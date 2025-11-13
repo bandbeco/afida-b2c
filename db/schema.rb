@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_08_152248) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_13_195313) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,6 +88,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_08_152248) do
     t.datetime "updated_at", null: false
     t.index [ "position" ], name: "index_categories_on_position"
     t.index [ "slug" ], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "legacy_redirects", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "hit_count", default: 0, null: false
+    t.string "legacy_path", limit: 500, null: false
+    t.string "target_slug", limit: 255, null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "variant_params", default: {}, null: false
+    t.index "lower((legacy_path)::text)", name: "index_legacy_redirects_on_lower_legacy_path", unique: true
+    t.index [ "active" ], name: "index_legacy_redirects_on_active"
+    t.index [ "hit_count" ], name: "index_legacy_redirects_on_hit_count"
   end
 
   create_table "order_items", force: :cascade do |t|

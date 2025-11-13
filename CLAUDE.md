@@ -465,3 +465,10 @@ After deploying SEO updates:
 **Database fields:**
 - Products: `meta_title`, `meta_description` (optional, with fallback)
 - Categories: `meta_title`, `meta_description` (required)
+
+## Active Technologies
+- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+ (001-legacy-url-redirects)
+- PostgreSQL 14+ (primary database with `legacy_redirects` table using JSONB for variant parameters) (001-legacy-url-redirects)
+
+## Recent Changes
+- 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+
