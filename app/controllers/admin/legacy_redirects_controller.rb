@@ -1,10 +1,7 @@
 # frozen_string_literal: true
 
-class Admin::LegacyRedirectsController < ApplicationController
+class Admin::LegacyRedirectsController < Admin::ApplicationController
   before_action :set_redirect, only: [ :show, :edit, :update, :destroy, :toggle, :test ]
-
-  # TODO: Add admin authentication when implemented
-  # before_action :require_admin
 
   # T061: Index action
   def index
@@ -47,7 +44,10 @@ class Admin::LegacyRedirectsController < ApplicationController
   def create
     @redirect = LegacyRedirect.new(redirect_params)
 
-    if @redirect.save
+    if @json_parse_error
+      @redirect.errors.add(:variant_params, "invalid JSON format: #{@json_parse_error}")
+      render :new, status: :unprocessable_entity
+    elsif @redirect.save
       redirect_to admin_legacy_redirect_url(@redirect), notice: "Redirect created successfully"
     else
       render :new, status: :unprocessable_entity
@@ -60,7 +60,10 @@ class Admin::LegacyRedirectsController < ApplicationController
 
   # T066: Update action
   def update
-    if @redirect.update(redirect_params)
+    if @json_parse_error
+      @redirect.errors.add(:variant_params, "invalid JSON format: #{@json_parse_error}")
+      render :edit, status: :unprocessable_entity
+    elsif @redirect.update(redirect_params)
       redirect_to admin_legacy_redirect_url(@redirect), notice: "Redirect updated successfully"
     else
       render :edit, status: :unprocessable_entity
@@ -92,12 +95,6 @@ class Admin::LegacyRedirectsController < ApplicationController
     @variant_match_status = check_variant_match
   end
 
-  # T070: Import action (future implementation - not in tests yet)
-  def import
-    # TODO: Implement bulk import from JSON/CSV
-    redirect_to admin_legacy_redirects_url, notice: "Import not yet implemented"
-  end
-
   private
 
   def set_redirect
@@ -111,7 +108,8 @@ class Admin::LegacyRedirectsController < ApplicationController
     if permitted[:variant_params].is_a?(String)
       begin
         permitted[:variant_params] = JSON.parse(permitted[:variant_params])
-      rescue JSON::ParserError
+      rescue JSON::ParserError => e
+        @json_parse_error = e.message
         permitted[:variant_params] = {}
       end
     end

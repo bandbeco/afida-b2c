@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class LegacyRedirectMiddleware
+  # Cache duration for redirect responses (24 hours)
+  CACHE_MAX_AGE = 24.hours.to_i
+
   def initialize(app)
     @app = app
   end
@@ -14,11 +17,11 @@ class LegacyRedirectMiddleware
 
     # Normalize path (remove trailing slash) and lookup redirect
     normalized_path = request.path.chomp("/")
-    redirect = LegacyRedirect.active.find_by_path(normalized_path)
+    redirect = LegacyRedirect.find_active_by_path(normalized_path)
 
     # Pass through if no active redirect found
     unless redirect
-      Rails.logger.info("LegacyRedirectMiddleware: No mapping found for #{normalized_path}")
+      Rails.logger.debug("LegacyRedirectMiddleware: No mapping found for #{normalized_path}")
       return @app.call(env)
     end
 
@@ -60,7 +63,7 @@ class LegacyRedirectMiddleware
     {
       "Location" => location,
       "Content-Type" => "text/html; charset=utf-8",
-      "Cache-Control" => "public, max-age=86400"
+      "Cache-Control" => "public, max-age=#{CACHE_MAX_AGE}"
     }
   end
 end

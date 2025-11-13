@@ -92,9 +92,6 @@ Rails.application.routes.draw do
         patch :toggle
         get :test
       end
-      collection do
-        post :import
-      end
     end
   end
 

@@ -18,6 +18,10 @@ class LegacyRedirect < ApplicationRecord
     where("LOWER(legacy_path) = ?", path.downcase).first
   end
 
+  def self.find_active_by_path(path)
+    active.where("LOWER(legacy_path) = ?", path.downcase).first
+  end
+
   # Instance Methods
   def record_hit!
     increment!(:hit_count)

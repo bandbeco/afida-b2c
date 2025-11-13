@@ -16,7 +16,7 @@ class Admin::LegacyRedirectsControllerTest < ActionDispatch::IntegrationTest
     )
 
     # Sign in as admin
-    @admin = User.first || User.create!(email_address: "admin@test.com", password: "password")
+    @admin = users(:acme_admin)
     sign_in_as(@admin)
   end
 

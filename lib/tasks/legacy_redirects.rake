@@ -120,4 +120,28 @@ namespace :legacy_redirects do
       puts "\n✅ All active redirects have been used at least once"
     end
   end
+
+  desc "Check for orphaned redirects (target products no longer exist)"
+  task check_orphaned: :environment do
+    puts "Checking for orphaned redirects..."
+
+    orphaned = []
+    LegacyRedirect.active.find_each do |redirect|
+      unless Product.exists?(slug: redirect.target_slug)
+        orphaned << redirect
+        puts "  ❌ Orphaned: #{redirect.legacy_path} → #{redirect.target_slug} (product not found)"
+      end
+    end
+
+    puts "\nSummary:"
+    puts "  Total Active: #{LegacyRedirect.active.count}"
+    puts "  Orphaned: #{orphaned.count}"
+
+    if orphaned.any?
+      puts "\n⚠️  Found #{orphaned.count} orphaned redirect(s)"
+      puts "💡 Consider deactivating or updating these redirects"
+    else
+      puts "\n✅ No orphaned redirects found - all target products exist"
+    end
+  end
 end

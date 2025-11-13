@@ -5,7 +5,7 @@ require "test_helper"
 class AdminLegacyRedirectsTest < ActionDispatch::IntegrationTest
   setup do
     @headers = { "HTTP_USER_AGENT" => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36" }
-    @admin = User.first || User.create!(email_address: "admin@test.com", password: "password")
+    @admin = users(:acme_admin)
     @product = Product.first
 
     # Sign in as admin
