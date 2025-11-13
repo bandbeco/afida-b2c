@@ -37,8 +37,8 @@ A modern Rails 8 e-commerce application for selling eco-friendly catering suppli
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
-   cd shop
+   git clone git@github.com:bandbeco/afida-b2c.git
+   cd afida-b2c
    ```
 
 2. **Install dependencies**
