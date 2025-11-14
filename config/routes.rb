@@ -15,7 +15,7 @@ Rails.application.routes.draw do
   # FAQ page
   get "faqs", to: "faqs#index"
 
-  resources :products, only: [ :index, :show ], path: "product"
+  resources :products, only: [ :index, :show ]
   resources :categories, only: [ :show ], path: "category"
 
   # Branded products shortcut
@@ -85,6 +85,12 @@ Rails.application.routes.draw do
       member do
         patch :update_status
         post :create_instance_product
+      end
+    end
+    resources :legacy_redirects do
+      member do
+        patch :toggle
+        get :test
       end
     end
   end

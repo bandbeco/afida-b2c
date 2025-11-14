@@ -57,6 +57,9 @@ load Rails.root.join('db', 'seeds', 'branded_product_pricing.rb')
 # Load product photos (after products are created)
 load Rails.root.join('db', 'seeds', 'product_photos.rb')
 
+# Load legacy redirect mappings
+load Rails.root.join('db', 'seeds', 'legacy_redirects.rb')
+
 puts "Seeding completed!"
 puts "Categories created: #{Category.count}"
 puts "Products created: #{Product.count}"

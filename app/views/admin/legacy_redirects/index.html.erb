@@ -1,0 +1,56 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold">Legacy Redirects</h1>
+    <%= link_to "New Redirect", new_admin_legacy_redirect_path, class: "btn btn-primary" %>
+  </div>
+
+  <div class="mb-4 flex gap-2">
+    <%= link_to "All", admin_legacy_redirects_path, class: "btn btn-sm #{params[:status].nil? || params[:status] == 'all' ? 'btn-active' : ''}" %>
+    <%= link_to "Active", admin_legacy_redirects_path(status: 'active'), class: "btn btn-sm #{params[:status] == 'active' ? 'btn-active' : ''}" %>
+    <%= link_to "Inactive", admin_legacy_redirects_path(status: 'inactive'), class: "btn btn-sm #{params[:status] == 'inactive' ? 'btn-active' : ''}" %>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Legacy Path</th>
+          <th>Target Slug</th>
+          <th>Variant Params</th>
+          <th>Hit Count</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @redirects.each do |redirect| %>
+          <tr>
+            <td class="font-mono text-sm"><%= redirect.legacy_path %></td>
+            <td class="font-mono text-sm"><%= redirect.target_slug %></td>
+            <td class="font-mono text-xs"><%= redirect.variant_params.to_json %></td>
+            <td><%= redirect.hit_count %></td>
+            <td>
+              <% if redirect.active? %>
+                <span class="badge badge-success">Active</span>
+              <% else %>
+                <span class="badge badge-ghost">Inactive</span>
+              <% end %>
+            </td>
+            <td>
+              <div class="flex gap-1">
+                <%= link_to "View", admin_legacy_redirect_path(redirect), class: "btn btn-xs btn-ghost" %>
+                <%= link_to "Edit", edit_admin_legacy_redirect_path(redirect), class: "btn btn-xs btn-ghost" %>
+                <%= button_to "Toggle", toggle_admin_legacy_redirect_path(redirect), method: :patch, class: "btn btn-xs btn-ghost" %>
+                <%= button_to "Delete", admin_legacy_redirect_path(redirect), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-xs btn-error" %>
+              </div>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="mt-4 text-sm text-gray-600">
+    Total: <%= @redirects.count %> redirects
+  </div>
+</div>
