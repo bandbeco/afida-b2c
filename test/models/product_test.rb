@@ -390,4 +390,29 @@ class ProductTest < ActiveSupport::TestCase
 
     assert results.index(cheap) < results.index(expensive), "Cheap product should come before expensive"
   end
+
+  test "sorted by price_desc orders by minimum variant price descending" do
+    # Create products with different minimum prices
+    low_price = Product.create!(name: "Low Price Product", sku: "LOW", category: categories(:one))
+    mid_price = Product.create!(name: "Mid Price Product", sku: "MID", category: categories(:one))
+    high_price = Product.create!(name: "High Price Product", sku: "HIGH", category: categories(:one))
+
+    # Low price product: min = 5, max = 20
+    ProductVariant.create!(product: low_price, name: "Small", sku: "LOW-1", price: 5.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: low_price, name: "Large", sku: "LOW-2", price: 20.00, stock_quantity: 100, active: true)
+
+    # Mid price product: min = 50, max = 100
+    ProductVariant.create!(product: mid_price, name: "Small", sku: "MID-1", price: 50.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: mid_price, name: "Large", sku: "MID-2", price: 100.00, stock_quantity: 100, active: true)
+
+    # High price product: min = 150, max = 200
+    ProductVariant.create!(product: high_price, name: "Small", sku: "HIGH-1", price: 150.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: high_price, name: "Large", sku: "HIGH-2", price: 200.00, stock_quantity: 100, active: true)
+
+    results = Product.sorted("price_desc").to_a
+
+    # Should sort by MIN price descending: high_price (150) > mid_price (50) > low_price (5)
+    assert results.index(high_price) < results.index(mid_price), "High price product should come before mid price"
+    assert results.index(mid_price) < results.index(low_price), "Mid price product should come before low price"
+  end
 end

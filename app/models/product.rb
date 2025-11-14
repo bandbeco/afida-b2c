@@ -54,13 +54,14 @@ class Product < ApplicationRecord
   scope :sorted, ->(sort_param) {
     case sort_param
     when "price_asc"
-      # Use subquery to avoid GROUP BY issues with eager loading
+      # Sort by minimum price (the "from" price displayed on cards)
       reorder(
         Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) ASC, products.name ASC")
       )
     when "price_desc"
+      # Sort by minimum price descending (the "from" price displayed on cards)
       reorder(
-        Arel.sql("(SELECT MAX(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) DESC, products.name ASC")
+        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) DESC, products.name ASC")
       )
     when "name_asc"
       reorder(Arel.sql("LOWER(products.name) ASC"))
