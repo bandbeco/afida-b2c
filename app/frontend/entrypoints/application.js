@@ -49,6 +49,9 @@ application.register("addon", AddonController)
 import NestedFormController from "../javascript/controllers/nested_form_controller"
 application.register("nested-form", NestedFormController)
 
+import RedirectFormController from "../javascript/controllers/redirect_form_controller"
+application.register("redirect-form", RedirectFormController)
+
 // Configure Stimulus development experience
 application.debug = false
 window.Stimulus = application

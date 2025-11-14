@@ -22,13 +22,13 @@
     <div class="divider">Redirect Target</div>
 
     <div class="form-control">
-      <%= form.label :product_id, "Select Product", class: "label" %>
-      <%= select_tag :product_id,
+      <%= form.label :product_slug, "Select Product", class: "label" %>
+      <%= select_tag :product_slug,
         options_from_collection_for_select(
           Product.order(:name).all,
-          :id,
+          :slug,
           :name,
-          redirect.target_slug.present? ? Product.find_by(slug: redirect.target_slug)&.id : nil
+          redirect.target_slug
         ),
         prompt: "Select a product...",
         class: "select select-bordered w-full",

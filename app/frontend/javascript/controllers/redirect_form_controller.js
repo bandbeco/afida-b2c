@@ -11,16 +11,16 @@ export default class extends Controller {
   }
 
   async loadVariants() {
-    const productId = this.productTarget.value
+    const productSlug = this.productTarget.value
 
-    if (!productId) {
+    if (!productSlug) {
       this.variantTarget.innerHTML = '<option value="">Select a product first</option>'
       this.variantTarget.disabled = true
       return
     }
 
     try {
-      const response = await fetch(`/admin/products/${productId}/variants.json`)
+      const response = await fetch(`/admin/products/${productSlug}/variants.json`)
       const data = await response.json()
 
       this.variantTarget.innerHTML = '<option value="">Select variant...</option>'
