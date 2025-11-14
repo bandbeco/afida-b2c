@@ -1,286 +1,231 @@
 # Data Model: Legacy URL Smart Redirects
 
 **Feature**: 001-legacy-url-redirects
-**Date**: 2025-11-13
-**Status**: Complete
+**Date**: 2025-11-14
+
+## Overview
+
+This document describes the database schema for the Legacy URL redirect system.
 
 ## Entity: LegacyRedirect
 
-### Purpose
+Represents a mapping from a legacy product URL (from old afida.com site) to a new product page with optional variant parameters.
 
-Represents a mapping from a legacy product URL (from old afida.com site) to a new product page with optional extracted variant parameters. Stores redirect configuration, usage analytics, and enables/disables redirects without deletion.
-
-### Database Schema
+### Schema
 
 **Table**: `legacy_redirects`
 
 | Column | Type | Constraints | Description |
-|---|---|---|---|
-| `id` | `bigint` | Primary key, auto-increment | Unique identifier |
-| `legacy_path` | `string (500)` | NOT NULL, indexed (functional LOWER) | Original URL path (e.g., `/product/12-pizza-box-kraft`) |
-| `target_slug` | `string (255)` | NOT NULL | Product slug on new site (e.g., `pizza-box-kraft`) |
-| `variant_params` | `jsonb` | Default: `{}` | Extracted variant parameters (e.g., `{"size": "12\"", "colour": "Kraft"}`) |
-| `hit_count` | `integer` | NOT NULL, default: 0 | Number of times this redirect has been used |
-| `active` | `boolean` | NOT NULL, default: true | Whether this redirect is currently enabled |
-| `created_at` | `timestamp` | NOT NULL, auto | Record creation timestamp |
-| `updated_at` | `timestamp` | NOT NULL, auto | Record last update timestamp |
+|--------|------|-------------|-------------|
+| `id` | `bigint` | PRIMARY KEY | Auto-incrementing unique identifier |
+| `legacy_path` | `string(500)` | NOT NULL, UNIQUE (case-insensitive) | Legacy URL path (e.g., `/product/12-310-x-310mm-pizza-box-kraft`) |
+| `target_slug` | `string(255)` | NOT NULL, FOREIGN KEY (products.slug) | Target product slug (e.g., `pizza-box`) |
+| `variant_params` | `jsonb` | NOT NULL, DEFAULT `{}` | Variant parameters as JSON (e.g., `{"size": "12in", "colour": "kraft"}`) |
+| `hit_count` | `integer` | NOT NULL, DEFAULT `0` | Number of times this redirect has been accessed |
+| `active` | `boolean` | NOT NULL, DEFAULT `true` | Whether this redirect is currently enabled |
+| `created_at` | `timestamp` | NOT NULL | Record creation timestamp |
+| `updated_at` | `timestamp` | NOT NULL | Record last update timestamp |
 
-**Indexes**:
-- Primary key index on `id`
-- Functional unique index on `LOWER(legacy_path)` for case-insensitive lookups
-- Index on `active` for filtering enabled redirects
-- Index on `hit_count DESC` for analytics queries (most used redirects)
+### Indexes
 
-**Constraints**:
-- `legacy_path` must be unique (case-insensitive)
-- `legacy_path` must start with `/product/` (application-level validation)
-- `target_slug` must reference an existing product slug (application-level validation)
-- `variant_params` must be valid JSON object (database type enforces)
+1. **Unique case-insensitive index on legacy_path**
+   - Name: `index_legacy_redirects_on_lower_legacy_path`
+   - Expression: `LOWER(legacy_path)`
+   - Purpose: Fast case-insensitive lookups, prevents duplicate paths with different casing
 
-### ActiveRecord Model
+2. **Index on active**
+   - Name: `index_legacy_redirects_on_active`
+   - Purpose: Filter active vs inactive redirects efficiently
 
-**File**: `app/models/legacy_redirect.rb`
+3. **Index on hit_count**
+   - Name: `index_legacy_redirects_on_hit_count`
+   - Purpose: Analytics queries (e.g., most used redirects)
 
-**Validations**:
-```ruby
-validates :legacy_path, presence: true, uniqueness: { case_sensitive: false }
-validates :target_slug, presence: true
-validates :legacy_path, format: { with: %r{\A/product/}, message: "must start with /product/" }
-validate :target_slug_exists
+### Validations
+
+**Model**: `app/models/legacy_redirect.rb`
+
+1. **Presence**:
+   - `legacy_path` must be present
+   - `target_slug` must be present
+
+2. **Uniqueness**:
+   - `legacy_path` must be unique (case-insensitive)
+
+3. **Format**:
+   - `legacy_path` must match `/^\/product\/.*/` (start with `/product/`)
+
+4. **Custom Validation**:
+   - `target_slug_exists`: Validates that referenced product exists in `products` table
+
+### Scopes
+
+1. **active**: `where(active: true)` - Returns only active redirects
+2. **inactive**: `where(active: false)` - Returns only inactive redirects
+3. **most_used**: `order(hit_count: :desc)` - Orders by hit count (descending)
+4. **recently_updated**: `order(updated_at: :desc)` - Orders by update time (descending)
+
+### Instance Methods
+
+| Method | Returns | Description |
+|--------|---------|-------------|
+| `record_hit!` | `boolean` | Atomically increments `hit_count` by 1 |
+| `target_url` | `string` | Builds full target URL with variant params (e.g., `/products/pizza-box?size=12in&colour=kraft`) |
+| `deactivate!` | `boolean` | Sets `active` to false |
+| `activate!` | `boolean` | Sets `active` to true |
+
+### Class Methods
+
+| Method | Parameters | Returns | Description |
+|--------|------------|---------|-------------|
+| `find_by_path` | `path` (string) | `LegacyRedirect` or `nil` | Case-insensitive lookup by legacy_path |
+| `find_active_by_path` | `path` (string) | `LegacyRedirect` or `nil` | Case-insensitive lookup of active redirect only |
+
+## Relationships
+
+### LegacyRedirect → Product
+
+**Type**: Implicit foreign key (validated, not enforced by database constraint)
+
+**Relationship**: `LegacyRedirect.target_slug` references `Product.slug`
+
+**Validation**: Model validation (`target_slug_exists`) ensures product exists
+
+**Cascade Behavior**: None (validation prevents orphaned redirects)
+
+**Rationale**: Product slugs can change, but legacy redirects should remain stable. Validation prevents creating redirects to non-existent products. If a product is deleted, admin must manually update or deactivate affected redirects.
+
+## State Diagram
+
+```
+┌─────────────────┐
+│   New Redirect  │
+│   (active: true)│
+└────────┬────────┘
+         │
+         │ record_hit!
+         ▼
+┌─────────────────┐
+│  Active Redirect│
+│  (hit_count > 0)│
+└────────┬────────┘
+         │
+         │ deactivate!
+         ▼
+┌─────────────────┐
+│Inactive Redirect│
+│ (active: false) │
+└────────┬────────┘
+         │
+         │ activate!
+         ▼
+┌─────────────────┐
+│  Active Redirect│
+│  (hit_count > 0)│
+└─────────────────┘
 ```
 
-**Scopes**:
-```ruby
-scope :active, -> { where(active: true) }
-scope :inactive, -> { where(active: false) }
-scope :most_used, -> { order(hit_count: :desc) }
-scope :recently_updated, -> { order(updated_at: :desc) }
+## Lifecycle
+
+1. **Creation**: Redirect created via seeds, admin interface, or rake task
+2. **Activation**: Redirect is active by default (`active: true`)
+3. **Usage**: Each request increments `hit_count` (analytics tracking)
+4. **Deactivation**: Admin can deactivate redirect without deleting (preserves analytics)
+5. **Reactivation**: Admin can re-enable previously deactivated redirect
+6. **Deletion**: Admin can permanently delete redirect (rarely needed)
+
+## Data Integrity
+
+### Invariants
+
+1. `legacy_path` must start with `/product/` (enforced by format validation)
+2. `target_slug` must reference an existing product (enforced by custom validation)
+3. `hit_count` must be >= 0 (enforced by default value and increment-only operations)
+4. `variant_params` must be valid JSON object (enforced by JSONB type)
+
+### Constraints
+
+- No database-level foreign key constraint (to allow graceful handling of product deletions)
+- Unique constraint on `LOWER(legacy_path)` prevents duplicate redirects
+- NOT NULL constraints on all required fields
+
+## Migration Strategy
+
+### Seeding Data
+
+**Source**: `config/legacy_redirects.csv` (64 mappings)
+
+**Process**:
+1. Parse CSV file row by row
+2. Extract `legacy_path` from `source` column
+3. Parse `target` column to extract `target_slug` and `variant_params`
+4. Use `find_or_create_by!` for idempotent seeding
+5. Set `active: true` by default
+
+**Idempotency**: Running seeds multiple times updates existing records without duplicating
+
+### Rolling Back
+
+Migration is reversible:
+```bash
+rails db:rollback  # Drops legacy_redirects table
 ```
 
-**Class Methods**:
-```ruby
-# Find redirect by path (case-insensitive)
-def self.find_by_path(path)
-  where('LOWER(legacy_path) = ?', path.downcase).first
-end
-
-# Bulk import from array of hashes
-def self.import_from_data(redirects_array)
-  # Validates and creates multiple redirects
-  # Returns { success: count, errors: [...] }
-end
+Seed rollback requires manual deletion or truncation:
+```bash
+rails runner "LegacyRedirect.delete_all"
 ```
 
-**Instance Methods**:
-```ruby
-# Increment hit counter (SQL-based, thread-safe)
-def record_hit!
-  increment!(:hit_count)
-end
+## Performance Characteristics
 
-# Build target URL with query parameters
-def target_url
-  url = "/products/#{target_slug}"
-  if variant_params.present?
-    query_string = variant_params.to_query
-    url += "?#{query_string}"
-  end
-  url
-end
+### Query Performance
 
-# Deactivate redirect (soft delete)
-def deactivate!
-  update!(active: false)
-end
+**Lookup by path** (most common operation):
+- Uses functional index on `LOWER(legacy_path)`
+- Expected performance: O(log n), typically <1ms for 64 records
+- Scales well to thousands of redirects
 
-# Activate redirect
-def activate!
-  update!(active: true)
-end
-```
+**Analytics queries**:
+- Index on `hit_count` enables fast sorting for "most used" queries
+- Index on `active` enables fast filtering
 
-**Callbacks**: None (keep model simple)
+### Write Performance
 
-**Associations**: None (self-contained entity)
+**Insert/Update**: Single row operations, fast (<5ms)
+**Hit count increment**: Atomic operation using SQL `UPDATE ... SET hit_count = hit_count + 1`
 
-### State Transitions
+### Storage
 
-**States**: Active (true/false)
+**Estimated size per row**: ~500 bytes (including indexes)
+**Total size for 64 records**: ~32 KB (negligible)
 
-**Transitions**:
-- **Created** → `active: true` (default state)
-- **Active** → **Inactive**: Admin deactivates redirect
-- **Inactive** → **Active**: Admin reactivates redirect
-- **Any state** → **Deleted**: Admin permanently deletes mapping (rare)
-
-**No complex state machine needed** - Simple boolean flag sufficient
-
-### Data Integrity Rules
-
-**Creation**:
-- `legacy_path` must be unique (case-insensitive)
-- `target_slug` must reference existing Product
-- `variant_params` validated during creation (optional, can be empty)
-
-**Updates**:
-- `legacy_path` can be updated if new value is unique
-- `target_slug` can be updated if new product exists
-- `variant_params` can be modified at any time
-- `hit_count` only modified via `record_hit!` method (not direct updates)
-
-**Deletion**:
-- Soft delete preferred (set `active: false`)
-- Hard delete allowed via admin but discouraged (loses analytics)
-
-**Concurrency**:
-- `record_hit!` uses SQL increment (handles concurrent requests safely)
-- Last-write-wins for other attributes (acceptable for admin operations)
-
-### Example Records
+## Example Data
 
 ```ruby
-# Example 1: Pizza box with size parameter
+# Pizza box redirect with size variant
 LegacyRedirect.create!(
-  legacy_path: '/product/12-310-x-310mm-pizza-box-kraft',
-  target_slug: 'pizza-box-kraft',
-  variant_params: { size: '12"' },
-  active: true
+  legacy_path: "/product/12-310-x-310mm-pizza-box-kraft",
+  target_slug: "pizza-box",
+  variant_params: { size: "12in", colour: "kraft" },
+  active: true,
+  hit_count: 0
 )
 
-# Example 2: Hot cup with size and colour
+# Straw redirect with size and colour variants
 LegacyRedirect.create!(
-  legacy_path: '/product/8oz-227ml-single-wall-paper-hot-cup-white',
-  target_slug: 'single-wall-paper-hot-cup',
-  variant_params: { size: '8oz', colour: 'White' },
-  active: true
+  legacy_path: "/product/6mm-x-200mm-bamboo-fibre-straws-black",
+  target_slug: "bio-fibre-straws",
+  variant_params: { size: "6x200mm", colour: "black" },
+  active: true,
+  hit_count: 0
 )
 
-# Example 3: Generic product (no variant params)
+# Simple redirect without variants
 LegacyRedirect.create!(
-  legacy_path: '/product/straws-mixed',
-  target_slug: 'paper-straws',
-  variant_params: {},
-  active: true
-)
-
-# Example 4: Inactive redirect (unmapped product)
-LegacyRedirect.create!(
-  legacy_path: '/product/old-item-discontinued',
-  target_slug: 'eco-friendly-catering-supplies',  # Category fallback
-  variant_params: {},
-  active: false  # Deactivated until mapping confirmed
+  legacy_path: "/product/wooden-coffee-stirrers-140mm",
+  target_slug: "wooden-coffee-stirrers",
+  variant_params: { size: "14cm", colour: "natural" },
+  active: true,
+  hit_count: 0
 )
 ```
-
-### Database Migration
-
-**File**: `db/migrate/XXXXXX_create_legacy_redirects.rb`
-
-```ruby
-class CreateLegacyRedirects < ActiveRecord::Migration[8.0]
-  def up
-    create_table :legacy_redirects do |t|
-      t.string :legacy_path, limit: 500, null: false
-      t.string :target_slug, limit: 255, null: false
-      t.jsonb :variant_params, default: {}, null: false
-      t.integer :hit_count, default: 0, null: false
-      t.boolean :active, default: true, null: false
-      t.timestamps
-    end
-
-    # Functional index for case-insensitive lookups
-    add_index :legacy_redirects, 'LOWER(legacy_path)', unique: true, name: 'index_legacy_redirects_on_lower_legacy_path'
-
-    # Index for filtering active redirects
-    add_index :legacy_redirects, :active
-
-    # Index for analytics queries (most used redirects)
-    add_index :legacy_redirects, :hit_count
-  end
-
-  def down
-    drop_table :legacy_redirects
-  end
-end
-```
-
-### Seed Data
-
-**File**: `db/seeds/legacy_redirects.rb`
-
-Contains 63 manually curated mappings from results.json:
-
-```ruby
-legacy_redirects = [
-  {
-    legacy_path: '/product/12-310-x-310mm-pizza-box-kraft',
-    target_slug: 'pizza-box-kraft',
-    variant_params: { size: '12"' }
-  },
-  {
-    legacy_path: '/product/8oz-227ml-single-wall-paper-hot-cup-white',
-    target_slug: 'single-wall-paper-hot-cup',
-    variant_params: { size: '8oz', colour: 'White' }
-  },
-  # ... 61 more mappings
-]
-
-legacy_redirects.each do |data|
-  LegacyRedirect.find_or_create_by!(legacy_path: data[:legacy_path]) do |redirect|
-    redirect.target_slug = data[:target_slug]
-    redirect.variant_params = data[:variant_params]
-    redirect.active = true
-  end
-end
-
-puts "✅ Seeded #{legacy_redirects.count} legacy redirects"
-```
-
-## Performance Considerations
-
-**Query Optimization**:
-- Functional index on `LOWER(legacy_path)` ensures O(1) lookups
-- No N+1 queries possible (self-contained entity, no associations)
-- Hit count increment uses single SQL UPDATE (no round-trip)
-
-**Expected Load**:
-- 1-10 redirects per second (low traffic assumption)
-- Single database query per redirect request
-- <5ms query time with proper indexing
-
-**Scalability**:
-- Table size: 63 rows initially, ~100-200 rows long-term
-- Database size impact: <100KB (JSONB adds ~50 bytes per record)
-- No caching needed initially (database is fast enough)
-- Future optimization: In-memory cache (Redis) if redirects exceed 1000+
-
-**Monitoring**:
-- Track hit_count to identify high-value redirects
-- Log slow queries (>50ms) for index optimization
-- Monitor inactive redirects (candidates for deletion after 1 year)
-
-## Data Quality & Maintenance
-
-**Validation**:
-- Admin interface validates target_slug exists before saving
-- Bulk import validates all records before inserting (transaction)
-- Logs warnings for variant_params that don't match product options
-
-**Cleanup**:
-- Inactive redirects with hit_count = 0 can be deleted after 3 months
-- Redirects should remain active for minimum 1 year (SEO best practice)
-- Rake task to identify unused redirects: `rails legacy_redirects:report_unused`
-
-**Auditing**:
-- `created_at` and `updated_at` track changes
-- Consider adding `last_hit_at` timestamp for analytics (optional future enhancement)
-- Admin activity logged via Rails logs (who created/modified redirects)
-
-## Summary
-
-**Entity**: `LegacyRedirect`
-**Table**: `legacy_redirects`
-**Attributes**: 8 (id, legacy_path, target_slug, variant_params, hit_count, active, timestamps)
-**Indexes**: 4 (primary key, unique LOWER(legacy_path), active, hit_count)
-**Relationships**: None (standalone entity)
-**Complexity**: Low (simple CRUD model with analytics counter)

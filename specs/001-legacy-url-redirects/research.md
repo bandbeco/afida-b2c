@@ -1,194 +1,199 @@
 # Research: Legacy URL Smart Redirects
 
 **Feature**: 001-legacy-url-redirects
-**Date**: 2025-11-13
+**Date**: 2025-11-14
 **Status**: Complete
 
-## Purpose
+## Overview
 
-Research technical decisions for implementing a database-driven redirect system using Rack middleware, PostgreSQL, and Rails 8. This document resolves all unknowns from the technical context and establishes best practices for implementation.
+This document captures technical decisions and research findings for implementing the legacy URL redirect seeding and testing functionality.
 
-## Research Topics
+## Technical Decisions
 
-### 1. Rack Middleware for URL Interception
+### Decision 1: CSV Parsing Strategy
 
-**Decision**: Implement custom Rack middleware inserted early in the middleware stack
-
+**Chosen**: Use Ruby's built-in CSV library with manual parsing in seed file
 **Rationale**:
-- Rack middleware executes before Rails routing, minimizing overhead
-- Direct access to HTTP request/response objects for efficient 301 redirects
-- Can short-circuit request processing (return redirect without reaching Rails router)
-- Standard Rails pattern for request-level concerns (see Rack::Deflater, Rack::Auth, etc.)
+- CSV library is stdlib (no additional dependencies)
+- Simple, straightforward parsing for 64 rows
+- Seed file is already written in Ruby
+- Easy to add transformations or validations during import
 
-**Implementation Approach**:
+**Alternatives Considered**:
+- **ActiveRecord import gem**: Rejected - adds dependency for minimal benefit
+- **Direct SQL INSERT**: Rejected - loses ActiveRecord validations and callbacks
+- **JSON format**: Rejected - CSV already exists and is human-readable
+
+**Implementation Notes**:
 ```ruby
-class LegacyRedirectMiddleware
-  def initialize(app)
-    @app = app
-  end
+require 'csv'
 
-  def call(env)
-    request = Rack::Request.new(env)
-
-    if request.path.start_with?('/product/')
-      # Lookup redirect, return [301, headers, body] or fall through
-    end
-
-    @app.call(env)  # Fall through to next middleware/Rails
-  end
+CSV.foreach(Rails.root.join('config/legacy_redirects.csv'), headers: true) do |row|
+  # Parse source URL to extract legacy_path
+  # Parse target URL to extract target_slug and variant_params
+  # Create/update LegacyRedirect record
 end
 ```
 
-**Alternatives Considered**:
-- **Rails controller concern**: Rejected - would require routing all `/product/*` to a controller, adding overhead
-- **Nginx/Apache rewrite rules**: Rejected - would require deployment-time updates, no analytics, no admin UI
-- **Rails routing constraint**: Rejected - still requires routing overhead, less flexible than middleware
+### Decision 2: URL Parsing for Variant Parameters
 
-**Best Practices**:
-- Register middleware in `config/application.rb` using `config.middleware.use`
-- Position after `ActionDispatch::Session::CookieStore` if session access needed
-- Use database connection pooling (Rails handles automatically)
-- Cache database lookups in production (optional future optimization)
-
-### 2. Case-Insensitive Database Queries in PostgreSQL
-
-**Decision**: Use PostgreSQL `LOWER()` function with functional index for case-insensitive lookups
-
+**Chosen**: Parse target URLs using URI library and CGI.parse for query strings
 **Rationale**:
-- PostgreSQL is case-sensitive by default for text comparison
-- `LOWER()` function converts to lowercase for comparison
-- Functional index `CREATE INDEX ... ON LOWER(legacy_path)` ensures O(1) lookups
-- More portable than `CITEXT` extension (no additional setup required)
+- Target URLs in CSV contain full paths like `/products/pizza-box?size=12in&colour=kraft`
+- Need to extract slug (`pizza-box`) and variant params (`{size: "12in", colour: "kraft"}`)
+- URI and CGI are stdlib, battle-tested, handle edge cases (encoding, special chars)
 
-**Implementation Approach**:
+**Alternatives Considered**:
+- **Regex matching**: Rejected - fragile, doesn't handle URL encoding properly
+- **Manual string splitting**: Rejected - error-prone, missing edge case handling
+- **Addressable gem**: Rejected - unnecessary dependency for simple URL parsing
+
+**Implementation Notes**:
 ```ruby
-# Migration
-add_index :legacy_redirects, 'LOWER(legacy_path)', unique: true
-
-# Model query
-LegacyRedirect.where('LOWER(legacy_path) = ?', path.downcase).first
+uri = URI.parse(target_url)
+target_slug = uri.path.sub('/products/', '')
+variant_params = URI.decode_www_form(uri.query || '').to_h
 ```
 
-**Alternatives Considered**:
-- **CITEXT column type**: Requires PostgreSQL extension, overkill for single-column case-insensitivity
-- **ILIKE operator**: Slower than indexed `LOWER()`, designed for pattern matching not exact matches
-- **Application-level normalization only**: Doesn't handle URLs typed with different cases
+### Decision 3: Idempotent Seeding
 
-**Best Practices**:
-- Store legacy_path in original case (for display in admin)
-- Always query using `LOWER(legacy_path)` with functional index
-- Add unique constraint on lowercase to prevent duplicates
-- Document in model comments that lookups are case-insensitive
-
-### 3. URL Parameter Extraction and Normalization
-
-**Decision**: Use regex pattern matching with named captures, store in JSONB, normalize against product variants
-
+**Chosen**: Use `find_or_create_by!` with `legacy_path` as unique key
 **Rationale**:
-- Legacy URLs contain size/colour in text (e.g., `/product/12-310-x-310mm-pizza-box-kraft`)
-- JSONB column allows flexible storage of extracted parameters
-- Normalization required to match current product variant options
-- Pattern matching enables handling variations (e.g., "12oz", "340ml", "Kraft", "kraft")
+- Allows running seeds multiple times without duplicates
+- Updates existing redirects if target or params change
+- Fails loudly on validation errors (! version)
+- Maintains referential integrity (existing hit counts preserved)
 
-**Implementation Approach**:
+**Alternatives Considered**:
+- **Truncate and recreate**: Rejected - loses hit_count analytics data
+- **find_or_initialize_by + save**: Rejected - less atomic, more complex error handling
+- **upsert_all**: Rejected - bypasses ActiveRecord validations
+
+**Implementation Notes**:
 ```ruby
-# Extract parameters from legacy URL
-legacy_path = "/product/12-310-x-310mm-pizza-box-kraft"
-
-# Pattern: /product/{size}-{dimensions}-{name}-{colour}
-if legacy_path =~ %r{/product/(\d+)-.+-(.+)$}
-  size = $1  # "12"
-  colour = $2  # "kraft"
-
-  # Normalize against product variants
-  variant_params = {
-    size: normalize_size(size, product),
-    colour: normalize_colour(colour, product)
-  }
+LegacyRedirect.find_or_create_by!(legacy_path: source_path) do |redirect|
+  redirect.target_slug = target_slug
+  redirect.variant_params = variant_params
+  redirect.active = true
 end
-
-# Store in JSONB column
-redirect.variant_params = variant_params  # {"size": "12\"", "colour": "Kraft"}
 ```
 
-**Normalization Logic**:
-- **Size**: Match numeric portion (e.g., "12" → "12\"" or "12oz")
-- **Colour**: Capitalize first letter (e.g., "kraft" → "Kraft", "white" → "White")
-- **Fallback**: If no match found, store nil (redirect to product without pre-selection)
+### Decision 4: Testing Strategy
 
-**Alternatives Considered**:
-- **Separate columns for each parameter**: Rejected - not flexible for future parameters
-- **String column with delimiter**: Rejected - JSONB provides structure and queryability
-- **No normalization**: Rejected - variant parameters won't match current product options
-
-**Best Practices**:
-- Validate extracted parameters against actual product variants
-- Log warnings when parameters don't match (helps identify data quality issues)
-- Store both extracted and normalized values for debugging (optional)
-- Handle missing parameters gracefully (redirect without query params)
-
-### 4. 301 Redirect Best Practices for SEO
-
-**Decision**: Use HTTP 301 (Permanent Redirect) with proper headers and no redirect chains
-
+**Chosen**: Use existing test suite + manual browser testing of sample redirects
 **Rationale**:
-- 301 signals to search engines that the move is permanent
-- Search engines transfer ~90-99% of link equity to new URL
-- Proper headers prevent caching issues and preserve query parameters
-- Single redirect hop maintains performance and SEO value
+- Test infrastructure already exists and comprehensive
+- Seed data validation via model tests (target products exist)
+- Integration tests verify redirect flow works end-to-end
+- System tests simulate real browser requests
+- Manual testing validates user experience for 5-10 sample URLs
 
-**Implementation Approach**:
-```ruby
-# Return 301 with Location header
-[301, {
-  'Location' => new_url,
-  'Content-Type' => 'text/html',
-  'Cache-Control' => 'public, max-age=86400'  # Cache redirects for 24h
-}, ['Redirecting...']]
-```
-
-**SEO Considerations**:
-- **Always 301**: Never 302 (temporary) for permanent URL changes
-- **Single hop**: Legacy URL → New URL (no intermediary redirects)
-- **Preserve query parameters**: UTM tracking, referral codes, etc.
-- **Update sitemap**: Include new URLs, remove old URLs after deployment
-- **Submit to Google Search Console**: Notify search engines of URL changes
+**Test Coverage**:
+1. **Model tests**: Validate seed data integrity (all target products exist)
+2. **Middleware tests**: Verify request interception and 301 response
+3. **Integration tests**: End-to-end redirect flow from legacy URL to product page
+4. **System tests**: Browser-based testing with real HTTP requests
+5. **Manual testing**: Verify variant pre-selection in product page UI
 
 **Alternatives Considered**:
-- **302 redirect**: Rejected - temporary redirect, search engines won't transfer authority
-- **Meta refresh**: Rejected - not recognized by search engines as redirect
-- **JavaScript redirect**: Rejected - search engines may not execute JavaScript
+- **Automated testing of all 64 URLs**: Rejected - slow, diminishing returns
+- **Skip manual testing**: Rejected - need to verify user-facing behavior
+- **Load testing**: Out of scope - feature performance already validated
 
-**Best Practices**:
-- Monitor redirect usage (hit_count) to identify high-value URLs
-- Set reasonable cache TTL (24h) to allow updates without immediate propagation
-- Log unmapped URLs to identify additional redirects needed
-- Include redirect mapping in sitemap or submit changed URLs to GSC
-- Keep redirects active for at least 1 year (industry standard)
+## Data Mapping Analysis
 
-## Summary of Technical Decisions
+### CSV Structure
 
-| Decision Point | Choice | Key Rationale |
-|---|---|---|
-| **Interception Mechanism** | Rack middleware | Executes before routing, minimal overhead |
-| **Case-Insensitive Lookup** | `LOWER()` with functional index | O(1) performance, no extensions required |
-| **Parameter Storage** | JSONB column | Flexible, structured, queryable |
-| **Parameter Extraction** | Regex with normalization | Handles variations, matches current variants |
-| **Redirect Type** | HTTP 301 | Permanent redirect, preserves SEO authority |
-| **Cache Strategy** | 24h CDN cache | Balances performance with update flexibility |
+```csv
+source,target
+/product/14-360-x-360mm-pizza-box-kraft,/products/pizza-box?size=16in&colour=kraft
+/product/12-310-x-310mm-pizza-box-kraft,/products/pizza-box?size=12in&colour=kraft
+...
+```
 
-## Open Questions & Assumptions
+**Fields**:
+- `source`: Legacy URL path (e.g., `/product/12-310-x-310mm-pizza-box-kraft`)
+- `target`: New URL with query params (e.g., `/products/pizza-box?size=12in&colour=kraft`)
 
-**Assumptions**:
-- All 63 legacy URLs follow consistent pattern (verified by reviewing results.json)
-- Current product database is accessible during parameter normalization
-- Admin authentication already exists (reuse existing `/admin` authentication)
-- Results.json file location is known or will be provided
+**Data Quality**:
+- 64 total mappings (verified by line count)
+- All sources start with `/product/` (consistent pattern)
+- All targets start with `/products/` (valid Rails route)
+- Query parameters use lowercase keys (`size`, `colour`)
 
-**Resolved**:
-- ✅ Middleware positioning determined (early in stack, after session)
-- ✅ Database indexing strategy defined (functional index on LOWER)
-- ✅ Parameter normalization approach established (regex + match against variants)
-- ✅ SEO best practices confirmed (301, single hop, preserve params)
+### Variant Parameter Extraction
 
-**No further clarifications needed** - Ready for Phase 1 (Design & Contracts)
+**Size Formats**:
+- Dimensions: `12in`, `14in`, `360mm`, `500ml`, `750ml`
+- Volume: `8oz`, `12oz`, `16oz`, `20oz`
+- Paper sizes: `40x40cm`, `24x24cm`, `25x25cm`
+- Special: `pint`, `2cup`, `8fold-3ply`, `12-20oz-compatible`
+
+**Colour Formats**:
+- Materials: `kraft`, `natural`, `natural-beige`
+- Colors: `white`, `black`, `clear`
+
+**Edge Cases**:
+- Some targets have only `size` parameter (no colour)
+- Some targets have only `colour` parameter (no size)
+- Empty parameters stored as `{}` (empty hash)
+
+## Product Slug Validation
+
+**Requirement**: All `target_slug` values in CSV must reference existing products in database
+
+**Validation Strategy**:
+1. Model validation (`target_slug_exists`) prevents invalid slugs
+2. Seed file will fail loudly if product doesn't exist
+3. Pre-seed check: Query all unique slugs from CSV and verify against Product table
+
+**Sample Validation Query**:
+```ruby
+csv_slugs = CSV.read('config/legacy_redirects.csv', headers: true)
+  .map { |row| URI.parse(row['target']).path.sub('/products/', '') }
+  .uniq
+
+missing_slugs = csv_slugs - Product.pluck(:slug)
+# Should be empty array []
+```
+
+## Performance Considerations
+
+### Seed Performance
+- 64 database inserts/updates (sequential)
+- Each insert: 1 SELECT (find_or_create_by) + 1 INSERT or UPDATE
+- Expected time: <5 seconds
+- No optimization needed for this scale
+
+### Runtime Performance (Already Optimized)
+- Middleware adds single DB query per request matching `/product/*`
+- Case-insensitive index on `legacy_path` ensures fast lookup
+- Hit count increment is async-safe (atomic operation)
+- No caching needed (DB query fast enough)
+
+## Risk Assessment
+
+### Low Risks
+- **Duplicate mappings**: CSV has unique source paths (verified)
+- **Invalid slugs**: Model validation + pre-seed check prevents
+- **Performance**: Seed operation is one-time, runtime already optimized
+- **Data loss**: Idempotent seeding preserves hit counts
+
+### Medium Risks
+- **Product deletion**: If product deleted after seed, redirects fail validation
+  - Mitigation: Admin can mark redirect inactive instead of deleting
+- **CSV format changes**: Manual CSV editing could break parsing
+  - Mitigation: Add CSV schema validation before parsing
+
+### Mitigated Risks
+- **Concurrent requests during seed**: Seeds run in development/staging before production
+- **Redirect loops**: Middleware only matches `/product/*`, new products use `/products/*`
+
+## Next Steps
+
+1. ✅ Update seed file to parse CSV and create redirects
+2. ⏳ Run database migration (if not already run)
+3. ⏳ Run seeds in development environment
+4. ⏳ Verify tests pass
+5. ⏳ Manual testing of sample redirects in browser
+6. ⏳ Document findings and close planning phase
