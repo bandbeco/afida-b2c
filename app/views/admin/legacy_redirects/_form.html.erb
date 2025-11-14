@@ -1,4 +1,4 @@
-<%= form_with(model: [:admin, redirect], local: true) do |form| %>
+<%= form_with(model: [:admin, redirect], local: true, data: { controller: "redirect-form" }) do |form| %>
   <% if redirect.errors.any? %>
     <div class="alert alert-error mb-4">
       <h3 class="font-bold">Errors:</h3>
@@ -12,28 +12,54 @@
 
   <div class="space-y-4">
     <div class="form-control">
-      <%= form.label :legacy_path, class: "label" %>
+      <%= form.label :legacy_path, "Legacy URL Path", class: "label" %>
       <%= form.text_field :legacy_path, class: "input input-bordered w-full", placeholder: "/product/old-url-pattern" %>
       <label class="label">
-        <span class="label-text-alt">Must start with /product/</span>
+        <span class="label-text-alt">The old URL path that should redirect (must start with /product/)</span>
+      </label>
+    </div>
+
+    <div class="divider">Redirect Target</div>
+
+    <div class="form-control">
+      <%= form.label :product_id, "Select Product", class: "label" %>
+      <%= select_tag :product_id,
+        options_from_collection_for_select(
+          Product.order(:name).all,
+          :id,
+          :name,
+          redirect.target_slug.present? ? Product.find_by(slug: redirect.target_slug)&.id : nil
+        ),
+        prompt: "Select a product...",
+        class: "select select-bordered w-full",
+        data: {
+          redirect_form_target: "product",
+          action: "change->redirect-form#loadVariants"
+        }
+      %>
+      <label class="label">
+        <span class="label-text-alt">Choose the product to redirect to</span>
       </label>
     </div>
 
     <div class="form-control">
-      <%= form.label :target_slug, "Target Product Slug", class: "label" %>
-      <%= form.text_field :target_slug, class: "input input-bordered w-full", placeholder: "pizza-box-kraft" %>
+      <%= form.label :variant_id, "Select Variant", class: "label" %>
+      <%= select_tag :variant_id,
+        content_tag(:option, "Select a product first", value: ""),
+        disabled: true,
+        class: "select select-bordered w-full",
+        data: {
+          redirect_form_target: "variant",
+          action: "change->redirect-form#variantSelected"
+        }
+      %>
       <label class="label">
-        <span class="label-text-alt">Product slug from new site</span>
+        <span class="label-text-alt">Choose the specific variant (size, colour, etc.)</span>
       </label>
     </div>
 
-    <div class="form-control">
-      <%= form.label :variant_params, "Variant Parameters (JSON)", class: "label" %>
-      <%= form.text_area :variant_params, value: redirect.variant_params.to_json, class: "textarea textarea-bordered w-full", rows: 3, placeholder: '{"size": "12\"", "colour": "Kraft"}' %>
-      <label class="label">
-        <span class="label-text-alt">JSON object with size, colour, etc.</span>
-      </label>
-    </div>
+    <%= form.hidden_field :target_slug, data: { redirect_form_target: "targetSlug" } %>
+    <%= form.hidden_field :variant_params, value: redirect.variant_params.to_json, data: { redirect_form_target: "variantParams" } %>
 
     <div class="form-control">
       <label class="label cursor-pointer justify-start gap-2">

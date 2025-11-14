@@ -55,6 +55,7 @@ Rails.application.routes.draw do
       end
       member do
         get :new_variant
+        get :variants
         patch :move_higher
         patch :move_lower
         delete :product_photo, to: "products#destroy_product_photo"

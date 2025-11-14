@@ -1,6 +1,6 @@
 module Admin
   class ProductsController < ApplicationController
-    before_action :set_product, only: %i[ show edit update destroy new_variant destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids ]
+    before_action :set_product, only: %i[ show edit update destroy new_variant destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids variants ]
 
     # GET /products
     def index
@@ -191,6 +191,28 @@ module Admin
       end
 
       redirect_to edit_admin_product_path(@product), notice: "Updated compatible lids"
+    end
+
+    # GET /admin/products/:id/variants.json
+    def variants
+      respond_to do |format|
+        format.json do
+          render json: {
+            product: {
+              id: @product.id,
+              name: @product.name,
+              slug: @product.slug
+            },
+            variants: @product.active_variants.map do |variant|
+              {
+                id: variant.id,
+                name: variant.name,
+                option_values: variant.option_values
+              }
+            end
+          }
+        end
+      end
     end
 
     private
