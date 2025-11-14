@@ -83,10 +83,15 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
   def toggle
     if @redirect.active?
       @redirect.deactivate!
-      redirect_to admin_legacy_redirects_url, notice: "Redirect deactivated"
+      message = "Redirect deactivated"
     else
       @redirect.activate!
-      redirect_to admin_legacy_redirects_url, notice: "Redirect activated"
+      message = "Redirect activated"
+    end
+
+    respond_to do |format|
+      format.html { redirect_to admin_legacy_redirects_url, notice: message }
+      format.turbo_stream { flash.now[:notice] = message }
     end
   end
 

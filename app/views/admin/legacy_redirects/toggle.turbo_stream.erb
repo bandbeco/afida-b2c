@@ -1,0 +1,36 @@
+<%= turbo_stream.replace "redirect_#{@redirect.id}" do %>
+  <tr id="redirect_<%= @redirect.id %>">
+    <td class="font-mono text-sm"><%= @redirect.legacy_path %></td>
+    <td class="font-mono text-sm"><%= @redirect.target_slug %></td>
+    <td class="font-mono text-xs"><%= @redirect.variant_params.to_json %></td>
+    <td><%= @redirect.hit_count %></td>
+    <td>
+      <%= form_with model: @redirect, url: toggle_admin_legacy_redirect_path(@redirect), method: :patch, data: { turbo_frame: "_top" } do |f| %>
+        <label class="label cursor-pointer justify-start gap-2">
+          <input
+            type="checkbox"
+            class="toggle toggle-success"
+            <%= "checked" if @redirect.active? %>
+            onchange="this.form.requestSubmit()"
+          />
+          <span class="label-text text-xs">
+            <%= @redirect.active? ? "Active" : "Inactive" %>
+          </span>
+        </label>
+      <% end %>
+    </td>
+    <td>
+      <div class="flex gap-1">
+        <%= link_to "View", admin_legacy_redirect_path(@redirect), class: "btn btn-xs btn-ghost" %>
+        <%= link_to "Edit", edit_admin_legacy_redirect_path(@redirect), class: "btn btn-xs btn-ghost" %>
+        <%= button_to "Delete", admin_legacy_redirect_path(@redirect), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-xs btn-error" %>
+      </div>
+    </td>
+  </tr>
+<% end %>
+
+<%= turbo_stream.prepend "flash" do %>
+  <div class="alert alert-success" data-turbo-temporary>
+    <%= flash[:notice] %>
+  </div>
+<% end %>
