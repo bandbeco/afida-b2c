@@ -2,17 +2,17 @@
 
 require "test_helper"
 
-class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
+class UrlRedirectMiddlewareTest < ActiveSupport::TestCase
   def setup
     @app = ->(env) { [ 200, {}, [ "App" ] ] }
-    @middleware = LegacyRedirectMiddleware.new(@app)
+    @middleware = UrlRedirectMiddleware.new(@app)
     @product = Product.first
   end
 
   # T016: Test redirect match found (active)
   test "should redirect when active redirect found" do
-    redirect = LegacyRedirect.create!(
-      legacy_path: "/product/test-active",
+    redirect = UrlRedirect.create!(
+      source_path: "/product/test-active",
       target_slug: @product.slug,
       variant_params: { size: "12\"" },
       active: true
@@ -37,8 +37,8 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
 
   # T018: Test match found (inactive)
   test "should pass through when redirect is inactive" do
-    LegacyRedirect.create!(
-      legacy_path: "/product/test-inactive",
+    UrlRedirect.create!(
+      source_path: "/product/test-inactive",
       target_slug: @product.slug,
       active: false
     )
@@ -52,8 +52,8 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
 
   # T019: Test case-insensitive match
   test "should match legacy path case-insensitively" do
-    LegacyRedirect.create!(
-      legacy_path: "/product/test-case",
+    UrlRedirect.create!(
+      source_path: "/product/test-case",
       target_slug: @product.slug,
       active: true
     )
@@ -67,8 +67,8 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
 
   # T020: Test trailing slash handling
   test "should handle trailing slash in legacy path" do
-    LegacyRedirect.create!(
-      legacy_path: "/product/test-slash",
+    UrlRedirect.create!(
+      source_path: "/product/test-slash",
       target_slug: @product.slug,
       active: true
     )
@@ -82,8 +82,8 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
 
   # T021: Test query parameter preservation
   test "should preserve existing query parameters" do
-    LegacyRedirect.create!(
-      legacy_path: "/product/test-query",
+    UrlRedirect.create!(
+      source_path: "/product/test-query",
       target_slug: @product.slug,
       variant_params: { size: "12\"" },
       active: true
@@ -99,8 +99,8 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
 
   # T022: Test non-GET request pass-through
   test "should pass through non-GET requests" do
-    LegacyRedirect.create!(
-      legacy_path: "/product/test-post",
+    UrlRedirect.create!(
+      source_path: "/product/test-post",
       target_slug: @product.slug,
       active: true
     )
@@ -123,8 +123,8 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
 
   # T024: Test hit counter increment
   test "should increment hit_count when redirect occurs" do
-    redirect = LegacyRedirect.create!(
-      legacy_path: "/product/test-counter",
+    redirect = UrlRedirect.create!(
+      source_path: "/product/test-counter",
       target_slug: @product.slug,
       active: true,
       hit_count: 5
@@ -153,7 +153,7 @@ class LegacyRedirectMiddlewareTest < ActiveSupport::TestCase
     # to avoid requiring additional mocking dependencies
 
     # Read middleware source to verify rescue block exists
-    middleware_source = File.read(Rails.root.join("app/middleware/legacy_redirect_middleware.rb"))
+    middleware_source = File.read(Rails.root.join("app/middleware/url_redirect_middleware.rb"))
     assert_includes middleware_source, "rescue ActiveRecord::ConnectionNotEstablished"
     assert_includes middleware_source, "@app.call(env)"  # Fail open behavior
   end

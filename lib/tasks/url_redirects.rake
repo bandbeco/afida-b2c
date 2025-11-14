@@ -1,27 +1,27 @@
 # frozen_string_literal: true
 
-namespace :legacy_redirects do
-  desc "Import legacy redirects from CSV file (config/legacy_redirects.csv)"
+namespace :url_redirects do
+  desc "Import URL redirects from CSV file (config/url_redirects.csv)"
   task import: :environment do
-    puts "Loading legacy redirects seed file..."
-    load Rails.root.join("db/seeds/legacy_redirects.rb")
+    puts "Loading URL redirects seed file..."
+    load Rails.root.join("db/seeds/url_redirects.rb")
   end
 
-  desc "Validate all legacy redirects (checks model validations and variant matches)"
+  desc "Validate all URL redirects (checks model validations and variant matches)"
   task validate: :environment do
-    puts "Validating legacy redirects..."
+    puts "Validating URL redirects..."
 
-    total = LegacyRedirect.count
-    active = LegacyRedirect.active.count
-    inactive = LegacyRedirect.inactive.count
+    total = UrlRedirect.count
+    active = UrlRedirect.active.count
+    inactive = UrlRedirect.inactive.count
     invalid = 0
     variant_mismatches = 0
 
-    LegacyRedirect.find_each do |redirect|
+    UrlRedirect.find_each do |redirect|
       # Check model validations
       unless redirect.valid?
         invalid += 1
-        puts "  ❌ Invalid: #{redirect.legacy_path} - #{redirect.errors.full_messages.join(', ')}"
+        puts "  ❌ Invalid: #{redirect.source_path} - #{redirect.errors.full_messages.join(', ')}"
       end
 
       # Check if variant params match actual product variants
@@ -36,7 +36,7 @@ namespace :legacy_redirects do
 
           if matching_variants.empty?
             variant_mismatches += 1
-            puts "  ⚠️  Variant mismatch: #{redirect.legacy_path}"
+            puts "  ⚠️  Variant mismatch: #{redirect.source_path}"
             puts "      Target: #{redirect.target_slug} with #{redirect.variant_params.inspect}"
             puts "      No matching variant found in product"
           end
@@ -59,29 +59,29 @@ namespace :legacy_redirects do
     end
   end
 
-  desc "Generate usage report for legacy redirects"
+  desc "Generate usage report for URL redirects"
   task report: :environment do
     puts "Legacy Redirects Usage Report"
     puts "=" * 80
 
-    total_hits = LegacyRedirect.sum(:hit_count)
+    total_hits = UrlRedirect.sum(:hit_count)
 
     puts "\nOverall Statistics:"
-    puts "  Total Redirects: #{LegacyRedirect.count}"
-    puts "  Active: #{LegacyRedirect.active.count}"
-    puts "  Inactive: #{LegacyRedirect.inactive.count}"
+    puts "  Total Redirects: #{UrlRedirect.count}"
+    puts "  Active: #{UrlRedirect.active.count}"
+    puts "  Inactive: #{UrlRedirect.inactive.count}"
     puts "  Total Hits: #{total_hits}"
 
     puts "\nTop 10 Most Used Redirects:"
-    LegacyRedirect.active.most_used.limit(10).each_with_index do |redirect, index|
-      puts "  #{index + 1}. #{redirect.legacy_path} → #{redirect.target_slug} (#{redirect.hit_count} hits)"
+    UrlRedirect.active.most_used.limit(10).each_with_index do |redirect, index|
+      puts "  #{index + 1}. #{redirect.source_path} → #{redirect.target_slug} (#{redirect.hit_count} hits)"
     end
 
-    unused = LegacyRedirect.active.where(hit_count: 0)
+    unused = UrlRedirect.active.where(hit_count: 0)
     if unused.any?
       puts "\nUnused Active Redirects (#{unused.count}):"
       unused.each do |redirect|
-        puts "  - #{redirect.legacy_path} → #{redirect.target_slug}"
+        puts "  - #{redirect.source_path} → #{redirect.target_slug}"
       end
     end
 
@@ -90,12 +90,12 @@ namespace :legacy_redirects do
 
   desc "Report unused redirects (hit_count = 0)"
   task report_unused: :environment do
-    unused = LegacyRedirect.active.where(hit_count: 0)
+    unused = UrlRedirect.active.where(hit_count: 0)
 
     puts "Unused Active Redirects: #{unused.count}"
 
     unused.each do |redirect|
-      puts "  #{redirect.legacy_path} → #{redirect.target_slug} (created: #{redirect.created_at.to_date})"
+      puts "  #{redirect.source_path} → #{redirect.target_slug} (created: #{redirect.created_at.to_date})"
     end
 
     if unused.any?
@@ -110,15 +110,15 @@ namespace :legacy_redirects do
     puts "Checking for orphaned redirects..."
 
     orphaned = []
-    LegacyRedirect.active.find_each do |redirect|
+    UrlRedirect.active.find_each do |redirect|
       unless Product.exists?(slug: redirect.target_slug)
         orphaned << redirect
-        puts "  ❌ Orphaned: #{redirect.legacy_path} → #{redirect.target_slug} (product not found)"
+        puts "  ❌ Orphaned: #{redirect.source_path} → #{redirect.target_slug} (product not found)"
       end
     end
 
     puts "\nSummary:"
-    puts "  Total Active: #{LegacyRedirect.active.count}"
+    puts "  Total Active: #{UrlRedirect.active.count}"
     puts "  Orphaned: #{orphaned.count}"
 
     if orphaned.any?
@@ -133,7 +133,7 @@ namespace :legacy_redirects do
   task :export, [ :file_path ] => :environment do |_t, args|
     require "csv"
 
-    file_path = args[:file_path] || Rails.root.join("tmp/legacy_redirects_export.csv")
+    file_path = args[:file_path] || Rails.root.join("tmp/url_redirects_export.csv")
 
     puts "Exporting redirects to #{file_path}..."
 
@@ -142,18 +142,18 @@ namespace :legacy_redirects do
       csv << [ "source", "target" ]
 
       # Write redirects (active only by default)
-      LegacyRedirect.active.order(:legacy_path).each do |redirect|
+      UrlRedirect.active.order(:source_path).each do |redirect|
         target_url = "/products/#{redirect.target_slug}"
         if redirect.variant_params.present?
           query_params = redirect.variant_params.to_query
           target_url += "?#{query_params}"
         end
 
-        csv << [ redirect.legacy_path, target_url ]
+        csv << [ redirect.source_path, target_url ]
       end
     end
 
-    puts "✅ Exported #{LegacyRedirect.active.count} redirects to #{file_path}"
+    puts "✅ Exported #{UrlRedirect.active.count} redirects to #{file_path}"
   end
 
   desc "List all redirects with product and variant details"
@@ -161,10 +161,10 @@ namespace :legacy_redirects do
     puts "Legacy Redirects List"
     puts "=" * 100
 
-    LegacyRedirect.active.order(:legacy_path).each do |redirect|
+    UrlRedirect.active.order(:source_path).each do |redirect|
       product = Product.find_by(slug: redirect.target_slug)
 
-      puts "\n#{redirect.legacy_path}"
+      puts "\n#{redirect.source_path}"
       puts "  → /products/#{redirect.target_slug}"
 
       if product
@@ -194,6 +194,6 @@ namespace :legacy_redirects do
     end
 
     puts "\n" + "=" * 100
-    puts "Total: #{LegacyRedirect.active.count} active redirects"
+    puts "Total: #{UrlRedirect.active.count} active redirects"
   end
 end

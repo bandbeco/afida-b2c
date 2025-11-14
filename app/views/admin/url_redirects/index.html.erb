@@ -3,13 +3,13 @@
 
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold">URL Redirects</h1>
-    <%= link_to "New Redirect", new_admin_legacy_redirect_path, class: "btn btn-primary" %>
+    <%= link_to "New Redirect", new_admin_url_redirect_path, class: "btn btn-primary" %>
   </div>
 
   <div class="mb-4 flex gap-2">
-    <%= link_to "All", admin_legacy_redirects_path, class: "btn btn-sm #{params[:status].nil? || params[:status] == 'all' ? 'btn-active' : ''}" %>
-    <%= link_to "Active", admin_legacy_redirects_path(status: 'active'), class: "btn btn-sm #{params[:status] == 'active' ? 'btn-active' : ''}" %>
-    <%= link_to "Inactive", admin_legacy_redirects_path(status: 'inactive'), class: "btn btn-sm #{params[:status] == 'inactive' ? 'btn-active' : ''}" %>
+    <%= link_to "All", admin_url_redirects_path, class: "btn btn-sm #{params[:status].nil? || params[:status] == 'all' ? 'btn-active' : ''}" %>
+    <%= link_to "Active", admin_url_redirects_path(status: 'active'), class: "btn btn-sm #{params[:status] == 'active' ? 'btn-active' : ''}" %>
+    <%= link_to "Inactive", admin_url_redirects_path(status: 'inactive'), class: "btn btn-sm #{params[:status] == 'inactive' ? 'btn-active' : ''}" %>
   </div>
 
   <div class="overflow-x-auto">
@@ -27,7 +27,7 @@
       <tbody>
         <% @redirects.each do |redirect| %>
           <tr id="redirect_<%= redirect.id %>">
-            <td class="font-mono text-sm"><%= redirect.legacy_path %></td>
+            <td class="font-mono text-sm"><%= redirect.source_path %></td>
             <td>
               <% product = @products_by_slug[redirect.target_slug] %>
               <%= product&.name || redirect.target_slug %>
@@ -54,7 +54,7 @@
             </td>
             <td><%= redirect.hit_count %></td>
             <td>
-              <%= form_with model: redirect, url: toggle_admin_legacy_redirect_path(redirect), method: :patch, data: { turbo_frame: "_top" } do |f| %>
+              <%= form_with model: redirect, url: toggle_admin_url_redirect_path(redirect), method: :patch, data: { turbo_frame: "_top" } do |f| %>
                 <label class="label cursor-pointer justify-start gap-2">
                   <input
                     type="checkbox"
@@ -70,9 +70,9 @@
             </td>
             <td>
               <div class="flex gap-1">
-                <%= link_to "View", admin_legacy_redirect_path(redirect), class: "btn btn-xs btn-ghost" %>
-                <%= link_to "Edit", edit_admin_legacy_redirect_path(redirect), class: "btn btn-xs btn-ghost" %>
-                <%= button_to "Delete", admin_legacy_redirect_path(redirect), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-xs btn-error" %>
+                <%= link_to "View", admin_url_redirect_path(redirect), class: "btn btn-xs btn-ghost" %>
+                <%= link_to "Edit", edit_admin_url_redirect_path(redirect), class: "btn btn-xs btn-ghost" %>
+                <%= button_to "Delete", admin_url_redirect_path(redirect), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-xs btn-error" %>
               </div>
             </td>
           </tr>

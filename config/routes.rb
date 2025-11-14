@@ -88,7 +88,7 @@ Rails.application.routes.draw do
         post :create_instance_product
       end
     end
-    resources :legacy_redirects do
+    resources :url_redirects do
       member do
         patch :toggle
         get :test

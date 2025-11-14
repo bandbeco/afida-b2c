@@ -12,8 +12,8 @@
 
   <div class="space-y-4">
     <div class="form-control">
-      <%= form.label :legacy_path, "Legacy URL Path", class: "label" %>
-      <%= form.text_field :legacy_path, class: "input input-bordered w-full", placeholder: "/product/old-url-pattern" %>
+      <%= form.label :source_path, "Legacy URL Path", class: "label" %>
+      <%= form.text_field :source_path, class: "input input-bordered w-full", placeholder: "/product/old-url-pattern" %>
       <label class="label">
         <span class="label-text-alt">The old URL path that should redirect (must start with /product/)</span>
       </label>
@@ -74,7 +74,7 @@
 
     <div class="flex gap-2">
       <%= form.submit class: "btn btn-primary" %>
-      <%= link_to "Cancel", admin_legacy_redirects_path, class: "btn btn-ghost" %>
+      <%= link_to "Cancel", admin_url_redirects_path, class: "btn btn-ghost" %>
     </div>
   </div>
 <% end %>

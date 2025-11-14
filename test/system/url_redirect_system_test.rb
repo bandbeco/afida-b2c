@@ -2,13 +2,13 @@
 
 require "application_system_test_case"
 
-class LegacyRedirectSystemTest < ApplicationSystemTestCase
+class UrlRedirectSystemTest < ApplicationSystemTestCase
   # T040: Browser redirect test
   test "should redirect user in browser from legacy URL to new product page" do
     product = Product.first
 
-    LegacyRedirect.create!(
-      legacy_path: "/product/system-test-redirect",
+    UrlRedirect.create!(
+      source_path: "/product/system-test-redirect",
       target_slug: product.slug,
       variant_params: { size: "12\"" },
       active: true

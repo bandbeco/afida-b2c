@@ -1,11 +1,11 @@
 # frozen_string_literal: true
 
-class Admin::LegacyRedirectsController < Admin::ApplicationController
+class Admin::UrlRedirectsController < Admin::ApplicationController
   before_action :set_redirect, only: [ :show, :edit, :update, :destroy, :toggle, :test ]
 
   # T061: Index action
   def index
-    @redirects = LegacyRedirect.all
+    @redirects = UrlRedirect.all
 
     # Filter by status
     @redirects = case params[:status]
@@ -22,7 +22,7 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
     when "recent"
       @redirects.recently_updated
     when "alphabetical"
-      @redirects.order(:legacy_path)
+      @redirects.order(:source_path)
     when "hits"
       @redirects.most_used
     else  # Default: by product and variant
@@ -65,18 +65,18 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
 
   # T063: New action
   def new
-    @redirect = LegacyRedirect.new
+    @redirect = UrlRedirect.new
   end
 
   # T064: Create action
   def create
-    @redirect = LegacyRedirect.new(redirect_params)
+    @redirect = UrlRedirect.new(redirect_params)
 
     if @json_parse_error
       @redirect.errors.add(:variant_params, "invalid JSON format: #{@json_parse_error}")
       render :new, status: :unprocessable_entity
     elsif @redirect.save
-      redirect_to admin_legacy_redirect_url(@redirect), notice: "Redirect created successfully"
+      redirect_to admin_url_redirect_url(@redirect), notice: "Redirect created successfully"
     else
       render :new, status: :unprocessable_entity
     end
@@ -95,7 +95,7 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
       @redirect.errors.add(:variant_params, "invalid JSON format: #{@json_parse_error}")
       render :edit, status: :unprocessable_entity
     elsif @redirect.update(params_hash)
-      redirect_to admin_legacy_redirect_url(@redirect), notice: "Redirect updated successfully"
+      redirect_to admin_url_redirect_url(@redirect), notice: "Redirect updated successfully"
     else
       render :edit, status: :unprocessable_entity
     end
@@ -104,7 +104,7 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
   # T067: Destroy action
   def destroy
     @redirect.destroy!
-    redirect_to admin_legacy_redirects_url, notice: "Redirect deleted successfully"
+    redirect_to admin_url_redirects_url, notice: "Redirect deleted successfully"
   end
 
   # T068: Toggle action
@@ -118,14 +118,14 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
     end
 
     respond_to do |format|
-      format.html { redirect_to admin_legacy_redirects_url, notice: message }
+      format.html { redirect_to admin_url_redirects_url, notice: message }
       format.turbo_stream { flash.now[:notice] = message }
     end
   end
 
   # T069: Test action
   def test
-    @source_url = @redirect.legacy_path
+    @source_url = @redirect.source_path
     @target_url = @redirect.target_url
     @http_status = 301
     @variant_match_status = check_variant_match
@@ -134,11 +134,11 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
   private
 
   def set_redirect
-    @redirect = LegacyRedirect.find(params[:id])
+    @redirect = UrlRedirect.find(params[:id])
   end
 
   def redirect_params
-    permitted = params.require(:legacy_redirect).permit(:legacy_path, :target_slug, :active, :variant_params)
+    permitted = params.require(:url_redirect).permit(:source_path, :target_slug, :active, :variant_params)
 
     # Parse variant_params if it's a JSON string
     if permitted[:variant_params].is_a?(String)
