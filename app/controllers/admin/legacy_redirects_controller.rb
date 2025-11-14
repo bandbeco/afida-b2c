@@ -29,9 +29,9 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
       # Load to array first
       redirects_array = @redirects.to_a
 
-      # Preload products for sorting
+      # Preload products with variants for sorting
       product_slugs = redirects_array.map(&:target_slug).compact.uniq
-      products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
+      products_by_slug = Product.includes(:active_variants).where(slug: product_slugs).index_by(&:slug)
 
       # Sort by product name, then by variant params as string
       redirects_array.sort_by do |redirect|
@@ -54,9 +54,9 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
     # Convert to array if not already
     @redirects = @redirects.to_a unless @redirects.is_a?(Array)
 
-    # Preload products to avoid N+1 queries in view
+    # Preload products with variants to avoid N+1 queries in view
     product_slugs = @redirects.map(&:target_slug).compact.uniq
-    @products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
+    @products_by_slug = Product.includes(:active_variants).where(slug: product_slugs).index_by(&:slug)
   end
 
   # T062: Show action
