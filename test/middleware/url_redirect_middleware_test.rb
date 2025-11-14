@@ -51,7 +51,7 @@ class UrlRedirectMiddlewareTest < ActiveSupport::TestCase
   end
 
   # T019: Test case-insensitive match
-  test "should match legacy path case-insensitively" do
+  test "should match source path case-insensitively" do
     UrlRedirect.create!(
       source_path: "/product/test-case",
       target_slug: @product.slug,
@@ -66,7 +66,7 @@ class UrlRedirectMiddlewareTest < ActiveSupport::TestCase
   end
 
   # T020: Test trailing slash handling
-  test "should handle trailing slash in legacy path" do
+  test "should handle trailing slash in source path" do
     UrlRedirect.create!(
       source_path: "/product/test-slash",
       target_slug: @product.slug,
@@ -137,7 +137,7 @@ class UrlRedirectMiddlewareTest < ActiveSupport::TestCase
   end
 
   # T044: Test unmapped URL pass-through (User Story 2)
-  test "should pass through unmapped legacy URLs to routing" do
+  test "should pass through unmapped source URLs to routing" do
     # No redirect exists for this path
     env = Rack::MockRequest.env_for("/product/unmapped-url")
     status, _headers, body = @middleware.call(env)

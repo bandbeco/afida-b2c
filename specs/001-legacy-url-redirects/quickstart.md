@@ -140,7 +140,7 @@ rails runner "
 "
 ```
 
-### Find Redirect by Legacy Path
+### Find Redirect by Source Path
 
 ```bash
 rails runner "
