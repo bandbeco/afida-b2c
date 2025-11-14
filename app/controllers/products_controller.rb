@@ -65,8 +65,8 @@ class ProductsController < ApplicationController
       # Check if this is an explicit selection (URL params present)
       @has_url_selection = params[:size].present? || params[:colour].present? || params[:variant_id].present?
 
-      # Prepare data for option selectors
-      @product_options = @product.options.order(:position)
+      # Prepare data for option selectors (exclude material - not customer-selectable)
+      @product_options = @product.options.where.not(name: "material").order(:position)
       @variants_json = @product.active_variants.map do |v|
         {
           id: v.id,
