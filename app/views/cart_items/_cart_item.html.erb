@@ -2,8 +2,8 @@
   <%
     # Build URL parameters from variant option_values
     url_params = {}
-    url_params[:size] = cart_item.product_variant.option_values['Size'] if cart_item.product_variant.option_values['Size'].present?
-    url_params[:colour] = cart_item.product_variant.option_values['Colour'] if cart_item.product_variant.option_values['Colour'].present?
+    url_params[:size] = cart_item.product_variant.option_values['size'] if cart_item.product_variant.option_values['size'].present?
+    url_params[:colour] = cart_item.product_variant.option_values['colour'] if cart_item.product_variant.option_values['colour'].present?
   %>
   <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center p-4 border-b hover:bg-gray-50">
     <div class="col-span-full md:col-span-2 flex items-center space-x-4">

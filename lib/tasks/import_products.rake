@@ -109,11 +109,27 @@ namespace :products do
           option_types << :colour
         end
 
-        # Associate options with product
+        # Associate options with product and create option values
         option_types.each do |option_type|
           option = ProductOption.find_by(name: option_type.to_s)
           unless product.options.include?(option)
             product.option_assignments.create!(product_option: option)
+          end
+
+          # Collect unique label/value pairs for this option from all rows
+          label_col = "#{option_type}_label"
+          value_col = "#{option_type}_value"
+
+          unique_values = rows.map { |r| [ r[label_col], r[value_col] ] }
+                              .uniq
+                              .reject { |(label, value)| label.blank? || value.blank? }
+
+          # Create or update ProductOptionValue records
+          unique_values.each_with_index do |(label, value), idx|
+            option_value = option.values.find_or_initialize_by(value: value)
+            option_value.label = label
+            option_value.position = idx + 1 unless option_value.persisted?
+            option_value.save!
           end
         end
 
