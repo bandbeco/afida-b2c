@@ -12,7 +12,11 @@ module BrandedProducts
       return render json: { lids: [] } if cup_size.blank?
 
       # Get compatible lid products (matches material type via join table)
+      # Eager load variants and their attachments to prevent N+1 queries
       compatible_lid_products = compatible_lids_for_cup_product(cup_product)
+      compatible_lid_products = Product.where(id: compatible_lid_products.pluck(:id))
+                                       .includes(active_variants: :product_photo_attachment,
+                                                product_photo_attachment: :blob)
 
       # For each compatible lid product, find variants matching the cup size
       lid_variants_data = compatible_lid_products.flat_map do |lid_product|
