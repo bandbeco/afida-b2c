@@ -4,7 +4,7 @@ class ShopPageTest < ApplicationSystemTestCase
   test "browsing all products" do
     visit shop_path
 
-    assert_selector "h1", text: "Shop All Products"
+    assert_selector "h1", text: "Shop all products"
     assert_selector ".product-card", minimum: 1
   end
 
@@ -18,8 +18,8 @@ class ShopPageTest < ApplicationSystemTestCase
     # Should show products from that category
     assert_selector ".product-card", minimum: 0
 
-    # URL should reflect filter with slugs
-    assert_current_path(/categories/)
+    # URL should reflect filter with categories param in shop page
+    assert_current_path(/shop.*categories/)
   end
 
   test "searching products" do

@@ -415,4 +415,18 @@ class ProductTest < ActiveSupport::TestCase
     assert results.index(high_price) < results.index(mid_price), "High price product should come before mid price"
     assert results.index(mid_price) < results.index(low_price), "Mid price product should come before low price"
   end
+
+  test "sorted by price places products without variants at end" do
+    # Create product without any variants
+    no_variants = Product.create!(name: "No Variants Product", sku: "NOVARS", category: categories(:one))
+    with_variants = Product.create!(name: "With Variants Product", sku: "WITHVARS", category: categories(:one))
+    ProductVariant.create!(product: with_variants, name: "Standard", sku: "WITHVARS-1", price: 10.00, stock_quantity: 100, active: true)
+
+    results_asc = Product.sorted("price_asc").to_a
+    results_desc = Product.sorted("price_desc").to_a
+
+    # Products without variants should appear at end (NULLS LAST)
+    assert results_asc.index(with_variants) < results_asc.index(no_variants), "Product with variants should come before product without variants (asc)"
+    assert results_desc.index(with_variants) < results_desc.index(no_variants), "Product with variants should come before product without variants (desc)"
+  end
 end

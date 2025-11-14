@@ -13,8 +13,8 @@
             <h2 class="font-semibold text-lg mb-3 pb-2 border-b">Product Types</h2>
 
             <% @categories.each do |category| %>
-              <label class="flex items-center gap-2 mb-2 cursor-pointer">
-                <%= check_box_tag 'categories[]', category.slug, (params[:categories] || []).include?(category.slug), class: "checkbox checkbox-primary", data: { action: "change->form#submit" } %>
+              <label for="category_<%= category.slug %>" class="flex items-center gap-2 mb-2 cursor-pointer">
+                <%= check_box_tag 'categories[]', category.slug, (params[:categories] || []).include?(category.slug), id: "category_#{category.slug}", class: "checkbox checkbox-primary", aria: { label: "Filter by #{category.name}" }, data: { action: "change->form#submit" } %>
                 <span><%= category.name %> (<%= category.products_count %>)</span>
               </label>
             <% end %>
@@ -38,19 +38,20 @@
         <div class="flex items-center gap-4 mb-8">
           <!-- Search Bar -->
           <div class="flex-grow">
-            <%= text_field_tag :q, params[:q], placeholder: "Search all products...", class: "input input-bordered w-full", data: { controller: "search", action: "input->search#debounce" } %>
+            <%= label_tag :q, "Search products", class: "sr-only" %>
+            <%= text_field_tag :q, params[:q], placeholder: "Search all products...", class: "input input-bordered w-full", aria: { label: "Search products by name, SKU, or colour" }, data: { controller: "search", action: "input->search#debounce" } %>
           </div>
 
           <!-- Sort Dropdown - Hidden on mobile -->
           <div class="hidden lg:flex items-center gap-2 flex-shrink-0">
-            <label for="sort" class="text-sm font-medium">Sort:</label>
+            <%= label_tag :sort, "Sort:", class: "text-sm font-medium" %>
             <%= select_tag :sort, options_for_select([
               ["Default", ""],
               ["Price: Low to High", "price_asc"],
               ["Price: High to Low", "price_desc"],
               ["Name: A-Z", "name_asc"],
               ["Name: Z-A", "name_desc"]
-            ], params[:sort]), class: "select select-bordered select-sm", data: { action: "change->form#submit" } %>
+            ], params[:sort]), class: "select select-bordered select-sm", aria: { label: "Sort products" }, data: { action: "change->form#submit" } %>
           </div>
         </div>
 

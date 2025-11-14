@@ -55,13 +55,15 @@ class Product < ApplicationRecord
     case sort_param
     when "price_asc"
       # Sort by minimum price (the "from" price displayed on cards)
+      # NULLS LAST: products without variants appear at end
       reorder(
-        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) ASC, products.name ASC")
+        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) ASC NULLS LAST, products.name ASC")
       )
     when "price_desc"
       # Sort by minimum price descending (the "from" price displayed on cards)
+      # NULLS LAST: products without variants appear at end
       reorder(
-        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) DESC, products.name ASC")
+        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) DESC NULLS LAST, products.name ASC")
       )
     when "name_asc"
       reorder(Arel.sql("LOWER(products.name) ASC"))

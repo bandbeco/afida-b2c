@@ -39,4 +39,18 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Verify products are present (specific order checking in system tests)
   end
+
+  test "shop page handles excessive page number gracefully" do
+    get shop_path, params: { page: 999999 }
+
+    assert_response :success
+    # Pagy overflow handling should redirect to last page, not crash
+  end
+
+  test "shop page handles invalid sort parameter safely" do
+    get shop_path, params: { sort: "invalid_sort" }
+
+    assert_response :success
+    # Should fall back to default sort, not crash
+  end
 end
