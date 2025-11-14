@@ -1,7 +1,7 @@
 source,target
 /product/14-360-x-360mm-pizza-box-kraft,/products/pizza-box?size=16in&colour=kraft
 /product/12-310-x-310mm-pizza-box-kraft,/products/pizza-box?size=12in&colour=kraft
-/product/10-255-x-255mm-pizza-box-kraft,/products/pizza-box?size=12in&colour=kraft
+/product/10-255-x-255mm-pizza-box-kraft,/products/pizza-box?size=10in&colour=kraft
 /product/9-240-x-240mm-pizza-box-kraft,/products/pizza-box?size=9in&colour=kraft
 /product/7-195-x-195mm-pizza-box-kraft,/products/pizza-box?size=7in&colour=kraft
 /product/8-fold-white-3ply-dinner-napkins-40cm-x-40cm,/products/dinner-napkins-8-fold-3-ply?size=8fold-3ply&colour=white
@@ -27,7 +27,7 @@ source,target
 /product/large-kraft-takeaway-bag-260x140x290mm-10x5-5x12,/products/kraft-flathandle-takeaway-bag?size=large&colour=kraft
 /product/12oz-20oz-compatible-rpet-flat-lid,/products/rpet-flat-lid?size=12-20oz-compatible&colour=clear
 /product/dome-lid-for-smoothie-cup-rpet-clear,/products/rpet-dome-lid?size=12-20oz-compatible&colour=clear
-/product/4-fold-2ply-dinner-napkins-40cm-x-40cm,/products/dinner-napkins-8-fold-3-ply?size=8fold-3ply&colour=black
+/product/4-fold-2ply-dinner-napkins-40cm-x-40cm,/products/dinner-napkins-4-fold-2-ply?size=40x40cm&colour=black
 /product/12oz-355ml-rpet-recyclable-cup,/products/rpet-recyclable-cup?size=12oz&colour=clear
 /product/8oz-237ml-rpet-recyclable-cup,/products/rpet-recyclable-cup?size=8oz&colour=clear
 /product/recyclable-pulp-fibre-2-cup-carrier-tray,/products/recyclable-pulp-fibre-cup-carrier-tray?size=2cup&colour=natural
@@ -50,7 +50,7 @@ source,target
 /product/12oz-340ml-single-wall-paper-hot-cup,/products/single-wall-paper-hot-cup?size=12oz&colour=white
 /product/8oz-227ml-single-wall-paper-hot-cup-white,/products/single-wall-paper-hot-cup?size=8oz&colour=white
 /product/4oz-114ml-single-wall-paper-hot-cup-white,/products/single-wall-paper-hot-cup?size=4oz&colour=white
-/product/4oz-114ml-single-wall-paper-hot-cup-black,/products/single-wall-paper-hot-cup?size=4oz&colour=white
+/product/4oz-114ml-single-wall-paper-hot-cup-black,/products/single-wall-paper-hot-cup?size=4oz&colour=black
 /product/6mm-x-200mm-bamboo-fibre-straws-black,/products/bio-fibre-straws?size=6x200mm&colour=black
 /product/6mm-x-150mm-bamboo-fibre-straws-black,/products/bio-fibre-straws?size=6x150mm&colour=black
 /product/6mm-x-200mm-bamboo-fibre-straws-natural,/products/bio-fibre-straws?size=6x200mm&colour=natural-beige

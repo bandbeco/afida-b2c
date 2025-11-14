@@ -20,11 +20,55 @@ puts "Reading: #{Rails.root.join('config/legacy_redirects.csv')}"
 # Track statistics
 created_count = 0
 updated_count = 0
+skipped_count = 0
 error_count = 0
 errors = []
+csv_row_count = 0
 
-# Parse CSV and create redirects
-CSV.foreach(Rails.root.join('config/legacy_redirects.csv'), headers: true) do |row|
+# Validate CSV file exists
+csv_path = Rails.root.join('config/legacy_redirects.csv')
+unless File.exist?(csv_path)
+  puts "❌ Error: CSV file not found at #{csv_path}"
+  exit 1
+end
+
+# Pre-flight validation: Check all target products exist
+puts "Validating target products..."
+invalid_products = []
+
+CSV.foreach(csv_path, headers: true) do |row|
+  begin
+    uri = URI.parse(row['target'])
+    target_slug = uri.path.sub('/products/', '')
+
+    unless Product.exists?(slug: target_slug)
+      invalid_products << { source: row['source'], target_slug: target_slug }
+    end
+  rescue StandardError => e
+    invalid_products << { source: row['source'], error: e.message }
+  end
+end
+
+if invalid_products.any?
+  puts "❌ Validation failed: #{invalid_products.count} invalid product(s) found"
+  invalid_products.each do |item|
+    if item[:error]
+      puts "  - #{item[:source]}: #{item[:error]}"
+    else
+      puts "  - #{item[:source]} → product '#{item[:target_slug]}' not found"
+    end
+  end
+  exit 1
+end
+
+puts "✅ All target products exist (#{CSV.read(csv_path, headers: true).count} redirects to validate)"
+puts ""
+
+# Wrap seeding in transaction for data integrity
+ActiveRecord::Base.transaction do
+  # Parse CSV and create redirects
+  CSV.foreach(csv_path, headers: true) do |row|
+    csv_row_count += 1
   source = row['source']
   target = row['target']
 
@@ -62,6 +106,7 @@ CSV.foreach(Rails.root.join('config/legacy_redirects.csv'), headers: true) do |r
       updated_count += 1
       print "u"
     else
+      skipped_count += 1
       print "-"
     end
 
@@ -70,16 +115,18 @@ CSV.foreach(Rails.root.join('config/legacy_redirects.csv'), headers: true) do |r
     errors << { legacy_path: legacy_path, error: e.message }
     print "E"
   end
+  end
 end
 
 puts "\n"
 puts "=" * 60
 puts "✅ Seed completed!"
 puts "=" * 60
-puts "Created:  #{created_count} new redirects"
-puts "Updated:  #{updated_count} existing redirects"
-puts "Skipped:  #{LegacyRedirect.count - created_count - updated_count} unchanged redirects"
-puts "Errors:   #{error_count}"
+puts "Processed: #{csv_row_count} rows from CSV"
+puts "Created:   #{created_count} new redirects"
+puts "Updated:   #{updated_count} existing redirects"
+puts "Skipped:   #{skipped_count} unchanged redirects"
+puts "Errors:    #{error_count}"
 puts ""
 puts "Database totals:"
 puts "  Active redirects:   #{LegacyRedirect.active.count}"
