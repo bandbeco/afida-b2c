@@ -1,4 +1,4 @@
-class Admin::BrandedOrdersController < ApplicationController
+class Admin::BrandedOrdersController < Admin::ApplicationController
   allow_unauthenticated_access
   skip_before_action :set_current_cart
   layout "admin"

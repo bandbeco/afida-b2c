@@ -19,9 +19,25 @@ export default class extends Controller {
       return
     }
 
+    // Show loading state
+    this.variantTarget.innerHTML = '<option value="">Loading variants...</option>'
+    this.variantTarget.disabled = true
+
     try {
       const response = await fetch(`/admin/products/${productSlug}/variants.json`)
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
       const data = await response.json()
+
+      if (!data.variants || data.variants.length === 0) {
+        this.variantTarget.innerHTML = '<option value="">No variants available</option>'
+        this.variantTarget.disabled = true
+        this.showError('This product has no active variants')
+        return
+      }
 
       this.variantTarget.innerHTML = '<option value="">Select variant...</option>'
 
@@ -45,7 +61,23 @@ export default class extends Controller {
       console.error('Failed to load variants:', error)
       this.variantTarget.innerHTML = '<option value="">Error loading variants</option>'
       this.variantTarget.disabled = true
+      this.showError(`Failed to load variants: ${error.message}`)
     }
+  }
+
+  showError(message) {
+    // Create or update alert banner
+    let alert = document.getElementById('variant-load-error')
+    if (!alert) {
+      alert = document.createElement('div')
+      alert.id = 'variant-load-error'
+      alert.className = 'alert alert-error mb-4'
+      this.element.insertBefore(alert, this.element.firstChild)
+    }
+    alert.textContent = message
+
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => alert.remove(), 5000)
   }
 
   variantSelected() {

@@ -1,4 +1,4 @@
-class Admin::ProductVariantsController < ApplicationController
+class Admin::ProductVariantsController < Admin::ApplicationController
   before_action :set_product_variant, only: [ :edit, :update, :destroy_product_photo, :destroy_lifestyle_photo ]
 
   def edit

@@ -2,18 +2,10 @@
   <tr id="redirect_<%= @redirect.id %>">
     <td class="font-mono text-sm"><%= @redirect.source_path %></td>
     <td>
-      <% product = Product.find_by(slug: @redirect.target_slug) %>
-      <%= product&.name || @redirect.target_slug %>
+      <%= @product&.name || @redirect.target_slug %>
     </td>
     <td>
-      <%
-        variant = nil
-        if product && @redirect.variant_params.present?
-          variant = product.active_variants.find do |v|
-            @redirect.variant_params.all? { |key, value| v.option_values[key] == value }
-          end
-        end
-      %>
+      <% variant = find_matching_variant(@product, @redirect.variant_params) %>
       <% if variant %>
         <div class="text-sm">
           <div><%= variant.name %></div>

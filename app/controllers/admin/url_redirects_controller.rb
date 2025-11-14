@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class Admin::UrlRedirectsController < Admin::ApplicationController
+  include Admin::UrlRedirectsHelper
+
   before_action :set_redirect, only: [ :show, :edit, :update, :destroy, :toggle, :test ]
 
   # T061: Index action
@@ -33,19 +35,14 @@ class Admin::UrlRedirectsController < Admin::ApplicationController
       product_slugs = redirects_array.map(&:target_slug).compact.uniq
       products_by_slug = Product.includes(:active_variants).where(slug: product_slugs).index_by(&:slug)
 
-      # Sort by product name, then by variant params as string
+      # Sort by product name, then by variant name
       redirects_array.sort_by do |redirect|
         product = products_by_slug[redirect.target_slug]
         product_name = product&.name || redirect.target_slug
 
         # Find matching variant for secondary sort
-        variant_name = ""
-        if product && redirect.variant_params.present?
-          variant = product.active_variants.find do |v|
-            redirect.variant_params.all? { |key, value| v.option_values[key] == value }
-          end
-          variant_name = variant&.name || ""
-        end
+        variant = find_matching_variant(product, redirect.variant_params)
+        variant_name = variant&.name || ""
 
         [ product_name, variant_name ]
       end
@@ -119,7 +116,11 @@ class Admin::UrlRedirectsController < Admin::ApplicationController
 
     respond_to do |format|
       format.html { redirect_to admin_url_redirects_url, notice: message }
-      format.turbo_stream { flash.now[:notice] = message }
+      format.turbo_stream do
+        # Preload product with variants for turbo stream rendering
+        @product = Product.includes(:active_variants).find_by(slug: @redirect.target_slug)
+        flash.now[:notice] = message
+      end
     end
   end
 
