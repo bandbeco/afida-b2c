@@ -87,7 +87,8 @@
       "WebSearch",
       "Bash(git restore:*)",
       "Bash(rails lid_compatibility:populate:*)",
-      "Bash(rails lid_compatibility:report:*)"
+      "Bash(rails lid_compatibility:report:*)",
+      "Bash(rails legacy_redirects:seed:*)"
     ],
     "deny": [],
     "ask": []

@@ -1,494 +1,363 @@
-# Quick Start Guide: Legacy URL Smart Redirects
+# Quickstart: Legacy URL Redirects
 
 **Feature**: 001-legacy-url-redirects
-**Date**: 2025-11-13
-**For**: Developers implementing this feature
+**Date**: 2025-11-14
 
 ## Overview
 
-This feature implements a database-driven redirect system that intercepts legacy product URLs from the old afida.com site and redirects them to the new product structure with extracted variant parameters.
+Quick reference guide for seeding and managing legacy URL redirects.
 
 ## Prerequisites
 
-- Rails 8.x application running
-- PostgreSQL 14+ database
-- Existing product catalog with slugs
-- Admin authentication already implemented
-- `results.json` file with 63 legacy URLs available
+- Rails 8 application running
+- PostgreSQL database accessible
+- CSV mapping file at `config/legacy_redirects.csv`
+- Product data already seeded in database
 
-## Quick Setup (5 Minutes)
-
-### 1. Create Migration
+## Step 1: Run Database Migration
 
 ```bash
-rails generate migration CreateLegacyRedirects
-```
+# Check if migration has been run
+rails db:migrate:status | grep legacy_redirects
 
-Edit the generated migration file (`db/migrate/XXXXXX_create_legacy_redirects.rb`):
-
-```ruby
-class CreateLegacyRedirects < ActiveRecord::Migration[8.0]
-  def up
-    create_table :legacy_redirects do |t|
-      t.string :legacy_path, limit: 500, null: false
-      t.string :target_slug, limit: 255, null: false
-      t.jsonb :variant_params, default: {}, null: false
-      t.integer :hit_count, default: 0, null: false
-      t.boolean :active, default: true, null: false
-      t.timestamps
-    end
-
-    add_index :legacy_redirects, 'LOWER(legacy_path)', unique: true, name: 'index_legacy_redirects_on_lower_legacy_path'
-    add_index :legacy_redirects, :active
-    add_index :legacy_redirects, :hit_count
-  end
-
-  def down
-    drop_table :legacy_redirects
-  end
-end
-```
-
-Run migration:
-
-```bash
+# Run migration if needed
 rails db:migrate
 ```
 
-### 2. Create Model
-
-Create `app/models/legacy_redirect.rb`:
-
-```ruby
-class LegacyRedirect < ApplicationRecord
-  # Validations
-  validates :legacy_path, presence: true, uniqueness: { case_sensitive: false }
-  validates :target_slug, presence: true
-  validates :legacy_path, format: { with: %r{\A/product/}, message: "must start with /product/" }
-  validate :target_slug_exists
-
-  # Scopes
-  scope :active, -> { where(active: true) }
-  scope :inactive, -> { where(active: false) }
-  scope :most_used, -> { order(hit_count: :desc) }
-  scope :recently_updated, -> { order(updated_at: :desc) }
-
-  # Class methods
-  def self.find_by_path(path)
-    where('LOWER(legacy_path) = ?', path.downcase).first
-  end
-
-  # Instance methods
-  def record_hit!
-    increment!(:hit_count)
-  end
-
-  def target_url
-    url = "/products/#{target_slug}"
-    if variant_params.present?
-      query_string = variant_params.to_query
-      url += "?#{query_string}"
-    end
-    url
-  end
-
-  def deactivate!
-    update!(active: false)
-  end
-
-  def activate!
-    update!(active: true)
-  end
-
-  private
-
-  def target_slug_exists
-    return if target_slug.blank?
-    unless Product.exists?(slug: target_slug)
-      errors.add(:target_slug, "product not found")
-    end
-  end
-end
+**Expected Output**:
+```
+== CreateLegacyRedirects: migrating =====================
+-- create_table(:legacy_redirects)
+-- add_index(:legacy_redirects, "LOWER(legacy_path)", {:unique=>true, :name=>"index_legacy_redirects_on_lower_legacy_path"})
+-- add_index(:legacy_redirects, :active)
+-- add_index(:legacy_redirects, :hit_count)
+== CreateLegacyRedirects: migrated ====================
 ```
 
-### 3. Create Middleware
-
-Create `app/middleware/legacy_redirect_middleware.rb`:
-
-```ruby
-class LegacyRedirectMiddleware
-  def initialize(app)
-    @app = app
-  end
-
-  def call(env)
-    request = Rack::Request.new(env)
-
-    return @app.call(env) unless %w[GET HEAD].include?(request.method)
-    return @app.call(env) unless request.path.start_with?('/product/')
-
-    normalized_path = request.path.chomp('/')
-    redirect = LegacyRedirect.active.find_by_path(normalized_path)
-
-    return @app.call(env) unless redirect
-
-    increment_hit_counter(redirect)
-    target_url = build_target_url(redirect, request)
-
-    [301, redirect_headers(target_url), ['Redirecting...']]
-  rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
-    Rails.logger.error("LegacyRedirectMiddleware: #{e.class} - #{e.message}")
-    @app.call(env)
-  end
-
-  private
-
-  def increment_hit_counter(redirect)
-    redirect.record_hit!
-  rescue => e
-    Rails.logger.warn("LegacyRedirectMiddleware: Hit counter update failed - #{e.message}")
-  end
-
-  def build_target_url(redirect, request)
-    url = "/products/#{redirect.target_slug}"
-
-    all_params = redirect.variant_params.dup || {}
-    if request.query_string.present?
-      existing_params = Rack::Utils.parse_query(request.query_string)
-      all_params.merge!(existing_params)
-    end
-
-    url += "?#{Rack::Utils.build_query(all_params)}" if all_params.present?
-    url
-  end
-
-  def redirect_headers(location)
-    {
-      'Location' => location,
-      'Content-Type' => 'text/html; charset=utf-8',
-      'Cache-Control' => 'public, max-age=86400'
-    }
-  end
-end
-```
-
-### 4. Register Middleware
-
-Edit `config/application.rb`:
-
-```ruby
-module Shop
-  class Application < Rails::Application
-    # ... existing config
-
-    # Register legacy redirect middleware
-    config.middleware.use LegacyRedirectMiddleware
-  end
-end
-```
-
-### 5. Add Admin Routes
-
-Edit `config/routes.rb`:
-
-```ruby
-namespace :admin do
-  # ... existing admin routes
-
-  resources :legacy_redirects do
-    member do
-      patch :toggle
-      get :test
-    end
-    collection do
-      post :import
-    end
-  end
-end
-```
-
-### 6. Test It!
-
-Create a test redirect in Rails console:
+## Step 2: Seed Redirect Data
 
 ```bash
-rails console
-```
-
-```ruby
-LegacyRedirect.create!(
-  legacy_path: '/product/test-redirect',
-  target_slug: 'pizza-box-kraft',
-  variant_params: { size: '12"' },
-  active: true
-)
-```
-
-Start the server and test:
-
-```bash
-rails server
-```
-
-Visit: `http://localhost:3000/product/test-redirect`
-
-You should be redirected to: `http://localhost:3000/products/pizza-box-kraft?size=12%22`
-
-## Next Steps (Complete Implementation)
-
-### 1. Implement Admin Controller
-
-See `contracts/admin_interface.md` for full specification.
-
-Create `app/controllers/admin/legacy_redirects_controller.rb` with standard CRUD operations.
-
-### 2. Implement Admin Views
-
-Create views in `app/views/admin/legacy_redirects/`:
-- `index.html.erb` - List all redirects
-- `new.html.erb` - Create new redirect
-- `edit.html.erb` - Edit existing redirect
-- `_form.html.erb` - Shared form partial
-
-### 3. Seed Initial Data
-
-Create `db/seeds/legacy_redirects.rb` with 63 mappings from `results.json`:
-
-```ruby
-legacy_redirects = [
-  {
-    legacy_path: '/product/12-310-x-310mm-pizza-box-kraft',
-    target_slug: 'pizza-box-kraft',
-    variant_params: { size: '12"' }
-  },
-  # ... 62 more mappings
-]
-
-legacy_redirects.each do |data|
-  LegacyRedirect.find_or_create_by!(legacy_path: data[:legacy_path]) do |redirect|
-    redirect.target_slug = data[:target_slug]
-    redirect.variant_params = data[:variant_params]
-    redirect.active = true
-  end
-end
-```
-
-Load seeds:
-
-```bash
+# Run all seeds (includes legacy redirects)
 rails db:seed
+
+# OR run just legacy redirects seed
+rails runner "load Rails.root.join('db/seeds/legacy_redirects.rb')"
 ```
 
-### 4. Write Tests
+**Expected Output**:
+```
+Seeding legacy redirects...
+✅ Seeded 64 legacy redirects
+   Active: 64
+   Total: 64
+```
 
-**Model Test** (`test/models/legacy_redirect_test.rb`):
-- Test validations
-- Test scopes
-- Test `find_by_path` method
-- Test `record_hit!` method
-- Test `target_url` method
-
-**Middleware Test** (`test/middleware/legacy_redirect_middleware_test.rb`):
-- Test redirect behavior
-- Test case insensitivity
-- Test query parameter preservation
-- Test error handling
-
-**Controller Test** (`test/controllers/admin/legacy_redirects_controller_test.rb`):
-- Test CRUD operations
-- Test authentication
-- Test validation errors
-
-**Integration Test** (`test/integration/legacy_redirect_flow_test.rb`):
-- Test end-to-end redirect flow
-- Test hit counter increment
-
-**System Test** (`test/system/legacy_redirect_system_test.rb`):
-- Test browser redirect
-- Test admin UI
-
-Run tests:
+## Step 3: Verify Seed Data
 
 ```bash
+# Check redirect count
+rails runner "puts LegacyRedirect.count"
+# Expected: 64
+
+# List first 5 redirects
+rails runner "puts LegacyRedirect.limit(5).pluck(:legacy_path, :target_slug)"
+
+# Verify all target products exist
+rails runner "
+  missing = LegacyRedirect.where.not(
+    target_slug: Product.pluck(:slug)
+  ).pluck(:target_slug).uniq
+  puts missing.any? ? 'ERROR: Missing products: ' + missing.join(', ') : '✅ All products exist'
+"
+```
+
+## Step 4: Run Tests
+
+```bash
+# Run all redirect-related tests
+rails test test/models/legacy_redirect_test.rb
+rails test test/middleware/legacy_redirect_middleware_test.rb
+rails test test/controllers/admin/legacy_redirects_controller_test.rb
+rails test test/integration/legacy_redirect_flow_test.rb
+rails test test/system/legacy_redirect_system_test.rb
+
+# Or run all tests at once
 rails test
 ```
 
-### 5. Verify with RuboCop and Brakeman
+**Expected**: All tests pass (green)
+
+## Step 5: Manual Testing in Browser
 
 ```bash
-rubocop
-brakeman
+# Start development server
+bin/dev
 ```
 
-## Common Tasks
+Visit these sample URLs in browser:
 
-### Add a New Redirect
+1. **Pizza box redirect**:
+   - Legacy URL: `http://localhost:3000/product/12-310-x-310mm-pizza-box-kraft`
+   - Expected: 301 redirect to `/products/pizza-box?size=12in&colour=kraft`
+   - Verify: Product page shows correct variant pre-selected
 
-**Via Rails Console**:
-```ruby
-LegacyRedirect.create!(
-  legacy_path: '/product/new-legacy-url',
-  target_slug: 'new-product-slug',
-  variant_params: { size: '8oz' },
-  active: true
-)
+2. **Hot cup redirect**:
+   - Legacy URL: `http://localhost:3000/product/8oz-227ml-single-wall-paper-hot-cup-white`
+   - Expected: 301 redirect to `/products/single-wall-paper-hot-cup?size=8oz&colour=white`
+
+3. **Straw redirect**:
+   - Legacy URL: `http://localhost:3000/product/6mm-x-200mm-bamboo-fibre-straws-black`
+   - Expected: 301 redirect to `/products/bio-fibre-straws?size=6x200mm&colour=black`
+
+**Verification Checklist**:
+- [ ] Browser shows 301 status in Network tab
+- [ ] URL changes to new product page
+- [ ] Correct variant is pre-selected (check size/colour dropdowns)
+- [ ] Add to cart works with selected variant
+- [ ] Hit count increments in database
+
+## Step 6: Check Hit Counts
+
+```bash
+# View redirects with hit counts
+rails runner "
+  LegacyRedirect.most_used.limit(10).each do |r|
+    puts '#{r.legacy_path} → #{r.target_slug} (#{r.hit_count} hits)'
+  end
+"
 ```
 
-**Via Admin UI**:
-1. Navigate to `/admin/legacy_redirects`
-2. Click "New Redirect"
-3. Fill in form and submit
+## Common Commands
 
-### View Redirect Statistics
+### View All Redirects
 
-**Via Rails Console**:
-```ruby
-# Most used redirects
-LegacyRedirect.active.most_used.limit(10)
-
-# Recently updated redirects
-LegacyRedirect.recently_updated.limit(10)
-
-# Total redirects
-LegacyRedirect.count
-LegacyRedirect.active.count
-
-# Total hits
-LegacyRedirect.sum(:hit_count)
+```bash
+rails runner "
+  LegacyRedirect.order(:legacy_path).each do |r|
+    params = r.variant_params.present? ? '?' + r.variant_params.to_query : ''
+    puts '#{r.legacy_path} → /products/#{r.target_slug}#{params}'
+  end
+"
 ```
 
-**Via Admin UI**:
-Navigate to `/admin/legacy_redirects` to see full list with statistics.
+### Find Redirect by Legacy Path
+
+```bash
+rails runner "
+  redirect = LegacyRedirect.find_by_path('/product/12-310-x-310mm-pizza-box-kraft')
+  puts redirect.inspect
+"
+```
 
 ### Deactivate a Redirect
 
-**Via Rails Console**:
-```ruby
-redirect = LegacyRedirect.find_by_path('/product/old-url')
-redirect.deactivate!
+```bash
+rails runner "
+  redirect = LegacyRedirect.find_by_path('/product/some-legacy-url')
+  redirect.deactivate!
+  puts 'Deactivated'
+"
 ```
 
-**Via Admin UI**:
-1. Navigate to `/admin/legacy_redirects`
-2. Click "Toggle" button next to redirect
+### Reactivate a Redirect
 
-### Bulk Import from JSON
-
-Create a JSON file (`legacy_redirects.json`):
-
-```json
-[
-  {
-    "legacy_path": "/product/item-1",
-    "target_slug": "product-1",
-    "variant_params": {"size": "12\""},
-    "active": true
-  }
-]
+```bash
+rails runner "
+  redirect = LegacyRedirect.find_by_path('/product/some-legacy-url')
+  redirect.activate!
+  puts 'Reactivated'
+"
 ```
 
-Import via Rails console:
+### Add a New Redirect Manually
 
-```ruby
-data = JSON.parse(File.read('legacy_redirects.json'))
-data.each do |item|
-  LegacyRedirect.find_or_create_by!(legacy_path: item['legacy_path']) do |redirect|
-    redirect.target_slug = item['target_slug']
-    redirect.variant_params = item['variant_params']
-    redirect.active = item['active']
-  end
-end
+```bash
+rails runner "
+  LegacyRedirect.create!(
+    legacy_path: '/product/new-legacy-url',
+    target_slug: 'target-product-slug',
+    variant_params: { size: '12oz', colour: 'white' },
+    active: true
+  )
+  puts 'Created'
+"
 ```
+
+## Rake Tasks
+
+### Import Redirects from CSV
+
+```bash
+rails legacy_redirects:import
+```
+
+### Export Redirects to CSV
+
+```bash
+rails legacy_redirects:export
+```
+
+### Validate All Redirects
+
+```bash
+rails legacy_redirects:validate
+```
+
+**Checks**:
+- All target products exist
+- No duplicate legacy paths
+- All redirects have valid format
+
+### Reset Hit Counts
+
+```bash
+rails legacy_redirects:reset_counts
+```
+
+## Admin Interface
+
+Access admin interface for managing redirects:
+
+```
+http://localhost:3000/admin/legacy_redirects
+```
+
+**Features**:
+- View all redirects with hit counts
+- Search/filter redirects
+- Create new redirects
+- Edit existing redirects
+- Activate/deactivate redirects
+- Delete redirects
+- Bulk import from CSV
 
 ## Troubleshooting
 
 ### Redirect Not Working
 
-1. **Check middleware is registered**:
+**Problem**: Legacy URL returns 404 instead of redirecting
+
+**Solutions**:
+1. Check redirect exists and is active:
+   ```bash
+   rails runner "puts LegacyRedirect.find_active_by_path('/product/your-url').inspect"
+   ```
+
+2. Verify middleware is registered:
+   ```bash
+   grep -r "LegacyRedirectMiddleware" config/
+   ```
+
+3. Check middleware order:
    ```bash
    rails middleware
-   ```
-   Look for `LegacyRedirectMiddleware` in the list
-
-2. **Check redirect exists and is active**:
-   ```ruby
-   LegacyRedirect.active.find_by_path('/product/your-url')
+   # Should see LegacyRedirectMiddleware before ActionDispatch::Routing
    ```
 
-3. **Check database index**:
+### Product Not Found Error
+
+**Problem**: Seed fails with "target_slug product not found"
+
+**Solutions**:
+1. Ensure products are seeded first:
    ```bash
-   rails dbconsole
-   \d legacy_redirects
+   rails db:seed  # Seeds products before redirects
    ```
-   Verify `index_legacy_redirects_on_lower_legacy_path` exists
 
-4. **Check logs**:
+2. Check which products are missing:
    ```bash
-   tail -f log/development.log
+   rails runner "
+     csv_slugs = CSV.read('config/legacy_redirects.csv', headers: true)
+       .map { |row| URI.parse(row['target']).path.sub('/products/', '') }.uniq
+     missing = csv_slugs - Product.pluck(:slug)
+     puts 'Missing products: ' + missing.join(', ')
+   "
    ```
-   Look for middleware errors
 
-### Performance Issues
+3. Add missing products or update CSV to use existing product slugs
 
-1. **Check database query time**:
-   ```ruby
-   require 'benchmark'
-   Benchmark.ms { LegacyRedirect.active.find_by_path('/product/test') }
-   ```
-   Should be <5ms
+### Variant Not Pre-Selected
 
-2. **Verify index is being used**:
-   ```sql
-   EXPLAIN ANALYZE SELECT * FROM legacy_redirects WHERE LOWER(legacy_path) = '/product/test';
-   ```
-   Should show "Index Scan" not "Seq Scan"
+**Problem**: Redirect works but variant not showing on product page
 
-3. **Monitor hit counter updates**:
-   If hit counter updates are slow, they won't block redirects (fire-and-forget pattern)
-
-### Admin UI Not Accessible
-
-1. **Check authentication**:
-   Verify you're logged in as admin
-
-2. **Check routes**:
+**Solutions**:
+1. Check variant parameter names match product variant options
+2. Verify JavaScript variant selector is working
+3. Check browser console for errors
+4. Ensure variant_params format is correct:
    ```bash
-   rails routes | grep legacy_redirects
+   rails runner "puts LegacyRedirect.find_by_path('/product/your-url').variant_params"
+   # Should output: {"size"=>"12oz", "colour"=>"white"}
    ```
 
-3. **Check controller exists**:
-   ```bash
-   ls app/controllers/admin/legacy_redirects_controller.rb
-   ```
+### Case Sensitivity Issues
+
+**Problem**: Redirect works for lowercase but not mixed case
+
+**Solution**: Index handles case-insensitivity automatically. Verify:
+```bash
+# Both should work:
+curl -I http://localhost:3000/product/pizza-box
+curl -I http://localhost:3000/product/Pizza-Box
+```
+
+## Performance Monitoring
+
+### Check Redirect Response Times
+
+```bash
+# In development log (log/development.log)
+grep "LegacyRedirectMiddleware" log/development.log | tail -20
+```
+
+### Benchmark a Redirect
+
+```ruby
+# In rails console
+require 'benchmark'
+
+Benchmark.ms do
+  100.times do
+    LegacyRedirect.find_active_by_path('/product/12-310-x-310mm-pizza-box-kraft')
+  end
+end
+# Expected: < 100ms for 100 lookups (< 1ms per lookup)
+```
 
 ## Deployment Checklist
 
-- [ ] Migration has been run on production database
-- [ ] Seed data has been loaded (63 legacy redirects)
-- [ ] Middleware is registered in `config/application.rb`
-- [ ] Admin controller and views implemented
+Before deploying to production:
+
 - [ ] All tests passing
-- [ ] RuboCop passing
-- [ ] Brakeman passing
-- [ ] Performance tested (<10ms overhead)
-- [ ] Admin authentication verified
-- [ ] Redirects manually tested in staging
-- [ ] Google Search Console notified of URL changes
-- [ ] Monitoring set up for redirect hit counts
+- [ ] Seed data validated (no missing products)
+- [ ] Sample redirects tested in staging
+- [ ] Admin authentication enabled
+- [ ] Database migration run in staging
+- [ ] Performance benchmarks acceptable (<500ms redirect time)
+- [ ] Rollback plan documented
 
-## Resources
+## Rollback Procedure
 
-- **Spec**: [spec.md](./spec.md)
-- **Research**: [research.md](./research.md)
-- **Data Model**: [data-model.md](./data-model.md)
-- **Admin Interface Contract**: [contracts/admin_interface.md](./contracts/admin_interface.md)
-- **Middleware Contract**: [contracts/middleware_interface.md](./contracts/middleware_interface.md)
+If redirects cause issues in production:
+
+1. **Disable all redirects** (fastest):
+   ```bash
+   rails runner "LegacyRedirect.update_all(active: false)"
+   ```
+
+2. **Remove middleware** (requires deployment):
+   - Comment out middleware registration in `config/initializers/legacy_redirect_middleware.rb`
+   - Deploy
+
+3. **Full rollback** (destructive):
+   ```bash
+   rails db:rollback
+   # This drops the legacy_redirects table
+   ```
 
 ## Support
 
-For issues or questions:
-1. Check troubleshooting section above
-2. Review contracts and data model documentation
-3. Check Rails logs for errors
-4. Test in Rails console first
-5. Verify database indexes and queries
+- **Documentation**: See `specs/001-legacy-url-redirects/` directory
+- **Tests**: See `test/` directory for examples
+- **Model**: See `app/models/legacy_redirect.rb` for business logic
+- **Middleware**: See `app/middleware/legacy_redirect_middleware.rb` for request handling

@@ -60,10 +60,13 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
 
   # T066: Update action
   def update
+    # Call redirect_params first to set @json_parse_error if JSON parsing fails
+    params_hash = redirect_params
+
     if @json_parse_error
       @redirect.errors.add(:variant_params, "invalid JSON format: #{@json_parse_error}")
       render :edit, status: :unprocessable_entity
-    elsif @redirect.update(redirect_params)
+    elsif @redirect.update(params_hash)
       redirect_to admin_legacy_redirect_url(@redirect), notice: "Redirect updated successfully"
     else
       render :edit, status: :unprocessable_entity

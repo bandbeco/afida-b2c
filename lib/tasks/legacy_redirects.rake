@@ -1,6 +1,12 @@
 # frozen_string_literal: true
 
 namespace :legacy_redirects do
+  desc "Seed legacy redirects from CSV file"
+  task seed: :environment do
+    puts "Loading legacy redirects seed file..."
+    load Rails.root.join("db/seeds/legacy_redirects.rb")
+  end
+
   desc "Validate all legacy redirects"
   task validate: :environment do
     puts "Validating legacy redirects..."
@@ -33,7 +39,7 @@ namespace :legacy_redirects do
 
   desc "Import legacy redirects from JSON file"
   task :import, [ :file_path ] => :environment do |_t, args|
-    file_path = args[:file_path] || Rails.root.join("legacy_redirects.json")
+    file_path = args[:file_path] || Rails.root.join("lib", "data", "legacy_redirects.json")
 
     unless File.exist?(file_path)
       puts "❌ File not found: #{file_path}"
