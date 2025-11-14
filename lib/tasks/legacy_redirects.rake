@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 namespace :legacy_redirects do
-  desc "Seed legacy redirects from CSV file"
-  task seed: :environment do
+  desc "Import legacy redirects from CSV file"
+  task import: :environment do
     puts "Loading legacy redirects seed file..."
     load Rails.root.join("db/seeds/legacy_redirects.rb")
   end
@@ -33,50 +33,6 @@ namespace :legacy_redirects do
       puts "\n✅ All redirects are valid"
     else
       puts "\n⚠️  #{invalid} invalid redirect(s) found"
-      exit 1
-    end
-  end
-
-  desc "Import legacy redirects from JSON file"
-  task :import, [ :file_path ] => :environment do |_t, args|
-    file_path = args[:file_path] || Rails.root.join("lib", "data", "legacy_redirects.json")
-
-    unless File.exist?(file_path)
-      puts "❌ File not found: #{file_path}"
-      puts "Usage: rails legacy_redirects:import[path/to/file.json]"
-      exit 1
-    end
-
-    puts "Importing redirects from #{file_path}..."
-
-    begin
-      data = JSON.parse(File.read(file_path))
-
-      success = 0
-      errors = 0
-
-      data.each do |item|
-        redirect = LegacyRedirect.find_or_initialize_by(legacy_path: item["legacy_path"])
-        redirect.target_slug = item["target_slug"]
-        redirect.variant_params = item["variant_params"] || {}
-        redirect.active = item.fetch("active", true)
-
-        if redirect.save
-          success += 1
-        else
-          errors += 1
-          puts "  ❌ Failed: #{item['legacy_path']} - #{redirect.errors.full_messages.join(', ')}"
-        end
-      end
-
-      puts "\nImport Summary:"
-      puts "  Success: #{success}"
-      puts "  Errors: #{errors}"
-      puts "  Total: #{data.count}"
-
-      puts "\n✅ Import completed"
-    rescue JSON::ParserError => e
-      puts "❌ Invalid JSON file: #{e.message}"
       exit 1
     end
   end
