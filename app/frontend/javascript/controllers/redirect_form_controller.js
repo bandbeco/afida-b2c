@@ -70,14 +70,25 @@ export default class extends Controller {
     // Try to match the current variant params to restore selection
     const currentParams = this.variantParamsTarget.value
 
-    if (!currentParams || currentParams === '{}') return
+    if (!currentParams || currentParams === '{}' || currentParams === '') return
 
+    let currentParamsObj
+    try {
+      currentParamsObj = JSON.parse(currentParams)
+    } catch (e) {
+      console.error('Failed to parse current variant params:', e)
+      return
+    }
+
+    // Match by comparing actual object properties
     for (let option of this.variantTarget.options) {
       if (!option.value) continue
 
       try {
         const data = JSON.parse(option.value)
-        if (JSON.stringify(data.params) === currentParams) {
+
+        // Deep compare the params objects
+        if (this.objectsEqual(data.params, currentParamsObj)) {
           option.selected = true
           break
         }
@@ -85,5 +96,15 @@ export default class extends Controller {
         // Skip invalid options
       }
     }
+  }
+
+  // Helper method to compare two objects for equality
+  objectsEqual(obj1, obj2) {
+    const keys1 = Object.keys(obj1 || {})
+    const keys2 = Object.keys(obj2 || {})
+
+    if (keys1.length !== keys2.length) return false
+
+    return keys1.every(key => obj1[key] === obj2[key])
   }
 }
