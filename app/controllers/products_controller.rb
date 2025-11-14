@@ -67,9 +67,20 @@ class ProductsController < ApplicationController
 
       # Prepare data for option selectors
       # Exclude options where all variants have identical values (not a real choice)
-      @product_options = @product.options.order(:position).select do |option|
+      # Eager load option values to prevent N+1 queries
+      all_options = @product.options.includes(:values).order(:position)
+      @product_options = all_options.select do |option|
         unique_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
         unique_values.count > 1
+      end
+
+      # Build lookup hash for O(1) label access in views (prevents N+1 queries)
+      @option_labels = {}
+      @product_options.each do |option|
+        @option_labels[option.name] ||= {}
+        option.values.each do |ov|
+          @option_labels[option.name][ov.value] = ov.label.presence || ov.value
+        end
       end
       @variants_json = @product.active_variants.map do |v|
         {
