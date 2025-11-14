@@ -25,7 +25,7 @@
       <%= form.label :product_slug, "Select Product", class: "label" %>
       <%= select_tag :product_slug,
         options_from_collection_for_select(
-          Product.order(:name).all,
+          Product.joins(:category).where.not(categories: { slug: 'branded-products' }).order(:name).all,
           :slug,
           :name,
           redirect.target_slug
@@ -38,7 +38,7 @@
         }
       %>
       <label class="label">
-        <span class="label-text-alt">Choose the product to redirect to</span>
+        <span class="label-text-alt">Choose the product to redirect to (branded products excluded)</span>
       </label>
     </div>
 
