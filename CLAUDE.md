@@ -469,6 +469,7 @@ After deploying SEO updates:
 ## Active Technologies
 - Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+ (001-legacy-url-redirects)
 - PostgreSQL 14+ (primary database with `legacy_redirects` table using JSONB for variant parameters) (001-legacy-url-redirects)
+- PostgreSQL 14+ (existing `products`, `categories`, `product_variants` tables) (003-shop-page-filters-search)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

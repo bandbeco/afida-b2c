@@ -30,6 +30,48 @@ class Product < ApplicationRecord
   scope :catalog_products, -> { where(product_type: [ "standard", "customizable_template" ]) }
   scope :customized_for_organization, ->(org) { unscoped.where(product_type: "customized_instance", organization: org) }
 
+  # Filtering and search scopes
+  scope :in_categories, ->(category_slugs) {
+    return all if category_slugs.blank?
+
+    # Handle array of category slugs
+    slugs = Array(category_slugs).reject(&:blank?)
+    return all if slugs.empty?
+
+    joins(:category).where(categories: { slug: slugs })
+  }
+
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    sanitized_query = sanitize_sql_like(query)
+    where("name ILIKE ? OR sku ILIKE ? OR colour ILIKE ?",
+          "%#{sanitized_query}%",
+          "%#{sanitized_query}%",
+          "%#{sanitized_query}%")
+  }
+
+  scope :sorted, ->(sort_param) {
+    case sort_param
+    when "price_asc"
+      # Use subquery to avoid GROUP BY issues with eager loading
+      reorder(
+        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) ASC, products.name ASC")
+      )
+    when "price_desc"
+      reorder(
+        Arel.sql("(SELECT MAX(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) DESC, products.name ASC")
+      )
+    when "name_asc"
+      reorder(Arel.sql("LOWER(products.name) ASC"))
+    when "name_desc"
+      reorder(Arel.sql("LOWER(products.name) DESC"))
+    else  # "relevance" or nil or blank
+      # Keep default scope ordering (position ASC, name ASC)
+      all
+    end
+  }
+
   belongs_to :category, counter_cache: true
   belongs_to :organization, optional: true
   belongs_to :parent_product, class_name: "Product", optional: true

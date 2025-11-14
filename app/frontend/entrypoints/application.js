@@ -52,6 +52,12 @@ application.register("nested-form", NestedFormController)
 import RedirectFormController from "../javascript/controllers/redirect_form_controller"
 application.register("redirect-form", RedirectFormController)
 
+import FormController from "../javascript/controllers/form_controller"
+application.register("form", FormController)
+
+import SearchController from "../javascript/controllers/search_controller"
+application.register("search", SearchController)
+
 // Configure Stimulus development experience
 application.debug = false
 window.Stimulus = application

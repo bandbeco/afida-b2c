@@ -291,4 +291,103 @@ class ProductTest < ActiveSupport::TestCase
     assert_not product.valid?
     assert_includes product.errors[:profit_margin], "is not included in the list"
   end
+
+  # Category filtering scope tests
+  test "in_categories filters by single category slug" do
+    category = categories(:one)
+    product_in_category = products(:one)
+    product_in_category.update(category: category)
+
+    results = Product.in_categories([ category.slug ])
+
+    assert_includes results, product_in_category
+    # Verify it's filtering (not just returning all)
+    assert results.count <= category.products.count
+  end
+
+  test "in_categories filters by multiple category slugs" do
+    category1 = categories(:one)
+    category2 = Category.create!(name: "Category Two", slug: "category-two")
+
+    product1 = products(:one)
+    product1.update(category: category1)
+
+    product2 = Product.create!(name: "Product 2", sku: "SKU2", category: category2)
+
+    results = Product.in_categories([ category1.slug, category2.slug ])
+
+    assert_includes results, product1
+    assert_includes results, product2
+  end
+
+  test "in_categories returns all products when categories is blank" do
+    all_count = Product.count
+
+    assert_equal all_count, Product.in_categories([]).count
+    assert_equal all_count, Product.in_categories(nil).count
+  end
+
+  # Search scope tests
+  test "search returns products matching name" do
+    pizza_product = products(:one)
+    pizza_product.update(name: "Pizza Box Kraft")
+
+    results = Product.search("pizza")
+
+    assert_includes results, pizza_product
+    # Verify it's actually filtering (not returning all)
+    assert results.count < Product.count, "Search should filter results"
+  end
+
+  test "search returns products matching SKU" do
+    product = products(:one)
+    product.update(sku: "PIZB-001")
+
+    results = Product.search("PIZB")
+
+    assert_includes results, product
+  end
+
+  test "search is case-insensitive" do
+    product = products(:one)
+    product.update(name: "Pizza Box")
+
+    results = Product.search("PIZZA")
+
+    assert_includes results, product
+  end
+
+  test "search returns all products when query is blank" do
+    all_count = Product.count
+
+    assert_equal all_count, Product.search("").count
+    assert_equal all_count, Product.search(nil).count
+  end
+
+  # Sort scope tests
+  test "sorted by relevance uses default order" do
+    products = Product.sorted("relevance").to_a
+
+    # Should match default scope (position ASC, name ASC)
+    assert_equal Product.all.to_a, products
+  end
+
+  test "sorted by name_asc orders alphabetically" do
+    products = Product.sorted("name_asc").pluck(:name)
+
+    assert_equal products.sort, products
+  end
+
+  test "sorted by price_asc orders by minimum variant price" do
+    # Create two products with different prices
+    cheap = Product.create!(name: "Cheap Product", sku: "CHEAP", category: categories(:one))
+    expensive = Product.create!(name: "Expensive Product", sku: "EXPENSIVE", category: categories(:one))
+
+    ProductVariant.create!(product: cheap, name: "Small", sku: "CHEAP-1", price: 1.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: expensive, name: "Large", sku: "EXP-1", price: 10.00, stock_quantity: 100, active: true)
+
+    results = Product.sorted("price_asc").to_a
+
+    assert results.index(cheap) < results.index(expensive), "Cheap product should come before expensive"
+  end
 end

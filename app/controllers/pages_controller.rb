@@ -7,8 +7,26 @@ class PagesController < ApplicationController
   end
 
   def shop
-    @categories = Category.with_attached_image.order(:name)
-    @products = Product.all
+    @categories = Category.all.order(:position)
+
+    @products = Product
+      .includes(:category,
+                :active_variants,
+                product_photo_attachment: :blob,
+                lifestyle_photo_attachment: :blob)
+
+    # Search and category filter are mutually exclusive
+    # If searching, ignore category filter
+    if params[:q].present?
+      @products = @products.search(params[:q])
+    else
+      @products = @products.in_categories(params[:categories])
+    end
+
+    # Apply sorting
+    @products = @products.sorted(params[:sort])
+
+    @pagy, @products = pagy(@products)
   end
 
   def branding
