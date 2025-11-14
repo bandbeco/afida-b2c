@@ -69,52 +69,60 @@ ActiveRecord::Base.transaction do
   # Parse CSV and create redirects
   CSV.foreach(csv_path, headers: true) do |row|
     csv_row_count += 1
-  source = row['source']
-  target = row['target']
+    source = row['source']
+    target = row['target']
 
-  # Extract legacy path (source is already in the format /product/...)
-  legacy_path = source
-
-  # Parse target URL to extract slug and variant parameters
-  begin
-    uri = URI.parse(target)
-
-    # Extract target slug from path (remove /products/ prefix)
-    target_slug = uri.path.sub('/products/', '')
-
-    # Extract variant parameters from query string
-    variant_params = if uri.query
-      URI.decode_www_form(uri.query).to_h
-    else
-      {}
+    # Validate row data
+    if source.blank? || target.blank?
+      error_count += 1
+      errors << { row: csv_row_count, error: "Empty source or target" }
+      print "E"
+      next
     end
 
-    # Create or update redirect using idempotent find_or_create_by!
-    redirect = LegacyRedirect.find_or_initialize_by(legacy_path: legacy_path)
+    # Extract legacy path (source is already in the format /product/...)
+    legacy_path = source.strip
 
-    if redirect.new_record?
-      redirect.target_slug = target_slug
-      redirect.variant_params = variant_params
-      redirect.active = true
-      redirect.save!
-      created_count += 1
-      print "."
-    elsif redirect.target_slug != target_slug || redirect.variant_params != variant_params
-      redirect.target_slug = target_slug
-      redirect.variant_params = variant_params
-      redirect.save!
-      updated_count += 1
-      print "u"
-    else
-      skipped_count += 1
-      print "-"
+    # Parse target URL to extract slug and variant parameters
+    begin
+      uri = URI.parse(target)
+
+      # Extract target slug from path (remove /products/ prefix)
+      target_slug = uri.path.sub('/products/', '')
+
+      # Extract variant parameters from query string
+      variant_params = if uri.query
+        URI.decode_www_form(uri.query).to_h
+      else
+        {}
+      end
+
+      # Create or update redirect using idempotent find_or_create_by!
+      redirect = LegacyRedirect.find_or_initialize_by(legacy_path: legacy_path)
+
+      if redirect.new_record?
+        redirect.target_slug = target_slug
+        redirect.variant_params = variant_params
+        redirect.active = true
+        redirect.save!
+        created_count += 1
+        print "."
+      elsif redirect.target_slug != target_slug || redirect.variant_params != variant_params
+        redirect.target_slug = target_slug
+        redirect.variant_params = variant_params
+        redirect.save!
+        updated_count += 1
+        print "u"
+      else
+        skipped_count += 1
+        print "-"
+      end
+
+    rescue StandardError => e
+      error_count += 1
+      errors << { legacy_path: legacy_path, error: e.message }
+      print "E"
     end
-
-  rescue StandardError => e
-    error_count += 1
-    errors << { legacy_path: legacy_path, error: e.message }
-    print "E"
-  end
   end
 end
 
