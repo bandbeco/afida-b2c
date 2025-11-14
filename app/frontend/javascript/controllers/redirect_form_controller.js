@@ -32,7 +32,7 @@ export default class extends Controller {
           slug: data.product.slug,
           params: variant.option_values
         })
-        option.textContent = variant.name
+        option.textContent = variant.display_name || variant.name
         this.variantTarget.appendChild(option)
       })
 

@@ -204,9 +204,19 @@ module Admin
               slug: @product.slug
             },
             variants: @product.active_variants.map do |variant|
+              # Build display name with all option values
+              display_parts = []
+              display_parts << variant.name
+
+              # Add color if present
+              if variant.option_values["colour"].present?
+                display_parts << variant.option_values["colour"]
+              end
+
               {
                 id: variant.id,
                 name: variant.name,
+                display_name: display_parts.join(" - "),
                 option_values: variant.option_values
               }
             end
