@@ -10,7 +10,7 @@
         <!-- Category Filter (shown when not searching) -->
         <% if params[:q].blank? %>
           <div>
-            <h2 class="font-semibold text-lg mb-3 pb-2 border-b">Category</h2>
+            <h2 class="font-semibold text-lg mb-3 pb-2 border-b">Product Types</h2>
 
             <% @categories.each do |category| %>
               <label class="flex items-center gap-2 mb-2 cursor-pointer">
@@ -31,7 +31,7 @@
       <div class="flex-1 min-w-0 min-h-[60vh]">
         <!-- Title Row -->
         <div class="mb-6">
-          <h1 class="text-3xl font-bold">Shop All Products</h1>
+          <h1 class="text-3xl font-bold">Shop all products</h1>
         </div>
 
         <!-- Search and Sort Row (aligned horizontally) -->
