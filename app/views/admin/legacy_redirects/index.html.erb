@@ -18,6 +18,7 @@
         <tr>
           <th>Legacy Path</th>
           <th>Target Product</th>
+          <th>Target Variant</th>
           <th>Hit Count</th>
           <th>Status</th>
           <th>Actions</th>
@@ -30,6 +31,26 @@
             <td>
               <% product = @products_by_slug[redirect.target_slug] %>
               <%= product&.name || redirect.target_slug %>
+            </td>
+            <td>
+              <%
+                variant = nil
+                if product && redirect.variant_params.present?
+                  variant = product.active_variants.find do |v|
+                    redirect.variant_params.all? { |key, value| v.option_values[key] == value }
+                  end
+                end
+              %>
+              <% if variant %>
+                <div class="text-sm">
+                  <div><%= variant.name %></div>
+                  <div class="text-xs text-gray-500">SKU: <%= variant.sku %></div>
+                </div>
+              <% elsif redirect.variant_params.present? %>
+                <span class="text-xs text-warning">⚠️ No matching variant</span>
+              <% else %>
+                <span class="text-xs text-gray-400">—</span>
+              <% end %>
             </td>
             <td><%= redirect.hit_count %></td>
             <td>
