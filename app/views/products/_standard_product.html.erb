@@ -109,7 +109,7 @@
               <% @product_options.each do |option| %>
                 <div class="w-full">
                   <label class="label pb-2">
-                    <span class="label-text font-semibold"><%= option.name %></span>
+                    <span class="label-text font-semibold">Select <%= option.name.downcase %>:</span>
                   </label>
                   <%
                     # Get unique values for this option from all variants
