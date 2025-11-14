@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-class LegacyRedirectMiddleware
+class UrlRedirectMiddleware
   # Cache duration for redirect responses (24 hours)
   CACHE_MAX_AGE = 24.hours.to_i
 
@@ -17,11 +17,11 @@ class LegacyRedirectMiddleware
 
     # Normalize path (remove trailing slash) and lookup redirect
     normalized_path = request.path.chomp("/")
-    redirect = LegacyRedirect.find_active_by_path(normalized_path)
+    redirect = UrlRedirect.find_active_by_path(normalized_path)
 
     # Pass through if no active redirect found
     unless redirect
-      Rails.logger.debug("LegacyRedirectMiddleware: No mapping found for #{normalized_path}")
+      Rails.logger.debug("UrlRedirectMiddleware: No mapping found for #{normalized_path}")
       return @app.call(env)
     end
 
@@ -34,7 +34,7 @@ class LegacyRedirectMiddleware
     # Return 301 redirect
     [ 301, redirect_headers(target_url), [ "Redirecting..." ] ]
   rescue ActiveRecord::ConnectionNotEstablished, ActiveRecord::StatementInvalid => e
-    Rails.logger.error("LegacyRedirectMiddleware: #{e.class} - #{e.message}")
+    Rails.logger.error("UrlRedirectMiddleware: #{e.class} - #{e.message}")
     @app.call(env)  # Fail open
   end
 
@@ -43,7 +43,7 @@ class LegacyRedirectMiddleware
   def increment_hit_counter(redirect)
     redirect.record_hit!
   rescue => e
-    Rails.logger.warn("LegacyRedirectMiddleware: Hit counter update failed - #{e.message}")
+    Rails.logger.warn("UrlRedirectMiddleware: Hit counter update failed - #{e.message}")
   end
 
   def build_target_url(redirect, request)

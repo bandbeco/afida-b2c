@@ -2,8 +2,8 @@
   <div class="flex justify-between items-center mb-6">
     <h1 class="text-3xl font-bold">Redirect Details</h1>
     <div class="flex gap-2">
-      <%= link_to "Edit", edit_admin_legacy_redirect_path(@redirect), class: "btn btn-primary" %>
-      <%= link_to "Back", admin_legacy_redirects_path, class: "btn btn-ghost" %>
+      <%= link_to "Edit", edit_admin_url_redirect_path(@redirect), class: "btn btn-primary" %>
+      <%= link_to "Back", admin_url_redirects_path, class: "btn btn-ghost" %>
     </div>
   </div>
 
@@ -13,7 +13,7 @@
         <tbody>
           <tr>
             <td class="font-bold w-1/4">Legacy Path</td>
-            <td class="font-mono"><%= @redirect.legacy_path %></td>
+            <td class="font-mono"><%= @redirect.source_path %></td>
           </tr>
           <tr>
             <td class="font-bold">Target Slug</td>
@@ -53,9 +53,9 @@
       </table>
 
       <div class="card-actions justify-end mt-4">
-        <%= link_to "Test Redirect", test_admin_legacy_redirect_path(@redirect), class: "btn btn-secondary" %>
-        <%= button_to "Toggle Status", toggle_admin_legacy_redirect_path(@redirect), method: :patch, class: "btn btn-warning" %>
-        <%= button_to "Delete", admin_legacy_redirect_path(@redirect), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-error" %>
+        <%= link_to "Test Redirect", test_admin_url_redirect_path(@redirect), class: "btn btn-secondary" %>
+        <%= button_to "Toggle Status", toggle_admin_url_redirect_path(@redirect), method: :patch, class: "btn btn-warning" %>
+        <%= button_to "Delete", admin_url_redirect_path(@redirect), method: :delete, data: { confirm: "Are you sure?" }, class: "btn btn-error" %>
       </div>
     </div>
   </div>

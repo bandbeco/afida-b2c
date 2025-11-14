@@ -38,4 +38,32 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     @product.reload
     assert_not @product.lifestyle_photo.attached?, "Lifestyle photo should be purged after deletion"
   end
+
+  test "should get variants as JSON" do
+    get variants_admin_product_path(@product, format: :json), headers: @headers
+    assert_response :success
+
+    json = JSON.parse(response.body)
+    assert_equal @product.id, json["product"]["id"]
+    assert_equal @product.name, json["product"]["name"]
+    assert_equal @product.slug, json["product"]["slug"]
+    assert json["variants"].is_a?(Array)
+    assert json["variants"].length > 0
+
+    # Check variant structure
+    first_variant = json["variants"].first
+    assert first_variant["id"]
+    assert first_variant["name"]
+    assert first_variant["display_name"]
+    assert first_variant["option_values"].is_a?(Hash)
+  end
+
+  test "variants endpoint requires authentication" do
+    # Sign out
+    delete session_url, headers: @headers
+
+    get variants_admin_product_path(@product, format: :json), headers: @headers
+    assert_response :redirect
+    assert_redirected_to new_session_path
+  end
 end

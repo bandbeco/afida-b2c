@@ -3,19 +3,19 @@
 require 'csv'
 require 'uri'
 
-# Legacy URL Redirects from old afida.com site
+# URL Redirects from old afida.com site
 # This file seeds the database with mappings from legacy product URLs to new product structure
 #
-# Source: config/legacy_redirects.csv
+# Source: config/url_redirects.csv
 #
 # Process:
 # 1. Parse CSV file (source, target columns)
-# 2. Extract legacy_path from source column
+# 2. Extract source_path from source column
 # 3. Parse target URL to extract target_slug and variant_params
-# 4. Create/update LegacyRedirect records using idempotent find_or_create_by!
+# 4. Create/update UrlRedirect records using idempotent find_or_create_by!
 
 puts "Seeding legacy redirects from CSV..."
-puts "Reading: #{Rails.root.join('config/legacy_redirects.csv')}"
+puts "Reading: #{Rails.root.join('config/url_redirects.csv')}"
 
 # Track statistics
 created_count = 0
@@ -26,7 +26,7 @@ errors = []
 csv_row_count = 0
 
 # Validate CSV file exists
-csv_path = Rails.root.join('config/legacy_redirects.csv')
+csv_path = Rails.root.join('config/url_redirects.csv')
 unless File.exist?(csv_path)
   puts "❌ Error: CSV file not found at #{csv_path}"
   exit 1
@@ -81,7 +81,7 @@ ActiveRecord::Base.transaction do
     end
 
     # Extract legacy path (source is already in the format /product/...)
-    legacy_path = source.strip
+    source_path = source.strip
 
     # Parse target URL to extract slug and variant parameters
     begin
@@ -98,7 +98,7 @@ ActiveRecord::Base.transaction do
       end
 
       # Create or update redirect using idempotent find_or_create_by!
-      redirect = LegacyRedirect.find_or_initialize_by(legacy_path: legacy_path)
+      redirect = UrlRedirect.find_or_initialize_by(source_path: source_path)
 
       if redirect.new_record?
         redirect.target_slug = target_slug
@@ -120,7 +120,7 @@ ActiveRecord::Base.transaction do
 
     rescue StandardError => e
       error_count += 1
-      errors << { legacy_path: legacy_path, error: e.message }
+      errors << { source_path: source_path, error: e.message }
       print "E"
     end
   end
@@ -137,14 +137,14 @@ puts "Skipped:   #{skipped_count} unchanged redirects"
 puts "Errors:    #{error_count}"
 puts ""
 puts "Database totals:"
-puts "  Active redirects:   #{LegacyRedirect.active.count}"
-puts "  Inactive redirects: #{LegacyRedirect.inactive.count}"
-puts "  Total redirects:    #{LegacyRedirect.count}"
+puts "  Active redirects:   #{UrlRedirect.active.count}"
+puts "  Inactive redirects: #{UrlRedirect.inactive.count}"
+puts "  Total redirects:    #{UrlRedirect.count}"
 
 if errors.any?
   puts ""
   puts "⚠️  Errors encountered:"
   errors.each do |err|
-    puts "  - #{err[:legacy_path]}: #{err[:error]}"
+    puts "  - #{err[:source_path]}: #{err[:error]}"
   end
 end

@@ -1,0 +1,80 @@
+<%= form_with(model: [:admin, redirect], local: true, data: { controller: "redirect-form" }) do |form| %>
+  <% if redirect.errors.any? %>
+    <div class="alert alert-error mb-4">
+      <h3 class="font-bold">Errors:</h3>
+      <ul>
+        <% redirect.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4">
+    <div class="form-control">
+      <%= form.label :source_path, "Legacy URL Path", class: "label" %>
+      <%= form.text_field :source_path, class: "input input-bordered w-full", placeholder: "/product/old-url-pattern" %>
+      <label class="label">
+        <span class="label-text-alt">The old URL path that should redirect (must start with /product/)</span>
+      </label>
+    </div>
+
+    <div class="divider">Redirect Target</div>
+
+    <div class="form-control">
+      <%= form.label :product_slug, "Select Product", class: "label" %>
+      <%
+        # Group products by category, excluding branded products
+        products_by_category = Product.joins(:category)
+          .where.not(categories: { slug: 'branded-products' })
+          .includes(:category)
+          .order('categories.name', :name)
+          .group_by { |p| p.category.name }
+          .transform_values { |products| products.map { |p| [p.name, p.slug] } }
+      %>
+      <%= select_tag :product_slug,
+        grouped_options_for_select(products_by_category, redirect.target_slug),
+        prompt: "Select a product...",
+        class: "select select-bordered w-full",
+        data: {
+          redirect_form_target: "product",
+          action: "change->redirect-form#loadVariants"
+        }
+      %>
+      <label class="label">
+        <span class="label-text-alt">Choose the product to redirect to (branded products excluded)</span>
+      </label>
+    </div>
+
+    <div class="form-control">
+      <%= form.label :variant_id, "Select Variant", class: "label" %>
+      <%= select_tag :variant_id,
+        content_tag(:option, "Select a product first", value: ""),
+        disabled: true,
+        class: "select select-bordered w-full",
+        data: {
+          redirect_form_target: "variant",
+          action: "change->redirect-form#variantSelected"
+        }
+      %>
+      <label class="label">
+        <span class="label-text-alt">Choose the specific variant (size, colour, etc.)</span>
+      </label>
+    </div>
+
+    <%= form.hidden_field :target_slug, data: { redirect_form_target: "targetSlug" } %>
+    <%= form.hidden_field :variant_params, value: redirect.variant_params.to_json, data: { redirect_form_target: "variantParams" } %>
+
+    <div class="form-control">
+      <label class="label cursor-pointer justify-start gap-2">
+        <%= form.check_box :active, class: "checkbox" %>
+        <span class="label-text">Active</span>
+      </label>
+    </div>
+
+    <div class="flex gap-2">
+      <%= form.submit class: "btn btn-primary" %>
+      <%= link_to "Cancel", admin_url_redirects_path, class: "btn btn-ghost" %>
+    </div>
+  </div>
+<% end %>

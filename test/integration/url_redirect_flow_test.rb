@@ -2,13 +2,13 @@
 
 require "test_helper"
 
-class LegacyRedirectFlowTest < ActionDispatch::IntegrationTest
+class UrlRedirectFlowTest < ActionDispatch::IntegrationTest
   # T037: End-to-end redirect flow
   test "should redirect legacy URL to new product page with variant" do
     product = Product.first
 
-    redirect = LegacyRedirect.create!(
-      legacy_path: "/product/integration-test-redirect",
+    redirect = UrlRedirect.create!(
+      source_path: "/product/integration-test-redirect",
       target_slug: product.slug,
       variant_params: { size: "12\"", colour: "Kraft" },
       active: true,
@@ -35,8 +35,8 @@ class LegacyRedirectFlowTest < ActionDispatch::IntegrationTest
   test "should redirect with variant selection and preserve query parameters" do
     product = Product.first
 
-    LegacyRedirect.create!(
-      legacy_path: "/product/variant-test",
+    UrlRedirect.create!(
+      source_path: "/product/variant-test",
       target_slug: product.slug,
       variant_params: { size: "8oz" },
       active: true
@@ -59,8 +59,8 @@ class LegacyRedirectFlowTest < ActionDispatch::IntegrationTest
   test "should return 404 for inactive redirect" do
     product = Product.first
 
-    LegacyRedirect.create!(
-      legacy_path: "/product/inactive-test",
+    UrlRedirect.create!(
+      source_path: "/product/inactive-test",
       target_slug: product.slug,
       active: false
     )

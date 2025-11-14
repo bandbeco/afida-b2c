@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-class LegacyRedirect < ApplicationRecord
+class UrlRedirect < ApplicationRecord
   # Validations
-  validates :legacy_path, presence: true, uniqueness: { case_sensitive: false }
+  validates :source_path, presence: true, uniqueness: { case_sensitive: false }
   validates :target_slug, presence: true
-  validates :legacy_path, format: { with: %r{\A/product/.*\z}, message: "must start with /product/" }
+  validates :source_path, format: { with: %r{\A/product/.*\z}, message: "must start with /product/" }
   validate :target_slug_exists
 
   # Scopes
@@ -15,11 +15,11 @@ class LegacyRedirect < ApplicationRecord
 
   # Class Methods
   def self.find_by_path(path)
-    where("LOWER(legacy_path) = ?", path.downcase).first
+    where("LOWER(source_path) = ?", path.downcase).first
   end
 
   def self.find_active_by_path(path)
-    active.where("LOWER(legacy_path) = ?", path.downcase).first
+    active.where("LOWER(source_path) = ?", path.downcase).first
   end
 
   # Instance Methods

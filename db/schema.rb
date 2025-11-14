@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_14_124913) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_14_153951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -88,19 +88,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_14_124913) do
     t.datetime "updated_at", null: false
     t.index [ "position" ], name: "index_categories_on_position"
     t.index [ "slug" ], name: "index_categories_on_slug", unique: true
-  end
-
-  create_table "legacy_redirects", force: :cascade do |t|
-    t.boolean "active", default: true, null: false
-    t.datetime "created_at", null: false
-    t.integer "hit_count", default: 0, null: false
-    t.string "legacy_path", limit: 500, null: false
-    t.string "target_slug", limit: 255, null: false
-    t.datetime "updated_at", null: false
-    t.jsonb "variant_params", default: {}, null: false
-    t.index "lower((legacy_path)::text)", name: "index_legacy_redirects_on_lower_legacy_path", unique: true
-    t.index [ "active" ], name: "index_legacy_redirects_on_active"
-    t.index [ "hit_count" ], name: "index_legacy_redirects_on_hit_count"
   end
 
   create_table "order_items", force: :cascade do |t|
@@ -287,6 +274,19 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_14_124913) do
     t.bigint "user_id", null: false
     t.index [ "created_at" ], name: "index_sessions_on_created_at"
     t.index [ "user_id" ], name: "index_sessions_on_user_id"
+  end
+
+  create_table "url_redirects", force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.integer "hit_count", default: 0, null: false
+    t.string "source_path", limit: 500, null: false
+    t.string "target_slug", limit: 255, null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "variant_params", default: {}, null: false
+    t.index "lower((source_path)::text)", name: "index_legacy_redirects_on_lower_legacy_path", unique: true
+    t.index [ "active" ], name: "index_url_redirects_on_active"
+    t.index [ "hit_count" ], name: "index_url_redirects_on_hit_count"
   end
 
   create_table "users", force: :cascade do |t|
