@@ -10,8 +10,7 @@ class PagesController < ApplicationController
     @categories = Category.all.order(:position)
 
     @products = Product
-      .includes(:category,
-                :active_variants,
+      .includes(:active_variants,
                 product_photo_attachment: :blob,
                 lifestyle_photo_attachment: :blob)
 
