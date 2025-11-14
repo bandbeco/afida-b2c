@@ -4,6 +4,10 @@ export default class extends Controller {
   static targets = ["product", "variant", "targetSlug", "variantParams"]
 
   connect() {
+    console.log('Redirect form controller connected')
+    console.log('Product value:', this.productTarget.value)
+    console.log('Current variant params:', this.variantParamsTarget.value)
+
     // Initialize variant dropdown based on current product selection
     if (this.productTarget.value) {
       this.loadVariants()
@@ -69,32 +73,46 @@ export default class extends Controller {
   restoreVariantSelection() {
     // Try to match the current variant params to restore selection
     const currentParams = this.variantParamsTarget.value
+    console.log('Restoring variant selection...')
+    console.log('Current params string:', currentParams)
 
-    if (!currentParams || currentParams === '{}' || currentParams === '') return
+    if (!currentParams || currentParams === '{}' || currentParams === '') {
+      console.log('No params to restore')
+      return
+    }
 
     let currentParamsObj
     try {
       currentParamsObj = JSON.parse(currentParams)
+      console.log('Parsed current params:', currentParamsObj)
     } catch (e) {
       console.error('Failed to parse current variant params:', e)
       return
     }
 
     // Match by comparing actual object properties
+    let matchFound = false
     for (let option of this.variantTarget.options) {
       if (!option.value) continue
 
       try {
         const data = JSON.parse(option.value)
+        console.log('Checking option:', data.params, 'against', currentParamsObj)
 
         // Deep compare the params objects
         if (this.objectsEqual(data.params, currentParamsObj)) {
+          console.log('Match found! Selecting option:', option.textContent)
           option.selected = true
+          matchFound = true
           break
         }
       } catch (e) {
         // Skip invalid options
       }
+    }
+
+    if (!matchFound) {
+      console.warn('No matching variant found for params:', currentParamsObj)
     }
   }
 
