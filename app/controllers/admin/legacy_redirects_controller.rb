@@ -23,14 +23,38 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
       @redirects.recently_updated
     when "alphabetical"
       @redirects.order(:legacy_path)
-    else  # Default: most_used
+    when "hits"
       @redirects.most_used
+    else  # Default: by product and variant
+      # Load to array first
+      redirects_array = @redirects.to_a
+
+      # Preload products for sorting
+      product_slugs = redirects_array.map(&:target_slug).compact.uniq
+      products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
+
+      # Sort by product name, then by variant params as string
+      redirects_array.sort_by do |redirect|
+        product = products_by_slug[redirect.target_slug]
+        product_name = product&.name || redirect.target_slug
+
+        # Find matching variant for secondary sort
+        variant_name = ""
+        if product && redirect.variant_params.present?
+          variant = product.active_variants.find do |v|
+            redirect.variant_params.all? { |key, value| v.option_values[key] == value }
+          end
+          variant_name = variant&.name || ""
+        end
+
+        [ product_name, variant_name ]
+      end
     end
 
-    # No pagination needed for ~63 redirects
-    @redirects = @redirects.to_a
+    # Convert to array if not already
+    @redirects = @redirects.to_a unless @redirects.is_a?(Array)
 
-    # Preload products to avoid N+1 queries
+    # Preload products to avoid N+1 queries in view
     product_slugs = @redirects.map(&:target_slug).compact.uniq
     @products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
   end
