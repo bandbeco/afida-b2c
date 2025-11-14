@@ -23,13 +23,17 @@
 
     <div class="form-control">
       <%= form.label :product_slug, "Select Product", class: "label" %>
+      <%
+        # Group products by category, excluding branded products
+        products_by_category = Product.joins(:category)
+          .where.not(categories: { slug: 'branded-products' })
+          .includes(:category)
+          .order('categories.name', :name)
+          .group_by { |p| p.category.name }
+          .transform_values { |products| products.map { |p| [p.name, p.slug] } }
+      %>
       <%= select_tag :product_slug,
-        options_from_collection_for_select(
-          Product.joins(:category).where.not(categories: { slug: 'branded-products' }).order(:name).all,
-          :slug,
-          :name,
-          redirect.target_slug
-        ),
+        grouped_options_for_select(products_by_category, redirect.target_slug),
         prompt: "Select a product...",
         class: "select select-bordered w-full",
         data: {
