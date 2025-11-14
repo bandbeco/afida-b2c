@@ -82,13 +82,13 @@ Rails.application.routes.draw do
       end
     end
     resources :orders, only: [ :index, :show ]
-    resources :branded_orders, only: [ :index, :show ] do
+    resources :branded_orders, path: "branded-orders", only: [ :index, :show ] do
       member do
         patch :update_status
         post :create_instance_product
       end
     end
-    resources :url_redirects do
+    resources :url_redirects, path: "url-redirects" do
       member do
         patch :toggle
         get :test
