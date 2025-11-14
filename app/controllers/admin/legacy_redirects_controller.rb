@@ -29,6 +29,10 @@ class Admin::LegacyRedirectsController < Admin::ApplicationController
 
     # No pagination needed for ~63 redirects
     @redirects = @redirects.to_a
+
+    # Preload products to avoid N+1 queries
+    product_slugs = @redirects.map(&:target_slug).compact.uniq
+    @products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
   end
 
   # T062: Show action

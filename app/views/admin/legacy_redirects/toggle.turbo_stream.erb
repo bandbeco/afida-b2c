@@ -1,8 +1,10 @@
 <%= turbo_stream.replace "redirect_#{@redirect.id}" do %>
   <tr id="redirect_<%= @redirect.id %>">
     <td class="font-mono text-sm"><%= @redirect.legacy_path %></td>
-    <td class="font-mono text-sm"><%= @redirect.target_slug %></td>
-    <td class="font-mono text-xs"><%= @redirect.variant_params.to_json %></td>
+    <td>
+      <% product = Product.find_by(slug: @redirect.target_slug) %>
+      <%= product&.name || @redirect.target_slug %>
+    </td>
     <td><%= @redirect.hit_count %></td>
     <td>
       <%= form_with model: @redirect, url: toggle_admin_legacy_redirect_path(@redirect), method: :patch, data: { turbo_frame: "_top" } do |f| %>
