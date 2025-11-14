@@ -29,7 +29,7 @@ templates.each do |template_data|
     p.category = branded_category
     p.description = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
     p.active = true
-    p.sort_order = template_data[:sort]
+    p.position = template_data[:sort]
   end
 
   # Create placeholder variant
@@ -88,7 +88,7 @@ double_wall_branded = Product.find_or_create_by!(slug: "double-wall-branded-cups
   product.category = branded_category
   product.description = "Premium double-wall insulated cups with your custom branding. No sleeve needed!"
   product.active = true
-  product.sort_order = 2
+  product.position = 2
 end
 
 # Pricing from CSV: Double Wall

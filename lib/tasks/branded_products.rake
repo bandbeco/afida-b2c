@@ -8,11 +8,11 @@ namespace :branded_products do
     puts ""
 
     # Find branded/customizable template products
-    branded_products = Product.where(product_type: "customizable_template").order(:sort_order)
+    branded_products = Product.where(product_type: "customizable_template").order(:position)
 
     if branded_products.empty?
       puts "❌ No branded products found"
-      puts "💡 Run 'rails db:seed:branded_prices' to create branded products and pricing"
+      puts "💡 Run 'rails branded_products:import' to import branded products and pricing"
       exit 0
     end
 
@@ -23,7 +23,7 @@ namespace :branded_products do
       puts "📦 #{product.name}"
       puts "   Slug: #{product.slug}"
       puts "   Active: #{product.active ? '✅ Yes' : '❌ No'}"
-      puts "   Sort Order: #{product.sort_order}"
+      puts "   Position: #{product.position}"
 
       # Check for pricing data
       pricing_count = product.branded_product_prices.count
@@ -156,5 +156,11 @@ namespace :branded_products do
         puts "  #{size.ljust(10)} - #{product_count} #{product_count == 1 ? 'product' : 'products'}, #{tier_count} pricing #{tier_count == 1 ? 'tier' : 'tiers'}"
       end
     end
+  end
+
+  desc "Import branded products and pricing data"
+  task import: :environment do
+    puts "Importing branded products..."
+    load Rails.root.join("db/seeds/branded_product_pricing.rb")
   end
 end
