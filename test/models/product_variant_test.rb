@@ -221,7 +221,8 @@ class ProductVariantTest < ActiveSupport::TestCase
   end
 
   test "delegates description to product" do
-    assert_equal @variant.product.description, @variant.description
+    # Variant.description now uses description_standard_with_fallback from product
+    assert_equal @variant.product.description_standard_with_fallback, @variant.description
   end
 
   test "delegates meta_title to product" do

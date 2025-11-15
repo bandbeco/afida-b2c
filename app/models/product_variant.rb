@@ -62,7 +62,9 @@ class ProductVariant < ApplicationRecord
             allow_blank: true
 
   # Inherit these attributes from parent product
-  delegate :category, :description, :meta_title, :meta_description, :colour, to: :product
+  delegate :category, :description_standard_with_fallback, :meta_title, :meta_description, :colour, to: :product
+  # Alias for backward compatibility
+  alias_method :description, :description_standard_with_fallback
 
   # Display name for cart/order items
   # Example: "Pizza Box - Kraft (14 inch)"
