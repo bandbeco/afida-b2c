@@ -30,7 +30,7 @@ class ProductMetaTagsTest < ActionDispatch::IntegrationTest
 
   test "falls back to product description when meta_description is blank" do
     product = products(:single_wall_cups)
-    product.update(meta_description: nil, description: "Fallback description text")
+    product.update(meta_description: nil, description_standard: "Fallback description text")
 
     get product_path(product)
 
