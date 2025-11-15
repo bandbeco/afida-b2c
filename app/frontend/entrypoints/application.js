@@ -58,6 +58,9 @@ application.register("form", FormController)
 import SearchController from "../javascript/controllers/search_controller"
 application.register("search", SearchController)
 
+import CharacterCounterController from "../javascript/controllers/character_counter_controller"
+application.register("character-counter", CharacterCounterController)
+
 // Configure Stimulus development experience
 application.debug = false
 window.Stimulus = application

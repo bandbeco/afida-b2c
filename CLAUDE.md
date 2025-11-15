@@ -177,6 +177,41 @@ rails credentials:edit
 - Use `product.default_variant` for single variant products
 - Price range calculated from all active variants
 
+### Working with Product Descriptions
+
+Products use a **three-tier description system** for contextual content display:
+
+**Description Fields**:
+- **`description_short`** (10-25 words) - Brief summary for product cards on browse pages
+- **`description_standard`** (25-50 words) - Medium paragraph for product page intro (above fold)
+- **`description_detailed`** (75-175 words) - Comprehensive content for product page main section (below fold)
+
+**Fallback Helper Methods**:
+```ruby
+# Use these methods in views (they handle missing descriptions gracefully)
+product.description_short_with_fallback    # Returns short, or truncates standard/detailed (15 words)
+product.description_standard_with_fallback # Returns standard, or truncates detailed (35 words)
+product.description_detailed_with_fallback # Returns detailed (no fallback needed)
+```
+
+**Where Each Description Appears**:
+- **Short**: Product cards on shop page (`app/views/products/_card.html.erb`) and category pages (`app/views/products/_product.html.erb`)
+- **Standard**: Product detail page intro above fold (`app/views/products/_standard_product.html.erb`)
+- **Detailed**: Product detail page main content section with "Product Details" heading
+- **SEO**: Meta descriptions and structured data use `description_standard_with_fallback`
+
+**Admin Interface**:
+- Three separate textarea fields in `app/views/admin/products/_form.html.erb`
+- Real-time character counter with color-coded feedback (green/yellow/red)
+- Target ranges shown in labels: Short (10-25), Standard (25-50), Detailed (75-175)
+- Character counters powered by `character-counter` Stimulus controller
+
+**Best Practices**:
+- All three fields are optional (fallback logic handles missing values)
+- Use `_with_fallback` methods in views (never access raw fields directly)
+- Character count targets are soft recommendations, not hard limits
+- CSV data in `lib/data/products.csv` provides template examples
+
 ### Working with Product Photos
 
 Products and variants support two photo types:
@@ -470,6 +505,8 @@ After deploying SEO updates:
 - Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+ (001-legacy-url-redirects)
 - PostgreSQL 14+ (primary database with `legacy_redirects` table using JSONB for variant parameters) (001-legacy-url-redirects)
 - PostgreSQL 14+ (existing `products`, `categories`, `product_variants` tables) (003-shop-page-filters-search)
+- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionView, ActiveSupport), Vite Rails, Stimulus, TailwindCSS 4, DaisyUI (004-product-descriptions)
+- PostgreSQL 14+ (existing products table, new columns: description_short, description_standard, description_detailed) (004-product-descriptions)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

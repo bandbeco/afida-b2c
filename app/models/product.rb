@@ -181,4 +181,33 @@ class Product < ApplicationRecord
   def has_compatible_lids?
     product_compatible_lids.exists?
   end
+
+  # Description fallback methods - T018-T020
+  # Returns short description with fallback to truncated standard/detailed
+  def description_short_with_fallback
+    return description_short if description_short.present?
+    return truncate_to_words(description_standard, 15) if description_standard.present?
+    truncate_to_words(description_detailed, 15) if description_detailed.present?
+  end
+
+  # Returns standard description with fallback to truncated detailed
+  def description_standard_with_fallback
+    return description_standard if description_standard.present?
+    truncate_to_words(description_detailed, 35) if description_detailed.present?
+  end
+
+  # Returns detailed description (no fallback needed - longest form)
+  def description_detailed_with_fallback
+    description_detailed
+  end
+
+  private
+
+  # T021: Truncates text to N words, adds ellipsis if truncated
+  def truncate_to_words(text, word_count)
+    return nil if text.blank?
+    words = text.split
+    return text if words.length <= word_count
+    words.first(word_count).join(" ") + "..."
+  end
 end

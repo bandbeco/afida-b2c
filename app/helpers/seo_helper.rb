@@ -4,7 +4,7 @@ module SeoHelper
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": product.name,
-      "description": product.description,
+      "description": product.description_standard_with_fallback,
       "brand": {
         "@type": "Brand",
         "name": "Afida"

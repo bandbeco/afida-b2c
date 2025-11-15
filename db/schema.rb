@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_14_224446) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_15_013520) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -234,7 +234,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_14_224446) do
     t.string "compatible_cup_sizes", default: [], array: true
     t.jsonb "configuration_data", default: {}
     t.datetime "created_at", null: false
-    t.text "description"
+    t.text "description_detailed"
+    t.text "description_short"
+    t.text "description_standard"
     t.boolean "featured", default: false
     t.string "material"
     t.string "meta_description"

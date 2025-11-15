@@ -106,8 +106,56 @@
         </div>
       <% end %>
 
-      <%= form.label :description, class: "label text-base" %>
-      <%= form.text_area :description, rows: 4, class: "textarea textarea-bordered w-full" %>
+      <%# Short Description with Character Counter - T060-T066 %>
+      <%= form.label :description_short, "Short Description (10-25 words)", class: "label text-base" %>
+      <div data-controller="character-counter"
+           data-character-counter-min-value="10"
+           data-character-counter-target-value="25"
+           data-character-counter-max-value="25">
+        <%= form.text_area :description_short,
+                           rows: 2,
+                           class: "textarea textarea-bordered w-full",
+                           placeholder: "Brief product summary for browse pages (10-25 words)",
+                           data: {
+                             character_counter_target: "input",
+                             action: "input->character-counter#count"
+                           } %>
+        <div class="text-sm mt-1" data-character-counter-target="counter">0 words</div>
+      </div>
+
+      <%# Standard Description with Character Counter %>
+      <%= form.label :description_standard, "Standard Description (25-50 words)", class: "label text-base mt-4" %>
+      <div data-controller="character-counter"
+           data-character-counter-min-value="25"
+           data-character-counter-target-value="50"
+           data-character-counter-max-value="50">
+        <%= form.text_area :description_standard,
+                           rows: 3,
+                           class: "textarea textarea-bordered w-full",
+                           placeholder: "Medium description for product page intro (25-50 words)",
+                           data: {
+                             character_counter_target: "input",
+                             action: "input->character-counter#count"
+                           } %>
+        <div class="text-sm mt-1" data-character-counter-target="counter">0 words</div>
+      </div>
+
+      <%# Detailed Description with Character Counter %>
+      <%= form.label :description_detailed, "Detailed Description (75-175 words)", class: "label text-base mt-4" %>
+      <div data-controller="character-counter"
+           data-character-counter-min-value="75"
+           data-character-counter-target-value="175"
+           data-character-counter-max-value="175">
+        <%= form.text_area :description_detailed,
+                           rows: 6,
+                           class: "textarea textarea-bordered w-full",
+                           placeholder: "Comprehensive product description for product page (75-175 words)",
+                           data: {
+                             character_counter_target: "input",
+                             action: "input->character-counter#count"
+                           } %>
+        <div class="text-sm mt-1" data-character-counter-target="counter">0 words</div>
+      </div>
     </div>
   </fieldset>
 

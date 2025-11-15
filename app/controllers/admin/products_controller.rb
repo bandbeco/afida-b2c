@@ -19,6 +19,8 @@ module Admin
 
     # GET /products/1/edit
     def edit
+      # Eager load variant photos to prevent N+1 queries in form
+      @product.variants.includes(:product_photo_attachment, :lifestyle_photo_attachment).load
       @product.variants.build if @product.variants.none?
     end
 
@@ -238,7 +240,9 @@ module Admin
         :featured,
         :sample_eligible,
         :name,
-        :description,
+        :description_short,
+        :description_standard,
+        :description_detailed,
         :colour,
         :category_id,
         :product_photo,

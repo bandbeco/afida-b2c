@@ -440,4 +440,99 @@ class ProductTest < ActiveSupport::TestCase
     assert results_asc.index(with_variants) < results_asc.index(no_variants), "Product with variants should come before product without variants (asc)"
     assert results_desc.index(with_variants) < results_desc.index(no_variants), "Product with variants should come before product without variants (desc)"
   end
+
+  # Description fallback method tests (T009-T016)
+  test "description_short_with_fallback returns short when all three fields present" do
+    product = products(:one)
+    product.update_columns(
+      description_short: "This is short",
+      description_standard: "This is standard description text",
+      description_detailed: "This is a much longer detailed description with lots of words and information about the product"
+    )
+
+    assert_equal "This is short", product.description_short_with_fallback
+  end
+
+  test "description_short_with_fallback truncates standard when short is blank" do
+    product = products(:one)
+    product.update_columns(
+      description_short: nil,
+      description_standard: "This is a standard description with more than fifteen words to test truncation behavior properly and correctly",
+      description_detailed: "This is detailed"
+    )
+
+    result = product.description_short_with_fallback
+    assert_not_nil result
+    assert result.end_with?("...")
+    assert result.split.length <= 16 # 15 words + "..."
+  end
+
+  test "description_short_with_fallback truncates detailed when short and standard are blank" do
+    product = products(:one)
+    product.update_columns(
+      description_short: nil,
+      description_standard: nil,
+      description_detailed: "This is a detailed description with many many words more than fifteen to test the truncation fallback logic properly"
+    )
+
+    result = product.description_short_with_fallback
+    assert_not_nil result
+    assert result.end_with?("...")
+    assert result.split.length <= 16 # 15 words + "..."
+  end
+
+  test "description_short_with_fallback returns nil when all fields are blank" do
+    product = products(:one)
+    product.update_columns(
+      description_short: nil,
+      description_standard: nil,
+      description_detailed: nil
+    )
+
+    assert_nil product.description_short_with_fallback
+  end
+
+  test "description_standard_with_fallback returns standard when present" do
+    product = products(:one)
+    product.update_columns(
+      description_standard: "This is the standard description",
+      description_detailed: "This is detailed"
+    )
+
+    assert_equal "This is the standard description", product.description_standard_with_fallback
+  end
+
+  test "description_standard_with_fallback truncates detailed when standard is blank" do
+    product = products(:one)
+    product.update_columns(
+      description_standard: nil,
+      description_detailed: "This is a very long detailed description with many words more than thirty five words to properly test the truncation behavior of the fallback method logic here and ensure it works correctly and precisely every single time"
+    )
+
+    result = product.description_standard_with_fallback
+    assert_not_nil result
+    assert result.end_with?("...")
+    assert result.split.length <= 36 # 35 words + "..."
+  end
+
+  test "description_detailed_with_fallback always returns detailed field" do
+    product = products(:one)
+    product.update_columns(description_detailed: "This is the detailed description")
+
+    assert_equal "This is the detailed description", product.description_detailed_with_fallback
+  end
+
+  test "truncate_to_words truncates text to specified word count" do
+    product = products(:one)
+    # Need to test private method indirectly through public methods
+    product.update_columns(
+      description_short: nil,
+      description_standard: "One two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen",
+      description_detailed: nil
+    )
+
+    result = product.description_short_with_fallback
+    words = result.gsub("...", "").split
+    assert_equal 15, words.length
+  end
 end
