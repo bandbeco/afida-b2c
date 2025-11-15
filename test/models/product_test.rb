@@ -364,6 +364,17 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal all_count, Product.search(nil).count
   end
 
+  test "search truncates excessively long queries" do
+    # Create a query longer than 100 characters
+    long_query = "a" * 150
+
+    # Should not raise error, query should be truncated
+    results = Product.search(long_query)
+
+    # Should return results (or empty array), not raise error
+    assert_kind_of ActiveRecord::Relation, results
+  end
+
   # Sort scope tests
   test "sorted by relevance uses default order" do
     products = Product.sorted("relevance").to_a

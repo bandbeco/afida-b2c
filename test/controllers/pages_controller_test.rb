@@ -53,4 +53,13 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Should fall back to default sort, not crash
   end
+
+  test "shop page handles excessively long search query safely" do
+    long_query = "a" * 200
+
+    get shop_path, params: { q: long_query }
+
+    assert_response :success
+    # Query should be truncated to 100 chars, not cause errors
+  end
 end

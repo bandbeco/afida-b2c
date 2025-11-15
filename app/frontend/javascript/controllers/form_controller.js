@@ -21,11 +21,13 @@ export default class extends Controller {
       }
     })
 
-    // Re-enable after a short delay (after form submission)
-    setTimeout(() => {
-      inputs.forEach(input => {
-        input.disabled = false
+    // Re-enable after form submission using requestAnimationFrame (safer than setTimeout)
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        inputs.forEach(input => {
+          input.disabled = false
+        })
       })
-    }, 100)
+    })
   }
 }

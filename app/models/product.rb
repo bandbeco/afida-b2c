@@ -44,7 +44,9 @@ class Product < ApplicationRecord
   scope :search, ->(query) {
     return all if query.blank?
 
-    sanitized_query = sanitize_sql_like(query)
+    # Truncate query to prevent excessively long searches
+    truncated_query = query.to_s.truncate(100, omission: "")
+    sanitized_query = sanitize_sql_like(truncated_query)
     where("name ILIKE ? OR sku ILIKE ? OR colour ILIKE ?",
           "%#{sanitized_query}%",
           "%#{sanitized_query}%",
