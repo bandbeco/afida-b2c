@@ -7,7 +7,19 @@ class ReplaceProductDescriptionWithThreeFields < ActiveRecord::Migration[8.1]
     add_column :products, :description_standard, :text
     add_column :products, :description_detailed, :text
 
-    # Populate from CSV data
+    # SAFETY: First, copy existing descriptions to description_standard as fallback
+    # This preserves data if CSV is missing or has issues
+    say "Preserving existing product descriptions..."
+    preserved_count = 0
+    Product.unscoped.find_each do |product|
+      if product.description.present?
+        product.update_column(:description_standard, product.description)
+        preserved_count += 1
+      end
+    end
+    say "Preserved #{preserved_count} existing product descriptions", true
+
+    # Then populate from CSV (will override preserved data if CSV has matching SKU)
     populate_descriptions_from_csv
 
     # Remove old description field
@@ -33,7 +45,14 @@ class ReplaceProductDescriptionWithThreeFields < ActiveRecord::Migration[8.1]
 
   def populate_descriptions_from_csv
     csv_path = Rails.root.join("lib", "data", "products.csv")
-    return unless File.exist?(csv_path)
+
+    unless File.exist?(csv_path)
+      say "WARNING: CSV file not found at #{csv_path}", true
+      say "Products will use preserved descriptions or remain blank", true
+      return
+    end
+
+    say "Loading product descriptions from CSV..."
 
     # Read CSV and build a lookup hash by SKU
     descriptions_by_sku = {}
@@ -50,10 +69,12 @@ class ReplaceProductDescriptionWithThreeFields < ActiveRecord::Migration[8.1]
         }
       end
     rescue CSV::MalformedCSVError => e
-      Rails.logger.warn "CSV parsing error: #{e.message}. Continuing with parsed data."
+      say "WARNING: CSV parsing error: #{e.message}", true
+      say "Continuing with parsed data...", true
     end
 
     # Update products with their descriptions
+    updated_count = 0
     Product.unscoped.find_each do |product|
       next if product.sku.blank?
 
@@ -65,6 +86,9 @@ class ReplaceProductDescriptionWithThreeFields < ActiveRecord::Migration[8.1]
         description_standard: descriptions[:standard],
         description_detailed: descriptions[:detailed]
       )
+      updated_count += 1
     end
+
+    say "Updated #{updated_count} products from CSV data", true
   end
 end
