@@ -7,6 +7,7 @@ export default class extends Controller {
     // Store bound function references to prevent memory leaks
     this.boundTrapFocus = this.trapFocus.bind(this)
     this.boundHandleEscape = this.handleEscape.bind(this)
+    this.boundHandleClickOutside = this.handleClickOutside.bind(this)
     this.boundOpen = this.open.bind(this)
     this.boundHandleSubmitEnd = this.handleSubmitEnd.bind(this)
 
@@ -40,9 +41,21 @@ export default class extends Controller {
 
     // Set up focus trap (using stored bound function)
     this.element.addEventListener('keydown', this.boundTrapFocus)
+
+    // Add click-outside-to-close handler
+    const modal = this.element.querySelector('.modal')
+    if (modal) {
+      modal.addEventListener('click', this.boundHandleClickOutside)
+    }
   }
 
   close() {
+    // Remove click-outside handler before clearing content
+    const modal = this.element.querySelector('.modal')
+    if (modal) {
+      modal.removeEventListener('click', this.boundHandleClickOutside)
+    }
+
     // Clear modal content
     this.element.innerHTML = '<turbo-frame id="quick-add-modal"></turbo-frame>'
 
@@ -95,6 +108,15 @@ export default class extends Controller {
     } else if (!event.shiftKey && document.activeElement === lastElement) {
       event.preventDefault()
       firstElement.focus()
+    }
+  }
+
+  handleClickOutside(event) {
+    // Only close if clicking directly on the modal overlay (not its children)
+    // DaisyUI modals have .modal as overlay and .modal-box as content
+    if (event.target.classList.contains('modal')) {
+      event.preventDefault()
+      this.close()
     }
   }
 }
