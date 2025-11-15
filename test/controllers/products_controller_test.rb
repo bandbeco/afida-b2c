@@ -133,6 +133,38 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # GET /products/:id/quick_add
+  test "quick_add renders modal for standard product" do
+    standard_product = products(:one)  # Assuming product type is 'standard'
+    standard_product.update!(product_type: "standard")
+    # Ensure product has a slug (in case fixture doesn't have one)
+    standard_product.generate_slug if standard_product.slug.blank?
+    standard_product.save! if standard_product.changed?
+
+    get quick_add_product_url(standard_product)
+
+    assert_response :success
+    assert_select "turbo-frame#quick-add-modal"
+    assert_select ".modal.modal-open"
+    assert_match standard_product.name, response.body
+  end
+
+  test "quick_add redirects for customizable product" do
+    customizable_product = products(:one)
+    customizable_product.update!(product_type: "customizable_template")
+
+    get quick_add_product_url(customizable_product)
+
+    assert_redirected_to product_path(customizable_product)
+    assert_equal "Product not available for quick add", flash[:alert]
+  end
+
+  test "quick_add returns 404 for invalid slug" do
+    get quick_add_product_path("nonexistent-product-slug")
+
+    assert_response :not_found
+  end
+
   private
 
   def sign_in_as(user)

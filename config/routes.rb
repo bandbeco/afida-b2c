@@ -15,7 +15,11 @@ Rails.application.routes.draw do
   # FAQ page
   get "faqs", to: "faqs#index"
 
-  resources :products, only: [ :index, :show ]
+  resources :products, only: [ :index, :show ], param: :slug do
+    member do
+      get :quick_add
+    end
+  end
   resources :categories, only: [ :show ], path: "category"
 
   # Branded products shortcut

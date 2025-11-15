@@ -1,0 +1,293 @@
+openapi: 3.0.0
+info:
+  title: Quick Add Modal API
+  version: 1.0.0
+  description: |
+    API specification for Quick Add to Cart feature modal endpoint.
+    This endpoint returns Turbo Frame HTML for rendering a product quick-add modal.
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://afida.co.uk
+    description: Production server
+
+paths:
+  /products/{slug}/quick_add:
+    get:
+      summary: Render quick add modal for a product
+      description: |
+        Returns Turbo Frame HTML containing a modal with variant selector,
+        quantity selector, and add-to-cart form for the specified product.
+
+        The modal is designed to be inserted into a shared Turbo Frame container
+        (`<turbo-frame id="quick-add-modal">`) and opened via Stimulus controller.
+
+        **Eligibility**: Only standard products (product_type: 'standard') are
+        eligible. Customizable products return 404.
+
+      operationId: getQuickAddModal
+      tags:
+        - Products
+        - Quick Add
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          description: |
+            Product slug (SEO-friendly identifier).
+            Examples: "single-wall-hot-cup", "pizza-box-kraft"
+          schema:
+            type: string
+            pattern: '^[a-z0-9-]+$'
+          example: "single-wall-hot-cup"
+
+      responses:
+        '200':
+          description: Modal HTML content successfully rendered
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Turbo Frame HTML with modal markup
+              examples:
+                single_variant_product:
+                  summary: Product with single variant
+                  value: |
+                    <turbo-frame id="quick-add-modal">
+                      <div class="modal modal-open" role="dialog" aria-modal="true">
+                        <div class="modal-box">
+                          <h3 class="font-bold text-lg">Pizza Box - Kraft</h3>
+                          <form action="/cart/cart_items" method="post">
+                            <input type="hidden" name="cart_item[variant_sku]" value="PIZB-14" />
+                            <select name="cart_item[quantity]">
+                              <option value="25">1 pack (25 units)</option>
+                              <option value="50">2 packs (50 units)</option>
+                            </select>
+                            <button type="submit">Add to Basket</button>
+                          </form>
+                        </div>
+                      </div>
+                    </turbo-frame>
+
+                multi_variant_product:
+                  summary: Product with multiple variants
+                  value: |
+                    <turbo-frame id="quick-add-modal">
+                      <div class="modal modal-open" role="dialog" aria-modal="true">
+                        <div class="modal-box">
+                          <h3 class="font-bold text-lg">Single Wall Hot Cup</h3>
+                          <form action="/cart/cart_items" method="post">
+                            <select name="variant_selector" data-action="change->quick-add-form#updateVariant">
+                              <option value="SWC-8OZ-WHT">8oz - £12.50</option>
+                              <option value="SWC-12OZ-WHT">12oz - £15.50</option>
+                              <option value="SWC-16OZ-WHT">16oz - £18.50</option>
+                            </select>
+                            <input type="hidden" name="cart_item[variant_sku]" value="SWC-8OZ-WHT" />
+                            <select name="cart_item[quantity]">
+                              <option value="50">1 pack (50 units)</option>
+                              <option value="100">2 packs (100 units)</option>
+                            </select>
+                            <button type="submit">Add to Basket</button>
+                          </form>
+                        </div>
+                      </div>
+                    </turbo-frame>
+
+        '404':
+          description: Product not found or not eligible for quick add
+          content:
+            text/html:
+              schema:
+                type: string
+                description: Error message in Turbo Frame
+              example: |
+                <turbo-frame id="quick-add-modal">
+                  <div class="alert alert-error">
+                    <p>Product not available for quick add</p>
+                  </div>
+                </turbo-frame>
+
+  /cart/cart_items:
+    post:
+      summary: Add item to cart (existing endpoint, reused)
+      description: |
+        Handles form submission from quick add modal to add product variant to cart.
+
+        **Behavior**:
+        - If cart item already exists with same variant: increment quantity
+        - If new variant: create new cart line item
+
+        **Response**: Turbo Stream actions to update cart UI and close modal.
+
+      operationId: createCartItem
+      tags:
+        - Cart
+        - Cart Items
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                cart_item[variant_sku]:
+                  type: string
+                  description: ProductVariant SKU (unique identifier)
+                  example: "SWC-8OZ-WHT"
+                cart_item[quantity]:
+                  type: integer
+                  description: Quantity in units (multiple of pac_size)
+                  minimum: 1
+                  maximum: 1000
+                  example: 50
+              required:
+                - cart_item[variant_sku]
+                - cart_item[quantity]
+            examples:
+              add_new_item:
+                summary: Add new item to cart
+                value:
+                  cart_item[variant_sku]: "SWC-8OZ-WHT"
+                  cart_item[quantity]: 50
+
+              increment_existing:
+                summary: Increment quantity of existing item
+                value:
+                  cart_item[variant_sku]: "SWC-12OZ-WHT"
+                  cart_item[quantity]: 100
+
+      responses:
+        '201':
+          description: Item successfully added to cart (Turbo Stream response)
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: text/vnd.turbo-stream.html
+          content:
+            text/vnd.turbo-stream.html:
+              schema:
+                type: string
+                description: Turbo Stream actions to update cart UI
+              example: |
+                <turbo-stream action="replace" target="basket_counter">
+                  <template>
+                    <span id="basket_counter">3</span>
+                  </template>
+                </turbo-stream>
+                <turbo-stream action="replace" target="quick-add-modal">
+                  <template>
+                    <turbo-frame id="quick-add-modal"></turbo-frame>
+                  </template>
+                </turbo-stream>
+
+        '422':
+          description: Validation error (invalid SKU, quantity, etc.)
+          content:
+            text/vnd.turbo-stream.html:
+              schema:
+                type: string
+                description: Turbo Stream with error message
+              example: |
+                <turbo-stream action="replace" target="quick-add-modal">
+                  <template>
+                    <turbo-frame id="quick-add-modal">
+                      <div class="alert alert-error">
+                        <p>Invalid variant or quantity</p>
+                      </div>
+                    </turbo-frame>
+                  </template>
+                </turbo-stream>
+
+components:
+  schemas:
+    Product:
+      type: object
+      description: Product model
+      properties:
+        id:
+          type: integer
+          example: 1
+        slug:
+          type: string
+          example: "single-wall-hot-cup"
+        name:
+          type: string
+          example: "Single Wall Hot Cup"
+        product_type:
+          type: string
+          enum: [standard, customizable_template, customized_instance]
+          example: "standard"
+        active:
+          type: boolean
+          example: true
+
+    ProductVariant:
+      type: object
+      description: Product variant model
+      properties:
+        id:
+          type: integer
+          example: 1
+        sku:
+          type: string
+          example: "SWC-8OZ-WHT"
+        name:
+          type: string
+          example: "8oz"
+        price:
+          type: number
+          format: decimal
+          description: Pack price in pounds (not cents)
+          example: 12.50
+        pac_size:
+          type: integer
+          description: Units per pack
+          example: 50
+        active:
+          type: boolean
+          example: true
+
+    CartItem:
+      type: object
+      description: Cart item model
+      properties:
+        id:
+          type: integer
+          example: 1
+        cart_id:
+          type: integer
+          example: 1
+        product_variant_id:
+          type: integer
+          example: 1
+        quantity:
+          type: integer
+          description: Quantity in units
+          example: 50
+        price:
+          type: number
+          format: decimal
+          description: Unit price snapshot (pounds)
+          example: 12.50
+
+  securitySchemes:
+    csrf:
+      type: apiKey
+      in: header
+      name: X-CSRF-Token
+      description: Rails CSRF token (required for POST requests)
+
+security:
+  - csrf: []
+
+tags:
+  - name: Products
+    description: Product browsing and detail endpoints
+  - name: Quick Add
+    description: Quick add to cart modal functionality
+  - name: Cart
+    description: Shopping cart management
+  - name: Cart Items
+    description: Individual cart item CRUD operations

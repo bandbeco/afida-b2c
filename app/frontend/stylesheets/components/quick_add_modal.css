@@ -1,0 +1,52 @@
+/* Quick Add Modal Styles */
+
+/* Desktop: Centered modal */
+@media (min-width: 768px) {
+  #quick-add-modal .modal-box {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 500px;
+    border-radius: 1rem;
+  }
+}
+
+/* Mobile: Bottom sheet */
+@media (max-width: 767px) {
+  #quick-add-modal .modal-box {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    transform: translateY(0);
+    max-width: 100%;
+    border-radius: 1rem 1rem 0 0;
+    max-height: 85vh;
+    overflow-y: auto;
+    margin: 0;
+  }
+
+  /* Slide-up animation */
+  #quick-add-modal.modal-open .modal-box {
+    animation: slide-up 0.3s ease-out;
+  }
+
+  @keyframes slide-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Ensure touch targets are >= 44x44pt on mobile */
+@media (max-width: 767px) {
+  #quick-add-modal .btn,
+  #quick-add-modal .select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

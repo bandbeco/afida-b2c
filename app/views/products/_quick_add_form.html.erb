@@ -1,0 +1,66 @@
+<%# Quick Add Form - Handles both single and multi-variant products %>
+
+<% variants_data ||= [] %>
+
+<%= form_with url: cart_cart_items_path,
+              method: :post,
+              class: "space-y-4",
+              data: {
+                controller: "cart-drawer quick-add-form",
+                action: "turbo:submit-end->cart-drawer#open",
+                quick_add_form_variants_data_value: variants_data.to_json
+              } do |f| %>
+
+  <%# Hidden field for variant SKU - will be updated by Stimulus for multi-variant products %>
+  <%= hidden_field_tag "cart_item[variant_sku]",
+                       (variants.first&.sku || product.default_variant&.sku),
+                       data: { quick_add_form_target: "variantSku" } %>
+
+  <%# Variant selector - Only show if product has multiple variants %>
+  <% if variants.count > 1 %>
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text font-semibold">Select variant:</span>
+      </label>
+      <%= select_tag "variant_selector",
+                     options_from_collection_for_select(variants, :sku, :name, variants.first&.sku),
+                     class: "select select-bordered w-full",
+                     data: {
+                       quick_add_form_target: "variantSelector",
+                       action: "change->quick-add-form#updateVariant change->quick-add-form#updatePrice"
+                     } %>
+    </div>
+  <% end %>
+
+  <%# Quantity selector - Show multiples of pack size %>
+  <% pac_size = (variants.first&.pac_size || product.default_variant&.pac_size || 1) %>
+  <div class="form-control">
+    <label class="label">
+      <span class="label-text font-semibold">Select quantity:</span>
+      <span class="label-text-alt text-sm text-base-content/60" data-quick-add-form-target="packSizeDisplay">
+        Pack size: <%= number_with_delimiter(pac_size) %> units
+      </span>
+    </label>
+    <%= select_tag "cart_item[quantity]",
+                   options_for_select((1..10).map { |n|
+                     quantity_units = n * pac_size
+                     ["#{n} #{n == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(quantity_units)} units)", quantity_units]
+                   }, pac_size),
+                   class: "select select-bordered w-full",
+                   data: {
+                     quick_add_form_target: "quantitySelect",
+                     action: "change->quick-add-form#updatePrice"
+                   } %>
+  </div>
+
+  <%# Price display - Shows selected variant price %>
+  <div class="flex justify-between items-center py-3 px-4 bg-base-200 rounded-lg">
+    <span class="font-medium">Price:</span>
+    <span class="font-semibold text-lg" data-quick-add-form-target="priceDisplay">
+      <%= number_to_currency(variants.first&.price || product.default_variant&.price || 0) %>
+    </span>
+  </div>
+
+  <%# Submit button %>
+  <%= f.submit "Add to Basket", class: "btn btn-primary w-full mt-4" %>
+<% end %>

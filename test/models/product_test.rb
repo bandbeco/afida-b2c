@@ -535,4 +535,67 @@ class ProductTest < ActiveSupport::TestCase
     words = result.gsub("...", "").split
     assert_equal 15, words.length
   end
+
+  # Quick Add scope tests (T011)
+  test "quick_add_eligible scope returns only standard products" do
+    standard_product = products(:one)
+    standard_product.update!(product_type: "standard")
+
+    customizable_product = Product.create!(
+      name: "Branded Cup",
+      sku: "BRANDED-1",
+      category: categories(:one),
+      product_type: "customizable_template"
+    )
+
+    customized_instance = Product.create!(
+      name: "Acme Branded Cup",
+      sku: "ACME-1",
+      category: categories(:one),
+      product_type: "customized_instance",
+      parent_product: customizable_product,
+      organization: organizations(:acme)
+    )
+
+    eligible = Product.quick_add_eligible
+
+    assert_includes eligible, standard_product
+    assert_not_includes eligible, customizable_product
+    assert_not_includes eligible, customized_instance
+  end
+
+  test "quick_add_eligible scope excludes customizable products" do
+    customizable = Product.create!(
+      name: "Customizable Product",
+      sku: "CUSTOM-1",
+      category: categories(:one),
+      product_type: "customizable_template"
+    )
+
+    eligible = Product.quick_add_eligible
+
+    assert_not_includes eligible, customizable
+  end
+
+  test "quick_add_eligible scope excludes customized instances" do
+    template = Product.create!(
+      name: "Template Product",
+      sku: "TEMPLATE-1",
+      category: categories(:one),
+      product_type: "customizable_template"
+    )
+
+    instance = Product.create!(
+      name: "Instance Product",
+      sku: "INSTANCE-1",
+      category: categories(:one),
+      product_type: "customized_instance",
+      parent_product: template,
+      organization: organizations(:acme)
+    )
+
+    eligible = Product.quick_add_eligible
+
+    assert_not_includes eligible, instance
+  end
 end

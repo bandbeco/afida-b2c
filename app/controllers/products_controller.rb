@@ -13,13 +13,13 @@ class ProductsController < ApplicationController
 
     # Load product with appropriate associations based on type
     # We check product_type first to avoid N+1 queries
-    base_product = Product.find_by!(slug: params[:id])
+    base_product = Product.find_by!(slug: params[:slug])
 
     if base_product.customizable_template?
       # For branded products, only need category, image, and branded_product_prices
       @product = Product.includes(:category, :branded_product_prices)
                        .with_attached_product_photo
-                       .find_by!(slug: params[:id])
+                       .find_by!(slug: params[:slug])
       # Load data for configurator
       service = BrandedProductPricingService.new(@product)
       @available_sizes = service.available_sizes
@@ -43,7 +43,7 @@ class ProductsController < ApplicationController
     elsif base_product.standard? || base_product.customized_instance?
       # For standard products, need variants with their images (not product-level photos)
       @product = Product.includes(:category)
-                       .find_by!(slug: params[:id])
+                       .find_by!(slug: params[:slug])
       # Eager load variant photos for @variants_json mapping (primary_photo needs both)
       @product.active_variants.includes(:product_photo_attachment, :lifestyle_photo_attachment).load
       # Logic for standard products and customized instances (both have variants)
@@ -93,5 +93,20 @@ class ProductsController < ApplicationController
         }
       end
     end
+  end
+
+  def quick_add
+    @product = Product.find_by!(slug: params[:slug])
+
+    # Only allow quick add for standard products
+    unless @product.product_type == "standard"
+      redirect_to product_path(@product), alert: "Product not available for quick add"
+      return
+    end
+
+    # Load active variants for the modal
+    @variants = @product.active_variants.by_position
+
+    render layout: false  # Turbo Frame content only
   end
 end
