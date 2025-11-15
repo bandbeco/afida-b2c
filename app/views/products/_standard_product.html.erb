@@ -13,14 +13,14 @@
 <% end %>
 
 <% content_for :meta_description do %>
-<%= @product.meta_description.presence || @product.description %>
+<%= @product.meta_description.presence || @product.description_standard_with_fallback %>
 <% end %>
 
 <% content_for :head do %>
   <!-- Twitter Card meta tags -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @product.name %>">
-  <meta name="twitter:description" content="<%= @product.description %>">
+  <meta name="twitter:description" content="<%= @product.description_standard_with_fallback %>">
   <% if @selected_variant&.primary_photo&.attached? %>
     <meta name="twitter:image" content="<%= polymorphic_url(@selected_variant.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
   <% end %>
@@ -28,7 +28,7 @@
   <!-- Open Graph meta tags (also used by Twitter and WhatsApp) -->
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= @product.name %>">
-  <meta property="og:description" content="<%= @product.description %>">
+  <meta property="og:description" content="<%= @product.description_standard_with_fallback %>">
   <meta property="og:url" content="<%= polymorphic_url(@product) %>">
   <meta property="og:site_name" content="Afida">
   <% if @selected_variant&.primary_photo&.attached? %>
@@ -99,9 +99,11 @@
             </span>
           </div>
 
-          <p class="text-base-content/70 my-4">
-            <%= @product.description %>
-          </p>
+          <% if @product.description_standard_with_fallback.present? %>
+            <p class="text-lg text-gray-700 mb-6">
+              <%= @product.description_standard_with_fallback %>
+            </p>
+          <% end %>
 
           <% if @product.active_variants.count > 1 %>
             <div class="space-y-4 my-4">
@@ -235,6 +237,16 @@
                   </tr>
                 <% end %>
               </table>
+            </div>
+          <% end %>
+
+          <%# Product Details Section - T038-T043 %>
+          <% if @product.description_detailed_with_fallback.present? %>
+            <div class="mt-8">
+              <h2 class="text-2xl font-semibold mb-4">Product Details</h2>
+              <div class="prose prose-lg max-w-none">
+                <%= simple_format(@product.description_detailed_with_fallback) %>
+              </div>
             </div>
           <% end %>
         </div>

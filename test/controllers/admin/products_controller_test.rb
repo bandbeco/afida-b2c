@@ -66,4 +66,21 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     assert_redirected_to new_session_path
   end
+
+  test "update permits description_short, description_standard, description_detailed parameters" do
+    patch admin_product_path(@product), params: {
+      product: {
+        name: @product.name,
+        description_short: "Updated short description",
+        description_standard: "Updated standard description text",
+        description_detailed: "Updated detailed description with full information"
+      }
+    }, headers: @headers
+
+    assert_response :redirect
+    @product.reload
+    assert_equal "Updated short description", @product.description_short
+    assert_equal "Updated standard description text", @product.description_standard
+    assert_equal "Updated detailed description with full information", @product.description_detailed
+  end
 end

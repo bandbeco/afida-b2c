@@ -13,6 +13,10 @@
     <div class="card-body p-4">
       <h3 class="card-title text-lg"><%= product.name %></h3>
 
+      <% if product.description_short_with_fallback.present? %>
+        <p class="text-sm text-gray-600 mb-2"><%= product.description_short_with_fallback %></p>
+      <% end %>
+
       <% price_range = product.price_range %>
       <% price_unit = product.customizable_template? ? "unit" : "pack" %>
       <% if price_range.is_a?(Array) %>

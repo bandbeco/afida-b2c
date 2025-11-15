@@ -3,7 +3,7 @@
 <% end %>
 
 <% content_for :meta_description do %>
-  <%= @product.meta_description.presence || @product.description %>
+  <%= @product.meta_description.presence || @product.description_standard_with_fallback %>
 <% end %>
 
 <% content_for :head do %>
@@ -12,7 +12,7 @@
       "@context": "https://schema.org/",
       "@type": "Product",
       "name": @product.name,
-      "description": @product.description,
+      "description": @product.description_standard_with_fallback,
       "brand": {
         "@type": "Brand",
         "name": "Afida"
@@ -64,7 +64,7 @@
     <div class="space-y-6">
       <div>
         <h1 class="text-3xl font-bold"><%= @product.name %></h1>
-        <p class="text-lg text-gray-600 mt-2"><%= @product.description %></p>
+        <p class="text-lg text-gray-600 mt-2"><%= @product.description_standard_with_fallback %></p>
       </div>
 
       <!-- Configuration Steps as Accordion -->

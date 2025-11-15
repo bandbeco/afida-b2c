@@ -2,7 +2,9 @@ one:
   name: "Product 1"
   sku: "BUBL-POP-11"
   base_sku: "BUBL-POP-11"
-  description: "Description 1"
+  description_short: "Short description 1"
+  description_standard: "Standard description 1 with a bit more detail"
+  description_detailed: "Detailed description 1 with comprehensive information about the product and its features"
   active: true
   category: :one
   slug: "product-1"
@@ -12,7 +14,9 @@ two:
   name: "Product 2"
   sku: "BUBL-POP-12"
   base_sku: "BUBL-POP-12"
-  description: "Description 2"
+  description_short: "Short description 2"
+  description_standard: "Standard description 2 with a bit more detail"
+  description_detailed: "Detailed description 2 with comprehensive information about the product and its features"
   active: false
   category: :two
   slug: "product-2"
@@ -33,7 +37,9 @@ branded_double_wall_template:
   active: true
   position: 1
   product_type: customizable_template
-  description: Custom branded double-wall cups for your business
+  description_short: "Custom branded double-wall cups"
+  description_standard: "Custom branded double-wall cups for your business with high-quality printing"
+  description_detailed: "Custom branded double-wall cups for your business with high-quality printing and eco-friendly materials"
 
 acme_branded_cups:
   name: ACME Coffee 12oz Double Wall Branded Cups

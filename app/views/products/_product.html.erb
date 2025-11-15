@@ -32,6 +32,11 @@
         <%= product.name %>
       <% end %>
     </h2>
+
+    <% if product.description_short_with_fallback.present? %>
+      <p class="text-sm text-gray-600 mt-2"><%= product.description_short_with_fallback %></p>
+    <% end %>
+
     <% if product.featured? %>
       <div class="badge badge-secondary absolute top-2 right-2 z-10">FEATURED</div>
     <% end %>
