@@ -14,7 +14,7 @@ require 'uri'
 # 3. Parse target URL to extract target_slug and variant_params
 # 4. Create/update UrlRedirect records using idempotent find_or_create_by!
 
-puts "Seeding legacy redirects from CSV..."
+puts "Seeding URL redirects from CSV..."
 puts "Reading: #{Rails.root.join('config/url_redirects.csv')}"
 
 # Track statistics
@@ -80,7 +80,7 @@ ActiveRecord::Base.transaction do
       next
     end
 
-    # Extract legacy path (source is already in the format /product/...)
+    # Extract source path (source is already in the format /product/...)
     source_path = source.strip
 
     # Parse target URL to extract slug and variant parameters

@@ -138,7 +138,19 @@ namespace :products do
           sku = row["sku"]
           next if sku.blank?
 
-          variant = product.variants.find_or_initialize_by(sku: sku)
+          # Find variant globally first (SKU is unique across all variants)
+          # Then ensure it belongs to current product
+          variant = ProductVariant.find_by(sku: sku)
+
+          if variant && variant.product_id != product.id
+            # SKU exists on different product - skip with warning
+            puts "  ⚠️  Skipping variant #{sku}: SKU already exists on product '#{variant.product.name}'"
+            next
+          elsif variant.nil?
+            # Create new variant
+            variant = product.variants.build(sku: sku)
+          end
+
           is_new_variant = variant.new_record?
 
           # Build option values hash
@@ -150,6 +162,12 @@ namespace :products do
           # Parse price (remove currency symbols)
           price_str = row["price"].to_s.gsub(/[£$,]/, "").strip
           price = price_str.to_f
+
+          # Skip variant if price is invalid (0 or negative)
+          if price <= 0
+            puts "  ⚠️  Skipping variant #{sku}: Invalid price '#{row["price"]}' (parsed as #{price})"
+            next
+          end
 
           variant.assign_attributes(
             name: row["size_label"].presence || row["colour_label"].presence || "Standard",

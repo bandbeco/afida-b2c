@@ -4,7 +4,7 @@ require "application_system_test_case"
 
 class UrlRedirectSystemTest < ApplicationSystemTestCase
   # T040: Browser redirect test
-  test "should redirect user in browser from legacy URL to new product page" do
+  test "should redirect user in browser from source URL to new product page" do
     product = Product.first
 
     UrlRedirect.create!(
@@ -14,7 +14,7 @@ class UrlRedirectSystemTest < ApplicationSystemTestCase
       active: true
     )
 
-    # Visit legacy URL in browser
+    # Visit source URL in browser
     visit "/product/system-test-redirect"
 
     # Verify browser was redirected to product page

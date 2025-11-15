@@ -291,4 +291,153 @@ class ProductTest < ActiveSupport::TestCase
     assert_not product.valid?
     assert_includes product.errors[:profit_margin], "is not included in the list"
   end
+
+  # Category filtering scope tests
+  test "in_categories filters by single category slug" do
+    category = categories(:one)
+    product_in_category = products(:one)
+    product_in_category.update(category: category)
+
+    results = Product.in_categories([ category.slug ])
+
+    assert_includes results, product_in_category
+    # Verify it's filtering (not just returning all)
+    assert results.count <= category.products.count
+  end
+
+  test "in_categories filters by multiple category slugs" do
+    category1 = categories(:one)
+    category2 = Category.create!(name: "Category Two", slug: "category-two")
+
+    product1 = products(:one)
+    product1.update(category: category1)
+
+    product2 = Product.create!(name: "Product 2", sku: "SKU2", category: category2)
+
+    results = Product.in_categories([ category1.slug, category2.slug ])
+
+    assert_includes results, product1
+    assert_includes results, product2
+  end
+
+  test "in_categories returns all products when categories is blank" do
+    all_count = Product.count
+
+    assert_equal all_count, Product.in_categories([]).count
+    assert_equal all_count, Product.in_categories(nil).count
+  end
+
+  # Search scope tests
+  test "search returns products matching name" do
+    pizza_product = products(:one)
+    pizza_product.update(name: "Pizza Box Kraft")
+
+    results = Product.search("pizza")
+
+    assert_includes results, pizza_product
+    # Verify it's actually filtering (not returning all)
+    assert results.count < Product.count, "Search should filter results"
+  end
+
+  test "search returns products matching SKU" do
+    product = products(:one)
+    product.update(sku: "PIZB-001")
+
+    results = Product.search("PIZB")
+
+    assert_includes results, product
+  end
+
+  test "search is case-insensitive" do
+    product = products(:one)
+    product.update(name: "Pizza Box")
+
+    results = Product.search("PIZZA")
+
+    assert_includes results, product
+  end
+
+  test "search returns all products when query is blank" do
+    all_count = Product.count
+
+    assert_equal all_count, Product.search("").count
+    assert_equal all_count, Product.search(nil).count
+  end
+
+  test "search truncates excessively long queries" do
+    # Create a query longer than 100 characters
+    long_query = "a" * 150
+
+    # Should not raise error, query should be truncated
+    results = Product.search(long_query)
+
+    # Should return results (or empty array), not raise error
+    assert_kind_of ActiveRecord::Relation, results
+  end
+
+  # Sort scope tests
+  test "sorted by relevance uses default order" do
+    products = Product.sorted("relevance").to_a
+
+    # Should match default scope (position ASC, name ASC)
+    assert_equal Product.all.to_a, products
+  end
+
+  test "sorted by name_asc orders alphabetically" do
+    products = Product.sorted("name_asc").pluck(:name)
+
+    assert_equal products.sort, products
+  end
+
+  test "sorted by price_asc orders by minimum variant price" do
+    # Create two products with different prices
+    cheap = Product.create!(name: "Cheap Product", sku: "CHEAP", category: categories(:one))
+    expensive = Product.create!(name: "Expensive Product", sku: "EXPENSIVE", category: categories(:one))
+
+    ProductVariant.create!(product: cheap, name: "Small", sku: "CHEAP-1", price: 1.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: expensive, name: "Large", sku: "EXP-1", price: 10.00, stock_quantity: 100, active: true)
+
+    results = Product.sorted("price_asc").to_a
+
+    assert results.index(cheap) < results.index(expensive), "Cheap product should come before expensive"
+  end
+
+  test "sorted by price_desc orders by minimum variant price descending" do
+    # Create products with different minimum prices
+    low_price = Product.create!(name: "Low Price Product", sku: "LOW", category: categories(:one))
+    mid_price = Product.create!(name: "Mid Price Product", sku: "MID", category: categories(:one))
+    high_price = Product.create!(name: "High Price Product", sku: "HIGH", category: categories(:one))
+
+    # Low price product: min = 5, max = 20
+    ProductVariant.create!(product: low_price, name: "Small", sku: "LOW-1", price: 5.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: low_price, name: "Large", sku: "LOW-2", price: 20.00, stock_quantity: 100, active: true)
+
+    # Mid price product: min = 50, max = 100
+    ProductVariant.create!(product: mid_price, name: "Small", sku: "MID-1", price: 50.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: mid_price, name: "Large", sku: "MID-2", price: 100.00, stock_quantity: 100, active: true)
+
+    # High price product: min = 150, max = 200
+    ProductVariant.create!(product: high_price, name: "Small", sku: "HIGH-1", price: 150.00, stock_quantity: 100, active: true)
+    ProductVariant.create!(product: high_price, name: "Large", sku: "HIGH-2", price: 200.00, stock_quantity: 100, active: true)
+
+    results = Product.sorted("price_desc").to_a
+
+    # Should sort by MIN price descending: high_price (150) > mid_price (50) > low_price (5)
+    assert results.index(high_price) < results.index(mid_price), "High price product should come before mid price"
+    assert results.index(mid_price) < results.index(low_price), "Mid price product should come before low price"
+  end
+
+  test "sorted by price places products without variants at end" do
+    # Create product without any variants
+    no_variants = Product.create!(name: "No Variants Product", sku: "NOVARS", category: categories(:one))
+    with_variants = Product.create!(name: "With Variants Product", sku: "WITHVARS", category: categories(:one))
+    ProductVariant.create!(product: with_variants, name: "Standard", sku: "WITHVARS-1", price: 10.00, stock_quantity: 100, active: true)
+
+    results_asc = Product.sorted("price_asc").to_a
+    results_desc = Product.sorted("price_desc").to_a
+
+    # Products without variants should appear at end (NULLS LAST)
+    assert results_asc.index(with_variants) < results_asc.index(no_variants), "Product with variants should come before product without variants (asc)"
+    assert results_desc.index(with_variants) < results_desc.index(no_variants), "Product with variants should come before product without variants (desc)"
+  end
 end

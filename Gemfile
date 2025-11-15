@@ -85,3 +85,5 @@ gem "mocha"
 gem "sentry-ruby", "~> 6.1"
 
 gem "sentry-rails", "~> 6.1"
+
+gem "pagy", "~> 43.0"

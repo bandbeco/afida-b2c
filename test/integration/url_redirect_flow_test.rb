@@ -4,7 +4,7 @@ require "test_helper"
 
 class UrlRedirectFlowTest < ActionDispatch::IntegrationTest
   # T037: End-to-end redirect flow
-  test "should redirect legacy URL to new product page with variant" do
+  test "should redirect source URL to new product page with variant" do
     product = Product.first
 
     redirect = UrlRedirect.create!(
@@ -15,7 +15,7 @@ class UrlRedirectFlowTest < ActionDispatch::IntegrationTest
       hit_count: 0
     )
 
-    # Make request to legacy URL
+    # Make request to source URL
     get "/product/integration-test-redirect"
 
     # Verify 301 redirect
@@ -65,7 +65,7 @@ class UrlRedirectFlowTest < ActionDispatch::IntegrationTest
       active: false
     )
 
-    # Make request to legacy URL
+    # Make request to source URL
     get "/product/inactive-test"
 
     # Should pass through to routing, resulting in 404

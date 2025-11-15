@@ -13,7 +13,7 @@ class AdminUrlRedirectsTest < ActionDispatch::IntegrationTest
   end
 
   # T077: Admin CRUD workflow
-  test "should complete full CRUD workflow for legacy redirects" do
+  test "should complete full CRUD workflow for URL redirects" do
     # Create a new redirect
     get new_admin_url_redirect_path
     assert_response :success

@@ -30,6 +30,53 @@ class Product < ApplicationRecord
   scope :catalog_products, -> { where(product_type: [ "standard", "customizable_template" ]) }
   scope :customized_for_organization, ->(org) { unscoped.where(product_type: "customized_instance", organization: org) }
 
+  # Filtering and search scopes
+  scope :in_categories, ->(category_slugs) {
+    return all if category_slugs.blank?
+
+    # Handle array of category slugs
+    slugs = Array(category_slugs).reject(&:blank?)
+    return all if slugs.empty?
+
+    joins(:category).where(categories: { slug: slugs })
+  }
+
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    # Truncate query to prevent excessively long searches
+    truncated_query = query.to_s.truncate(100, omission: "")
+    sanitized_query = sanitize_sql_like(truncated_query)
+    where("name ILIKE ? OR sku ILIKE ? OR colour ILIKE ?",
+          "%#{sanitized_query}%",
+          "%#{sanitized_query}%",
+          "%#{sanitized_query}%")
+  }
+
+  scope :sorted, ->(sort_param) {
+    case sort_param
+    when "price_asc"
+      # Sort by minimum price (the "from" price displayed on cards)
+      # NULLS LAST: products without variants appear at end
+      reorder(
+        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) ASC NULLS LAST, products.name ASC")
+      )
+    when "price_desc"
+      # Sort by minimum price descending (the "from" price displayed on cards)
+      # NULLS LAST: products without variants appear at end
+      reorder(
+        Arel.sql("(SELECT MIN(price) FROM product_variants WHERE product_variants.product_id = products.id AND product_variants.active = true) DESC NULLS LAST, products.name ASC")
+      )
+    when "name_asc"
+      reorder(Arel.sql("LOWER(products.name) ASC"))
+    when "name_desc"
+      reorder(Arel.sql("LOWER(products.name) DESC"))
+    else  # "relevance" or nil or blank
+      # Keep default scope ordering (position ASC, name ASC)
+      all
+    end
+  }
+
   belongs_to :category, counter_cache: true
   belongs_to :organization, optional: true
   belongs_to :parent_product, class_name: "Product", optional: true
