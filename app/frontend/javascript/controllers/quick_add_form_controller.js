@@ -18,10 +18,17 @@ export default class extends Controller {
     this.variantSkuTarget.value = selectedSku
 
     // Find the selected variant data
-    this.currentVariant = this.variantsDataValue.find(v => v.sku === selectedSku)
+    const variant = this.variantsDataValue.find(v => v.sku === selectedSku)
+
+    if (!variant) {
+      console.error('Variant not found for SKU:', selectedSku)
+      return
+    }
+
+    this.currentVariant = variant
 
     // Update pack size display and quantity options
-    if (this.currentVariant && this.hasPackSizeDisplayTarget && this.hasQuantitySelectTarget) {
+    if (this.hasPackSizeDisplayTarget && this.hasQuantitySelectTarget) {
       this.updateQuantityOptions()
     }
   }
@@ -34,9 +41,18 @@ export default class extends Controller {
                      parseInt(this.quantitySelectTarget.value) :
                      (this.currentVariant.pac_size || 1)
 
+    // Validate data
+    const pacSize = this.currentVariant.pac_size || 1
+    const price = this.currentVariant.price || 0
+
+    if (pacSize <= 0) {
+      console.error('Invalid pac_size:', pacSize)
+      return
+    }
+
     // Calculate price (quantity is in units, price is per pack)
-    const packs = quantity / (this.currentVariant.pac_size || 1)
-    const totalPrice = this.currentVariant.price * packs
+    const packs = quantity / pacSize
+    const totalPrice = price * packs
 
     // Format and display price
     this.priceDisplayTarget.textContent = this.formatCurrency(totalPrice)
@@ -54,7 +70,6 @@ export default class extends Controller {
 
     // Rebuild quantity options
     const select = this.quantitySelectTarget
-    const currentValue = parseInt(select.value) || pacSize
     select.innerHTML = ''
 
     for (let n = 1; n <= 10; n++) {
@@ -65,7 +80,7 @@ export default class extends Controller {
       select.appendChild(option)
     }
 
-    // Try to maintain similar quantity, or default to 1 pack
+    // Default to 1 pack
     select.value = pacSize
   }
 

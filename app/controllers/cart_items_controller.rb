@@ -143,9 +143,8 @@ class CartItemsController < ApplicationController
             # Update basket counter
             turbo_stream.replace("basket_counter", partial: "shared/basket_counter"),
             # Update drawer cart content
-            turbo_stream.replace("drawer_cart_content", partial: "shared/drawer_cart_content"),
-            # Clear quick add modal
-            turbo_stream.replace("quick-add-modal", html: '<turbo-frame id="quick-add-modal"></turbo-frame>'.html_safe)
+            turbo_stream.replace("drawer_cart_content", partial: "shared/drawer_cart_content")
+            # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end
           ]
         end
         format.html { redirect_to cart_path, notice: "#{product_variant.display_name} added to cart." }

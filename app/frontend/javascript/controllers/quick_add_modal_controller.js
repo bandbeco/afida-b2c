@@ -4,18 +4,28 @@ export default class extends Controller {
   connect() {
     this.previouslyFocusedElement = null
 
+    // Store bound function references to prevent memory leaks
+    this.boundTrapFocus = this.trapFocus.bind(this)
+    this.boundHandleEscape = this.handleEscape.bind(this)
+    this.boundOpen = this.open.bind(this)
+    this.boundHandleSubmitEnd = this.handleSubmitEnd.bind(this)
+
     // Listen for Turbo Frame load to open modal
-    this.element.addEventListener('turbo:frame-load', this.open.bind(this))
+    this.element.addEventListener('turbo:frame-load', this.boundOpen)
 
     // Listen for form submission completion
-    this.element.addEventListener('turbo:submit-end', this.handleSubmitEnd.bind(this))
+    this.element.addEventListener('turbo:submit-end', this.boundHandleSubmitEnd)
 
     // Listen for ESC key
-    document.addEventListener('keydown', this.handleEscape.bind(this))
+    document.addEventListener('keydown', this.boundHandleEscape)
   }
 
   disconnect() {
-    document.removeEventListener('keydown', this.handleEscape.bind(this))
+    // Clean up all event listeners
+    this.element.removeEventListener('turbo:frame-load', this.boundOpen)
+    this.element.removeEventListener('turbo:submit-end', this.boundHandleSubmitEnd)
+    document.removeEventListener('keydown', this.boundHandleEscape)
+    this.element.removeEventListener('keydown', this.boundTrapFocus)
   }
 
   open(event) {
@@ -28,8 +38,8 @@ export default class extends Controller {
       firstFocusable.focus()
     }
 
-    // Set up focus trap
-    this.element.addEventListener('keydown', this.trapFocus.bind(this))
+    // Set up focus trap (using stored bound function)
+    this.element.addEventListener('keydown', this.boundTrapFocus)
   }
 
   close() {
@@ -41,8 +51,8 @@ export default class extends Controller {
       this.previouslyFocusedElement.focus()
     }
 
-    // Remove focus trap
-    this.element.removeEventListener('keydown', this.trapFocus.bind(this))
+    // Remove focus trap (using stored bound function)
+    this.element.removeEventListener('keydown', this.boundTrapFocus)
   }
 
   handleSubmitEnd(event) {
