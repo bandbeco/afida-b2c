@@ -1,4 +1,4 @@
-<div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card">
+<div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card" data-product-id="<%= product.id %>">
   <%= link_to product_path(product.slug), data: { turbo_frame: "_top" } do %>
     <figure class="aspect-square">
       <% if product.primary_photo&.attached? %>
@@ -24,6 +24,19 @@
       <% elsif price_range %>
         <p class="text-sm text-gray-600">from <%= number_to_currency(price_range, unit: "£") %> / <%= price_unit %></p>
       <% end %>
+    </div>
+  <% end %>
+
+  <%# Quick Add button - Only for standard products with variants %>
+  <% if product.product_type == "standard" && product.active_variants.any? %>
+    <div class="card-actions p-4 pt-0">
+      <%= link_to "Quick Add",
+                  quick_add_product_path(product),
+                  data: {
+                    turbo_frame: "quick-add-modal",
+                    fallback_url: product_path(product)
+                  },
+                  class: "btn btn-secondary btn-sm w-full" %>
     </div>
   <% end %>
 </div>

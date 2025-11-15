@@ -61,6 +61,12 @@ application.register("search", SearchController)
 import CharacterCounterController from "../javascript/controllers/character_counter_controller"
 application.register("character-counter", CharacterCounterController)
 
+import QuickAddModalController from "../javascript/controllers/quick_add_modal_controller"
+application.register("quick-add-modal", QuickAddModalController)
+
+import QuickAddFormController from "../javascript/controllers/quick_add_form_controller"
+application.register("quick-add-form", QuickAddFormController)
+
 // Configure Stimulus development experience
 application.debug = false
 window.Stimulus = application

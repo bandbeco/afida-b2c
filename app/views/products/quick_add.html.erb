@@ -1,0 +1,19 @@
+<turbo-frame id="quick-add-modal">
+  <div class="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="quick-add-title">
+    <div class="modal-box">
+      <h3 id="quick-add-title" class="font-bold text-lg mb-4"><%= @product.name %></h3>
+
+      <%# Pass variant data to form for price calculations %>
+      <% variants_data = @variants.map { |v| { sku: v.sku, price: v.price.to_f, pac_size: v.pac_size || 1, name: v.name } } %>
+      <%= render "quick_add_form", product: @product, variants: @variants, variants_data: variants_data %>
+
+      <div class="modal-action">
+        <button type="button"
+                class="btn btn-ghost"
+                data-action="click->quick-add-modal#close">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</turbo-frame>

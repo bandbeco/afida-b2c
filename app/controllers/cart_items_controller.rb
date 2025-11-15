@@ -138,7 +138,16 @@ class CartItemsController < ApplicationController
 
     if @cart_item.save
       respond_to do |format|
-        format.turbo_stream
+        format.turbo_stream do
+          render turbo_stream: [
+            # Update basket counter
+            turbo_stream.replace("basket_counter", partial: "shared/basket_counter"),
+            # Update drawer cart content
+            turbo_stream.replace("drawer_cart_content", partial: "shared/drawer_cart_content"),
+            # Clear quick add modal
+            turbo_stream.replace("quick-add-modal", html: '<turbo-frame id="quick-add-modal"></turbo-frame>'.html_safe)
+          ]
+        end
         format.html { redirect_to cart_path, notice: "#{product_variant.display_name} added to cart." }
       end
     else

@@ -4,3 +4,4 @@
 @plugin "daisyui";
 @import "../stylesheets/custom-styles.css";
 @import "../stylesheets/patterns.css";
+@import "../stylesheets/components/quick_add_modal.css";
