@@ -62,13 +62,24 @@ namespace :products do
           )
         end
 
-        # Set meta fields from first variant
+        # Set meta fields and descriptions from first variant row
         first_row = rows.first
         if first_row["meta_title"].present?
           product.update_column(:meta_title, first_row["meta_title"])
         end
         if first_row["meta_description"].present?
           product.update_column(:meta_description, first_row["meta_description"])
+        end
+
+        # Import descriptions (all three tiers)
+        if first_row["description_short"].present?
+          product.update_column(:description_short, first_row["description_short"])
+        end
+        if first_row["description_standard"].present?
+          product.update_column(:description_standard, first_row["description_standard"])
+        end
+        if first_row["description_detailed"].present?
+          product.update_column(:description_detailed, first_row["description_detailed"])
         end
 
         if is_new_product
