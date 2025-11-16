@@ -40,12 +40,13 @@ module ArticleHelper
     data.to_json
   end
 
-  # Render markdown to HTML using Redcarpet
+  # Render markdown to HTML using Redcarpet with XSS protection
   def render_markdown(markdown_text)
     return "" if markdown_text.blank?
 
+    # Use safe renderer that filters HTML
     renderer = Redcarpet::Render::HTML.new(
-      filter_html: false,
+      filter_html: true,  # CRITICAL: Filter raw HTML to prevent XSS
       hard_wrap: true,
       link_attributes: { target: "_blank", rel: "noopener noreferrer" }
     )
@@ -59,6 +60,7 @@ module ArticleHelper
       superscript: true
     )
 
-    markdown.render(markdown_text).html_safe
+    # Sanitize output as additional XSS protection layer
+    sanitize(markdown.render(markdown_text), tags: %w[p br strong em ul ol li h1 h2 h3 h4 h5 h6 a blockquote code pre table thead tbody tr th td], attributes: %w[href target rel])
   end
 end
