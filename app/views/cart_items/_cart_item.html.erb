@@ -21,7 +21,7 @@
           </div>
         <% else %>
           <div class="text-lg">
-            <%= cart_item.product_variant.name %>
+            <%= cart_item.product_variant.options_display.presence || cart_item.product_variant.name %>
           </div>
           <% if cart_item.product_variant.pac_size.present? && cart_item.product_variant.pac_size > 1 %>
             <div class="text-gray-500 text-sm">

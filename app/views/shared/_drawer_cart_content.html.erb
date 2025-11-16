@@ -16,7 +16,7 @@
                 <% if cart_item.configured? %>
                   Size: <%= cart_item.configuration["size"] %>
                 <% else %>
-                  <%= cart_item.product_variant.name %>
+                  <%= cart_item.product_variant.options_display.presence || cart_item.product_variant.name %>
                 <% end %>
               </p>
               <div class="flex justify-between items-center mt-1">
