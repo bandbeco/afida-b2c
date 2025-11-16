@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: SEO AI Engine Admin API
+  version: 1.0.0
+  description: Admin dashboard API for SEO opportunity management and content review
+
+paths:
+  /seo_ai/admin/opportunities:
+    get:
+      summary: List SEO opportunities
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, completed, dismissed]
+        - name: min_score
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 100
+      responses:
+        '200':
+          description: List of opportunities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Opportunity'
+
+  /seo_ai/admin/opportunities/{id}/dismiss:
+    post:
+      summary: Dismiss an opportunity
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Opportunity dismissed
+
+  /seo_ai/admin/content_drafts:
+    get:
+      summary: List content drafts pending review
+      responses:
+        '200':
+          description: List of drafts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ContentDraft'
+
+  /seo_ai/admin/content_drafts/{id}/approve:
+    post:
+      summary: Approve and publish a draft
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Draft approved and published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentItem'
+
+components:
+  schemas:
+    Opportunity:
+      type: object
+      properties:
+        id:
+          type: integer
+        keyword:
+          type: string
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        status:
+          type: string
+          enum: [pending, in_progress, completed, dismissed]
+
+    ContentDraft:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        quality_score:
+          type: integer
+        status:
+          type: string
+          enum: [pending_review, approved, rejected, published]
+
+    ContentItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        published_at:
+          type: string
+          format: date-time

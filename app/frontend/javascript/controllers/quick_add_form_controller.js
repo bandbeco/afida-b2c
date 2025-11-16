@@ -1,36 +1,90 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["variantSku", "variantSelector", "priceDisplay", "packSizeDisplay", "quantitySelect"]
+  static targets = ["variantSku", "priceDisplay", "packSizeDisplay", "quantitySelect"]
   static values = { variantsData: Array }
 
   connect() {
     // Initialize with first variant data
     if (this.hasVariantsDataValue && this.variantsDataValue.length > 0) {
       this.currentVariant = this.variantsDataValue[0]
+      this.selectedOptions = {}
+
+      // Initialize selected options from first variant
+      if (this.currentVariant.option_values) {
+        this.selectedOptions = { ...this.currentVariant.option_values }
+      }
+
       this.updatePrice()
     }
   }
 
-  updateVariant(event) {
-    // Update hidden field with selected variant SKU
-    const selectedSku = event.target.value
-    this.variantSkuTarget.value = selectedSku
+  selectOption(event) {
+    const button = event.currentTarget
+    const optionName = button.dataset.option
+    const value = button.dataset.value
 
-    // Find the selected variant data
-    const variant = this.variantsDataValue.find(v => v.sku === selectedSku)
+    // Update selected options
+    this.selectedOptions[optionName] = value
 
-    if (!variant) {
-      console.error('Variant not found for SKU:', selectedSku)
+    // Update UI: Remove selection from all buttons in this option group
+    const targetName = optionName.toLowerCase() + "Button"
+    const buttons = this.element.querySelectorAll(`[data-quick-add-form-target="${targetName}"]`)
+
+    buttons.forEach(btn => {
+      btn.classList.remove('border-primary')
+      const checkmark = btn.querySelector('.option-checkmark')
+      if (checkmark) {
+        checkmark.classList.add('hidden')
+      }
+    })
+
+    // Add selection to clicked button
+    button.classList.add('border-primary')
+    let checkmark = button.querySelector('.option-checkmark')
+    if (!checkmark) {
+      // Create checkmark if it doesn't exist
+      checkmark = document.createElement('span')
+      checkmark.className = 'option-checkmark absolute -top-2 -right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center'
+      checkmark.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+        </svg>
+      `
+      button.appendChild(checkmark)
+    } else {
+      checkmark.classList.remove('hidden')
+    }
+
+    // Find matching variant based on all selected options
+    this.updateVariantFromOptions()
+  }
+
+  updateVariantFromOptions() {
+    // Find variant that matches all selected options
+    const matchingVariant = this.variantsDataValue.find(variant => {
+      if (!variant.option_values) return false
+
+      return Object.keys(this.selectedOptions).every(optionName => {
+        return variant.option_values[optionName] === this.selectedOptions[optionName]
+      })
+    })
+
+    if (!matchingVariant) {
+      console.error('No matching variant found for options:', this.selectedOptions)
       return
     }
 
-    this.currentVariant = variant
+    this.currentVariant = matchingVariant
+    this.variantSkuTarget.value = matchingVariant.sku
 
-    // Update pack size display and quantity options
+    // Update pack size and quantity options if needed
     if (this.hasPackSizeDisplayTarget && this.hasQuantitySelectTarget) {
       this.updateQuantityOptions()
     }
+
+    // Update price
+    this.updatePrice()
   }
 
   updatePrice() {
