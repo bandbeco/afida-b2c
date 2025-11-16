@@ -1,0 +1,22 @@
+# Fixtures for ContentBrief
+one:
+  seo_ai_opportunity: high_score_pending
+  target_keyword: "eco-friendly coffee cups"
+  search_intent: "informational"
+  suggested_structure:
+    title: "The Complete Guide to Eco-Friendly Coffee Cups"
+    headings:
+      - "What are Eco-Friendly Coffee Cups?"
+      - "Benefits of Sustainable Coffee Cups"
+      - "How to Choose the Right Eco-Friendly Cup"
+    word_count_target: 1500
+    key_points:
+      - "Define eco-friendly coffee cups"
+      - "Explain environmental benefits"
+      - "Provide selection criteria"
+    meta_description: "Discover everything you need to know about eco-friendly coffee cups."
+  internal_links:
+    opportunities:
+      - "related products"
+      - "category pages"
+  created_by_model: "claude-3-5-sonnet-20241022"

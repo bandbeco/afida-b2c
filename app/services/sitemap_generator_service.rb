@@ -36,6 +36,14 @@ class SitemapGeneratorService
                   changefreq: "weekly",
                   lastmod: product.updated_at)
         end
+
+        # Blog posts (published ContentItems from SEO AI Engine)
+        SeoAiEngine::ContentItem.where.not(published_at: nil).find_each do |content_item|
+          add_url(xml, blog_url(content_item),
+                  priority: "0.6",
+                  changefreq: "monthly",
+                  lastmod: content_item.updated_at)
+        end
       end
     end
 
