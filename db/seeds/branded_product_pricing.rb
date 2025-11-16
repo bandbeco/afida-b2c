@@ -27,7 +27,7 @@ templates.each do |template_data|
     p.name = template_data[:name]
     p.product_type = "customizable_template"
     p.category = branded_category
-    p.description = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
+    p.description_standard = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
     p.active = true
     p.position = template_data[:sort]
   end
@@ -86,7 +86,7 @@ double_wall_branded = Product.find_or_create_by!(slug: "double-wall-branded-cups
   product.name = "Double Wall Branded Cups"
   product.product_type = "customizable_template"
   product.category = branded_category
-  product.description = "Premium double-wall insulated cups with your custom branding. No sleeve needed!"
+  product.description_standard = "Premium double-wall insulated cups with your custom branding. No sleeve needed!"
   product.active = true
   product.position = 2
 end

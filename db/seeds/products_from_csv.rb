@@ -35,8 +35,8 @@ CSV.foreach(csv_path, headers: true) do |row|
   }
 
   products_data[key][:variants] << {
-    size: row['size'],
-    colour: row['colour'],
+    size: row['size_value'],
+    colour: row['colour_value'],
     sku: row['sku'],
     price: row['price']&.gsub('£', '')&.gsub(',', '')&.to_f || 0,
     pac_size: row['pac_size']&.to_i || 1
@@ -60,7 +60,7 @@ products_data.each do |key, data|
     p.category = category
     p.meta_title = data[:meta_title]
     p.meta_description = data[:meta_description]
-    p.description = data[:description]
+    p.description_standard = data[:description]
     p.material = data[:material]
     p.active = true
     p.product_type = 'standard'
@@ -93,8 +93,13 @@ products_data.each do |key, data|
     option_values['Size'] = variant_data[:size] if variant_data[:size].present?
     option_values['Colour'] = variant_data[:colour] if variant_data[:colour].present?
 
-    # Create variant name from options
-    variant_name = [ variant_data[:size], variant_data[:colour] ].compact.join(' ')
+    # Create variant name from options that actually vary
+    # Only include size if product has multiple sizes
+    # Only include colour if product has multiple colours
+    variant_name_parts = []
+    variant_name_parts << variant_data[:size] if has_size_variants && variant_data[:size].present?
+    variant_name_parts << variant_data[:colour] if has_color_variants && variant_data[:colour].present?
+    variant_name = variant_name_parts.join(' ')
     variant_name = 'Standard' if variant_name.blank?
 
     variant = product.variants.find_or_initialize_by(sku: variant_data[:sku])
