@@ -210,9 +210,9 @@ module Admin
               display_parts = []
               display_parts << variant.name
 
-              # Add color if present
-              if variant.option_values["colour"].present?
-                display_parts << variant.option_values["colour"]
+              # Add color if present (using helper method)
+              if variant.colour_value.present?
+                display_parts << variant.colour_value
               end
 
               {

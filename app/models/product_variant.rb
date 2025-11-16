@@ -117,6 +117,20 @@ class ProductVariant < ApplicationRecord
     option_values.values.join(" ")
   end
 
+  # Safe accessor methods for common option values
+  # Returns nil if option not present in variant
+  def size_value
+    option_values["size"]
+  end
+
+  def colour_value
+    option_values["colour"]
+  end
+
+  def material_value
+    option_values["material"]
+  end
+
   # Convert pack price to unit price for display
   # If pac_size is set, price is per pack, so divide to get per-unit price
   # Otherwise, price is already per unit
