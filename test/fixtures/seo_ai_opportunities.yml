@@ -1,0 +1,41 @@
+high_score:
+  keyword: "eco-friendly coffee cups"
+  search_volume: 5400
+  current_position: 15
+  competition_level: "medium"
+  search_intent: "commercial"
+  opportunity_score: 78
+  status: "pending"
+  priority: "high"
+  serp_features: ["featured_snippet", "people_also_ask"]
+  top_ranking_urls: ["example.com/eco-cups", "competitor.com/sustainable-cups"]
+  keyword_difficulty: 45
+  content_gap_identified: true
+
+medium_score:
+  keyword: "recyclable napkins"
+  search_volume: 1200
+  current_position: 25
+  competition_level: "low"
+  search_intent: "informational"
+  opportunity_score: 62
+  status: "pending"
+  priority: "medium"
+  serp_features: []
+  top_ranking_urls: ["example.com/napkins"]
+  keyword_difficulty: 30
+  content_gap_identified: true
+
+in_progress:
+  keyword: "biodegradable straws"
+  search_volume: 3200
+  current_position: 20
+  competition_level: "medium"
+  search_intent: "commercial"
+  opportunity_score: 72
+  status: "in_progress"
+  priority: "high"
+  serp_features: ["shopping_results"]
+  top_ranking_urls: ["example.com/straws", "competitor.com/eco-straws"]
+  keyword_difficulty: 42
+  content_gap_identified: true

@@ -1,0 +1,28 @@
+# Fixtures for ContentDraft
+pending_review:
+  seo_ai_content_brief: one
+  content_type: "blog_post"
+  title: "The Complete Guide to Eco-Friendly Coffee Cups"
+  body: |
+    # Introduction
+
+    This is a comprehensive guide about eco-friendly coffee cups.
+
+    ## Benefits
+
+    Many benefits to using sustainable products.
+  meta_title: "Eco-Friendly Coffee Cups Guide | Afida"
+  meta_description: "Learn about eco-friendly coffee cups and sustainable choices."
+  target_keywords:
+    - "eco-friendly coffee cups"
+    - "sustainable coffee cups"
+  status: "pending_review"
+  quality_score: 75
+  review_notes:
+    strengths:
+      - "Well structured"
+      - "Good keyword integration"
+    improvements:
+      - "Add more examples"
+  reviewer_model: "claude-3-5-sonnet-20241022"
+  generation_cost_gbp: 0.15

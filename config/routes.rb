@@ -15,6 +15,9 @@ Rails.application.routes.draw do
   # FAQ page
   get "faqs", to: "faqs#index"
 
+  # Blog pages
+  resources :blogs, only: [ :index, :show ], path: "blog"
+
   resources :products, only: [ :index, :show ], param: :slug do
     member do
       get :quick_add
@@ -106,4 +109,7 @@ Rails.application.routes.draw do
   get "robots.txt", to: "robots#show", defaults: { format: :text }
 
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # Mount SEO AI Engine
+  mount SeoAiEngine::Engine, at: "/ai-seo"
 end

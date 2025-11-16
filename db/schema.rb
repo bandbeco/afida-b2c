@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_15_013520) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_16_172042) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -273,6 +273,114 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_15_013520) do
     t.index [ "slug" ], name: "index_products_on_slug", unique: true
   end
 
+  create_table "seo_ai_budget_trackings", force: :cascade do |t|
+    t.decimal "avg_cost_per_piece", precision: 10, scale: 2
+    t.integer "content_pieces_generated", default: 0
+    t.datetime "created_at", null: false
+    t.integer "gsc_requests", default: 0
+    t.decimal "llm_cost_gbp", precision: 10, scale: 2, default: "0.0"
+    t.integer "llm_requests", default: 0
+    t.date "month", null: false
+    t.decimal "serpapi_cost_gbp", precision: 10, scale: 2, default: "0.0"
+    t.integer "serpapi_requests", default: 0
+    t.decimal "total_cost_gbp", precision: 10, scale: 2, default: "0.0"
+    t.datetime "updated_at", null: false
+    t.index [ "month" ], name: "index_seo_ai_budget_trackings_on_month", unique: true
+  end
+
+  create_table "seo_ai_content_briefs", force: :cascade do |t|
+    t.jsonb "competitor_analysis", default: {}
+    t.datetime "created_at", null: false
+    t.string "created_by_model"
+    t.decimal "generation_cost_gbp", precision: 10, scale: 4
+    t.jsonb "internal_links", default: {}
+    t.jsonb "product_links", default: {}
+    t.string "search_intent"
+    t.bigint "seo_ai_opportunity_id", null: false
+    t.jsonb "suggested_structure", default: {}
+    t.string "target_keyword", null: false
+    t.datetime "updated_at", null: false
+    t.index [ "seo_ai_opportunity_id" ], name: "index_seo_ai_content_briefs_on_seo_ai_opportunity_id", unique: true
+  end
+
+  create_table "seo_ai_content_drafts", force: :cascade do |t|
+    t.text "body", null: false
+    t.string "content_type", null: false
+    t.datetime "created_at", null: false
+    t.decimal "generation_cost_gbp", precision: 10, scale: 4
+    t.string "meta_description"
+    t.string "meta_title"
+    t.integer "quality_score"
+    t.jsonb "review_notes", default: {}
+    t.datetime "reviewed_at"
+    t.integer "reviewed_by_id"
+    t.string "reviewer_model"
+    t.bigint "seo_ai_content_brief_id", null: false
+    t.string "status", default: "pending_review", null: false
+    t.string "target_keywords", default: [], array: true
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index [ "seo_ai_content_brief_id" ], name: "index_seo_ai_content_drafts_on_seo_ai_content_brief_id", unique: true
+    t.index [ "status", "quality_score" ], name: "index_seo_ai_content_drafts_on_status_and_quality_score"
+  end
+
+  create_table "seo_ai_content_items", force: :cascade do |t|
+    t.string "author_credit", default: "Afida Editorial Team"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.string "meta_description"
+    t.string "meta_title"
+    t.datetime "published_at", null: false
+    t.integer "related_category_ids", default: [], array: true
+    t.integer "related_product_ids", default: [], array: true
+    t.bigint "seo_ai_content_draft_id", null: false
+    t.string "slug", null: false
+    t.string "target_keywords", default: [], array: true
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index [ "published_at" ], name: "index_seo_ai_content_items_on_published_at"
+    t.index [ "seo_ai_content_draft_id" ], name: "index_seo_ai_content_items_on_seo_ai_content_draft_id"
+    t.index [ "slug" ], name: "index_seo_ai_content_items_on_slug", unique: true
+  end
+
+  create_table "seo_ai_opportunities", force: :cascade do |t|
+    t.string "competition_difficulty"
+    t.datetime "created_at", null: false
+    t.integer "current_position"
+    t.datetime "discovered_at", null: false
+    t.string "keyword", null: false
+    t.jsonb "metadata", default: {}
+    t.string "opportunity_type", null: false
+    t.integer "score", null: false
+    t.integer "search_volume"
+    t.string "status", default: "pending", null: false
+    t.string "target_url"
+    t.datetime "updated_at", null: false
+    t.index [ "discovered_at" ], name: "index_seo_ai_opportunities_on_discovered_at"
+    t.index [ "keyword" ], name: "index_seo_ai_opportunities_on_keyword", unique: true
+    t.index [ "opportunity_type" ], name: "index_seo_ai_opportunities_on_opportunity_type"
+    t.index [ "score" ], name: "index_seo_ai_opportunities_on_score"
+    t.index [ "status", "score" ], name: "index_seo_ai_opportunities_on_status_and_score"
+    t.index [ "status" ], name: "index_seo_ai_opportunities_on_status"
+  end
+
+  create_table "seo_ai_performance_snapshots", force: :cascade do |t|
+    t.decimal "avg_position", precision: 5, scale: 2
+    t.integer "clicks", default: 0
+    t.datetime "created_at", null: false
+    t.decimal "ctr", precision: 5, scale: 4
+    t.integer "impressions", default: 0
+    t.jsonb "keyword_positions", default: {}
+    t.date "period_end", null: false
+    t.date "period_start", null: false
+    t.bigint "seo_ai_content_item_id"
+    t.decimal "traffic_value_gbp", precision: 10, scale: 2
+    t.datetime "updated_at", null: false
+    t.index [ "period_end" ], name: "index_seo_ai_performance_snapshots_on_period_end"
+    t.index [ "seo_ai_content_item_id", "period_end" ], name: "idx_on_seo_ai_content_item_id_period_end_588cc4adf8"
+    t.index [ "seo_ai_content_item_id" ], name: "index_seo_ai_performance_snapshots_on_seo_ai_content_item_id"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -332,6 +440,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_15_013520) do
   add_foreign_key "products", "categories"
   add_foreign_key "products", "organizations"
   add_foreign_key "products", "products", column: "parent_product_id"
+  add_foreign_key "seo_ai_content_briefs", "seo_ai_opportunities"
+  add_foreign_key "seo_ai_content_drafts", "seo_ai_content_briefs"
+  add_foreign_key "seo_ai_content_items", "seo_ai_content_drafts"
+  add_foreign_key "seo_ai_performance_snapshots", "seo_ai_content_items"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "organizations"
 end
