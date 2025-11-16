@@ -3,9 +3,13 @@
     <div class="modal-box">
       <h3 id="quick-add-title" class="font-bold text-lg mb-4"><%= @product.name %></h3>
 
-      <%# Pass variant data to form for price calculations %>
-      <% variants_data = @variants.map { |v| { sku: v.sku, price: v.price.to_f, pac_size: v.pac_size || 1, name: v.name } } %>
-      <%= render "quick_add_form", product: @product, variants: @variants, variants_data: variants_data %>
+      <%# Pass all necessary data to form for option selection %>
+      <%= render "quick_add_form",
+                 product: @product,
+                 variants: @variants,
+                 variants_data: @variants_json,
+                 product_options: @product_options,
+                 option_labels: @option_labels %>
 
       <div class="modal-action">
         <button type="button"

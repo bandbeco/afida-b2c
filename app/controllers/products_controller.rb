@@ -107,6 +107,34 @@ class ProductsController < ApplicationController
     # Load active variants for the modal
     @variants = @product.active_variants.by_position
 
+    # Load product options (same logic as show action)
+    # Exclude options where all variants have identical values (not a real choice)
+    all_options = @product.options.includes(:values).order(:position)
+    @product_options = all_options.select do |option|
+      unique_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
+      unique_values.count > 1
+    end
+
+    # Build lookup hash for option labels
+    @option_labels = {}
+    @product_options.each do |option|
+      @option_labels[option.name] ||= {}
+      option.values.each do |ov|
+        @option_labels[option.name][ov.value] = ov.label.presence || ov.value
+      end
+    end
+
+    # Build variants JSON for client-side variant matching
+    @variants_json = @variants.map do |v|
+      {
+        sku: v.sku,
+        price: v.price.to_f,
+        pac_size: v.pac_size || 1,
+        name: v.name,
+        option_values: v.option_values
+      }
+    end
+
     render layout: false  # Turbo Frame content only
   end
 end
