@@ -165,8 +165,8 @@ export default class extends Controller {
 
   findMatchingVariant(size, colour) {
     return this.variantsValue.find(variant => {
-      const sizeMatch = !size || variant.option_values.Size === size
-      const colourMatch = !colour || variant.option_values.Colour === colour
+      const sizeMatch = !size || variant.option_values.size === size
+      const colourMatch = !colour || variant.option_values.colour === colour
       return sizeMatch && colourMatch
     })
   }
@@ -230,8 +230,8 @@ export default class extends Controller {
       }
     }
 
-    // Dispatch event for compatible lids controller (note: capitalized key)
-    const rawSize = variant.option_values?.Size || variant.name
+    // Dispatch event for compatible lids controller
+    const rawSize = variant.option_values?.size || variant.name
     const size = this.extractSizeFromName(rawSize)
     if (size) {
       this.dispatch('variant-changed', { detail: { size: size } })
@@ -279,16 +279,16 @@ export default class extends Controller {
   updateUrl(variant) {
     const params = new URLSearchParams(window.location.search)
 
-    // Set size parameter if variant has size (note: capitalized key)
-    if (variant.option_values.Size) {
-      params.set('size', variant.option_values.Size)
+    // Set size parameter if variant has size
+    if (variant.option_values.size) {
+      params.set('size', variant.option_values.size)
     } else {
       params.delete('size')
     }
 
-    // Set colour parameter if variant has colour (note: capitalized key)
-    if (variant.option_values.Colour) {
-      params.set('colour', variant.option_values.Colour)
+    // Set colour parameter if variant has colour
+    if (variant.option_values.colour) {
+      params.set('colour', variant.option_values.colour)
     } else {
       params.delete('colour')
     }

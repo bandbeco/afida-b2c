@@ -11,8 +11,8 @@ unless File.exist?(csv_path)
 end
 
 # Get existing options
-size_option = ProductOption.find_by(name: 'Size')
-color_option = ProductOption.find_by(name: 'Colour')
+size_option = ProductOption.find_by(name: 'size')
+color_option = ProductOption.find_by(name: 'colour')
 
 # Group CSV rows by product
 products_data = {}
@@ -90,8 +90,8 @@ products_data.each do |key, data|
   # Create variants
   data[:variants].each do |variant_data|
     option_values = {}
-    option_values['Size'] = variant_data[:size] if variant_data[:size].present?
-    option_values['Colour'] = variant_data[:colour] if variant_data[:colour].present?
+    option_values['size'] = variant_data[:size] if variant_data[:size].present?
+    option_values['colour'] = variant_data[:colour] if variant_data[:colour].present?
 
     # Create variant name from options that actually vary
     # Only include size if product has multiple sizes

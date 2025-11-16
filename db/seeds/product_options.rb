@@ -2,7 +2,7 @@
 puts "Creating product options..."
 
 # Size Option
-size_option = ProductOption.find_or_create_by!(name: "Size") do |option|
+size_option = ProductOption.find_or_create_by!(name: "size") do |option|
   option.display_type = "dropdown"
   option.required = true
   option.position = 1
@@ -15,7 +15,7 @@ end
 end
 
 # Color Option
-color_option = ProductOption.find_or_create_by!(name: "Colour") do |option|
+color_option = ProductOption.find_or_create_by!(name: "colour") do |option|
   option.display_type = "swatch"
   option.required = true
   option.position = 2
@@ -28,7 +28,7 @@ end
 end
 
 # Material Option
-material_option = ProductOption.find_or_create_by!(name: "Material") do |option|
+material_option = ProductOption.find_or_create_by!(name: "material") do |option|
   option.display_type = "radio"
   option.required = false
   option.position = 3
