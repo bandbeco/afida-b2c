@@ -27,18 +27,20 @@ namespace :products do
 
     updated_count = 0
     deleted_count = 0
+    name_updated_count = 0
 
-    # Group products by name to find duplicates
-    Product.all.group_by(&:name).each do |name, products|
+    # Group products by their variant SKUs to find duplicates
+    # Products with identical variant sets are duplicates
+    product_groups = Product.includes(:variants).all.group_by do |product|
+      product.variants.pluck(:sku).sort.join(",")
+    end
+
+    product_groups.each do |variant_skus, products|
       next if products.count == 1 # No duplicates
+      next if variant_skus.blank? # Skip products with no variants
 
-      # We have duplicates
-      new_slug = product_slug_mapping[name]
-
-      unless new_slug
-        puts "  ⚠ No slug found in CSV for: #{name}"
-        next
-      end
+      puts ""
+      puts "Found duplicate products with variants: #{variant_skus}"
 
       # Find the product with photos (the one we want to keep)
       product_with_photos = products.find { |p| p.product_photo.attached? || p.lifestyle_photo.attached? }
@@ -47,29 +49,54 @@ namespace :products do
       # If still no product with photos, keep the oldest one
       product_with_photos ||= products.min_by(&:created_at)
 
-      # Delete duplicates (products without photos)
-      products_to_delete = products - [ product_with_photos ]
+      # Get the first variant SKU to look up in CSV
+      first_variant_sku = product_with_photos.variants.first&.sku
+      csv_row = CSV.foreach(csv_path, headers: true).find { |row| row["sku"] == first_variant_sku }
 
-      products_to_delete.each do |product|
-        puts "  🗑  Deleting duplicate: #{product.name} (#{product.slug}) - no photos"
-        product.destroy
-        deleted_count += 1
-      end
+      if csv_row
+        new_slug = csv_row["slug"]
+        new_name = csv_row["product"]
 
-      # Update the keeper's slug if needed
-      if product_with_photos.slug != new_slug
-        old_slug = product_with_photos.slug
-        product_with_photos.update!(slug: new_slug)
-        puts "  ✓ Updated: #{product_with_photos.name} (#{old_slug} → #{new_slug})"
-        updated_count += 1
+        # Delete duplicates (products without photos)
+        products_to_delete = products - [ product_with_photos ]
+
+        products_to_delete.each do |product|
+          puts "  🗑  Deleting duplicate: #{product.name} (#{product.slug}) - no photos"
+          product.destroy
+          deleted_count += 1
+        end
+
+        # Update the keeper's slug and name if needed
+        updates = {}
+        updates[:slug] = new_slug if product_with_photos.slug != new_slug
+        updates[:name] = new_name if product_with_photos.name != new_name
+
+        if updates.any?
+          old_slug = product_with_photos.slug
+          old_name = product_with_photos.name
+          product_with_photos.update!(updates)
+
+          if updates[:slug]
+            puts "  ✓ Updated slug: #{old_name} (#{old_slug} → #{new_slug})"
+            updated_count += 1
+          end
+
+          if updates[:name]
+            puts "  ✓ Updated name: #{old_name} → #{new_name}"
+            name_updated_count += 1
+          end
+        else
+          puts "  → Already correct: #{product_with_photos.name} (#{product_with_photos.slug})"
+        end
       else
-        puts "  → Already correct: #{product_with_photos.name} (#{product_with_photos.slug})"
+        puts "  ⚠ No CSV row found for variant SKU: #{first_variant_sku}"
       end
     end
 
     puts ""
     puts "Done!"
-    puts "  Products updated: #{updated_count}"
+    puts "  Slugs updated: #{updated_count}"
+    puts "  Names updated: #{name_updated_count}"
     puts "  Duplicates deleted: #{deleted_count}"
     puts "  Total products now: #{Product.count}"
   end
