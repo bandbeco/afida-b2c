@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_16_172042) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_17_105324) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -348,17 +348,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_16_172042) do
     t.datetime "created_at", null: false
     t.integer "current_position"
     t.datetime "discovered_at", null: false
-    t.string "keyword", null: false
     t.jsonb "metadata", default: {}
     t.string "opportunity_type", null: false
+    t.string "query", null: false
     t.integer "score", null: false
     t.integer "search_volume"
     t.string "status", default: "pending", null: false
     t.string "target_url"
     t.datetime "updated_at", null: false
     t.index [ "discovered_at" ], name: "index_seo_ai_opportunities_on_discovered_at"
-    t.index [ "keyword" ], name: "index_seo_ai_opportunities_on_keyword", unique: true
     t.index [ "opportunity_type" ], name: "index_seo_ai_opportunities_on_opportunity_type"
+    t.index [ "query" ], name: "index_seo_ai_opportunities_on_query", unique: true
     t.index [ "score" ], name: "index_seo_ai_opportunities_on_score"
     t.index [ "status", "score" ], name: "index_seo_ai_opportunities_on_status_and_score"
     t.index [ "status" ], name: "index_seo_ai_opportunities_on_status"
