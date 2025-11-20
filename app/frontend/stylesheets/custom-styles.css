@@ -13,6 +13,8 @@ body {
 
 .btn {
   @apply font-medium;
+  @apply uppercase;
+  @apply tracking-wide;
 }
 
 h1, h2 {
