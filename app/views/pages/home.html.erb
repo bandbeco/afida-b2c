@@ -18,71 +18,67 @@
 
 <!-- Hero Section -->
 <div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-[#f4fbf8] overflow-hidden">
-  <!-- Decorative Background Elements -->
-  <div class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-bl from-[#79ebc0]/20 to-transparent rounded-bl-[100px] pointer-events-none"></div>
-  <div class="absolute bottom-0 left-0 w-64 h-64 bg-[#79ebc0]/10 rounded-tr-full pointer-events-none"></div>
-
-  <div class="container mx-auto px-4 py-12 lg:py-20 relative z-10">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+  <div class="container mx-auto px-4 py-12 lg:py-16">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
       <div class="max-w-2xl">
-        <h1 class="text-4xl lg:text-5xl font-black text-neutral-900 leading-tight mb-6 tracking-tight">
+        <h1 class="text-3xl lg:text-4xl font-black text-neutral-900 leading-tight mb-6 tracking-tight">
          Eco-friendly catering supplies<br>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00a86b] to-[#79ebc0]">Without the Wait or Waste</span>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00a86b] to-[#79ebc0]">Delivered Fast. Zero Storage Hassle.</span>
         </h1>
-        
-        <p class="text-xl text-neutral-600 mb-8 leading-relaxed max-w-lg">
-          Be unforgettable with your own fully customisable packaging. High quality, low minimums and delivered pronto. All in just a couple of clicks.
+
+        <p class="text-lg text-neutral-600 mb-8 leading-relaxed max-w-lg">
+          Supply your restaurant, café, or takeaway with high-quality eco-friendly packaging. From custom branded cups to bamboo straws, we deliver everything you need within 48 hours—with free storage and inventory management included.
         </p>
-        
+
         <div class="flex flex-col sm:flex-row gap-4">
-          <%= link_to shop_path, class: "group inline-flex items-center justify-center gap-3 bg-neutral-900 text-white px-8 py-4 rounded-full text-lg font-bold hover:bg-neutral-800 transition-all hover:scale-105 shadow-lg hover:shadow-xl" do %>
+          <%= link_to shop_path, class: "btn btn-primary" do %>
             Shop Products
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="group-hover:translate-x-1 transition-transform">
-              <path d="M5 12h14"/>
-              <path d="m12 5 7 7-7 7"/>
-            </svg>
           <% end %>
         </div>
 
+        <% logos = [
+          "ballie-ballerson.png",
+          "edwardian-hotels.svg",
+          "hawksmoor.png",
+          "hurlingham.png",
+          "la-gelateria.png",
+          "mandarin-oriental.svg",
+          "marriott.svg",
+          "pixel-bar.png",
+          "royal-lancaster.svg",
+          "the-grove.webp",
+          "vincenzos.svg"
+        ] %>
+
         <div class="mt-12 flex items-center gap-4 text-sm text-neutral-500 font-medium">
           <div class="flex -space-x-2">
-            <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white"></div>
-            <div class="w-8 h-8 rounded-full bg-gray-300 border-2 border-white"></div>
-            <div class="w-8 h-8 rounded-full bg-gray-400 border-2 border-white"></div>
+            <% logos.each do |logo| %>
+              <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white">
+                <%= vite_image_tag "images/logos/#{logo}", class: "w-full h-full object-contain" %>
+              </div>
+            <% end %>
           </div>
           <p>Trusted by 500+ businesses</p>
         </div>
       </div>
 
-      <div class="relative">
-        <div class="relative z-10 transform hover:scale-[1.02] transition-transform duration-500">
-          <%= vite_image_tag "images/hero.png", alt: "Branded packaging", class: "w-full h-auto drop-shadow-2xl rounded-2xl" %>
-          
-        </div>
-        
-        <!-- Background Blob -->
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[#79ebc0]/20 blur-3xl rounded-full -z-10"></div>
-      </div>
+        <%= vite_image_tag "images/hero.png", alt: "Branded packaging", class: "w-full h-auto drop-shadow-2xl rounded-2xl" %>
     </div>
   </div>
 </div>
 
 <!-- Client Logos Conveyor Belt -->
 <div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-white py-16 border-y border-neutral-100">
-  <div class="container mx-auto px-4 text-center mb-10">
-    <p class="text-sm font-bold text-neutral-400 uppercase tracking-widest">Trusted by Leading Brands</p>
-  </div>
-
   <div class="relative">
     <div class="absolute inset-y-0 left-0 w-32 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
     <div class="absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
 
     <div class="flex overflow-hidden group">
       <div class="logo-conveyor flex items-center whitespace-nowrap">
-        <% logos = ["ballie-ballerson.png", "edwardian-hotels.svg", "hawksmoor.png", "hurlingham.png", "la-gelateria.png", "mandarin-oriental.svg", "marriott.svg", "pixel-bar.png", "royal-lancaster.svg", "the-grove.webp", "vincenzos.svg"] %>
         <% logos.each do |logo| %>
           <%= vite_image_tag "images/logos/#{logo}", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
         <% end %>
+
         <!-- Duplicate for loop -->
         <% logos.each do |logo| %>
           <%= vite_image_tag "images/logos/#{logo}", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
@@ -93,7 +89,7 @@
 </div>
 
 <!-- Featured Products -->
-<div class="container mx-auto px-4 py-20">
+<div class="container mx-auto px-4 py-16">
   <div class="text-center mb-16">
     <h2 class="text-4xl md:text-5xl font-bold mb-4">Our Bestsellers</h2>
     <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
@@ -155,13 +151,10 @@
         </div>
 
         <div class="mt-10">
-          <%= link_to product_path(Product.find_by(slug: "bio-fibre-straws")), class: "group btn bg-[#79ebc0] text-neutral-900 hover:bg-[#5fdcb0] border-0 px-8 py-3 text-lg font-bold rounded-full" do %>
-            View Product
-            <span class="group-hover:translate-x-1 transition-transform">→</span>
-          <% end %>
+          <%= link_to "View Product", product_path(Product.find_by(slug: "bio-fibre-straws")), class: "btn btn-primary btn-lg" %>
         </div>
       </div>
-      
+
       <div class="order-1 md:order-2 relative">
         <div class="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center overflow-hidden backdrop-blur-sm p-8">
           <%= vite_image_tag "images/bambigga.png", alt: "Bambigga Bio Fibre Straws", class: "w-full h-full object-contain drop-shadow-2xl transform hover:scale-110 transition-transform duration-500" %>
@@ -223,17 +216,23 @@
           </div>
         </div>
 
-        <button class="group bg-black text-white hover:bg-neutral-800 px-10 py-5 text-xl font-bold rounded-full transition-all flex items-center gap-3">
-          Get Started
-          <span class="group-hover:translate-x-1 transition-transform">→</span>
-        </button>
+          <%= link_to "Brand your products", branded_products_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" %>
       </div>
     </div>
   </div>
 </section>
 
+<!-- Categories Section -->
+<div class="container mx-auto px-4 py-20">
+  <div class="text-center mb-16">
+    <h2 class="text-4xl md:text-5xl font-bold mb-4">Shop by Category</h2>
+    <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
+  </div>
+  <%= render "categories/index" %>
+</div>
+
 <!-- Values Banner -->
-<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-black text-white py-24">
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-black text-white py-24 -mb-16">
   <div class="container mx-auto px-4">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
       <!-- Column 1 -->
@@ -270,13 +269,4 @@
       </div>
     </div>
   </div>
-</section>
-
-<!-- Categories Section -->
-<div class="container mx-auto px-4 py-20">
-  <div class="text-center mb-16">
-    <h2 class="text-4xl md:text-5xl font-bold mb-4">Shop by Category</h2>
-    <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
-  </div>
-  <%= render "categories/index" %>
-</div>
+</section> 
