@@ -15,6 +15,7 @@ body {
   @apply font-medium;
   @apply uppercase;
   @apply tracking-wide;
+  @apply shadow-lg shadow-black/20;
 }
 
 h1, h2 {
