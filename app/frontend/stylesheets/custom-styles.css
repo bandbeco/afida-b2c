@@ -302,3 +302,9 @@ h3, h4, h5, h6 {
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
 }
+
+/* Slide-in text effect support */
+[data-controller="slide-in"] span {
+  display: inline-block;
+  will-change: transform, opacity;
+}
