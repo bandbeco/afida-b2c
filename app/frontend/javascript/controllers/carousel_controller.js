@@ -11,44 +11,47 @@ export default class extends Controller {
 
     // Count slides to determine if loop should be enabled
     const slideCount = this.element.querySelectorAll('.swiper-slide').length
+    console.log("Slide count:", slideCount)
 
     const config = {
       modules: [Navigation, Pagination, Autoplay],
-      loop: slideCount > 3, // Only loop if enough slides
+      loop: false, // Disable loop for now to avoid issues
       pagination: {
         el: ".swiper-pagination",
         clickable: true,
       },
       navigation: {
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev",
+        nextEl: ".bestsellers-button-next, .swiper-button-next",
+        prevEl: ".bestsellers-button-prev, .swiper-button-prev",
       },
       autoplay: slideCount > 1 ? {
         delay: 5000,
         disableOnInteraction: false,
+        pauseOnMouseEnter: true,
       } : false, // Disable autoplay if only 1 slide
     }
 
     // Add responsive breakpoints for addon carousel
     if (isAddonCarousel) {
-      config.slidesPerView = 1
+      config.slidesPerView = 2
       config.spaceBetween = 20
       config.breakpoints = {
         640: {
-          slidesPerView: 1,
-          spaceBetween: 20,
-        },
-        768: {
           slidesPerView: 2,
           spaceBetween: 20,
         },
-        1024: {
+        768: {
           slidesPerView: 3,
+          spaceBetween: 20,
+        },
+        1024: {
+          slidesPerView: 4,
           spaceBetween: 30,
         },
       }
     }
 
     this.swiper = new Swiper(this.element, config)
+    console.log("Swiper initialized:", this.swiper)
   }
 } 
