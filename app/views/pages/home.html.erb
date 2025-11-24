@@ -84,6 +84,7 @@
 
         <div class="mt-8 mb-12 flex items-center gap-4 text-sm text-neutral-500 font-medium">
           <div class="flex -space-x-2">
+            <%# Exclude the-grove.webp from hero avatars to keep visual balance (10 logos fit better in small avatar circles) %>
             <% client_logos.reject { |logo| logo == "the-grove.webp" }.each do |logo| %>
               <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white">
                 <%= vite_image_tag "images/logos/#{logo}", class: "w-full h-full object-contain" %>
@@ -108,12 +109,12 @@
     <div class="flex overflow-hidden group">
       <div class="logo-conveyor flex items-center whitespace-nowrap">
         <% client_logos.each do |logo| %>
-          <%= vite_image_tag "images/logos/#{logo}", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
+          <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize} logo", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
         <% end %>
 
-        <!-- Duplicate for loop -->
+        <!-- Duplicate for infinite scroll effect -->
         <% client_logos.each do |logo| %>
-          <%= vite_image_tag "images/logos/#{logo}", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
+          <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize} logo", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
         <% end %>
       </div>
     </div>
@@ -125,11 +126,11 @@
   <div class="flex items-center justify-between mb-12">
     <h2 class="text-4xl md:text-5xl font-bold border-b-4 border-primary pb-2 ml-4">Bestsellers</h2>
     <div class="flex gap-3 mr-4">
-      <button class="bestsellers-button-prev w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow flex items-center justify-center relative z-10 cursor-pointer">
-        <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+      <button class="bestsellers-button-prev w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow flex items-center justify-center relative z-10 cursor-pointer" aria-label="Previous bestseller product">
+        <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
       </button>
-      <button class="bestsellers-button-next w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow flex items-center justify-center relative z-10 cursor-pointer">
-        <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+      <button class="bestsellers-button-next w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow flex items-center justify-center relative z-10 cursor-pointer" aria-label="Next bestseller product">
+        <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
       </button>
     </div>
   </div>

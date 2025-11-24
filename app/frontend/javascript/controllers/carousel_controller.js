@@ -12,7 +12,9 @@ export default class extends Controller {
 
     const config = {
       modules: [Navigation, Pagination, Autoplay],
-      loop: false, // Disable loop for now to avoid issues
+      // Loop disabled: Swiper loop mode requires minimum 2x slidesPerView slides
+      // With dynamic slide counts, this could cause visual duplication issues
+      loop: false,
       pagination: {
         el: ".swiper-pagination",
         clickable: true,
