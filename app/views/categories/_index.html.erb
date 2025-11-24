@@ -1,30 +1,39 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
   <% @categories.each do |category| %>
-    <div class="card bg-base-100 shadow-md hover:shadow-xl transition-shadow">
-      <figure class="bg-neutral/5">
+    <%= link_to category_path(category), class: "group relative block h-96 rounded-3xl overflow-hidden" do %>
+      <!-- Background Image/Color -->
+      <div class="absolute inset-0 bg-neutral-100 transition-transform duration-700 group-hover:scale-105">
         <% if category.image.attached? %>
-          <%= image_tag category.image, alt: category.name, class: "w-full h-64 object-cover" %>
+          <%= image_tag category.image, alt: category.name, class: "w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity" %>
         <% elsif category_icon_path(category).present? %>
-          <div class="w-full h-64 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            <%= vite_image_tag category_icon_path(category), class: 'w-32 h-32 object-contain', alt: "#{category.name} icon" %>
+          <div class="w-full h-full bg-[#f4fbf8] flex items-center justify-center p-12">
+            <%= vite_image_tag category_icon_path(category), class: 'w-full h-full object-contain opacity-80 group-hover:scale-110 transition-transform duration-500', alt: "#{category.name} icon" %>
           </div>
         <% else %>
-          <div class="w-full h-64 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-            <span class="text-6xl font-bold text-primary/30"><%= category.name[0] %></span>
+          <div class="w-full h-full bg-[#f4fbf8] flex items-center justify-center">
+            <span class="text-9xl font-black text-[#79ebc0]/20 group-hover:text-[#79ebc0]/30 transition-colors"><%= category.name[0] %></span>
           </div>
         <% end %>
-      </figure>
-      <div class="card-body">
-        <div class="flex flex-col items-center justify-center">
-          <h2 class="card-title text-2xl mb-2 text-center">
-            <%= category.name %>
-          </h2>
-          <% if category.description.present? %>
-            <p class="text-neutral/70 mb-4 text-center"><%= category.description %></p>
-          <% end %>
-        </div>
-        <%= link_to "Shop #{category.name}", category_path(category), class: "btn btn-primary w-full rounded-full text-lg" %>
       </div>
-    </div>
+      
+      <!-- Overlay -->
+      <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-70 transition-opacity"></div>
+      
+      <!-- Content -->
+      <div class="absolute inset-0 p-8 flex flex-col justify-end text-white">
+        <h3 class="text-3xl font-bold mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"><%= category.name %></h3>
+        
+        <div class="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-75">
+          <% if category.description.present? %>
+            <p class="text-gray-200 mb-4 line-clamp-2"><%= category.description %></p>
+          <% end %>
+          
+          <span class="inline-flex items-center gap-2 text-[#79ebc0] font-bold">
+            Shop Now
+            <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+          </span>
+        </div>
+      </div>
+    <% end %>
   <% end %>
 </div>

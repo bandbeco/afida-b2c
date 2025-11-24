@@ -72,8 +72,11 @@
       </div>
 
       <div>
-        <%= button_to "Proceed to Checkout", checkout_path, class: "btn btn-primary btn-sm w-full", data: { turbo: false } %>
+        <%= button_to "Proceed to Checkout", checkout_path, class: "btn btn-primary btn-lg w-full", data: { turbo: false } %>
       </div>
+
+      <div class="divider">or</div>
+      <%= link_to "View basket", cart_path, class: "btn btn-outline btn-sm w-full", data: { turbo: false } %>
     </div>
   <% else %>
     <div class="text-center py-8">

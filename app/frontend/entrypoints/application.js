@@ -67,6 +67,9 @@ application.register("quick-add-modal", QuickAddModalController)
 import QuickAddFormController from "../javascript/controllers/quick_add_form_controller"
 application.register("quick-add-form", QuickAddFormController)
 
+import SlideInController from "../javascript/controllers/slide_in_controller"
+application.register("slide-in", SlideInController)
+
 // Configure Stimulus development experience
 application.debug = false
 window.Stimulus = application

@@ -2,7 +2,7 @@ class PagesController < ApplicationController
   allow_unauthenticated_access
 
   def home
-    @featured_products = Product.featured.with_attached_product_photo.limit(4)
+    @featured_products = Product.featured.with_attached_product_photo.limit(8)
     @categories = Category.with_attached_image.all
   end
 

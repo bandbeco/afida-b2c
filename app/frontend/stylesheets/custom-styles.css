@@ -13,6 +13,9 @@ body {
 
 .btn {
   @apply font-medium;
+  @apply uppercase;
+  @apply tracking-wide;
+  @apply shadow-lg shadow-black/20;
 }
 
 h1, h2 {
@@ -299,4 +302,34 @@ h3, h4, h5, h6 {
   height: 100%;
   opacity: 0;
   transition: opacity 0.3s ease-in-out;
+}
+
+/* Slide-in text effect support */
+[data-controller="slide-in"] span {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+
+/* Bestsellers carousel navigation buttons */
+.bestsellers-button-prev,
+.bestsellers-button-next {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  border: 1px solid #e5e7eb;
+}
+
+.bestsellers-button-prev:hover,
+.bestsellers-button-next:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+}
+
+.bestsellers-button-prev.swiper-button-disabled,
+.bestsellers-button-next.swiper-button-disabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  background-color: #f3f4f6 !important;
 }
