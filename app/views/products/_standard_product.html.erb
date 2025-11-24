@@ -60,7 +60,7 @@
 <% end %>
 
 <div class="drawer drawer-end">
-  <input id="cart-drawer" type="checkbox" class="drawer-toggle" />
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
     <div class="container mx-auto py-8 min-h-screen">
       <div class="card lg:card-side bg-base-100 shadow-sm"
@@ -74,6 +74,9 @@
                                 alt: @product.name,
                                 class: "w-full h-full object-cover",
                                 variant: { resize_to_limit: [800, 800] },
+                                fetchpriority: "high",
+                                width: 800,
+                                height: 800,
                                 data: { product_options_target: "imageDisplay" }) %>
         </figure>
 
@@ -180,7 +183,7 @@
 
                   <div class="divider"></div>
 
-                  <h3 class="text-lg font-semibold mb-3">Add a matching lid</h3>
+                  <h2 class="text-lg font-semibold mb-3">Add a matching lid</h2>
 
                   <!-- Loading State -->
                   <div id="lids-loading" data-compatible-lids-target="loading" style="display: none;" class="text-center py-4">

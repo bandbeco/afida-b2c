@@ -53,15 +53,22 @@ module ProductHelper
   end
 
   # Display product/variant photo with placeholder if missing
-  # Usage: product_photo_tag(product.primary_photo, alt: "Product name", class: "w-20 h-20", data: { product_options_target: "imageDisplay" })
+  # Usage: product_photo_tag(product.primary_photo, alt: "Product name", class: "w-20 h-20", fetchpriority: "high", width: 800, height: 800, data: { product_options_target: "imageDisplay" })
   def product_photo_tag(photo, options = {})
     css_class = options[:class] || "w-full h-full object-cover"
     alt_text = options[:alt] || "Product photo"
     variant_options = options[:variant] || { resize_to_limit: [ 400, 400 ] }
     data_attributes = options[:data] || {}
 
+    # Extract image tag specific options
+    image_options = { class: css_class, alt: alt_text, data: data_attributes }
+    image_options[:fetchpriority] = options[:fetchpriority] if options[:fetchpriority]
+    image_options[:width] = options[:width] if options[:width]
+    image_options[:height] = options[:height] if options[:height]
+    image_options[:loading] = options[:loading] if options[:loading]
+
     if photo&.attached?
-      image_tag photo.variant(variant_options), class: css_class, alt: alt_text, data: data_attributes
+      image_tag photo.variant(variant_options), **image_options
     else
       # Show placeholder SVG
       content_tag :div, { class: "#{css_class} bg-base-200 flex items-center justify-center", data: data_attributes } do
