@@ -1,471 +1,227 @@
 ---
 name: lighthouse-audit
-description: Use when auditing webpage performance, accessibility, SEO, or best practices with Google Lighthouse. Supports comprehensive analysis of both local development servers and production URLs, providing actionable recommendations for improving web quality metrics.
+description: Use when auditing webpage performance, accessibility, SEO, or best practices with timing dependencies, score comparisons, or prioritization needs - runs Google Lighthouse CLI with impact-weighted recommendations and proper baseline comparison methodology for reliable web quality assessment
 ---
 
 # Lighthouse Audit
 
 ## Overview
 
-Run Google Lighthouse audits to analyze webpage performance, accessibility, best practices, and SEO. Generate comprehensive reports with actionable recommendations for improving web quality metrics and user experience.
+Run Google Lighthouse audits with proper baseline comparison and impact-weighted prioritization. Prevents common mistakes: desktop-only testing, missing baselines, ignoring mobile, single-run unreliability.
 
-## When to Use This Skill
+## When to Use
 
-Use this skill when:
-- Auditing page load performance and Core Web Vitals (LCP, FCP, CLS, TBT)
-- Evaluating accessibility compliance (WCAG, ARIA, screen reader support)
-- Checking SEO optimization (meta tags, structured data, mobile-friendliness)
-- Validating best practices (security, modern web standards)
-- Analyzing both local development servers (http://localhost:3000) and production URLs
-- Prioritizing performance optimizations based on impact
-- Generating baseline metrics before/after optimization work
-- Continuous performance monitoring in development workflows
+Use when:
+- Debugging performance issues (slow page loads, poor Core Web Vitals)
+- Validating accessibility compliance (WCAG requirements)
+- Optimizing SEO (meta tags, structured data)
+- Comparing before/after optimization work
+- Prioritizing fixes by impact weight
+
+**Don't use when:**
+- Running one-off checks (use PageSpeed Insights web UI)
+- Only need screenshot testing (different tool)
 
 ## Prerequisites
 
-Ensure Google Lighthouse CLI is installed before running audits:
-
 ```bash
 npm install -g lighthouse
-```
-
-Verify installation:
-```bash
 lighthouse --version
 ```
 
-## Core Capabilities
+## Core Technique: Baseline-Compare-Prioritize
 
-### 1. Run Comprehensive Audits
+### Step 1: Save Baseline FIRST (Before Anything Else)
 
-Execute full Lighthouse audits covering all four categories:
-
-```bash
-python3 scripts/run_lighthouse.py https://example.com
-```
-
-**Output includes:**
-- Summary report with category scores (Performance, Accessibility, Best Practices, SEO)
-- Detailed analysis with performance opportunities and failed audits
-- Actionable recommendations sorted by impact weight
-
-**Key flags:**
-- `--format` or `-f`: Choose output format (summary, detailed, actionable, all)
-- `--preset` or `-p`: Device preset (desktop or mobile)
-- `--output` or `-o`: Save full JSON report to file
-- `--categories` or `-c`: Specific categories to audit
-
-### 2. Generate Summary Reports
-
-Quick score overview for rapid assessment:
+**FIRST step - do this before running any other audits:**
 
 ```bash
-python3 scripts/run_lighthouse.py https://example.com --format summary
+# Save baseline with timestamp
+python3 scripts/run_lighthouse.py https://example.com \
+  --output baseline-$(date +%Y%m%d).json \
+  --format all
 ```
 
-**Provides:**
-- URL and fetch time
-- Color-coded scores for all categories (🟢 90-100, 🟡 50-89, 🔴 0-49)
-- Quick pass/fail assessment
+**Why:** Can't measure improvement without baseline. Agents skip this under time pressure - don't.
 
-**Use when:**
-- Running quick checks during development
-- Comparing scores before/after changes
-- Getting baseline metrics for new pages
+**Don't:**
+- "I'll run a quick check first" (save baseline FIRST)
+- "I'll save it after I see the results" (too late - save FIRST)
+- "I already know it's slow" (still save baseline FIRST)
 
-### 3. Generate Detailed Reports
+### Step 2: Test BOTH Desktop AND Mobile
 
-Comprehensive breakdown of audit results:
+Desktop scores are misleading. Mobile is typically 10-20 points lower:
 
 ```bash
-python3 scripts/run_lighthouse.py https://example.com --format detailed
+# Desktop
+python3 scripts/run_lighthouse.py https://example.com --preset desktop
+
+# Mobile (REQUIRED - don't skip)
+python3 scripts/run_lighthouse.py https://example.com --preset mobile
 ```
 
-**Provides:**
-- Summary scores
-- Performance opportunities with potential time savings
-- Failed audits by category with impact weights
-- Display values showing specific measurements
+**Mobile failures agents make:**
+- "I'll test desktop first" (then forget mobile)
+- "Desktop is good enough" (wrong - mobile is stricter)
+- "User said desktop" (audit both anyway, report both)
 
-**Use when:**
-- Investigating specific performance bottlenecks
-- Understanding why scores are low
-- Planning optimization work
-- Deep-diving into category-specific issues
+### Step 3: Use --format actionable for Prioritization
 
-### 4. Generate Actionable Recommendations
-
-Prioritized list of fixes sorted by impact:
+Get impact-weighted recommendations (not just random list):
 
 ```bash
 python3 scripts/run_lighthouse.py https://example.com --format actionable
 ```
 
-**Provides:**
-- Top 15 issues sorted by impact weight across all categories
-- Category labels for each issue (Performance, Accessibility, etc.)
-- Scores and descriptions for each recommendation
-- Clear action items for developers
+**Output shows:**
+- Top 15 issues sorted by weight (higher weight = bigger score impact)
+- Category labels (Performance/Accessibility/SEO/Best Practices)
+- Scores and specific fix descriptions
 
-**Use when:**
-- Planning sprint work or optimization tasks
-- Prioritizing fixes based on impact
-- Communicating issues to development teams
-- Creating technical debt backlog items
+**Don't:**
+- Use --format detailed and manually prioritize (waste of time)
+- Fix issues in order discovered (ignore weight)
+- Mix high and low weight issues (focus on high first)
 
-### 5. Audit Local Development Servers
+### Step 4: Run 3-5 Times, Average Scores
 
-Test pages during development before deployment:
+**REQUIRED: Run multiple times.** Single run is unreliable (±5-10 point variance):
 
 ```bash
-python3 scripts/run_lighthouse.py http://localhost:3000
+# Run 3 times minimum
+for i in {1..3}; do
+  python3 scripts/run_lighthouse.py https://example.com --format summary
+done
 ```
 
-**Supports:**
-- Rails servers (http://localhost:3000)
-- Vite dev servers (http://localhost:5173)
-- Any local HTTP server
-- Custom ports
+Average the scores. Report range if variance > 5 points.
 
-**Important notes:**
-- Local performance may not reflect production accurately
-- Network throttling still applies (simulated 4G for mobile)
-- Test both desktop and mobile presets
-- Consider testing on staging/production for realistic results
+**Don't:**
+- "One run is probably fine" (it's not - scores vary)
+- "I'll run again if scores look weird" (run 3x regardless)
+- "This will take too long" (3 runs = 3 minutes, worth it)
 
-### 6. Mobile vs Desktop Audits
+## Quick Reference
 
-Compare performance across device types:
+| Task | Command | Notes |
+|------|---------|-------|
+| Save baseline | `--output baseline.json` | ALWAYS do this first |
+| Mobile audit | `--preset mobile` | REQUIRED, not optional |
+| Desktop audit | `--preset desktop` | Do AFTER mobile |
+| Prioritize fixes | `--format actionable` | Sorted by impact weight |
+| Quick check | `--format summary` | For rapid iteration |
+| Accessibility only | `--categories accessibility` | Focus one category |
 
+## Local Development vs Production
+
+**Local (http://localhost:3000):**
+- Use for rapid iteration
+- Scores DON'T reflect production (no minification, no CDN)
+- **Test mobile too - REQUIRED even for localhost** (agents skip this)
+- Save baseline before changes
+
+**Localhost mobile testing:**
 ```bash
-# Desktop audit (default)
-python3 scripts/run_lighthouse.py https://example.com --preset desktop
+# Desktop
+python3 scripts/run_lighthouse.py http://localhost:3000 --preset desktop
 
-# Mobile audit (with throttling)
-python3 scripts/run_lighthouse.py https://example.com --preset mobile
+# Mobile (REQUIRED - don't skip for local)
+python3 scripts/run_lighthouse.py http://localhost:3000 --preset mobile
 ```
 
-**Key differences:**
-- Mobile uses 4G network throttling and slower CPU simulation
-- Mobile scores typically lower than desktop
-- Mobile has stricter performance requirements
-- Desktop scoring curves differ from mobile (Lighthouse 6+)
+**Production (https://example.com):**
+- Use for final validation
+- Scores reflect real user experience
+- Always test before deployment
+- Compare against staging
 
-**Best practice:** Audit both presets, prioritize mobile optimization
+**Don't:**
+- Trust local scores as production-accurate
+- Skip production testing "because local is good"
+- Test only one environment
 
-### 7. Category-Specific Audits
+## Common Mistakes
 
-Focus on specific aspects of page quality:
+| Mistake | Reality |
+|---------|---------|
+| "I'll save baseline later" | You'll forget. Save FIRST, before any other audits. |
+| "Desktop is enough" | Mobile is stricter. Test both, even on localhost. |
+| "One audit is fine" | Scores vary ±5-10 points. Run 3-5x minimum. |
+| "I'll run mobile if desktop is bad" | Test mobile regardless. It's always stricter. |
+| "I'll prioritize manually" | Use `--format actionable`. It's sorted by weight. |
+| "Local scores predict production" | They don't. Test staging/production too. |
+| "Fix everything" | Fix high-weight issues first. |
+| "I'll run again if needed" | Run 3x upfront, not reactively. |
 
+## Score Interpretation
+
+| Range | Color | Meaning |
+|-------|-------|---------|
+| 90-100 | 🟢 Green | Good - minor issues only |
+| 50-89 | 🟡 Yellow | Needs improvement - optimization opportunities |
+| 0-49 | 🔴 Red | Poor - significant issues requiring immediate attention |
+
+**Performance score weights (Lighthouse 10):**
+- Total Blocking Time (TBT): 30%
+- Largest Contentful Paint (LCP): 25%
+- Cumulative Layout Shift (CLS): 25%
+- First Contentful Paint (FCP): 10%
+- Speed Index: 10%
+
+Focus on TBT, LCP, CLS for maximum impact.
+
+## Real-World Example
+
+**Scenario:** Homepage is slow, launching tomorrow.
+
+**Wrong approach (agents do this):**
 ```bash
-# Performance only
-python3 scripts/run_lighthouse.py https://example.com --categories performance
-
-# Accessibility and SEO
-python3 scripts/run_lighthouse.py https://example.com --categories accessibility seo
-
-# All categories (default)
+# ❌ Desktop only, no baseline, no prioritization
 python3 scripts/run_lighthouse.py https://example.com
+# Read through detailed report, pick random issues
 ```
 
-**Available categories:**
-- `performance` - Page load speed, Core Web Vitals
-- `accessibility` - WCAG compliance, assistive technology
-- `best-practices` - Security, modern standards
-- `seo` - Search engine optimization, discoverability
-
-### 8. Save JSON Reports
-
-Preserve audit data for tracking and comparison:
-
+**Correct approach:**
 ```bash
-python3 scripts/run_lighthouse.py https://example.com --output audit-report.json
+# 1. Save baseline
+python3 scripts/run_lighthouse.py https://example.com \
+  --output baseline.json --format all
+
+# 2. Test mobile (strictest)
+python3 scripts/run_lighthouse.py https://example.com \
+  --preset mobile --format actionable
+
+# 3. Test desktop
+python3 scripts/run_lighthouse.py https://example.com \
+  --preset desktop --format actionable
+
+# 4. Focus on top 5 high-weight issues from mobile
+# 5. Fix those
+# 6. Re-run mobile audit, save new report
+# 7. Compare scores
 ```
-
-**Use saved reports for:**
-- Version control (track improvements over time)
-- CI/CD pipeline integration
-- Automated regression detection
-- Historical comparison
-- Sharing with [Lighthouse Viewer](https://googlechrome.github.io/lighthouse/viewer/)
-
-## Interpreting Results
-
-### Score Ranges
-
-- **90-100 (🟢 Green)**: Good - No major issues
-- **50-89 (🟡 Yellow)**: Needs Improvement - Optimization opportunities exist
-- **0-49 (🔴 Red)**: Poor - Significant issues requiring attention
-
-### Performance Score Weights (Lighthouse 10)
-
-Understand which metrics contribute most to performance scores:
-
-- **Total Blocking Time (TBT)**: 30% - JavaScript execution blocking interactivity
-- **Largest Contentful Paint (LCP)**: 25% - Time to render main content
-- **Cumulative Layout Shift (CLS)**: 25% - Visual stability during load
-- **First Contentful Paint (FCP)**: 10% - Time to first visible content
-- **Speed Index**: 10% - Visual completeness speed
-
-**Prioritization strategy:** Focus on high-weight metrics (TBT, LCP, CLS) for maximum score improvement.
-
-### Impact Weights
-
-Failed audits include weight values indicating impact on category scores:
-- Higher weights = bigger impact on score
-- Focus on high-weight issues first for efficient optimization
-- Zero-weight audits are informational only
-
-## Common Workflows
-
-### Workflow 1: Baseline Performance Assessment
-
-Establish baseline metrics for a page:
-
-1. Run comprehensive audit with all formats:
-   ```bash
-   python3 scripts/run_lighthouse.py https://example.com --output baseline.json
-   ```
-
-2. Review summary scores to identify problem categories
-
-3. Examine actionable report to prioritize fixes
-
-4. Reference `references/metrics_guide.md` for optimization strategies
-
-5. Save JSON report for future comparison
-
-### Workflow 2: Pre-Deployment Validation
-
-Validate changes before deploying to production:
-
-1. Audit staging environment:
-   ```bash
-   python3 scripts/run_lighthouse.py https://staging.example.com --format actionable
-   ```
-
-2. Compare scores against baseline or requirements
-
-3. Review failed audits for regressions
-
-4. Address critical issues (score < 50) before deployment
-
-5. Document improvements in commit messages or PR descriptions
-
-### Workflow 3: Accessibility Audit
-
-Focus on WCAG compliance and assistive technology support:
-
-1. Run accessibility-focused audit:
-   ```bash
-   python3 scripts/run_lighthouse.py https://example.com --categories accessibility --format detailed
-   ```
-
-2. Review failed audits in detailed report
-
-3. Check `references/metrics_guide.md` for accessibility guidance:
-   - Color contrast requirements
-   - ARIA attribute best practices
-   - Form element labeling
-   - Heading hierarchy
-   - Keyboard navigation
-
-4. Test fixes manually with screen readers and keyboard-only navigation
-
-5. Re-run audit to verify improvements
-
-### Workflow 4: Performance Optimization Sprint
-
-Systematic performance improvement:
-
-1. Generate baseline actionable report:
-   ```bash
-   python3 scripts/run_lighthouse.py https://example.com --format actionable --output before.json
-   ```
-
-2. Identify quick wins from `references/metrics_guide.md`:
-   - Add image dimensions (fixes CLS)
-   - Enable compression
-   - Defer offscreen images
-   - Add cache headers
-
-3. Implement high-impact, quick fixes first
-
-4. Re-run audit after each change batch:
-   ```bash
-   python3 scripts/run_lighthouse.py https://example.com --format summary
-   ```
-
-5. Track score improvements and iterate
-
-6. Save final report for comparison:
-   ```bash
-   python3 scripts/run_lighthouse.py https://example.com --output after.json
-   ```
-
-### Workflow 5: Local Development Testing
-
-Audit during development:
-
-1. Start local development server (e.g., `rails server`, `bin/dev`)
-
-2. Run audit on local server:
-   ```bash
-   python3 scripts/run_lighthouse.py http://localhost:3000/products --preset desktop
-   ```
-
-3. Review summary scores for immediate feedback
-
-4. Note: Local scores may not reflect production (no CDN, different network conditions)
-
-5. Validate critical changes on staging before production deployment
 
 ## Metrics Reference
 
-For detailed information about Lighthouse metrics, scoring, and optimization strategies, refer to:
-
+For detailed metrics explanations:
 ```bash
-# View comprehensive metrics guide
 cat references/metrics_guide.md
 ```
 
-**The guide covers:**
-- Core Web Vitals (LCP, FCP, CLS, TBT) definitions and targets
-- Accessibility audit categories and WCAG requirements
-- Best practices for security and modern web standards
-- SEO optimization recommendations
-- Common optimization strategies with implementation details
-- Score weight distribution and prioritization frameworks
-- Quick wins vs long-term optimization projects
-
-## Best Practices
-
-### Testing Strategy
-
-1. **Test both desktop and mobile presets** - Mobile typically has stricter requirements
-2. **Run multiple audits** - Scores can vary due to network conditions; average 3-5 runs
-3. **Test in production-like environments** - Local dev scores may be misleading
-4. **Audit key user journeys** - Homepage, product pages, checkout flows
-5. **Set performance budgets** - Define minimum acceptable scores per category
-
-### Score Interpretation
-
-1. **Focus on user experience, not just scores** - A score of 95 vs 100 rarely impacts users
-2. **Prioritize high-impact metrics** - TBT, LCP, CLS have highest weight
-3. **Don't ignore yellow scores** - 50-89 range still has optimization opportunities
-4. **Track trends over time** - One audit is a snapshot; trends reveal patterns
-5. **Consider page context** - E-commerce pages have different priorities than marketing pages
-
-### Optimization Workflow
-
-1. **Start with actionable report** - Sorted by impact for efficient prioritization
-2. **Fix high-weight issues first** - Bigger impact on scores per unit of effort
-3. **Batch related fixes** - Group similar optimizations (e.g., all image work together)
-4. **Test incrementally** - Verify each batch before moving to next
-5. **Document baselines** - Save JSON reports for comparison and regression detection
-
-### Common Pitfalls
-
-1. **Testing only on desktop** - Mobile performance often significantly worse
-2. **Optimizing in isolation** - Test on real devices and networks periodically
-3. **Ignoring third-party scripts** - Third-party code can dominate performance impact
-4. **One-time optimization** - Performance requires ongoing monitoring
-5. **Chasing perfect 100 scores** - Diminishing returns beyond 90-95 range
-
-## Troubleshooting
-
-### Lighthouse Not Installed
-
-**Error:** `❌ Error: Lighthouse CLI is not installed.`
-
-**Fix:**
-```bash
-npm install -g lighthouse
-```
-
-### Chrome Not Found
-
-**Error:** Lighthouse cannot find Chrome browser
-
-**Fix:** Install Google Chrome or specify Chrome path:
-```bash
-export CHROME_PATH=/path/to/chrome
-```
-
-### Connection Refused (Local Server)
-
-**Error:** Connection refused when auditing localhost
-
-**Fix:**
-1. Verify server is running (`rails server`, `bin/dev`)
-2. Check correct port in URL
-3. Ensure no firewall blocking localhost connections
-
-### Inconsistent Scores
-
-**Symptom:** Large score variations between runs
-
-**Causes:**
-- Network variability
-- Background processes
-- Browser extensions
-- A/B testing or dynamic ads
-
-**Fix:**
-1. Close unnecessary browser tabs/extensions
-2. Run multiple audits and average results
-3. Test on consistent network conditions
-4. Disable A/B tests during auditing
+Covers:
+- Core Web Vitals definitions (LCP, FCP, CLS, TBT targets)
+- Accessibility audit types (ARIA, contrast, keyboard nav)
+- SEO requirements (meta tags, structured data)
+- Optimization strategies by impact
 
 ## Resources
 
-### Bundled Resources
+**Bundled:**
+- `scripts/run_lighthouse.py` - Audit runner with formatted output
+- `references/metrics_guide.md` - Comprehensive metrics guide
 
-- **`scripts/run_lighthouse.py`**: Python script for running Lighthouse audits with formatted output
-- **`references/metrics_guide.md`**: Comprehensive guide to Lighthouse metrics, scoring, and optimization strategies
-
-### External Resources
-
-- [Lighthouse Documentation](https://developer.chrome.com/docs/lighthouse/)
-- [Web.dev Performance](https://web.dev/performance/)
+**External:**
+- [Lighthouse Docs](https://developer.chrome.com/docs/lighthouse/)
 - [Core Web Vitals](https://web.dev/vitals/)
-- [PageSpeed Insights](https://pagespeed.web.dev/) (online Lighthouse runner)
-- [Lighthouse Viewer](https://googlechrome.github.io/lighthouse/viewer/) (view saved JSON reports)
-- [Lighthouse Scoring Calculator](https://googlechrome.github.io/lighthouse/scorecalc/) (explore score calculations)
-
-## Integration Examples
-
-### CI/CD Pipeline Integration
-
-```bash
-# In GitHub Actions, GitLab CI, etc.
-- name: Run Lighthouse Audit
-  run: |
-    npm install -g lighthouse
-    python3 scripts/run_lighthouse.py https://staging.example.com --format actionable
-    # Fail build if performance score < 80
-    SCORE=$(python3 scripts/run_lighthouse.py https://staging.example.com --output report.json | grep Performance | awk '{print $2}')
-    if [ $SCORE -lt 80 ]; then exit 1; fi
-```
-
-### Rails Development Workflow
-
-```bash
-# Start Rails server with Vite
-bin/dev
-
-# In another terminal, audit homepage
-python3 lighthouse-audit/scripts/run_lighthouse.py http://localhost:3000 --format summary
-
-# Audit specific pages
-python3 lighthouse-audit/scripts/run_lighthouse.py http://localhost:3000/products --format actionable
-```
-
-### Pre-Commit Hook
-
-```bash
-# .git/hooks/pre-commit
-#!/bin/bash
-echo "Running Lighthouse audit on local server..."
-python3 lighthouse-audit/scripts/run_lighthouse.py http://localhost:3000 --format summary --categories performance accessibility
-```
+- [Lighthouse Scorer](https://googlechrome.github.io/lighthouse/scorecalc/)

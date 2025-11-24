@@ -159,15 +159,15 @@
 
               <div class="form-control">
                 <div class="flex justify-between items-baseline mb-2">
-                  <label class="label-text font-semibold">Select quantity:</label>
+                  <label for="cart_item_quantity" class="label-text font-semibold">Select quantity:</label>
                   <span class="text-sm text-base-content/60" data-product-options-target="packSizeDisplay">
                     Pack size: <%= number_with_delimiter(pac_size) %> units
                   </span>
                 </div>
                 <%= select_tag "cart_item[quantity]",
                               options_for_select(quantity_options.map { |q| ["#{q / pac_size} #{(q / pac_size) == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(q)} units)", q] }, pac_size),
-                              class: "select select-bordered select-lg w-full",
-                              data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>
+                              { id: "cart_item_quantity", class: "select select-bordered select-lg w-full" },
+                              { data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } } %>
               </div>
 
               <%# Compatible Lids Section - Only for cup products %>
@@ -197,8 +197,8 @@
               <% end %>
 
               <div class="my-8 space-y-3">
-                <div class="flex items-center gap-2 text-secondary">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div class="flex items-center gap-2 text-primary">
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   <span class="font-medium">Delivered in 2 to 3 working days</span>
@@ -255,7 +255,7 @@
   </div>
 
   <div class="drawer-side">
-    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <label for="cart-drawer" aria-label="Close cart drawer" class="drawer-overlay"></label>
     <ul class="menu bg-base-200 text-base-content min-h-full w-80 p-4">
       <%= render "shared/drawer_cart_content" %>
     </ul>

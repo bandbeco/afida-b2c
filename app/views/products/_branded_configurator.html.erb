@@ -55,7 +55,7 @@
         </figure>
       <% else %>
         <div class="w-full h-96 bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
-          <span class="text-gray-500">Image not available</span>
+          <span class="text-gray-700">Image not available</span>
         </div>
       <% end %>
     </div>
@@ -71,7 +71,7 @@
       <div class="space-y-4">
         <!-- Step 1: Select Size -->
         <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="sizeStep">
-          <input type="radio" name="config-accordion" checked />
+          <input type="radio" name="config-accordion" checked aria-label="Step 1: Select Size" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="sizeIndicator">1</span>
             Select Size
@@ -93,7 +93,7 @@
 
         <!-- Step 2: Select Finish -->
         <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="finishStep">
-          <input type="radio" name="config-accordion" />
+          <input type="radio" name="config-accordion" aria-label="Step 2: Select Finish" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="finishIndicator">2</span>
             Select Finish
@@ -120,7 +120,7 @@
 
         <!-- Step 3: Select Quantity -->
         <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="quantityStep">
-          <input type="radio" name="config-accordion" />
+          <input type="radio" name="config-accordion" aria-label="Step 3: Select Quantity" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="quantityIndicator">3</span>
             Select Quantity
@@ -157,7 +157,7 @@
 
         <!-- Step 4: Add Matching Lids (Optional) -->
         <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="lidsStep">
-          <input type="radio" name="config-accordion" />
+          <input type="radio" name="config-accordion" aria-label="Step 4: Add Matching Lids (Optional)" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="lidsIndicator">4</span>
             Add Matching Lids (Optional)
@@ -185,7 +185,7 @@
 
         <!-- Step 5: Upload Design -->
         <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="designStep">
-          <input type="radio" name="config-accordion" />
+          <input type="radio" name="config-accordion" aria-label="Step 5: Upload Your Design" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="designIndicator">5</span>
             Upload Your Design
@@ -219,8 +219,8 @@
 
       <!-- Delivery Info & Price Summary -->
       <div class="my-8 space-y-3 rounded-lg pt-4 px-4">
-        <div class="flex items-center gap-2 text-secondary">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div class="flex items-center gap-2 text-primary">
+          <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
           <span class="font-medium">Delivered in 3-4 weeks</span>
