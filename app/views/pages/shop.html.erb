@@ -3,7 +3,7 @@
 <% content_for :meta_description, "Browse our complete range of eco-friendly catering supplies. Filter by category, search products, and find exactly what you need. Sustainable packaging for your business." %>
 
 <div class="drawer drawer-end">
-  <input id="cart-drawer" type="checkbox" class="drawer-toggle" />
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
     <div class="container mx-auto px-4 py-8">
   <%= form_with url: shop_path, method: :get, data: { controller: "form", turbo_frame: "products", turbo_action: "replace" } do |f| %>
@@ -13,7 +13,7 @@
         <!-- Category Filter (shown when not searching) -->
         <% if params[:q].blank? %>
           <div>
-            <h2 class="font-semibold text-lg mb-3 pb-2 border-b">Product Types</h2>
+            <div class="font-semibold text-lg mb-3 pb-2 border-b">Product Types</div>
 
             <% @categories.each do |category| %>
               <label for="category_<%= category.slug %>" class="flex items-center gap-2 mb-2 cursor-pointer">
