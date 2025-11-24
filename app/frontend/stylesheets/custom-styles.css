@@ -18,6 +18,22 @@ body {
   @apply shadow-lg shadow-black/20;
 }
 
+.btn-secondary {
+  @apply bg-secondary;
+  @apply text-white;
+  @apply border-secondary;
+  @apply hover:bg-neutral-800;
+  @apply hover:border-neutral-800;
+  @apply shadow-lg shadow-black/20;
+}
+
+.btn-black {
+  @apply bg-gray-800;
+  @apply text-white;
+  @apply border-gray-800;
+  @apply shadow-lg shadow-black/20;
+}
+
 h1, h2 {
   @apply font-semibold;
 }
