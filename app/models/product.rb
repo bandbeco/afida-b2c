@@ -162,8 +162,11 @@ class Product < ApplicationRecord
   # - nil if no variants
   # - Single price if all variants have same price
   # - [min, max] array if variant prices differ
+  # Optimized to use loaded association when available (prevents N+1)
   def price_range
-    prices = active_variants.pluck(:price)
+    # Use loaded association if available, otherwise query
+    variants = active_variants.loaded? ? active_variants.to_a : active_variants
+    prices = variants.map(&:price)
     return nil if prices.empty?
 
     min = prices.min
