@@ -1,85 +1,72 @@
-// To see this message, add the following to the `<head>` section in your
-// views/layouts/application.html.erb
-//
-//    <%= vite_client_tag %>
-//    <%= vite_javascript_tag 'application' %>
-console.log('Vite ⚡️ Rails')
-
-// If using a TypeScript entrypoint file:
-//     <%= vite_typescript_tag 'application' %>
-//
-// If you want to use .jsx or .tsx, add the extension:
-//     <%= vite_javascript_tag 'application.jsx' %>
-
-console.log('Visit the guide for more information: ', 'https://vite-ruby.netlify.app/guide/rails')
-
-// Example: Load Rails libraries in Vite.
-//
+// Vite + Rails entrypoint with optimized lazy loading
 import "@hotwired/turbo-rails"
 import { Application } from "@hotwired/stimulus"
 
 // Start Stimulus application
 const application = Application.start()
 
-// Import all controllers
-import CartDrawerController from "../javascript/controllers/cart_drawer_controller"
-application.register("cart-drawer", CartDrawerController)
-
-import CarouselController from "../javascript/controllers/carousel_controller"
-application.register("carousel", CarouselController)
-
-import BrandedConfiguratorController from "../javascript/controllers/branded_configurator_controller"
-application.register("branded-configurator", BrandedConfiguratorController)
-
-import ProductCardHoverController from "../javascript/controllers/product_card_hover_controller"
-application.register("product-card-hover", ProductCardHoverController)
-
-import ProductOptionsController from "../javascript/controllers/product_options_controller"
-application.register("product-options", ProductOptionsController)
-
-import CompatibleLidsController from "../javascript/controllers/compatible_lids_controller"
-application.register("compatible-lids", CompatibleLidsController)
-
-import FaqSearchController from "../javascript/controllers/faq_search_controller"
-application.register("faq-search", FaqSearchController)
-
-import AddonController from "../javascript/controllers/addon_controller"
-application.register("addon", AddonController)
-
-import NestedFormController from "../javascript/controllers/nested_form_controller"
-application.register("nested-form", NestedFormController)
-
-import RedirectFormController from "../javascript/controllers/redirect_form_controller"
-application.register("redirect-form", RedirectFormController)
-
+// CORE CONTROLLERS - Always loaded (used on most pages)
 import FormController from "../javascript/controllers/form_controller"
 application.register("form", FormController)
 
 import SearchController from "../javascript/controllers/search_controller"
 application.register("search", SearchController)
 
-import CharacterCounterController from "../javascript/controllers/character_counter_controller"
-application.register("character-counter", CharacterCounterController)
+import CartDrawerController from "../javascript/controllers/cart_drawer_controller"
+application.register("cart-drawer", CartDrawerController)
 
-import QuickAddModalController from "../javascript/controllers/quick_add_modal_controller"
-application.register("quick-add-modal", QuickAddModalController)
+// LAZY LOADED CONTROLLERS - Only loaded when needed
+const lazyControllers = {
+  "carousel": () => import("../javascript/controllers/carousel_controller"),
+  "branded-configurator": () => import("../javascript/controllers/branded_configurator_controller"),
+  "product-card-hover": () => import("../javascript/controllers/product_card_hover_controller"),
+  "product-options": () => import("../javascript/controllers/product_options_controller"),
+  "compatible-lids": () => import("../javascript/controllers/compatible_lids_controller"),
+  "faq-search": () => import("../javascript/controllers/faq_search_controller"),
+  "addon": () => import("../javascript/controllers/addon_controller"),
+  "nested-form": () => import("../javascript/controllers/nested_form_controller"),
+  "redirect-form": () => import("../javascript/controllers/redirect_form_controller"),
+  "character-counter": () => import("../javascript/controllers/character_counter_controller"),
+  "quick-add-modal": () => import("../javascript/controllers/quick_add_modal_controller"),
+  "quick-add-form": () => import("../javascript/controllers/quick_add_form_controller"),
+  "slide-in": () => import("../javascript/controllers/slide_in_controller")
+}
 
-import QuickAddFormController from "../javascript/controllers/quick_add_form_controller"
-application.register("quick-add-form", QuickAddFormController)
+// Lazy load controllers when their elements appear in DOM
+const loadedControllers = new Set()
 
-import SlideInController from "../javascript/controllers/slide_in_controller"
-application.register("slide-in", SlideInController)
+function lazyLoadController(name) {
+  if (loadedControllers.has(name) || !lazyControllers[name]) return
 
-// Configure Stimulus development experience
+  loadedControllers.add(name)
+  lazyControllers[name]().then(module => {
+    application.register(name, module.default)
+  })
+}
+
+// Check for controllers on page load and after Turbo navigation
+function checkForLazyControllers() {
+  Object.keys(lazyControllers).forEach(name => {
+    if (document.querySelector(`[data-controller~="${name}"]`)) {
+      lazyLoadController(name)
+    }
+  })
+}
+
+// Initial check
+checkForLazyControllers()
+
+// Check after Turbo navigations
+document.addEventListener("turbo:load", checkForLazyControllers)
+document.addEventListener("turbo:frame-load", checkForLazyControllers)
+
+// Configure Stimulus
 application.debug = false
 window.Stimulus = application
 
-//
-import * as ActiveStorage from '@rails/activestorage'
-ActiveStorage.start()
-//
-// // Import all channels.
-// const channels = import.meta.globEager('./**/*_channel.js')
-
-// Example: Import a stylesheet in app/frontend/index.css
-// import '~/index.css'
+// Lazy load ActiveStorage only on pages that need it (file uploads)
+if (document.querySelector('[data-direct-upload-url]')) {
+  import('@rails/activestorage').then(ActiveStorage => {
+    ActiveStorage.start()
+  })
+}
