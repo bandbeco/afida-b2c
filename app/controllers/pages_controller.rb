@@ -4,7 +4,7 @@ class PagesController < ApplicationController
   def home
     @featured_products = Product.featured
                                 .with_attached_product_photo
-                                .includes(:product_variants)
+                                .includes(:variants)
                                 .limit(8)
     @featured_straw_product = Product.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
