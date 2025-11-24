@@ -3,6 +3,7 @@ class PagesController < ApplicationController
 
   def home
     @featured_products = Product.featured.with_attached_product_photo.limit(8)
+    @featured_straw_product = Product.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
   end
 
