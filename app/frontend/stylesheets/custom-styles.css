@@ -310,6 +310,23 @@ h3, h4, h5, h6 {
   will-change: transform, opacity;
 }
 
+/* Slide-in from top animation */
+@keyframes slideInFromTop {
+  from {
+    transform: translateY(-30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.slide-in-from-top {
+  animation: slideInFromTop 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  opacity: 0; /* Start invisible until animation begins */
+}
+
 /* Bestsellers carousel navigation buttons */
 .bestsellers-button-prev,
 .bestsellers-button-next {

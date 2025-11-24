@@ -1,22 +1,23 @@
 import { Controller } from "@hotwired/stimulus"
-import { gsap } from "gsap"
 
+/**
+ * Slide In Controller
+ * Provides staggered slide-in animation for text elements using CSS animations
+ */
 export default class extends Controller {
   static targets = ["item"]
 
   connect() {
-    this.slideInFromTop()
+    this.animateItems()
   }
 
-  slideInFromTop() {
-    // Staggered slide-in animation from top on page load
-    gsap.from(this.itemTargets, {
-      y: -30,
-      opacity: 0,
-      duration: 0.8,
-      ease: "power2.out",
-      delay: 0.3,
-      stagger: 0.15
+  animateItems() {
+    // Add animation class with staggered delay to each item
+    this.itemTargets.forEach((item, index) => {
+      // Set staggered delay for each item
+      item.style.animationDelay = `${0.3 + (index * 0.15)}s`
+      // Add animation class
+      item.classList.add("slide-in-from-top")
     })
   }
 }

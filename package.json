@@ -16,7 +16,6 @@
     "@hotwired/turbo-rails": "^8.0.13",
     "@rails/activestorage": "^8.0.200",
     "daisyui": "^5.0.38",
-    "gsap": "^3.12.5",
     "swiper": "^11.2.8"
   }
 }
