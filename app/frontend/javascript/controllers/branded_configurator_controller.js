@@ -208,7 +208,7 @@ export default class extends Controller {
                   data-action="click->branded-configurator#addLidToCart"
                   data-lid-sku="${lid.sku}"
                   data-lid-name="${lid.name}">
-            Add to basket
+            Add to cart
           </button>
         </div>
       </div>
@@ -486,20 +486,20 @@ export default class extends Controller {
       })
 
       if (response.ok) {
-        // Process turbo stream to update basket counter
+        // Process turbo stream to update cart counter
         const text = await response.text()
         if (text) {
           Turbo.renderStreamMessage(text)
         }
 
         // Show success feedback
-        button.textContent = '✓ Added to basket'
+        button.textContent = '✓ Added to cart'
         button.classList.remove('bg-primary', 'hover:bg-primary-focus')
         button.classList.add('bg-success', 'hover:bg-success')
 
         // Reset after 2 seconds
         setTimeout(() => {
-          button.textContent = 'Add to basket'
+          button.textContent = 'Add to cart'
           button.classList.remove('bg-success', 'hover:bg-success')
           button.classList.add('bg-primary', 'hover:bg-primary-focus')
           button.disabled = false
@@ -510,7 +510,7 @@ export default class extends Controller {
     } catch (error) {
       this.showError(`Failed to add ${name}`)
       button.disabled = false
-      button.textContent = 'Add to basket'
+      button.textContent = 'Add to cart'
     }
   }
 
@@ -595,7 +595,7 @@ export default class extends Controller {
       })
 
       if (response.ok) {
-        // Turbo Stream will update the basket counter
+        // Turbo Stream will update the cart counter
         const text = await response.text()
         if (text) {
           Turbo.renderStreamMessage(text)
@@ -604,7 +604,7 @@ export default class extends Controller {
             // In modal: dispatch event to close modal
             window.dispatchEvent(new CustomEvent('addon:added'))
           }
-          // Product added to cart - basket counter updated via Turbo Stream
+          // Product added to cart - cart counter updated via Turbo Stream
 
           // Reset the configurator form
           this.resetConfigurator()

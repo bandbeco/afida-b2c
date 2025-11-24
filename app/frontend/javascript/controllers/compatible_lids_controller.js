@@ -127,7 +127,7 @@ export default class extends Controller {
                   data-action="click->compatible-lids#addLidToCart"
                   data-lid-sku="${lid.sku}"
                   data-lid-name="${lid.name}">
-            Add to basket
+            Add to cart
           </button>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default class extends Controller {
       })
 
       if (response.ok) {
-        // Process turbo stream to update basket counter
+        // Process turbo stream to update cart counter
         const text = await response.text()
         if (text) {
           Turbo.renderStreamMessage(text)
@@ -204,7 +204,7 @@ export default class extends Controller {
         // Reset button after 2 seconds
         setTimeout(() => {
           button.disabled = false
-          button.textContent = 'Add to basket'
+          button.textContent = 'Add to cart'
           button.classList.remove('bg-success')
           button.classList.add('bg-primary', 'hover:bg-primary-focus')
         }, 2000)
@@ -218,7 +218,7 @@ export default class extends Controller {
 
       setTimeout(() => {
         button.disabled = false
-        button.textContent = 'Add to basket'
+        button.textContent = 'Add to cart'
         button.classList.remove('bg-error')
       }, 2000)
     }

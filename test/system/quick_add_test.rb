@@ -36,8 +36,8 @@ class QuickAddTest < ApplicationSystemTestCase
       end
     end
 
-    # Click Add to Basket
-    click_button "Add to Basket"
+    # Click Add to Cart
+    click_button "Add to Cart"
 
     # Modal should close
     assert_no_selector ".modal.modal-open", wait: 3
@@ -130,8 +130,8 @@ class QuickAddTest < ApplicationSystemTestCase
       end
     end
 
-    # Click Add to Basket
-    click_button "Add to Basket"
+    # Click Add to Cart
+    click_button "Add to Cart"
 
     # Modal should close
     assert_no_selector ".modal.modal-open", wait: 3
@@ -188,7 +188,7 @@ class QuickAddTest < ApplicationSystemTestCase
     end
 
     assert_selector ".modal.modal-open"
-    click_button "Add to Basket"
+    click_button "Add to Cart"
     assert_no_selector ".modal.modal-open", wait: 3
 
     # Second add: Add same product again via quick add
@@ -201,8 +201,8 @@ class QuickAddTest < ApplicationSystemTestCase
     # Modal opens
     assert_selector ".modal.modal-open"
 
-    # Add to basket again (default quantity = 1 pack)
-    click_button "Add to Basket"
+    # Add to cart again (default quantity = 1 pack)
+    click_button "Add to Cart"
 
     # Modal closes, drawer opens
     assert_no_selector ".modal.modal-open", wait: 3

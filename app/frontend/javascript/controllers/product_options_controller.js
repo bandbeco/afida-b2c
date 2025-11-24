@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Handles Size/Colour option selection on product pages with button selectors
 // Finds matching variant based on selected options
 export default class extends Controller {
-  static targets = ["sizeButton", "colourButton", "priceDisplay", "unitPriceDisplay", "imageDisplay", "variantSkuInput", "quantitySelect", "packSizeDisplay", "skuDisplay", "addToBasketButton"]
+  static targets = ["sizeButton", "colourButton", "priceDisplay", "unitPriceDisplay", "imageDisplay", "variantSkuInput", "quantitySelect", "packSizeDisplay", "skuDisplay", "addToCartButton"]
 
   static values = {
     variants: Array,    // All product variants with their option_values
@@ -20,10 +20,10 @@ export default class extends Controller {
       this.skuDisplayTarget.style.display = 'none'
     }
 
-    // Disable add to basket button and show "from" price if no URL selection
+    // Disable add to cart button and show "from" price if no URL selection
     if (!this.hasSelectionValue) {
       this.showFromPrice()
-      this.disableAddToBasket()
+      this.disableAddToCart()
     }
 
     // Read URL parameters
@@ -127,8 +127,8 @@ export default class extends Controller {
     // Revert to "from" price display
     this.showFromPrice()
 
-    // Disable add to basket button
-    this.disableAddToBasket()
+    // Disable add to cart button
+    this.disableAddToCart()
   }
 
   showFromPrice() {
@@ -141,17 +141,17 @@ export default class extends Controller {
     }
   }
 
-  disableAddToBasket() {
-    if (this.hasAddToBasketButtonTarget) {
-      this.addToBasketButtonTarget.disabled = true
-      this.addToBasketButtonTarget.classList.add('btn-disabled')
+  disableAddToCart() {
+    if (this.hasAddToCartButtonTarget) {
+      this.addToCartButtonTarget.disabled = true
+      this.addToCartButtonTarget.classList.add('btn-disabled')
     }
   }
 
-  enableAddToBasket() {
-    if (this.hasAddToBasketButtonTarget) {
-      this.addToBasketButtonTarget.disabled = false
-      this.addToBasketButtonTarget.classList.remove('btn-disabled')
+  enableAddToCart() {
+    if (this.hasAddToCartButtonTarget) {
+      this.addToCartButtonTarget.disabled = false
+      this.addToCartButtonTarget.classList.remove('btn-disabled')
     }
   }
 
@@ -201,8 +201,8 @@ export default class extends Controller {
       this.variantSkuInputTarget.value = variant.sku
     }
 
-    // Enable add to basket button
-    this.enableAddToBasket()
+    // Enable add to cart button
+    this.enableAddToCart()
 
     // Update image (show photo or placeholder)
     if (this.hasImageDisplayTarget) {

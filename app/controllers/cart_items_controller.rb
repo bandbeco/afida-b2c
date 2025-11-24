@@ -36,7 +36,7 @@ class CartItemsController < ApplicationController
       end
     else
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("basket_counter", partial: "shared/basket_counter") }
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("cart_counter", partial: "shared/cart_counter") }
         format.html { redirect_to cart_path, alert: "Could not update cart: #{@cart_item.errors.full_messages.join(', ')}" }
       end
     end
@@ -117,7 +117,7 @@ class CartItemsController < ApplicationController
       end
     else
       respond_to do |format|
-        format.turbo_stream { render turbo_stream: turbo_stream.replace("basket_counter", partial: "shared/basket_counter") }
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("cart_counter", partial: "shared/cart_counter") }
         format.html { redirect_back fallback_location: root_path, alert: cart_item.errors.full_messages.join(", ") }
         format.json { render json: { error: cart_item.errors.full_messages.join(", ") }, status: :unprocessable_entity }
       end
@@ -140,8 +140,8 @@ class CartItemsController < ApplicationController
       respond_to do |format|
         format.turbo_stream do
           render turbo_stream: [
-            # Update basket counter
-            turbo_stream.replace("basket_counter", partial: "shared/basket_counter"),
+            # Update cart counter
+            turbo_stream.replace("cart_counter", partial: "shared/cart_counter"),
             # Update drawer cart content
             turbo_stream.replace("drawer_cart_content", partial: "shared/drawer_cart_content")
             # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end

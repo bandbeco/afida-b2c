@@ -2,8 +2,8 @@
   <%= render partial: "cart_items/index" %>
 <% end %>
 
-<%= turbo_stream.replace "basket_counter" do %>
-  <%= render partial: "shared/basket_counter", locals: { cart_items_count: Current.cart.items_count } %>
+<%= turbo_stream.replace "cart_counter" do %>
+  <%= render partial: "shared/cart_counter", locals: { cart_items_count: Current.cart.items_count } %>
 <% end %>
 
 <%= turbo_stream.update "vat" do %>

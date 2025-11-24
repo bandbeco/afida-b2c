@@ -1,4 +1,4 @@
-<%= turbo_frame_tag "basket_counter" do %>
+<%= turbo_frame_tag "cart_counter" do %>
   <div class="pb-6 mt-6 dropdown dropdown-center dropdown-hover">
     <div tabindex="0" role="button" class="btn btn-ghost btn-sm">
       <div class="indicator">
@@ -15,7 +15,7 @@
 
         <div class="card-actions mt-4">
           <div class="w-full flex flex-col gap-2">
-            <%= link_to "View basket", cart_path, class: "btn btn-primary btn-block", data: { turbo: false } %>
+            <%= link_to "View cart", cart_path, class: "btn btn-primary btn-block", data: { turbo: false } %>
             <%= button_to "Checkout", checkout_path, class: "btn btn-secondary btn-block", data: { turbo: false } %>
           </div>
         </div>

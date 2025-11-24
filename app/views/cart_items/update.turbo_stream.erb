@@ -1,4 +1,4 @@
-<%= turbo_stream.replace "basket_counter", partial: "shared/basket_counter" %>
+<%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
 
 <%= turbo_stream.update "cart_item_#{@cart_item.id}_total" do %>
   <%= number_to_currency(@cart_item.line_total) %>
