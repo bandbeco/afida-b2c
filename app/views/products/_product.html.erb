@@ -1,3 +1,4 @@
+<% image_index ||= 999 %> <%# Default if index not provided %>
 <div class="card shadow-sm bg-base-100"
      data-controller="product-card-hover"
      data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
@@ -10,6 +11,7 @@
                         class: "product-image",
                         width: 400,
                         height: 400,
+                        **(image_index == 0 ? { fetchpriority: "high" } : {}),
                         data: { product_card_hover_target: "productPhoto" } %>
         <% end %>
 
