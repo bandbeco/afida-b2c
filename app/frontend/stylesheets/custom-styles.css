@@ -66,6 +66,13 @@ h3, h4, h5, h6 {
   width: fit-content;
 }
 
+/* Respect user preference for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .logo-conveyor {
+    animation: none;
+  }
+}
+
 .logo-conveyor img {
   object-fit: contain;
   max-height: 64px;
