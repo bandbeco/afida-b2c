@@ -8,7 +8,7 @@ namespace :branded_products do
     puts ""
 
     # Find branded/customizable template products
-    branded_products = Product.where(product_type: "customizable_template").order(:position)
+    branded_products = Product.branded.order(:position)
 
     if branded_products.empty?
       puts "❌ No branded products found"
@@ -53,9 +53,10 @@ namespace :branded_products do
       end
 
       # Check description
-      if product.description.present?
+      if product.description_standard_with_fallback.present?
         puts ""
-        puts "   Description: #{product.description[0..100]}#{'...' if product.description.length > 100}"
+        desc = product.description_standard_with_fallback
+        puts "   Description: #{desc[0..100]}#{'...' if desc.length > 100}"
       end
 
       puts ""
@@ -91,7 +92,7 @@ namespace :branded_products do
       exit 1
     end
 
-    unless product.product_type == "customizable_template"
+    unless product.customizable_template?
       puts "⚠️  Product '#{product.name}' is not a branded/customizable product"
       puts "   Product type: #{product.product_type}"
       exit 1
@@ -101,7 +102,7 @@ namespace :branded_products do
     puts "=" * 100
     puts "Slug: #{product.slug}"
     puts "Active: #{product.active ? 'Yes' : 'No'}"
-    puts "Description: #{product.description}"
+    puts "Description: #{product.description_standard_with_fallback}" if product.description_standard_with_fallback.present?
     puts ""
 
     prices = product.branded_product_prices.order(:size, :quantity_tier)

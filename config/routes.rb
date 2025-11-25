@@ -23,10 +23,9 @@ Rails.application.routes.draw do
       get :quick_add
     end
   end
-  resources :categories, only: [ :show ], path: "category"
+  resources :categories, only: [ :show ]
+  resources :branded_products, only: [ :index, :show ], path: "branded-products", param: :slug
 
-  # Branded products shortcut
-  get "branded-products", to: "categories#show", defaults: { id: "branded-products" }
   resource :session, path: "signin", path_names: { new: "" }
   resources :passwords, param: :token
   resource :registration, only: [ :new, :create ], path: "signup", path_names: { new: "" }

@@ -30,6 +30,8 @@ class Product < ApplicationRecord
   scope :catalog_products, -> { where(product_type: [ "standard", "customizable_template" ]) }
   scope :customized_for_organization, ->(org) { unscoped.where(product_type: "customized_instance", organization: org) }
   scope :quick_add_eligible, -> { where(product_type: "standard") }
+  scope :standard, -> { where(product_type: "standard") }
+  scope :branded, -> { where(product_type: "customizable_template") }
 
   # Filtering and search scopes
   scope :in_categories, ->(category_slugs) {
