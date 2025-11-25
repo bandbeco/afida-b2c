@@ -1,4 +1,5 @@
 <% content_for :title, "Frequently Asked Questions" %>
+<% content_for :meta_description, "Find answers to frequently asked questions about Afida's eco-friendly catering supplies. Learn about our products, shipping, returns, and customer service policies." %>
 
 <div class="container mx-auto px-4 py-8 max-w-5xl">
   <!-- Header -->
@@ -16,7 +17,7 @@
             placeholder: "Search FAQs...",
             class: "input input-bordered w-full pr-12",
             data: { faq_search_target: "input", action: "input->faq-search#search" } %>
-        <button type="submit" class="btn btn-ghost btn-sm absolute right-2 top-1/2 -translate-y-1/2">
+        <button type="submit" class="btn btn-ghost btn-sm absolute right-2 top-1/2 -translate-y-1/2" aria-label="Search FAQs">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
@@ -79,7 +80,7 @@
         <div class="join join-vertical w-full">
           <% category["questions"].each do |q| %>
             <div class="collapse collapse-arrow join-item bg-base-100 border border-base-300">
-              <input type="radio" name="faq-accordion" />
+              <input type="radio" name="faq-accordion-<%= category["id"] %>" aria-label="<%= q["question"] %>" />
               <div class="collapse-title text-lg" id="<%= category["id"] %>-<%= q["id"] %>">
                 <%= q["question"] %>
               </div>
