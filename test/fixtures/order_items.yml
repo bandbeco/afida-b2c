@@ -42,3 +42,23 @@ acme_branded_item:
   configuration:
     size: "12oz"
     quantity: 5000
+
+complete_order_item_one:
+  order: complete_order
+  product: one
+  product_variant: one
+  product_name: Eco Coffee Cup
+  product_sku: CUP-8OZ
+  price: 10.00
+  quantity: 2
+  line_total: 20.00
+
+complete_order_item_two:
+  order: complete_order
+  product: two
+  product_variant: two
+  product_name: Bamboo Cutlery Set
+  product_sku: CUTLERY-SET
+  price: 15.00
+  quantity: 1
+  line_total: 15.00

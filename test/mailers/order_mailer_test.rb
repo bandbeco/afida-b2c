@@ -42,21 +42,31 @@ class OrderMailerTest < ActionMailer::TestCase
   test "confirmation_email has both HTML and text parts" do
     email = OrderMailer.with(order: @order).confirmation_email
 
+    # With PDF attachment, email becomes multipart/mixed with 2 parts:
+    # 1. multipart/alternative (HTML + text)
+    # 2. application/pdf (attachment)
     assert_equal 2, email.parts.size
-    assert_equal "multipart/alternative", email.mime_type
+    assert_equal "multipart/mixed", email.mime_type
 
-    # Check for HTML part
-    html_part = email.parts.find { |p| p.content_type.include?("text/html") }
+    # Find the multipart/alternative part (contains HTML and text)
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") }
+    assert_not_nil content_part, "Should have multipart/alternative content part"
+
+    # Check for HTML part within the alternative part
+    html_part = content_part.parts.find { |p| p.content_type.include?("text/html") }
     assert_not_nil html_part
 
-    # Check for text part
-    text_part = email.parts.find { |p| p.content_type.include?("text/plain") }
+    # Check for text part within the alternative part
+    text_part = content_part.parts.find { |p| p.content_type.include?("text/plain") }
     assert_not_nil text_part
   end
 
   test "confirmation_email HTML body includes order details" do
     email = OrderMailer.with(order: @order).confirmation_email
-    html_part = email.parts.find { |p| p.content_type.include?("text/html") }
+
+    # Find the multipart/alternative part, then get HTML from it
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") }
+    html_part = content_part.parts.find { |p| p.content_type.include?("text/html") }
 
     assert_match @order.order_number, html_part.body.to_s
     assert_match @order.shipping_name, html_part.body.to_s
@@ -64,7 +74,10 @@ class OrderMailerTest < ActionMailer::TestCase
 
   test "confirmation_email text body includes order number" do
     email = OrderMailer.with(order: @order).confirmation_email
-    text_part = email.parts.find { |p| p.content_type.include?("text/plain") }
+
+    # Find the multipart/alternative part, then get text from it
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") }
+    text_part = content_part.parts.find { |p| p.content_type.include?("text/plain") }
 
     assert_match @order.order_number, text_part.body.to_s
   end
