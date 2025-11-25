@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_11_17_105324) do
+ActiveRecord::Schema[8.1].define(version: 2025_11_25_134444) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -270,7 +270,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_11_17_105324) do
     t.index [ "product_type" ], name: "index_products_on_product_type"
     t.index [ "profit_margin" ], name: "index_products_on_profit_margin"
     t.index [ "sku" ], name: "index_products_on_sku"
-    t.index [ "slug" ], name: "index_products_on_slug", unique: true
+    t.index [ "slug", "product_type" ], name: "index_products_on_slug_and_product_type", unique: true
   end
 
   create_table "seo_ai_budget_trackings", force: :cascade do |t|

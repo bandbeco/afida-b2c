@@ -129,7 +129,7 @@ class Product < ApplicationRecord
   before_validation :generate_slug
 
   validates :name, :category, presence: true
-  validates :slug, presence: true, uniqueness: true
+  validates :slug, presence: true, uniqueness: { scope: :product_type }
   validates :parent_product_id, presence: true, if: :customized_instance?
   validates :organization_id, presence: true, if: :customized_instance?
 

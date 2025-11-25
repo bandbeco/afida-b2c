@@ -26,7 +26,8 @@ namespace :url_redirects do
 
       # Check if variant params match actual product variants
       if redirect.target_slug.present? && redirect.variant_params.present?
-        product = Product.find_by(slug: redirect.target_slug)
+        # TODO: URL redirects should store product_type since slugs are now scoped
+        product = Product.unscoped.find_by(slug: redirect.target_slug)
         if product
           matching_variants = product.active_variants.select do |variant|
             redirect.variant_params.all? do |key, value|
@@ -162,7 +163,8 @@ namespace :url_redirects do
     puts "=" * 100
 
     UrlRedirect.active.order(:source_path).each do |redirect|
-      product = Product.find_by(slug: redirect.target_slug)
+      # TODO: URL redirects should store product_type since slugs are now scoped
+      product = Product.unscoped.find_by(slug: redirect.target_slug)
 
       puts "\n#{redirect.source_path}"
       puts "  → /products/#{redirect.target_slug}"

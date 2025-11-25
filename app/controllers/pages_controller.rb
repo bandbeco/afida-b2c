@@ -6,7 +6,7 @@ class PagesController < ApplicationController
                                 .with_attached_product_photo
                                 .includes(:variants)
                                 .limit(8)
-    @featured_straw_product = Product.find_by(slug: "bio-fibre-straws")
+    @featured_straw_product = Product.standard.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
     @client_logos = [
       "ballie-ballerson.png",
@@ -24,13 +24,13 @@ class PagesController < ApplicationController
   end
 
   def shop
-    @categories = Category.all.order(:position)
-
     @products = Product
       .standard
       .includes(:active_variants,
                 product_photo_attachment: :blob,
                 lifestyle_photo_attachment: :blob)
+
+    @categories = Category.where(id: @products.pluck(:category_id).uniq).order(:position)
 
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter

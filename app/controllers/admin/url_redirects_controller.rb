@@ -155,7 +155,9 @@ class Admin::UrlRedirectsController < Admin::ApplicationController
   end
 
   def check_variant_match
-    product = Product.find_by(slug: @redirect.target_slug)
+    # TODO: URL redirects should store product_type or use product ID instead of slug
+    # since slugs are now scoped to product_type and not globally unique
+    product = Product.unscoped.find_by(slug: @redirect.target_slug)
     return "Product not found" unless product
 
     if @redirect.variant_params.present?
