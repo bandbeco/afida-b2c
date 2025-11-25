@@ -1,0 +1,52 @@
+<!-- Branding Section -->
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] py-24 bg-[#ffb7c5]" id="branding">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+      <div class="relative group">
+        <div class="absolute inset-0 bg-black translate-x-4 translate-y-4 rounded-2xl transition-transform group-hover:translate-x-2 group-hover:translate-y-2"></div>
+        <div class="aspect-square bg-white rounded-2xl flex items-center justify-center relative z-10 border-2 border-black overflow-hidden">
+          <%= vite_image_tag "images/branding.png", alt: "branding by afida", class: "w-full h-full object-cover" %>
+        </div>
+      </div>
+
+      <div>
+        <h2 class="text-6xl font-black text-black mb-8 flex items-center gap-4">
+          <span>Branding</span>
+          <div class="flex items-center gap-4">
+            <span class="font-light italic text-4xl font-serif">by</span>
+            <div><%= render "shared/logo" %></div>
+          </div>
+        </h2>
+
+        <p class="text-xl text-black mb-6 leading-relaxed font-medium">
+          Design increases brand recognition. We custom print on a wide range of our products to help you showcase your brand.
+        </p>
+
+        <div class="grid grid-cols-3 gap-6 mb-12">
+          <div class="flex flex-col items-center text-center group cursor-default">
+            <div class="w-20 h-20 rounded-full bg-[#79ebc0] border-[3px] border-black flex items-center justify-center mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[2px] group-hover:translate-y-[2px] group-hover:shadow-none transition-all duration-200">
+              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+            <span class="font-black uppercase text-sm tracking-wide leading-tight">Short Lead<br>Times</span>
+          </div>
+
+          <div class="flex flex-col items-center text-center group cursor-default">
+            <div class="w-20 h-20 rounded-full bg-[#79ebc0] border-[3px] border-black flex items-center justify-center mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[2px] group-hover:translate-y-[2px] group-hover:shadow-none transition-all duration-200">
+              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <span class="font-black uppercase text-sm tracking-wide leading-tight">Low Minimum<br>Orders</span>
+          </div>
+
+          <div class="flex flex-col items-center text-center group cursor-default">
+            <div class="w-20 h-20 rounded-full bg-[#79ebc0] border-[3px] border-black flex items-center justify-center mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] group-hover:translate-x-[2px] group-hover:translate-y-[2px] group-hover:shadow-none transition-all duration-200">
+              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-black"><circle cx="13.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="10.5" r="2.5"/><circle cx="8.5" cy="7.5" r="2.5"/><circle cx="6.5" cy="12.5" r="2.5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            </div>
+            <span class="font-black uppercase text-sm tracking-wide leading-tight">Full<br>Colour</span>
+          </div>
+        </div>
+
+        <%= link_to "Brand your products", branded_products_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" %>
+      </div>
+    </div>
+  </div>
+</section>

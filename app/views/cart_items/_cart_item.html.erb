@@ -7,7 +7,7 @@
   %>
   <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center p-4 border-b hover:bg-gray-50">
     <div class="col-span-full md:col-span-2 flex items-center space-x-4">
-      <%= link_to product_path(cart_item.product, url_params), data: { turbo: false } do %>
+      <%= link_to product_path(cart_item.product, url_params), "aria-label": "View #{cart_item.product.name} details", data: { turbo: false } do %>
         <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-20 h-20 rounded-md shadow") %>
       <% end %>
       <div>
@@ -59,6 +59,7 @@
           quantity_options.sort!
         %>
         <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
+          <%= form.label :quantity, "Quantity:", class: "sr-only" %>
           <%= form.select :quantity,
                           options_for_select(
                             quantity_options.map { |q| ["#{number_with_delimiter(q)} units", q] },
@@ -93,6 +94,7 @@
         %>
 
         <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
+          <%= form.label :quantity, "Quantity:", class: "sr-only" %>
           <%= form.select :quantity,
                           options_for_select(
                             quantity_options.map { |q|

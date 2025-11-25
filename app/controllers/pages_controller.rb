@@ -8,6 +8,19 @@ class PagesController < ApplicationController
                                 .limit(8)
     @featured_straw_product = Product.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
+    @client_logos = [
+      "ballie-ballerson.png",
+      "edwardian-hotels.svg",
+      "hawksmoor.png",
+      "hurlingham.png",
+      "la-gelateria.png",
+      "mandarin-oriental.svg",
+      "marriott.svg",
+      "pixel-bar.png",
+      "royal-lancaster.svg",
+      "the-grove.webp",
+      "vincenzos.svg"
+    ]
   end
 
   def shop
