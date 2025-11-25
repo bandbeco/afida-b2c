@@ -2,6 +2,11 @@ require "prawn"
 require "prawn/table"
 
 class OrderPdfGenerator
+  COMPANY_NAME = "Afida".freeze
+  COMPANY_TAGLINE = "Eco-Friendly Catering Supplies".freeze
+  COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
+  LOGO_PATH = Rails.root.join("app", "frontend", "images", "logo.png").freeze
+
   def initialize(order)
     @order = order
   end
@@ -38,18 +43,19 @@ class OrderPdfGenerator
   private
 
   def add_header(pdf)
-    logo_path = Rails.root.join("app", "frontend", "images", "logo.png")
-
-    if File.exist?(logo_path)
-      # Add logo (scaled down to fit)
-      pdf.image logo_path, width: 120, position: :left
-      pdf.move_down 10
+    if File.exist?(LOGO_PATH) && File.size(LOGO_PATH) > 0
+      begin
+        pdf.image LOGO_PATH, width: 120, position: :left
+        pdf.move_down 10
+      rescue StandardError => e
+        Rails.logger.warn("Failed to add logo to PDF: #{e.message}")
+      end
     end
 
-    pdf.text "Afida", size: 24, style: :bold
-    pdf.text "Eco-Friendly Catering Supplies", size: 12, style: :italic
+    pdf.text COMPANY_NAME, size: 24, style: :bold
+    pdf.text COMPANY_TAGLINE, size: 12, style: :italic
     pdf.move_down 5
-    pdf.text "orders@afida.com", size: 10
+    pdf.text COMPANY_EMAIL, size: 10
   end
 
   def add_order_info(pdf)
@@ -65,11 +71,11 @@ class OrderPdfGenerator
     pdf.text "Shipping Address", size: 14, style: :bold
     pdf.move_down 5
 
-    pdf.text @order.shipping_name, size: 10
-    pdf.text @order.shipping_address_line1, size: 10
-    pdf.text @order.shipping_address_line2, size: 10 if @order.shipping_address_line2.present?
-    pdf.text "#{@order.shipping_city}, #{@order.shipping_postal_code}", size: 10
-    pdf.text @order.shipping_country, size: 10
+    pdf.text @order.shipping_name.to_s, size: 10
+    pdf.text @order.shipping_address_line1.to_s, size: 10
+    pdf.text @order.shipping_address_line2.to_s, size: 10 if @order.shipping_address_line2.present?
+    pdf.text "#{@order.shipping_city}, #{@order.shipping_postal_code}".strip, size: 10
+    pdf.text @order.shipping_country.to_s, size: 10
   end
 
   def add_items_table(pdf)
@@ -125,7 +131,7 @@ class OrderPdfGenerator
     pdf.move_down 10
 
     pdf.text "Thank you for your order!", size: 12, style: :bold, align: :center
-    pdf.text "If you have any questions, please contact us at orders@afida.com",
+    pdf.text "If you have any questions, please contact us at #{COMPANY_EMAIL}",
       size: 9, align: :center
   end
 

@@ -1,6 +1,7 @@
-# Fixtures for ContentDraft
+# Fixtures for SeoAiContentDraft
 pending_review:
-  seo_ai_content_brief: one
+  id: 1
+  seo_ai_content_brief_id: 1
   content_type: "blog_post"
   title: "The Complete Guide to Eco-Friendly Coffee Cups"
   body: |
@@ -26,3 +27,5 @@ pending_review:
       - "Add more examples"
   reviewer_model: "claude-3-5-sonnet-20241022"
   generation_cost_gbp: 0.15
+  created_at: <%= 5.days.ago %>
+  updated_at: <%= 5.days.ago %>

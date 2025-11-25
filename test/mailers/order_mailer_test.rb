@@ -113,4 +113,43 @@ class OrderMailerTest < ActionMailer::TestCase
     assert_not_nil email
     assert_equal [ @order.email ], email.to
   end
+
+  test "confirmation_email has pdf attachment with correct filename" do
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    # Find the PDF attachment
+    pdf_attachment = email.attachments.find { |a| a.content_type.include?("application/pdf") }
+    assert_not_nil pdf_attachment, "Email should have PDF attachment"
+
+    # Verify filename matches order number
+    assert_equal "Order-#{@order.order_number}.pdf", pdf_attachment.filename
+  end
+
+  test "confirmation_email pdf attachment has content" do
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    pdf_attachment = email.attachments.find { |a| a.content_type.include?("application/pdf") }
+    assert_not_nil pdf_attachment
+
+    # PDF should have content
+    assert pdf_attachment.body.raw_source.length > 0, "PDF attachment should have content"
+
+    # Verify it starts with PDF magic bytes
+    assert pdf_attachment.body.raw_source.start_with?("%PDF"), "Attachment should be valid PDF"
+  end
+
+  test "confirmation_email sends without pdf if generation fails" do
+    # Stub the generator to raise an error
+    OrderPdfGenerator.any_instance.stubs(:generate).raises(StandardError, "Test error")
+
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    # Email should still be deliverable
+    assert_not_nil email
+    assert_equal [ @order.email ], email.to
+
+    # Should have no PDF attachment
+    pdf_attachment = email.attachments.find { |a| a.content_type.include?("application/pdf") }
+    assert_nil pdf_attachment, "Email should not have PDF attachment when generation fails"
+  end
 end
