@@ -7,12 +7,12 @@ module PricingHelper
   # @return [String] formatted price display string
   def format_price_display(item)
     if item.pack_priced?
-      pack = number_to_currency(item.pack_price, unit: "£")
-      unit = number_to_currency(item.unit_price, unit: "£", precision: 4)
-      "#{pack} / pack (#{unit} / unit)"
+      pack_price = number_to_currency(item.pack_price, unit: "£")
+      unit_price = number_to_currency(item.unit_price, unit: "£", precision: 4)
+      "#{pack_price} / pack"
     else
-      unit = number_to_currency(item.unit_price, unit: "£", precision: 4)
-      "#{unit} / unit"
+      unit_price = number_to_currency(item.unit_price, unit: "£", precision: 4)
+      "#{unit_price} / unit"
     end
   end
 

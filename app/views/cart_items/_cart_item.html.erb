@@ -1,9 +1,13 @@
 <%= turbo_frame_tag cart_item do %>
   <%
-    # Build URL parameters from variant option_values
-    url_params = {}
-    url_params[:size] = cart_item.product_variant.option_values['size'] if cart_item.product_variant.option_values['size'].present?
-    url_params[:colour] = cart_item.product_variant.option_values['colour'] if cart_item.product_variant.option_values['colour'].present?
+    # Branded products use different path and don't need URL params
+    # Standard products use variant option values to pre-select size/colour
+    if cart_item.configured?
+      product_url = branded_product_path(cart_item.product)
+    else
+      url_params = cart_item.product_variant.url_params
+      product_url = product_path(cart_item.product, url_params)
+    end
   %>
   <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center p-4 border-b hover:bg-gray-50">
     <div class="col-span-full md:col-span-2 flex items-center space-x-4">
@@ -11,7 +15,7 @@
         <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-20 h-20 rounded-md shadow") %>
       <% end %>
       <div>
-        <%= link_to cart_item.product.name, product_path(cart_item.product, url_params), class: "text-xl font-medium text-gray-800 hover:text-primary-500", data: { turbo: false } %>
+        <%= link_to cart_item.product.name, product_url, class: "text-xl font-medium text-gray-800 hover:text-primary-500", data: { turbo: false } %>
         <% if cart_item.configured? %>
           <div class="text-gray-600">
             Size: <%= cart_item.configuration["size"] %>

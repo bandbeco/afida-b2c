@@ -131,6 +131,15 @@ class ProductVariant < ApplicationRecord
     option_values["material"]
   end
 
+  # Returns hash of URL parameters for linking to the product with this variant selected
+  # Example: { size: "8oz", colour: "White" }
+  def url_params
+    params = {}
+    params[:size] = option_values["size"] if option_values["size"].present?
+    params[:colour] = option_values["colour"] if option_values["colour"].present?
+    params
+  end
+
   # Convert pack price to unit price for display
   # If pac_size is set, price is per pack, so divide to get per-unit price
   # Otherwise, price is already per unit

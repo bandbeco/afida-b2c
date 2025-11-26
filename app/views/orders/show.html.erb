@@ -56,9 +56,15 @@
             <%= product_photo_tag(item.product_variant&.primary_photo, alt: item.product_variant&.display_name || "Product", class: "h-16 w-16 rounded-lg") %>
 
             <div class="flex-1">
-              <h3 class="text-lg font-medium text-gray-900"><%= item.product_variant.display_name %></h3>
-              <p class="text-sm text-gray-500">SKU: <%= item.product_variant.sku %></p>
-              <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
+              <% if item.configured? %>
+                <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product.name, branded_product_path(item.product) %></h3>
+                <p class="text-sm text-gray-500">Custom branded with your design</p>
+                <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
+              <% else %>
+                <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product_variant.display_name, product_path(item.product, item.product_variant.url_params) %></h3>
+                <p class="text-sm text-gray-500">SKU: <%= item.product_variant.sku %></p>
+                <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
+              <% end %>
             </div>
 
             <div class="text-right">
