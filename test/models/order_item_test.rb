@@ -298,4 +298,59 @@ class OrderItemTest < ActiveSupport::TestCase
     )
     assert_equal 0.18, order_item.unit_price
   end
+
+  # Edge case tests for pac_size validation and handling
+  test "validates pac_size must be greater than zero when present" do
+    order_item = OrderItem.new(@valid_attributes.merge(pac_size: 0))
+    assert_not order_item.valid?
+    assert_includes order_item.errors[:pac_size], "must be greater than 0"
+  end
+
+  test "validates pac_size rejects negative values" do
+    order_item = OrderItem.new(@valid_attributes.merge(pac_size: -1))
+    assert_not order_item.valid?
+    assert_includes order_item.errors[:pac_size], "must be greater than 0"
+  end
+
+  test "validates pac_size allows nil" do
+    order_item = OrderItem.new(@valid_attributes.merge(pac_size: nil))
+    assert order_item.valid?
+  end
+
+  test "pack_priced? returns false when pac_size is zero" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 0,
+        configuration: {}
+      )
+    )
+    # Note: pac_size=0 is invalid, but testing the method behavior
+    assert_not order_item.pack_priced?
+  end
+
+  test "unit_price handles very large pac_size correctly" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 100.00,
+        pac_size: 10000,
+        configuration: {}
+      )
+    )
+    # £100.00 / 10000 = £0.01 per unit
+    assert_equal 0.01, order_item.unit_price
+    assert order_item.pack_priced?
+  end
+
+  test "unit_price formats correctly with very small unit price" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 50.00,
+        pac_size: 50000,
+        configuration: {}
+      )
+    )
+    # £50.00 / 50000 = £0.001 per unit
+    assert_equal 0.001, order_item.unit_price
+  end
 end

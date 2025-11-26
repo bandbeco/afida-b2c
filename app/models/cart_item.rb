@@ -30,6 +30,9 @@ class CartItem < ApplicationRecord
     end
   end
 
+  # Returns the current unit price from product_variant for standard products,
+  # or the configured price for branded products. This uses live pricing,
+  # unlike OrderItem#unit_price which calculates from historical pac_size snapshot.
   def unit_price
     if configured?
       price

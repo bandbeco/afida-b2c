@@ -9,6 +9,7 @@ class OrderItem < ApplicationRecord
   validates :price, presence: true, numericality: { greater_than: 0 }
   validates :quantity, presence: true, numericality: { greater_than: 0 }
   validates :line_total, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :pac_size, numericality: { greater_than: 0 }, allow_nil: true
 
   before_validation :calculate_line_total
 
@@ -63,6 +64,9 @@ class OrderItem < ApplicationRecord
     pack_priced? ? price : nil
   end
 
+  # Returns the unit price, calculated from historical order data (pac_size snapshot).
+  # This preserves pricing at the time of order, unlike CartItem#unit_price which
+  # delegates to the current product_variant.unit_price for live pricing.
   def unit_price
     pack_priced? ? (price / pac_size) : price
   end
