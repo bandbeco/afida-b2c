@@ -1,6 +1,7 @@
-# Fixtures for ContentBrief
+# Fixtures for SeoAiContentBrief
 one:
-  seo_ai_opportunity: high_score_pending
+  id: 1
+  seo_ai_opportunity_id: 1
   target_keyword: "eco-friendly coffee cups"
   search_intent: "informational"
   suggested_structure:
@@ -20,3 +21,5 @@ one:
       - "related products"
       - "category pages"
   created_by_model: "claude-3-5-sonnet-20241022"
+  created_at: <%= 1.week.ago %>
+  updated_at: <%= 1.week.ago %>

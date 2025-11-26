@@ -1,6 +1,7 @@
-# Fixtures for ContentItem
+# Fixtures for SeoAiContentItem
 published_one:
-  seo_ai_content_draft: pending_review
+  id: 1
+  seo_ai_content_draft_id: 1
   slug: "complete-guide-eco-friendly-coffee-cups"
   title: "The Complete Guide to Eco-Friendly Coffee Cups"
   body: |
@@ -18,3 +19,5 @@ published_one:
     - "sustainable coffee cups"
   published_at: <%= 1.day.ago %>
   author_credit: "Afida Editorial Team"
+  created_at: <%= 3.days.ago %>
+  updated_at: <%= 1.day.ago %>
