@@ -135,27 +135,18 @@ export default class extends Controller {
     return card
   }
 
+  // Generate quantity options for lid selector
+  // Value is number of packs, display shows "X packs (Y units)"
   generateLidQuantityOptions(pac_size) {
-    const MAX_QUANTITY = 30000
     const options = []
 
-    // Add pack multiples up to 10,000 units
-    for (let i = 1; i <= 10; i++) {
-      const quantity = pac_size * i
-      if (quantity > 10000) break
-      const numPacks = i
+    // Add options for 1-10 packs
+    for (let numPacks = 1; numPacks <= 10; numPacks++) {
+      const totalUnits = pac_size * numPacks
+      const packText = numPacks === 1 ? "pack" : "packs"
       options.push({
-        value: quantity,
-        label: `${quantity.toLocaleString()} units (${numPacks} ${numPacks === 1 ? 'pack' : 'packs'})`
-      })
-    }
-
-    // Add 5,000-unit increments from 15,000 to 30,000
-    for (let quantity = 15000; quantity <= MAX_QUANTITY; quantity += 5000) {
-      const numPacks = Math.ceil(quantity / pac_size)
-      options.push({
-        value: quantity,
-        label: `${quantity.toLocaleString()} units (${numPacks} ${numPacks === 1 ? 'pack' : 'packs'})`
+        value: numPacks,  // Submit number of packs, not units
+        label: `${numPacks} ${packText} (${totalUnits.toLocaleString()} units)`
       })
     }
 
