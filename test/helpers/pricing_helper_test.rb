@@ -15,8 +15,7 @@ class PricingHelperTest < ActionView::TestCase
 
     assert_includes result, "£15.99"
     assert_includes result, "/ pack"
-    assert_includes result, "£0.0320"
-    assert_includes result, "/ unit"
+    assert_not_includes result, "/ unit"
   end
 
   test "format_price_display returns unit format for unit-priced items" do
@@ -103,8 +102,7 @@ class PricingHelperTest < ActionView::TestCase
 
     assert_includes result, "£16.00"
     assert_includes result, "/ pack"
-    assert_includes result, "£0.0320"
-    assert_includes result, "/ unit"
+    assert_not_includes result, "/ unit"
   end
 
   test "format_price_display with real CartItem" do
@@ -130,8 +128,7 @@ class PricingHelperTest < ActionView::TestCase
 
     assert_includes result, "£16.00"
     assert_includes result, "/ pack"
-    assert_includes result, "£0.0320"
-    assert_includes result, "/ unit"
+    assert_not_includes result, "/ unit"
   end
 
   # Tests for format_quantity_display

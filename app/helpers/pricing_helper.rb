@@ -1,18 +1,15 @@
 module PricingHelper
   # Formats price display for cart items and order items
-  # Pack-priced items: "£15.99 / pack (£0.0320 / unit)"
+  # Pack-priced items: "£15.99 / pack"
   # Unit-priced items: "£0.0320 / unit"
   #
   # @param item [CartItem, OrderItem] an item responding to pack_priced?, pack_price, unit_price
   # @return [String] formatted price display string
   def format_price_display(item)
     if item.pack_priced?
-      pack_price = number_to_currency(item.pack_price, unit: "£")
-      unit_price = number_to_currency(item.unit_price, unit: "£", precision: 4)
-      "#{pack_price} / pack"
+      "#{number_to_currency(item.pack_price, unit: '£')} / pack"
     else
-      unit_price = number_to_currency(item.unit_price, unit: "£", precision: 4)
-      "#{unit_price} / unit"
+      "#{number_to_currency(item.unit_price, unit: '£', precision: 4)} / unit"
     end
   end
 
