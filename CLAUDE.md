@@ -368,6 +368,45 @@ Visit `/pattern-demo` in development to see all variants and usage examples.
 - VAT calculated at `Cart::VAT_RATE` (0.2)
 - Cart methods: `items_count`, `subtotal_amount`, `vat_amount`, `total_amount`
 
+### Pricing Model (Pack vs Unit Pricing)
+
+The application uses a unified pricing model where `subtotal = price × quantity` for all items, but the meaning of `quantity` differs by product type:
+
+**Standard Products** (pack-priced):
+- `quantity` = number of packs
+- `price` = price per pack
+- Example: 2 packs × £16.00/pack = £32.00
+
+**Branded/Configured Products** (unit-priced):
+- `quantity` = number of units
+- `price` = price per unit
+- Example: 5,000 units × £0.18/unit = £900.00
+
+**Duck-typed Interface** (`CartItem`, `OrderItem`):
+```ruby
+item.pack_priced?  # true if standard product with pac_size > 1
+item.pack_price    # price per pack (nil for unit-priced)
+item.unit_price    # price per unit (derived from pack_price / pac_size for pack-priced)
+item.pac_size      # units per pack
+```
+
+**PricingHelper** (`app/helpers/pricing_helper.rb`):
+```ruby
+# Use in views for consistent display
+format_price_display(item)     # "£16.00 / pack" or "£0.1800 / unit"
+format_quantity_display(item)  # "2 packs (1,000 units)" or "5,000 units"
+```
+
+**Historical Data Preservation**:
+- `OrderItem` captures `pac_size` at order time
+- This ensures order history displays correctly even if product pac_size changes later
+- Always use `order_item.pac_size`, never `order_item.product_variant.pac_size`
+
+**Form Submissions**:
+- Standard product forms submit pack count (not unit count)
+- Stimulus controllers (`product_options_controller.js`, `compatible_lids_controller.js`) handle this
+- Quantity select shows "X packs (Y units)" but submits X
+
 ### Authentication
 - Uses Rails 8 authentication with Session model
 - Allow public access with `allow_unauthenticated_access` in controllers
