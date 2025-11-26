@@ -22,7 +22,8 @@ class OrderItem < ApplicationRecord
       product_name: cart_item.product_variant.display_name,
       product_sku: cart_item.product_variant.sku,
       quantity: cart_item.quantity,
-      price: cart_item.unit_price,
+      price: cart_item.price,  # Store pack price (not unit price) for correct display
+      pac_size: cart_item.product_variant.pac_size,  # Capture pack size for pricing display
       line_total: cart_item.line_total,
       configuration: cart_item.configuration
     )
@@ -51,8 +52,19 @@ class OrderItem < ApplicationRecord
     configuration.present? && !configuration.empty?
   end
 
+  # Pricing display methods for pack vs unit pricing
+  # Pack-priced: standard products with pac_size > 1
+  # Unit-priced: branded/configured products OR pac_size nil/1
+  def pack_priced?
+    !configured? && pac_size.present? && pac_size > 1
+  end
+
+  def pack_price
+    pack_priced? ? price : nil
+  end
+
   def unit_price
-    price
+    pack_priced? ? (price / pac_size) : price
   end
 
   private

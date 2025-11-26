@@ -64,4 +64,91 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
       assert pdf_data.present?
     end
   end
+
+  # Pack pricing display tests
+  test "format_price_display returns pack format for pack-priced items" do
+    pack_item = OrderItem.new(
+      price: 16.00,
+      pac_size: 500,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_price_display, pack_item)
+
+    assert_includes result, "£16.00 / pack"
+    assert_includes result, "£0.0320 / unit"
+  end
+
+  test "format_price_display returns unit format for unit-priced items" do
+    unit_item = OrderItem.new(
+      price: 0.18,
+      pac_size: 500,
+      configuration: { size: "12oz" }
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_price_display, unit_item)
+
+    assert_includes result, "£0.1800 / unit"
+    refute_includes result, "/ pack"
+  end
+
+  test "format_price_display handles nil pac_size" do
+    item = OrderItem.new(
+      price: 5.50,
+      pac_size: nil,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_price_display, item)
+
+    assert_includes result, "£5.5000 / unit"
+    refute_includes result, "/ pack"
+  end
+
+  test "generates pdf with pack-priced order items" do
+    # Create order item with pack pricing
+    order_item = OrderItem.create!(
+      order: @order,
+      product: products(:one),
+      product_variant: product_variants(:one),
+      product_name: "Test Pack Product",
+      product_sku: "PACK-TEST",
+      price: 16.00,
+      pac_size: 500,
+      quantity: 500,
+      line_total: 16.00,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    pdf_data = generator.generate
+
+    assert_not_nil pdf_data
+    assert pdf_data.length > 0
+  end
+
+  test "generates pdf with branded/configured order items" do
+    # Create order item with unit pricing (configured)
+    order_item = OrderItem.create!(
+      order: @order,
+      product: products(:one),
+      product_variant: product_variants(:one),
+      product_name: "Test Branded Product",
+      product_sku: "BRAND-TEST",
+      price: 0.18,
+      pac_size: 500,
+      quantity: 5000,
+      line_total: 900.00,
+      configuration: { size: "12oz", quantity: 5000 }
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    pdf_data = generator.generate
+
+    assert_not_nil pdf_data
+    assert pdf_data.length > 0
+  end
 end

@@ -91,7 +91,7 @@ class OrderPdfGenerator
         item.product_name,
         item.product_sku,
         item.quantity.to_s,
-        format_currency(item.price),
+        format_price_display(item),
         format_currency(item.line_total)
       ]
     end
@@ -137,5 +137,19 @@ class OrderPdfGenerator
 
   def format_currency(amount)
     "£%.2f" % amount
+  end
+
+  # Formats price display for order items
+  # Pack-priced items: "£15.99 / pack (£0.0320 / unit)"
+  # Unit-priced items: "£0.0320 / unit"
+  def format_price_display(item)
+    if item.pack_priced?
+      pack = format_currency(item.pack_price)
+      unit = "£%.4f" % item.unit_price
+      "#{pack} / pack\n(#{unit} / unit)"
+    else
+      unit = "£%.4f" % item.unit_price
+      "#{unit} / unit"
+    end
   end
 end

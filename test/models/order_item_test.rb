@@ -198,4 +198,104 @@ class OrderItemTest < ActiveSupport::TestCase
     assert order_item.configured?
     assert_equal "12oz", order_item.configuration["size"]
   end
+
+  # Pack pricing tests for pricing display consolidation
+  test "pack_priced? returns true for standard product with pac_size > 1" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert order_item.pack_priced?
+  end
+
+  test "pack_priced? returns false for branded/configured product" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.032,
+        pac_size: 500,
+        configuration: { size: "12oz", quantity: 5000 }
+      )
+    )
+    assert_not order_item.pack_priced?
+  end
+
+  test "pack_priced? returns false when pac_size is nil" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: nil,
+        configuration: {}
+      )
+    )
+    assert_not order_item.pack_priced?
+  end
+
+  test "pack_priced? returns false when pac_size is 1" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 1,
+        configuration: {}
+      )
+    )
+    assert_not order_item.pack_priced?
+  end
+
+  test "pack_price returns price for pack-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert_equal 15.99, order_item.pack_price
+  end
+
+  test "pack_price returns nil for unit-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.032,
+        pac_size: nil,
+        configuration: {}
+      )
+    )
+    assert_nil order_item.pack_price
+  end
+
+  test "unit_price derives from pack price for pack-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 16.00,
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert_equal 0.032, order_item.unit_price
+  end
+
+  test "unit_price returns price directly for unit-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 5.50,
+        pac_size: nil,
+        configuration: {}
+      )
+    )
+    assert_equal 5.50, order_item.unit_price
+  end
+
+  test "unit_price returns price for branded/configured items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.18,
+        pac_size: 500,
+        configuration: { size: "12oz" }
+      )
+    )
+    assert_equal 0.18, order_item.unit_price
+  end
 end

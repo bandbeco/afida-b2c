@@ -34,19 +34,7 @@
 
     <div class="text-left md:text-center text-gray-700">
       <span class="md:hidden font-semibold">Price: </span>
-      <% if cart_item.configured? %>
-        <%= number_to_currency(cart_item.unit_price, precision: 4) %>/unit
-      <% else %>
-        <div>
-          <%= number_to_currency(cart_item.price) %> / pack
-          <% pac_size = cart_item.product_variant.pac_size || 1 %>
-          <% if pac_size > 1 %>
-            <div class="text-xs text-gray-500">
-              (<%= number_to_currency(cart_item.price / pac_size, precision: 4) %> / unit)
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+      <%= format_price_display(cart_item) %>
     </div>
 
     <div class="text-left md:text-center">

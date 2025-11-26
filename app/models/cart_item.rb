@@ -46,6 +46,17 @@ class CartItem < ApplicationRecord
     configuration.present?
   end
 
+  # Pricing display methods for pack vs unit pricing
+  # Pack-priced: standard products with pac_size > 1
+  # Unit-priced: branded/configured products OR pac_size nil/1
+  def pack_priced?
+    !configured? && product_variant.pac_size.present? && product_variant.pac_size > 1
+  end
+
+  def pack_price
+    pack_priced? ? price : nil
+  end
+
   private
 
   def set_price_from_variant
