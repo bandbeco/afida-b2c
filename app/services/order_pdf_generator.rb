@@ -139,6 +139,11 @@ class OrderPdfGenerator
     "£%.2f" % amount
   end
 
+  # Formats unit price with 4 decimal precision for accurate per-unit pricing
+  def format_unit_price(amount)
+    "£%.4f" % amount
+  end
+
   # Formats quantity display for order items
   # Pack-priced items: "30 packs (15,000 units)"
   # Unit-priced items: "5,000 units"
@@ -160,10 +165,10 @@ class OrderPdfGenerator
   def format_price_display(item)
     if item.pack_priced?
       pack = format_currency(item.pack_price)
-      unit = "£%.4f" % item.unit_price
+      unit = format_unit_price(item.unit_price)
       "#{pack} / pack\n(#{unit} / unit)"
     else
-      unit = "£%.4f" % item.unit_price
+      unit = format_unit_price(item.unit_price)
       "#{unit} / unit"
     end
   end

@@ -353,4 +353,38 @@ class OrderItemTest < ActiveSupport::TestCase
     # £50.00 / 50000 = £0.001 per unit
     assert_equal 0.001, order_item.unit_price
   end
+
+  # Historical data preservation test - verifies order uses captured pac_size
+  test "unit_price uses captured pac_size not live variant value" do
+    # Create an order item with pac_size captured at order time
+    order = orders(:one)
+    variant = product_variants(:one)
+    original_pac_size = 500
+
+    order_item = OrderItem.create!(
+      order: order,
+      product_variant: variant,
+      product_name: "Test Product",
+      product_sku: "TEST-HISTORICAL",
+      price: 16.00,
+      pac_size: original_pac_size,
+      quantity: 1000,
+      line_total: 32.00,
+      configuration: {}
+    )
+
+    # Verify unit price uses captured pac_size
+    assert_equal 0.032, order_item.unit_price
+
+    # Now simulate the product variant's pac_size changing
+    variant.update!(pac_size: 1000)
+
+    # Reload the order item to ensure we're testing the persisted data
+    order_item.reload
+
+    # OrderItem should still use its captured pac_size (500), not the variant's new value (1000)
+    assert_equal original_pac_size, order_item.pac_size
+    assert_equal 0.032, order_item.unit_price  # Still £16.00 / 500 = £0.032
+    assert_not_equal variant.pac_size, order_item.pac_size
+  end
 end

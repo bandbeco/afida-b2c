@@ -67,8 +67,10 @@ class OrderItem < ApplicationRecord
   # Returns the unit price, calculated from historical order data (pac_size snapshot).
   # This preserves pricing at the time of order, unlike CartItem#unit_price which
   # delegates to the current product_variant.unit_price for live pricing.
+  # Uses .to_f for safety: ensures float division and returns Infinity instead of
+  # crashing if pac_size is somehow 0 (which validation prevents but defensive coding allows).
   def unit_price
-    pack_priced? ? (price / pac_size) : price
+    pack_priced? ? (price / pac_size.to_f) : price
   end
 
   private
