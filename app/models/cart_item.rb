@@ -60,6 +60,11 @@ class CartItem < ApplicationRecord
     pack_priced? ? price : nil
   end
 
+  # Delegate to product_variant for consistent interface with OrderItem
+  def pac_size
+    product_variant.pac_size
+  end
+
   private
 
   def set_price_from_variant

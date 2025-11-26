@@ -133,4 +133,109 @@ class PricingHelperTest < ActionView::TestCase
     assert_includes result, "£0.0320"
     assert_includes result, "/ unit"
   end
+
+  # Tests for format_quantity_display
+
+  test "format_quantity_display returns packs format for pack-priced items" do
+    item = OpenStruct.new(
+      pack_priced?: true,
+      pac_size: 500,
+      quantity: 15000
+    )
+
+    result = format_quantity_display(item)
+
+    assert_includes result, "30"
+    assert_includes result, "packs"
+    assert_includes result, "15,000"
+    assert_includes result, "units"
+  end
+
+  test "format_quantity_display returns units format for unit-priced items" do
+    item = OpenStruct.new(
+      pack_priced?: false,
+      pac_size: nil,
+      quantity: 5000
+    )
+
+    result = format_quantity_display(item)
+
+    assert_includes result, "5,000"
+    assert_includes result, "units"
+    assert_not_includes result, "packs"
+  end
+
+  test "format_quantity_display uses singular pack for 1 pack" do
+    item = OpenStruct.new(
+      pack_priced?: true,
+      pac_size: 500,
+      quantity: 500
+    )
+
+    result = format_quantity_display(item)
+
+    assert_includes result, "1 pack"
+    assert_not_includes result, "packs"
+    assert_includes result, "500 units"
+  end
+
+  test "format_quantity_display formats large numbers with delimiters" do
+    item = OpenStruct.new(
+      pack_priced?: true,
+      pac_size: 500,
+      quantity: 30000
+    )
+
+    result = format_quantity_display(item)
+
+    assert_includes result, "30,000"
+  end
+
+  test "format_quantity_display with real OrderItem" do
+    order = orders(:one)
+    order_item = OrderItem.new(
+      order: order,
+      product_variant: product_variants(:one),
+      product_name: "Test Product",
+      product_sku: "TEST-SKU",
+      price: 16.00,
+      pac_size: 500,
+      quantity: 15000,
+      configuration: {}
+    )
+
+    result = format_quantity_display(order_item)
+
+    assert_includes result, "30"
+    assert_includes result, "packs"
+    assert_includes result, "15,000"
+    assert_includes result, "units"
+  end
+
+  test "format_quantity_display with real CartItem" do
+    cart = Cart.create
+    product = products(:one)
+    variant = ProductVariant.create!(
+      product: product,
+      name: "Test Variant",
+      sku: "TEST-QTY-HELPER-VARIANT",
+      price: 16.00,
+      pac_size: 500,
+      active: true
+    )
+
+    cart_item = CartItem.create!(
+      cart: cart,
+      product_variant: variant,
+      quantity: 15000,
+      price: variant.price
+    )
+
+    result = format_quantity_display(cart_item)
+
+    assert_includes result, "30"
+    assert_includes result, "packs"
+    assert_includes result, "15,000"
+    assert_includes result, "units"
+  end
 end

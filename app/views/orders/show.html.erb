@@ -58,7 +58,7 @@
             <div class="flex-1">
               <h3 class="text-lg font-medium text-gray-900"><%= item.product_variant.display_name %></h3>
               <p class="text-sm text-gray-500">SKU: <%= item.product_variant.sku %></p>
-              <p class="text-sm text-gray-500">Quantity: <%= item.quantity %></p>
+              <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
             </div>
 
             <div class="text-right">

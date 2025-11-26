@@ -90,7 +90,7 @@ class OrderPdfGenerator
       table_data << [
         item.product_name,
         item.product_sku,
-        item.quantity.to_s,
+        format_quantity_display(item),
         format_price_display(item),
         format_currency(item.line_total)
       ]
@@ -137,6 +137,21 @@ class OrderPdfGenerator
 
   def format_currency(amount)
     "£%.2f" % amount
+  end
+
+  # Formats quantity display for order items
+  # Pack-priced items: "30 packs (15,000 units)"
+  # Unit-priced items: "5,000 units"
+  def format_quantity_display(item)
+    if item.pack_priced?
+      packs = (item.quantity.to_f / item.pac_size).ceil
+      units = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
+      packs_formatted = ActiveSupport::NumberHelper.number_to_delimited(packs)
+      "#{packs_formatted} #{'pack'.pluralize(packs)}\n(#{units} units)"
+    else
+      units = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
+      "#{units} units"
+    end
   end
 
   # Formats price display for order items

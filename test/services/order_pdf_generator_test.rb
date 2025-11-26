@@ -151,4 +151,70 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     assert_not_nil pdf_data
     assert pdf_data.length > 0
   end
+
+  # Quantity display tests
+  test "format_quantity_display returns packs format for pack-priced items" do
+    pack_item = OrderItem.new(
+      price: 16.00,
+      pac_size: 500,
+      quantity: 15000,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_quantity_display, pack_item)
+
+    assert_includes result, "30"
+    assert_includes result, "pack"
+    assert_includes result, "15,000"
+    assert_includes result, "units"
+  end
+
+  test "format_quantity_display returns units format for unit-priced items" do
+    unit_item = OrderItem.new(
+      price: 0.18,
+      pac_size: 500,
+      quantity: 5000,
+      configuration: { size: "12oz" }
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_quantity_display, unit_item)
+
+    assert_includes result, "5,000"
+    assert_includes result, "units"
+    refute_includes result, "pack"
+  end
+
+  test "format_quantity_display handles nil pac_size" do
+    item = OrderItem.new(
+      price: 5.50,
+      pac_size: nil,
+      quantity: 100,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_quantity_display, item)
+
+    assert_includes result, "100"
+    assert_includes result, "units"
+    refute_includes result, "pack"
+  end
+
+  test "format_quantity_display uses singular pack for 1 pack" do
+    item = OrderItem.new(
+      price: 16.00,
+      pac_size: 500,
+      quantity: 500,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_quantity_display, item)
+
+    assert_includes result, "1"
+    assert_includes result, "pack"
+    refute_includes result, "packs"
+  end
 end
