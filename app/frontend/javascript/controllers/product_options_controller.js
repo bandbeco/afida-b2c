@@ -20,6 +20,17 @@ export default class extends Controller {
       this.skuDisplayTarget.style.display = 'none'
     }
 
+    // Check if this is a single-variant product (no size/colour buttons)
+    const hasSizeButtons = this.hasSizeButtonTarget && this.sizeButtonTargets.length > 0
+    const hasColourButtons = this.hasColourButtonTarget && this.colourButtonTargets.length > 0
+    const isSingleVariant = !hasSizeButtons && !hasColourButtons
+
+    // For single-variant products, auto-select the only variant
+    if (isSingleVariant && this.variantsValue.length > 0) {
+      this.updateDisplay(this.variantsValue[0])
+      return
+    }
+
     // Disable add to cart button and show "from" price if no URL selection
     if (!this.hasSelectionValue) {
       this.showFromPrice()
@@ -32,7 +43,7 @@ export default class extends Controller {
     const urlColour = params.get('colour')
 
     // Only pre-select if URL parameters are present
-    if (urlSize && this.hasSizeButtonTarget) {
+    if (urlSize && hasSizeButtons) {
       const matchingButton = this.sizeButtonTargets.find(btn =>
         btn.dataset.value === urlSize
       )
@@ -41,7 +52,7 @@ export default class extends Controller {
       }
     }
 
-    if (urlColour && this.hasColourButtonTarget) {
+    if (urlColour && hasColourButtons) {
       const matchingButton = this.colourButtonTargets.find(btn =>
         btn.dataset.value === urlColour
       )
