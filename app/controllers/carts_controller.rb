@@ -3,6 +3,9 @@ class CartsController < ApplicationController
   before_action :eager_load_cart, only: :show
 
   def show
+    @cart_items = Current.cart.cart_items
+      .includes(:product, product_variant: :product)
+      .order("products.name ASC, product_variants.name ASC")
   end
 
   def destroy
