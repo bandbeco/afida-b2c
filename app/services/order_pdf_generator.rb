@@ -145,14 +145,16 @@ class OrderPdfGenerator
   end
 
   # Formats quantity display for order items
-  # Pack-priced items: "30 packs (15,000 units)"
-  # Unit-priced items: "5,000 units"
+  # Pack-priced items: "30 packs (15,000 units)" - quantity IS packs, units = quantity * pac_size
+  # Unit-priced items: "5,000 units" - quantity IS units
   def format_quantity_display(item)
     if item.pack_priced?
-      packs = (item.quantity.to_f / item.pac_size).ceil
-      units = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
+      # quantity is number of packs, calculate total units
+      packs = item.quantity
+      total_units = packs * item.pac_size
       packs_formatted = ActiveSupport::NumberHelper.number_to_delimited(packs)
-      "#{packs_formatted} #{'pack'.pluralize(packs)}\n(#{units} units)"
+      units_formatted = ActiveSupport::NumberHelper.number_to_delimited(total_units)
+      "#{packs_formatted} #{'pack'.pluralize(packs)}\n(#{units_formatted} units)"
     else
       units = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
       "#{units} units"

@@ -135,12 +135,14 @@ class PricingHelperTest < ActionView::TestCase
   end
 
   # Tests for format_quantity_display
+  # New model: quantity = packs for standard products, units for branded
 
   test "format_quantity_display returns packs format for pack-priced items" do
+    # quantity = 30 packs, pac_size = 500 => 15,000 units
     item = OpenStruct.new(
       pack_priced?: true,
       pac_size: 500,
-      quantity: 15000
+      quantity: 30  # 30 packs
     )
 
     result = format_quantity_display(item)
@@ -155,7 +157,7 @@ class PricingHelperTest < ActionView::TestCase
     item = OpenStruct.new(
       pack_priced?: false,
       pac_size: nil,
-      quantity: 5000
+      quantity: 5000  # 5,000 units
     )
 
     result = format_quantity_display(item)
@@ -166,10 +168,11 @@ class PricingHelperTest < ActionView::TestCase
   end
 
   test "format_quantity_display uses singular pack for 1 pack" do
+    # quantity = 1 pack, pac_size = 500 => 500 units
     item = OpenStruct.new(
       pack_priced?: true,
       pac_size: 500,
-      quantity: 500
+      quantity: 1  # 1 pack
     )
 
     result = format_quantity_display(item)
@@ -180,10 +183,11 @@ class PricingHelperTest < ActionView::TestCase
   end
 
   test "format_quantity_display formats large numbers with delimiters" do
+    # quantity = 60 packs, pac_size = 500 => 30,000 units
     item = OpenStruct.new(
       pack_priced?: true,
       pac_size: 500,
-      quantity: 30000
+      quantity: 60  # 60 packs
     )
 
     result = format_quantity_display(item)
@@ -193,6 +197,7 @@ class PricingHelperTest < ActionView::TestCase
 
   test "format_quantity_display with real OrderItem" do
     order = orders(:one)
+    # Standard product: 30 packs of 500 = 15,000 units
     order_item = OrderItem.new(
       order: order,
       product_variant: product_variants(:one),
@@ -200,7 +205,7 @@ class PricingHelperTest < ActionView::TestCase
       product_sku: "TEST-SKU",
       price: 16.00,
       pac_size: 500,
-      quantity: 15000,
+      quantity: 30,  # 30 packs
       configuration: {}
     )
 
@@ -224,10 +229,11 @@ class PricingHelperTest < ActionView::TestCase
       active: true
     )
 
+    # Standard product: 30 packs
     cart_item = CartItem.create!(
       cart: cart,
       product_variant: variant,
-      quantity: 15000,
+      quantity: 30,  # 30 packs
       price: variant.price
     )
 

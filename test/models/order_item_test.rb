@@ -101,7 +101,11 @@ class OrderItemTest < ActiveSupport::TestCase
     assert_equal 100, order_item.line_total
   end
 
-  # Method tests
+  # Method tests - subtotal calculation
+  # New model: subtotal = price * quantity for ALL items
+  # Standard products: price = pack price, quantity = packs
+  # Branded products: price = unit price, quantity = units
+
   test "subtotal calculates price times quantity" do
     order_item = OrderItem.new(@valid_attributes.merge(price: 15.99, quantity: 3))
     assert_equal 47.97, order_item.subtotal
@@ -110,6 +114,45 @@ class OrderItemTest < ActiveSupport::TestCase
   test "subtotal handles single quantity" do
     order_item = OrderItem.new(@valid_attributes.merge(price: 9.99, quantity: 1))
     assert_equal 9.99, order_item.subtotal
+  end
+
+  test "subtotal for pack-priced item with 1 pack" do
+    # Standard product: 1 pack at £56.96/pack = £56.96
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 56.96,
+        quantity: 1,  # 1 pack
+        pac_size: 1000,
+        configuration: {}
+      )
+    )
+    assert_equal 56.96, order_item.subtotal
+  end
+
+  test "subtotal for pack-priced item with multiple packs" do
+    # Standard product: 30 packs at £16.00/pack = £480.00
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 16.00,
+        quantity: 30,  # 30 packs
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert_equal 480.00, order_item.subtotal
+  end
+
+  test "subtotal for branded/configured product" do
+    # Branded product: 1,000 units at £0.30/unit = £300.00
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.30,
+        quantity: 1000,  # 1,000 units
+        pac_size: 500,
+        configuration: { size: "12oz" }
+      )
+    )
+    assert_equal 300.00, order_item.subtotal
   end
 
   test "product_display_name returns variant name when available" do

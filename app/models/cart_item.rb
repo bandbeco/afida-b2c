@@ -13,21 +13,11 @@ class CartItem < ApplicationRecord
 
   before_validation :set_price_from_variant
 
+  # Calculates subtotal: price * quantity
+  # For standard products: price = pack price, quantity = number of packs
+  # For branded products: price = unit price, quantity = number of units
   def subtotal_amount
-    if configured?
-      # For configured/branded products: price is already per unit
-      price * quantity
-    elsif product_variant.pac_size.present? && product_variant.pac_size > 0
-      # For standard products with pack pricing:
-      # - price is per PACK
-      # - quantity is in UNITS
-      # Calculate: (units / units_per_pack) * price_per_pack
-      packs_needed = (quantity.to_f / product_variant.pac_size).ceil
-      price * packs_needed
-    else
-      # For products without pack size: price is per unit
-      price * quantity
-    end
+    price * quantity
   end
 
   # Returns the current unit price from product_variant for standard products,

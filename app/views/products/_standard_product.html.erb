@@ -167,8 +167,9 @@
                     Pack size: <%= number_with_delimiter(pac_size) %> units
                   </span>
                 </div>
-                <%= select_tag "cart_item[quantity]",
-                              options_for_select(quantity_options.map { |q| ["#{q / pac_size} #{(q / pac_size) == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(q)} units)", q] }, pac_size),
+                <%# Value is number of packs, display shows "X packs (Y units)" %>
+              <%= select_tag "cart_item[quantity]",
+                              options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
                               id: "cart_item_quantity",
                               class: "select select-bordered select-lg w-full",
                               data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>

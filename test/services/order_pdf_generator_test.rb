@@ -153,11 +153,14 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
   end
 
   # Quantity display tests
+  # New model: quantity = packs for standard products, units for branded
+
   test "format_quantity_display returns packs format for pack-priced items" do
+    # 30 packs of 500 = 15,000 units
     pack_item = OrderItem.new(
       price: 16.00,
       pac_size: 500,
-      quantity: 15000,
+      quantity: 30,  # 30 packs
       configuration: {}
     )
 
@@ -174,7 +177,7 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     unit_item = OrderItem.new(
       price: 0.18,
       pac_size: 500,
-      quantity: 5000,
+      quantity: 5000,  # 5,000 units (branded)
       configuration: { size: "12oz" }
     )
 
@@ -203,10 +206,11 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
   end
 
   test "format_quantity_display uses singular pack for 1 pack" do
+    # 1 pack of 500 = 500 units
     item = OrderItem.new(
       price: 16.00,
       pac_size: 500,
-      quantity: 500,
+      quantity: 1,  # 1 pack
       configuration: {}
     )
 

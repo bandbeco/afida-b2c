@@ -59,35 +59,29 @@
         <% end %>
       <% else %>
         <%
+          # Standard products: quantity is number of packs
           variant = cart_item.product_variant
           pac_size = variant.pac_size || 1
-          max_quantity = 30000
 
-          # Generate pack multiples up to 10,000 units
-          quantity_options = []
-          (1..10).each do |i|
-            quantity = pac_size * i
-            break if quantity > 10000
-            quantity_options << quantity
-          end
+          # Generate pack options (1-10 packs, plus larger quantities)
+          pack_options = (1..10).to_a
 
-          # Add 5,000-unit increments from 15,000 to 30,000
-          (15000..max_quantity).step(5000).each do |quantity|
-            quantity_options << quantity
-          end
+          # Add larger pack quantities (30, 40, 50, 60 packs)
+          [30, 40, 50, 60].each { |p| pack_options << p }
 
-          # Always include current quantity if it's not already in the list
-          quantity_options << cart_item.quantity unless quantity_options.include?(cart_item.quantity)
-          quantity_options.sort!
+          # Always include current quantity if not in list
+          pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
+          pack_options.sort!.uniq!
         %>
 
         <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
           <%= form.label :quantity, "Quantity:", class: "sr-only" %>
+          <%# Value is number of packs, display shows "X packs (Y units)" %>
           <%= form.select :quantity,
                           options_for_select(
-                            quantity_options.map { |q|
-                              num_packs = q / pac_size
-                              ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(q)} units)", q]
+                            pack_options.map { |num_packs|
+                              total_units = num_packs * pac_size
+                              ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
                             },
                             cart_item.quantity
                           ),

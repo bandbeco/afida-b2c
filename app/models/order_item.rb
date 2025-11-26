@@ -37,6 +37,9 @@ class OrderItem < ApplicationRecord
     order_item
   end
 
+  # Calculates subtotal: price * quantity
+  # For standard products: price = pack price, quantity = number of packs
+  # For branded products: price = unit price, quantity = number of units
   def subtotal
     price * quantity
   end
