@@ -167,8 +167,9 @@
                     Pack size: <%= number_with_delimiter(pac_size) %> units
                   </span>
                 </div>
-                <%= select_tag "cart_item[quantity]",
-                              options_for_select(quantity_options.map { |q| ["#{q / pac_size} #{(q / pac_size) == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(q)} units)", q] }, pac_size),
+                <%# Value is number of packs, display shows "X packs (Y units)" %>
+              <%= select_tag "cart_item[quantity]",
+                              options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
                               id: "cart_item_quantity",
                               class: "select select-bordered select-lg w-full",
                               data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>
@@ -201,7 +202,7 @@
               <% end %>
 
               <div class="my-8 space-y-3">
-                <div class="flex items-center gap-2 text-primary">
+                <div class="flex items-center gap-2">
                   <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>

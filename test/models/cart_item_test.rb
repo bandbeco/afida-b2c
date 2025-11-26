@@ -151,8 +151,10 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   # Pack-based pricing tests
+  # New model: quantity = packs for standard products, price = pack price
+  # subtotal = price * quantity
+
   test "subtotal_amount for standard product with pack pricing" do
-    # Create a product variant with pack pricing
     product = products(:one)
     variant = ProductVariant.create!(
       product: product,
@@ -163,11 +165,11 @@ class CartItemTest < ActiveSupport::TestCase
       active: true
     )
 
-    # User orders 1500 units (needs 2 packs)
+    # User orders 2 packs (2000 units)
     cart_item = CartItem.create!(
       cart: @cart,
       product_variant: variant,
-      quantity: 1500,  # units
+      quantity: 2,  # 2 packs
       price: variant.price  # pack price
     )
 
@@ -177,7 +179,6 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "subtotal_amount for standard product with exact pack quantity" do
-    # Create a product variant with pack pricing
     product = products(:one)
     variant = ProductVariant.create!(
       product: product,
@@ -188,11 +189,11 @@ class CartItemTest < ActiveSupport::TestCase
       active: true
     )
 
-    # User orders exactly 1000 units (needs exactly 2 packs)
+    # User orders 2 packs (1000 units)
     cart_item = CartItem.create!(
       cart: @cart,
       product_variant: variant,
-      quantity: 1000,  # units
+      quantity: 2,  # 2 packs
       price: variant.price  # pack price
     )
 
@@ -202,7 +203,6 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "subtotal_amount for standard product with single pack" do
-    # Create a product variant with pack pricing
     product = products(:one)
     variant = ProductVariant.create!(
       product: product,
@@ -213,16 +213,111 @@ class CartItemTest < ActiveSupport::TestCase
       active: true
     )
 
-    # User orders 50 units (needs 1 pack)
+    # User orders 1 pack
     cart_item = CartItem.create!(
       cart: @cart,
       product_variant: variant,
-      quantity: 50,  # units (less than pack size)
+      quantity: 1,  # 1 pack
       price: variant.price  # pack price
     )
 
-    # Should calculate: 1 pack * £10 = £10 (can't buy partial packs)
+    # Should calculate: 1 pack * £10 = £10
     assert_equal 10.00, cart_item.subtotal_amount
     assert_equal 0.10, cart_item.unit_price  # £10/100 = £0.10 per unit
+  end
+
+  # Pack pricing display tests for pricing display consolidation
+  test "pack_priced? returns true for standard product with pac_size > 1" do
+    product = products(:one)
+    variant = ProductVariant.create!(
+      product: product,
+      name: "500 pack",
+      sku: "TEST-PACK-PRICED-500",
+      price: 15.99,
+      pac_size: 500,
+      active: true
+    )
+
+    cart_item = CartItem.create!(
+      cart: @cart,
+      product_variant: variant,
+      quantity: 500,
+      price: variant.price
+    )
+
+    assert cart_item.pack_priced?
+  end
+
+  test "pack_priced? returns false for branded/configured product" do
+    cart_item = cart_items(:branded_configuration)
+    assert_not cart_item.pack_priced?
+  end
+
+  test "pack_priced? returns false when pac_size is nil" do
+    product = products(:one)
+    variant = ProductVariant.create!(
+      product: product,
+      name: "No pack size",
+      sku: "TEST-NO-PAC-SIZE",
+      price: 15.99,
+      pac_size: nil,
+      active: true
+    )
+
+    cart_item = CartItem.create!(
+      cart: @cart,
+      product_variant: variant,
+      quantity: 1,
+      price: variant.price
+    )
+
+    assert_not cart_item.pack_priced?
+  end
+
+  test "pack_priced? returns false when pac_size is 1" do
+    product = products(:one)
+    variant = ProductVariant.create!(
+      product: product,
+      name: "Single unit",
+      sku: "TEST-SINGLE-UNIT",
+      price: 15.99,
+      pac_size: 1,
+      active: true
+    )
+
+    cart_item = CartItem.create!(
+      cart: @cart,
+      product_variant: variant,
+      quantity: 1,
+      price: variant.price
+    )
+
+    assert_not cart_item.pack_priced?
+  end
+
+  test "pack_price returns price for pack-priced items" do
+    product = products(:one)
+    variant = ProductVariant.create!(
+      product: product,
+      name: "500 pack for pack_price test",
+      sku: "TEST-PACK-PRICE-500",
+      price: 15.99,
+      pac_size: 500,
+      active: true
+    )
+
+    cart_item = CartItem.create!(
+      cart: @cart,
+      product_variant: variant,
+      quantity: 500,
+      price: variant.price
+    )
+
+    assert_equal 15.99, cart_item.pack_price
+  end
+
+  test "pack_price returns nil for unit-priced items" do
+    cart_item = cart_items(:branded_configuration)
+    assert_nil cart_item.pack_price
   end
 end

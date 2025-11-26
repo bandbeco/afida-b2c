@@ -67,11 +67,12 @@
         Pack size: <%= number_with_delimiter(pac_size) %> units
       </span>
     </label>
+    <%# Value is number of packs, display shows "X packs (Y units)" %>
     <%= select_tag "cart_item[quantity]",
-                   options_for_select((1..10).map { |n|
-                     quantity_units = n * pac_size
-                     ["#{n} #{n == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(quantity_units)} units)", quantity_units]
-                   }, pac_size),
+                   options_for_select((1..10).map { |num_packs|
+                     total_units = num_packs * pac_size
+                     ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
+                   }, 1),
                    class: "select select-bordered w-full",
                    data: {
                      quick_add_form_target: "quantitySelect",

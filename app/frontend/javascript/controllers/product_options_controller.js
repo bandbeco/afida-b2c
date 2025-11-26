@@ -20,6 +20,17 @@ export default class extends Controller {
       this.skuDisplayTarget.style.display = 'none'
     }
 
+    // Check if this is a single-variant product (no size/colour buttons)
+    const hasSizeButtons = this.hasSizeButtonTarget && this.sizeButtonTargets.length > 0
+    const hasColourButtons = this.hasColourButtonTarget && this.colourButtonTargets.length > 0
+    const isSingleVariant = !hasSizeButtons && !hasColourButtons
+
+    // For single-variant products, auto-select the only variant
+    if (isSingleVariant && this.variantsValue.length > 0) {
+      this.updateDisplay(this.variantsValue[0])
+      return
+    }
+
     // Disable add to cart button and show "from" price if no URL selection
     if (!this.hasSelectionValue) {
       this.showFromPrice()
@@ -32,7 +43,7 @@ export default class extends Controller {
     const urlColour = params.get('colour')
 
     // Only pre-select if URL parameters are present
-    if (urlSize && this.hasSizeButtonTarget) {
+    if (urlSize && hasSizeButtons) {
       const matchingButton = this.sizeButtonTargets.find(btn =>
         btn.dataset.value === urlSize
       )
@@ -41,7 +52,7 @@ export default class extends Controller {
       }
     }
 
-    if (urlColour && this.hasColourButtonTarget) {
+    if (urlColour && hasColourButtons) {
       const matchingButton = this.colourButtonTargets.find(btn =>
         btn.dataset.value === urlColour
       )
@@ -261,13 +272,10 @@ export default class extends Controller {
       this.unitPriceDisplayTarget.textContent = `${formatter.format(this.currentVariant.price)} / pack`
     }
 
-    // Get selected quantity in units
-    const quantityInUnits = this.hasQuantitySelectTarget
+    // Get selected quantity (number of packs)
+    const numberOfPacks = this.hasQuantitySelectTarget
       ? parseInt(this.quantitySelectTarget.value)
-      : this.pacSizeValue
-
-    // Calculate number of packs (quantity is in units, price is per pack)
-    const numberOfPacks = quantityInUnits / this.pacSizeValue
+      : 1
 
     // Calculate total price (variant price is per pack)
     const totalPrice = this.currentVariant.price * numberOfPacks
@@ -298,20 +306,21 @@ export default class extends Controller {
   }
 
   // Regenerate quantity dropdown options when pack size changes
+  // Value is number of packs, display shows "X packs (Y units)"
   updateQuantityOptions(pacSize) {
     if (!this.hasQuantitySelectTarget) return
 
     // Clear existing options
     this.quantitySelectTarget.innerHTML = ''
 
-    // Generate new options: 1-10 packs with correct unit counts
-    for (let i = 1; i <= 10; i++) {
-      const units = pacSize * i
-      const packText = i === 1 ? 'pack' : 'packs'
-      const label = `${i} ${packText} (${this.formatNumber(units)} units)`
+    // Generate new options: 1-10 packs
+    for (let numPacks = 1; numPacks <= 10; numPacks++) {
+      const totalUnits = pacSize * numPacks
+      const packText = numPacks === 1 ? 'pack' : 'packs'
+      const label = `${numPacks} ${packText} (${this.formatNumber(totalUnits)} units)`
 
       const option = document.createElement('option')
-      option.value = units
+      option.value = numPacks  // Submit number of packs, not units
       option.textContent = label
 
       this.quantitySelectTarget.appendChild(option)

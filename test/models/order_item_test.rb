@@ -101,7 +101,11 @@ class OrderItemTest < ActiveSupport::TestCase
     assert_equal 100, order_item.line_total
   end
 
-  # Method tests
+  # Method tests - subtotal calculation
+  # New model: subtotal = price * quantity for ALL items
+  # Standard products: price = pack price, quantity = packs
+  # Branded products: price = unit price, quantity = units
+
   test "subtotal calculates price times quantity" do
     order_item = OrderItem.new(@valid_attributes.merge(price: 15.99, quantity: 3))
     assert_equal 47.97, order_item.subtotal
@@ -110,6 +114,45 @@ class OrderItemTest < ActiveSupport::TestCase
   test "subtotal handles single quantity" do
     order_item = OrderItem.new(@valid_attributes.merge(price: 9.99, quantity: 1))
     assert_equal 9.99, order_item.subtotal
+  end
+
+  test "subtotal for pack-priced item with 1 pack" do
+    # Standard product: 1 pack at £56.96/pack = £56.96
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 56.96,
+        quantity: 1,  # 1 pack
+        pac_size: 1000,
+        configuration: {}
+      )
+    )
+    assert_equal 56.96, order_item.subtotal
+  end
+
+  test "subtotal for pack-priced item with multiple packs" do
+    # Standard product: 30 packs at £16.00/pack = £480.00
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 16.00,
+        quantity: 30,  # 30 packs
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert_equal 480.00, order_item.subtotal
+  end
+
+  test "subtotal for branded/configured product" do
+    # Branded product: 1,000 units at £0.30/unit = £300.00
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.30,
+        quantity: 1000,  # 1,000 units
+        pac_size: 500,
+        configuration: { size: "12oz" }
+      )
+    )
+    assert_equal 300.00, order_item.subtotal
   end
 
   test "product_display_name returns variant name when available" do
@@ -197,5 +240,194 @@ class OrderItemTest < ActiveSupport::TestCase
     order_item = order_items(:acme_branded_item)
     assert order_item.configured?
     assert_equal "12oz", order_item.configuration["size"]
+  end
+
+  # Pack pricing tests for pricing display consolidation
+  test "pack_priced? returns true for standard product with pac_size > 1" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert order_item.pack_priced?
+  end
+
+  test "pack_priced? returns false for branded/configured product" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.032,
+        pac_size: 500,
+        configuration: { size: "12oz", quantity: 5000 }
+      )
+    )
+    assert_not order_item.pack_priced?
+  end
+
+  test "pack_priced? returns false when pac_size is nil" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: nil,
+        configuration: {}
+      )
+    )
+    assert_not order_item.pack_priced?
+  end
+
+  test "pack_priced? returns false when pac_size is 1" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 1,
+        configuration: {}
+      )
+    )
+    assert_not order_item.pack_priced?
+  end
+
+  test "pack_price returns price for pack-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert_equal 15.99, order_item.pack_price
+  end
+
+  test "pack_price returns nil for unit-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.032,
+        pac_size: nil,
+        configuration: {}
+      )
+    )
+    assert_nil order_item.pack_price
+  end
+
+  test "unit_price derives from pack price for pack-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 16.00,
+        pac_size: 500,
+        configuration: {}
+      )
+    )
+    assert_equal 0.032, order_item.unit_price
+  end
+
+  test "unit_price returns price directly for unit-priced items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 5.50,
+        pac_size: nil,
+        configuration: {}
+      )
+    )
+    assert_equal 5.50, order_item.unit_price
+  end
+
+  test "unit_price returns price for branded/configured items" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 0.18,
+        pac_size: 500,
+        configuration: { size: "12oz" }
+      )
+    )
+    assert_equal 0.18, order_item.unit_price
+  end
+
+  # Edge case tests for pac_size validation and handling
+  test "validates pac_size must be greater than zero when present" do
+    order_item = OrderItem.new(@valid_attributes.merge(pac_size: 0))
+    assert_not order_item.valid?
+    assert_includes order_item.errors[:pac_size], "must be greater than 0"
+  end
+
+  test "validates pac_size rejects negative values" do
+    order_item = OrderItem.new(@valid_attributes.merge(pac_size: -1))
+    assert_not order_item.valid?
+    assert_includes order_item.errors[:pac_size], "must be greater than 0"
+  end
+
+  test "validates pac_size allows nil" do
+    order_item = OrderItem.new(@valid_attributes.merge(pac_size: nil))
+    assert order_item.valid?
+  end
+
+  test "pack_priced? returns false when pac_size is zero" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 15.99,
+        pac_size: 0,
+        configuration: {}
+      )
+    )
+    # Note: pac_size=0 is invalid, but testing the method behavior
+    assert_not order_item.pack_priced?
+  end
+
+  test "unit_price handles very large pac_size correctly" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 100.00,
+        pac_size: 10000,
+        configuration: {}
+      )
+    )
+    # £100.00 / 10000 = £0.01 per unit
+    assert_equal 0.01, order_item.unit_price
+    assert order_item.pack_priced?
+  end
+
+  test "unit_price formats correctly with very small unit price" do
+    order_item = OrderItem.new(
+      @valid_attributes.merge(
+        price: 50.00,
+        pac_size: 50000,
+        configuration: {}
+      )
+    )
+    # £50.00 / 50000 = £0.001 per unit
+    assert_equal 0.001, order_item.unit_price
+  end
+
+  # Historical data preservation test - verifies order uses captured pac_size
+  test "unit_price uses captured pac_size not live variant value" do
+    # Create an order item with pac_size captured at order time
+    order = orders(:one)
+    variant = product_variants(:one)
+    original_pac_size = 500
+
+    order_item = OrderItem.create!(
+      order: order,
+      product_variant: variant,
+      product_name: "Test Product",
+      product_sku: "TEST-HISTORICAL",
+      price: 16.00,
+      pac_size: original_pac_size,
+      quantity: 1000,
+      line_total: 32.00,
+      configuration: {}
+    )
+
+    # Verify unit price uses captured pac_size
+    assert_equal 0.032, order_item.unit_price
+
+    # Now simulate the product variant's pac_size changing
+    variant.update!(pac_size: 1000)
+
+    # Reload the order item to ensure we're testing the persisted data
+    order_item.reload
+
+    # OrderItem should still use its captured pac_size (500), not the variant's new value (1000)
+    assert_equal original_pac_size, order_item.pac_size
+    assert_equal 0.032, order_item.unit_price  # Still £16.00 / 500 = £0.032
+    assert_not_equal variant.pac_size, order_item.pac_size
   end
 end

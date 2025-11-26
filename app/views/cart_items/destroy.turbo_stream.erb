@@ -1,5 +1,5 @@
 <%= turbo_stream.update "cart" do %>
-  <%= render partial: "cart_items/index" %>
+  <%= render partial: "cart_items/index", locals: { cart_items: Current.cart.cart_items.includes(:product, product_variant: :product).order('products.name ASC, product_variants.name ASC') } %>
 <% end %>
 
 <%= turbo_stream.replace "cart_counter" do %>

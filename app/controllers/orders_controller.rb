@@ -13,6 +13,6 @@ class OrdersController < ApplicationController
   private
 
   def set_order
-    @order = Order.find(params[:id])
+    @order = Order.includes(order_items: :product_variant).find(params[:id])
   end
 end

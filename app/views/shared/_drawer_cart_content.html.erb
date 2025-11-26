@@ -20,33 +20,7 @@
                 <% end %>
               </p>
               <div class="flex justify-between items-center mt-1">
-                <span class="text-xs">
-                  <% if cart_item.configured? %>
-                    <%
-                      # Branded products: show "x units (y packs)"
-                      branded_price = cart_item.product.branded_product_prices.find_by(
-                        size: cart_item.configuration["size"],
-                        quantity_tier: cart_item.quantity
-                      )
-                      if branded_price && branded_price.case_quantity > 0
-                        packs = (cart_item.quantity.to_f / branded_price.case_quantity).ceil
-                    %>
-                      <%= number_with_delimiter(cart_item.quantity) %> units (<%= pluralize(packs, 'pack') %>)
-                    <% else %>
-                      <%= number_with_delimiter(cart_item.quantity) %> units
-                    <% end %>
-                  <% else %>
-                    <%
-                      # Standard products: show "x packs (y units)"
-                      if cart_item.product_variant.pac_size.present? && cart_item.product_variant.pac_size > 0
-                        packs = (cart_item.quantity.to_f / cart_item.product_variant.pac_size).ceil
-                    %>
-                      <%= pluralize(packs, 'pack') %> (<%= number_with_delimiter(cart_item.quantity) %> units)
-                    <% else %>
-                      <%= number_with_delimiter(cart_item.quantity) %> units
-                    <% end %>
-                  <% end %>
-                </span>
+                <span class="text-xs"><%= format_quantity_display(cart_item) %></span>
                 <span class="text-sm font-medium"><%= number_to_currency(cart_item.subtotal_amount) %></span>
               </div>
             </div>
@@ -58,17 +32,17 @@
     <div class="border-t pt-4">
       <div class="flex justify-between items-center mb-4">
         <span class="font-medium">Subtotal</span>
-        <span class="font-semibold"><%= number_to_currency(Current.cart.subtotal_amount) %></span>
+        <span><%= number_to_currency(Current.cart.subtotal_amount) %></span>
       </div>
 
       <div class="flex justify-between items-center mb-4">
         <span class="font-medium">VAT <%= VAT_RATE * 100 %>%</span>
-        <span class="font-semibold"><%= number_to_currency(Current.cart.vat_amount) %></span>
+        <span><%= number_to_currency(Current.cart.vat_amount) %></span>
       </div>
 
       <div class="flex justify-between items-center mb-8">
         <span class="font-medium">Total</span>
-        <span class="font-semibold text-lg"><%= number_to_currency(Current.cart.total_amount) %></span>
+        <span class="text-lg"><%= number_to_currency(Current.cart.total_amount) %></span>
       </div>
 
       <div>

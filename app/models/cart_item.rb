@@ -13,23 +13,16 @@ class CartItem < ApplicationRecord
 
   before_validation :set_price_from_variant
 
+  # Calculates subtotal: price * quantity
+  # For standard products: price = pack price, quantity = number of packs
+  # For branded products: price = unit price, quantity = number of units
   def subtotal_amount
-    if configured?
-      # For configured/branded products: price is already per unit
-      price * quantity
-    elsif product_variant.pac_size.present? && product_variant.pac_size > 0
-      # For standard products with pack pricing:
-      # - price is per PACK
-      # - quantity is in UNITS
-      # Calculate: (units / units_per_pack) * price_per_pack
-      packs_needed = (quantity.to_f / product_variant.pac_size).ceil
-      price * packs_needed
-    else
-      # For products without pack size: price is per unit
-      price * quantity
-    end
+    price * quantity
   end
 
+  # Returns the current unit price from product_variant for standard products,
+  # or the configured price for branded products. This uses live pricing,
+  # unlike OrderItem#unit_price which calculates from historical pac_size snapshot.
   def unit_price
     if configured?
       price
@@ -44,6 +37,22 @@ class CartItem < ApplicationRecord
 
   def configured?
     configuration.present?
+  end
+
+  # Pricing display methods for pack vs unit pricing
+  # Pack-priced: standard products with pac_size > 1
+  # Unit-priced: branded/configured products OR pac_size nil/1
+  def pack_priced?
+    !configured? && product_variant.pac_size.present? && product_variant.pac_size > 1
+  end
+
+  def pack_price
+    pack_priced? ? price : nil
+  end
+
+  # Delegate to product_variant for consistent interface with OrderItem
+  def pac_size
+    product_variant.pac_size
   end
 
   private

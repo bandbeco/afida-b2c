@@ -13,7 +13,7 @@
           <div class="text-right">Total</div>
         </div>
 
-        <%= render Current.cart.cart_items.includes(:product, product_variant: :product).order('products.name ASC, product_variants.name ASC') %>
+        <%= render cart_items %>
       </div>
 
       <div class="mt-8 flex flex-col md:flex-row justify-between items-start gap-8">

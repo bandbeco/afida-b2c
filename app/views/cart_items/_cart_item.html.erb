@@ -1,9 +1,13 @@
 <%= turbo_frame_tag cart_item do %>
   <%
-    # Build URL parameters from variant option_values
-    url_params = {}
-    url_params[:size] = cart_item.product_variant.option_values['size'] if cart_item.product_variant.option_values['size'].present?
-    url_params[:colour] = cart_item.product_variant.option_values['colour'] if cart_item.product_variant.option_values['colour'].present?
+    # Branded products use different path and don't need URL params
+    # Standard products use variant option values to pre-select size/colour
+    if cart_item.configured?
+      product_url = branded_product_path(cart_item.product)
+    else
+      url_params = cart_item.product_variant.url_params
+      product_url = product_path(cart_item.product, url_params)
+    end
   %>
   <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center p-4 border-b hover:bg-gray-50">
     <div class="col-span-full md:col-span-2 flex items-center space-x-4">
@@ -11,7 +15,7 @@
         <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-20 h-20 rounded-md shadow") %>
       <% end %>
       <div>
-        <%= link_to cart_item.product.name, product_path(cart_item.product, url_params), class: "text-xl font-medium text-gray-800 hover:text-primary-500", data: { turbo: false } %>
+        <%= link_to cart_item.product.name, product_url, class: "text-xl font-medium text-gray-800 hover:text-primary-500", data: { turbo: false } %>
         <% if cart_item.configured? %>
           <div class="text-gray-600">
             Size: <%= cart_item.configuration["size"] %>
@@ -34,19 +38,7 @@
 
     <div class="text-left md:text-center text-gray-700">
       <span class="md:hidden font-semibold">Price: </span>
-      <% if cart_item.configured? %>
-        <%= number_to_currency(cart_item.unit_price, precision: 4) %>/unit
-      <% else %>
-        <div>
-          <%= number_to_currency(cart_item.price) %> / pack
-          <% pac_size = cart_item.product_variant.pac_size || 1 %>
-          <% if pac_size > 1 %>
-            <div class="text-xs text-gray-500">
-              (<%= number_to_currency(cart_item.price / pac_size, precision: 4) %> / unit)
-            </div>
-          <% end %>
-        </div>
-      <% end %>
+      <%= format_price_display(cart_item) %>
     </div>
 
     <div class="text-left md:text-center">
@@ -71,35 +63,29 @@
         <% end %>
       <% else %>
         <%
+          # Standard products: quantity is number of packs
           variant = cart_item.product_variant
           pac_size = variant.pac_size || 1
-          max_quantity = 30000
 
-          # Generate pack multiples up to 10,000 units
-          quantity_options = []
-          (1..10).each do |i|
-            quantity = pac_size * i
-            break if quantity > 10000
-            quantity_options << quantity
-          end
+          # Generate pack options (1-10 packs, plus larger quantities)
+          pack_options = (1..10).to_a
 
-          # Add 5,000-unit increments from 15,000 to 30,000
-          (15000..max_quantity).step(5000).each do |quantity|
-            quantity_options << quantity
-          end
+          # Add larger pack quantities (30, 40, 50, 60 packs)
+          [30, 40, 50, 60].each { |p| pack_options << p }
 
-          # Always include current quantity if it's not already in the list
-          quantity_options << cart_item.quantity unless quantity_options.include?(cart_item.quantity)
-          quantity_options.sort!
+          # Always include current quantity if not in list
+          pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
+          pack_options.sort!.uniq!
         %>
 
         <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
           <%= form.label :quantity, "Quantity:", class: "sr-only" %>
+          <%# Value is number of packs, display shows "X packs (Y units)" %>
           <%= form.select :quantity,
                           options_for_select(
-                            quantity_options.map { |q|
-                              num_packs = q / pac_size
-                              ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(q)} units)", q]
+                            pack_options.map { |num_packs|
+                              total_units = num_packs * pac_size
+                              ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
                             },
                             cart_item.quantity
                           ),

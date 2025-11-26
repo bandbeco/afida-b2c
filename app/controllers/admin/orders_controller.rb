@@ -6,6 +6,6 @@ class Admin::OrdersController < Admin::ApplicationController
   end
 
   def show
-    @order = Order.find(params[:id])
+    @order = Order.includes(order_items: :product_variant).find(params[:id])
   end
 end

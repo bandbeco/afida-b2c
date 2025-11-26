@@ -90,8 +90,8 @@ class OrderPdfGenerator
       table_data << [
         item.product_name,
         item.product_sku,
-        item.quantity.to_s,
-        format_currency(item.price),
+        format_quantity_display(item),
+        format_price_display(item),
         format_currency(item.line_total)
       ]
     end
@@ -137,5 +137,41 @@ class OrderPdfGenerator
 
   def format_currency(amount)
     "£%.2f" % amount
+  end
+
+  # Formats unit price with 4 decimal precision for accurate per-unit pricing
+  def format_unit_price(amount)
+    "£%.4f" % amount
+  end
+
+  # Formats quantity display for order items
+  # Pack-priced items: "30 packs (15,000 units)" - quantity IS packs, units = quantity * pac_size
+  # Unit-priced items: "5,000 units" - quantity IS units
+  def format_quantity_display(item)
+    if item.pack_priced?
+      # quantity is number of packs, calculate total units
+      packs = item.quantity
+      total_units = packs * item.pac_size
+      packs_formatted = ActiveSupport::NumberHelper.number_to_delimited(packs)
+      units_formatted = ActiveSupport::NumberHelper.number_to_delimited(total_units)
+      "#{packs_formatted} #{'pack'.pluralize(packs)}\n(#{units_formatted} units)"
+    else
+      units = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
+      "#{units} units"
+    end
+  end
+
+  # Formats price display for order items
+  # Pack-priced items: "£15.99 / pack (£0.0320 / unit)"
+  # Unit-priced items: "£0.0320 / unit"
+  def format_price_display(item)
+    if item.pack_priced?
+      pack = format_currency(item.pack_price)
+      unit = format_unit_price(item.unit_price)
+      "#{pack} / pack\n(#{unit} / unit)"
+    else
+      unit = format_unit_price(item.unit_price)
+      "#{unit} / unit"
+    end
   end
 end
