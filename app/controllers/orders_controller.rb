@@ -13,6 +13,8 @@ class OrdersController < ApplicationController
   private
 
   def set_order
-    @order = Order.includes(order_items: :product_variant).find(params[:id])
+    @order = Current.user.orders.includes(order_items: :product_variant).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to orders_path, alert: "Order not found"
   end
 end
