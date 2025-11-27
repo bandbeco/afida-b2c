@@ -53,6 +53,25 @@ acme_order:
   shipping_country: GB
   created_at: <%= 2.days.ago %>
 
+# Complete order for PDF generator testing
+complete_order:
+  user: one
+  email: complete@example.com
+  stripe_session_id: cs_test_complete
+  order_number: ORD-2025-COMPLETE
+  status: paid
+  subtotal_amount: 48.00
+  vat_amount: 9.60
+  shipping_amount: 5.95
+  total_amount: 63.55
+  shipping_name: Complete Test Customer
+  shipping_address_line1: 42 Test Street
+  shipping_address_line2: Floor 3
+  shipping_city: London
+  shipping_postal_code: EC2A 4BX
+  shipping_country: GB
+  created_at: <%= 1.day.ago %>
+
 # Guest order (no user association) - for authorization testing
 guest_order:
   # user: intentionally omitted - this is a guest checkout order

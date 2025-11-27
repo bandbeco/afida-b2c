@@ -43,6 +43,18 @@ acme_branded_item:
     size: "12oz"
     quantity: 5000
 
+# Order item for complete_order (PDF testing)
+complete_order_item:
+  order: complete_order
+  product: one
+  product_variant: one
+  product_name: Single Wall Hot Cup
+  product_sku: SW-8OZ-500
+  price: 16.00
+  pac_size: 500
+  quantity: 3
+  line_total: 48.00
+
 guest_order_item_one:
   order: guest_order
   product: one
