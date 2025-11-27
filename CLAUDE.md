@@ -171,6 +171,10 @@ rails credentials:edit
 
 ## Development Tips
 
+**Key Principles**:
+- Only make changes that are directly requested. Keep solutions simple and focused.
+- ALWAYS read and understand relevant files before proposing edits. Do not speculate about code you have not inspected.
+
 ### Working with Products
 - Products require a category and generate slugs automatically from name/SKU/colour
 - Always work with `product.active_variants` not `product.variants` (filters inactive)
