@@ -53,16 +53,18 @@ acme_order:
   shipping_country: GB
   created_at: <%= 2.days.ago %>
 
-complete_order:
-  email: customer@example.com
-  stripe_session_id: cs_test_complete
-  order_number: ORD-2025-001234
+# Guest order (no user association) - for authorization testing
+guest_order:
+  # user: intentionally omitted - this is a guest checkout order
+  email: guest@example.com
+  stripe_session_id: cs_test_guest
+  order_number: ORD-2025-GUEST1
   status: paid
   subtotal_amount: 35.00
   vat_amount: 7.00
   shipping_amount: 5.00
   total_amount: 47.00
-  shipping_name: John Doe
+  shipping_name: Guest Customer
   shipping_address_line1: 123 Main Street
   shipping_city: London
   shipping_postal_code: SW1A 1AA
