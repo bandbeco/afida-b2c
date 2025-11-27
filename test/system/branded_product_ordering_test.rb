@@ -20,22 +20,18 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
     click_button "12oz"
     assert_selector ".border-primary", text: "12oz"
 
-    # Step 2: Select finish - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='finishStep'] input[type='radio']", visible: false).click
-    click_button "Matte"
-
-    # Step 3: Select quantity - open accordion by clicking hidden radio
+    # Step 2: Select quantity - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='quantityStep'] input[type='radio']", visible: false).click
     find("[data-quantity='5000']").click
 
     # Wait for price calculation (wait for non-zero price)
     assert_selector "[data-branded-configurator-target='total']", text: /£[1-9]/
 
-    # Step 4: Skip lids (optional step) - open accordion by clicking hidden radio
+    # Step 3: Skip lids (optional step) - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='lidsStep'] input[type='radio']", visible: false).click
     click_button "Skip - No lids needed"
 
-    # Step 5: Upload design - open accordion by clicking hidden radio
+    # Step 4: Upload design - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='designStep'] input[type='radio']", visible: false).click
     find("[data-branded-configurator-target='designInput']").attach_file(Rails.root.join("test", "fixtures", "files", "test_design.pdf"))
     assert_text "test_design.pdf"
@@ -44,7 +40,7 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
     assert_no_selector ".btn-disabled", text: "Add to Cart"
     assert_selector ".btn-primary", text: "Add to Cart"
 
-    # Step 6: Add to cart
+    # Step 5: Add to cart
     click_button "Add to Cart"
 
     # Navigate to cart to verify item was added
@@ -63,13 +59,6 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
 
     # Select size only
     click_button "12oz"
-
-    # Still disabled (missing finish, quantity and design)
-    assert_selector ".btn-disabled", text: "Add to Cart"
-
-    # Select finish - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='finishStep'] input[type='radio']", visible: false).click
-    click_button "Matte"
 
     # Still disabled (missing quantity and design)
     assert_selector ".btn-disabled", text: "Add to Cart"

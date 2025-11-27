@@ -3,7 +3,6 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "sizeOption",
-    "finishOption",
     "quantityOption",
     "pricePerUnit",
     "savingsBadge",
@@ -16,12 +15,10 @@ export default class extends Controller {
     "designPreview",
     "errorMessage",
     "sizeIndicator",
-    "finishIndicator",
     "quantityIndicator",
     "lidsIndicator",
     "designIndicator",
     "sizeStep",
-    "finishStep",
     "quantityStep",
     "lidsStep",
     "designStep",
@@ -36,7 +33,6 @@ export default class extends Controller {
 
   connect() {
     this.selectedSize = null
-    this.selectedFinish = null
     this.selectedQuantity = null
     this.calculatedPrice = null
     this.updateAddToCartButton()
@@ -62,18 +58,6 @@ export default class extends Controller {
       )
       if (sizeButton) {
         sizeButton.click()
-      }
-    }
-
-    // Pre-select finish if in URL (normalize: "matte" → "Matte", "gloss" → "Gloss")
-    const finishParam = params.get('finish')
-    if (finishParam) {
-      const normalizedFinish = finishParam.charAt(0).toUpperCase() + finishParam.slice(1).toLowerCase()
-      const finishButton = this.finishOptionTargets.find(el =>
-        el.dataset.finish.toLowerCase() === finishParam.toLowerCase()
-      )
-      if (finishButton) {
-        finishButton.click()
       }
     }
 
@@ -105,23 +89,6 @@ export default class extends Controller {
     this.updateUrl()
     this.showStepComplete('size')
     this.calculatePrice()
-  }
-
-  selectFinish(event) {
-    // Reset all finish buttons to unselected state
-    this.finishOptionTargets.forEach(el => {
-      el.classList.remove("border-primary", "border-4")
-      el.classList.add("border-gray-300", "border-2")
-    })
-
-    // Add selected state to clicked button
-    event.currentTarget.classList.remove("border-gray-300", "border-2")
-    event.currentTarget.classList.add("border-primary", "border-4")
-
-    this.selectedFinish = event.currentTarget.dataset.finish
-    this.updateUrl()
-    this.showStepComplete('finish')
-    this.updateAddToCartButton()
   }
 
   selectQuantity(event) {
@@ -407,9 +374,6 @@ export default class extends Controller {
     if (this.selectedSize) {
       params.set('size', this.selectedSize)
     }
-    if (this.selectedFinish) {
-      params.set('finish', this.selectedFinish)
-    }
     if (this.selectedQuantity) {
       params.set('quantity', this.selectedQuantity)
     }
@@ -431,8 +395,8 @@ export default class extends Controller {
     // Open next step in accordion
     // In modal mode, skip lids step and go directly from quantity to design
     const stepMap = this.inModalValue
-      ? { size: 'finish', finish: 'quantity', quantity: 'design', design: null }
-      : { size: 'finish', finish: 'quantity', quantity: 'lids', lids: 'design' }
+      ? { size: 'quantity', quantity: 'design', design: null }
+      : { size: 'quantity', quantity: 'lids', lids: 'design' }
 
     const nextStep = stepMap[step]
     if (nextStep) {
@@ -511,7 +475,6 @@ export default class extends Controller {
     if (!this.hasAddToCartButtonTarget) return
 
     const isValid = this.selectedSize &&
-                    this.selectedFinish &&
                     this.selectedQuantity &&
                     this.calculatedPrice &&
                     this.designInputTarget?.files.length > 0
@@ -546,11 +509,6 @@ export default class extends Controller {
       return
     }
 
-    if (!this.selectedFinish) {
-      this.showError("Please select a finish")
-      return
-    }
-
     if (!this.selectedQuantity) {
       this.showError("Please select a quantity")
       return
@@ -569,7 +527,6 @@ export default class extends Controller {
     const formData = new FormData()
     formData.append("product_id", this.productIdValue)
     formData.append("configuration[size]", this.selectedSize)
-    formData.append("configuration[finish]", this.selectedFinish)
     formData.append("configuration[quantity]", this.selectedQuantity)
     formData.append("calculated_price", this.calculatedPrice)
 
@@ -614,18 +571,11 @@ export default class extends Controller {
   resetConfigurator() {
     // Reset state variables
     this.selectedSize = null
-    this.selectedFinish = null
     this.selectedQuantity = null
     this.calculatedPrice = null
 
     // Reset size buttons
     this.sizeOptionTargets.forEach(el => {
-      el.classList.remove("border-primary", "border-4")
-      el.classList.add("border-gray-300", "border-2")
-    })
-
-    // Reset finish buttons
-    this.finishOptionTargets.forEach(el => {
       el.classList.remove("border-primary", "border-4")
       el.classList.add("border-gray-300", "border-2")
     })
@@ -647,7 +597,7 @@ export default class extends Controller {
     }
 
     // Reset step indicators
-    const indicators = ['size', 'finish', 'quantity', 'lids', 'design']
+    const indicators = ['size', 'quantity', 'lids', 'design']
     indicators.forEach(step => {
       const indicatorTarget = `${step}IndicatorTarget`
       if (this[indicatorTarget]) {
