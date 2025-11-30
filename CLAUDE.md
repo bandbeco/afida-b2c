@@ -554,6 +554,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items` tables) (005-quick-add-to-cart)
 - Ruby 3.3.0+ / Rails 8.x + Rails Engine (SeoAiEngine), Anthropic Claude API (anthropic ~> 1.15), Google Search Console API (google-apis-webmasters_v3 ~> 0.6), SerpAPI (google_search_results ~> 2.2) (006-ai-seo-engine)
 - PostgreSQL 14+ (6 new engine tables: seo_ai_opportunities, seo_ai_content_briefs, seo_ai_content_drafts, seo_ai_content_items, seo_ai_performance_snapshots, seo_ai_budget_trackings) (006-ai-seo-engine)
+- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (010-sample-pack)
+- PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items` tables — no schema changes) (010-sample-pack)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+
