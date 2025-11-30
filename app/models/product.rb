@@ -24,6 +24,7 @@ class Product < ApplicationRecord
   PROFIT_MARGINS = %w[high medium low].freeze
   SEASONAL_TYPES = %w[year_round seasonal holiday].freeze
   B2B_PRIORITIES = %w[high medium low].freeze
+  SAMPLE_PACK_SLUG = "sample-pack".freeze
 
   default_scope { where(active: true).order(:position, :name) }
   scope :featured, -> { where(featured: true) }
@@ -32,6 +33,10 @@ class Product < ApplicationRecord
   scope :quick_add_eligible, -> { where(product_type: "standard") }
   scope :standard, -> { where(product_type: "standard") }
   scope :branded, -> { where(product_type: "customizable_template") }
+  scope :shoppable, -> {
+    where(product_type: [ "standard", "customizable_template" ])
+      .where.not(slug: SAMPLE_PACK_SLUG)
+  }
 
   # Filtering and search scopes
   scope :in_categories, ->(category_slugs) {
@@ -186,6 +191,11 @@ class Product < ApplicationRecord
   # Check if this product has any compatible lids
   def has_compatible_lids?
     product_compatible_lids.exists?
+  end
+
+  # Check if this product is the sample pack
+  def sample_pack?
+    slug == SAMPLE_PACK_SLUG
   end
 
   # Description fallback methods - T018-T020

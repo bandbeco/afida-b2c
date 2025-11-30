@@ -6,7 +6,8 @@ class CartItem < ApplicationRecord
   has_one_attached :design
 
   validates :quantity, presence: true, numericality: { greater_than: 0, less_than_or_equal_to: 30000 }
-  validates :price, presence: true, numericality: { greater_than: 0 }
+  validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validate :price_must_be_positive_unless_sample_pack
   validates_uniqueness_of :product_variant, scope: :cart, unless: :configured?
   validates :calculated_price, presence: true, if: :configured?
   validate :design_required_for_configured_products
@@ -65,5 +66,13 @@ class CartItem < ApplicationRecord
     if configured? && !design.attached?
       errors.add(:design, "must be uploaded for custom products")
     end
+  end
+
+  # Price must be greater than 0, unless it's a sample pack (which is free)
+  def price_must_be_positive_unless_sample_pack
+    return if product&.sample_pack?
+    return if price.nil? || price > 0
+
+    errors.add(:price, "must be greater than 0")
   end
 end

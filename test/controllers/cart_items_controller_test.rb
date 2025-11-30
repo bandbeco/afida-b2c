@@ -341,6 +341,55 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_nil cart_item.calculated_price
   end
 
+  # Sample Pack tests (US2 - Limit Sample Pack Quantity)
+  test "adding sample pack to cart succeeds when cart has no sample pack" do
+    sample_variant = product_variants(:sample_pack_variant)
+
+    assert_difference "CartItem.count", 1 do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        quantity: 1
+      }
+    end
+
+    assert_redirected_to cart_path
+    assert_match /added to cart/i, flash[:notice]
+  end
+
+  test "adding sample pack when already in cart shows friendly message" do
+    sample_variant = product_variants(:sample_pack_variant)
+
+    # Add sample pack first time
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: sample_variant.price
+    )
+
+    # Try to add again
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        quantity: 1
+      }
+    end
+
+    assert_redirected_to cart_path
+    assert_match /already in your cart/i, flash[:notice]
+  end
+
+  test "adding sample pack quantity is capped at 1" do
+    sample_variant = product_variants(:sample_pack_variant)
+
+    post cart_cart_items_path, params: {
+      product_variant_id: sample_variant.id,
+      quantity: 5  # Trying to add 5
+    }
+
+    cart_item = @cart.cart_items.find_by(product_variant: sample_variant)
+    assert_equal 1, cart_item.quantity  # Should be capped at 1
+  end
+
   private
 
   def sign_in_as(user)

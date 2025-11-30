@@ -1,15 +1,129 @@
-<% content_for :title, "Free Samples - Try Before You Buy | Afida" %>
+<% content_for :title, "Free Sample Pack - Try Before You Buy | Afida" %>
 
-<% content_for :meta_description, "Request free samples of our eco-friendly catering supplies. Test our products before ordering. Straws, napkins, cups, takeaway boxes, and more available." %>
+<% content_for :meta_description, "Request a free sample pack of our eco-friendly catering supplies. Test our products before ordering. Just pay shipping." %>
 
-<div class="container mx-auto py-8 py-16 min-h-screen">
-  <h1 class="text-4xl font-bold mb-8">Samples</h1>
+<div class="min-h-screen">
+  <!-- Hero Section -->
+  <section class="bg-primary text-primary-content py-16">
+    <div class="container mx-auto px-4 text-center">
+      <h1 class="text-4xl md:text-5xl font-bold mb-4">Try Our Eco-Friendly Products</h1>
+      <p class="text-xl md:text-2xl mb-8 opacity-90">Get a free sample pack — just pay shipping</p>
 
-  <p class="text-lg mb-8">
-    Try before you buy!
-  </p>
+      <% if @sample_pack && @variant %>
+        <%= button_to cart_cart_items_path(product_variant_id: @variant.id, quantity: 1),
+            method: :post,
+            class: "btn btn-secondary btn-lg text-lg" do %>
+          Add Sample Pack to Cart
+        <% end %>
+      <% end %>
+    </div>
+  </section>
 
-  <p class="text-lg mb-8">
-    We offer free samples of our eco-friendly packaging — from straws and napkins to takeaway boxes, cups, and more. Simply choose the products you'd like to test, and we'll send them your way!
-  </p>
+  <!-- What's Included Section -->
+  <section class="py-16 bg-base-100">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold mb-8 text-center">What's Included</h2>
+
+      <div class="max-w-3xl mx-auto">
+        <p class="text-lg mb-6 text-center">
+          Our sample pack contains a curated selection of our best-selling eco-friendly catering supplies:
+        </p>
+
+        <ul class="grid md:grid-cols-2 gap-4 text-lg">
+          <li class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Hot cups & lids</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Cold cups & lids</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Takeaway containers</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Napkins</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>Straws</span>
+          </li>
+          <li class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+            <span>And more...</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Benefits Section -->
+  <section class="py-16 bg-base-200">
+    <div class="container mx-auto px-4">
+      <h2 class="text-3xl font-bold mb-8 text-center">Why Get a Sample Pack?</h2>
+
+      <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+        <div class="card bg-base-100 shadow-md">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl mb-4">🌱</div>
+            <h3 class="card-title">Feel the Quality</h3>
+            <p>Experience the look and feel of our eco-friendly materials before committing to a larger order.</p>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-md">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl mb-4">✅</div>
+            <h3 class="card-title">Test Compatibility</h3>
+            <p>Ensure our products work perfectly with your serving equipment and presentation style.</p>
+          </div>
+        </div>
+
+        <div class="card bg-base-100 shadow-md">
+          <div class="card-body items-center text-center">
+            <div class="text-4xl mb-4">💚</div>
+            <h3 class="card-title">Make the Switch</h3>
+            <p>See how easy it is to transition to sustainable packaging without compromising on quality.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA Section -->
+  <section class="py-16 bg-base-100">
+    <div class="container mx-auto px-4 text-center">
+      <% if @sample_pack && @variant %>
+        <h2 class="text-3xl font-bold mb-4">Ready to Try?</h2>
+        <p class="text-lg mb-8 text-base-content/70">
+          <span class="text-success font-semibold text-2xl">Free</span> — just pay shipping
+        </p>
+
+        <%= button_to cart_cart_items_path(product_variant_id: @variant.id, quantity: 1),
+            method: :post,
+            class: "btn btn-primary btn-lg text-lg" do %>
+          Add Sample Pack to Cart
+        <% end %>
+      <% else %>
+        <h2 class="text-3xl font-bold mb-4">Sample Pack Coming Soon</h2>
+        <p class="text-lg text-base-content/70">
+          We're preparing our sample pack. Check back soon or <%= link_to "contact us", contact_path, class: "link link-primary" %> to learn more.
+        </p>
+      <% end %>
+    </div>
+  </section>
 </div>

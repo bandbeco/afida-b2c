@@ -86,7 +86,9 @@
           </h2>
 
           <p class="text-xl text-black mt-2" data-product-options-target="unitPriceDisplay">
-            <% if @has_url_selection %>
+            <% if @product.sample_pack? %>
+              <span class="text-success font-semibold">Free</span> — just pay shipping
+            <% elsif @has_url_selection %>
               <%= number_to_currency(@selected_variant.price) %> / pack
             <% else %>
               from <%= number_to_currency(@min_price) %> / pack
@@ -160,20 +162,22 @@
                      value="<%= @selected_variant.sku %>"
                      data-product-options-target="variantSkuInput" />
 
-              <div class="form-control">
-                <div class="flex justify-between items-baseline mb-2">
-                  <label for="cart_item_quantity" class="label-text font-semibold">Select quantity:</label>
-                  <span class="text-sm text-base-content/60" data-product-options-target="packSizeDisplay">
-                    Pack size: <%= number_with_delimiter(pac_size) %> units
-                  </span>
+              <% unless @product.sample_pack? %>
+                <div class="form-control">
+                  <div class="flex justify-between items-baseline mb-2">
+                    <label for="cart_item_quantity" class="label-text font-semibold">Select quantity:</label>
+                    <span class="text-sm text-base-content/60" data-product-options-target="packSizeDisplay">
+                      Pack size: <%= number_with_delimiter(pac_size) %> units
+                    </span>
+                  </div>
+                  <%# Value is number of packs, display shows "X packs (Y units)" %>
+                <%= select_tag "cart_item[quantity]",
+                                options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
+                                id: "cart_item_quantity",
+                                class: "select select-bordered select-lg w-full",
+                                data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>
                 </div>
-                <%# Value is number of packs, display shows "X packs (Y units)" %>
-              <%= select_tag "cart_item[quantity]",
-                              options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
-                              id: "cart_item_quantity",
-                              class: "select select-bordered select-lg w-full",
-                              data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>
-              </div>
+              <% end %>
 
               <%# Compatible Lids Section - Only for cup products %>
               <% if @product.name.downcase.include?('cup') && !@product.name.downcase.include?('lid') && @product.has_compatible_lids? %>
@@ -208,19 +212,31 @@
                   </svg>
                   <span class="font-medium">Delivered in 2 to 3 working days</span>
                 </div>
-                <div class="mt-8 grid grid-cols-[1fr_auto] gap-4 items-start">
-                  <div>
-                    <p class="text-lg">Total (excl. VAT)</p>
-                    <p class="text-xs text-base-content/60">Free delivery on all mainland UK orders over £100 excl. VAT</p>
+                <% if @product.sample_pack? %>
+                  <div class="mt-8 grid grid-cols-[1fr_auto] gap-4 items-start">
+                    <div>
+                      <p class="text-lg">Total</p>
+                      <p class="text-xs text-base-content/60">Shipping calculated at checkout</p>
+                    </div>
+                    <p class="text-2xl font-semibold whitespace-nowrap text-right text-success">
+                      Free
+                    </p>
                   </div>
-                  <p class="text-2xl font-semibold whitespace-nowrap text-right" data-product-options-target="priceDisplay">
-                    <% if @has_url_selection %>
-                      <%= number_to_currency(@selected_variant.price) %>
-                    <% else %>
-                      <%= number_to_currency(@min_price) %>
-                    <% end %>
-                  </p>
-                </div>
+                <% else %>
+                  <div class="mt-8 grid grid-cols-[1fr_auto] gap-4 items-start">
+                    <div>
+                      <p class="text-lg">Total (excl. VAT)</p>
+                      <p class="text-xs text-base-content/60">Free delivery on all mainland UK orders over £100 excl. VAT</p>
+                    </div>
+                    <p class="text-2xl font-semibold whitespace-nowrap text-right" data-product-options-target="priceDisplay">
+                      <% if @has_url_selection %>
+                        <%= number_to_currency(@selected_variant.price) %>
+                      <% else %>
+                        <%= number_to_currency(@min_price) %>
+                      <% end %>
+                    </p>
+                  </div>
+                <% end %>
               </div>
 
               <%= f.submit "Add to cart", class: "btn btn-primary btn-lg w-full cursor-pointer", data: { product_options_target: "addToCartButton" } %>

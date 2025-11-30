@@ -38,11 +38,17 @@
 
     <div class="text-left md:text-center text-gray-700">
       <span class="md:hidden font-semibold">Price: </span>
-      <%= format_price_display(cart_item) %>
+      <% if cart_item.product.sample_pack? %>
+        <span class="text-success font-semibold">Free</span>
+      <% else %>
+        <%= format_price_display(cart_item) %>
+      <% end %>
     </div>
 
     <div class="text-left md:text-center">
-      <% if cart_item.configured? %>
+      <% if cart_item.product.sample_pack? %>
+        <span class="text-gray-500 text-sm">1 pack</span>
+      <% elsif cart_item.configured? %>
         <%
           # Branded products: offer standard quantity tiers
           current_qty = cart_item.quantity
@@ -99,7 +105,11 @@
     <div class="text-right text-gray-700">
       <span class="md:hidden font-semibold">Total: </span>
       <span id="cart_item_<%= cart_item.id %>_total">
-        <%= number_to_currency(cart_item.line_total) %>
+        <% if cart_item.product.sample_pack? %>
+          <span class="text-success font-semibold">Free</span>
+        <% else %>
+          <%= number_to_currency(cart_item.line_total) %>
+        <% end %>
       </span>
     </div>
 

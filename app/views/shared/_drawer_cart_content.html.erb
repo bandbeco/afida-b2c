@@ -21,7 +21,11 @@
               </p>
               <div class="flex justify-between items-center mt-1">
                 <span class="text-xs"><%= format_quantity_display(cart_item) %></span>
-                <span class="text-sm font-medium"><%= number_to_currency(cart_item.subtotal_amount) %></span>
+                <% if cart_item.product.sample_pack? %>
+                  <span class="text-sm font-medium text-success">Free</span>
+                <% else %>
+                  <span class="text-sm font-medium"><%= number_to_currency(cart_item.subtotal_amount) %></span>
+                <% end %>
               </div>
             </div>
           </div>

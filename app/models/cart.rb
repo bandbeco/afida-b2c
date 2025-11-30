@@ -58,6 +58,12 @@ class Cart < ApplicationRecord
     user.blank?
   end
 
+  # Check if cart contains a sample pack
+  # Used to enforce 1 sample pack per order limit
+  def has_sample_pack?
+    cart_items.joins(:product).exists?(products: { slug: Product::SAMPLE_PACK_SLUG })
+  end
+
   # Clear memoized values when cart items change
   # Call this after adding/updating/removing cart items
   def reload(*)

@@ -125,15 +125,27 @@ class CartItemsController < ApplicationController
   end
 
   def create_standard_cart_item
-    # Existing logic for standard products
-    product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
+    # Find variant by SKU or ID (samples page uses ID)
+    product_variant = find_product_variant
+    return unless product_variant
+
+    # Check for sample pack limit (1 per order)
+    if product_variant.product.sample_pack? && @cart.has_sample_pack?
+      return redirect_to cart_path, notice: "Sample pack is already in your cart."
+    end
+
     @cart_item = @cart.cart_items.find_or_initialize_by(product_variant: product_variant)
 
     if @cart_item.new_record?
-      @cart_item.quantity = cart_item_params[:quantity].to_i || 1
+      # For sample pack, always cap quantity at 1
+      quantity = product_variant.product.sample_pack? ? 1 : (cart_item_quantity || 1)
+      @cart_item.quantity = quantity
       @cart_item.price = product_variant.price
     else
-      @cart_item.quantity += (cart_item_params[:quantity].to_i || 1)
+      # For sample pack, don't increment quantity
+      unless product_variant.product.sample_pack?
+        @cart_item.quantity += (cart_item_quantity || 1)
+      end
     end
 
     if @cart_item.save
@@ -157,7 +169,27 @@ class CartItemsController < ApplicationController
     end
   end
 
+  # Find variant by SKU (from product page) or ID (from samples page)
+  def find_product_variant
+    if cart_item_params[:variant_sku].present?
+      ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
+    elsif params[:product_variant_id].present?
+      ProductVariant.find(params[:product_variant_id])
+    else
+      nil
+    end
+  rescue ActiveRecord::RecordNotFound
+    redirect_to cart_path, alert: "Product not found."
+    nil
+  end
+
+  # Get quantity from nested params or top-level params
+  def cart_item_quantity
+    (cart_item_params[:quantity] || params[:quantity]).to_i
+  end
+
   def cart_item_params
+    return {} unless params[:cart_item].present?
     params.expect(cart_item: [ :variant_sku, :quantity ])
   end
 end

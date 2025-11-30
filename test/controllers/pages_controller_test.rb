@@ -62,4 +62,33 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Query should be truncated to 100 chars, not cause errors
   end
+
+  # Sample Pack tests (T011)
+  test "samples page loads and displays sample pack" do
+    get samples_path
+
+    assert_response :success
+    assert_select "h1", text: /Eco-Friendly|Sample/i
+    # Verify the page has an add to cart button for the sample pack
+    assert_select "form[action*='cart_items']"
+  end
+
+  test "samples page shows free messaging" do
+    get samples_path
+
+    assert_response :success
+    # Check for "Free" text indicating sample pack pricing
+    assert_match(/free/i, response.body)
+  end
+
+  test "samples page handles missing sample pack gracefully" do
+    # Delete the sample pack product
+    Product.unscoped.find_by(slug: "sample-pack")&.destroy
+
+    get samples_path
+
+    assert_response :success
+    # Should show fallback message, not crash
+    assert_match(/coming soon|unavailable/i, response.body)
+  end
 end

@@ -127,3 +127,17 @@ sip_lid_8oz:
   meta_title: Sip Lid 8oz
   meta_description: Sip lid with built-in spout for 8oz cups
   compatible_cup_sizes: ["8oz"]
+
+sample_pack:
+  name: Sample Pack
+  slug: sample-pack
+  sku: SAMPLE-PACK
+  base_sku: SAMPLE-PACK
+  active: true
+  category: one
+  product_type: standard
+  description_short: Try our eco-friendly products before you buy
+  description_standard: Get a curated selection of our best-selling eco-friendly catering supplies delivered to your door.
+  description_detailed: Our sample pack includes a selection of cups, lids, takeaway containers, napkins, and straws so you can evaluate our products before placing a larger order.
+  meta_title: Free Sample Pack - Try Before You Buy
+  meta_description: Request a free sample pack of eco-friendly catering supplies. Just pay shipping.

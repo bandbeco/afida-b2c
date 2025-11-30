@@ -211,3 +211,14 @@ sip_lid_8oz_variant:
   active: true
   position: 1
   option_values: {}
+
+sample_pack_variant:
+  product: sample_pack
+  name: Sample Pack
+  sku: SAMPLE-PACK-001
+  pac_size: 1
+  price: 0.00
+  stock_quantity: 999
+  active: true
+  position: 1
+  option_values: {}

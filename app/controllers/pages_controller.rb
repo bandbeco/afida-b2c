@@ -25,7 +25,7 @@ class PagesController < ApplicationController
 
   def shop
     @products = Product
-      .standard
+      .shoppable
       .includes(:active_variants,
                 product_photo_attachment: :blob,
                 lifestyle_photo_attachment: :blob)
@@ -50,6 +50,8 @@ class PagesController < ApplicationController
   end
 
   def samples
+    @sample_pack = Product.unscoped.find_by(slug: Product::SAMPLE_PACK_SLUG)
+    @variant = @sample_pack&.default_variant
   end
 
   def about

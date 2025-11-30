@@ -188,4 +188,37 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 68.00, cart.vat_amount  # 20% of £340
     assert_equal 408.00, cart.total_amount
   end
+
+  # Sample Pack tests (US2 - Limit Sample Pack Quantity)
+  test "has_sample_pack? returns true when cart contains sample pack" do
+    cart = Cart.create
+    sample_pack = products(:sample_pack)
+    variant = product_variants(:sample_pack_variant)
+
+    cart.cart_items.create!(
+      product_variant: variant,
+      quantity: 1,
+      price: variant.price
+    )
+
+    assert cart.has_sample_pack?
+  end
+
+  test "has_sample_pack? returns false when cart is empty" do
+    cart = Cart.create
+    assert_not cart.has_sample_pack?
+  end
+
+  test "has_sample_pack? returns false when cart has no sample pack" do
+    cart = Cart.create
+    variant = product_variants(:one)
+
+    cart.cart_items.create!(
+      product_variant: variant,
+      quantity: 1,
+      price: variant.price
+    )
+
+    assert_not cart.has_sample_pack?
+  end
 end

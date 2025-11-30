@@ -54,7 +54,8 @@ class ProductVariant < ApplicationRecord
   scope :by_position, -> { order(:position, :name) }
 
   validates :sku, presence: true, uniqueness: true
-  validates :price, presence: true, numericality: { greater_than: 0 }
+  validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validate :price_must_be_positive_unless_sample_pack
   validates :name, presence: true
   validates :gtin,
             format: { with: /\A\d{8}|\d{12}|\d{13}|\d{14}\z/, message: "must be 8, 12, 13, or 14 digits" },
@@ -151,5 +152,15 @@ class ProductVariant < ApplicationRecord
   # Returns minimum order quantity in units
   def minimum_order_units
     pac_size || 1
+  end
+
+  private
+
+  # Price must be greater than 0, unless it's a sample pack (which is free)
+  def price_must_be_positive_unless_sample_pack
+    return if product&.sample_pack?
+    return if price.nil? || price > 0
+
+    errors.add(:price, "must be greater than 0")
   end
 end

@@ -598,4 +598,47 @@ class ProductTest < ActiveSupport::TestCase
 
     assert_not_includes eligible, instance
   end
+
+  # Sample Pack tests (T004-T006)
+  test "SAMPLE_PACK_SLUG constant is defined" do
+    assert_equal "sample-pack", Product::SAMPLE_PACK_SLUG
+  end
+
+  test "sample_pack? returns true for sample pack product" do
+    sample_pack = products(:sample_pack)
+    assert sample_pack.sample_pack?
+  end
+
+  test "sample_pack? returns false for regular products" do
+    regular_product = products(:one)
+    assert_not regular_product.sample_pack?
+  end
+
+  test "shoppable scope excludes sample pack" do
+    sample_pack = products(:sample_pack)
+    regular_product = products(:one)
+
+    shoppable = Product.shoppable
+
+    assert_not_includes shoppable, sample_pack
+    assert_includes shoppable, regular_product
+  end
+
+  test "shoppable scope includes standard and customizable_template products" do
+    standard = products(:one)
+    template = products(:branded_double_wall_template)
+
+    shoppable = Product.shoppable
+
+    assert_includes shoppable, standard
+    assert_includes shoppable, template
+  end
+
+  test "shoppable scope excludes customized_instance products" do
+    customized = products(:acme_branded_cups)
+
+    shoppable = Product.shoppable
+
+    assert_not_includes shoppable, customized
+  end
 end
