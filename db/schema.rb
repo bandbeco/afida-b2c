@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_01_222900) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,8 +20,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "name", null: false
     t.bigint "record_id", null: false
     t.string "record_type", null: false
-    t.index [ "blob_id" ], name: "index_active_storage_attachments_on_blob_id"
-    t.index [ "record_type", "record_id", "name", "blob_id" ], name: "index_active_storage_attachments_uniqueness", unique: true
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
   end
 
   create_table "active_storage_blobs", force: :cascade do |t|
@@ -33,13 +33,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "key", null: false
     t.text "metadata"
     t.string "service_name", null: false
-    t.index [ "key" ], name: "index_active_storage_blobs_on_key", unique: true
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
   end
 
   create_table "active_storage_variant_records", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
-    t.index [ "blob_id", "variation_digest" ], name: "index_active_storage_variant_records_uniqueness", unique: true
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
   create_table "branded_product_prices", force: :cascade do |t|
@@ -50,8 +50,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.integer "quantity_tier", null: false
     t.string "size", null: false
     t.datetime "updated_at", null: false
-    t.index [ "product_id", "size", "quantity_tier" ], name: "index_branded_prices_uniqueness", unique: true
-    t.index [ "product_id" ], name: "index_branded_product_prices_on_product_id"
+    t.index ["product_id", "size", "quantity_tier"], name: "index_branded_prices_uniqueness", unique: true
+    t.index ["product_id"], name: "index_branded_product_prices_on_product_id"
   end
 
   create_table "cart_items", force: :cascade do |t|
@@ -63,17 +63,18 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.bigint "product_variant_id", null: false
     t.integer "quantity", default: 1, null: false
     t.datetime "updated_at", null: false
-    t.index [ "cart_id" ], name: "index_cart_items_on_cart_id"
-    t.index [ "configuration" ], name: "index_cart_items_on_configuration", using: :gin
-    t.index [ "product_variant_id" ], name: "index_cart_items_on_product_variant_id"
+    t.index ["cart_id", "price"], name: "index_cart_items_on_cart_id_and_price"
+    t.index ["cart_id"], name: "index_cart_items_on_cart_id"
+    t.index ["configuration"], name: "index_cart_items_on_configuration", using: :gin
+    t.index ["product_variant_id"], name: "index_cart_items_on_product_variant_id"
   end
 
   create_table "carts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id"
-    t.index [ "created_at" ], name: "index_carts_on_created_at"
-    t.index [ "user_id" ], name: "index_carts_on_user_id"
+    t.index ["created_at"], name: "index_carts_on_created_at"
+    t.index ["user_id"], name: "index_carts_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -86,8 +87,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.integer "products_count", default: 0, null: false
     t.string "slug"
     t.datetime "updated_at", null: false
-    t.index [ "position" ], name: "index_categories_on_position"
-    t.index [ "slug" ], name: "index_categories_on_slug", unique: true
+    t.index ["position"], name: "index_categories_on_position"
+    t.index ["slug"], name: "index_categories_on_slug", unique: true
   end
 
   create_table "order_items", force: :cascade do |t|
@@ -103,10 +104,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.bigint "product_variant_id", null: false
     t.integer "quantity", null: false
     t.datetime "updated_at", null: false
-    t.index [ "configuration" ], name: "index_order_items_on_configuration", using: :gin
-    t.index [ "order_id" ], name: "index_order_items_on_order_id"
-    t.index [ "product_id" ], name: "index_order_items_on_product_id"
-    t.index [ "product_variant_id" ], name: "index_order_items_on_product_variant_id"
+    t.index ["configuration"], name: "index_order_items_on_configuration", using: :gin
+    t.index ["order_id"], name: "index_order_items_on_order_id"
+    t.index ["product_id"], name: "index_order_items_on_product_id"
+    t.index ["product_variant_id"], name: "index_order_items_on_product_variant_id"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -130,15 +131,15 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.datetime "updated_at", null: false
     t.bigint "user_id"
     t.decimal "vat_amount", precision: 10, scale: 2, null: false
-    t.index [ "branded_order_status" ], name: "index_orders_on_branded_order_status"
-    t.index [ "email" ], name: "index_orders_on_email"
-    t.index [ "order_number" ], name: "index_orders_on_order_number", unique: true
-    t.index [ "organization_id", "created_at" ], name: "index_orders_on_organization_id_and_created_at"
-    t.index [ "organization_id" ], name: "index_orders_on_organization_id"
-    t.index [ "placed_by_user_id" ], name: "index_orders_on_placed_by_user_id"
-    t.index [ "status" ], name: "index_orders_on_status"
-    t.index [ "stripe_session_id" ], name: "index_orders_on_stripe_session_id", unique: true
-    t.index [ "user_id" ], name: "index_orders_on_user_id"
+    t.index ["branded_order_status"], name: "index_orders_on_branded_order_status"
+    t.index ["email"], name: "index_orders_on_email"
+    t.index ["order_number"], name: "index_orders_on_order_number", unique: true
+    t.index ["organization_id", "created_at"], name: "index_orders_on_organization_id_and_created_at"
+    t.index ["organization_id"], name: "index_orders_on_organization_id"
+    t.index ["placed_by_user_id"], name: "index_orders_on_placed_by_user_id"
+    t.index ["status"], name: "index_orders_on_status"
+    t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id", unique: true
+    t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
   create_table "organizations", force: :cascade do |t|
@@ -148,7 +149,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "name", null: false
     t.string "phone"
     t.datetime "updated_at", null: false
-    t.index [ "billing_email" ], name: "index_organizations_on_billing_email"
+    t.index ["billing_email"], name: "index_organizations_on_billing_email"
   end
 
   create_table "product_compatible_lids", force: :cascade do |t|
@@ -158,10 +159,10 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.bigint "product_id", null: false
     t.integer "sort_order", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index [ "compatible_lid_id" ], name: "index_product_compatible_lids_on_compatible_lid_id"
-    t.index [ "product_id", "compatible_lid_id" ], name: "index_product_compatible_lids_on_product_and_lid", unique: true
-    t.index [ "product_id", "sort_order" ], name: "index_product_compatible_lids_on_product_id_and_sort_order"
-    t.index [ "product_id" ], name: "index_product_compatible_lids_on_product_id"
+    t.index ["compatible_lid_id"], name: "index_product_compatible_lids_on_compatible_lid_id"
+    t.index ["product_id", "compatible_lid_id"], name: "index_product_compatible_lids_on_product_and_lid", unique: true
+    t.index ["product_id", "sort_order"], name: "index_product_compatible_lids_on_product_id_and_sort_order"
+    t.index ["product_id"], name: "index_product_compatible_lids_on_product_id"
   end
 
   create_table "product_option_assignments", force: :cascade do |t|
@@ -170,9 +171,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.bigint "product_id", null: false
     t.bigint "product_option_id", null: false
     t.datetime "updated_at", null: false
-    t.index [ "product_id", "product_option_id" ], name: "index_product_option_assignments_uniqueness", unique: true
-    t.index [ "product_id" ], name: "index_product_option_assignments_on_product_id"
-    t.index [ "product_option_id" ], name: "index_product_option_assignments_on_product_option_id"
+    t.index ["product_id", "product_option_id"], name: "index_product_option_assignments_uniqueness", unique: true
+    t.index ["product_id"], name: "index_product_option_assignments_on_product_id"
+    t.index ["product_option_id"], name: "index_product_option_assignments_on_product_option_id"
   end
 
   create_table "product_option_values", force: :cascade do |t|
@@ -182,9 +183,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.bigint "product_option_id", null: false
     t.datetime "updated_at", null: false
     t.string "value", null: false
-    t.index [ "position" ], name: "index_product_option_values_on_position"
-    t.index [ "product_option_id", "value" ], name: "index_product_option_values_on_product_option_id_and_value", unique: true
-    t.index [ "product_option_id" ], name: "index_product_option_values_on_product_option_id"
+    t.index ["position"], name: "index_product_option_values_on_position"
+    t.index ["product_option_id", "value"], name: "index_product_option_values_on_product_option_id_and_value", unique: true
+    t.index ["product_option_id"], name: "index_product_option_values_on_product_option_id"
   end
 
   create_table "product_options", force: :cascade do |t|
@@ -194,7 +195,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.integer "position", default: 0, null: false
     t.boolean "required", default: true, null: false
     t.datetime "updated_at", null: false
-    t.index [ "position" ], name: "index_product_options_on_position"
+    t.index ["position"], name: "index_product_options_on_position"
   end
 
   create_table "product_variants", force: :cascade do |t|
@@ -219,13 +220,13 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.integer "volume_in_ml"
     t.integer "weight_in_g"
     t.integer "width_in_mm"
-    t.index [ "active" ], name: "index_product_variants_on_active"
-    t.index [ "gtin" ], name: "index_product_variants_on_gtin", unique: true, where: "(gtin IS NOT NULL)"
-    t.index [ "option_values" ], name: "index_product_variants_on_option_values", using: :gin
-    t.index [ "product_id", "position" ], name: "index_product_variants_on_product_id_and_position"
-    t.index [ "product_id", "sku" ], name: "index_product_variants_on_product_id_and_sku", unique: true
-    t.index [ "product_id" ], name: "index_product_variants_on_product_id"
-    t.index [ "sample_eligible" ], name: "index_product_variants_on_sample_eligible"
+    t.index ["active"], name: "index_product_variants_on_active"
+    t.index ["gtin"], name: "index_product_variants_on_gtin", unique: true, where: "(gtin IS NOT NULL)"
+    t.index ["option_values"], name: "index_product_variants_on_option_values", using: :gin
+    t.index ["product_id", "position"], name: "index_product_variants_on_product_id_and_position"
+    t.index ["product_id", "sku"], name: "index_product_variants_on_product_id_and_sku", unique: true
+    t.index ["product_id"], name: "index_product_variants_on_product_id"
+    t.index ["sample_eligible"], name: "index_product_variants_on_sample_eligible"
   end
 
   create_table "products", force: :cascade do |t|
@@ -258,23 +259,23 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "slug"
     t.datetime "updated_at", null: false
     t.decimal "vat_rate", precision: 5, scale: 2, default: "20.0"
-    t.index [ "active", "category_id" ], name: "index_products_on_active_and_category_id"
-    t.index [ "active" ], name: "index_products_on_active"
-    t.index [ "base_sku" ], name: "index_products_on_base_sku", unique: true
-    t.index [ "best_seller" ], name: "index_products_on_best_seller"
-    t.index [ "category_id", "position" ], name: "index_products_on_category_id_and_position"
-    t.index [ "category_id" ], name: "index_products_on_category_id"
-    t.index [ "colour" ], name: "index_products_on_colour"
-    t.index [ "featured" ], name: "index_products_on_featured"
-    t.index [ "name" ], name: "index_products_on_name"
-    t.index [ "organization_id", "product_type" ], name: "index_products_on_organization_id_and_product_type"
-    t.index [ "organization_id" ], name: "index_products_on_organization_id"
-    t.index [ "parent_product_id" ], name: "index_products_on_parent_product_id"
-    t.index [ "position" ], name: "index_products_on_position"
-    t.index [ "product_type" ], name: "index_products_on_product_type"
-    t.index [ "profit_margin" ], name: "index_products_on_profit_margin"
-    t.index [ "sku" ], name: "index_products_on_sku"
-    t.index [ "slug", "product_type" ], name: "index_products_on_slug_and_product_type", unique: true
+    t.index ["active", "category_id"], name: "index_products_on_active_and_category_id"
+    t.index ["active"], name: "index_products_on_active"
+    t.index ["base_sku"], name: "index_products_on_base_sku", unique: true
+    t.index ["best_seller"], name: "index_products_on_best_seller"
+    t.index ["category_id", "position"], name: "index_products_on_category_id_and_position"
+    t.index ["category_id"], name: "index_products_on_category_id"
+    t.index ["colour"], name: "index_products_on_colour"
+    t.index ["featured"], name: "index_products_on_featured"
+    t.index ["name"], name: "index_products_on_name"
+    t.index ["organization_id", "product_type"], name: "index_products_on_organization_id_and_product_type"
+    t.index ["organization_id"], name: "index_products_on_organization_id"
+    t.index ["parent_product_id"], name: "index_products_on_parent_product_id"
+    t.index ["position"], name: "index_products_on_position"
+    t.index ["product_type"], name: "index_products_on_product_type"
+    t.index ["profit_margin"], name: "index_products_on_profit_margin"
+    t.index ["sku"], name: "index_products_on_sku"
+    t.index ["slug", "product_type"], name: "index_products_on_slug_and_product_type", unique: true
   end
 
   create_table "seo_ai_budget_trackings", force: :cascade do |t|
@@ -289,7 +290,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.integer "serpapi_requests", default: 0
     t.decimal "total_cost_gbp", precision: 10, scale: 2, default: "0.0"
     t.datetime "updated_at", null: false
-    t.index [ "month" ], name: "index_seo_ai_budget_trackings_on_month", unique: true
+    t.index ["month"], name: "index_seo_ai_budget_trackings_on_month", unique: true
   end
 
   create_table "seo_ai_content_briefs", force: :cascade do |t|
@@ -304,7 +305,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.jsonb "suggested_structure", default: {}
     t.string "target_keyword", null: false
     t.datetime "updated_at", null: false
-    t.index [ "seo_ai_opportunity_id" ], name: "index_seo_ai_content_briefs_on_seo_ai_opportunity_id", unique: true
+    t.index ["seo_ai_opportunity_id"], name: "index_seo_ai_content_briefs_on_seo_ai_opportunity_id", unique: true
   end
 
   create_table "seo_ai_content_drafts", force: :cascade do |t|
@@ -324,8 +325,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "target_keywords", default: [], array: true
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index [ "seo_ai_content_brief_id" ], name: "index_seo_ai_content_drafts_on_seo_ai_content_brief_id", unique: true
-    t.index [ "status", "quality_score" ], name: "index_seo_ai_content_drafts_on_status_and_quality_score"
+    t.index ["seo_ai_content_brief_id"], name: "index_seo_ai_content_drafts_on_seo_ai_content_brief_id", unique: true
+    t.index ["status", "quality_score"], name: "index_seo_ai_content_drafts_on_status_and_quality_score"
   end
 
   create_table "seo_ai_content_items", force: :cascade do |t|
@@ -342,9 +343,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "target_keywords", default: [], array: true
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.index [ "published_at" ], name: "index_seo_ai_content_items_on_published_at"
-    t.index [ "seo_ai_content_draft_id" ], name: "index_seo_ai_content_items_on_seo_ai_content_draft_id"
-    t.index [ "slug" ], name: "index_seo_ai_content_items_on_slug", unique: true
+    t.index ["published_at"], name: "index_seo_ai_content_items_on_published_at"
+    t.index ["seo_ai_content_draft_id"], name: "index_seo_ai_content_items_on_seo_ai_content_draft_id"
+    t.index ["slug"], name: "index_seo_ai_content_items_on_slug", unique: true
   end
 
   create_table "seo_ai_opportunities", force: :cascade do |t|
@@ -360,12 +361,12 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "status", default: "pending", null: false
     t.string "target_url"
     t.datetime "updated_at", null: false
-    t.index [ "discovered_at" ], name: "index_seo_ai_opportunities_on_discovered_at"
-    t.index [ "opportunity_type" ], name: "index_seo_ai_opportunities_on_opportunity_type"
-    t.index [ "query" ], name: "index_seo_ai_opportunities_on_query", unique: true
-    t.index [ "score" ], name: "index_seo_ai_opportunities_on_score"
-    t.index [ "status", "score" ], name: "index_seo_ai_opportunities_on_status_and_score"
-    t.index [ "status" ], name: "index_seo_ai_opportunities_on_status"
+    t.index ["discovered_at"], name: "index_seo_ai_opportunities_on_discovered_at"
+    t.index ["opportunity_type"], name: "index_seo_ai_opportunities_on_opportunity_type"
+    t.index ["query"], name: "index_seo_ai_opportunities_on_query", unique: true
+    t.index ["score"], name: "index_seo_ai_opportunities_on_score"
+    t.index ["status", "score"], name: "index_seo_ai_opportunities_on_status_and_score"
+    t.index ["status"], name: "index_seo_ai_opportunities_on_status"
   end
 
   create_table "seo_ai_performance_snapshots", force: :cascade do |t|
@@ -380,9 +381,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.bigint "seo_ai_content_item_id"
     t.decimal "traffic_value_gbp", precision: 10, scale: 2
     t.datetime "updated_at", null: false
-    t.index [ "period_end" ], name: "index_seo_ai_performance_snapshots_on_period_end"
-    t.index [ "seo_ai_content_item_id", "period_end" ], name: "idx_on_seo_ai_content_item_id_period_end_588cc4adf8"
-    t.index [ "seo_ai_content_item_id" ], name: "index_seo_ai_performance_snapshots_on_seo_ai_content_item_id"
+    t.index ["period_end"], name: "index_seo_ai_performance_snapshots_on_period_end"
+    t.index ["seo_ai_content_item_id", "period_end"], name: "idx_on_seo_ai_content_item_id_period_end_588cc4adf8"
+    t.index ["seo_ai_content_item_id"], name: "index_seo_ai_performance_snapshots_on_seo_ai_content_item_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -391,8 +392,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.datetime "updated_at", null: false
     t.string "user_agent"
     t.bigint "user_id", null: false
-    t.index [ "created_at" ], name: "index_sessions_on_created_at"
-    t.index [ "user_id" ], name: "index_sessions_on_user_id"
+    t.index ["created_at"], name: "index_sessions_on_created_at"
+    t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
   create_table "url_redirects", force: :cascade do |t|
@@ -404,8 +405,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.datetime "updated_at", null: false
     t.jsonb "variant_params", default: {}, null: false
     t.index "lower((source_path)::text)", name: "index_legacy_redirects_on_lower_legacy_path", unique: true
-    t.index [ "active" ], name: "index_url_redirects_on_active"
-    t.index [ "hit_count" ], name: "index_url_redirects_on_hit_count"
+    t.index ["active"], name: "index_url_redirects_on_active"
+    t.index ["hit_count"], name: "index_url_redirects_on_hit_count"
   end
 
   create_table "users", force: :cascade do |t|
@@ -418,9 +419,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_143934) do
     t.string "password_digest", null: false
     t.string "role"
     t.datetime "updated_at", null: false
-    t.index [ "email_address" ], name: "index_users_on_email_address", unique: true
-    t.index [ "organization_id", "role" ], name: "index_users_on_organization_id_and_role"
-    t.index [ "organization_id" ], name: "index_users_on_organization_id"
+    t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["organization_id", "role"], name: "index_users_on_organization_id_and_role"
+    t.index ["organization_id"], name: "index_users_on_organization_id"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"

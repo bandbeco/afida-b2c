@@ -9,9 +9,10 @@ class CartItem < ApplicationRecord
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validate :price_must_be_positive_unless_sample
   validate :cart_sample_limit_not_exceeded, on: :create, if: :sample?
-  # Allow same variant twice: once as sample (price=0) and once as regular item (price>0)
-  # Configured products can always have duplicates (different configurations)
-  validates_uniqueness_of :product_variant, scope: [ :cart_id, :price ], unless: -> { configured? || sample? }
+  # Prevent duplicate cart items for the same variant at the same price
+  # The scope [:cart_id, :price] allows: sample (price=0) + regular item (price>0) for same variant
+  # Configured products are excluded as they can have different configurations
+  validates_uniqueness_of :product_variant, scope: [ :cart_id, :price ], unless: :configured?
   validates :calculated_price, presence: true, if: :configured?
   validate :design_required_for_configured_products
 

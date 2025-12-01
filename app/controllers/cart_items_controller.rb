@@ -181,7 +181,7 @@ class CartItemsController < ApplicationController
 
   def respond_with_sample_error(message)
     @error_message = message
-    @in_cart = @cart.cart_items.exists?(product_variant: @variant)
+    @in_cart = @variant && @cart.cart_items.exists?(product_variant: @variant)
     @at_limit = @cart.at_sample_limit?
 
     respond_to do |format|

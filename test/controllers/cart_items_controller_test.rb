@@ -421,6 +421,33 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match /already in your cart/, flash[:alert]
   end
 
+  test "rejects sample request for non-existent variant" do
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_variant_id: 999999,
+        sample: true
+      }
+    end
+
+    assert_redirected_to samples_path
+    assert_match /not available as a sample/, flash[:alert]
+  end
+
+  test "rejects sample request for inactive variant" do
+    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant.update!(active: false)
+
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        sample: true
+      }
+    end
+
+    assert_redirected_to samples_path
+    assert_match /not available as a sample/, flash[:alert]
+  end
+
   test "removes sample from cart" do
     sample_variant = product_variants(:sample_cup_8oz)
     cart_item = @cart.cart_items.create!(
