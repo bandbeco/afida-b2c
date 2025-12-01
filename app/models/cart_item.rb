@@ -8,6 +8,7 @@ class CartItem < ApplicationRecord
   validates :quantity, presence: true, numericality: { greater_than: 0, less_than_or_equal_to: 30000 }
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validate :price_must_be_positive_unless_sample
+  validate :cart_sample_limit_not_exceeded, on: :create, if: :sample?
   # Allow same variant twice: once as sample (price=0) and once as regular item (price>0)
   # Configured products can always have duplicates (different configurations)
   validates_uniqueness_of :product_variant, scope: [ :cart_id, :price ], unless: -> { configured? || sample? }
@@ -81,6 +82,15 @@ class CartItem < ApplicationRecord
 
     if price.to_f == 0 && !product_variant.sample_eligible?
       errors.add(:price, "must be greater than 0")
+    end
+  end
+
+  # Prevents race condition: reload cart to check current sample count at save time
+  def cart_sample_limit_not_exceeded
+    return unless cart
+
+    if cart.reload.at_sample_limit?
+      errors.add(:base, "Sample limit of #{Cart::SAMPLE_LIMIT} reached")
     end
   end
 end

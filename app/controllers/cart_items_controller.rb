@@ -49,7 +49,8 @@ class CartItemsController < ApplicationController
   def destroy
     @variant = @cart_item.product_variant
     product_name = @variant.display_name
-    is_sample_removal = request.referer&.include?("/samples") || params[:turbo_frame]&.include?("sample")
+    # Use the item's own state to determine if it's a sample (more reliable than referer/params)
+    is_sample_removal = @cart_item.sample?
     @category = @variant.product.category if is_sample_removal
     @cart_item.destroy
 
@@ -58,10 +59,7 @@ class CartItemsController < ApplicationController
         if is_sample_removal
           @sample_count = @cart.sample_count
           @at_limit = @cart.at_sample_limit?
-          @category_selected_count = @cart.cart_items.where(price: 0)
-            .joins(product_variant: :product)
-            .where(products: { category_id: @category.id })
-            .count
+          @category_selected_count = @cart.sample_count_for_category(@category)
           render :destroy_sample
         else
           render :destroy
@@ -170,10 +168,7 @@ class CartItemsController < ApplicationController
       @sample_count = @cart.sample_count
       @at_limit = @cart.at_sample_limit?
       @category = @variant.product.category
-      @category_selected_count = @cart.cart_items.where(price: 0)
-        .joins(product_variant: :product)
-        .where(products: { category_id: @category.id })
-        .count
+      @category_selected_count = @cart.sample_count_for_category(@category)
 
       respond_to do |format|
         format.turbo_stream { render :create_sample }

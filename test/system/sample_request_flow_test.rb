@@ -29,8 +29,8 @@ class SampleRequestFlowTest < ApplicationSystemTestCase
     # Expand category
     click_on @category.name
 
-    # Wait for content to load
-    sleep 0.5
+    # Wait for variant cards to load
+    assert_selector ".card", text: @sample_variant.product.name, wait: 2
 
     # Find and click the Add Sample button
     within first(".card", text: @sample_variant.product.name) do
@@ -38,7 +38,7 @@ class SampleRequestFlowTest < ApplicationSystemTestCase
     end
 
     # Should show the sample counter
-    assert_selector "#sample_counter"
+    assert_selector "#sample_counter", wait: 2
     assert_text "1 / 5"
   end
 
@@ -46,22 +46,24 @@ class SampleRequestFlowTest < ApplicationSystemTestCase
     # First add a sample
     visit samples_path
     click_on @category.name
-    sleep 0.5
+
+    # Wait for content to load
+    assert_selector ".card", text: @sample_variant.product.name, wait: 2
 
     within first(".card", text: @sample_variant.product.name) do
       click_on "Add Sample"
     end
 
-    # Wait for update
-    sleep 0.5
+    # Wait for button to change to Remove
+    assert_selector "button", text: "Remove", wait: 2
 
-    # Click on "Added" to remove
+    # Click Remove to remove
     within first(".card", text: @sample_variant.product.name) do
-      click_on "Added"
+      click_on "Remove"
     end
 
-    # Counter should update or hide
-    assert_no_text "1 / 5"
+    # Counter should update - wait for Add Sample to reappear
+    assert_selector "button", text: "Add Sample", wait: 2
   end
 
   test "sample counter shows limit reached message" do
@@ -109,7 +111,9 @@ class SampleRequestFlowTest < ApplicationSystemTestCase
 
     visit samples_path
     click_on @category.name
-    sleep 0.5
+
+    # Wait for content to load
+    assert_selector ".card", text: @sample_variant.product.name, wait: 2
 
     # Buttons should still be enabled (not disabled)
     # When clicked, they show a warning message
@@ -118,22 +122,23 @@ class SampleRequestFlowTest < ApplicationSystemTestCase
       click_on "Add Sample"
     end
 
-    sleep 0.3
-
     # Warning message should appear on the card
-    assert_text "Sample limit reached"
+    assert_text "Sample limit reached", wait: 2
   end
 
   test "view cart link in counter navigates to cart" do
     visit samples_path
     click_on @category.name
-    sleep 0.5
+
+    # Wait for content to load
+    assert_selector ".card", text: @sample_variant.product.name, wait: 2
 
     within first(".card", text: @sample_variant.product.name) do
       click_on "Add Sample"
     end
 
-    sleep 0.5
+    # Wait for View Cart link to appear
+    assert_selector "a", text: "View Cart", wait: 2
 
     click_on "View Cart"
 

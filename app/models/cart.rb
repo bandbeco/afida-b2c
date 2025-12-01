@@ -69,16 +69,23 @@ class Cart < ApplicationRecord
   end
 
   # Sample tracking methods
+  # Samples are identified by price = 0 (validated to only allow sample-eligible variants)
 
-  # Returns cart items for sample-eligible variants
+  # Returns cart items that are samples (price = 0)
   def sample_items
-    cart_items.joins(:product_variant)
-              .where(product_variants: { sample_eligible: true })
+    cart_items.where(price: 0)
   end
 
   # Returns count of sample items in cart
   def sample_count
     sample_items.count
+  end
+
+  # Returns count of samples in a specific category
+  def sample_count_for_category(category)
+    sample_items.joins(product_variant: :product)
+                .where(products: { category_id: category.id })
+                .count
   end
 
   # Returns true if cart contains only sample items (no paid products)

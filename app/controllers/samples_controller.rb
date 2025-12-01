@@ -5,6 +5,7 @@
 #
 class SamplesController < ApplicationController
   allow_unauthenticated_access
+  rate_limit to: 30, within: 1.minute, only: [ :index, :category ]
 
   # GET /samples
   # Main samples browsing page showing categories with sample-eligible variants
@@ -38,7 +39,8 @@ class SamplesController < ApplicationController
       .where(products: { category_id: @category.id, active: true })
       .where(active: true)
       .includes(product: { product_photo_attachment: :blob })
-      .order(Arel.sql("products.name, (NULLIF(REGEXP_REPLACE(product_variants.name, '[^0-9].*', '', 'g'), ''))::integer NULLS LAST, product_variants.name"))
+      .order("products.name")
+      .naturally_sorted
 
     # For sample counter and variant cards
     @sample_count = Current.cart&.sample_count || 0

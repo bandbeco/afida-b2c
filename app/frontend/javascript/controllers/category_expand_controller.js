@@ -27,6 +27,10 @@ export default class extends Controller {
     loaded: { type: Boolean, default: false }
   }
 
+  // Temporary height buffer for initial expansion before Turbo Frame loads
+  // Provides space for loading spinner; actual height recalculated after load
+  static INITIAL_EXPAND_BUFFER = 200
+
   connect() {
     // Bind the frame load handler to this instance
     this.handleFrameLoad = this.handleFrameLoad.bind(this)
@@ -54,7 +58,7 @@ export default class extends Controller {
 
     // Set initial expanded height (will be recalculated after frame loads)
     if (this.hasContentTarget) {
-      this.contentTarget.style.maxHeight = this.contentTarget.scrollHeight + 500 + "px"
+      this.contentTarget.style.maxHeight = this.contentTarget.scrollHeight + this.constructor.INITIAL_EXPAND_BUFFER + "px"
     }
 
     // Rotate chevron
