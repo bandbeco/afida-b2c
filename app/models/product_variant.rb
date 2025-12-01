@@ -52,6 +52,7 @@ class ProductVariant < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :by_name, -> { order(:name) }
   scope :by_position, -> { order(:position, :name) }
+  scope :sample_eligible, -> { where(sample_eligible: true) }
 
   validates :sku, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than: 0 }
@@ -151,5 +152,11 @@ class ProductVariant < ApplicationRecord
   # Returns minimum order quantity in units
   def minimum_order_units
     pac_size || 1
+  end
+
+  # Returns the SKU to use for sample fulfillment
+  # Uses custom sample_sku if present, otherwise derives from main SKU
+  def effective_sample_sku
+    sample_sku.presence || "SAMPLE-#{sku}"
   end
 end

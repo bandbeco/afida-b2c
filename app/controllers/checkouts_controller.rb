@@ -9,17 +9,31 @@ class CheckoutsController < ApplicationController
     line_items = cart_items.map do |item|
       # For standard products with pack pricing: send packs as quantity
       # For branded/configured products: send units as quantity
-      if item.configured? || item.product_variant.pac_size.blank? || item.product_variant.pac_size.zero?
-        # Unit-based pricing (branded products or products without packs)
+      variant_name = item.product_variant.name
+
+      if item.sample?
+        # Sample items: free, quantity 1
+        quantity = 1
+        unit_amount = 0
+        product_name = "#{item.product.name} - #{variant_name} (Sample)"
+      elsif item.configured?
+        # Unit-based pricing (branded products)
+        quantity = 1
+        unit_amount = (item.price.to_f * item.quantity * 100).round
+        units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
+        product_name = "#{item.product.name} - #{item.configuration['size']} (#{units_formatted} units)"
+      elsif item.product_variant.pac_size.blank? || item.product_variant.pac_size.zero?
+        # Unit-based pricing (products without packs)
         quantity = item.quantity
         unit_amount = (item.price.to_f * 100).round
-        product_name = item.product.name
+        product_name = "#{item.product.name} - #{variant_name}"
       else
         # Pack-based pricing (standard products)
-        packs_needed = (item.quantity.to_f / item.product_variant.pac_size).ceil
-        quantity = packs_needed
-        unit_amount = (item.price.to_f * 100).round
-        product_name = "#{item.product.name} (#{item.product_variant.pac_size} per pack)"
+        packs_needed = item.quantity
+        quantity = 1
+        unit_amount = (item.price.to_f * packs_needed * 100).round
+        packs_label = packs_needed == 1 ? "pack" : "packs"
+        product_name = "#{item.product.name} - #{variant_name} (#{packs_needed} #{packs_label})"
       end
 
       {
@@ -37,6 +51,13 @@ class CheckoutsController < ApplicationController
     end
 
     begin
+      # Use sample shipping for samples-only orders, standard options otherwise
+      shipping_options = if cart.only_samples?
+        [ Shipping.sample_only_shipping_option ]
+      else
+        Shipping.stripe_shipping_options
+      end
+
       session_params = {
         payment_method_types: [ "card" ],
         line_items: line_items,
@@ -44,7 +65,7 @@ class CheckoutsController < ApplicationController
         shipping_address_collection: {
           allowed_countries: Shipping::ALLOWED_COUNTRIES
         },
-        shipping_options: Shipping.stripe_shipping_options,
+        shipping_options: shipping_options,
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: cancel_checkout_url
       }

@@ -6,8 +6,11 @@ class CartItem < ApplicationRecord
   has_one_attached :design
 
   validates :quantity, presence: true, numericality: { greater_than: 0, less_than_or_equal_to: 30000 }
-  validates :price, presence: true, numericality: { greater_than: 0 }
-  validates_uniqueness_of :product_variant, scope: :cart, unless: :configured?
+  validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validate :price_must_be_positive_unless_sample
+  # Allow same variant twice: once as sample (price=0) and once as regular item (price>0)
+  # Configured products can always have duplicates (different configurations)
+  validates_uniqueness_of :product_variant, scope: [ :cart_id, :price ], unless: -> { configured? || sample? }
   validates :calculated_price, presence: true, if: :configured?
   validate :design_required_for_configured_products
 
@@ -39,6 +42,11 @@ class CartItem < ApplicationRecord
     configuration.present?
   end
 
+  # A sample is a free item (price = 0) on a sample-eligible variant
+  def sample?
+    price.to_f.zero? && product_variant&.sample_eligible?
+  end
+
   # Pricing display methods for pack vs unit pricing
   # Pack-priced: standard products with pac_size > 1
   # Unit-priced: branded/configured products OR pac_size nil/1
@@ -64,6 +72,15 @@ class CartItem < ApplicationRecord
   def design_required_for_configured_products
     if configured? && !design.attached?
       errors.add(:design, "must be uploaded for custom products")
+    end
+  end
+
+  # Samples (price = 0) are only allowed for sample-eligible variants
+  def price_must_be_positive_unless_sample
+    return unless product_variant
+
+    if price.to_f == 0 && !product_variant.sample_eligible?
+      errors.add(:price, "must be greater than 0")
     end
   end
 end

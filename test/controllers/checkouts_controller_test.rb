@@ -537,6 +537,86 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================================
+  # SAMPLES-ONLY CHECKOUT TESTS
+  # ============================================================================
+
+  test "samples-only cart uses Sample Delivery shipping option" do
+    # Create samples-only cart
+    @cart.cart_items.destroy_all
+    sample_variant = product_variants(:sample_cup_8oz)
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
+
+    params_captured = nil
+    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
+      params_captured = params
+      FakeStripe::CheckoutSession.new(params)
+    end
+
+    post checkout_path
+
+    assert_response :see_other
+    assert_not_nil params_captured
+
+    # Should have single Sample Delivery shipping option
+    assert_equal 1, params_captured[:shipping_options].length
+    shipping_option = params_captured[:shipping_options].first
+    assert_equal "Sample Delivery", shipping_option[:shipping_rate_data][:display_name]
+    assert_equal 750, shipping_option[:shipping_rate_data][:fixed_amount][:amount]
+  end
+
+  test "samples-only cart line items have zero unit_amount" do
+    # Create samples-only cart
+    @cart.cart_items.destroy_all
+    sample_variant = product_variants(:sample_cup_8oz)
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
+
+    params_captured = nil
+    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
+      params_captured = params
+      FakeStripe::CheckoutSession.new(params)
+    end
+
+    post checkout_path
+
+    assert_not_nil params_captured
+    # Sample line items should have unit_amount of 0
+    assert_equal 0, params_captured[:line_items].first[:price_data][:unit_amount]
+  end
+
+  test "mixed cart (samples + paid) uses standard shipping options" do
+    # Add sample to existing cart
+    sample_variant = product_variants(:sample_cup_8oz)
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
+
+    params_captured = nil
+    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
+      params_captured = params
+      FakeStripe::CheckoutSession.new(params)
+    end
+
+    post checkout_path
+
+    assert_not_nil params_captured
+    # Should have standard shipping options (2 options: Standard + Express)
+    assert_equal 2, params_captured[:shipping_options].length
+    shipping_names = params_captured[:shipping_options].map { |o| o[:shipping_rate_data][:display_name] }
+    assert_includes shipping_names, "Standard Shipping"
+    assert_includes shipping_names, "Express Shipping"
+  end
+
+  # ============================================================================
   # HELPER METHODS
   # ============================================================================
 

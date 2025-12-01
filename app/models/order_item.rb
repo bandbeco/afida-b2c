@@ -6,7 +6,8 @@ class OrderItem < ApplicationRecord
   has_one_attached :design
 
   validates :product_name, presence: true
-  validates :price, presence: true, numericality: { greater_than: 0 }
+  validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validate :price_must_be_positive_unless_sample
   validates :quantity, presence: true, numericality: { greater_than: 0 }
   validates :line_total, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :pac_size, numericality: { greater_than: 0 }, allow_nil: true
@@ -80,5 +81,14 @@ class OrderItem < ApplicationRecord
 
   def calculate_line_total
     self.line_total = subtotal if price.present? && quantity.present?
+  end
+
+  # Samples (price = 0) are only allowed for sample-eligible variants
+  def price_must_be_positive_unless_sample
+    return unless product_variant
+
+    if price.to_f == 0 && !product_variant.sample_eligible?
+      errors.add(:price, "must be greater than 0")
+    end
   end
 end

@@ -188,4 +188,147 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 68.00, cart.vat_amount  # 20% of £340
     assert_equal 408.00, cart.total_amount
   end
+
+  # Sample tracking tests
+  test "SAMPLE_LIMIT constant is 5" do
+    assert_equal 5, Cart::SAMPLE_LIMIT
+  end
+
+  test "sample_items returns cart items for sample-eligible variants" do
+    cart = Cart.create
+
+    # Create sample-eligible variant
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Variant",
+      sku: "SAMPLE-CART-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    # Create non-sample variant
+    regular_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Regular Variant",
+      sku: "REGULAR-CART-TEST-1",
+      price: 20.0,
+      sample_eligible: false,
+      active: true
+    )
+
+    # Add both to cart (sample as free, regular at price)
+    sample_item = cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
+    regular_item = cart.cart_items.create!(product_variant: regular_variant, quantity: 2, price: 20.0)
+
+    sample_items = cart.sample_items
+    assert_equal 1, sample_items.count
+    assert_includes sample_items, sample_item
+    assert_not_includes sample_items, regular_item
+  end
+
+  test "sample_count returns count of sample items" do
+    cart = Cart.create
+
+    # Create sample-eligible variants
+    3.times do |i|
+      variant = ProductVariant.create!(
+        product: products(:one),
+        name: "Sample Variant #{i}",
+        sku: "SAMPLE-COUNT-TEST-#{i}",
+        price: 10.0,
+        sample_eligible: true,
+        active: true
+      )
+      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+    end
+
+    assert_equal 3, cart.sample_count
+  end
+
+  test "only_samples? returns true when cart has only sample items" do
+    cart = Cart.create
+
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Only Samples Test",
+      sku: "ONLY-SAMPLES-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
+
+    assert cart.only_samples?
+  end
+
+  test "only_samples? returns false when cart has paid items" do
+    cart = Cart.create
+
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Mixed Cart Sample",
+      sku: "MIXED-SAMPLE-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    regular_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Mixed Cart Regular",
+      sku: "MIXED-REGULAR-TEST-1",
+      price: 20.0,
+      sample_eligible: false,
+      active: true
+    )
+
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
+    cart.cart_items.create!(product_variant: regular_variant, quantity: 1, price: 20.0)
+
+    assert_not cart.only_samples?
+  end
+
+  test "only_samples? returns false for empty cart" do
+    cart = Cart.create
+
+    assert_not cart.only_samples?
+  end
+
+  test "at_sample_limit? returns true when sample_count equals SAMPLE_LIMIT" do
+    cart = Cart.create
+
+    Cart::SAMPLE_LIMIT.times do |i|
+      variant = ProductVariant.create!(
+        product: products(:one),
+        name: "Limit Test Variant #{i}",
+        sku: "LIMIT-TEST-#{i}",
+        price: 10.0,
+        sample_eligible: true,
+        active: true
+      )
+      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+    end
+
+    assert cart.at_sample_limit?
+  end
+
+  test "at_sample_limit? returns false when under limit" do
+    cart = Cart.create
+
+    2.times do |i|
+      variant = ProductVariant.create!(
+        product: products(:one),
+        name: "Under Limit Variant #{i}",
+        sku: "UNDER-LIMIT-#{i}",
+        price: 10.0,
+        sample_eligible: true,
+        active: true
+      )
+      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+    end
+
+    assert_not cart.at_sample_limit?
+  end
 end

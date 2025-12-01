@@ -19,6 +19,8 @@
 #   cart.total_amount         # Final total with VAT
 #
 class Cart < ApplicationRecord
+  SAMPLE_LIMIT = 5
+
   belongs_to :user, optional: true
 
   has_many :cart_items, dependent: :destroy
@@ -64,5 +66,28 @@ class Cart < ApplicationRecord
     @items_count = nil
     @subtotal_amount = nil
     super
+  end
+
+  # Sample tracking methods
+
+  # Returns cart items for sample-eligible variants
+  def sample_items
+    cart_items.joins(:product_variant)
+              .where(product_variants: { sample_eligible: true })
+  end
+
+  # Returns count of sample items in cart
+  def sample_count
+    sample_items.count
+  end
+
+  # Returns true if cart contains only sample items (no paid products)
+  def only_samples?
+    cart_items.any? && cart_items.where("price > 0").none?
+  end
+
+  # Returns true if cart has reached the sample limit
+  def at_sample_limit?
+    sample_count >= SAMPLE_LIMIT
   end
 end

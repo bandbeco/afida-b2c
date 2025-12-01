@@ -3,7 +3,11 @@ Rails.application.routes.draw do
 
   get "shop", to: "pages#shop"
   get "branding", to: "pages#branding"
-  get "samples", to: "pages#samples"
+  resources :samples, only: [ :index ] do
+    collection do
+      get ":category_slug", action: :category, as: :category
+    end
+  end
   get "about", to: "pages#about"
   get "contact", to: "pages#contact"
   get "terms-conditions", to: "pages#terms_conditions"

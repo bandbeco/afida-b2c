@@ -1,0 +1,38 @@
+<%# Sticky sample counter showing selection progress %>
+<%
+  sample_count ||= 0
+  sample_limit = Cart::SAMPLE_LIMIT
+  at_limit = sample_count >= sample_limit
+%>
+
+<div id="sample_counter"
+     class="<%= sample_count > 0 ? '' : 'hidden' %> sticky top-0 z-40 bg-primary text-primary-content shadow-lg"
+     data-controller="sample-counter"
+     data-sample-counter-count-value="<%= sample_count %>"
+     data-sample-counter-limit-value="<%= sample_limit %>">
+  <div class="container mx-auto px-4 py-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="badge badge-lg <%= at_limit ? 'badge-warning' : 'badge-secondary' %>"
+             data-sample-counter-target="badge">
+          <%= sample_count %> / <%= sample_limit %>
+        </div>
+        <span class="font-medium" data-sample-counter-target="message">
+          <% if at_limit %>
+            Sample limit reached
+          <% else %>
+            samples selected
+          <% end %>
+        </span>
+      </div>
+
+      <%= link_to cart_path, class: "btn btn-sm btn-secondary gap-2" do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        View Cart
+      <% end %>
+    </div>
+  </div>
+</div>

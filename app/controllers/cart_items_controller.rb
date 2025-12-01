@@ -12,6 +12,9 @@ class CartItemsController < ApplicationController
     if params[:configuration].present?
       # Configured product (branded cups)
       create_configured_cart_item
+    elsif params[:sample].present?
+      # Sample request
+      create_sample_cart_item
     else
       # Standard product
       create_standard_cart_item
@@ -44,11 +47,21 @@ class CartItemsController < ApplicationController
 
   # DELETE /cart/cart_items/:id
   def destroy
-    product_name = @cart_item.product_variant.display_name
+    @variant = @cart_item.product_variant
+    product_name = @variant.display_name
+    is_sample_removal = request.referer&.include?("/samples") || params[:turbo_frame]&.include?("sample")
     @cart_item.destroy
 
     respond_to do |format|
-      format.turbo_stream
+      format.turbo_stream do
+        if is_sample_removal
+          @sample_count = @cart.sample_count
+          @at_limit = @cart.at_sample_limit?
+          render :destroy_sample
+        else
+          render :destroy
+        end
+      end
       format.html { redirect_to cart_path, notice: "#{product_name} removed from cart.", status: :see_other }
     end
   end
@@ -124,10 +137,64 @@ class CartItemsController < ApplicationController
     end
   end
 
+  def create_sample_cart_item
+    @variant = ProductVariant.find(params[:product_variant_id])
+
+    # Validate sample eligibility
+    unless @variant.sample_eligible?
+      return respond_with_sample_error("This variant is not available as a sample")
+    end
+
+    # Check sample limit
+    if @cart.at_sample_limit?
+      return respond_with_sample_error("Sample limit reached (#{Cart::SAMPLE_LIMIT} maximum)")
+    end
+
+    # Check if sample already in cart (allow regular item to coexist)
+    if @cart.cart_items.exists?(product_variant: @variant, price: 0)
+      return respond_with_sample_error("This sample is already in your cart")
+    end
+
+    @cart_item = @cart.cart_items.build(
+      product_variant: @variant,
+      quantity: 1,
+      price: 0
+    )
+
+    if @cart_item.save
+      @sample_count = @cart.sample_count
+      @at_limit = @cart.at_sample_limit?
+
+      respond_to do |format|
+        format.turbo_stream { render :create_sample }
+        format.html { redirect_to samples_path, notice: "Sample added to cart" }
+      end
+    else
+      respond_with_sample_error(@cart_item.errors.full_messages.join(", "))
+    end
+  end
+
+  def respond_with_sample_error(message)
+    @error_message = message
+    @in_cart = @cart.cart_items.exists?(product_variant: @variant)
+    @at_limit = @cart.at_sample_limit?
+
+    respond_to do |format|
+      format.turbo_stream { render :create_sample_error }
+      format.html { redirect_to samples_path, alert: message }
+    end
+  end
+
   def create_standard_cart_item
     # Existing logic for standard products
     product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
-    @cart_item = @cart.cart_items.find_or_initialize_by(product_variant: product_variant)
+
+    # Find existing non-sample cart item for this variant (samples have price = 0)
+    # We need to find the regular item (price > 0), not the sample
+    @cart_item = @cart.cart_items.where(product_variant: product_variant).where.not(price: 0).first
+
+    # If no regular item exists, create a new one
+    @cart_item ||= @cart.cart_items.build(product_variant: product_variant)
 
     if @cart_item.new_record?
       @cart_item.quantity = cart_item_params[:quantity].to_i || 1

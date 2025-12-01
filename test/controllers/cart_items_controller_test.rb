@@ -341,6 +341,197 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_nil cart_item.calculated_price
   end
 
+  # Sample Cart Items Tests
+  test "adds sample to cart with price zero" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    assert_difference "CartItem.count", 1 do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        sample: true
+      }
+    end
+
+    cart_item = CartItem.last
+    assert_equal sample_variant, cart_item.product_variant
+    assert_equal 0, cart_item.price
+    assert_equal 1, cart_item.quantity
+  end
+
+  test "rejects sample request for non-eligible variant" do
+    non_sample_variant = product_variants(:one)
+
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_variant_id: non_sample_variant.id,
+        sample: true
+      }
+    end
+
+    assert_redirected_to samples_path
+    assert_match /not available as a sample/, flash[:alert]
+  end
+
+  test "rejects sample when at sample limit" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add 5 samples to reach limit
+    Cart::SAMPLE_LIMIT.times do |i|
+      variant = ProductVariant.create!(
+        product: sample_variant.product,
+        name: "Sample Variant #{i}",
+        sku: "SAMPLE-#{i}-#{SecureRandom.hex(4)}",
+        price: 10.0,
+        stock_quantity: 100,
+        active: true,
+        sample_eligible: true
+      )
+      @cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+    end
+
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        sample: true
+      }
+    end
+
+    assert_redirected_to samples_path
+    assert_match /Sample limit reached/, flash[:alert]
+  end
+
+  test "rejects duplicate sample in cart" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add sample first time
+    post cart_cart_items_path, params: {
+      product_variant_id: sample_variant.id,
+      sample: true
+    }
+
+    # Try to add same sample again
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        sample: true
+      }
+    end
+
+    assert_redirected_to samples_path
+    assert_match /already in your cart/, flash[:alert]
+  end
+
+  test "removes sample from cart" do
+    sample_variant = product_variants(:sample_cup_8oz)
+    cart_item = @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
+
+    assert_difference "CartItem.count", -1 do
+      delete cart_cart_item_path(cart_item)
+    end
+  end
+
+  # Tests for sample + regular item coexistence
+  test "allows adding regular item when sample of same variant exists" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # First add as sample
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
+
+    # Then add as regular item - should create a new cart item
+    assert_difference "CartItem.count", 1 do
+      post cart_cart_items_path, params: {
+        cart_item: {
+          variant_sku: sample_variant.sku,
+          quantity: 2
+        }
+      }
+    end
+
+    # Verify both items exist
+    assert_equal 2, @cart.cart_items.where(product_variant: sample_variant).count
+
+    sample_item = @cart.cart_items.find_by(product_variant: sample_variant, price: 0)
+    regular_item = @cart.cart_items.where(product_variant: sample_variant).where.not(price: 0).first
+
+    assert sample_item.present?, "Sample item should exist"
+    assert regular_item.present?, "Regular item should exist"
+    assert_equal 1, sample_item.quantity
+    assert_equal 2, regular_item.quantity
+    assert regular_item.price > 0
+  end
+
+  test "allows adding sample when regular item of same variant exists" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # First add as regular item
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 2,
+      price: sample_variant.price
+    )
+
+    # Then add as sample - should create a new cart item
+    assert_difference "CartItem.count", 1 do
+      post cart_cart_items_path, params: {
+        product_variant_id: sample_variant.id,
+        sample: true
+      }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    end
+
+    # Verify both items exist
+    assert_equal 2, @cart.cart_items.where(product_variant: sample_variant).count
+
+    sample_item = @cart.cart_items.find_by(product_variant: sample_variant, price: 0)
+    regular_item = @cart.cart_items.where(product_variant: sample_variant).where.not(price: 0).first
+
+    assert sample_item.present?, "Sample item should exist"
+    assert regular_item.present?, "Regular item should exist"
+  end
+
+  test "increments regular item quantity when both sample and regular exist" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add sample
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
+
+    # Add regular item
+    @cart.cart_items.create!(
+      product_variant: sample_variant,
+      quantity: 2,
+      price: sample_variant.price
+    )
+
+    # Add more of the regular item - should increment existing regular, not create new
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        cart_item: {
+          variant_sku: sample_variant.sku,
+          quantity: 3
+        }
+      }
+    end
+
+    # Sample should be unchanged
+    sample_item = @cart.cart_items.find_by(product_variant: sample_variant, price: 0)
+    assert_equal 1, sample_item.quantity
+
+    # Regular item should be incremented
+    regular_item = @cart.cart_items.where(product_variant: sample_variant).where.not(price: 0).first
+    assert_equal 5, regular_item.quantity # 2 + 3
+  end
+
   private
 
   def sign_in_as(user)

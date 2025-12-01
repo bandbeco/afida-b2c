@@ -450,4 +450,60 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_not variant2.valid?
     assert_includes variant2.errors[:gtin], "has already been taken"
   end
+
+  # Sample eligibility tests
+  test "sample_eligible scope returns only sample-eligible variants" do
+    # Create sample-eligible variant
+    sample_variant = ProductVariant.create!(
+      product: @product,
+      name: "Sample Eligible",
+      sku: "SAMPLE-ELIGIBLE-1",
+      price: 10.0,
+      active: true,
+      sample_eligible: true
+    )
+
+    # Create non-sample-eligible variant
+    non_sample_variant = ProductVariant.create!(
+      product: @product,
+      name: "Not Sample Eligible",
+      sku: "NOT-SAMPLE-1",
+      price: 10.0,
+      active: true,
+      sample_eligible: false
+    )
+
+    eligible_variants = ProductVariant.unscoped.sample_eligible
+    assert_includes eligible_variants, sample_variant
+    assert_not_includes eligible_variants, non_sample_variant
+  end
+
+  test "sample_eligible defaults to false" do
+    variant = ProductVariant.create!(
+      product: @product,
+      name: "New Variant",
+      sku: "NEW-VAR-1",
+      price: 10.0
+    )
+
+    assert_equal false, variant.sample_eligible
+  end
+
+  test "effective_sample_sku returns sample_sku when present" do
+    @variant.update!(sample_eligible: true, sample_sku: "CUSTOM-SAMPLE-SKU")
+
+    assert_equal "CUSTOM-SAMPLE-SKU", @variant.effective_sample_sku
+  end
+
+  test "effective_sample_sku derives from sku when sample_sku is blank" do
+    @variant.update!(sample_eligible: true, sample_sku: nil)
+
+    assert_equal "SAMPLE-#{@variant.sku}", @variant.effective_sample_sku
+  end
+
+  test "effective_sample_sku derives from sku when sample_sku is empty string" do
+    @variant.update!(sample_eligible: true, sample_sku: "")
+
+    assert_equal "SAMPLE-#{@variant.sku}", @variant.effective_sample_sku
+  end
 end

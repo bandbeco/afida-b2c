@@ -1,0 +1,10 @@
+<%# Turbo Stream response for sample add error %>
+
+<%= turbo_stream.replace dom_id(@variant, :sample),
+      partial: "samples/variant_card",
+      locals: {
+        variant: @variant,
+        in_cart: @in_cart,
+        at_limit: @at_limit,
+        error: @error_message
+      } %>

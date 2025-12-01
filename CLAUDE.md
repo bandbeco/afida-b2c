@@ -73,6 +73,16 @@ rails c                 # Shorthand
 - Swiper for carousels
 - Active Storage for file uploads
 
+**⚠️ IMPORTANT: Registering Stimulus Controllers**:
+When creating a new Stimulus controller, you MUST register it in `app/frontend/entrypoints/application.js`. Add it to the `lazyControllers` object:
+```javascript
+const lazyControllers = {
+  // ... existing controllers
+  "your-controller": () => import("../javascript/controllers/your_controller")
+}
+```
+Controllers will NOT work if they are not registered. The lazy loading system automatically loads controllers when their `data-controller` attribute is detected in the DOM.
+
 **Styling**:
 - TailwindCSS 4 for utility-first styling
 - DaisyUI component library for pre-built UI components
@@ -554,6 +564,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items` tables) (005-quick-add-to-cart)
 - Ruby 3.3.0+ / Rails 8.x + Rails Engine (SeoAiEngine), Anthropic Claude API (anthropic ~> 1.15), Google Search Console API (google-apis-webmasters_v3 ~> 0.6), SerpAPI (google_search_results ~> 2.2) (006-ai-seo-engine)
 - PostgreSQL 14+ (6 new engine tables: seo_ai_opportunities, seo_ai_content_briefs, seo_ai_content_drafts, seo_ai_content_items, seo_ai_performance_snapshots, seo_ai_budget_trackings) (006-ai-seo-engine)
+- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionView), Hotwire (Turbo Frames + Stimulus), TailwindCSS 4, DaisyUI, Stripe Checkou (011-variant-samples)
+- PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items`, `orders`, `order_items` tables) (011-variant-samples)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

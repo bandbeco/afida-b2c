@@ -8,7 +8,14 @@
       <% Current.cart.cart_items.includes(:product, product_variant: [:product_photo_attachment, :lifestyle_photo_attachment]).each do |cart_item| %>
         <% if cart_item.product.present? && cart_item.product_variant.present? %>
           <div class="flex items-center space-x-3 p-3 bg-base-100 rounded-lg">
-            <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-12 h-12 rounded") %>
+            <div class="relative flex-shrink-0">
+              <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-12 h-12 rounded") %>
+              <% if cart_item.sample? %>
+                <span class="absolute bottom-0 left-0 right-0 bg-primary text-primary-content text-[9px] text-center py-px rounded-b">
+                  SAMPLE
+                </span>
+              <% end %>
+            </div>
 
             <div class="flex-1 min-w-0">
               <p class="text-sm font-medium truncate"><%= cart_item.product.name %></p>
@@ -20,8 +27,20 @@
                 <% end %>
               </p>
               <div class="flex justify-between items-center mt-1">
-                <span class="text-xs"><%= format_quantity_display(cart_item) %></span>
-                <span class="text-sm font-medium"><%= number_to_currency(cart_item.subtotal_amount) %></span>
+                <span class="text-xs">
+                  <% if cart_item.sample? %>
+                    1 unit
+                  <% else %>
+                    <%= format_quantity_display(cart_item) %>
+                  <% end %>
+                </span>
+                <span class="text-sm font-medium">
+                  <% if cart_item.sample? %>
+                    Free
+                  <% else %>
+                    <%= number_to_currency(cart_item.subtotal_amount) %>
+                  <% end %>
+                </span>
               </div>
             </div>
           </div>
