@@ -1,7 +1,7 @@
 <%# Category card with expandable variants via Turbo Frame %>
 <% selected_count ||= 0 %>
 
-<div class="card bg-base-100 shadow-lg <%= selected_count > 0 ? 'ring-2 ring-success/30' : '' %>"
+<div class="card bg-base-100 shadow-lg"
      id="<%= dom_id(category, :sample_card) %>"
      data-controller="category-expand"
      data-category-expand-url-value="<%= category_samples_path(category.slug) %>"

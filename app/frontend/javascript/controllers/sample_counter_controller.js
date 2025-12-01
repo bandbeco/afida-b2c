@@ -61,7 +61,7 @@ export default class extends Controller {
       if (this.countValue >= this.limitValue) {
         this.messageTarget.textContent = "Sample limit reached"
       } else {
-        this.messageTarget.textContent = "samples selected"
+        this.messageTarget.textContent = "Samples selected"
       }
     }
   }
