@@ -1,5 +1,40 @@
-<% content_for :title, "Free Samples | Try Before You Buy | Afida" %>
-<% content_for :meta_description, "Request up to 5 free samples of our eco-friendly catering supplies. Try our cups, lids, food containers and more before committing to a bulk purchase. UK delivery £7.50." %>
+<% content_for :title, "Request Free Product Samples | Afida" %>
+<% content_for :meta_description, "Request up to 5 free samples of our eco-friendly catering supplies. Try our cups, lids, food containers and more before committing to a bulk order. UK delivery just £7.50." %>
+
+<%= content_for :head do %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I request samples?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Browse our sample collection, select up to 5 products you'd like to try, and proceed to checkout. Samples are completely free - you only pay £7.50 for delivery."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many free samples can I request?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can request up to 5 free samples per order. This allows you to test different products before committing to a bulk purchase."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a cost for samples?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The samples themselves are completely free. You only need to cover the delivery cost of £7.50. If you add samples to a regular order, they ship free with your purchase."
+          }
+        }
+      ]
+    }.to_json) %>
+  </script>
+<% end %>
 
 <div class="min-h-screen bg-base-100">
   <!-- Header -->
