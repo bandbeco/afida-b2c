@@ -15,6 +15,9 @@ application.register("search", SearchController)
 import CartDrawerController from "../javascript/controllers/cart_drawer_controller"
 application.register("cart-drawer", CartDrawerController)
 
+import AutoDismissController from "../javascript/controllers/auto_dismiss_controller"
+application.register("auto-dismiss", AutoDismissController)
+
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
   "carousel": () => import("../javascript/controllers/carousel_controller"),

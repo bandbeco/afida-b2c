@@ -9,7 +9,7 @@
 %>
 
 <%= turbo_frame_tag dom_id(variant, :sample) do %>
-  <div class="card relative <%= in_cart ? 'bg-success/10 border-2 border-success ring-2 ring-success/20' : 'bg-base-100 border border-base-200' %> <%= error ? 'border-error' : '' %> hover:shadow-md transition-all">
+  <div class="card relative overflow-hidden <%= in_cart ? 'bg-success/10 border-2 border-success ring-2 ring-success/20' : 'bg-base-100 border border-base-200' %> hover:shadow-md transition-all">
     <!-- Selected Badge Overlay -->
     <% if in_cart %>
       <div class="absolute top-2 right-2 z-10">
@@ -19,6 +19,19 @@
           </svg>
           Selected
         </div>
+      </div>
+    <% end %>
+
+    <% if error %>
+      <!-- Warning Message - slides in from right, out to left -->
+      <div class="absolute top-2 right-2 left-2 z-20 bg-warning/90 text-warning-content rounded-lg text-xs py-2 px-3 flex items-center gap-2 shadow-lg"
+           data-controller="auto-dismiss"
+           data-auto-dismiss-delay-value="3000"
+           data-auto-dismiss-animation-value="slide-left">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+        <span><%= error %></span>
       </div>
     <% end %>
 
@@ -47,23 +60,13 @@
         <%= variant.name %>
       </p>
 
-      <% if error %>
-        <!-- Error Message -->
-        <div class="alert alert-warning text-xs py-2 px-3 mt-2">
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-          </svg>
-          <span><%= error %></span>
-        </div>
-      <% end %>
-
       <!-- Action Button -->
       <div class="card-actions justify-center mt-2">
         <% if in_cart %>
           <%# Already in cart - show remove option %>
           <%= button_to cart_cart_item_path(cart_item),
                         method: :delete,
-                        class: "btn btn-error btn-outline btn-sm w-full gap-2",
+                        class: "btn btn-error btn-sm w-full gap-2",
                         data: { turbo_frame: dom_id(variant, :sample) } do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>

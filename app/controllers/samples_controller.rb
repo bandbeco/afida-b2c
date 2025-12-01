@@ -41,7 +41,7 @@ class SamplesController < ApplicationController
       .where(products: { category_id: @category.id, active: true })
       .where(active: true)
       .includes(product: { product_photo_attachment: :blob })
-      .order("products.name", :name)
+      .order(Arel.sql("products.name, (NULLIF(REGEXP_REPLACE(product_variants.name, '[^0-9].*', '', 'g'), ''))::integer NULLS LAST, product_variants.name"))
 
     # For sample counter and variant cards
     @sample_count = Current.cart&.sample_count || 0
