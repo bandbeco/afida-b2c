@@ -28,12 +28,14 @@ export default class extends Controller {
   }
 
   // Temporary height buffer for initial expansion before Turbo Frame loads
-  // Provides space for loading spinner; actual height recalculated after load
-  static INITIAL_EXPAND_BUFFER = 200
+  // Provides space for loading spinner and expected content; actual height recalculated after load
+  // 500px accommodates ~8-10 variant cards in a grid before recalculation
+  static INITIAL_EXPAND_BUFFER = 500
 
   connect() {
-    // Bind the frame load handler to this instance
+    // Bind event handlers to this instance
     this.handleFrameLoad = this.handleFrameLoad.bind(this)
+    this.handleFrameError = this.handleFrameError.bind(this)
   }
 
   toggle() {
@@ -49,8 +51,10 @@ export default class extends Controller {
     if (!this.loadedValue && this.hasContentTarget) {
       const frame = this.contentTarget.querySelector("turbo-frame")
       if (frame && this.urlValue) {
-        // Listen for this specific frame to finish loading
+        // Listen for frame events
         frame.addEventListener("turbo:frame-load", this.handleFrameLoad, { once: true })
+        frame.addEventListener("turbo:frame-missing", this.handleFrameError, { once: true })
+        frame.addEventListener("turbo:fetch-request-error", this.handleFrameError, { once: true })
         frame.src = this.urlValue
         this.loadedValue = true
       }
@@ -97,12 +101,77 @@ export default class extends Controller {
     }
   }
 
+  // Handle Turbo Frame load errors (network failures, 404s, etc.)
+  handleFrameError(event) {
+    console.error("Failed to load category content:", event)
+
+    // Allow retry on next expansion
+    this.loadedValue = false
+
+    // Show error message in the frame using safe DOM methods
+    if (this.hasContentTarget) {
+      const frame = this.contentTarget.querySelector("turbo-frame")
+      if (frame) {
+        // Clear existing content safely
+        frame.replaceChildren()
+
+        // Build error UI with DOM methods
+        const container = document.createElement("div")
+        container.className = "text-center py-8 text-base-content/60"
+
+        const message = document.createElement("p")
+        message.className = "mb-2"
+        message.textContent = "Failed to load samples"
+
+        const retryButton = document.createElement("button")
+        retryButton.className = "btn btn-sm btn-outline"
+        retryButton.textContent = "Try again"
+        retryButton.dataset.action = "click->category-expand#retryLoad"
+
+        container.appendChild(message)
+        container.appendChild(retryButton)
+        frame.appendChild(container)
+      }
+      // Recalculate height for error message
+      requestAnimationFrame(() => {
+        this.contentTarget.style.maxHeight = this.contentTarget.scrollHeight + "px"
+      })
+    }
+  }
+
+  // Retry loading after an error
+  retryLoad(event) {
+    event.stopPropagation() // Prevent toggle from triggering
+    if (this.hasContentTarget) {
+      const frame = this.contentTarget.querySelector("turbo-frame")
+      if (frame && this.urlValue) {
+        // Show loading spinner using safe DOM methods
+        frame.replaceChildren()
+        const spinnerContainer = document.createElement("div")
+        spinnerContainer.className = "flex justify-center py-8"
+        const spinner = document.createElement("span")
+        spinner.className = "loading loading-spinner loading-md"
+        spinnerContainer.appendChild(spinner)
+        frame.appendChild(spinnerContainer)
+
+        // Re-attach event listeners and load
+        frame.addEventListener("turbo:frame-load", this.handleFrameLoad, { once: true })
+        frame.addEventListener("turbo:frame-missing", this.handleFrameError, { once: true })
+        frame.addEventListener("turbo:fetch-request-error", this.handleFrameError, { once: true })
+        frame.src = this.urlValue
+        this.loadedValue = true
+      }
+    }
+  }
+
   // Cleanup when controller disconnects
   disconnect() {
     if (this.hasContentTarget) {
       const frame = this.contentTarget.querySelector("turbo-frame")
       if (frame) {
         frame.removeEventListener("turbo:frame-load", this.handleFrameLoad)
+        frame.removeEventListener("turbo:frame-missing", this.handleFrameError)
+        frame.removeEventListener("turbo:fetch-request-error", this.handleFrameError)
       }
     }
   }
