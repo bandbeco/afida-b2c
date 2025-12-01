@@ -29,7 +29,7 @@
   <div class="overflow-hidden transition-all duration-300"
        data-category-expand-target="content"
        style="max-height: 0;">
-    <%= turbo_frame_tag "category_#{category.id}" do %>
+    <%= turbo_frame_tag dom_id(category) do %>
       <!-- Content loaded via Turbo Frame when expanded -->
       <div class="p-6 pt-0">
         <div class="flex justify-center py-8">

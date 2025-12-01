@@ -1,4 +1,4 @@
-<%# Individual variant card for sample selection %>
+<%# Individual variant card for sample selection - entire card is clickable %>
 <%
   in_cart ||= false
   at_limit ||= false
@@ -8,19 +8,20 @@
   cart_item = Current.cart&.cart_items&.find_by(product_variant: variant, price: 0) if in_cart
 %>
 
-<%= turbo_frame_tag dom_id(variant, :sample) do %>
-  <div class="card relative overflow-hidden <%= in_cart ? 'bg-success/10 border-2 border-success ring-2 ring-success/20' : 'bg-base-100 border border-base-200' %> hover:shadow-md transition-all">
-    <!-- Selected Badge Overlay -->
-    <% if in_cart %>
-      <div class="absolute top-2 right-2 z-10">
-        <div class="badge badge-success gap-1 shadow-md">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+<%= turbo_frame_tag dom_id(variant, :sample), class: "block" do %>
+  <div class="card relative cursor-pointer <%= in_cart ? 'bg-success/10 border-2 border-success' : 'bg-base-100 border-2 border-base-200' %> hover:shadow-lg transition-all [background-clip:padding-box]"
+       data-controller="clickable-card"
+       data-action="click->clickable-card#click">
+    <!-- Selection Checkbox -->
+    <div class="absolute top-2 right-2 z-10">
+      <div class="w-6 h-6 rounded-full flex items-center justify-center <%= in_cart ? 'bg-success text-success-content' : 'bg-base-200 border border-base-300' %>">
+        <% if in_cart %>
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
           </svg>
-          Selected
-        </div>
+        <% end %>
       </div>
-    <% end %>
+    </div>
 
     <% if error %>
       <!-- Warning Message - slides in from right, out to left -->
@@ -67,7 +68,7 @@
           <%= button_to cart_cart_item_path(cart_item),
                         method: :delete,
                         class: "btn btn-error btn-sm w-full gap-2",
-                        data: { turbo_frame: dom_id(variant, :sample) } do %>
+                        data: { turbo_frame: dom_id(variant, :sample), clickable_card_target: "button" } do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -78,7 +79,7 @@
           <%= button_to cart_cart_items_path,
                         class: "btn btn-primary btn-outline btn-sm w-full",
                         params: { product_variant_id: variant.id, sample: true },
-                        data: { turbo_frame: dom_id(variant, :sample) } do %>
+                        data: { turbo_frame: dom_id(variant, :sample), clickable_card_target: "button" } do %>
             Add Sample
           <% end %>
         <% end %>

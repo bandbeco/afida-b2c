@@ -18,6 +18,9 @@ application.register("cart-drawer", CartDrawerController)
 import AutoDismissController from "../javascript/controllers/auto_dismiss_controller"
 application.register("auto-dismiss", AutoDismissController)
 
+import ClickableCardController from "../javascript/controllers/clickable_card_controller"
+application.register("clickable-card", ClickableCardController)
+
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
   "carousel": () => import("../javascript/controllers/carousel_controller"),
