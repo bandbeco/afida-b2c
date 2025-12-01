@@ -9,10 +9,10 @@ class CartItem < ApplicationRecord
   validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validate :price_must_be_positive_unless_sample
   validate :cart_sample_limit_not_exceeded, on: :create, if: :sample?
-  # Prevent duplicate cart items for the same variant at the same price
-  # The scope [:cart_id, :price] allows: sample (price=0) + regular item (price>0) for same variant
+  validate :cannot_add_sample_when_regular_exists, on: :create, if: :sample?
+  # Prevent duplicate cart items for the same variant
   # Configured products are excluded as they can have different configurations
-  validates_uniqueness_of :product_variant, scope: [ :cart_id, :price ], unless: :configured?
+  validates_uniqueness_of :product_variant, scope: :cart_id, unless: :configured?
   validates :calculated_price, presence: true, if: :configured?
   validate :design_required_for_configured_products
 
@@ -96,6 +96,15 @@ class CartItem < ApplicationRecord
 
     if cart.reload.at_sample_limit?
       errors.add(:base, "Sample limit of #{Cart::SAMPLE_LIMIT} reached")
+    end
+  end
+
+  # Prevents adding a sample when the regular item is already in cart
+  def cannot_add_sample_when_regular_exists
+    return unless cart && product_variant
+
+    if cart.cart_items.non_samples.exists?(product_variant: product_variant)
+      errors.add(:base, "You already have this product in your cart")
     end
   end
 end

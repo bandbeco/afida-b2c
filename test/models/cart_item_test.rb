@@ -63,40 +63,37 @@ class CartItemTest < ActiveSupport::TestCase
     assert cart_item2.valid?
   end
 
-  test "allows same variant as both sample and regular item in same cart" do
+  test "prevents adding sample when regular item exists in cart" do
     sample_variant = product_variants(:sample_cup_8oz)
 
-    # Add as sample (price=0)
-    sample_item = CartItem.create!(
-      cart: @cart,
-      product_variant: sample_variant,
-      quantity: 1,
-      price: 0
-    )
-
-    # Add as regular item (price>0) - should be allowed
-    regular_item = CartItem.new(
+    # Add as regular item first
+    CartItem.create!(
       cart: @cart,
       product_variant: sample_variant,
       quantity: 2,
       price: sample_variant.price
     )
 
-    assert regular_item.valid?, "Same variant at different prices should be allowed: #{regular_item.errors.full_messages}"
-    regular_item.save!
+    # Try to add as sample - should be rejected
+    sample_item = CartItem.new(
+      cart: @cart,
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0
+    )
 
-    # Verify both exist
-    assert_equal 2, @cart.cart_items.where(product_variant: sample_variant).count
+    assert_not sample_item.valid?
+    assert sample_item.errors[:base].any? { |e| e.include?("already have this product in your cart") }
   end
 
-  test "prevents duplicate samples of same variant in same cart" do
+  test "prevents duplicate of same variant in same cart" do
     sample_variant = product_variants(:sample_cup_8oz)
 
-    # Add first sample
-    CartItem.create!(cart: @cart, product_variant: sample_variant, quantity: 1, price: 0)
+    # Add first item
+    CartItem.create!(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price)
 
-    # Try to add duplicate sample - should fail uniqueness validation
-    duplicate = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: 0)
+    # Try to add duplicate - should fail uniqueness validation
+    duplicate = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price)
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:product_variant], "has already been taken"
   end
@@ -134,7 +131,7 @@ class CartItemTest < ActiveSupport::TestCase
   test "samples scope returns only price=0 items" do
     sample_variant = product_variants(:sample_cup_8oz)
 
-    # Add sample and regular items
+    # Add sample and regular items (different variants)
     @cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
     @cart.cart_items.create!(product_variant: @product_variant, quantity: 1, price: @product_variant.price)
 
@@ -146,7 +143,7 @@ class CartItemTest < ActiveSupport::TestCase
   test "non_samples scope excludes price=0 items" do
     sample_variant = product_variants(:sample_cup_8oz)
 
-    # Add sample and regular items
+    # Add sample and regular items (different variants)
     @cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
     @cart.cart_items.create!(product_variant: @product_variant, quantity: 1, price: @product_variant.price)
 

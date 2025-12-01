@@ -4,8 +4,11 @@
   at_limit ||= false
   error ||= nil
 
-  # Find cart item if in cart (for remove button)
-  cart_item = Current.cart&.cart_items&.find_by(product_variant: variant, price: 0) if in_cart
+  # Find sample cart item if in cart (for remove button)
+  # Only samples (price: 0) can be removed from this page
+  cart_item = Current.cart&.cart_items&.samples&.find_by(product_variant: variant) if in_cart
+  is_sample_in_cart = cart_item.present?
+  is_regular_in_cart = in_cart && !is_sample_in_cart
 %>
 
 <%= turbo_frame_tag dom_id(variant, :sample), class: "block" do %>
@@ -63,8 +66,8 @@
 
       <!-- Action Button -->
       <div class="card-actions justify-center mt-2">
-        <% if in_cart %>
-          <%# Already in cart - show remove option %>
+        <% if is_sample_in_cart %>
+          <%# Sample in cart - show remove option %>
           <%= button_to cart_cart_item_path(cart_item),
                         method: :delete,
                         class: "btn btn-error btn-sm w-full gap-2",
@@ -74,6 +77,11 @@
             </svg>
             Remove
           <% end %>
+        <% elsif is_regular_in_cart %>
+          <%# Regular item in cart - show disabled state %>
+          <button class="btn btn-disabled btn-sm w-full" disabled>
+            In Cart
+          </button>
         <% else %>
           <%# Add sample button - always enabled, server validates limit %>
           <%= button_to cart_cart_items_path,

@@ -194,6 +194,9 @@ class CartItemsController < ApplicationController
     # Existing logic for standard products
     product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
 
+    # If sample exists for this variant, remove it (regular item replaces sample)
+    @cart.cart_items.samples.where(product_variant: product_variant).destroy_all
+
     # Find existing non-sample cart item for this variant
     @cart_item = @cart.cart_items.non_samples.find_by(product_variant: product_variant)
 
