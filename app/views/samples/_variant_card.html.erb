@@ -5,17 +5,29 @@
   error ||= nil
 
   # Find cart item if in cart (for remove button)
-  cart_item = Current.cart&.cart_items&.find_by(product_variant: variant) if in_cart
+  cart_item = Current.cart&.cart_items&.find_by(product_variant: variant, price: 0) if in_cart
 %>
 
 <%= turbo_frame_tag dom_id(variant, :sample) do %>
-  <div class="card bg-base-100 border <%= error ? 'border-error' : 'border-base-200' %> hover:shadow-md transition-shadow">
+  <div class="card relative <%= in_cart ? 'bg-success/10 border-2 border-success ring-2 ring-success/20' : 'bg-base-100 border border-base-200' %> <%= error ? 'border-error' : '' %> hover:shadow-md transition-all">
+    <!-- Selected Badge Overlay -->
+    <% if in_cart %>
+      <div class="absolute top-2 right-2 z-10">
+        <div class="badge badge-success gap-1 shadow-md">
+          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
+          </svg>
+          Selected
+        </div>
+      </div>
+    <% end %>
+
     <!-- Product Image -->
     <figure class="px-4 pt-4">
       <% photo = variant.primary_photo || variant.product.primary_photo %>
       <% if photo %>
         <%= image_tag photo.variant(resize_to_fill: [200, 200]),
-                      class: "rounded-lg w-full h-32 object-cover",
+                      class: "rounded-lg w-full h-32 object-cover #{in_cart ? 'opacity-90' : ''}",
                       alt: variant.display_name %>
       <% else %>
         <div class="w-full h-32 bg-base-200 rounded-lg flex items-center justify-center">
@@ -37,29 +49,29 @@
 
       <% if error %>
         <!-- Error Message -->
-        <p class="text-xs text-error mt-1"><%= error %></p>
+        <div class="alert alert-warning text-xs py-2 px-3 mt-2">
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          <span><%= error %></span>
+        </div>
       <% end %>
 
       <!-- Action Button -->
       <div class="card-actions justify-center mt-2">
         <% if in_cart %>
-          <%# Already in cart - show "Added" with remove option %>
+          <%# Already in cart - show remove option %>
           <%= button_to cart_cart_item_path(cart_item),
                         method: :delete,
-                        class: "btn btn-success btn-sm w-full gap-2",
+                        class: "btn btn-error btn-outline btn-sm w-full gap-2",
                         data: { turbo_frame: dom_id(variant, :sample) } do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
-            Added
+            Remove
           <% end %>
-        <% elsif at_limit %>
-          <%# At sample limit - disabled button %>
-          <button class="btn btn-disabled btn-sm w-full" disabled>
-            Limit Reached
-          </button>
         <% else %>
-          <%# Can add sample %>
+          <%# Add sample button - always enabled, server validates limit %>
           <%= button_to cart_cart_items_path,
                         class: "btn btn-primary btn-outline btn-sm w-full",
                         params: { product_variant_id: variant.id, sample: true },

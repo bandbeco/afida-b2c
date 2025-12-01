@@ -10,5 +10,10 @@
       partial: "samples/sample_counter",
       locals: { sample_count: @sample_count } %>
 
+<%# Update category header with new selected count %>
+<%= turbo_stream.replace dom_id(@category, :sample_header),
+      partial: "samples/category_header",
+      locals: { category: @category, selected_count: @category_selected_count } %>
+
 <%# Update cart counter %>
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>

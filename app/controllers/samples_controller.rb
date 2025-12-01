@@ -18,6 +18,16 @@ class SamplesController < ApplicationController
 
     # For sample counter
     @sample_count = Current.cart&.sample_count || 0
+
+    # Get selected sample variant IDs with their category IDs for showing selection counts
+    @selected_samples_by_category = {}
+    if Current.cart
+      Current.cart.cart_items.where(price: 0).includes(product_variant: :product).each do |item|
+        category_id = item.product_variant.product.category_id
+        @selected_samples_by_category[category_id] ||= 0
+        @selected_samples_by_category[category_id] += 1
+      end
+    end
   end
 
   # GET /samples/:category_slug
@@ -35,7 +45,8 @@ class SamplesController < ApplicationController
 
     # For sample counter and variant cards
     @sample_count = Current.cart&.sample_count || 0
-    @cart_variant_ids = Current.cart&.cart_items&.pluck(:product_variant_id) || []
+    # Only include sample cart items (price = 0), not regular items
+    @cart_variant_ids = Current.cart&.cart_items&.where(price: 0)&.pluck(:product_variant_id) || []
 
     render partial: "samples/category_variants", locals: {
       category: @category,

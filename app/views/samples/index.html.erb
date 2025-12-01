@@ -21,7 +21,9 @@
     <% if @categories.any? %>
       <div class="space-y-6">
         <% @categories.each do |category| %>
-          <%= render "samples/category_card", category: category %>
+          <%= render "samples/category_card",
+                     category: category,
+                     selected_count: @selected_samples_by_category[category.id] || 0 %>
         <% end %>
       </div>
     <% else %>

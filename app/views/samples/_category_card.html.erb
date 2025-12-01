@@ -1,13 +1,8 @@
 <%# Category card with expandable variants via Turbo Frame %>
-<%
-  # Count sample-eligible variants in this category
-  sample_count_in_category = category.products.joins(:variants)
-    .where(active: true)
-    .where(product_variants: { sample_eligible: true, active: true })
-    .count("DISTINCT product_variants.id")
-%>
+<% selected_count ||= 0 %>
 
-<div class="card bg-base-100 shadow-lg"
+<div class="card bg-base-100 shadow-lg <%= selected_count > 0 ? 'ring-2 ring-success/30' : '' %>"
+     id="<%= dom_id(category, :sample_card) %>"
      data-controller="category-expand"
      data-category-expand-url-value="<%= category_samples_path(category.slug) %>"
      data-category-expand-category-id-value="<%= category.id %>">
@@ -16,31 +11,17 @@
   <div class="card-body cursor-pointer hover:bg-base-200 transition-colors rounded-t-xl"
        data-action="click->category-expand#toggle">
     <div class="flex items-center justify-between">
-      <div class="flex items-center gap-4">
-        <% if category.image.attached? %>
-          <%= image_tag category.image.variant(resize_to_fill: [80, 80]),
-                        class: "w-20 h-20 object-cover rounded-lg",
-                        alt: category.name %>
-        <% else %>
-          <div class="w-20 h-20 bg-base-200 rounded-lg flex items-center justify-center">
-            <span class="text-3xl">📦</span>
-          </div>
-        <% end %>
+      <!-- Header content (updatable via Turbo Stream) -->
+      <%= render "samples/category_header", category: category, selected_count: selected_count %>
 
-        <div>
-          <h2 class="card-title text-xl"><%= category.name %></h2>
-          <p class="text-sm text-base-content/70">
-            <%= sample_count_in_category %> sample<%= sample_count_in_category == 1 ? "" : "s" %> available
-          </p>
-        </div>
+      <div class="flex items-center gap-3">
+        <!-- Chevron indicator -->
+        <svg class="w-6 h-6 transition-transform duration-200"
+             data-category-expand-target="chevron"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
       </div>
-
-      <!-- Chevron indicator -->
-      <svg class="w-6 h-6 transition-transform duration-200"
-           data-category-expand-target="chevron"
-           fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-      </svg>
     </div>
   </div>
 

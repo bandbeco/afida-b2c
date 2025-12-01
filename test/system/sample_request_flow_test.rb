@@ -111,8 +111,17 @@ class SampleRequestFlowTest < ApplicationSystemTestCase
     click_on @category.name
     sleep 0.5
 
-    # Buttons should show "Limit Reached" for non-added variants
-    assert_selector "button:disabled", text: "Limit Reached"
+    # Buttons should still be enabled (not disabled)
+    # When clicked, they show a warning message
+    within first(".card", text: @sample_variant.product.name) do
+      assert_selector "button", text: "Add Sample"
+      click_on "Add Sample"
+    end
+
+    sleep 0.3
+
+    # Warning message should appear on the card
+    assert_text "Sample limit reached"
   end
 
   test "view cart link in counter navigates to cart" do
