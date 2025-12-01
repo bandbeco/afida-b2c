@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_01_222900) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_01_234259) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_222900) do
     t.integer "quantity", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["cart_id", "price"], name: "index_cart_items_on_cart_id_and_price"
+    t.index ["cart_id", "product_variant_id"], name: "index_cart_items_on_cart_id_and_product_variant_id"
     t.index ["cart_id"], name: "index_cart_items_on_cart_id"
     t.index ["configuration"], name: "index_cart_items_on_configuration", using: :gin
     t.index ["product_variant_id"], name: "index_cart_items_on_product_variant_id"

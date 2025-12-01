@@ -50,7 +50,7 @@ class CartItem < ApplicationRecord
 
   # A sample is a free item (price = 0) on a sample-eligible variant
   def sample?
-    price.to_f.zero? && product_variant&.sample_eligible?
+    price&.zero? && product_variant&.sample_eligible?
   end
 
   # Pricing display methods for pack vs unit pricing
@@ -85,7 +85,7 @@ class CartItem < ApplicationRecord
   def price_must_be_positive_unless_sample
     return unless product_variant
 
-    if price.to_f == 0 && !product_variant.sample_eligible?
+    if price&.zero? && !product_variant.sample_eligible?
       errors.add(:price, "must be greater than 0")
     end
   end
