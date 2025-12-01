@@ -141,10 +141,10 @@ class CartItemsController < ApplicationController
   end
 
   def create_sample_cart_item
-    @variant = ProductVariant.find(params[:product_variant_id])
+    # Find variant ensuring it's active and sample-eligible
+    @variant = ProductVariant.active.sample_eligible.find_by(id: params[:product_variant_id])
 
-    # Validate sample eligibility
-    unless @variant.sample_eligible?
+    unless @variant
       return respond_with_sample_error("This variant is not available as a sample")
     end
 
@@ -154,7 +154,7 @@ class CartItemsController < ApplicationController
     end
 
     # Check if sample already in cart (allow regular item to coexist)
-    if @cart.cart_items.exists?(product_variant: @variant, price: 0)
+    if @cart.cart_items.samples.exists?(product_variant: @variant)
       return respond_with_sample_error("This sample is already in your cart")
     end
 
@@ -194,9 +194,8 @@ class CartItemsController < ApplicationController
     # Existing logic for standard products
     product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
 
-    # Find existing non-sample cart item for this variant (samples have price = 0)
-    # We need to find the regular item (price > 0), not the sample
-    @cart_item = @cart.cart_items.where(product_variant: product_variant).where.not(price: 0).first
+    # Find existing non-sample cart item for this variant
+    @cart_item = @cart.cart_items.non_samples.find_by(product_variant: product_variant)
 
     # If no regular item exists, create a new one
     @cart_item ||= @cart.cart_items.build(product_variant: product_variant)

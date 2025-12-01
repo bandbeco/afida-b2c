@@ -65,6 +65,7 @@ class Cart < ApplicationRecord
   def reload(*)
     @items_count = nil
     @subtotal_amount = nil
+    @sample_variant_ids = nil
     super
   end
 
@@ -79,6 +80,11 @@ class Cart < ApplicationRecord
   # Returns count of sample items in cart
   def sample_count
     sample_items.count
+  end
+
+  # Returns variant IDs of samples in cart (memoized to prevent N+1)
+  def sample_variant_ids
+    @sample_variant_ids ||= sample_items.pluck(:product_variant_id)
   end
 
   # Returns count of samples in a specific category

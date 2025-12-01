@@ -44,8 +44,8 @@ class SamplesController < ApplicationController
 
     # For sample counter and variant cards
     @sample_count = Current.cart&.sample_count || 0
-    # Only include sample cart items (price = 0), not regular items
-    @cart_variant_ids = Current.cart&.cart_items&.where(price: 0)&.pluck(:product_variant_id) || []
+    # Use memoized method to prevent N+1 query
+    @cart_variant_ids = Current.cart&.sample_variant_ids || []
 
     render partial: "samples/category_variants", locals: {
       category: @category,

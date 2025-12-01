@@ -17,6 +17,10 @@ class CartItem < ApplicationRecord
 
   before_validation :set_price_from_variant
 
+  # Scopes for filtering by item type
+  scope :samples, -> { where(price: 0) }
+  scope :non_samples, -> { where.not(price: 0) }
+
   # Calculates subtotal: price * quantity
   # For standard products: price = pack price, quantity = number of packs
   # For branded products: price = unit price, quantity = number of units
