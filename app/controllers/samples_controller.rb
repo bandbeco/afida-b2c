@@ -19,15 +19,12 @@ class SamplesController < ApplicationController
     # For sample counter
     @sample_count = Current.cart&.sample_count || 0
 
-    # Get selected sample variant IDs with their category IDs for showing selection counts
-    @selected_samples_by_category = {}
-    if Current.cart
-      Current.cart.cart_items.where(price: 0).includes(product_variant: :product).each do |item|
-        category_id = item.product_variant.product.category_id
-        @selected_samples_by_category[category_id] ||= 0
-        @selected_samples_by_category[category_id] += 1
-      end
-    end
+    # Get selected sample counts by category with a single grouped query
+    @selected_samples_by_category = Current.cart&.cart_items
+      &.where(price: 0)
+      &.joins(product_variant: :product)
+      &.group("products.category_id")
+      &.count || {}
   end
 
   # GET /samples/:category_slug
