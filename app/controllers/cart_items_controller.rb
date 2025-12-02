@@ -142,7 +142,7 @@ class CartItemsController < ApplicationController
 
   def create_sample_cart_item
     # Find variant ensuring it's active and sample-eligible
-    @variant = ProductVariant.active.sample_eligible.find_by(id: sample_params[:product_variant_id])
+    @variant = ProductVariant.active.sample_eligible.find_by(id: sample_params)
 
     unless @variant
       return respond_with_sample_error("This variant is not available as a sample")
@@ -250,6 +250,6 @@ class CartItemsController < ApplicationController
   end
 
   def sample_params
-    params.permit(:product_variant_id)
+    params.expect(:product_variant_id)
   end
 end
