@@ -47,7 +47,7 @@
                   <div class="flex -space-x-2 mb-4">
                     <% order.order_items.limit(3).each do |item| %>
                       <% if item.product_variant&.product_photo&.attached? %>
-                        <%= image_tag vite_asset_path(item.product.image), class: "h-10 w-10 object-cover rounded-full border-2 border-white", alt: item.product_name %>
+                        <%= image_tag item.product_variant.product_photo.variant(resize_to_fill: [80, 80]), class: "h-10 w-10 object-cover rounded-full border-2 border-white", alt: item.product_name %>
                       <% else %>
                         <div class="h-10 w-10 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center">
                           <span class="text-gray-400 text-xs">?</span>
