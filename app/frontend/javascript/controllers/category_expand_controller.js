@@ -27,10 +27,12 @@ export default class extends Controller {
     loaded: { type: Boolean, default: false }
   }
 
-  // Temporary height buffer for initial expansion before Turbo Frame loads
-  // Provides space for loading spinner and expected content; actual height recalculated after load
-  // 500px accommodates ~8-10 variant cards in a grid before recalculation
-  static INITIAL_EXPAND_BUFFER = 500
+  // Estimate initial height buffer based on viewport
+  // Shows roughly 2 rows of cards while loading; actual height recalculated after load
+  static get INITIAL_EXPAND_BUFFER() {
+    // Minimum 300px, maximum 600px, or ~40% of viewport height
+    return Math.min(600, Math.max(300, Math.round(window.innerHeight * 0.4)))
+  }
 
   connect() {
     // Bind event handlers to this instance
