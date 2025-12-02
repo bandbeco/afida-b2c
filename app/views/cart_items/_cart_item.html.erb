@@ -9,16 +9,16 @@
       product_url = product_path(cart_item.product, url_params)
     end
   %>
-  <div class="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-4 items-center p-3 sm:p-4 border-b hover:bg-gray-50 text-center md:text-left">
-    <div class="col-span-full md:col-span-2 flex flex-col md:flex-row items-center gap-3 sm:space-x-4">
+  <div class="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-4 items-center p-3 sm:p-4 border-b hover:bg-gray-50 text-center md:text-left">
+    <div class="col-span-full md:col-span-2 flex flex-row items-center gap-3 md:space-x-4">
       <%= link_to product_path(cart_item.product, url_params), "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
         <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow") %>
         <% if cart_item.sample? %>
           <%= render "shared/sample_badge", size: :md %>
         <% end %>
       <% end %>
-      <div class="min-w-0">
-        <%= link_to cart_item.product.name, product_url, class: "text-lg sm:text-xl font-medium text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
+      <div class="min-w-0 text-left">
+        <%= link_to cart_item.product.name, product_url, class: "text-base sm:text-xl font-medium text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
         <% if cart_item.configured? %>
           <div class="text-base text-gray-600">
             Size: <%= cart_item.configuration["size"] %>
@@ -43,90 +43,82 @@
       </div>
     </div>
 
-    <div class="text-center md:text-center text-gray-700">
-      <span class="md:hidden font-semibold">Price: </span>
-      <% if cart_item.sample? %>
-        <span class="font-medium">Free</span>
-      <% else %>
-        <%= format_price_display(cart_item) %>
-      <% end %>
-    </div>
-
-    <div class="text-center md:text-center">
-      <% if cart_item.sample? %>
-        <%# Samples are always quantity 1, no dropdown %>
-        <span class="text-gray-600">1 unit</span>
-      <% elsif cart_item.configured? %>
-        <%
-          # Branded products: offer standard quantity tiers
-          current_qty = cart_item.quantity
-          quantity_options = [1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000]
-          quantity_options << current_qty unless quantity_options.include?(current_qty)
-          quantity_options.sort!
-        %>
-        <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
-          <%= form.label :quantity, "Quantity:", class: "sr-only" %>
-          <%= form.select :quantity,
-                          options_for_select(
-                            quantity_options.map { |q| ["#{number_with_delimiter(q)} units", q] },
-                            current_qty
-                          ),
-                          {},
-                          class: "select select-sm select-bordered",
-                          onchange: "this.form.requestSubmit(); this.blur()" %>
-        <% end %>
-      <% else %>
-        <%
-          # Standard products: quantity is number of packs
-          variant = cart_item.product_variant
-          pac_size = variant.pac_size || 1
-
-          # Generate pack options (1-10 packs, plus larger quantities)
-          pack_options = (1..10).to_a
-
-          # Add larger pack quantities (30, 40, 50, 60 packs)
-          [30, 40, 50, 60].each { |p| pack_options << p }
-
-          # Always include current quantity if not in list
-          pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
-          pack_options.sort!.uniq!
-        %>
-
-        <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
-          <%= form.label :quantity, "Quantity:", class: "sr-only" %>
-          <%# Value is number of packs, display shows "X packs (Y units)" %>
-          <%= form.select :quantity,
-                          options_for_select(
-                            pack_options.map { |num_packs|
-                              total_units = num_packs * pac_size
-                              ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
-                            },
-                            cart_item.quantity
-                          ),
-                          {},
-                          class: "select select-sm select-bordered",
-                          onchange: "this.form.requestSubmit(); this.blur()" %>
-        <% end %>
-      <% end %>
-    </div>
-
-    <div class="text-center md:text-right text-gray-700">
-      <span class="md:hidden font-semibold">Total: </span>
-      <span id="cart_item_<%= cart_item.id %>_total">
+    <%# Mobile: compact 2-column grid for price/qty/total. Desktop: separate columns %>
+    <div class="col-span-full md:col-span-4 grid grid-cols-3 md:contents gap-2 items-center">
+      <div class="text-left md:text-center text-gray-700">
+        <div class="text-xs text-gray-500 md:hidden">Price</div>
         <% if cart_item.sample? %>
           <span class="font-medium">Free</span>
         <% else %>
-          <%= number_to_currency(cart_item.line_total) %>
+          <%= format_price_display(cart_item) %>
         <% end %>
-      </span>
-    </div>
+      </div>
 
-    <div class="text-center md:text-center">
-      <%= button_to cart_cart_item_path(cart_item), method: :delete, class: "btn btn-ghost btn-sm group", local: false, title: "Remove item", data: { turbo_confirm: "Remove this item from your cart?" } do %>
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/40 group-hover:text-error transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-      <% end %>
+      <div class="text-center">
+        <div class="text-xs text-gray-500 md:hidden mb-1">Qty</div>
+        <% if cart_item.sample? %>
+          <span class="text-gray-600">1 unit</span>
+        <% elsif cart_item.configured? %>
+          <%
+            current_qty = cart_item.quantity
+            quantity_options = [1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000]
+            quantity_options << current_qty unless quantity_options.include?(current_qty)
+            quantity_options.sort!
+          %>
+          <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
+            <%= form.label :quantity, "Quantity:", class: "sr-only" %>
+            <%= form.select :quantity,
+                            options_for_select(
+                              quantity_options.map { |q| ["#{number_with_delimiter(q)} units", q] },
+                              current_qty
+                            ),
+                            {},
+                            class: "select select-xs md:select-sm select-bordered w-full",
+                            onchange: "this.form.requestSubmit(); this.blur()" %>
+          <% end %>
+        <% else %>
+          <%
+            variant = cart_item.product_variant
+            pac_size = variant.pac_size || 1
+            pack_options = (1..10).to_a
+            [30, 40, 50, 60].each { |p| pack_options << p }
+            pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
+            pack_options.sort!.uniq!
+          %>
+          <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
+            <%= form.label :quantity, "Quantity:", class: "sr-only" %>
+            <%= form.select :quantity,
+                            options_for_select(
+                              pack_options.map { |num_packs|
+                                total_units = num_packs * pac_size
+                                ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
+                              },
+                              cart_item.quantity
+                            ),
+                            {},
+                            class: "select select-xs md:select-sm select-bordered w-full",
+                            onchange: "this.form.requestSubmit(); this.blur()" %>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="text-right md:text-right text-gray-700 flex items-center justify-end gap-1">
+        <div>
+          <div class="text-xs text-gray-500 md:hidden">Total</div>
+          <span id="cart_item_<%= cart_item.id %>_total">
+            <% if cart_item.sample? %>
+              <span class="font-medium">Free</span>
+            <% else %>
+              <%= number_to_currency(cart_item.line_total) %>
+            <% end %>
+          </span>
+        </div>
+        <%= button_to cart_cart_item_path(cart_item), method: :delete, class: "btn btn-ghost btn-xs md:btn-sm group ml-1", local: false, title: "Remove item", data: { turbo_confirm: "Remove this item from your cart?" } do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 text-base-content/40 group-hover:text-error transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        <% end %>
+      </div>
     </div>
   </div>
 <% end %>
