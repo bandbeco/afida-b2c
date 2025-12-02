@@ -2,7 +2,18 @@ Order Confirmed!
 
 Thank you for your order, <%= @order.shipping_name %>!
 
-Your order ##<%= @order.order_number %> has been confirmed and is being processed.
+Your order #<%= @order.order_number %> has been confirmed and is being processed.
+
+ORDER SUMMARY
+=============
+<% @order.order_items.each do |item| %>
+<%= item.quantity %>x <%= item.product_name %><%= item.sample? ? " (Sample)" : "" %> - <%= item.sample? ? "FREE" : number_to_currency(item.line_total, unit: "£") %>
+<% end %>
+
+Subtotal: <%= number_to_currency(@order.subtotal_amount, unit: "£") %>
+Shipping: <%= number_to_currency(@order.shipping_amount, unit: "£") %>
+VAT (20%): <%= number_to_currency(@order.vat_amount, unit: "£") %>
+Total: <%= number_to_currency(@order.total_amount, unit: "£") %>
 
 We will notify you again when your order has shipped.
 

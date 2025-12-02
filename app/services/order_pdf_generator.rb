@@ -180,7 +180,7 @@ class OrderPdfGenerator
         item.product_sku,
         format_quantity_display(item),
         format_price_display(item),
-        format_currency(item.line_total)
+        item.sample? ? "FREE" : format_currency(item.line_total)
       ]
     end
 
@@ -281,12 +281,16 @@ class OrderPdfGenerator
   end
 
   # Formats product name with units per pack on second line
+  # Adds "(Sample)" indicator for sample items
   def format_product_name(item)
+    name = item.product_name
+    name = "#{name} (Sample)" if item.sample?
+
     if item.pac_size.present? && item.pac_size > 1
       units_per_pack = ActiveSupport::NumberHelper.number_to_delimited(item.pac_size)
-      "#{item.product_name}\n(#{units_per_pack} units / pack)"
+      "#{name}\n(#{units_per_pack} units / pack)"
     else
-      item.product_name
+      name
     end
   end
 
@@ -296,10 +300,13 @@ class OrderPdfGenerator
   end
 
   # Formats quantity display for order items
+  # Samples: "1 unit" - samples are always single units
   # Pack-priced items: "30 packs (15,000 units)" - quantity IS packs, units = quantity * pac_size
   # Unit-priced items: "5,000 units" - quantity IS units
   def format_quantity_display(item)
-    if item.pack_priced?
+    if item.sample?
+      "#{item.quantity} #{'unit'.pluralize(item.quantity)}"
+    elsif item.pack_priced?
       # quantity is number of packs, calculate total units
       packs = item.quantity
       total_units = packs * item.pac_size
@@ -308,14 +315,17 @@ class OrderPdfGenerator
       "#{packs_formatted} #{'pack'.pluralize(packs)}\n(#{units_formatted} units)"
     else
       units = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
-      "#{units} units"
+      "#{units} #{'unit'.pluralize(item.quantity)}"
     end
   end
 
   # Formats price display for order items
+  # Samples: "£0.00 / unit"
   # Pack-priced items: "£15.99 / pack (£0.0320 / unit)"
   # Unit-priced items: "£0.0320 / unit"
   def format_price_display(item)
+    return "£0.00 / unit" if item.sample?
+
     if item.pack_priced?
       pack = format_currency(item.pack_price)
       unit = format_unit_price(item.unit_price)

@@ -7,7 +7,7 @@
         </div>
         <ul
           tabindex="0"
-          class="dropdown-content bg-base-100 rounded-box z-[1] mt-3 w-52 p-4 shadow flex flex-col gap-3">
+          class="dropdown-content lg:hidden bg-base-100 rounded-box z-[1] mt-3 w-52 p-4 shadow flex flex-col gap-3">
           <li class="text-lg font-medium"><%= link_to "Shop All", shop_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(shop_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg font-medium"><%= link_to "Cups & Lids", category_path('cups-and-lids'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('cups-and-lids')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg font-medium"><%= link_to "Ice Cream Cups", category_path('ice-cream-cups'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('ice-cream-cups')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>

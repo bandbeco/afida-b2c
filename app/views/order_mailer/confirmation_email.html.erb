@@ -24,10 +24,15 @@
         <% @order.order_items.each do |item| %>
           <tr>
             <td style="padding-bottom: 20px;">
-              <p style="font-size: 16px; color: #111827; margin: 0; font-weight: 600;"><%= item.quantity %>x <%= item.product_name %></p>
+              <p style="font-size: 16px; color: #111827; margin: 0; font-weight: 600;">
+                <%= item.quantity %>x <%= item.product_name %>
+                <% if item.sample? %>
+                  <span style="color: #059669; font-weight: 500; font-size: 14px;">(Sample)</span>
+                <% end %>
+              </p>
             </td>
             <td align="right" style="padding-bottom: 20px;">
-              <p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(item.line_total, unit: "£") %></p>
+              <p style="font-size: 16px; color: #111827; margin: 0;"><%= item.sample? ? "FREE" : number_to_currency(item.line_total, unit: "£") %></p>
             </td>
           </tr>
         <% end %>
