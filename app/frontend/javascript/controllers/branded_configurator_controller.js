@@ -189,7 +189,7 @@ export default class extends Controller {
     actions.className = 'flex items-center gap-2 mt-3'
 
     const select = document.createElement('select')
-    select.className = 'flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white'
+    select.className = 'min-w-0 flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white'
     select.dataset.lidQuantity = lid.sku
 
     this.generateLidQuantityOptions(lid.pac_size, this.selectedQuantity).forEach(q => {
