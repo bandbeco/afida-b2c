@@ -102,7 +102,7 @@
         <% end %>
       </div>
 
-      <div class="text-right md:text-right text-gray-700 flex items-center justify-end gap-1">
+      <div class="text-right md:text-right text-gray-700 flex items-center justify-end gap-3">
         <div>
           <div class="text-xs text-gray-500 md:hidden">Total</div>
           <span id="cart_item_<%= cart_item.id %>_total">
@@ -113,7 +113,7 @@
             <% end %>
           </span>
         </div>
-        <%= button_to cart_cart_item_path(cart_item), method: :delete, class: "btn btn-ghost btn-xs md:btn-sm group ml-1", local: false, title: "Remove item", data: { turbo_confirm: "Remove this item from your cart?" } do %>
+        <%= button_to cart_cart_item_path(cart_item), method: :delete, class: "btn btn-ghost btn-xs md:btn-sm group", local: false, title: "Remove item", data: { turbo_confirm: "Remove this item from your cart?" } do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 md:h-5 md:w-5 text-base-content/40 group-hover:text-error transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
           </svg>
