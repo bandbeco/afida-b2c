@@ -194,46 +194,54 @@ class CartItemsController < ApplicationController
     # Existing logic for standard products
     product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
 
-    # If sample exists for this variant, remove it (regular item replaces sample)
-    sample_items = @cart.cart_items.samples.where(product_variant: product_variant)
-    @sample_replaced = sample_items.exists?
-    sample_items.destroy_all
+    # Wrap in transaction to ensure sample removal and item creation are atomic
+    # If save fails, sample won't be lost
+    ActiveRecord::Base.transaction do
+      # If sample exists for this variant, remove it (regular item replaces sample)
+      sample_items = @cart.cart_items.samples.where(product_variant: product_variant)
+      @sample_replaced = sample_items.exists?
+      sample_items.destroy_all
 
-    # Find existing non-sample cart item for this variant
-    @cart_item = @cart.cart_items.non_samples.find_by(product_variant: product_variant)
+      # Find existing non-sample cart item for this variant
+      @cart_item = @cart.cart_items.non_samples.find_by(product_variant: product_variant)
 
-    # If no regular item exists, create a new one
-    @cart_item ||= @cart.cart_items.build(product_variant: product_variant)
+      # If no regular item exists, create a new one
+      @cart_item ||= @cart.cart_items.build(product_variant: product_variant)
 
-    if @cart_item.new_record?
-      @cart_item.quantity = cart_item_params[:quantity].to_i || 1
-      @cart_item.price = product_variant.price
-    else
-      @cart_item.quantity += (cart_item_params[:quantity].to_i || 1)
+      if @cart_item.new_record?
+        @cart_item.quantity = cart_item_params[:quantity].to_i || 1
+        @cart_item.price = product_variant.price
+      else
+        @cart_item.quantity += (cart_item_params[:quantity].to_i || 1)
+      end
+
+      # Use save! to raise on failure and trigger rollback
+      @cart_item.save!
     end
 
-    if @cart_item.save
-      respond_to do |format|
-        format.turbo_stream
-        # Renders create.turbo_stream.erb which handles:
-        # - Cart counter update
-        # - Drawer content update
-        # - Sample replacement notification (if @sample_replaced)
-        # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end
-        format.html do
-          notice = if @sample_replaced
-            "#{product_variant.display_name} added to cart (sample removed)."
-          else
-            "#{product_variant.display_name} added to cart."
-          end
-          redirect_to cart_path, notice: notice
+    # Transaction succeeded
+    respond_to do |format|
+      format.turbo_stream
+      # Renders create.turbo_stream.erb which handles:
+      # - Cart counter update
+      # - Drawer content update
+      # - Sample replacement notification (if @sample_replaced)
+      # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end
+      format.html do
+        notice = if @sample_replaced
+          "#{product_variant.display_name} added to cart (sample removed)."
+        else
+          "#{product_variant.display_name} added to cart."
         end
+        redirect_to cart_path, notice: notice
       end
-    else
-      respond_to do |format|
-        format.turbo_stream
-        format.html { redirect_back fallback_location: product_path(product_variant.product), alert: "Could not add item to cart: #{@cart_item.errors.full_messages.join(', ')}" }
-      end
+    end
+  rescue ActiveRecord::RecordInvalid
+    # Transaction rolled back - sample not removed, cart item not saved
+    @sample_replaced = false
+    respond_to do |format|
+      format.turbo_stream
+      format.html { redirect_back fallback_location: product_path(product_variant.product), alert: "Could not add item to cart: #{@cart_item.errors.full_messages.join(', ')}" }
     end
   end
 
