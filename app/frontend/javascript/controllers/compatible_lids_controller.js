@@ -105,7 +105,7 @@ export default class extends Controller {
         <div class="flex-shrink-0 w-20 h-20">
           ${lid.image_url ?
             `<img src="${lid.image_url}" alt="${lid.name}" class="w-full h-full object-contain" />` :
-            '<div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl">📦</div>'
+            '<div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl" role="img" aria-label="Product image placeholder">📦</div>'
           }
         </div>
 

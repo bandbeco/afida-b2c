@@ -144,11 +144,12 @@
             <div class="pt-4 pr-1">
               <p class="text-sm text-gray-600 mb-4">Complete your order with compatible lids</p>
 
-              <div id="lids-loading" class="text-center py-8" style="display:none;">
-                <span class="loading loading-spinner loading-lg"></span>
+              <div id="lids-loading" class="text-center py-8" style="display:none;" role="status" aria-live="polite">
+                <span class="loading loading-spinner loading-lg" aria-hidden="true"></span>
+                <span class="sr-only">Loading compatible lids...</span>
               </div>
 
-              <div id="lids-grid" class="flex flex-col gap-3" data-branded-configurator-target="lidsContainer">
+              <div id="lids-grid" class="flex flex-col gap-3" data-branded-configurator-target="lidsContainer" aria-live="polite" aria-label="Compatible lids">
                 <!-- Lids will be loaded here via AJAX -->
               </div>
 

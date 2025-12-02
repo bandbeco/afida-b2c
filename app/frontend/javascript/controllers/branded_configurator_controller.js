@@ -164,6 +164,8 @@ export default class extends Controller {
     } else {
       const placeholder = document.createElement('div')
       placeholder.className = 'w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl sm:text-4xl'
+      placeholder.setAttribute('role', 'img')
+      placeholder.setAttribute('aria-label', 'Product image placeholder')
       placeholder.textContent = '📦'
       imageContainer.appendChild(placeholder)
     }

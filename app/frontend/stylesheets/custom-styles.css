@@ -9,7 +9,7 @@
 /* Set default body font to Fredoka */
 body {
   font-family: var(--font-family-fredoka);
-  overflow-x: hidden; /* Prevent horizontal scroll from full-width breakout sections */
+  overflow-x: clip; /* Prevent horizontal scroll from full-width breakout sections - clip is safer than hidden */
 }
 
 .btn {
