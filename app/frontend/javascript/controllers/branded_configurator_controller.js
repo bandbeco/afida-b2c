@@ -146,40 +146,79 @@ export default class extends Controller {
 
   createLidCard(lid) {
     const card = document.createElement('div')
-    card.className = 'bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors'
-    card.innerHTML = `
-      <div class="flex items-center gap-6 p-4">
-        <!-- Image -->
-        <div class="flex-shrink-0 w-24 h-24">
-          ${lid.image_url ?
-            `<img src="${lid.image_url}" alt="${lid.name}" class="w-full h-full object-contain" />` :
-            '<div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-4xl">📦</div>'
-          }
-        </div>
+    card.className = 'bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4'
 
-        <!-- Content -->
-        <div class="flex-1 min-w-0">
-          <h3 class="font-semibold text-lg mb-1">${lid.name}</h3>
-          <div class="text-base text-gray-900">£${parseFloat(lid.price).toFixed(2)}</div>
-          <div class="text-sm text-gray-500 mt-1">Pack of ${lid.pac_size.toLocaleString()}</div>
-        </div>
+    const wrapper = document.createElement('div')
+    wrapper.className = 'flex items-start gap-3 sm:gap-4'
 
-        <!-- Actions (vertical stack) -->
-        <div class="flex-shrink-0 flex flex-col gap-2" style="min-width: 200px;">
-          <select class="px-4 py-2.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white w-full" data-lid-quantity="${lid.sku}">
-            ${this.generateLidQuantityOptions(lid.pac_size, this.selectedQuantity).map(q =>
-              `<option value="${q.value}" ${q.selected ? 'selected' : ''}>${q.label}</option>`
-            ).join('')}
-          </select>
-          <button class="px-6 py-2.5 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors whitespace-nowrap w-full cursor-pointer"
-                  data-action="click->branded-configurator#addLidToCart"
-                  data-lid-sku="${lid.sku}"
-                  data-lid-name="${lid.name}">
-            Add to cart
-          </button>
-        </div>
-      </div>
-    `
+    // Image container
+    const imageContainer = document.createElement('div')
+    imageContainer.className = 'flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24'
+
+    if (lid.image_url) {
+      const img = document.createElement('img')
+      img.src = lid.image_url
+      img.alt = lid.name
+      img.className = 'w-full h-full object-contain'
+      imageContainer.appendChild(img)
+    } else {
+      const placeholder = document.createElement('div')
+      placeholder.className = 'w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl sm:text-4xl'
+      placeholder.textContent = '📦'
+      imageContainer.appendChild(placeholder)
+    }
+
+    // Content container
+    const content = document.createElement('div')
+    content.className = 'flex-1 min-w-0'
+
+    const title = document.createElement('h3')
+    title.className = 'font-semibold text-base sm:text-lg mb-1 leading-tight'
+    title.textContent = lid.name
+
+    const price = document.createElement('div')
+    price.className = 'text-sm sm:text-base text-gray-900'
+    price.textContent = `£${parseFloat(lid.price).toFixed(2)}`
+
+    const packSize = document.createElement('div')
+    packSize.className = 'text-xs sm:text-sm text-gray-500'
+    packSize.textContent = `Pack of ${lid.pac_size.toLocaleString()}`
+
+    // Actions row
+    const actions = document.createElement('div')
+    actions.className = 'flex items-center gap-2 mt-3'
+
+    const select = document.createElement('select')
+    select.className = 'flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white'
+    select.dataset.lidQuantity = lid.sku
+
+    this.generateLidQuantityOptions(lid.pac_size, this.selectedQuantity).forEach(q => {
+      const option = document.createElement('option')
+      option.value = q.value
+      option.textContent = q.label
+      if (q.selected) option.selected = true
+      select.appendChild(option)
+    })
+
+    const button = document.createElement('button')
+    button.className = 'flex-shrink-0 px-3 sm:px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors whitespace-nowrap cursor-pointer'
+    button.dataset.action = 'click->branded-configurator#addLidToCart'
+    button.dataset.lidSku = lid.sku
+    button.dataset.lidName = lid.name
+    button.textContent = 'Add'
+
+    actions.appendChild(select)
+    actions.appendChild(button)
+
+    content.appendChild(title)
+    content.appendChild(price)
+    content.appendChild(packSize)
+    content.appendChild(actions)
+
+    wrapper.appendChild(imageContainer)
+    wrapper.appendChild(content)
+    card.appendChild(wrapper)
+
     return card
   }
 
