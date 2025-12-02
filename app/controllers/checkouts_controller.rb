@@ -55,11 +55,14 @@ class CheckoutsController < ApplicationController
     end
 
     begin
-      # Use sample shipping for samples-only orders, standard options otherwise
+      # Determine shipping options based on order type and subtotal:
+      # - Samples-only orders: Fixed sample delivery rate
+      # - Orders >= £100 subtotal: Free shipping
+      # - Orders < £100 subtotal: Standard shipping (£5)
       shipping_options = if cart.only_samples?
         [ Shipping.sample_only_shipping_option ]
       else
-        Shipping.stripe_shipping_options
+        Shipping.shipping_options_for_subtotal(cart.subtotal_amount)
       end
 
       session_params = {
