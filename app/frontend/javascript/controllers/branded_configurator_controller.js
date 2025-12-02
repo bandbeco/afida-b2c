@@ -184,12 +184,12 @@ export default class extends Controller {
     packSize.className = 'text-xs sm:text-sm text-gray-500'
     packSize.textContent = `Pack of ${lid.pac_size.toLocaleString()}`
 
-    // Actions row
+    // Actions - stacked vertically
     const actions = document.createElement('div')
-    actions.className = 'flex items-center gap-2 mt-3'
+    actions.className = 'flex flex-col gap-2 mt-3'
 
     const select = document.createElement('select')
-    select.className = 'min-w-0 flex-1 px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white'
+    select.className = 'w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white'
     select.dataset.lidQuantity = lid.sku
 
     this.generateLidQuantityOptions(lid.pac_size, this.selectedQuantity).forEach(q => {
@@ -201,11 +201,11 @@ export default class extends Controller {
     })
 
     const button = document.createElement('button')
-    button.className = 'flex-shrink-0 px-3 sm:px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors whitespace-nowrap cursor-pointer'
+    button.className = 'w-full px-3 sm:px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors cursor-pointer'
     button.dataset.action = 'click->branded-configurator#addLidToCart'
     button.dataset.lidSku = lid.sku
     button.dataset.lidName = lid.name
-    button.textContent = 'Add'
+    button.textContent = 'Add to Cart'
 
     actions.appendChild(select)
     actions.appendChild(button)
