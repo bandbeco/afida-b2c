@@ -1,5 +1,6 @@
 class CheckoutsController < ApplicationController
   allow_unauthenticated_access
+  before_action :resume_session
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to cart_path, alert: "Too many checkout attempts. Please wait before trying again." }
 
   # Eager loading strategy for cart items used across checkout methods
