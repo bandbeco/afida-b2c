@@ -386,7 +386,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
         active: true,
         sample_eligible: true
       )
-      @cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+      @cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
     end
 
     assert_no_difference "CartItem.count" do
@@ -453,7 +453,8 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     cart_item = @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     assert_difference "CartItem.count", -1 do
@@ -469,7 +470,8 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
     assert_equal 1, @cart.cart_items.samples.count
 
@@ -499,7 +501,8 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 2,
-      price: sample_variant.price
+      price: sample_variant.price,
+      is_sample: false
     )
 
     # Then try to add as sample - should be rejected
@@ -523,7 +526,8 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     # Add regular item with quantity 5

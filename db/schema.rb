@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_01_234259) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_02_093658) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -59,6 +59,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_234259) do
     t.bigint "cart_id", null: false
     t.jsonb "configuration", default: {}
     t.datetime "created_at", null: false
+    t.boolean "is_sample", default: false, null: false
     t.decimal "price", precision: 10, scale: 2, null: false
     t.bigint "product_variant_id", null: false
     t.integer "quantity", default: 1, null: false
@@ -67,6 +68,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_234259) do
     t.index ["cart_id", "product_variant_id"], name: "index_cart_items_on_cart_id_and_product_variant_id"
     t.index ["cart_id"], name: "index_cart_items_on_cart_id"
     t.index ["configuration"], name: "index_cart_items_on_configuration", using: :gin
+    t.index ["is_sample"], name: "index_cart_items_on_is_sample"
     t.index ["product_variant_id"], name: "index_cart_items_on_product_variant_id"
   end
 
@@ -95,6 +97,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_234259) do
   create_table "order_items", force: :cascade do |t|
     t.jsonb "configuration", default: {}
     t.datetime "created_at", null: false
+    t.boolean "is_sample", default: false, null: false
     t.decimal "line_total", precision: 10, scale: 2, null: false
     t.bigint "order_id", null: false
     t.integer "pac_size"
@@ -106,6 +109,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_01_234259) do
     t.integer "quantity", null: false
     t.datetime "updated_at", null: false
     t.index ["configuration"], name: "index_order_items_on_configuration", using: :gin
+    t.index ["is_sample"], name: "index_order_items_on_is_sample"
     t.index ["order_id"], name: "index_order_items_on_order_id"
     t.index ["product_id"], name: "index_order_items_on_product_id"
     t.index ["product_variant_id"], name: "index_order_items_on_product_variant_id"

@@ -45,8 +45,8 @@ class Order < ApplicationRecord
       .distinct
   }
   scope :with_samples, -> {
-    joins(order_items: :product_variant)
-      .where(product_variants: { sample_eligible: true })
+    joins(:order_items)
+      .where(order_items: { is_sample: true })
       .distinct
   }
 
@@ -78,15 +78,14 @@ class Order < ApplicationRecord
     order_items.any? { |item| item.configuration.present? }
   end
 
-  # Returns true if any order items are for sample-eligible variants
+  # Returns true if any order items are samples (using is_sample flag)
   def contains_samples?
-    order_items.joins(:product_variant)
-               .exists?(product_variants: { sample_eligible: true })
+    order_items.samples.exists?
   end
 
-  # Returns true if this is a samples-only order (no paid items)
+  # Returns true if this is a samples-only order (no non-sample items)
   def sample_request?
-    contains_samples? && order_items.where("price > 0").none?
+    contains_samples? && order_items.non_samples.none?
   end
 
   private

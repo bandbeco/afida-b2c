@@ -89,3 +89,37 @@ guest_order:
   shipping_postal_code: SW1A 1AA
   shipping_country: GB
   created_at: <%= 1.day.ago %>
+
+# Sample-only order (for testing sample badges)
+sample_only_order:
+  email: sample@example.com
+  stripe_session_id: cs_test_sample_only
+  order_number: ORD-2025-SAMPLE1
+  status: paid
+  subtotal_amount: 0.00
+  vat_amount: 0.00
+  shipping_amount: 7.50
+  total_amount: 7.50
+  shipping_name: Sample Customer
+  shipping_address_line1: 789 Sample Lane
+  shipping_city: Birmingham
+  shipping_postal_code: B1 1AA
+  shipping_country: GB
+  created_at: <%= 12.hours.ago %>
+
+# Mixed order (samples + paid products)
+mixed_order:
+  email: mixed@example.com
+  stripe_session_id: cs_test_mixed
+  order_number: ORD-2025-MIXED1
+  status: paid
+  subtotal_amount: 26.00
+  vat_amount: 5.20
+  shipping_amount: 5.95
+  total_amount: 37.15
+  shipping_name: Mixed Customer
+  shipping_address_line1: 101 Mixed Road
+  shipping_city: Manchester
+  shipping_postal_code: M1 2AB
+  shipping_country: GB
+  created_at: <%= 6.hours.ago %>

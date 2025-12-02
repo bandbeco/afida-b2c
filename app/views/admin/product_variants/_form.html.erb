@@ -33,6 +33,22 @@
   </fieldset>
 
   <fieldset class="fieldset my-8">
+    <legend class="fieldset-legend">Sample Eligibility</legend>
+
+    <div class="grid grid-cols-2 gap-x-6 gap-y-4 mt-4 w-1/2">
+      <%= form.label :sample_eligible, "Available as free sample", class: "label" %>
+      <%= form.check_box :sample_eligible, class: "toggle toggle-primary toggle-lg" %>
+
+      <%= form.label :sample_sku, "Sample SKU (optional)", class: "label" %>
+      <%= form.text_field :sample_sku, class: "input", placeholder: "Leave blank to auto-generate" %>
+    </div>
+
+    <p class="text-sm text-gray-500 mt-2">
+      If no sample SKU is provided, it will default to "SAMPLE-<%= product_variant.sku %>"
+    </p>
+  </fieldset>
+
+  <fieldset class="fieldset my-8">
     <legend class="fieldset-legend">Product Specifications</legend>
 
     <div class="grid grid-cols-2 gap-x-6 gap-y-4 mt-4 w-1/2">

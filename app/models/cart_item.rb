@@ -19,8 +19,8 @@ class CartItem < ApplicationRecord
   before_validation :set_price_from_variant
 
   # Scopes for filtering by item type
-  scope :samples, -> { where(price: 0) }
-  scope :non_samples, -> { where.not(price: 0) }
+  scope :samples, -> { where(is_sample: true) }
+  scope :non_samples, -> { where(is_sample: false) }
 
   # Calculates subtotal: price * quantity
   # For standard products: price = pack price, quantity = number of packs
@@ -48,9 +48,9 @@ class CartItem < ApplicationRecord
     configuration.present?
   end
 
-  # A sample is a free item (price = 0) on a sample-eligible variant
+  # Uses the is_sample boolean flag set when the item is created
   def sample?
-    price&.zero? && product_variant&.sample_eligible?
+    is_sample
   end
 
   # Pricing display methods for pack vs unit pricing

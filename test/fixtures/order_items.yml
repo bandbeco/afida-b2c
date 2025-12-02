@@ -75,3 +75,49 @@ guest_order_item_two:
   quantity: 1
   line_total: 15.00
 
+# Sample-only order items (free samples)
+sample_order_item_one:
+  order: sample_only_order
+  product: single_wall_cups
+  product_variant: sample_cup_8oz
+  product_name: 8oz Sample Cup
+  product_sku: SAMPLE-CUP-8OZ
+  price: 0.00
+  quantity: 1
+  line_total: 0.00
+  is_sample: true
+
+sample_order_item_two:
+  order: sample_only_order
+  product: single_wall_cups
+  product_variant: sample_cup_12oz
+  product_name: 12oz Sample Cup
+  product_sku: SAMPLE-SW-12
+  price: 0.00
+  quantity: 1
+  line_total: 0.00
+  is_sample: true
+
+# Mixed order items (sample + paid product)
+mixed_order_sample_item:
+  order: mixed_order
+  product: single_wall_cups
+  product_variant: sample_cup_8oz
+  product_name: 8oz Sample Cup
+  product_sku: SAMPLE-CUP-8OZ
+  price: 0.00
+  quantity: 1
+  line_total: 0.00
+  is_sample: true
+
+mixed_order_paid_item:
+  order: mixed_order
+  product: single_wall_cups
+  product_variant: single_wall_8oz_white
+  product_name: 8oz White Cup Pack
+  product_sku: CUP-SW-8-WHT
+  price: 26.00
+  quantity: 1
+  line_total: 26.00
+  is_sample: false
+

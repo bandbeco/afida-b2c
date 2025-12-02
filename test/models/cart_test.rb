@@ -217,9 +217,9 @@ class CartTest < ActiveSupport::TestCase
       active: true
     )
 
-    # Add both to cart (sample as free, regular at price)
-    sample_item = cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
-    regular_item = cart.cart_items.create!(product_variant: regular_variant, quantity: 2, price: 20.0)
+    # Add both to cart (sample with is_sample: true, regular with is_sample: false)
+    sample_item = cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+    regular_item = cart.cart_items.create!(product_variant: regular_variant, quantity: 2, price: 20.0, is_sample: false)
 
     sample_items = cart.sample_items
     assert_equal 1, sample_items.count
@@ -240,7 +240,7 @@ class CartTest < ActiveSupport::TestCase
         sample_eligible: true,
         active: true
       )
-      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
     end
 
     assert_equal 3, cart.sample_count
@@ -258,7 +258,7 @@ class CartTest < ActiveSupport::TestCase
       active: true
     )
 
-    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
 
     assert cart.only_samples?
   end
@@ -284,8 +284,8 @@ class CartTest < ActiveSupport::TestCase
       active: true
     )
 
-    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0)
-    cart.cart_items.create!(product_variant: regular_variant, quantity: 1, price: 20.0)
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+    cart.cart_items.create!(product_variant: regular_variant, quantity: 1, price: 20.0, is_sample: false)
 
     assert_not cart.only_samples?
   end
@@ -308,7 +308,7 @@ class CartTest < ActiveSupport::TestCase
         sample_eligible: true,
         active: true
       )
-      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
     end
 
     assert cart.at_sample_limit?
@@ -326,7 +326,7 @@ class CartTest < ActiveSupport::TestCase
         sample_eligible: true,
         active: true
       )
-      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0)
+      cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
     end
 
     assert_not cart.at_sample_limit?

@@ -22,7 +22,7 @@ class SamplesController < ApplicationController
 
     # Get selected sample counts by category with a single grouped query
     @selected_samples_by_category = Current.cart&.cart_items
-      &.where(price: 0)
+      &.samples
       &.joins(product_variant: :product)
       &.group("products.category_id")
       &.count || {}

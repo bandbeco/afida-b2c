@@ -161,7 +161,8 @@ class CartItemsController < ApplicationController
     @cart_item = @cart.cart_items.build(
       product_variant: @variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     if @cart_item.save

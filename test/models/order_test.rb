@@ -273,7 +273,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: sample_variant.sku,
       price: 0,
       quantity: 1,
-      line_total: 0
+      line_total: 0,
+      is_sample: true
     )
 
     # Create order without sample item
@@ -298,7 +299,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: regular_variant.sku,
       price: 20.0,
       quantity: 1,
-      line_total: 20.0
+      line_total: 20.0,
+      is_sample: false
     )
 
     orders_with_samples = Order.with_samples
@@ -328,7 +330,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: sample_variant.sku,
       price: 0,
       quantity: 1,
-      line_total: 0
+      line_total: 0,
+      is_sample: true
     )
 
     assert order.contains_samples?
@@ -338,7 +341,7 @@ class OrderTest < ActiveSupport::TestCase
     regular_variant = ProductVariant.create!(
       product: products(:one),
       name: "No Samples Test",
-      sku: "NO-SAMPLES-TEST-1",
+      sku: "REGULAR-SKU-TEST-1",
       price: 20.0,
       sample_eligible: false,
       active: true
@@ -346,7 +349,7 @@ class OrderTest < ActiveSupport::TestCase
 
     order = Order.create!(
       @valid_attributes.merge(
-        stripe_session_id: "sess_no_samples_test",
+        stripe_session_id: "sess_no_samples_test_#{SecureRandom.hex(4)}",
         order_number: nil
       )
     )
@@ -356,10 +359,12 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: regular_variant.sku,
       price: 20.0,
       quantity: 1,
-      line_total: 20.0
+      line_total: 20.0,
+      is_sample: false
     )
 
-    assert_not order.contains_samples?
+    order.reload
+    assert_not order.contains_samples?, "Order should not contain samples when is_sample is false"
   end
 
   test "sample_request? returns true for samples-only order" do
@@ -384,7 +389,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: sample_variant.sku,
       price: 0,
       quantity: 1,
-      line_total: 0
+      line_total: 0,
+      is_sample: true
     )
 
     assert order.sample_request?
@@ -421,7 +427,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: sample_variant.sku,
       price: 0,
       quantity: 1,
-      line_total: 0
+      line_total: 0,
+      is_sample: true
     )
     order.order_items.create!(
       product_variant: regular_variant,
@@ -429,7 +436,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: regular_variant.sku,
       price: 20.0,
       quantity: 1,
-      line_total: 20.0
+      line_total: 20.0,
+      is_sample: false
     )
 
     assert_not order.sample_request?
@@ -458,7 +466,8 @@ class OrderTest < ActiveSupport::TestCase
       product_sku: regular_variant.sku,
       price: 20.0,
       quantity: 1,
-      line_total: 20.0
+      line_total: 20.0,
+      is_sample: false
     )
 
     assert_not order.sample_request?

@@ -71,11 +71,11 @@ class Cart < ApplicationRecord
   end
 
   # Sample tracking methods
-  # Samples are identified by price = 0 (validated to only allow sample-eligible variants)
+  # Samples are identified by is_sample = true flag set at creation time
 
-  # Returns cart items that are samples (price = 0)
+  # Returns cart items that are samples (is_sample = true)
   def sample_items
-    cart_items.where(price: 0)
+    cart_items.samples
   end
 
   # Returns count of sample items in cart
@@ -102,7 +102,7 @@ class Cart < ApplicationRecord
 
   # Returns true if cart contains only sample items (no paid products)
   def only_samples?
-    cart_items.any? && cart_items.where("price > 0").none?
+    cart_items.any? && cart_items.non_samples.none?
   end
 
   # Returns true if cart has reached the sample limit

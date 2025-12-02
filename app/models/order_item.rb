@@ -15,6 +15,8 @@ class OrderItem < ApplicationRecord
   before_validation :calculate_line_total
 
   scope :for_product, ->(product) { where(product: product) }
+  scope :samples, -> { where(is_sample: true) }
+  scope :non_samples, -> { where(is_sample: false) }
 
   def self.create_from_cart_item(cart_item, order)
     order_item = new(
@@ -27,7 +29,8 @@ class OrderItem < ApplicationRecord
       price: cart_item.price,  # Store pack price (not unit price) for correct display
       pac_size: cart_item.product_variant.pac_size,  # Capture pack size for pricing display
       line_total: cart_item.line_total,
-      configuration: cart_item.configuration
+      configuration: cart_item.configuration,
+      is_sample: cart_item.is_sample
     )
 
     # Copy design attachment if present
@@ -55,6 +58,11 @@ class OrderItem < ApplicationRecord
 
   def configured?
     configuration.present? && !configuration.empty?
+  end
+
+  # Uses the is_sample boolean flag set when the order was created
+  def sample?
+    is_sample
   end
 
   # Pricing display methods for pack vs unit pricing
