@@ -4,11 +4,16 @@
   at_limit ||= false
   error ||= nil
 
-  # Find sample cart item if in cart (for remove button)
-  # Only samples (price: 0) can be removed from this page
-  cart_item = Current.cart&.cart_items&.samples&.find_by(product_variant: variant) if in_cart
-  is_sample_in_cart = cart_item.present?
-  is_regular_in_cart = in_cart && !is_sample_in_cart
+  # Accept pre-computed values from parent, or compute from database
+  # Pre-computed values avoid N+1 queries on initial page load
+  unless defined?(is_sample_in_cart) && defined?(is_regular_in_cart)
+    cart_item = Current.cart&.cart_items&.samples&.find_by(product_variant: variant) if in_cart
+    is_sample_in_cart = cart_item.present?
+    is_regular_in_cart = in_cart && !is_sample_in_cart
+  end
+
+  # Find cart_item for remove button (only needed if sample is in cart)
+  cart_item ||= Current.cart&.cart_items&.samples&.find_by(product_variant: variant) if is_sample_in_cart
 %>
 
 <%= turbo_frame_tag dom_id(variant, :sample), class: "block" do %>

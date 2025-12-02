@@ -4,9 +4,15 @@
     <% if variants.any? %>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-1">
         <% variants.each do |variant| %>
+          <%
+            is_sample_in_cart = sample_variant_ids.include?(variant.id)
+            is_regular_in_cart = regular_variant_ids.include?(variant.id)
+          %>
           <%= render "samples/variant_card",
                      variant: variant,
-                     in_cart: cart_variant_ids.include?(variant.id),
+                     in_cart: is_sample_in_cart || is_regular_in_cart,
+                     is_sample_in_cart: is_sample_in_cart,
+                     is_regular_in_cart: is_regular_in_cart,
                      at_limit: sample_count >= Cart::SAMPLE_LIMIT %>
         <% end %>
       </div>

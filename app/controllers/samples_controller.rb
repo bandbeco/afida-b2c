@@ -49,14 +49,16 @@ class SamplesController < ApplicationController
 
     # For sample counter and variant cards
     @sample_count = Current.cart&.sample_count || 0
-    # Use memoized method to prevent N+1 query
-    @cart_variant_ids = Current.cart&.sample_variant_ids || []
+    # Use memoized methods to prevent N+1 queries
+    @sample_variant_ids = Current.cart&.sample_variant_ids || []
+    @regular_variant_ids = Current.cart&.regular_variant_ids || []
 
     render partial: "samples/category_variants", locals: {
       category: @category,
       variants: @variants,
       sample_count: @sample_count,
-      cart_variant_ids: @cart_variant_ids
+      sample_variant_ids: @sample_variant_ids,
+      regular_variant_ids: @regular_variant_ids
     }
   end
 end
