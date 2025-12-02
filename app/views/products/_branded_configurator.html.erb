@@ -101,26 +101,31 @@
           <div class="collapse-content">
             <div class="space-y-3 pt-4">
           <% Array(@quantity_tiers).each_with_index do |quantity, index| %>
-            <div class="border-2 border-gray-300 bg-white rounded-xl p-4 cursor-pointer hover:border-primary transition flex items-center justify-between"
+            <div class="border-2 border-gray-300 bg-white rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary transition"
                  data-branded-configurator-target="quantityOption"
                  data-quantity="<%= quantity %>"
                  data-action="click->branded-configurator#selectQuantity">
-              <div class="flex items-center gap-4">
-                <div class="text-black"><%= number_with_delimiter(quantity) %></div>
-                <div class="text-gray-500"
-                     data-branded-configurator-target="pricePerUnit">
-                  <!-- Price per unit filled by JS -->
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="badge bg-pink-100 text-pink-800 border-0 px-3 py-2 font-semibold <%= 'invisible' if index == 0 %>"
+              <div class="flex items-center justify-between">
+                <%# Quantity - always on left %>
+                <div class="text-black font-semibold text-lg"><%= number_with_delimiter(quantity) %></div>
+
+                <%# Savings badge - center on mobile, inline on desktop %>
+                <div class="badge bg-pink-100 text-pink-800 border-0 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-semibold <%= 'invisible' if index == 0 %>"
                      data-branded-configurator-target="savingsBadge">
                   <!-- Savings % filled by JS -->
                 </div>
-                <div class="text-black"
+
+                <%# Total price - always on right %>
+                <div class="text-black font-semibold"
                      data-branded-configurator-target="totalPrice">
                   <!-- Total price filled by JS -->
                 </div>
+              </div>
+
+              <%# Price per unit - on its own row %>
+              <div class="text-gray-500 text-sm mt-1"
+                   data-branded-configurator-target="pricePerUnit">
+                <!-- Price per unit filled by JS -->
               </div>
             </div>
           <% end %>
