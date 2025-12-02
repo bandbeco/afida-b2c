@@ -2,10 +2,13 @@ class CheckoutsController < ApplicationController
   allow_unauthenticated_access
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to cart_path, alert: "Too many checkout attempts. Please wait before trying again." }
 
+  # Eager loading strategy for cart items used across checkout methods
+  CART_ITEM_INCLUDES = [ :product, :product_variant, { design_attachment: :blob } ].freeze
+
   def create
     cart = Current.cart
     # Eager load associations to prevent N+1 queries when building Stripe line items
-    cart_items = cart.cart_items.includes(:product, product_variant: :product)
+    cart_items = cart.cart_items.includes(CART_ITEM_INCLUDES)
     line_items = cart_items.map do |item|
       # For standard products with pack pricing: send packs as quantity
       # For branded/configured products: send units as quantity
@@ -116,7 +119,7 @@ class CheckoutsController < ApplicationController
       end
 
       # Preload associations for order item creation (prevents N+1 queries)
-      cart.cart_items.includes(:product, :product_variant, design_attachment: :blob).load
+      cart.cart_items.includes(CART_ITEM_INCLUDES).load
 
       # Create the order
       customer_details = stripe_session.customer_details
