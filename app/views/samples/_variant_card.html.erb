@@ -17,13 +17,13 @@
 %>
 
 <%= turbo_frame_tag dom_id(variant, :sample), class: "block" do %>
-  <div class="card relative cursor-pointer <%= in_cart ? 'bg-success/10 border-2 border-success' : 'bg-base-100 border-2 border-base-200' %> hover:shadow-lg transition-all [background-clip:padding-box]"
+  <div class="card relative cursor-pointer <%= is_sample_in_cart ? 'bg-success/10 border-2 border-success' : 'bg-base-100 border-2 border-base-200' %> hover:shadow-lg transition-all [background-clip:padding-box]"
        data-controller="clickable-card"
        data-action="click->clickable-card#click">
     <!-- Selection Checkbox -->
     <div class="absolute top-2 right-2 z-10">
-      <div class="w-6 h-6 rounded-full flex items-center justify-center <%= in_cart ? 'bg-success text-success-content' : 'bg-base-200 border border-base-300' %>">
-        <% if in_cart %>
+      <div class="w-6 h-6 rounded-full flex items-center justify-center <%= is_sample_in_cart ? 'bg-success text-success-content' : 'bg-base-200 border border-base-300' %>">
+        <% if is_sample_in_cart %>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>
           </svg>
@@ -49,7 +49,7 @@
       <% photo = variant.primary_photo || variant.product.primary_photo %>
       <% if photo %>
         <%= image_tag photo.variant(resize_to_fill: [200, 200]),
-                      class: "rounded-lg w-full h-32 object-cover #{in_cart ? 'opacity-90' : ''}",
+                      class: "rounded-lg w-full h-32 object-cover #{is_sample_in_cart ? 'opacity-90' : ''}",
                       alt: variant.display_name %>
       <% else %>
         <div class="w-full h-32 bg-base-200 rounded-lg flex items-center justify-center">

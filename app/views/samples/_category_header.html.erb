@@ -17,7 +17,7 @@
     </div>
     <% if selected_count > 0 %>
       <!-- Selected count badge on image -->
-      <div class="absolute -top-2 -right-2 badge badge-success badge-sm font-bold shadow">
+      <div class="absolute -top-2 -right-2 badge badge-success badge-sm shadow">
         <%= selected_count %>
       </div>
     <% end %>
@@ -30,7 +30,7 @@
     <p class="text-sm text-base-content/70">
       <%= sample_count_in_category %> sample<%= sample_count_in_category == 1 ? "" : "s" %> available
       <% if selected_count > 0 %>
-        <span class="text-success font-medium">· <%= selected_count %> selected</span>
+        <span class="text-success">· <%= selected_count %> selected</span>
       <% end %>
     </p>
   </div>
