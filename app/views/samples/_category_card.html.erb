@@ -8,8 +8,12 @@
      data-category-expand-category-id-value="<%= category.id %>">
 
   <!-- Category Header (clickable) -->
-  <div class="card-body cursor-pointer hover:bg-base-200 transition-colors rounded-t-xl"
-       data-action="click->category-expand#toggle">
+  <button type="button"
+          class="card-body w-full text-left cursor-pointer hover:bg-base-200 transition-colors rounded-t-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          data-action="click->category-expand#toggle"
+          data-category-expand-target="trigger"
+          aria-expanded="false"
+          aria-controls="<%= dom_id(category) %>">
     <div class="flex items-center justify-between">
       <!-- Header content (updatable via Turbo Stream) -->
       <%= render "samples/category_header", category: category, selected_count: selected_count %>
@@ -23,7 +27,7 @@
         </svg>
       </div>
     </div>
-  </div>
+  </button>
 
   <!-- Expandable variants container (Turbo Frame) -->
   <div class="overflow-hidden transition-all duration-300"

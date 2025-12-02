@@ -17,9 +17,11 @@
 %>
 
 <%= turbo_frame_tag dom_id(variant, :sample), class: "block" do %>
-  <div class="card relative cursor-pointer <%= is_sample_in_cart ? 'bg-success/10 border-2 border-success' : 'bg-base-100 border-2 border-base-200' %> hover:shadow-lg transition-all [background-clip:padding-box]"
+  <div class="card relative cursor-pointer <%= is_sample_in_cart ? 'bg-success/10 border-2 border-success' : 'bg-base-100 border-2 border-base-200' %> hover:shadow-lg transition-all [background-clip:padding-box] rounded-xl"
        data-controller="clickable-card"
-       data-action="click->clickable-card#click">
+       data-action="click->clickable-card#click keydown->clickable-card#keydown"
+       role="article"
+       aria-label="<%= variant.display_name %> sample">
     <!-- Selection Checkbox -->
     <div class="absolute top-2 right-2 z-10">
       <div class="w-6 h-6 rounded-full flex items-center justify-center <%= is_sample_in_cart ? 'bg-success text-success-content' : 'bg-base-200 border border-base-300' %>">

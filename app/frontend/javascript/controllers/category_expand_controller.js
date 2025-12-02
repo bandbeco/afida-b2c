@@ -19,7 +19,7 @@ import { Controller } from "@hotwired/stimulus"
  *   </div>
  */
 export default class extends Controller {
-  static targets = ["content", "chevron"]
+  static targets = ["content", "chevron", "trigger"]
   static values = {
     url: String,
     categoryId: Number,
@@ -38,6 +38,9 @@ export default class extends Controller {
     // Bind event handlers to this instance
     this.handleFrameLoad = this.handleFrameLoad.bind(this)
     this.handleFrameError = this.handleFrameError.bind(this)
+
+    // Set initial aria-expanded state
+    this.updateAriaExpanded()
   }
 
   toggle() {
@@ -73,6 +76,7 @@ export default class extends Controller {
     }
 
     this.expandedValue = true
+    this.updateAriaExpanded()
   }
 
   collapse() {
@@ -87,6 +91,14 @@ export default class extends Controller {
     }
 
     this.expandedValue = false
+    this.updateAriaExpanded()
+  }
+
+  // Update aria-expanded attribute on trigger element
+  updateAriaExpanded() {
+    if (this.hasTriggerTarget) {
+      this.triggerTarget.setAttribute("aria-expanded", this.expandedValue.toString())
+    }
   }
 
   // Recalculate height after Turbo Frame loads its content

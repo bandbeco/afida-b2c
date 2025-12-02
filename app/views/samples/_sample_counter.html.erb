@@ -7,6 +7,9 @@
 
 <div id="sample_counter"
      class="<%= sample_count > 0 ? '' : 'hidden' %> sticky top-0 z-40 bg-primary text-primary-content shadow-lg"
+     role="status"
+     aria-live="polite"
+     aria-atomic="true"
      data-controller="sample-counter"
      data-sample-counter-count-value="<%= sample_count %>"
      data-sample-counter-limit-value="<%= sample_limit %>">
