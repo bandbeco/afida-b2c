@@ -18,20 +18,20 @@
         <% end %>
       <% end %>
       <div class="min-w-0">
-        <%= link_to cart_item.product.name, product_url, class: "text-base sm:text-xl font-medium text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
+        <%= link_to cart_item.product.name, product_url, class: "text-lg sm:text-xl font-medium text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
         <% if cart_item.configured? %>
-          <div class="text-gray-600">
+          <div class="text-base text-gray-600">
             Size: <%= cart_item.configuration["size"] %>
           </div>
           <div class="text-gray-500 text-sm">
             Custom branded with your design
           </div>
         <% elsif cart_item.sample? %>
-          <div class="text-lg">
+          <div class="text-base text-gray-600">
             <%= cart_item.product_variant.name %>
           </div>
         <% else %>
-          <div class="text-lg">
+          <div class="text-base text-gray-600">
             <%= cart_item.product_variant.name %>
           </div>
           <% if cart_item.product_variant.pac_size.present? && cart_item.product_variant.pac_size > 1 %>
