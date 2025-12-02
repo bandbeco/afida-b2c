@@ -1,7 +1,3 @@
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
-<%= turbo_stream.replace "drawer_cart_content", partial: "shared/drawer_cart_content" %>
-
-<% if @sample_replaced %>
-  <%= turbo_stream.prepend "drawer_cart_content", partial: "shared/flash_info",
-        locals: { message: "Sample replaced with regular item" } %>
-<% end %>
+<%= turbo_stream.replace "drawer_cart_content", partial: "shared/drawer_cart_content",
+      locals: { notice: @sample_replaced ? "Sample replaced with regular item" : nil } %>
