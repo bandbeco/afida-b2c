@@ -80,8 +80,8 @@
                                 data: { product_options_target: "imageDisplay" }) %>
         </figure>
 
-        <div class="card-body lg:w-1/2">
-          <h2 class="card-title text-3xl lg:text-4xl">
+        <div class="card-body p-4 sm:p-8 lg:w-1/2 text-center lg:text-left">
+          <h2 class="card-title text-2xl sm:text-3xl lg:text-4xl justify-center lg:justify-start">
             <%= @product.name %>
           </h2>
 
@@ -93,7 +93,7 @@
             <% end %>
           </p>
 
-          <div class="flex items-center gap-3">
+          <div class="flex items-center justify-center lg:justify-start gap-3">
             <% if @product.colour.present? %>
               <span class="text-base-content/60 font-medium text-lg"><%= @product.colour %></span>
             <% end %>
@@ -109,7 +109,7 @@
           <% end %>
 
           <% if @product.active_variants.count > 1 %>
-            <div class="space-y-4 my-4">
+            <div class="space-y-3 sm:space-y-4 my-3 sm:my-4">
 
               <% @product_options.each do |option| %>
                 <div class="w-full">
@@ -124,17 +124,17 @@
                     selected_value = @selected_variant.option_values[option.name]
                     target_name = option.name.downcase
                   %>
-                  <div class="flex flex-wrap gap-2">
+                  <div class="flex flex-wrap justify-center lg:justify-start gap-2">
                     <% option_values.each do |value| %>
                       <%# data-value contains the value (for URLs), button text shows label (for display) %>
                       <button type="button"
-                              class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-6 py-3 cursor-pointer font-medium"
+                              class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-3 py-2 sm:px-6 sm:py-3 cursor-pointer font-medium text-sm sm:text-base"
                               data-product-options-target="<%= target_name %>Button"
                               data-value="<%= value %>"
                               data-action="click->product-options#select<%= option.name.capitalize %>">
                         <%= @option_labels.dig(option.name, value) || value %>
-                        <span class="option-checkmark hidden absolute -top-2 -right-2 w-6 h-6 bg-primary rounded-full flex items-center justify-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                        <span class="option-checkmark hidden absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 sm:w-4 sm:h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                           </svg>
                         </span>
@@ -153,7 +153,7 @@
             # Generate quantity options as multiples of pack size
             quantity_options = (1..10).map { |i| pac_size * i }
           %>
-          <div class="card-actions space-y-3 my-4">
+          <div class="card-actions space-y-3 my-3 sm:my-4">
             <%= form_with url: cart_cart_items_path, method: :post, class: "w-full space-y-3", local: false, data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
               <input type="hidden"
                      name="cart_item[variant_sku]"
@@ -201,19 +201,19 @@
                 </div>
               <% end %>
 
-              <div class="my-8 space-y-3">
+              <div class="my-4 sm:my-8 space-y-3">
                 <div class="flex items-center gap-2">
-                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
-                  <span class="font-medium">Delivered in 2 to 3 working days</span>
+                  <span class="font-medium text-sm sm:text-base">Delivered in 2 to 3 working days</span>
                 </div>
-                <div class="mt-8 grid grid-cols-[1fr_auto] gap-4 items-start">
+                <div class="mt-4 sm:mt-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
                   <div>
-                    <p class="text-lg">Total (excl. VAT)</p>
-                    <p class="text-xs text-base-content/60">Free delivery on all mainland UK orders over £100 excl. VAT</p>
+                    <p class="text-base sm:text-lg">Total (excl. VAT)</p>
+                    <p class="text-xs text-base-content/60">Free delivery on orders over £100</p>
                   </div>
-                  <p class="text-2xl font-semibold whitespace-nowrap text-right" data-product-options-target="priceDisplay">
+                  <p class="text-xl sm:text-2xl font-semibold whitespace-nowrap" data-product-options-target="priceDisplay">
                     <% if @has_url_selection %>
                       <%= number_to_currency(@selected_variant.price) %>
                     <% else %>

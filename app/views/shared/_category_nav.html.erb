@@ -11,6 +11,23 @@
     { slug: "takeaway-extras", name: "Takeaway Extras" }
   ]
 %>
+<%# Mobile: Horizontal scrollable category bar %>
+<div class="bg-base-200 border-b border-base-300 lg:hidden">
+  <div class="overflow-x-auto scrollbar-hide">
+    <ul class="flex gap-1 px-4 py-2 min-w-max">
+      <% nav_categories.each do |cat| %>
+        <li>
+          <%= link_to category_path(cat[:slug]), class: "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors #{current_page?(category_path(cat[:slug])) ? 'bg-primary text-primary-content' : 'bg-base-100 text-base-content hover:bg-base-300'}" do %>
+            <%= category_icon_tag(cat[:slug], alt: "#{cat[:name]} icon", class: "w-4 h-4") %>
+            <span><%= cat[:name] %></span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  </div>
+</div>
+
+<%# Desktop: Original centered navigation %>
 <div class="bg-base-200 border-b border-base-300 hidden lg:block">
   <div class="container mx-auto px-4 flex justify-center">
     <ul class="flex gap-6 py-4">

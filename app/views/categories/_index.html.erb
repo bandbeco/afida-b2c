@@ -1,6 +1,6 @@
-<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-8">
   <% @categories.each do |category| %>
-    <%= link_to category_path(category), class: "group relative block h-96 rounded-3xl overflow-hidden" do %>
+    <%= link_to category_path(category), class: "group relative block h-56 sm:h-72 md:h-96 rounded-2xl md:rounded-3xl overflow-hidden" do %>
       <!-- Background Image/Color -->
       <div class="absolute inset-0 bg-neutral-100 transition-transform duration-700 group-hover:scale-105">
         <% if category.image.attached? %>
@@ -20,14 +20,14 @@
       <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-70 transition-opacity"></div>
       
       <!-- Content -->
-      <div class="absolute inset-0 p-8 flex flex-col justify-end text-white">
+      <div class="absolute inset-0 p-8 flex flex-col justify-end items-center md:items-start text-center md:text-left text-white">
         <h3 class="text-3xl font-bold mb-2 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300"><%= category.name %></h3>
-        
+
         <div class="opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-75">
           <% if category.description.present? %>
             <p class="text-gray-200 mb-4 line-clamp-2"><%= category.description %></p>
           <% end %>
-          
+
           <span class="inline-flex items-center gap-2 text-[#79ebc0] font-bold">
             Shop Now
             <svg class="w-5 h-5 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>

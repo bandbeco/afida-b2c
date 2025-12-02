@@ -9,16 +9,16 @@
       product_url = product_path(cart_item.product, url_params)
     end
   %>
-  <div class="grid grid-cols-1 md:grid-cols-6 gap-4 items-center p-4 border-b hover:bg-gray-50">
-    <div class="col-span-full md:col-span-2 flex items-center space-x-4">
+  <div class="grid grid-cols-1 md:grid-cols-6 gap-3 sm:gap-4 items-center p-3 sm:p-4 border-b hover:bg-gray-50 text-center md:text-left">
+    <div class="col-span-full md:col-span-2 flex flex-col md:flex-row items-center gap-3 sm:space-x-4">
       <%= link_to product_path(cart_item.product, url_params), "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
-        <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-20 h-20 rounded-md shadow") %>
+        <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow") %>
         <% if cart_item.sample? %>
           <%= render "shared/sample_badge", size: :md %>
         <% end %>
       <% end %>
-      <div>
-        <%= link_to cart_item.product.name, product_url, class: "text-xl font-medium text-gray-800 hover:text-primary-500", data: { turbo: false } %>
+      <div class="min-w-0">
+        <%= link_to cart_item.product.name, product_url, class: "text-base sm:text-xl font-medium text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
         <% if cart_item.configured? %>
           <div class="text-gray-600">
             Size: <%= cart_item.configuration["size"] %>
@@ -43,7 +43,7 @@
       </div>
     </div>
 
-    <div class="text-left md:text-center text-gray-700">
+    <div class="text-center md:text-center text-gray-700">
       <span class="md:hidden font-semibold">Price: </span>
       <% if cart_item.sample? %>
         <span class="font-medium">Free</span>
@@ -52,7 +52,7 @@
       <% end %>
     </div>
 
-    <div class="text-left md:text-center">
+    <div class="text-center md:text-center">
       <% if cart_item.sample? %>
         <%# Samples are always quantity 1, no dropdown %>
         <span class="text-gray-600">1 unit</span>
@@ -110,7 +110,7 @@
       <% end %>
     </div>
 
-    <div class="text-right text-gray-700">
+    <div class="text-center md:text-right text-gray-700">
       <span class="md:hidden font-semibold">Total: </span>
       <span id="cart_item_<%= cart_item.id %>_total">
         <% if cart_item.sample? %>
@@ -121,7 +121,7 @@
       </span>
     </div>
 
-    <div class="text-right md:text-center">
+    <div class="text-center md:text-center">
       <%= button_to cart_cart_item_path(cart_item), method: :delete, class: "btn btn-ghost btn-sm group", local: false, title: "Remove item", data: { turbo_confirm: "Remove this item from your cart?" } do %>
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/40 group-hover:text-error transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />

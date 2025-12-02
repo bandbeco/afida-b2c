@@ -74,9 +74,9 @@
             </li>
           </ul>
         <% else %>
-          <div class="flex items-center space-x-2">
-            <%= link_to "Sign In", new_session_path, class: "btn btn-sm btn-primary" %>
-            <%= link_to "Sign Up", new_registration_path, class: "btn btn-sm btn-primary" %>
+          <div class="flex items-center gap-1 sm:gap-2">
+            <%= link_to "Sign In", new_session_path, class: "btn btn-xs sm:btn-sm btn-primary" %>
+            <%= link_to "Sign Up", new_registration_path, class: "btn btn-xs sm:btn-sm btn-ghost hidden sm:inline-flex" %>
           </div>
         <% end %>
       </div>
