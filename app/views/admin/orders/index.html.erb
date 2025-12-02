@@ -3,6 +3,18 @@
     <h1 class="text-3xl font-bold">Orders</h1>
   </div>
 
+  <div class="flex gap-4 mb-4">
+    <%= form_with url: admin_orders_path, method: :get, class: "flex items-center gap-2" do %>
+      <label for="sample_status" class="text-sm font-medium">Filter by:</label>
+      <select name="sample_status" id="sample_status" class="select select-bordered select-sm" onchange="this.form.submit()">
+        <option value="all" <%= "selected" if params[:sample_status].blank? || params[:sample_status] == "all" %>>All Orders</option>
+        <option value="samples_only" <%= "selected" if params[:sample_status] == "samples_only" %>>Samples Only</option>
+        <option value="contains_samples" <%= "selected" if params[:sample_status] == "contains_samples" %>>Contains Samples</option>
+        <option value="no_samples" <%= "selected" if params[:sample_status] == "no_samples" %>>No Samples</option>
+      </select>
+    <% end %>
+  </div>
+
   <div class="overflow-x-auto">
     <table class="table table-zebra">
       <thead>
@@ -10,7 +22,8 @@
           <th class="text-lg font-medium">Order ID</th>
           <th class="text-lg font-medium">Customer</th>
           <th class="text-lg font-medium">Total</th>
-          <th class="text-lg font-medium">Status</th> 
+          <th class="text-lg font-medium">Status</th>
+          <th class="text-lg font-medium">Type</th>
           <th class="text-lg font-medium">Date</th>
         </tr>
       </thead>
@@ -21,6 +34,13 @@
             <td><%= order.email %></td>
             <td><%= number_to_currency(order.total_amount) %></td>
             <td><%= order.status %></td>
+            <td>
+              <% if order.sample_request? %>
+                <span class="badge badge-primary badge-sm">Samples Only</span>
+              <% elsif order.contains_samples? %>
+                <span class="badge badge-secondary badge-sm">Contains Samples</span>
+              <% end %>
+            </td>
             <td><%= order.created_at.strftime("%B %d, %Y") %></td>
           </tr>
         <% end %>

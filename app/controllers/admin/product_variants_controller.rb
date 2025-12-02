@@ -49,7 +49,9 @@ class Admin::ProductVariantsController < Admin::ApplicationController
         :depth_in_mm,
         :weight_in_g,
         :volume_in_ml,
-        :diameter_in_mm
+        :diameter_in_mm,
+        :sample_eligible,
+        :sample_sku
       ]
     )
   end

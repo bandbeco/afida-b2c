@@ -15,6 +15,12 @@ application.register("search", SearchController)
 import CartDrawerController from "../javascript/controllers/cart_drawer_controller"
 application.register("cart-drawer", CartDrawerController)
 
+import AutoDismissController from "../javascript/controllers/auto_dismiss_controller"
+application.register("auto-dismiss", AutoDismissController)
+
+import ClickableCardController from "../javascript/controllers/clickable_card_controller"
+application.register("clickable-card", ClickableCardController)
+
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
   "carousel": () => import("../javascript/controllers/carousel_controller"),
@@ -29,7 +35,9 @@ const lazyControllers = {
   "character-counter": () => import("../javascript/controllers/character_counter_controller"),
   "quick-add-modal": () => import("../javascript/controllers/quick_add_modal_controller"),
   "quick-add-form": () => import("../javascript/controllers/quick_add_form_controller"),
-  "slide-in": () => import("../javascript/controllers/slide_in_controller")
+  "slide-in": () => import("../javascript/controllers/slide_in_controller"),
+  "category-expand": () => import("../javascript/controllers/category_expand_controller"),
+  "sample-counter": () => import("../javascript/controllers/sample_counter_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM

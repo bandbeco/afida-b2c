@@ -247,4 +247,229 @@ class OrderTest < ActiveSupport::TestCase
     branded_orders = Order.branded_orders
     assert_kind_of ActiveRecord::Relation, branded_orders
   end
+
+  # Sample order tests
+  test "with_samples scope returns orders containing sample items" do
+    # Create sample-eligible variant
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Order Test",
+      sku: "SAMPLE-ORDER-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    # Create order with sample item
+    sample_order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_sample_order_test",
+        order_number: nil
+      )
+    )
+    sample_order.order_items.create!(
+      product_variant: sample_variant,
+      product_name: "Sample Product",
+      product_sku: sample_variant.sku,
+      price: 0,
+      quantity: 1,
+      line_total: 0,
+      is_sample: true
+    )
+
+    # Create order without sample item
+    regular_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Regular Order Test",
+      sku: "REGULAR-ORDER-TEST-1",
+      price: 20.0,
+      sample_eligible: false,
+      active: true
+    )
+
+    regular_order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_regular_order_test",
+        order_number: nil
+      )
+    )
+    regular_order.order_items.create!(
+      product_variant: regular_variant,
+      product_name: "Regular Product",
+      product_sku: regular_variant.sku,
+      price: 20.0,
+      quantity: 1,
+      line_total: 20.0,
+      is_sample: false
+    )
+
+    orders_with_samples = Order.with_samples
+    assert_includes orders_with_samples, sample_order
+    assert_not_includes orders_with_samples, regular_order
+  end
+
+  test "contains_samples? returns true when order has sample items" do
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Contains Samples Test",
+      sku: "CONTAINS-SAMPLES-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_contains_samples_test",
+        order_number: nil
+      )
+    )
+    order.order_items.create!(
+      product_variant: sample_variant,
+      product_name: "Sample Product",
+      product_sku: sample_variant.sku,
+      price: 0,
+      quantity: 1,
+      line_total: 0,
+      is_sample: true
+    )
+
+    assert order.contains_samples?
+  end
+
+  test "contains_samples? returns false when order has no sample items" do
+    regular_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "No Samples Test",
+      sku: "REGULAR-SKU-TEST-1",
+      price: 20.0,
+      sample_eligible: false,
+      active: true
+    )
+
+    order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_no_samples_test_#{SecureRandom.hex(4)}",
+        order_number: nil
+      )
+    )
+    order.order_items.create!(
+      product_variant: regular_variant,
+      product_name: "Regular Product",
+      product_sku: regular_variant.sku,
+      price: 20.0,
+      quantity: 1,
+      line_total: 20.0,
+      is_sample: false
+    )
+
+    order.reload
+    assert_not order.contains_samples?, "Order should not contain samples when is_sample is false"
+  end
+
+  test "sample_request? returns true for samples-only order" do
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Request Test",
+      sku: "SAMPLE-REQUEST-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_sample_request_test",
+        order_number: nil
+      )
+    )
+    order.order_items.create!(
+      product_variant: sample_variant,
+      product_name: "Sample Product",
+      product_sku: sample_variant.sku,
+      price: 0,
+      quantity: 1,
+      line_total: 0,
+      is_sample: true
+    )
+
+    assert order.sample_request?
+  end
+
+  test "sample_request? returns false for mixed order (samples + paid)" do
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Mixed Order Sample",
+      sku: "MIXED-ORDER-SAMPLE-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    regular_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Mixed Order Regular",
+      sku: "MIXED-ORDER-REGULAR-1",
+      price: 20.0,
+      sample_eligible: false,
+      active: true
+    )
+
+    order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_mixed_order_test",
+        order_number: nil
+      )
+    )
+    order.order_items.create!(
+      product_variant: sample_variant,
+      product_name: "Sample Product",
+      product_sku: sample_variant.sku,
+      price: 0,
+      quantity: 1,
+      line_total: 0,
+      is_sample: true
+    )
+    order.order_items.create!(
+      product_variant: regular_variant,
+      product_name: "Regular Product",
+      product_sku: regular_variant.sku,
+      price: 20.0,
+      quantity: 1,
+      line_total: 20.0,
+      is_sample: false
+    )
+
+    assert_not order.sample_request?
+    assert order.contains_samples?
+  end
+
+  test "sample_request? returns false for regular order" do
+    regular_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Regular Only Test",
+      sku: "REGULAR-ONLY-TEST-1",
+      price: 20.0,
+      sample_eligible: false,
+      active: true
+    )
+
+    order = Order.create!(
+      @valid_attributes.merge(
+        stripe_session_id: "sess_regular_only_test",
+        order_number: nil
+      )
+    )
+    order.order_items.create!(
+      product_variant: regular_variant,
+      product_name: "Regular Product",
+      product_sku: regular_variant.sku,
+      price: 20.0,
+      quantity: 1,
+      line_total: 20.0,
+      is_sample: false
+    )
+
+    assert_not order.sample_request?
+  end
 end

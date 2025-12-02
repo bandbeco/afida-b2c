@@ -211,3 +211,27 @@ sip_lid_8oz_variant:
   active: true
   position: 1
   option_values: {}
+
+# Sample-eligible variants
+sample_cup_8oz:
+  product: single_wall_cups
+  name: 8oz Sample
+  sku: SAMPLE-SW-8
+  price: 26.00
+  stock_quantity: 100
+  active: true
+  position: 10
+  sample_eligible: true
+  sample_sku: SAMPLE-CUP-8OZ
+  option_values: {}
+
+sample_cup_12oz:
+  product: single_wall_cups
+  name: 12oz Sample
+  sku: SAMPLE-SW-12
+  price: 28.00
+  stock_quantity: 100
+  active: true
+  position: 11
+  sample_eligible: true
+  option_values: {}

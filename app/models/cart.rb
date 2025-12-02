@@ -19,6 +19,8 @@
 #   cart.total_amount         # Final total with VAT
 #
 class Cart < ApplicationRecord
+  SAMPLE_LIMIT = 5
+
   belongs_to :user, optional: true
 
   has_many :cart_items, dependent: :destroy
@@ -63,6 +65,48 @@ class Cart < ApplicationRecord
   def reload(*)
     @items_count = nil
     @subtotal_amount = nil
+    @sample_variant_ids = nil
+    @regular_variant_ids = nil
     super
+  end
+
+  # Sample tracking methods
+  # Samples are identified by is_sample = true flag set at creation time
+
+  # Returns cart items that are samples (is_sample = true)
+  def sample_items
+    cart_items.samples
+  end
+
+  # Returns count of sample items in cart
+  def sample_count
+    sample_items.count
+  end
+
+  # Returns variant IDs of samples in cart (memoized to prevent N+1)
+  def sample_variant_ids
+    @sample_variant_ids ||= sample_items.pluck(:product_variant_id)
+  end
+
+  # Returns variant IDs of regular (non-sample) items in cart (memoized)
+  def regular_variant_ids
+    @regular_variant_ids ||= cart_items.non_samples.pluck(:product_variant_id)
+  end
+
+  # Returns count of samples in a specific category
+  def sample_count_for_category(category)
+    sample_items.joins(product_variant: :product)
+                .where(products: { category_id: category.id })
+                .count
+  end
+
+  # Returns true if cart contains only sample items (no paid products)
+  def only_samples?
+    cart_items.any? && cart_items.non_samples.none?
+  end
+
+  # Returns true if cart has reached the sample limit
+  def at_sample_limit?
+    sample_count >= SAMPLE_LIMIT
   end
 end

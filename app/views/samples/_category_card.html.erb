@@ -1,0 +1,45 @@
+<%# Category card with expandable variants via Turbo Frame %>
+<% selected_count ||= 0 %>
+
+<div class="card bg-base-100 shadow-lg"
+     id="<%= dom_id(category, :sample_card) %>"
+     data-controller="category-expand"
+     data-category-expand-url-value="<%= category_samples_path(category.slug) %>"
+     data-category-expand-category-id-value="<%= category.id %>">
+
+  <!-- Category Header (clickable) -->
+  <button type="button"
+          class="card-body w-full text-left cursor-pointer hover:bg-base-200 transition-colors rounded-t-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+          data-action="click->category-expand#toggle"
+          data-category-expand-target="trigger"
+          aria-expanded="false"
+          aria-controls="<%= dom_id(category) %>">
+    <div class="flex items-center justify-between">
+      <!-- Header content (updatable via Turbo Stream) -->
+      <%= render "samples/category_header", category: category, selected_count: selected_count %>
+
+      <div class="flex items-center gap-3">
+        <!-- Chevron indicator -->
+        <svg class="w-6 h-6 transition-transform duration-200"
+             data-category-expand-target="chevron"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+    </div>
+  </button>
+
+  <!-- Expandable variants container (Turbo Frame) -->
+  <div class="overflow-hidden transition-all duration-300"
+       data-category-expand-target="content"
+       style="max-height: 0;">
+    <%= turbo_frame_tag dom_id(category) do %>
+      <!-- Content loaded via Turbo Frame when expanded -->
+      <div class="p-6 pt-0">
+        <div class="flex justify-center py-8">
+          <span class="loading loading-spinner loading-lg"></span>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

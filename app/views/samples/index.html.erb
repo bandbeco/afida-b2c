@@ -1,0 +1,98 @@
+<% content_for :title, "Request Free Product Samples | Afida" %>
+<% content_for :meta_description, "Request up to #{sample_limit} free samples of our eco-friendly catering supplies. Try our cups, lids, food containers and more before committing to a bulk order. UK delivery just £7.50." %>
+
+<%= content_for :head do %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I request samples?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Browse our sample collection, select up to #{sample_limit} products you'd like to try, and proceed to checkout. Samples are completely free - you only pay £7.50 for delivery."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How many free samples can I request?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "You can request up to #{sample_limit} free samples per order. This allows you to test different products before committing to a bulk purchase."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is there a cost for samples?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The samples themselves are completely free. You only need to cover the delivery cost of £7.50. If you add samples to a regular order, they ship free with your purchase."
+          }
+        }
+      ]
+    }.to_json) %>
+  </script>
+<% end %>
+
+<div class="min-h-screen bg-base-100">
+  <!-- Flash Messages Container for Turbo Stream updates -->
+  <div id="flash-messages" class="container mx-auto px-4"></div>
+
+  <!-- Header -->
+  <div class="container mx-auto px-4 text-center">
+    <h1 class="text-4xl font-bold mb-4 py-6">Request Free Samples</h1>
+  </div>
+  <div class="bg-base-200 py-8">
+    <div class="max-w-3xl mx-auto container px-4 text-center">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="text-6xl mb-3 text-secondary font-semibold">1</div>
+            <h3 class="font-semibold mb-2">Browse & Select</h3>
+            <p class="text-sm text-base-content/70">
+              Choose up to <%= sample_limit %> samples from our range of eco-friendly products.
+            </p>
+          </div>
+          <div class="text-center">
+            <div class="text-6xl mb-3 text-secondary font-semibold">2</div>
+            <h3 class="font-semibold mb-2">Checkout</h3>
+            <p class="text-sm text-base-content/70">
+              Samples are free of charge - all you need to do is cover the delivery cost.
+            </p>
+          </div>
+          <div class="text-center">
+            <div class="text-6xl mb-3 text-secondary font-semibold">3</div>
+            <h3 class="font-semibold mb-2">Test & Decide</h3>
+            <p class="text-sm text-base-content/70">
+              Try before you buy. Confident in your choice? Order in bulk.
+            </p>
+          </div>
+        </div>
+    </div>
+  </div>
+
+  <!-- Sample Counter (sticky) -->
+  <%= render "samples/sample_counter", sample_count: @sample_count %>
+
+  <!-- Categories Grid -->
+  <div class="container mx-auto px-4 py-12">
+    <% if @categories.any? %>
+      <div class="space-y-6">
+        <% @categories.each do |category| %>
+          <%= render "samples/category_card",
+                     category: category,
+                     selected_count: @selected_samples_by_category[category.id] || 0 %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">📦</div>
+        <h2 class="text-2xl font-semibold mb-2">No Samples Available</h2>
+        <p class="text-base-content/70">
+          We're currently preparing our sample collection. Check back soon!
+        </p>
+      </div>
+    <% end %>
+  </div>
+</div>

@@ -14,6 +14,11 @@ module Shipping
   EXPRESS_MIN_DAYS = 1
   EXPRESS_MAX_DAYS = 2
 
+  # Sample delivery option (for samples-only orders)
+  SAMPLE_COST = ENV.fetch("SAMPLE_SHIPPING_COST", "750").to_i  # £7.50
+  SAMPLE_MIN_DAYS = 3
+  SAMPLE_MAX_DAYS = 5
+
   # Allowed shipping countries (ISO 3166-1 alpha-2 codes)
   ALLOWED_COUNTRIES = %w[GB].freeze
 
@@ -74,6 +79,24 @@ module Shipping
           currency: CURRENCY
         },
         display_name: "Free Shipping"
+      }
+    }
+  end
+
+  # Shipping option for samples-only orders
+  def self.sample_only_shipping_option
+    {
+      shipping_rate_data: {
+        type: "fixed_amount",
+        fixed_amount: {
+          amount: SAMPLE_COST,
+          currency: CURRENCY
+        },
+        display_name: "Sample Delivery",
+        delivery_estimate: {
+          minimum: { unit: "business_day", value: SAMPLE_MIN_DAYS },
+          maximum: { unit: "business_day", value: SAMPLE_MAX_DAYS }
+        }
       }
     }
   end

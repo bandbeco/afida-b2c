@@ -52,6 +52,17 @@ class ProductVariant < ApplicationRecord
   scope :active, -> { where(active: true) }
   scope :by_name, -> { order(:name) }
   scope :by_position, -> { order(:position, :name) }
+  scope :sample_eligible, -> { where(sample_eligible: true) }
+
+  # Natural sort for variant names with numeric prefixes (e.g., 8oz, 12oz, 16oz)
+  # Extracts leading digits and sorts numerically, with non-numeric names last
+  # Safe: No user input interpolated - only uses static column references
+  scope :naturally_sorted, -> {
+    order(Arel.sql(<<~SQL.squish))
+      (NULLIF(REGEXP_REPLACE(product_variants.name, '[^0-9].*', '', 'g'), ''))::integer NULLS LAST,
+      product_variants.name
+    SQL
+  }
 
   validates :sku, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than: 0 }
@@ -151,5 +162,11 @@ class ProductVariant < ApplicationRecord
   # Returns minimum order quantity in units
   def minimum_order_units
     pac_size || 1
+  end
+
+  # Returns the SKU to use for sample fulfillment
+  # Uses custom sample_sku if present, otherwise derives from main SKU
+  def effective_sample_sku
+    sample_sku.presence || "SAMPLE-#{sku}"
   end
 end

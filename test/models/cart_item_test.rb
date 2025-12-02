@@ -31,10 +31,20 @@ class CartItemTest < ActiveSupport::TestCase
     assert_includes cart_item.errors[:quantity], "must be greater than 0"
   end
 
-  test "validates price is greater than zero" do
+  test "validates price is greater than zero for non-sample-eligible variant" do
+    # @product_variant is not sample-eligible, so price=0 should be invalid
+    assert_not @product_variant.sample_eligible?, "Test requires non-sample-eligible variant"
     cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 1, price: 0)
     assert_not cart_item.valid?
     assert_includes cart_item.errors[:price], "must be greater than 0"
+  end
+
+  test "allows price of zero for sample-eligible variant" do
+    sample_variant = product_variants(:sample_cup_8oz)
+    assert sample_variant.sample_eligible?, "Test requires sample-eligible variant"
+
+    cart_item = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: 0)
+    assert cart_item.valid?, "Sample with price=0 should be valid: #{cart_item.errors.full_messages}"
   end
 
   test "validates uniqueness of product_variant per cart" do
@@ -51,6 +61,119 @@ class CartItemTest < ActiveSupport::TestCase
     cart_item2 = CartItem.new(cart: cart2, product_variant: @product_variant, quantity: 1, price: 10)
 
     assert cart_item2.valid?
+  end
+
+  test "prevents adding sample when regular item exists in cart" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add as regular item first
+    CartItem.create!(
+      cart: @cart,
+      product_variant: sample_variant,
+      quantity: 2,
+      price: sample_variant.price,
+      is_sample: false
+    )
+
+    # Try to add as sample - should be rejected
+    sample_item = CartItem.new(
+      cart: @cart,
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0,
+      is_sample: true
+    )
+
+    assert_not sample_item.valid?
+    assert sample_item.errors[:base].any? { |e| e.include?("already have this product in your cart") }
+  end
+
+  test "prevents duplicate of same variant in same cart" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add first item
+    CartItem.create!(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price)
+
+    # Try to add duplicate - should fail uniqueness validation
+    duplicate = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price)
+    assert_not duplicate.valid?
+    assert_includes duplicate.errors[:product_variant], "has already been taken"
+  end
+
+  test "enforces sample limit at model level" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Fill cart to sample limit
+    Cart::SAMPLE_LIMIT.times do |i|
+      variant = ProductVariant.create!(
+        product: sample_variant.product,
+        name: "Sample Variant #{i}",
+        sku: "SAMPLE-LIMIT-#{i}-#{SecureRandom.hex(4)}",
+        price: 10.0,
+        stock_quantity: 100,
+        active: true,
+        sample_eligible: true
+      )
+      @cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
+    end
+
+    assert @cart.at_sample_limit?, "Cart should be at sample limit"
+
+    # Try to add one more sample - should fail validation
+    extra_sample = @cart.cart_items.build(
+      product_variant: sample_variant,
+      quantity: 1,
+      price: 0,
+      is_sample: true
+    )
+    assert_not extra_sample.valid?
+    assert extra_sample.errors[:base].any? { |e| e.include?("Sample limit") }
+  end
+
+  # Sample scope tests
+  test "samples scope returns only is_sample=true items" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add sample and regular items (different variants)
+    @cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+    @cart.cart_items.create!(product_variant: @product_variant, quantity: 1, price: @product_variant.price, is_sample: false)
+
+    samples = @cart.cart_items.samples
+    assert_equal 1, samples.count
+    assert samples.all? { |item| item.is_sample }
+  end
+
+  test "non_samples scope excludes is_sample=true items" do
+    sample_variant = product_variants(:sample_cup_8oz)
+
+    # Add sample and regular items (different variants)
+    @cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+    @cart.cart_items.create!(product_variant: @product_variant, quantity: 1, price: @product_variant.price, is_sample: false)
+
+    non_samples = @cart.cart_items.non_samples
+    assert_equal 1, non_samples.count
+    assert non_samples.none? { |item| item.is_sample }
+  end
+
+  test "sample? returns true when is_sample is true" do
+    sample_variant = product_variants(:sample_cup_8oz)
+    cart_item = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    assert cart_item.sample?
+  end
+
+  test "sample? returns false when is_sample is false" do
+    sample_variant = product_variants(:sample_cup_8oz)
+    cart_item = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price, is_sample: false)
+
+    assert_not cart_item.sample?
+  end
+
+  test "sample? returns false when is_sample defaults to false" do
+    # Test default behavior: is_sample defaults to false
+    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 1, price: @product_variant.price)
+
+    assert_not cart_item.sample?
   end
 
   # Method tests

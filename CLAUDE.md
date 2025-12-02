@@ -73,6 +73,16 @@ rails c                 # Shorthand
 - Swiper for carousels
 - Active Storage for file uploads
 
+**⚠️ IMPORTANT: Registering Stimulus Controllers**:
+When creating a new Stimulus controller, you MUST register it in `app/frontend/entrypoints/application.js`. Add it to the `lazyControllers` object:
+```javascript
+const lazyControllers = {
+  // ... existing controllers
+  "your-controller": () => import("../javascript/controllers/your_controller")
+}
+```
+Controllers will NOT work if they are not registered. The lazy loading system automatically loads controllers when their `data-controller` attribute is detected in the DOM.
+
 **Styling**:
 - TailwindCSS 4 for utility-first styling
 - DaisyUI component library for pre-built UI components
@@ -372,6 +382,47 @@ Visit `/pattern-demo` in development to see all variants and usage examples.
 - VAT calculated at `Cart::VAT_RATE` (0.2)
 - Cart methods: `items_count`, `subtotal_amount`, `vat_amount`, `total_amount`
 
+### Working with Samples
+
+Free product samples allow customers to try products before buying. Samples are available at `/samples`.
+
+**Data Model**:
+- `ProductVariant#sample_eligible` - Boolean flag marking variants available as samples
+- `ProductVariant#sample_sku` - Optional custom SKU for sample fulfillment (defaults to `SAMPLE-{sku}`)
+- Samples are stored as `CartItem` records with `price = 0`
+- **Mutual Exclusivity**: Same variant CANNOT exist as both sample and regular item in cart
+
+**Limits & Validation**:
+- Maximum 5 samples per cart (`Cart::SAMPLE_LIMIT`)
+- `CartItem` validates sample eligibility and limit at database level (race-condition safe)
+- Only sample-eligible variants can have price=0
+- Uniqueness validated on `(cart_id, product_variant_id)` - one entry per variant
+
+**Sample vs Regular Item Replacement**:
+When adding items, the system enforces mutual exclusivity with asymmetric behavior:
+- **Adding sample when regular exists**: No-op (validation error, regular item stays)
+- **Adding regular when sample exists**: Sample is removed, regular item added
+- Rationale: Customers who add to cart show purchase intent, which supersedes sample request
+
+**Cart Methods**:
+```ruby
+cart.sample_items                      # Returns cart items with price = 0
+cart.sample_count                      # Number of samples in cart
+cart.sample_count_for_category(cat)    # Samples in specific category
+cart.only_samples?                     # True if cart has only samples
+cart.at_sample_limit?                  # True if 5+ samples
+```
+
+**Checkout Behavior**:
+- Samples-only orders: Special £7.50 shipping rate
+- Mixed orders: Samples ship free with regular items
+- Order tracks `samples_only?` for fulfillment
+
+**Admin Setup**:
+1. Edit a product variant in admin
+2. Check "Sample eligible" checkbox
+3. Optionally set custom `sample_sku` for fulfillment tracking
+
 ### Pricing Model (Pack vs Unit Pricing)
 
 The application uses a unified pricing model where `subtotal = price × quantity` for all items, but the meaning of `quantity` differs by product type:
@@ -554,6 +605,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items` tables) (005-quick-add-to-cart)
 - Ruby 3.3.0+ / Rails 8.x + Rails Engine (SeoAiEngine), Anthropic Claude API (anthropic ~> 1.15), Google Search Console API (google-apis-webmasters_v3 ~> 0.6), SerpAPI (google_search_results ~> 2.2) (006-ai-seo-engine)
 - PostgreSQL 14+ (6 new engine tables: seo_ai_opportunities, seo_ai_content_briefs, seo_ai_content_drafts, seo_ai_content_items, seo_ai_performance_snapshots, seo_ai_budget_trackings) (006-ai-seo-engine)
+- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionView), Hotwire (Turbo Frames + Stimulus), TailwindCSS 4, DaisyUI, Stripe Checkout (011-variant-samples)
+- PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items`, `orders`, `order_items` tables) (011-variant-samples)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

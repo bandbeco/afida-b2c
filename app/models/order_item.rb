@@ -6,7 +6,8 @@ class OrderItem < ApplicationRecord
   has_one_attached :design
 
   validates :product_name, presence: true
-  validates :price, presence: true, numericality: { greater_than: 0 }
+  validates :price, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validate :price_must_be_positive_unless_sample
   validates :quantity, presence: true, numericality: { greater_than: 0 }
   validates :line_total, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :pac_size, numericality: { greater_than: 0 }, allow_nil: true
@@ -14,6 +15,8 @@ class OrderItem < ApplicationRecord
   before_validation :calculate_line_total
 
   scope :for_product, ->(product) { where(product: product) }
+  scope :samples, -> { where(is_sample: true) }
+  scope :non_samples, -> { where(is_sample: false) }
 
   def self.create_from_cart_item(cart_item, order)
     order_item = new(
@@ -26,7 +29,8 @@ class OrderItem < ApplicationRecord
       price: cart_item.price,  # Store pack price (not unit price) for correct display
       pac_size: cart_item.product_variant.pac_size,  # Capture pack size for pricing display
       line_total: cart_item.line_total,
-      configuration: cart_item.configuration
+      configuration: cart_item.configuration,
+      is_sample: cart_item.is_sample
     )
 
     # Copy design attachment if present
@@ -56,6 +60,11 @@ class OrderItem < ApplicationRecord
     configuration.present? && !configuration.empty?
   end
 
+  # Uses the is_sample boolean flag set when the order was created
+  def sample?
+    is_sample
+  end
+
   # Pricing display methods for pack vs unit pricing
   # Pack-priced: standard products with pac_size > 1
   # Unit-priced: branded/configured products OR pac_size nil/1
@@ -80,5 +89,14 @@ class OrderItem < ApplicationRecord
 
   def calculate_line_total
     self.line_total = subtotal if price.present? && quantity.present?
+  end
+
+  # Samples (price = 0) are only allowed for sample-eligible variants
+  def price_must_be_positive_unless_sample
+    return unless product_variant
+
+    if price.to_f == 0 && !product_variant.sample_eligible?
+      errors.add(:price, "must be greater than 0")
+    end
   end
 end

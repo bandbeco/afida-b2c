@@ -2,24 +2,41 @@ class CheckoutsController < ApplicationController
   allow_unauthenticated_access
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to cart_path, alert: "Too many checkout attempts. Please wait before trying again." }
 
+  # Eager loading strategy for cart items used across checkout methods
+  CART_ITEM_INCLUDES = [ :product, :product_variant, { design_attachment: :blob } ].freeze
+
   def create
     cart = Current.cart
     # Eager load associations to prevent N+1 queries when building Stripe line items
-    cart_items = cart.cart_items.includes(:product, :product_variant)
+    cart_items = cart.cart_items.includes(CART_ITEM_INCLUDES)
     line_items = cart_items.map do |item|
       # For standard products with pack pricing: send packs as quantity
       # For branded/configured products: send units as quantity
-      if item.configured? || item.product_variant.pac_size.blank? || item.product_variant.pac_size.zero?
-        # Unit-based pricing (branded products or products without packs)
+      variant_name = item.product_variant.name
+
+      if item.sample?
+        # Sample items: free, quantity 1
+        quantity = 1
+        unit_amount = 0
+        product_name = "#{item.product.name} - #{variant_name} (Sample)"
+      elsif item.configured?
+        # Unit-based pricing (branded products)
+        quantity = 1
+        unit_amount = (item.price.to_f * item.quantity * 100).round
+        units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
+        product_name = "#{item.product.name} - #{item.configuration['size']} (#{units_formatted} units)"
+      elsif item.product_variant.pac_size.blank? || item.product_variant.pac_size.zero?
+        # Unit-based pricing (products without packs)
         quantity = item.quantity
         unit_amount = (item.price.to_f * 100).round
-        product_name = item.product.name
+        product_name = "#{item.product.name} - #{variant_name}"
       else
         # Pack-based pricing (standard products)
-        packs_needed = (item.quantity.to_f / item.product_variant.pac_size).ceil
-        quantity = packs_needed
-        unit_amount = (item.price.to_f * 100).round
-        product_name = "#{item.product.name} (#{item.product_variant.pac_size} per pack)"
+        packs_needed = item.quantity
+        quantity = 1
+        unit_amount = (item.price.to_f * packs_needed * 100).round
+        packs_label = packs_needed == 1 ? "pack" : "packs"
+        product_name = "#{item.product.name} - #{variant_name} (#{packs_needed} #{packs_label})"
       end
 
       {
@@ -37,6 +54,13 @@ class CheckoutsController < ApplicationController
     end
 
     begin
+      # Use sample shipping for samples-only orders, standard options otherwise
+      shipping_options = if cart.only_samples?
+        [ Shipping.sample_only_shipping_option ]
+      else
+        Shipping.stripe_shipping_options
+      end
+
       session_params = {
         payment_method_types: [ "card" ],
         line_items: line_items,
@@ -44,7 +68,7 @@ class CheckoutsController < ApplicationController
         shipping_address_collection: {
           allowed_countries: Shipping::ALLOWED_COUNTRIES
         },
-        shipping_options: Shipping.stripe_shipping_options,
+        shipping_options: shipping_options,
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: cancel_checkout_url
       }
@@ -87,12 +111,15 @@ class CheckoutsController < ApplicationController
         return redirect_to order_path(existing_order)
       end
 
-      # Get the cart
+      # Get the cart with eager loading for order creation
       cart = Current.cart
       if cart.blank? || cart.cart_items.empty?
         flash[:error] = "No items found in cart"
         return redirect_to root_path
       end
+
+      # Preload associations for order item creation (prevents N+1 queries)
+      cart.cart_items.includes(CART_ITEM_INCLUDES).load
 
       # Create the order
       customer_details = stripe_session.customer_details

@@ -44,6 +44,11 @@ class Order < ApplicationRecord
       .where.not(order_items: { configuration: nil })
       .distinct
   }
+  scope :with_samples, -> {
+    joins(:order_items)
+      .where(order_items: { is_sample: true })
+      .distinct
+  }
 
   def items_count
     order_items.sum(:quantity)
@@ -71,6 +76,16 @@ class Order < ApplicationRecord
 
   def branded_order?
     order_items.any? { |item| item.configuration.present? }
+  end
+
+  # Returns true if any order items are samples (using is_sample flag)
+  def contains_samples?
+    order_items.samples.exists?
+  end
+
+  # Returns true if this is a samples-only order (no non-sample items)
+  def sample_request?
+    contains_samples? && order_items.non_samples.none?
   end
 
   private
