@@ -1,0 +1,22 @@
+<%# Toast notification - auto-dismisses after delay %>
+<%
+  type ||= :info
+  message ||= ""
+
+  bg_class = case type.to_sym
+    when :success then "bg-success text-success-content"
+    when :warning then "bg-warning text-warning-content"
+    when :error   then "bg-error text-error-content"
+    else "bg-info text-info-content"
+  end
+%>
+
+<div class="alert <%= bg_class %> shadow-lg max-w-sm"
+     data-controller="auto-dismiss"
+     data-auto-dismiss-delay-value="5000">
+  <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+  </svg>
+  <span class="text-sm"><%= message %></span>
+</div>

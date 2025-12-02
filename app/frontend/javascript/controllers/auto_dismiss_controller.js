@@ -40,9 +40,15 @@ export default class extends Controller {
     if (this.timeout) {
       clearTimeout(this.timeout)
     }
+    if (this.removeTimeout) {
+      clearTimeout(this.removeTimeout)
+    }
   }
 
   dismiss() {
+    // Guard against already-removed elements
+    if (!this.element.isConnected) return
+
     if (this.animationValue === "slide-left") {
       // Slide out to the left
       this.element.style.transition = "transform 0.3s ease-in, opacity 0.3s ease-in"
@@ -54,8 +60,11 @@ export default class extends Controller {
       this.element.style.opacity = "0"
     }
 
-    setTimeout(() => {
-      this.element.remove()
+    this.removeTimeout = setTimeout(() => {
+      // Check again before removing (element may have been removed by navigation)
+      if (this.element.isConnected) {
+        this.element.remove()
+      }
     }, 300)
   }
 }
