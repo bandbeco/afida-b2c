@@ -16,9 +16,7 @@
             <div class="relative flex-shrink-0">
               <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-12 h-12 rounded") %>
               <% if cart_item.sample? %>
-                <span class="absolute bottom-0 left-0 right-0 bg-primary text-primary-content text-[9px] text-center py-px rounded-b">
-                  SAMPLE
-                </span>
+                <%= render "shared/sample_badge", size: :sm %>
               <% end %>
             </div>
 

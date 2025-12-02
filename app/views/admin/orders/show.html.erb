@@ -41,9 +41,7 @@
             <div class="relative flex-shrink-0">
               <%= product_photo_tag(item.product_variant&.primary_photo, alt: item.product_variant&.display_name || "Product", class: "h-16 w-16 rounded-lg") %>
               <% if item.sample? %>
-                <span class="absolute bottom-0 left-0 right-0 bg-primary text-primary-content text-[9px] text-center py-px rounded-b">
-                  SAMPLE
-                </span>
+                <%= render "shared/sample_badge", size: :sm %>
               <% end %>
             </div>
 

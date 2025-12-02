@@ -14,9 +14,7 @@
       <%= link_to product_path(cart_item.product, url_params), "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
         <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-20 h-20 rounded-md shadow") %>
         <% if cart_item.sample? %>
-          <span class="absolute bottom-0 left-0 right-0 bg-primary text-primary-content text-xs text-center py-0.5 rounded-b-md">
-            SAMPLE
-          </span>
+          <%= render "shared/sample_badge", size: :md %>
         <% end %>
       <% end %>
       <div>

@@ -1,0 +1,26 @@
+<%#
+  Sample badge overlay for product thumbnails.
+
+  Usage:
+    <%= render "shared/sample_badge", size: :sm %>
+    <%= render "shared/sample_badge", size: :md %>
+
+  Sizes:
+    :sm (default) - For smaller thumbnails (drawer, compact views)
+    :md - For larger thumbnails (cart page, order details)
+
+  Note: Parent container must have `position: relative` (class="relative")
+%>
+<%
+  size ||= :sm
+
+  size_classes = case size
+  when :md
+    "text-xs py-0.5 rounded-b-md"
+  else # :sm
+    "text-[9px] py-px rounded-b"
+  end
+%>
+<span class="absolute bottom-0 left-0 right-0 bg-primary text-primary-content text-center <%= size_classes %>">
+  SAMPLE
+</span>
