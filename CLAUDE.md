@@ -390,12 +390,19 @@ Free product samples allow customers to try products before buying. Samples are 
 - `ProductVariant#sample_eligible` - Boolean flag marking variants available as samples
 - `ProductVariant#sample_sku` - Optional custom SKU for sample fulfillment (defaults to `SAMPLE-{sku}`)
 - Samples are stored as `CartItem` records with `price = 0`
-- Same variant can exist as both sample (price=0) and regular item (price>0) in same cart
+- **Mutual Exclusivity**: Same variant CANNOT exist as both sample and regular item in cart
 
 **Limits & Validation**:
 - Maximum 5 samples per cart (`Cart::SAMPLE_LIMIT`)
 - `CartItem` validates sample eligibility and limit at database level (race-condition safe)
 - Only sample-eligible variants can have price=0
+- Uniqueness validated on `(cart_id, product_variant_id)` - one entry per variant
+
+**Sample vs Regular Item Replacement**:
+When adding items, the system enforces mutual exclusivity with asymmetric behavior:
+- **Adding sample when regular exists**: No-op (validation error, regular item stays)
+- **Adding regular when sample exists**: Sample is removed, regular item added
+- Rationale: Customers who add to cart show purchase intent, which supersedes sample request
 
 **Cart Methods**:
 ```ruby

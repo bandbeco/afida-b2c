@@ -397,7 +397,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to samples_path
-    assert_match /Sample limit reached/, flash[:alert]
+    assert_match /Sample limit of #{Cart::SAMPLE_LIMIT} reached/, flash[:alert]
   end
 
   test "rejects duplicate sample in cart" do

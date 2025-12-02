@@ -142,7 +142,7 @@ class CartItemsController < ApplicationController
 
   def create_sample_cart_item
     # Find variant ensuring it's active and sample-eligible
-    @variant = ProductVariant.active.sample_eligible.find_by(id: params[:product_variant_id])
+    @variant = ProductVariant.active.sample_eligible.find_by(id: sample_params[:product_variant_id])
 
     unless @variant
       return respond_with_sample_error("This variant is not available as a sample")
@@ -150,7 +150,7 @@ class CartItemsController < ApplicationController
 
     # Check sample limit
     if @cart.at_sample_limit?
-      return respond_with_sample_error("Sample limit reached (#{Cart::SAMPLE_LIMIT} maximum)")
+      return respond_with_sample_error("Sample limit of #{Cart::SAMPLE_LIMIT} reached")
     end
 
     # Check if sample already in cart (allow regular item to coexist)
@@ -195,7 +195,9 @@ class CartItemsController < ApplicationController
     product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
 
     # If sample exists for this variant, remove it (regular item replaces sample)
-    @cart.cart_items.samples.where(product_variant: product_variant).destroy_all
+    sample_items = @cart.cart_items.samples.where(product_variant: product_variant)
+    @sample_replaced = sample_items.exists?
+    sample_items.destroy_all
 
     # Find existing non-sample cart item for this variant
     @cart_item = @cart.cart_items.non_samples.find_by(product_variant: product_variant)
@@ -212,16 +214,20 @@ class CartItemsController < ApplicationController
 
     if @cart_item.save
       respond_to do |format|
-        format.turbo_stream do
-          render turbo_stream: [
-            # Update cart counter
-            turbo_stream.replace("cart_counter", partial: "shared/cart_counter"),
-            # Update drawer cart content
-            turbo_stream.replace("drawer_cart_content", partial: "shared/drawer_cart_content")
-            # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end
-          ]
+        format.turbo_stream
+        # Renders create.turbo_stream.erb which handles:
+        # - Cart counter update
+        # - Drawer content update
+        # - Sample replacement notification (if @sample_replaced)
+        # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end
+        format.html do
+          notice = if @sample_replaced
+            "#{product_variant.display_name} added to cart (sample removed)."
+          else
+            "#{product_variant.display_name} added to cart."
+          end
+          redirect_to cart_path, notice: notice
         end
-        format.html { redirect_to cart_path, notice: "#{product_variant.display_name} added to cart." }
       end
     else
       respond_to do |format|
@@ -233,5 +239,9 @@ class CartItemsController < ApplicationController
 
   def cart_item_params
     params.expect(cart_item: [ :variant_sku, :quantity ])
+  end
+
+  def sample_params
+    params.permit(:product_variant_id)
   end
 end

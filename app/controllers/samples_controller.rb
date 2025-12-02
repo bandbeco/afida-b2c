@@ -38,7 +38,12 @@ class SamplesController < ApplicationController
       .joins(:product)
       .where(products: { category_id: @category.id, active: true })
       .where(active: true)
-      .includes(product: { product_photo_attachment: :blob })
+      .with_attached_product_photo
+      .with_attached_lifestyle_photo
+      .includes(product: [
+        { product_photo_attachment: :blob },
+        { lifestyle_photo_attachment: :blob }
+      ])
       .order("products.name")
       .naturally_sorted
 

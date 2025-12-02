@@ -5,7 +5,7 @@ class CheckoutsController < ApplicationController
   def create
     cart = Current.cart
     # Eager load associations to prevent N+1 queries when building Stripe line items
-    cart_items = cart.cart_items.includes(:product, :product_variant)
+    cart_items = cart.cart_items.includes(:product, product_variant: :product)
     line_items = cart_items.map do |item|
       # For standard products with pack pricing: send packs as quantity
       # For branded/configured products: send units as quantity
@@ -108,12 +108,15 @@ class CheckoutsController < ApplicationController
         return redirect_to order_path(existing_order)
       end
 
-      # Get the cart
+      # Get the cart with eager loading for order creation
       cart = Current.cart
       if cart.blank? || cart.cart_items.empty?
         flash[:error] = "No items found in cart"
         return redirect_to root_path
       end
+
+      # Preload associations for order item creation (prevents N+1 queries)
+      cart.cart_items.includes(:product, :product_variant, design_attachment: :blob).load
 
       # Create the order
       customer_details = stripe_session.customer_details
