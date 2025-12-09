@@ -7,7 +7,7 @@
     <div class="flex overflow-hidden group">
       <div class="logo-conveyor flex items-center whitespace-nowrap">
         <% @client_logos.each do |logo| %>
-          <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize} logo", class: "mx-8 h-12 w-auto object-contain grayscale opacity-50 hover:grayscale-0 hover:opacity-100 transition-all duration-300" %>
+          <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize} logo", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
         <% end %>
 
         <!-- Duplicate for infinite scroll effect -->

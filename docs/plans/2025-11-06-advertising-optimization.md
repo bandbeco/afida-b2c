@@ -2098,7 +2098,7 @@ git commit -m "feat: add request quote form for B2B leads
    GOOGLE_ADS_ID=AW-XXXXXXXXXX
    GOOGLE_ADS_CONVERSION_LABEL=xxxxx
    META_PIXEL_ID=123456789
-   APP_HOST=afida.co.uk
+   APP_HOST=afida.com
    ```
 
 2. **Product Data Population:**
