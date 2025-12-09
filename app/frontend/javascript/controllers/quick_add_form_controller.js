@@ -1,21 +1,25 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["variantSku", "priceDisplay", "packSizeDisplay", "quantitySelect"]
+  static targets = ["variantSku", "priceDisplay", "packSizeDisplay", "quantitySelect", "submitButton"]
   static values = { variantsData: Array }
 
   connect() {
-    // Initialize with first variant data
+    this.selectedOptions = {}
+
     if (this.hasVariantsDataValue && this.variantsDataValue.length > 0) {
-      this.currentVariant = this.variantsDataValue[0]
-      this.selectedOptions = {}
-
-      // Initialize selected options from first variant
-      if (this.currentVariant.option_values) {
-        this.selectedOptions = { ...this.currentVariant.option_values }
+      // Single variant: auto-select it
+      if (this.variantsDataValue.length === 1) {
+        this.currentVariant = this.variantsDataValue[0]
+        if (this.currentVariant.option_values) {
+          this.selectedOptions = { ...this.currentVariant.option_values }
+        }
+        this.updatePrice()
+      } else {
+        // Multi-variant: no pre-selection, user must choose
+        this.currentVariant = null
+        this.updateSubmitButtonState()
       }
-
-      this.updatePrice()
     }
   }
 
@@ -83,29 +87,23 @@ export default class extends Controller {
       this.updateQuantityOptions()
     }
 
-    // Update price
+    // Update price and submit button state
     this.updatePrice()
+    this.updateSubmitButtonState()
   }
 
   updatePrice() {
     if (!this.hasPriceDisplayTarget || !this.currentVariant) return
 
-    // Get selected quantity
-    const quantity = this.hasQuantitySelectTarget ?
-                     parseInt(this.quantitySelectTarget.value) :
-                     (this.currentVariant.pac_size || 1)
+    // Get selected quantity (value is number of packs, not units)
+    const packs = this.hasQuantitySelectTarget ?
+                  parseInt(this.quantitySelectTarget.value) :
+                  1
 
     // Validate data
-    const pacSize = this.currentVariant.pac_size || 1
     const price = this.currentVariant.price || 0
 
-    if (pacSize <= 0) {
-      console.error('Invalid pac_size:', pacSize)
-      return
-    }
-
-    // Calculate price (quantity is in units, price is per pack)
-    const packs = quantity / pacSize
+    // Calculate price (packs × price per pack)
     const totalPrice = price * packs
 
     // Format and display price
@@ -127,15 +125,15 @@ export default class extends Controller {
     select.innerHTML = ''
 
     for (let n = 1; n <= 10; n++) {
-      const quantityUnits = n * pacSize
+      const totalUnits = n * pacSize
       const option = document.createElement('option')
-      option.value = quantityUnits
-      option.textContent = `${n} ${n === 1 ? 'pack' : 'packs'} (${this.formatNumber(quantityUnits)} units)`
+      option.value = n  // Value is number of packs, not units
+      option.textContent = `${n} ${n === 1 ? 'pack' : 'packs'} (${this.formatNumber(totalUnits)} units)`
       select.appendChild(option)
     }
 
     // Default to 1 pack
-    select.value = pacSize
+    select.value = 1
   }
 
   formatCurrency(amount) {
@@ -147,5 +145,18 @@ export default class extends Controller {
 
   formatNumber(num) {
     return new Intl.NumberFormat('en-GB').format(num)
+  }
+
+  updateSubmitButtonState() {
+    if (!this.hasSubmitButtonTarget) return
+
+    // Enable submit only when a variant is selected
+    if (this.currentVariant) {
+      this.submitButtonTarget.disabled = false
+      this.submitButtonTarget.classList.remove('btn-disabled')
+    } else {
+      this.submitButtonTarget.disabled = true
+      this.submitButtonTarget.classList.add('btn-disabled')
+    }
   }
 }

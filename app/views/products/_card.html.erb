@@ -1,32 +1,34 @@
-<div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card" data-product-id="<%= product.id %>">
-  <%= link_to product_path(product.slug), data: { turbo_frame: "_top" } do %>
-    <figure class="aspect-square">
+<div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card h-full flex flex-col" data-product-id="<%= product.id %>">
+  <%= link_to product_path(product.slug), class: "flex flex-col flex-1", data: { turbo_frame: "_top" } do %>
+    <figure class="aspect-square overflow-hidden flex-shrink-0">
       <%= product_photo_tag(product.primary_photo,
                             alt: product.name,
-                            class: "w-full h-full object-cover",
+                            class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
                             variant: { resize_to_limit: [400, 400] },
                             loading: "lazy") %>
     </figure>
 
-    <div class="card-body p-4">
+    <div class="card-body p-4 flex flex-col flex-1">
       <h2 class="card-title text-lg"><%= product.name %></h2>
 
       <% if product.description_short_with_fallback.present? %>
-        <p class="text-sm text-gray-600 mb-2"><%= product.description_short_with_fallback %></p>
+        <p class="text-sm text-gray-600 mb-2 line-clamp-2 flex-1"><%= product.description_short_with_fallback %></p>
+      <% else %>
+        <div class="flex-1"></div>
       <% end %>
 
       <% price_range = product.price_range %>
       <% price_unit = product.customizable_template? ? "unit" : "pack" %>
       <% if price_range.is_a?(Array) %>
-        <p class="text-sm text-gray-600">from <%= number_to_currency(price_range[0], unit: "£") %> / <%= price_unit %></p>
+        <p class="text-sm text-gray-600 mt-auto">from <%= number_to_currency(price_range[0], unit: "£") %> / <%= price_unit %></p>
       <% elsif price_range %>
-        <p class="text-sm text-gray-600">from <%= number_to_currency(price_range, unit: "£") %> / <%= price_unit %></p>
+        <p class="text-sm text-gray-600 mt-auto">from <%= number_to_currency(price_range, unit: "£") %> / <%= price_unit %></p>
       <% end %>
     </div>
   <% end %>
 
-  <%# Quick Add button - Only for standard products with variants %>
-  <% if product.product_type == "standard" && product.active_variants.any? %>
+  <% show_quick_add = local_assigns.fetch(:show_quick_add, true) %>
+  <% if show_quick_add && product.product_type == "standard" && product.active_variants.any? %>
     <div class="card-actions p-4 pt-0">
       <%= link_to quick_add_product_path(product),
                   data: {

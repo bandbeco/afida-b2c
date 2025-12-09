@@ -14,8 +14,10 @@
               } do |f| %>
 
   <%# Hidden field for variant SKU - will be updated by Stimulus when options change %>
+  <%# For multi-variant products, start empty to force user selection %>
+  <% initial_sku = (variants.count == 1) ? (variants.first&.sku || product.default_variant&.sku) : nil %>
   <%= hidden_field_tag "cart_item[variant_sku]",
-                       (variants.first&.sku || product.default_variant&.sku),
+                       initial_sku,
                        data: { quick_add_form_target: "variantSku" } %>
 
   <%# Option selectors - Same UI as product detail page %>
@@ -27,7 +29,7 @@
           option_values = variants.map { |v| v.option_values[option.name] }.compact.uniq
           # Sort by numeric value if present
           option_values = option_values.sort_by { |v| v.scan(/\d+/).first.to_i }
-          selected_value = variants.first.option_values[option.name]
+          # No pre-selection for multi-variant products - user must choose
           target_name = option.name.downcase
         %>
         <div class="form-control">
@@ -37,19 +39,12 @@
           <div class="flex flex-wrap gap-2">
             <% option_values.each do |value| %>
               <button type="button"
-                      class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-4 py-2 cursor-pointer font-medium text-sm <%= 'border-primary' if value == selected_value %>"
+                      class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-4 py-2 cursor-pointer font-medium text-sm"
                       data-quick-add-form-target="<%= target_name %>Button"
                       data-option="<%= option.name %>"
                       data-value="<%= value %>"
                       data-action="click->quick-add-form#selectOption">
                 <%= option_labels.dig(option.name, value) || value %>
-                <% if value == selected_value %>
-                  <span class="option-checkmark absolute -top-2 -right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                      <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
-                    </svg>
-                  </span>
-                <% end %>
               </button>
             <% end %>
           </div>
@@ -80,14 +75,22 @@
                    } %>
   </div>
 
-  <%# Price display - Shows selected variant price %>
+  <%# Price display - Shows selected variant price (or placeholder for multi-variant) %>
+  <% is_multi_variant = variants.count > 1 %>
   <div class="flex justify-between items-center py-3 px-4 bg-base-200 rounded-lg">
     <span class="font-medium">Price:</span>
     <span class="font-semibold text-lg" data-quick-add-form-target="priceDisplay">
-      <%= number_to_currency(variants.first&.price || product.default_variant&.price || 0) %>
+      <% if is_multi_variant %>
+        Select size
+      <% else %>
+        <%= number_to_currency(variants.first&.price || product.default_variant&.price || 0) %>
+      <% end %>
     </span>
   </div>
 
-  <%# Submit button %>
-  <%= f.submit "Add to Cart", class: "btn btn-primary w-full mt-4" %>
+  <%# Submit button - disabled until variant selected for multi-variant products %>
+  <%= f.submit "Add to Cart",
+               class: "btn btn-primary w-full mt-4 #{is_multi_variant ? 'btn-disabled' : ''}",
+               disabled: is_multi_variant,
+               data: { quick_add_form_target: "submitButton" } %>
 <% end %>
