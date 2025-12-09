@@ -19,7 +19,8 @@ CSV.foreach(Rails.root.join('lib', 'data', 'categories.csv'), headers: true) do 
     categories_metadata[slug] = {
       name: data['name']&.strip&.gsub(/\s+/, ' '),
       meta_title: data['meta_title']&.strip,
-      meta_description: data['meta_description']&.strip&.gsub(/\s+/, ' ')
+      meta_description: data['meta_description']&.strip&.gsub(/\s+/, ' '),
+      description: data['description']&.strip
     }
   end
 end
@@ -28,11 +29,12 @@ puts "Categories metadata loaded."
 # Create categories from the metadata loaded from CSV
 puts "Creating categories..."
 categories_metadata.each do |slug, metadata|
-  Category.find_or_create_by!(slug: slug) do |category|
-    category.name = metadata[:name]
-    category.meta_title = metadata[:meta_title]
-    category.meta_description = metadata[:meta_description]
-  end
+  category = Category.find_or_initialize_by(slug: slug)
+  category.name = metadata[:name]
+  category.meta_title = metadata[:meta_title]
+  category.meta_description = metadata[:meta_description]
+  category.description = metadata[:description]
+  category.save!
   puts "  Created/Updated category: #{metadata[:name]} (#{slug})"
 end
 
