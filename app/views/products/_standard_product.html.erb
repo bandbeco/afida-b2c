@@ -81,9 +81,9 @@
         </figure>
 
         <div class="card-body p-4 sm:p-8 lg:w-1/2 text-center lg:text-left">
-          <h2 class="card-title text-2xl sm:text-3xl lg:text-4xl justify-center lg:justify-start">
+          <h1 class="card-title text-2xl sm:text-3xl lg:text-4xl justify-center lg:justify-start">
             <%= @product.name %>
-          </h2>
+          </h1>
 
           <p class="text-xl text-black mt-2" data-product-options-target="unitPriceDisplay">
             <% if @has_url_selection %>
@@ -248,7 +248,7 @@
           <%# Product Details Section - T038-T043 %>
           <% if @product.description_detailed_with_fallback.present? %>
             <div class="mt-8">
-              <h2 class="text-2xl font-semibold mb-4">Product Details</h2>
+              <h2 class="text-2xl font-semibold mb-4">About Our <%= @product.name %></h2>
               <div class="prose prose-lg max-w-none">
                 <%= simple_format(@product.description_detailed_with_fallback) %>
               </div>
