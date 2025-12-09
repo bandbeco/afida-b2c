@@ -62,6 +62,12 @@ load Rails.root.join('db', 'seeds', 'product_photos.rb')
 # Load URL redirect mappings
 load Rails.root.join('db', 'seeds', 'url_redirects.rb')
 
+# Mark 8 random products as featured
+puts "Marking featured products..."
+Product.update_all(featured: false)
+Product.standard.order("RANDOM()").limit(8).update_all(featured: true)
+puts "  Marked #{Product.where(featured: true).count} products as featured"
+
 puts "Seeding completed!"
 puts "Categories created: #{Category.count}"
 puts "Products created: #{Product.count}"

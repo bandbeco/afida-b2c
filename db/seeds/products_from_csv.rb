@@ -19,7 +19,7 @@ products_data = {}
 
 CSV.foreach(csv_path, headers: true) do |row|
   product_name = row['product']
-  category_slug = row['category']
+  category_slug = row['category_slug']
 
   key = "#{product_name}|#{category_slug}"
 
@@ -30,7 +30,9 @@ CSV.foreach(csv_path, headers: true) do |row|
     material: row['material'],
     meta_title: row['meta_title'],
     meta_description: row['meta_description'],
-    description: row['description'],
+    description_short: row['description_short'],
+    description_standard: row['description_standard'],
+    description_detailed: row['description_detailed'],
     variants: []
   }
 
@@ -54,17 +56,19 @@ products_data.each do |key, data|
     next
   end
 
-  # Create product
-  product = Product.find_or_create_by!(slug: data[:slug]) do |p|
-    p.name = data[:name]
-    p.category = category
-    p.meta_title = data[:meta_title]
-    p.meta_description = data[:meta_description]
-    p.description_standard = data[:description]
-    p.material = data[:material]
-    p.active = true
-    p.product_type = 'standard'
-  end
+  # Create or update product
+  product = Product.find_or_initialize_by(slug: data[:slug])
+  product.name = data[:name]
+  product.category = category
+  product.meta_title = data[:meta_title]
+  product.meta_description = data[:meta_description]
+  product.description_short = data[:description_short]
+  product.description_standard = data[:description_standard]
+  product.description_detailed = data[:description_detailed]
+  product.material = data[:material]
+  product.active = true
+  product.product_type = 'standard'
+  product.save!
 
   # Determine which options to assign
   sizes = data[:variants].map { |v| v[:size] }.compact.uniq

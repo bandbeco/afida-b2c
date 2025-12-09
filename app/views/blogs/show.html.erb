@@ -42,13 +42,11 @@
           <div class="card bg-base-100 shadow-sm hover:shadow-md transition">
             <%= link_to product_path(product.slug), data: { turbo_frame: "_top" } do %>
               <figure class="aspect-square">
-                <% if product.primary_photo&.attached? %>
-                  <%= image_tag product.primary_photo, alt: product.name, class: "w-full h-full object-cover" %>
-                <% else %>
-                  <div class="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                    <span class="text-4xl font-bold text-primary/30"><%= product.name[0] %></span>
-                  </div>
-                <% end %>
+                <%= product_photo_tag(product.primary_photo,
+                                      alt: product.name,
+                                      class: "w-full h-full object-cover",
+                                      variant: { resize_to_limit: [400, 400] },
+                                      loading: "lazy") %>
               </figure>
 
               <div class="card-body p-4">
