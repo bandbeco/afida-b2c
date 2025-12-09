@@ -134,7 +134,7 @@ validates :password, length: { minimum: 8 }, if: -> { new_record? || password.pr
 
 ### ✅ **N+1 Query Prevention**
 **Status:** EXCELLENT  
-**Location:** `config/initializers/bullet.rb`, `doc/n_plus_one_prevention.md`
+**Location:** `config/initializers/bullet.rb`, `docs/n_plus_one_prevention.md`
 
 Comprehensive N+1 prevention strategy:
 - ✅ Bullet gem configured in development (warnings) and test (raises errors)
