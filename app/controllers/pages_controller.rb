@@ -42,6 +42,7 @@ class PagesController < ApplicationController
   end
 
   def about
+    @client_logos = client_logos
   end
 
   def contact
