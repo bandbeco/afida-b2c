@@ -1,42 +1,45 @@
 <!-- Featured Product -->
-<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] py-24 bg-neutral-900 text-white overflow-hidden">
-  <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 30px 30px;"></div>
+<section class="py-12 sm:py-24">
+  <div class="container mx-auto px-4">
+    <div class="bg-neutral-900 text-white overflow-hidden rounded-3xl py-16 px-8 sm:px-12 relative">
+      <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 30px 30px;"></div>
+      <div class="relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+          <div class="order-2 md:order-1">
+            <div class="mb-8">
+              <%= vite_image_tag "images/ecomaniacs-logo.svg", alt: "Eco Maniacs", class: "w-64 brightness-0 invert" %>
+            </div>
+            <h3 class="text-4xl font-bold mb-6 text-[#79ebc0]">BIO FIBRE STRAWS</h3>
+            <p class="text-lg text-gray-300 mb-8 leading-relaxed">
+              Available in both beige and black, our 100% biodegradable, Bio Fibre Straws are as durable as plastic, but with all the eco-friendly credentials. These straws boast a sleek and contemporary design that complements any drink or setting.
+            </p>
 
-  <div class="container mx-auto px-4 relative z-10">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
-      <div class="order-2 md:order-1">
-        <div class="mb-8">
-          <%= vite_image_tag "images/ecomaniacs-logo.svg", alt: "Eco Maniacs", class: "w-64 brightness-0 invert" %>
-        </div>
-        <h3 class="text-4xl font-bold mb-6 text-[#79ebc0]">BIO FIBRE STRAWS</h3>
-        <p class="text-lg text-gray-300 mb-8 leading-relaxed">
-          Available in both beige and black, our 100% biodegradable, Bio Fibre Straws are as durable as plastic, but with all the eco-friendly credentials. These straws boast a sleek and contemporary design that complements any drink or setting.
-        </p>
+            <div class="flex flex-col gap-6">
+              <div class="flex items-start gap-4">
+                <div>
+                  <h4 class="text-xl font-bold mb-2">Fully Biodegradable</h4>
+                  <p class="text-lg text-gray-300">Made from bio fibre, these straws are a sustainable alternative to single-use plastic straws.</p>
+                </div>
+              </div>
+            </div>
 
-        <div class="flex flex-col gap-6">
-          <div class="flex items-start gap-4">
-            <div>
-              <h4 class="text-xl font-bold mb-2">Fully Biodegradable</h4>
-              <p class="text-gray-400">Made from bio fibre, these straws are a sustainable alternative to single-use plastic straws.</p>
+            <div class="mt-10">
+              <% if false %>
+                <%= link_to "Shop Bio Fibre Straws", product_path(@featured_straw_product), class: "btn btn-primary btn-lg" %>
+              <% else %>
+                <%= link_to "Shop Straws", category_path("straws"), class: "btn btn-primary btn-lg" %>
+              <% end %>
             </div>
           </div>
-        </div>
 
-        <div class="mt-10">
-          <% if @featured_straw_product %>
-            <%= link_to "View Product", product_path(@featured_straw_product), class: "btn btn-primary btn-lg" %>
-          <% else %>
-            <%= link_to "Shop Now", shop_path, class: "btn btn-primary btn-lg" %>
-          <% end %>
+          <div class="order-1 md:order-2 relative">
+            <div class="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center overflow-hidden backdrop-blur-sm p-8">
+              <%= vite_image_tag "images/bambigga.webp", alt: "Bambigga Bio Fibre Straws", class: "w-full h-full object-contain drop-shadow-2xl transform hover:scale-110 transition-transform duration-500" %>
+            </div>
+            <!-- Decorative circle -->
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-[#79ebc0] rounded-full blur-3xl opacity-20"></div>
+          </div>
         </div>
-      </div>
-
-      <div class="order-1 md:order-2 relative">
-        <div class="aspect-square bg-white/5 rounded-3xl border border-white/10 flex items-center justify-center overflow-hidden backdrop-blur-sm p-8">
-          <%= vite_image_tag "images/bambigga.webp", alt: "Bambigga Bio Fibre Straws", class: "w-full h-full object-contain drop-shadow-2xl transform hover:scale-110 transition-transform duration-500" %>
-        </div>
-        <!-- Decorative circle -->
-        <div class="absolute -top-10 -right-10 w-32 h-32 bg-[#79ebc0] rounded-full blur-3xl opacity-20"></div>
       </div>
     </div>
   </div>

@@ -45,21 +45,29 @@
         </div>
 
         <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+          <%= link_to samples_path, class: "btn btn-outline btn-lg border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+            Request Free Samples
+          <% end %>
           <%= link_to shop_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
             Shop Products
           <% end %>
         </div>
 
-        <div class="mt-8 mb-12 flex items-center justify-center lg:justify-start gap-4 text-sm text-neutral-500 font-medium">
-          <div class="flex -space-x-2">
-            <%# Exclude the-grove.webp from hero avatars to keep visual balance (10 logos fit better in small avatar circles) %>
-            <% @client_logos.reject { |logo| logo == "the-grove.webp" }.each do |logo| %>
-              <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white">
-                <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize}", class: "w-full h-full object-contain" %>
-              </div>
-            <% end %>
+        <div class="mt-8 mb-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-neutral-600">
+          <div class="flex items-center gap-2">
+            <div class="flex -space-x-2">
+              <%# Exclude the-grove.webp from hero avatars to keep visual balance (10 logos fit better in small avatar circles) %>
+              <% @client_logos.reject { |logo| logo == "the-grove.webp" }.first(8).each do |logo| %>
+                <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white">
+                  <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize}", class: "w-full h-full object-contain" %>
+                </div>
+              <% end %>
+            </div>
+            <span class="font-semibold">Trusted by 500+ UK businesses</span>
           </div>
-          <p>Trusted by 500+ businesses</p>
         </div>
       </div>
 
