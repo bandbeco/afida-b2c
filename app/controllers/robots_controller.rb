@@ -11,7 +11,18 @@ class RobotsController < ApplicationController
 
   private
 
+  # Staging domains that should not be indexed by search engines
+  STAGING_DOMAINS = %w[kiyuro.com].freeze
+
   def robots_txt_content
+    # Block all crawling on staging domains
+    if staging_domain?
+      return <<~ROBOTS
+        User-agent: *
+        Disallow: /
+      ROBOTS
+    end
+
     base_url = "#{request.protocol}#{request.host_with_port}"
 
     <<~ROBOTS
@@ -26,5 +37,9 @@ class RobotsController < ApplicationController
       # Sitemap
       Sitemap: #{base_url}/sitemap.xml
     ROBOTS
+  end
+
+  def staging_domain?
+    STAGING_DOMAINS.any? { |domain| request.host.include?(domain) }
   end
 end
