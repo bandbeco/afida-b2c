@@ -15,7 +15,7 @@ class OrderPdfGenerator
   COMPANY_TAGLINE = "Eco-Friendly Catering Supplies".freeze
   COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
   COMPANY_WEBSITE = "https://afida.com".freeze
-  LOGO_PATH = Rails.root.join("app", "frontend", "images", "afida-logo.png").freeze
+  LOGO_PATH = Rails.root.join("app", "frontend", "images", "afida-logo-pdf.png").freeze
 
   def initialize(order)
     @order = order
