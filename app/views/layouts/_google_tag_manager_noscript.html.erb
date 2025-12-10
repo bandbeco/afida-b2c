@@ -1,0 +1,6 @@
+<%# Google Tag Manager noscript fallback - goes right after opening <body> tag %>
+
+<% if Rails.application.config.x.gtm_container_id.present? %>
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=<%= Rails.application.config.x.gtm_container_id %>"
+  height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<% end %>

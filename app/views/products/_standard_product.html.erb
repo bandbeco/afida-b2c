@@ -53,6 +53,11 @@
       { name: @product.name, url: product_url(@product) }
     ]) %>
   </script>
+
+  <%# GA4 E-commerce: view_item event %>
+  <script>
+    <%= ecommerce_view_item_event(@product, @selected_variant) %>
+  </script>
 <% end %>
 
 <% content_for :breadcrumbs do %>

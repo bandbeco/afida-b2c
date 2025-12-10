@@ -1,5 +1,12 @@
 <% content_for :title, "Shopping Cart | Afida" %>
 
+<%# GA4 E-commerce: view_cart event %>
+<% content_for :head do %>
+  <script>
+    <%= ecommerce_view_cart_event(Current.cart) %>
+  </script>
+<% end %>
+
 <div class="container mx-auto px-4 py-4 md:py-8 text-gray-800">
   <%= turbo_frame_tag "cart" do %>
     <% if Current.cart && Current.cart.cart_items.any? %>
@@ -55,8 +62,13 @@
             </span>
           </div>
 
-          <div class="mt-4 sm:mt-8">
-            <%= button_to "Proceed to Checkout", checkout_path, class: "btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20", data: { turbo: false } %>
+          <div class="mt-4 sm:mt-8"
+               data-controller="analytics"
+               data-analytics-cart-value-value="<%= Current.cart.total_amount.to_f %>"
+               data-analytics-cart-items-value="<%= ga4_cart_items_json(Current.cart) %>">
+            <%= button_to "Proceed to Checkout", checkout_path,
+                  class: "btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20",
+                  data: { turbo: false, action: "click->analytics#beginCheckout" } %>
           </div>
 
           <div class="mt-4 flex justify-center">

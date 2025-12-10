@@ -1,0 +1,30 @@
+<%# Google Tag Manager integration for GA4 e-commerce tracking %>
+<%# Set GTM_CONTAINER_ID in environment (e.g., GTM-XXXXXXX) %>
+
+<% if Rails.application.config.x.gtm_container_id.present? %>
+  <%# Data Layer initialization - MUST come before GTM script %>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+
+    // Track virtual page views for Turbo Drive SPA navigation
+    // Without this, GA4 would only track the initial page load
+    document.addEventListener('turbo:load', function(event) {
+      // Skip the initial page load (GTM handles that automatically)
+      if (event.detail && event.detail.timing && event.detail.timing.visitStart === 0) return;
+
+      dataLayer.push({
+        event: 'virtual_page_view',
+        page_path: window.location.pathname,
+        page_title: document.title,
+        page_location: window.location.href
+      });
+    });
+  </script>
+
+  <%# Google Tag Manager - HEAD script %>
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','<%= Rails.application.config.x.gtm_container_id %>');</script>
+<% end %>

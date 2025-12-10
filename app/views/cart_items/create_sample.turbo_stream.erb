@@ -17,3 +17,10 @@
 
 <%# Update cart counter %>
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
+
+<%# GA4 E-commerce: add_to_cart event for samples (value = 0) %>
+<%= turbo_stream.append_all "head" do %>
+  <script>
+    <%= ecommerce_add_to_cart_event(@variant, quantity: 1, value: 0) %>
+  </script>
+<% end %>

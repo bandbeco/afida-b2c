@@ -23,6 +23,7 @@ application.register("clickable-card", ClickableCardController)
 
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
+  "analytics": () => import("../javascript/controllers/analytics_controller"),
   "carousel": () => import("../javascript/controllers/carousel_controller"),
   "branded-configurator": () => import("../javascript/controllers/branded_configurator_controller"),
   "product-card-hover": () => import("../javascript/controllers/product_card_hover_controller"),

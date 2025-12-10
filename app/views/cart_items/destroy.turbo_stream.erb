@@ -17,3 +17,10 @@
 <%= turbo_stream.update "grand_total" do %>
   <%= number_to_currency(Current.cart.total_amount) %>
 <% end %>
+
+<%# GA4 E-commerce: remove_from_cart event %>
+<%= turbo_stream.append_all "head" do %>
+  <script>
+    <%= ecommerce_remove_from_cart_event_for_variant(@variant, quantity: @removed_quantity, value: @removed_value) %>
+  </script>
+<% end %>

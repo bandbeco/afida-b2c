@@ -1,3 +1,15 @@
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
 <%= turbo_stream.replace "drawer_cart_content", partial: "shared/drawer_cart_content",
       locals: { notice: @sample_replaced ? "Sample replaced with regular item" : nil } %>
+
+<%# GA4 E-commerce: add_to_cart event %>
+<%# Using append_all to head ensures script executes with Turbo Streams %>
+<%= turbo_stream.append_all "head" do %>
+  <script>
+    <%= ecommerce_add_to_cart_event(
+          @cart_item.product_variant,
+          quantity: @cart_item.quantity,
+          value: @cart_item.subtotal_amount
+        ) %>
+  </script>
+<% end %>

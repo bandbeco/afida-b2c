@@ -17,7 +17,7 @@ two:
   description_short: "Short description 2"
   description_standard: "Standard description 2 with a bit more detail"
   description_detailed: "Detailed description 2 with comprehensive information about the product and its features"
-  active: false
+  active: true
   category: :two
   slug: "product-2"
   product_type: standard

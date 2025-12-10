@@ -34,6 +34,14 @@
       { name: @product.name, url: product_url(@product) }
     ]) %>
   </script>
+
+  <%# GA4 E-commerce: view_item event for branded products %>
+  <%# Uses first active variant as representative since this is a configurator %>
+  <% if @product.active_variants.any? %>
+    <script>
+      <%= ecommerce_view_item_event(@product, @product.active_variants.first) %>
+    </script>
+  <% end %>
 <% end %>
 
 <% content_for :breadcrumbs do %>

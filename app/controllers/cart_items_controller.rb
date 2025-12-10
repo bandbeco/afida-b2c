@@ -49,6 +49,9 @@ class CartItemsController < ApplicationController
   def destroy
     @variant = @cart_item.product_variant
     product_name = @variant.display_name
+    # Capture data for GA4 tracking before destroying
+    @removed_quantity = @cart_item.quantity
+    @removed_value = @cart_item.subtotal_amount
     # Use the item's own state to determine if it's a sample (more reliable than referer/params)
     is_sample_removal = @cart_item.sample?
     @category = @variant.product.category if is_sample_removal

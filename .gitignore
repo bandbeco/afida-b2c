@@ -57,3 +57,7 @@ node_modules
 
 # Design source files (should be kept in design repository)
 *.eps
+
+# Ignore key files for decrypting credentials and more.
+/config/credentials/*.key
+

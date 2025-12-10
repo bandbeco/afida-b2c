@@ -88,6 +88,12 @@ class Order < ApplicationRecord
     contains_samples? && order_items.non_samples.none?
   end
 
+  # Generate a secure token for accessing this order without authentication
+  # Used in email links for guest checkout orders
+  def secure_access_token
+    Digest::SHA256.hexdigest("#{id}-#{stripe_session_id}-#{Rails.application.secret_key_base}")
+  end
+
   private
 
   def generate_order_number

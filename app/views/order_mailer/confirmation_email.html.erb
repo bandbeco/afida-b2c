@@ -11,7 +11,7 @@
         <br>
         Your order number is <strong style="color: #111827;">#<%= @order.order_number %></strong>.
       </p>
-      <a href="<%= order_url(@order) %>" target="_blank" style="display: inline-block; background-color: #76e9bf; color: #000000; padding: 12px 30px; margin-top: 25px; border-radius: 8px; text-decoration: none; font-weight: 500;">
+      <a href="<%= order_url(@order, token: @order.secure_access_token) %>" target="_blank" style="display: inline-block; background-color: #76e9bf; color: #000000; padding: 12px 30px; margin-top: 25px; border-radius: 8px; text-decoration: none; font-weight: 500;">
         View Your Order
       </a>
     </td>
