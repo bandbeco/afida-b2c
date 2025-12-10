@@ -1,6 +1,63 @@
-<% content_for :title, "About Us - Sustainable Catering Supplies | Afida" %>
+<% content_for :title, "About Us - Our Story | Eco-Friendly Packaging | Afida" %>
 
-<% content_for :meta_description, "Learn about Afida's commitment to providing eco-friendly catering supplies. From humble beginnings to sustainable solutions for businesses across the UK." %>
+<% content_for :meta_description, "From a living room startup to supplying The Ritz and Marriott. Discover how Afida became the UK's trusted source for sustainable catering supplies." %>
+
+<% content_for :head do %>
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="About Us - Our Story | Afida">
+  <meta property="og:description" content="From a living room startup to supplying The Ritz and Marriott. Discover how Afida became the UK's trusted source for sustainable catering supplies.">
+  <meta property="og:url" content="<%= about_url %>">
+  <meta property="og:site_name" content="Afida">
+  <meta property="og:image" content="<%= vite_asset_url('images/branding.webp') %>">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="About Us - Our Story | Afida">
+  <meta name="twitter:description" content="From a living room startup to supplying The Ritz and Marriott. Discover how Afida became the UK's trusted source for sustainable catering supplies.">
+  <meta name="twitter:image" content="<%= vite_asset_url('images/branding.webp') %>">
+
+  <!-- Structured Data: Organization -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Afida",
+      "alternateName": "B&B Eco",
+      "url": "<%= root_url %>",
+      "description": "UK supplier of eco-friendly catering supplies and sustainable packaging solutions.",
+      "foundingDate": "2020",
+      "founders": [
+        {
+          "@type": "Person",
+          "name": "Marco Bungish"
+        },
+        {
+          "@type": "Person",
+          "name": "Tariq"
+        }
+      ],
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      },
+      "knowsAbout": [
+        "Eco-friendly packaging",
+        "Sustainable catering supplies",
+        "Bamboo straws",
+        "Custom branded cups"
+      ]
+    }
+  </script>
+
+  <!-- Structured Data: Breadcrumb -->
+  <script type="application/ld+json">
+    <%= breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: "About", url: about_url }
+    ]).html_safe %>
+  </script>
+<% end %>
 
 <div class="pattern-bg-grey pattern-visible">
 <!-- Section 1: Hero -->
