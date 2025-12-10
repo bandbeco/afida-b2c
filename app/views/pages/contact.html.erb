@@ -2,6 +2,65 @@
 
 <% content_for :meta_description, "Get in touch with Afida for enquiries about eco-friendly catering supplies. Contact us by phone or email for product information, quotes, and support." %>
 
+<% content_for :head do %>
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Contact Us - Get in Touch | Afida">
+  <meta property="og:description" content="Get in touch with Afida for enquiries about eco-friendly catering supplies. Contact us by phone or email for product information, quotes, and support.">
+  <meta property="og:url" content="<%= contact_url %>">
+  <meta property="og:site_name" content="Afida">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Contact Us - Get in Touch | Afida">
+  <meta name="twitter:description" content="Get in touch with Afida for enquiries about eco-friendly catering supplies. Contact us by phone or email.">
+
+  <!-- Structured Data: ContactPage -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ContactPage",
+      "name": "Contact Afida",
+      "description": "Get in touch with Afida for enquiries about eco-friendly catering supplies.",
+      "url": "<%= contact_url %>",
+      "mainEntity": {
+        "@type": "LocalBusiness",
+        "name": "Afida",
+        "description": "Premium eco-friendly catering supplies for businesses across the UK.",
+        "url": "<%= root_url %>",
+        "telephone": "+44-203-302-7719",
+        "email": "hello@afida.com",
+        "openingHours": "Mo-Fr 09:00-17:00",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "GB"
+        },
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "contactType": "Customer Service",
+          "telephone": "+44-203-302-7719",
+          "email": "hello@afida.com",
+          "availableLanguage": "English",
+          "hoursAvailable": {
+            "@type": "OpeningHoursSpecification",
+            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+            "opens": "09:00",
+            "closes": "17:00"
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Structured Data: Breadcrumb -->
+  <script type="application/ld+json">
+    <%= breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: "Contact", url: contact_url }
+    ]).html_safe %>
+  </script>
+<% end %>
+
 <div class="pattern-bg-grey pattern-visible">
   <!-- Section 1: Hero with Contact Cards -->
   <section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] overflow-hidden">
