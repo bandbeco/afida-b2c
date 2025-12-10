@@ -62,13 +62,18 @@
             </span>
           </div>
 
-          <div class="mt-4 sm:mt-8"
-               data-controller="analytics"
-               data-analytics-cart-value-value="<%= Current.cart.total_amount.to_f %>"
-               data-analytics-cart-items-value="<%= ga4_cart_items_json(Current.cart) %>">
+          <div class="mt-4 sm:mt-8">
             <%= button_to "Proceed to Checkout", checkout_path,
                   class: "btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20",
-                  data: { turbo: false, action: "click->analytics#beginCheckout" } %>
+                  data: { turbo: false },
+                  form: {
+                    data: {
+                      controller: "analytics",
+                      analytics_cart_value_value: Current.cart.total_amount.to_f,
+                      analytics_cart_items_value: ga4_cart_items_json(Current.cart),
+                      action: "submit->analytics#beginCheckout"
+                    }
+                  } %>
           </div>
 
           <div class="mt-4 flex justify-center">
