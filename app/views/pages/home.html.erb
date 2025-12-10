@@ -16,14 +16,28 @@
   <meta name="twitter:description" content="Discover sustainable catering supplies for your business. Premium quality eco-friendly packaging with fast UK delivery.">
 <% end %>
 
-<%= render "pages/partials/hero" %>
+<div class="drawer drawer-end">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
+  <div class="drawer-content">
+    <%= render "pages/partials/hero" %>
 
-<%= render "pages/partials/client_logos" %>
+    <%= render "pages/partials/client_logos" %>
 
-<%= render "pages/partials/bestsellers" %>
+    <%= render "pages/partials/shop_by_category" %>
 
-<%= render "pages/partials/straws" %>
+    <%= render "pages/partials/bestsellers" %>
 
-<%= render "pages/partials/branding" %>
+    <%= render "pages/partials/testimonials" %>
 
-<%= render "pages/partials/shop_by_category" %>
+    <%= render "pages/partials/branding" %>
+
+    <%= render "pages/partials/straws" %>
+  </div>
+
+  <div class="drawer-side">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="bg-base-200 text-base-content h-full w-80 p-4 flex flex-col">
+      <%= render "shared/drawer_cart_content" %>
+    </div>
+  </div>
+</div>
