@@ -9,14 +9,14 @@ class PagesController < ApplicationController
     @featured_straw_product = Product.standard.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
     @client_logos = [
-      "ballie-ballerson.png",
+      "ballie-ballerson.webp",
       "edwardian-hotels.svg",
-      "hawksmoor.png",
-      "hurlingham.png",
-      "la-gelateria.png",
+      "hawksmoor.webp",
+      "hurlingham.webp",
+      "la-gelateria.webp",
       "mandarin-oriental.svg",
       "marriott.svg",
-      "pixel-bar.png",
+      "pixel-bar.webp",
       "royal-lancaster.svg",
       "the-grove.webp",
       "vincenzos.svg"
