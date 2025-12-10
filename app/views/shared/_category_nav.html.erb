@@ -29,13 +29,13 @@
 
 <%# Desktop: Original centered navigation %>
 <div class="bg-base-200 border-b border-base-300 hidden lg:block">
-  <div class="container mx-auto px-4 flex justify-center">
-    <ul class="flex gap-6 py-4">
+  <div class="container mx-auto px-4 overflow-x-auto scrollbar-hide">
+    <ul class="flex justify-center gap-4 xl:gap-6 py-4 min-w-max">
       <% nav_categories.each do |cat| %>
         <li>
           <%= link_to category_path(cat[:slug]), class: "flex items-center gap-2 hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path(cat[:slug])) ? 'text-base-content underline decoration-secondary decoration-2 underline-offset-8' : 'text-base-content'}" do %>
             <%= category_icon_tag(cat[:slug], alt: "#{cat[:name]} icon") %>
-            <span class="text-lg font-medium"><%= cat[:name] %></span>
+            <span class="text-base lg:text-lg font-medium"><%= cat[:name] %></span>
           <% end %>
         </li>
       <% end %>
