@@ -111,8 +111,8 @@ class CheckoutsController < ApplicationController
       # Check if order already exists for this session (prevent duplicates)
       existing_order = Order.find_by(stripe_session_id: session_id)
       if existing_order
-        flash[:notice] = "Order #{existing_order.display_number} was already created!"
-        return redirect_to order_path(existing_order)
+        # Redirect to show page (not confirmation) for duplicate requests
+        return redirect_to order_path(existing_order, token: existing_order.signed_access_token)
       end
 
       # Get the cart with eager loading for order creation
@@ -135,8 +135,12 @@ class CheckoutsController < ApplicationController
       # Send order confirmation email
       OrderMailer.with(order: order).confirmation_email.deliver_later
 
-      flash[:notice] = "Order #{order.display_number} created successfully! Payment successful!"
-      redirect_to order_path(order)
+      # Store in session for immediate access (proves ownership for guest checkout)
+      session[:recent_order_id] = order.id
+
+      # Redirect to confirmation page with signed token
+      redirect_to confirmation_order_path(order, token: order.signed_access_token),
+                  status: :see_other
 
     rescue Stripe::StripeError => e
       Rails.logger.error("Stripe error in checkout success: #{e.message}")

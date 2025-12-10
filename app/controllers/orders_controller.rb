@@ -1,13 +1,19 @@
 class OrdersController < ApplicationController
-  # Allow guest access to show (for order confirmation after checkout)
+  # Allow guest access to show and confirmation (for order confirmation after checkout)
   # Index requires authentication (order history)
-  allow_unauthenticated_access only: [ :show ]
+  allow_unauthenticated_access only: [ :show, :confirmation ]
   before_action :require_authentication, only: [ :index ]
 
-  # Resume session for show action so we can check if user owns the order
-  # (skip_before_action skips resume_session, so Current.user would be nil)
-  before_action :resume_session, only: [ :show ]
-  before_action :set_order, only: [ :show ]
+  # Resume session for show/confirmation so we can check if user owns the order
+  before_action :resume_session, only: [ :show, :confirmation ]
+  before_action :set_order, only: [ :show, :confirmation ]
+  before_action :authorize_order_access!, only: [ :show, :confirmation ]
+
+  def confirmation
+    # Atomic GA4 tracking - prevents race condition on concurrent requests
+    # Returns true only if THIS request set the timestamp (first time)
+    @should_track_ga4 = @order.mark_ga4_tracked!
+  end
 
   def show
   end
@@ -19,41 +25,38 @@ class OrdersController < ApplicationController
   private
 
   def set_order
-    @order = find_authorized_order
+    @order = Order.includes(order_items: { product_variant: :product }).find(params[:id])
   rescue ActiveRecord::RecordNotFound
-    redirect_to orders_path, alert: "Order not found"
+    redirect_to root_path, alert: "Order not found"
   end
 
-  # Find order with proper authorization:
-  # - Authenticated users can view their own orders
-  # - Guest orders can be viewed if accessed right after checkout (via session)
-  # - Orders can be accessed via secure token in URL (for email links)
-  def find_authorized_order
-    order = Order.includes(order_items: { product_variant: :product }).find(params[:id])
+  # Single authorization method for both show and confirmation actions
+  # Access granted if: user owns order, session owns order, or valid token provided
+  def authorize_order_access!
+    return if owns_order?
+    return if session_owns_order?
+    return if valid_token_access?
 
-    # Allow if user owns the order
-    if Current.user && order.user_id == Current.user.id
-      return order
-    end
-
-    # Allow if order was just created in this session (guest checkout)
-    # The flash message proves they just completed checkout
-    if flash[:notice]&.include?(order.display_number)
-      return order
-    end
-
-    # Allow access via secure token (for email links)
-    if params[:token].present? && secure_token_valid?(order, params[:token])
-      return order
-    end
-
-    # Otherwise, deny access
-    raise ActiveRecord::RecordNotFound
+    redirect_to root_path, alert: "Order not found"
   end
 
-  # Generate a secure token for order access (used in email links)
-  def secure_token_valid?(order, token)
-    expected_token = Digest::SHA256.hexdigest("#{order.id}-#{order.stripe_session_id}-#{Rails.application.secret_key_base}")
-    ActiveSupport::SecurityUtils.secure_compare(token, expected_token)
+  def owns_order?
+    Current.user && @order.user_id == Current.user.id
+  end
+
+  # Session proves THIS user just created THIS order (secure)
+  # Set in CheckoutsController#success after order creation
+  def session_owns_order?
+    session[:recent_order_id] == @order.id
+  end
+
+  def valid_token_access?
+    return false unless params[:token].present?
+
+    # Use Rails signed global ID for verification
+    located_order = GlobalID::Locator.locate_signed(params[:token], for: "order_access")
+    located_order == @order
+  rescue ActiveRecord::RecordNotFound, ActiveSupport::MessageVerifier::InvalidSignature
+    false
   end
 end

@@ -17,6 +17,6 @@ Total: <%= number_to_currency(@order.total_amount, unit: "£") %>
 
 We will notify you again when your order has shipped.
 
-You can view your order details here: <%= order_url(@order, token: @order.secure_access_token) %>
+You can view your order details here: <%= order_url(@order, token: @order.signed_access_token) %>
 
 Thanks for shopping with us! 

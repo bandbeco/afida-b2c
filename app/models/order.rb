@@ -94,6 +94,23 @@ class Order < ApplicationRecord
     Digest::SHA256.hexdigest("#{id}-#{stripe_session_id}-#{Rails.application.secret_key_base}")
   end
 
+  # Generate signed access token using Rails built-in signed global ID
+  # More secure than custom token generation, with built-in expiration
+  def signed_access_token
+    to_sgid(expires_in: 30.days, for: "order_access").to_s
+  end
+
+  # Atomic GA4 tracking - returns true if THIS call set the timestamp
+  # Uses update_all to prevent race condition when multiple requests hit simultaneously
+  def mark_ga4_tracked!
+    Order.where(id: id, ga4_purchase_tracked_at: nil)
+         .update_all(ga4_purchase_tracked_at: Time.current) > 0
+  end
+
+  def ga4_tracked?
+    ga4_purchase_tracked_at.present?
+  end
+
   private
 
   def generate_order_number

@@ -229,7 +229,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "success redirects to order show page" do
+  test "success redirects to confirmation page with token" do
     session = Stripe::Checkout::Session.create(
       customer_email: "buyer@example.com"
     )
@@ -237,8 +237,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     get success_checkout_path, params: { session_id: session.id }
 
     order = Order.last
-    assert_redirected_to order_path(order)
-    assert_match /created successfully/, flash[:notice]
+    # Now redirects to confirmation page (not show) with signed token
+    # Check the redirect location contains the confirmation path (token varies by timestamp)
+    assert_response :redirect
+    assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
   end
 
   test "success prevents duplicate orders with same session_id" do
@@ -255,8 +257,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       get success_checkout_path, params: { session_id: session.id }
     end
 
-    assert_redirected_to order_path(first_order)
-    assert_match /already created/, flash[:notice]
+    # Duplicate requests go to show page (not confirmation) with token
+    assert_response :redirect
+    assert_match %r{/orders/#{first_order.id}\?token=}, response.location
   end
 
   test "success handles missing session_id parameter" do

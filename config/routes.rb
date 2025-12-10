@@ -45,7 +45,11 @@ Rails.application.routes.draw do
     get :cancel, on: :collection
   end
 
-  resources :orders, only: [ :show, :index ]
+  resources :orders, only: [ :show, :index ] do
+    member do
+      get :confirmation
+    end
+  end
 
   namespace :branded_products do
     post "calculate_price", to: "configurator#calculate_price"
