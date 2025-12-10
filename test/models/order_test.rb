@@ -106,15 +106,16 @@ class OrderTest < ActiveSupport::TestCase
   test "generate_order_number creates unique order number" do
     order = Order.create!(@valid_attributes.except(:order_number))
     assert_not_nil order.order_number
-    assert_match /ORD-\d{4}-\d{6}/, order.order_number
+    # Format: YYYY-XXXXXX (full year + 6 alphanumeric)
+    assert_match /\d{4}-[A-Z0-9]{6}/, order.order_number
   end
 
   test "generate_order_number includes current year" do
     order = Order.create!(@valid_attributes.except(:order_number).merge(
       stripe_session_id: "sess_year_test"
     ))
-    current_year = Date.current.year
-    assert_includes order.order_number, current_year.to_s
+    current_year = Date.current.year.to_s
+    assert order.order_number.start_with?(current_year), "Expected order number to start with #{current_year}"
   end
 
   test "does not regenerate order_number if already set" do

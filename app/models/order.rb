@@ -117,10 +117,11 @@ class Order < ApplicationRecord
     return if order_number.present?
 
     loop do
-      # Generate order number like: ORD-2025-001234
+      # Generate order number like: 2025-A3X9K2 (11 chars total)
+      # Full year (4 digits) + hyphen + 6 alphanumeric = 2.1B combinations/year
       year = Date.current.year
-      random_part = SecureRandom.random_number(999999).to_s.rjust(6, "0")
-      candidate = "ORD-#{year}-#{random_part}"
+      random_part = SecureRandom.alphanumeric(6).upcase
+      candidate = "#{year}-#{random_part}"
 
       unless Order.exists?(order_number: candidate)
         self.order_number = candidate
