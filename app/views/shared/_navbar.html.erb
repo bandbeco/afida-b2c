@@ -16,7 +16,7 @@
           <li class="text-lg font-medium"><%= link_to "Straws", category_path('straws'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('straws')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg font-medium"><%= link_to "Takeaway Containers", category_path('takeaway-containers'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('takeaway-containers')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg font-medium"><%= link_to "Takeaway Extras", category_path('takeaway-extras'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('takeaway-extras')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-          <li class="text-lg font-medium"><%= link_to "Branded Products", branded_products_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(branded_products_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
+          <li class="text-lg font-medium"><%= link_to "Branding", branding_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(branding_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
         </ul>
       </div>
       <%= link_to root_path, class: "text-xl group hover:bg-transparent hover:border-transparent hover:shadow-none", "aria-label": "Afida Home" do %>
@@ -27,7 +27,7 @@
     <div class="navbar-center hidden lg:flex">
       <ul class="flex gap-6 px-1">
         <li class="text-lg font-medium"><%= link_to "Shop All", shop_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(shop_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-        <li class="text-lg font-medium"><%= link_to "Branded Products", branded_products_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(branded_products_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
+        <li class="text-lg font-medium"><%= link_to "Branding", branding_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(branding_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
       </ul>
     </div>
 

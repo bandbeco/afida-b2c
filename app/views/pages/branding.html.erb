@@ -1,21 +1,283 @@
-<% content_for :title, "Custom Branded Packaging | Afida" %>
+<% content_for :title, "Custom Branded Coffee Cups | Your Brand, Your Cup | Afida" %>
 
-<% content_for :meta_description, "Create custom branded eco-friendly packaging for your business. Low minimums, high quality, fast delivery. Transform your catering supplies into branded statements." %>
+<% content_for :meta_description, "Design your own custom branded double wall coffee cups. No setup fees, UK production, delivered in 20 business days. Start from just 1,000 units." %>
 
-<div class="container mx-auto py-8 py-16 min-h-screen">
-  <h1 class="text-4xl font-bold mb-8">Branding</h1>
+<!-- Hero Section -->
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-[#f4fbf8] overflow-hidden">
+  <div class="container mx-auto px-4 py-16 lg:py-24">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+      <div class="text-center lg:text-left">
+        <h1 class="text-4xl sm:text-5xl lg:text-6xl font-black text-neutral-900 leading-tight mb-6">
+          Your Brand.<br>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00a86b] to-[#79ebc0]">Your Cup.</span>
+        </h1>
 
-  <p class="text-lg mb-4">
-    Your brand is more than just a logo — it's the experience you deliver with every product, every interaction, and every detail.
-  </p>
+        <p class="text-xl text-neutral-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+          Custom branded double wall coffee cups, designed by you. No setup fees, UK production, delivered in 20 business days.
+        </p>
 
-  <p class="text-lg mb-4">
-    Whether you're a bar, café, restaurant, hotel, or something entirely unique, our custom packaging solutions are crafted to enhance your brand presence while keeping sustainability at the forefront. From cups and straws to bags and boxes, we transform everyday disposables into branded statements that leave a lasting impression.
-  </p>
+        <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mb-8">
+          <%= link_to branded_products_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+            Start Designing
+          <% end %>
+          <%= link_to contact_path, class: "btn btn-outline btn-lg border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white" do %>
+            Have Questions?
+          <% end %>
+        </div>
+      </div>
 
-  <p class="text-lg mb-4">
-    Don't be bland, enhance your brand!
-  </p>
+      <div class="flex justify-center lg:justify-end">
+        <div class="relative group max-w-md">
+          <div class="absolute inset-0 bg-black translate-x-4 translate-y-4 rounded-2xl transition-transform group-hover:translate-x-2 group-hover:translate-y-2"></div>
+          <%= vite_image_tag "images/branding.webp", alt: "Custom branded cups by Afida", class: "relative z-10 w-full h-auto rounded-2xl border-2 border-black" %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-  <a href="https://eu.jotform.com/build/250983539732063" target="_blank" rel="noopener noreferrer" class="btn btn-primary btn-lg">Get a Quote Now</a>
-</div>
+<!-- Trust Badges -->
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] py-8 bg-white border-y-2 border-black">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+      <!-- UK Production -->
+      <div class="flex flex-col items-center text-center p-4 rounded-xl bg-[#79ebc0]/20 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div class="text-3xl mb-2">🇬🇧</div>
+        <span class="text-2xl font-black">UK</span>
+        <span class="text-sm font-medium text-neutral-600">Production</span>
+      </div>
+
+      <!-- Minimum Units -->
+      <div class="flex flex-col items-center text-center p-4 rounded-xl bg-[#ffb7c5]/30 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div class="mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        </div>
+        <span class="text-2xl font-black">1,000</span>
+        <span class="text-sm font-medium text-neutral-600">Minimum units</span>
+      </div>
+
+      <!-- Turnaround -->
+      <div class="flex flex-col items-center text-center p-4 rounded-xl bg-[#fef08a]/40 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div class="mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <span class="text-2xl font-black">20 days</span>
+        <span class="text-sm font-medium text-neutral-600">Turnaround</span>
+      </div>
+
+      <!-- No Setup Fees -->
+      <div class="flex flex-col items-center text-center p-4 rounded-xl bg-[#c4b5fd]/30 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        <div class="mb-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <span class="text-2xl font-black">£0</span>
+        <span class="text-sm font-medium text-neutral-600">Setup fees</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-16 lg:py-24 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl sm:text-4xl font-black text-neutral-900 mb-4">From Design to Doorstep</h2>
+      <p class="text-lg text-neutral-600 max-w-2xl mx-auto">Get your branded cups in three simple steps</p>
+    </div>
+
+    <div class="relative max-w-5xl mx-auto">
+      <!-- Connector line spanning steps 1-3 (hidden on mobile) -->
+      <div class="hidden md:block absolute top-8 left-[16.67%] right-[16.67%] border-t-2 border-dashed border-neutral-300"></div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Step 1 -->
+        <div class="relative">
+          <div class="flex flex-col items-center text-center">
+            <div class="w-16 h-16 rounded-full bg-[#79ebc0] border-2 border-black flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-2xl font-black relative z-10">
+              1
+            </div>
+            <h3 class="text-xl font-bold mb-3">Design</h3>
+            <p class="text-neutral-600">Use our configurator to upload your logo and preview it on your cups in real-time.</p>
+          </div>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="relative">
+          <div class="flex flex-col items-center text-center">
+            <div class="w-16 h-16 rounded-full bg-[#ffb7c5] border-2 border-black flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-2xl font-black relative z-10">
+              2
+            </div>
+            <h3 class="text-xl font-bold mb-3">Order</h3>
+            <p class="text-neutral-600">Add to cart and checkout instantly. No quotes, no waiting, no hidden fees.</p>
+          </div>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="relative">
+          <div class="flex flex-col items-center text-center">
+            <div class="w-16 h-16 rounded-full bg-[#fef08a] border-2 border-black flex items-center justify-center mb-6 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] text-2xl font-black relative z-10">
+              3
+            </div>
+            <h3 class="text-xl font-bold mb-3">Receive</h3>
+            <p class="text-neutral-600">UK-printed and delivered to your door in 20 business days.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="text-center mt-12">
+      <%= link_to branded_products_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
+        Start Designing
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+        </svg>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<!-- Product Showcase Gallery -->
+<section class="py-16 lg:py-24 bg-neutral-50">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl sm:text-4xl font-black text-neutral-900 mb-4">Branded to Perfection</h2>
+      <p class="text-lg text-neutral-600 max-w-2xl mx-auto">See how businesses like yours are making their mark</p>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">
+      <!-- Photo 1: Shakedown cup in hand -->
+      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+        <%= vite_image_tag "images/branding/DSC_6621.jpg", alt: "Shakedown branded coffee cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+      </div>
+
+      <!-- Photo 2: OOO Koffee grey cup -->
+      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+        <%= vite_image_tag "images/branding/DSC_6736.jpg", alt: "OOO Koffee branded cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+      </div>
+
+      <!-- Photo 3: La Gelatiera mint cup -->
+      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+        <%= vite_image_tag "images/branding/DSC_6770.jpg", alt: "La Gelatiera branded gelato cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+      </div>
+
+      <!-- Photo 4: Multiple cups in bushes -->
+      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+        <%= vite_image_tag "images/branding/DSC_6872.jpg", alt: "Collection of branded cups", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+      </div>
+
+      <!-- Photo 5: La Gelatiera pastel cups on table -->
+      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+        <%= vite_image_tag "images/branding/DSC_7193.jpg", alt: "La Gelatiera branded cups display", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+      </div>
+
+      <!-- Photo 6: Gelato cups with ice cream -->
+      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+        <%= vite_image_tag "images/branding/DSC_7239.jpg", alt: "Branded gelato cups with gelato", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose Us -->
+<section class="py-16 lg:py-24 bg-white">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-12">
+      <h2 class="text-3xl sm:text-4xl font-black text-neutral-900 mb-4">Why Afida?</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <!-- No Setup Fees -->
+      <div class="p-6 rounded-2xl bg-[#79ebc0]/10 border-2 border-black">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-[#79ebc0] border-2 border-black flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold mb-2">No Setup Fees</h3>
+            <p class="text-neutral-600">Your first order costs the same as your hundredth. No hidden charges, no artwork fees, no surprises.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Low Minimums -->
+      <div class="p-6 rounded-2xl bg-[#ffb7c5]/10 border-2 border-black">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-[#ffb7c5] border-2 border-black flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold mb-2">Low Minimums</h3>
+            <p class="text-neutral-600">Start from just 1,000 cups. Perfect for testing your brand or smaller venues without overcommitting.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fast UK Production -->
+      <div class="p-6 rounded-2xl bg-[#fef08a]/20 border-2 border-black">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-[#fef08a] border-2 border-black flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold mb-2">Fast UK Production</h3>
+            <p class="text-neutral-600">Printed in the UK and delivered in 20 business days. No overseas shipping delays or customs headaches.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Eco-Friendly -->
+      <div class="p-6 rounded-2xl bg-[#79ebc0]/10 border-2 border-black">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-full bg-[#79ebc0] border-2 border-black flex items-center justify-center flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold mb-2">Eco-Friendly</h3>
+            <p class="text-neutral-600">Double wall cups made from sustainable materials. Look good, do good, feel good about your choice.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Social Proof: Client Logos -->
+<%= render "pages/partials/client_logos" %>
+
+<!-- Final CTA -->
+<section class="py-16 lg:py-24 bg-[#ffb7c5] rounded-3xl mx-4 my-8">
+  <div class="container mx-auto px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl lg:text-5xl font-black text-black mb-6">Ready to Brand Your Cups?</h2>
+      <p class="text-xl text-black/80 mb-8">
+        Design your custom double wall cups in minutes. No setup fees, delivered in 20 business days.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <%= link_to branded_products_path, class: "btn btn-lg bg-black text-white hover:bg-neutral-800 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+          </svg>
+          Start Designing
+        <% end %>
+        <%= link_to "Have questions? Contact us", contact_path, class: "btn btn-lg bg-white text-black hover:bg-neutral-100 border-2 border-black" %>
+      </div>
+    </div>
+  </div>
+</section>

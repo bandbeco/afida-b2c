@@ -8,19 +8,7 @@ class PagesController < ApplicationController
                                 .limit(8)
     @featured_straw_product = Product.standard.find_by(slug: "biodegradable-straws")
     @categories = Category.with_attached_image.all
-    @client_logos = [
-      "ballie-ballerson.webp",
-      "edwardian-hotels.svg",
-      "hawksmoor.webp",
-      "hurlingham.webp",
-      "la-gelateria.webp",
-      "mandarin-oriental.svg",
-      "marriott.svg",
-      "pixel-bar.webp",
-      "royal-lancaster.svg",
-      "the-grove.webp",
-      "vincenzos.svg"
-    ]
+    @client_logos = client_logos
   end
 
   def shop
@@ -47,6 +35,7 @@ class PagesController < ApplicationController
   end
 
   def branding
+    @client_logos = client_logos
   end
 
   def samples
@@ -101,5 +90,23 @@ class PagesController < ApplicationController
         Check your Sentry dashboard after triggering a test.
       TEXT
     end
+  end
+
+  private
+
+  def client_logos
+    [
+      "ballie-ballerson.webp",
+      "edwardian-hotels.svg",
+      "hawksmoor.webp",
+      "hurlingham.webp",
+      "la-gelateria.webp",
+      "mandarin-oriental.svg",
+      "marriott.svg",
+      "pixel-bar.webp",
+      "royal-lancaster.svg",
+      "the-grove.webp",
+      "vincenzos.svg"
+    ]
   end
 end
