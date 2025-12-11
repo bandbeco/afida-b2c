@@ -33,6 +33,7 @@ CSV.foreach(csv_path, headers: true) do |row|
     description_short: row['description_short'],
     description_standard: row['description_standard'],
     description_detailed: row['description_detailed'],
+    material: row['material'],
     variants: []
   }
 
@@ -41,7 +42,9 @@ CSV.foreach(csv_path, headers: true) do |row|
     colour: row['colour_value'],
     sku: row['sku'],
     price: row['price']&.gsub('£', '')&.gsub(',', '')&.to_f || 0,
-    pac_size: row['pac_size']&.to_i || 1
+    pac_size: row['pac_size']&.to_i || 1,
+    sample_eligible: row['sample_eligible']&.downcase == 'true',
+    active: row['active']&.downcase == 'true'
   }
 end
 
@@ -112,11 +115,16 @@ products_data.each do |key, data|
     variant.pac_size = variant_data[:pac_size]
     variant.stock_quantity = 10000
     variant.option_values = option_values
-    variant.active = true
+    variant.active = variant_data[:active]
     variant.save!
   end
 
-  puts "  ✓ #{product.name} (#{product.variants.count} variants)"
+  # Set product active if it has any active variants
+  active_variant_count = product.variants.where(active: true).count
+  product.update!(active: active_variant_count > 0)
+
+  status = product.active ? '✓' : '○'
+  puts "  #{status} #{product.name} (#{active_variant_count}/#{product.variants.count} active variants)"
 end
 
 puts ''

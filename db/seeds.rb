@@ -77,3 +77,23 @@ puts "Product option values created: #{ProductOptionValue.count}" if defined?(Pr
 puts "Branded product prices created: #{BrandedProductPrice.count}" if defined?(BrandedProductPrice)
 puts "Products with photos: #{Product.joins(:product_photo_attachment).distinct.count}"
 puts "Variants with photos: #{ProductVariant.joins(:product_photo_attachment).distinct.count}" if defined?(ProductVariant)
+
+# Report variants without photos
+if defined?(ProductVariant)
+  variants_without_photos = ProductVariant
+    .active
+    .joins(:product)
+    .where.not(id: ProductVariant.joins(:product_photo_attachment).select(:id))
+    .where.not(sku: ProductVariant.where("sku LIKE 'PLACEHOLDER-%'").select(:sku))
+    .where(products: { product_type: [ nil, 'standard' ] })
+    .includes(:product)
+    .order('products.name', 'product_variants.sku')
+
+  if variants_without_photos.any?
+    puts ""
+    puts "Variants without photos (#{variants_without_photos.count}):"
+    variants_without_photos.each do |variant|
+      puts "  - #{variant.product.name}: #{variant.sku}"
+    end
+  end
+end

@@ -8,21 +8,80 @@ unless branded_category
   return
 end
 
-# Define all branded product templates with min quantities
+# =============================================================================
+# BRANDED PRODUCT TEMPLATES
+# Comment/uncomment products here - this is the ONLY place you need to edit
+# =============================================================================
 templates = [
-  { name: "Double Wall Hot Cups", slug: "double-wall-hot-cups", min_qty: 5000, sort: 1, has_pricing: true },
-  { name: "Single Wall Hot Cups", slug: "single-wall-hot-cups", min_qty: 30000, sort: 2, has_pricing: true },
-  { name: "Single Wall Cold Cups", slug: "single-wall-cold-cups", min_qty: 30000, sort: 3, has_pricing: false },
-  { name: "Clear Recyclable Cups", slug: "clear-recyclable-cups", min_qty: 30000, sort: 4, has_pricing: false },
-  { name: "Ice Cream Cups", slug: "ice-cream-cups", min_qty: 50000, sort: 5, has_pricing: false },
-  { name: "Greaseproof Paper", slug: "greaseproof-paper", min_qty: 6000, sort: 6, has_pricing: false },
-  { name: "Pizza Boxes", slug: "pizza-boxes", min_qty: 5000, sort: 7, has_pricing: false },
-  { name: "Kraft Containers", slug: "kraft-containers", min_qty: 10000, sort: 8, has_pricing: false },
-  { name: "Kraft Bags", slug: "kraft-bags", min_qty: 10000, sort: 9, has_pricing: false }
+  {
+    name: "Double Wall Hot Cups",
+    slug: "double-wall-hot-cups",
+    min_qty: 5000,
+    sort: 1,
+    case_qty: 500,
+    pricing: [
+      { size: "8oz", quantity: 1000, price: 0.30 },
+      { size: "8oz", quantity: 2000, price: 0.25 },
+      { size: "8oz", quantity: 5000, price: 0.18 },
+      { size: "8oz", quantity: 10000, price: 0.15 },
+      { size: "8oz", quantity: 20000, price: 0.11 },
+      { size: "8oz", quantity: 30000, price: 0.10 },
+      { size: "12oz", quantity: 1000, price: 0.32 },
+      { size: "12oz", quantity: 5000, price: 0.20 },
+      { size: "12oz", quantity: 10000, price: 0.17 },
+      { size: "12oz", quantity: 20000, price: 0.13 },
+      { size: "12oz", quantity: 30000, price: 0.12 },
+      { size: "16oz", quantity: 1000, price: 0.34 },
+      { size: "16oz", quantity: 5000, price: 0.22 },
+      { size: "16oz", quantity: 10000, price: 0.19 },
+      { size: "16oz", quantity: 20000, price: 0.15 },
+      { size: "16oz", quantity: 30000, price: 0.14 }
+    ]
+  }
+
+  # {
+  #   name: "Single Wall Hot Cups",
+  #   slug: "single-wall-hot-cups",
+  #   min_qty: 30000,
+  #   sort: 2,
+  #   case_qty: 1000,
+  #   pricing: [
+  #     { size: "8oz", quantity: 1000, price: 0.26 },
+  #     { size: "8oz", quantity: 2000, price: 0.20 },
+  #     { size: "8oz", quantity: 5000, price: 0.15 },
+  #     { size: "8oz", quantity: 10000, price: 0.12 },
+  #     { size: "8oz", quantity: 20000, price: 0.11 },
+  #     { size: "8oz", quantity: 30000, price: 0.10 },
+  #     { size: "12oz", quantity: 1000, price: 0.28 },
+  #     { size: "12oz", quantity: 5000, price: 0.17 },
+  #     { size: "12oz", quantity: 10000, price: 0.14 },
+  #     { size: "12oz", quantity: 20000, price: 0.12 },
+  #     { size: "12oz", quantity: 30000, price: 0.11 },
+  #     { size: "16oz", quantity: 1000, price: 0.30 },
+  #     { size: "16oz", quantity: 5000, price: 0.20 },
+  #     { size: "16oz", quantity: 10000, price: 0.17 },
+  #     { size: "16oz", quantity: 20000, price: 0.15 },
+  #     { size: "16oz", quantity: 30000, price: 0.14 }
+  #   ]
+  # },
+
+  # { name: "Single Wall Cold Cups", slug: "single-wall-cold-cups", min_qty: 30000, sort: 3, case_qty: 1000, pricing: [] },
+  # { name: "Clear Recyclable Cups", slug: "clear-recyclable-cups", min_qty: 30000, sort: 4, case_qty: 1000, pricing: [] },
+  # { name: "Ice Cream Cups", slug: "ice-cream-cups", min_qty: 50000, sort: 5, case_qty: 500, pricing: [] },
+  # { name: "Greaseproof Paper", slug: "greaseproof-paper", min_qty: 6000, sort: 6, case_qty: 1000, pricing: [] },
+  # { name: "Pizza Boxes", slug: "pizza-boxes", min_qty: 5000, sort: 7, case_qty: 100, pricing: [] },
+  # { name: "Kraft Containers", slug: "kraft-containers", min_qty: 10000, sort: 8, case_qty: 300, pricing: [] },
+  # { name: "Kraft Bags", slug: "kraft-bags", min_qty: 10000, sort: 9, case_qty: 250, pricing: [] }
 ]
 
-# Create all template products
+# =============================================================================
+# PROCESSING (no need to edit below this line)
+# =============================================================================
+
+total_pricing_entries = 0
+
 templates.each do |template_data|
+  # Create the product
   product = Product.find_or_create_by!(slug: template_data[:slug]) do |p|
     p.name = template_data[:name]
     p.product_type = "customizable_template"
@@ -34,7 +93,7 @@ templates.each do |template_data|
     p.position = template_data[:sort]
   end
 
-  # Create placeholder variant
+  # Create placeholder variant (required by cart system)
   product.variants.find_or_create_by!(sku: "PLACEHOLDER-#{template_data[:slug].upcase}") do |v|
     v.name = 'Placeholder'
     v.price = 0.01
@@ -42,100 +101,24 @@ templates.each do |template_data|
     v.active = true
   end
 
-  puts "  ✓ #{product.name} (min: #{template_data[:min_qty]})"
-end
-
-# Get products with pricing
-single_wall_branded = Product.branded.find_by(slug: "single-wall-hot-cups")
-double_wall_branded = Product.branded.find_by(slug: "double-wall-hot-cups")
-
-# Pricing from CSV: Single Wall
-pricing_data_sw = [
-  { size: "8oz", quantity: 1000, price: 0.26, case_qty: 1000 },
-  { size: "8oz", quantity: 2000, price: 0.20, case_qty: 1000 },
-  { size: "8oz", quantity: 5000, price: 0.15, case_qty: 1000 },
-  { size: "8oz", quantity: 10000, price: 0.12, case_qty: 1000 },
-  { size: "8oz", quantity: 20000, price: 0.11, case_qty: 1000 },
-  { size: "8oz", quantity: 30000, price: 0.10, case_qty: 1000 },
-
-  { size: "12oz", quantity: 1000, price: 0.28, case_qty: 1000 },
-  { size: "12oz", quantity: 5000, price: 0.17, case_qty: 1000 },
-  { size: "12oz", quantity: 10000, price: 0.14, case_qty: 1000 },
-  { size: "12oz", quantity: 20000, price: 0.12, case_qty: 1000 },
-  { size: "12oz", quantity: 30000, price: 0.11, case_qty: 1000 },
-
-  { size: "16oz", quantity: 1000, price: 0.30, case_qty: 1000 },
-  { size: "16oz", quantity: 5000, price: 0.20, case_qty: 1000 },
-  { size: "16oz", quantity: 10000, price: 0.17, case_qty: 1000 },
-  { size: "16oz", quantity: 20000, price: 0.15, case_qty: 1000 },
-  { size: "16oz", quantity: 30000, price: 0.14, case_qty: 1000 }
-]
-
-pricing_data_sw.each do |data|
-  single_wall_branded.branded_product_prices.find_or_create_by!(
-    size: data[:size],
-    quantity_tier: data[:quantity]
-  ) do |price|
-    price.price_per_unit = data[:price]
-    price.case_quantity = data[:case_qty]
-  end
-end
-
-puts "  Single Wall Branded Cups: #{pricing_data_sw.size} pricing tiers created"
-
-# Use the product created in the template loop above
-if double_wall_branded.nil?
-  double_wall_branded = Product.branded.find_by(slug: "double-wall-hot-cups")
-  unless double_wall_branded
-    puts "  ERROR: Could not find double-wall-hot-cups product"
-    return
-  end
-end
-
-# Pricing from CSV: Double Wall
-pricing_data_dw = [
-  { size: "8oz", quantity: 1000, price: 0.30, case_qty: 500 },
-  { size: "8oz", quantity: 2000, price: 0.25, case_qty: 500 },
-  { size: "8oz", quantity: 5000, price: 0.18, case_qty: 500 },
-  { size: "8oz", quantity: 10000, price: 0.15, case_qty: 500 },
-  { size: "8oz", quantity: 20000, price: 0.11, case_qty: 500 },
-  { size: "8oz", quantity: 30000, price: 0.10, case_qty: 500 },
-
-  { size: "12oz", quantity: 1000, price: 0.32, case_qty: 500 },
-  { size: "12oz", quantity: 5000, price: 0.20, case_qty: 500 },
-  { size: "12oz", quantity: 10000, price: 0.17, case_qty: 500 },
-  { size: "12oz", quantity: 20000, price: 0.13, case_qty: 500 },
-  { size: "12oz", quantity: 30000, price: 0.12, case_qty: 500 },
-
-  { size: "16oz", quantity: 1000, price: 0.34, case_qty: 500 },
-  { size: "16oz", quantity: 5000, price: 0.22, case_qty: 500 },
-  { size: "16oz", quantity: 10000, price: 0.19, case_qty: 500 },
-  { size: "16oz", quantity: 20000, price: 0.15, case_qty: 500 },
-  { size: "16oz", quantity: 30000, price: 0.14, case_qty: 500 }
-]
-
-pricing_data_dw.each do |data|
-  double_wall_branded.branded_product_prices.find_or_create_by!(
-    size: data[:size],
-    quantity_tier: data[:quantity]
-  ) do |price|
-    price.price_per_unit = data[:price]
-    price.case_quantity = data[:case_qty]
-  end
-end
-
-puts "  Double Wall Branded Cups: #{pricing_data_dw.size} pricing tiers created"
-
-# Create placeholder variants for template products (required by cart system)
-[ single_wall_branded, double_wall_branded ].each do |product|
-  product.variants.find_or_create_by!(sku: "PLACEHOLDER-#{product.slug.upcase}") do |v|
-    v.name = 'Placeholder'
-    v.price = 0.01
-    v.stock_quantity = 0
-    v.active = true
+  # Create pricing tiers if defined
+  if template_data[:pricing].present?
+    template_data[:pricing].each do |price_data|
+      product.branded_product_prices.find_or_create_by!(
+        size: price_data[:size],
+        quantity_tier: price_data[:quantity]
+      ) do |price|
+        price.price_per_unit = price_data[:price]
+        price.case_quantity = template_data[:case_qty]
+      end
+    end
+    total_pricing_entries += template_data[:pricing].size
+    puts "  ✓ #{product.name} (min: #{template_data[:min_qty]}, #{template_data[:pricing].size} pricing tiers)"
+  else
+    puts "  ✓ #{product.name} (min: #{template_data[:min_qty]}, no pricing)"
   end
 end
 
 puts "Branded product pricing created successfully!"
-puts "  Total pricing entries: #{pricing_data_sw.size + pricing_data_dw.size}"
-puts "  Placeholder variants created for template products"
+puts "  Total products: #{templates.size}"
+puts "  Total pricing entries: #{total_pricing_entries}"

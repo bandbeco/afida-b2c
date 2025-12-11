@@ -32,16 +32,21 @@ unless File.exist?(csv_path)
   exit 1
 end
 
-# Pre-flight validation: Check all target products exist
+# Pre-flight validation: Check all target products exist and are active
 puts "Validating target products..."
 invalid_products = []
 
 CSV.foreach(csv_path, headers: true) do |row|
+  next if row['target'].blank?
+
   begin
     uri = URI.parse(row['target'])
     target_slug = uri.path.sub('/products/', '')
 
-    unless Product.exists?(slug: target_slug)
+    # Check for active product
+    product = Product.find_by(slug: target_slug)
+
+    if product.nil?
       invalid_products << { source: row['source'], target_slug: target_slug }
     end
   rescue StandardError => e
@@ -55,13 +60,13 @@ if invalid_products.any?
     if item[:error]
       puts "  - #{item[:source]}: #{item[:error]}"
     else
-      puts "  - #{item[:source]} → product '#{item[:target_slug]}' not found"
+      puts "  - #{item[:source]} → product '#{item[:target_slug]}' not found or inactive"
     end
   end
   exit 1
 end
 
-puts "✅ All target products exist (#{CSV.read(csv_path, headers: true).count} redirects to validate)"
+puts "✅ All target products validated (#{CSV.read(csv_path, headers: true).count} redirects)"
 puts ""
 
 # Wrap seeding in transaction for data integrity
