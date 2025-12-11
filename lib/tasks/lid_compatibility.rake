@@ -9,29 +9,26 @@ namespace :lid_compatibility do
 
     # Define hot cup product names (paper-based hot beverage cups)
     hot_cup_names = [
-      "Single Wall Hot Cup",
-      "Double Wall Hot Cup",
-      "Ripple Wall Hot Cup",
-      "Compostable Paper Cold Cup UKCA Marked" # Paper cups can use hot lids
+      "Single Wall Hot Cups",
+      "Double Wall Hot Cups",
+      "Ripple Wall Hot Cups"
     ]
 
     # Define hot lid product names
     hot_lid_names = [
-      "Bagasse Sip Lid for Hot Cup",
-      "Recyclable Sip Lid for Hot Cup"
+      "Bagasse Sip Lids for Hot Cups",
+      "Recyclable Sip Lids for Hot Cups"
     ]
 
     # Define cold cup product names (plastic/clear cups)
     cold_cup_names = [
-      "Clear Recyclable Cups",
-      "Single Wall Cold Cups",
-      "rPET Recyclable Cup"
+      "rPET Recyclable Cups"
     ]
 
     # Define cold lid product names
     cold_lid_names = [
-      "rPET Dome Lid",
-      "rPET Flat Lid"
+      "rPET Dome Lids",
+      "rPET Flat Lids"
     ]
 
     # Populate hot cup → hot lid relationships
