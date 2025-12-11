@@ -9,7 +9,7 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://afida.co.uk
+  - url: https://afida.com
     description: Production server
 
 paths:

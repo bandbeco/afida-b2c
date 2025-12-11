@@ -50,7 +50,7 @@ All parameters are **optional** and passed via query string:
 <html>
 <head>
   <title>Shop Eco-Friendly Catering Supplies | Afida</title>
-  <link rel="canonical" href="https://afida.co.uk/shop">
+  <link rel="canonical" href="https://afida.com/shop">
   <meta name="description" content="Browse our complete range...">
 </head>
 <body>
@@ -144,7 +144,7 @@ All parameters are **optional** and passed via query string:
 **Request**:
 ```
 GET /shop HTTP/1.1
-Host: afida.co.uk
+Host: afida.com
 Accept: text/html
 ```
 
@@ -163,7 +163,7 @@ Content-Type: text/html
 **Request**:
 ```
 GET /shop?category_id=3 HTTP/1.1
-Host: afida.co.uk
+Host: afida.com
 Accept: text/html
 Turbo-Frame: products
 ```
@@ -185,7 +185,7 @@ Content-Type: text/html
 **Request**:
 ```
 GET /shop?q=pizza HTTP/1.1
-Host: afida.co.uk
+Host: afida.com
 Accept: text/html
 Turbo-Frame: products
 ```
@@ -207,7 +207,7 @@ Content-Type: text/html
 **Request**:
 ```
 GET /shop?category_id=3&q=8oz&sort=price_asc&page=1 HTTP/1.1
-Host: afida.co.uk
+Host: afida.com
 Accept: text/html
 Turbo-Frame: products
 ```
@@ -229,7 +229,7 @@ Content-Type: text/html
 **Request**:
 ```
 GET /shop?page=2 HTTP/1.1
-Host: afida.co.uk
+Host: afida.com
 Accept: text/html
 Turbo-Frame: products
 ```
@@ -433,7 +433,7 @@ end
 **Meta Tags**:
 - Title: `"Shop Eco-Friendly Catering Supplies | Afida"`
 - Description: `"Browse our complete range of eco-friendly catering supplies..."`
-- Canonical URL: `https://afida.co.uk/shop` (always points to base /shop URL)
+- Canonical URL: `https://afida.com/shop` (always points to base /shop URL)
 
 **Filter State in Title** (optional enhancement):
 - With category filter: `"Cups - Shop | Afida"`
