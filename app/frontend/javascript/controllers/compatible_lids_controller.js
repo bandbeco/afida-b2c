@@ -1,8 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Handles displaying compatible lids for standard cup products
+// Renders as a horizontal mini-carousel with scroll navigation
 export default class extends Controller {
-  static targets = ["container", "loading"]
+  static targets = ["container", "loading", "wrapper"]
   static values = {
     productId: Number
   }
@@ -11,6 +12,19 @@ export default class extends Controller {
     // Get initial cup quantity from the product quantity select if it exists
     const quantitySelect = document.querySelector('[data-product-options-target="quantitySelect"]')
     this.cupQuantity = quantitySelect ? parseInt(quantitySelect.value) : null
+  }
+
+  // Carousel scroll navigation
+  scrollLeft() {
+    if (this.hasContainerTarget) {
+      this.containerTarget.scrollBy({ left: -200, behavior: 'smooth' })
+    }
+  }
+
+  scrollRight() {
+    if (this.hasContainerTarget) {
+      this.containerTarget.scrollBy({ left: 200, behavior: 'smooth' })
+    }
   }
 
   // Listen for variant changes from product-options controller
@@ -73,8 +87,16 @@ export default class extends Controller {
       }
 
       if (data.lids.length === 0) {
-        this.containerTarget.innerHTML = '<p class="text-base-content/60 text-center py-4">No compatible lids available for this size</p>'
+        // No lids available - keep the section hidden
+        if (this.hasWrapperTarget) {
+          this.wrapperTarget.classList.add('hidden')
+        }
         return
+      }
+
+      // Show the wrapper section now that we have lids
+      if (this.hasWrapperTarget) {
+        this.wrapperTarget.classList.remove('hidden')
       }
 
       // Render lid cards
@@ -91,47 +113,87 @@ export default class extends Controller {
       if (this.hasLoadingTarget) {
         this.loadingTarget.style.display = 'none'
       }
-      this.containerTarget.innerHTML = '<p class="text-error text-center py-4">Failed to load lids. Please try again.</p>'
+      // On error, keep section hidden rather than showing error message
+      if (this.hasWrapperTarget) {
+        this.wrapperTarget.classList.add('hidden')
+      }
     }
   }
 
   createLidCard(lid) {
+    // Build landscape card - shows 2 at a time with horizontal layout
     const card = document.createElement('div')
-    card.className = 'bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors'
+    card.className = 'flex-shrink-0 w-[calc(50%-8px)] bg-white border border-gray-200 rounded-lg p-4 hover:border-primary transition-colors flex gap-4'
 
-    card.innerHTML = `
-      <div class="flex items-center gap-4 p-3">
-        <!-- Image -->
-        <div class="flex-shrink-0 w-20 h-20">
-          ${lid.image_url ?
-            `<img src="${lid.image_url}" alt="${lid.name}" class="w-full h-full object-contain" />` :
-            '<div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl" role="img" aria-label="Product image placeholder">📦</div>'
-          }
-        </div>
+    // Image container (left side)
+    const imageContainer = document.createElement('div')
+    imageContainer.className = 'w-20 h-20 flex-shrink-0'
 
-        <!-- Content -->
-        <div class="flex-1 min-w-0">
-          <h4 class="font-semibold text-base mb-1">${lid.name}</h4>
-          <div class="text-base text-gray-900">£${parseFloat(lid.price).toFixed(2)}</div>
-          <div class="text-sm text-gray-500 mt-1">Pack of ${lid.pac_size.toLocaleString()}</div>
-        </div>
+    if (lid.image_url) {
+      const img = document.createElement('img')
+      img.src = lid.image_url
+      img.alt = lid.name
+      img.className = 'w-full h-full object-contain'
+      imageContainer.appendChild(img)
+    } else {
+      const placeholder = document.createElement('div')
+      placeholder.className = 'w-full h-full bg-gray-100 flex items-center justify-center rounded text-2xl'
+      placeholder.setAttribute('role', 'img')
+      placeholder.setAttribute('aria-label', 'Product image placeholder')
+      placeholder.textContent = '📦'
+      imageContainer.appendChild(placeholder)
+    }
+    card.appendChild(imageContainer)
 
-        <!-- Actions -->
-        <div class="flex-shrink-0 flex flex-col gap-2" style="min-width: 160px;">
-          <select class="px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white w-full" data-lid-quantity="${lid.sku}">
-            ${this.generateLidQuantityOptions(lid.pac_size).map(q =>
-              `<option value="${q.value}">${q.label}</option>`
-            ).join('')}
-          </select>
-          <button class="px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors whitespace-nowrap w-full cursor-pointer"
-                  data-action="click->compatible-lids#addLidToCart"
-                  data-lid-sku="${lid.sku}"
-                  data-lid-name="${lid.name}">
-            Add to cart
-          </button>
-        </div>
-      </div>
-    `
+    // Content container (right side)
+    const content = document.createElement('div')
+    content.className = 'flex-1 flex flex-col justify-between min-w-0'
+
+    // Name
+    const nameEl = document.createElement('p')
+    nameEl.className = 'text-sm font-medium line-clamp-2'
+    nameEl.title = lid.name
+    nameEl.textContent = lid.name
+    content.appendChild(nameEl)
+
+    // Price
+    const priceEl = document.createElement('p')
+    priceEl.className = 'text-sm text-gray-600'
+    priceEl.textContent = `£${parseFloat(lid.price).toFixed(2)} / pack`
+    content.appendChild(priceEl)
+
+    // Bottom row: quantity + button stacked on small cards
+    const bottomRow = document.createElement('div')
+    bottomRow.className = 'flex gap-2 items-center mt-1'
+
+    // Quantity select
+    const select = document.createElement('select')
+    select.className = 'flex-1 min-w-0 text-xs border border-gray-300 rounded px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-primary bg-white'
+    select.setAttribute('data-lid-quantity', lid.sku)
+
+    this.generateLidQuantityOptions(lid.pac_size).forEach(q => {
+      const option = document.createElement('option')
+      option.value = q.value
+      option.textContent = q.label
+      select.appendChild(option)
+    })
+    bottomRow.appendChild(select)
+
+    // Add button with cart + icon
+    const button = document.createElement('button')
+    button.className = 'btn btn-primary btn-xs btn-square cursor-pointer flex-shrink-0'
+    button.setAttribute('data-action', 'click->compatible-lids#addLidToCart')
+    button.setAttribute('data-lid-sku', lid.sku)
+    button.setAttribute('data-lid-name', lid.name)
+    button.setAttribute('aria-label', 'Add to cart')
+    button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+    </svg>`
+    bottomRow.appendChild(button)
+
+    content.appendChild(bottomRow)
+    card.appendChild(content)
+
     return card
   }
 
@@ -153,6 +215,21 @@ export default class extends Controller {
     return options
   }
 
+  // Icon SVGs for button states
+  cartIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+  </svg>`
+
+  loadingIcon = `<span class="loading loading-spinner loading-xs"></span>`
+
+  checkIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+  </svg>`
+
+  errorIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+  </svg>`
+
   async addLidToCart(event) {
     const button = event.currentTarget
     const sku = button.dataset.lidSku
@@ -160,9 +237,9 @@ export default class extends Controller {
     const quantitySelect = button.parentElement.querySelector('select')
     const quantity = parseInt(quantitySelect.value)
 
-    // Disable button during request
+    // Disable button during request - show loading spinner
     button.disabled = true
-    button.textContent = 'Adding...'
+    button.innerHTML = this.loadingIcon
 
     try {
       const response = await fetch("/cart/cart_items", {
@@ -187,30 +264,35 @@ export default class extends Controller {
           Turbo.renderStreamMessage(text)
         }
 
-        // Show success state
-        button.textContent = 'Added ✓'
-        button.classList.remove('bg-primary', 'hover:bg-primary-focus')
-        button.classList.add('bg-success')
+        // Show success state - checkmark icon
+        button.innerHTML = this.checkIcon
+        button.classList.remove('btn-primary')
+        button.classList.add('btn-success')
+
+        // Open cart drawer (same behavior as main add-to-cart)
+        window.dispatchEvent(new CustomEvent('cart:updated', { detail: { source: 'compatible-lids' } }))
 
         // Reset button after 2 seconds
         setTimeout(() => {
           button.disabled = false
-          button.textContent = 'Add to cart'
-          button.classList.remove('bg-success')
-          button.classList.add('bg-primary', 'hover:bg-primary-focus')
+          button.innerHTML = this.cartIcon
+          button.classList.remove('btn-success')
+          button.classList.add('btn-primary')
         }, 2000)
       } else {
         throw new Error('Failed to add to cart')
       }
     } catch (error) {
       console.error('Error adding lid to cart:', error)
-      button.textContent = 'Error - Try again'
-      button.classList.add('bg-error')
+      button.innerHTML = this.errorIcon
+      button.classList.remove('btn-primary')
+      button.classList.add('btn-error')
 
       setTimeout(() => {
         button.disabled = false
-        button.textContent = 'Add to cart'
-        button.classList.remove('bg-error')
+        button.innerHTML = this.cartIcon
+        button.classList.remove('btn-error')
+        button.classList.add('btn-primary')
       }, 2000)
     }
   }

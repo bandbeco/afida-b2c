@@ -66,6 +66,14 @@ class ProductsController < ApplicationController
         image_url: v.primary_photo&.attached? ? url_for(v.primary_photo.variant(resize_to_limit: [ 800, 800 ])) : nil
       }
     end
+
+    # Related products from same category (for "Complete your order" section)
+    @related_products = @product.category.products
+                                .standard
+                                .where.not(id: @product.id)
+                                .includes(:active_variants)
+                                .with_attached_product_photo
+                                .limit(8)
   end
 
   def quick_add

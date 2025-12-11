@@ -14,7 +14,7 @@
         <% if cart_item.product.present? && cart_item.product_variant.present? %>
           <div class="flex items-center space-x-3 p-3 bg-base-100 rounded-lg">
             <div class="relative flex-shrink-0">
-              <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-12 h-12 rounded") %>
+              <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-12 h-12 rounded bg-white object-contain") %>
               <% if cart_item.sample? %>
                 <%= render "shared/sample_badge", size: :sm %>
               <% end %>

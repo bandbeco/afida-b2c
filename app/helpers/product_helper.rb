@@ -55,9 +55,9 @@ module ProductHelper
   # Display product/variant photo with placeholder if missing
   # Usage: product_photo_tag(product.primary_photo, alt: "Product name", class: "w-20 h-20", fetchpriority: "high", width: 800, height: 800, data: { product_options_target: "imageDisplay" })
   def product_photo_tag(photo, options = {})
-    css_class = options[:class] || "w-full h-full object-cover"
+    css_class = options[:class] || "w-full h-full object-contain"
     alt_text = options[:alt] || "Product photo"
-    variant_options = options[:variant] || { resize_to_limit: [ 400, 400 ] }
+    variant_options = options[:variant] || { resize_and_pad: [ 400, 400, { background: [ 255, 255, 255 ] } ] }
     data_attributes = options[:data] || {}
 
     # Extract image tag specific options

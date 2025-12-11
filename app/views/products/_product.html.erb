@@ -2,13 +2,13 @@
 <div class="card shadow-sm bg-base-100"
      data-controller="product-card-hover"
      data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
-  <figure class="max-w-[600px] max-h-[600px] bg-base-200">
+  <figure class="max-w-[600px] max-h-[600px] bg-white">
     <%= link_to product_path(product), class: "w-full h-full" do %>
       <div class="product-image-container">
         <% if product.product_photo.attached? %>
-          <%= image_tag product.product_photo.variant(resize_to_limit: [400, 400]),
+          <%= image_tag product.product_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
                         alt: product.name,
-                        class: "product-image",
+                        class: "product-image object-contain",
                         width: 400,
                         height: 400,
                         **(image_index == 0 ? { fetchpriority: "high" } : {}),
@@ -16,9 +16,9 @@
         <% end %>
 
         <% if product.lifestyle_photo.attached? %>
-          <%= image_tag product.lifestyle_photo.variant(resize_to_limit: [400, 400]),
+          <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
                         alt: "#{product.name} lifestyle",
-                        class: "product-image product-image-overlay",
+                        class: "product-image product-image-overlay object-contain",
                         width: 400,
                         height: 400,
                         data: { product_card_hover_target: "lifestylePhoto" } %>

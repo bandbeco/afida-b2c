@@ -64,41 +64,58 @@
   <%= render "shared/breadcrumbs", product: @product %>
 <% end %>
 
+<%
+  pac_size = @selected_variant.pac_size || 1
+%>
+
 <div class="drawer drawer-end">
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
-    <div class="container mx-auto py-8 min-h-screen">
-      <div class="card lg:card-side bg-base-100 shadow-sm"
+    <div class="container mx-auto min-h-screen py-4 pb-24 lg:pb-8">
+
+      <%# ===== PURCHASE ZONE ===== %>
+      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12"
            data-controller="product-options"
            data-product-options-variants-value="<%= @variants_json.to_json %>"
-           data-product-options-pac-size-value="<%= @selected_variant.pac_size || 1 %>"
+           data-product-options-pac-size-value="<%= pac_size %>"
            data-product-options-min-price-value="<%= @min_price.to_f %>"
            data-product-options-has-selection-value="<%= @has_url_selection.to_s %>">
-        <figure class="lg:w-1/2">
-          <%= product_photo_tag(@selected_variant.primary_photo,
-                                alt: @product.name,
-                                class: "w-full h-full object-cover",
-                                variant: { resize_to_limit: [800, 800] },
-                                fetchpriority: "high",
-                                width: 800,
-                                height: 800,
-                                data: { product_options_target: "imageDisplay" }) %>
-        </figure>
 
-        <div class="card-body p-4 sm:p-8 lg:w-1/2 text-center lg:text-left">
-          <h1 class="card-title text-2xl sm:text-3xl lg:text-4xl justify-center lg:justify-start">
+        <%# Image Section - No card wrapper %>
+        <div class="lg:w-1/2 flex-shrink-0">
+          <div class="bg-white rounded-lg overflow-hidden">
+            <%= product_photo_tag(@selected_variant.primary_photo,
+                                  alt: @product.name,
+                                  class: "w-full h-auto object-contain",
+                                  variant: { resize_and_pad: [800, 800, { background: [255, 255, 255] }] },
+                                  fetchpriority: "high",
+                                  width: 800,
+                                  height: 800,
+                                  data: { product_options_target: "imageDisplay" }) %>
+          </div>
+        </div>
+
+        <%# Content Section - No card-body %>
+        <div class="lg:w-1/2 text-center lg:text-left">
+
+          <%# Title %>
+          <h1 class="text-2xl sm:text-3xl lg:text-4xl font-bold">
             <%= @product.name %>
           </h1>
 
-          <p class="text-xl text-black mt-2" data-product-options-target="unitPriceDisplay">
-            <% if @has_url_selection %>
-              <%= number_to_currency(@selected_variant.price) %> / pack
-            <% else %>
-              from <%= number_to_currency(@min_price) %> / pack
-            <% end %>
-          </p>
+          <%# Price with Free Delivery Badge %>
+          <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mt-3">
+            <p class="text-xl text-black" data-product-options-target="unitPriceDisplay">
+              <% if @has_url_selection %>
+                <%= number_to_currency(@selected_variant.price) %> / pack
+              <% else %>
+                from <%= number_to_currency(@min_price) %> / pack
+              <% end %>
+            </p>
+          </div>
 
-          <div class="flex items-center justify-center lg:justify-start gap-3">
+          <%# Colour & SKU %>
+          <div class="flex items-center justify-center lg:justify-start gap-3 mt-2">
             <% if @product.colour.present? %>
               <span class="text-base-content/60 font-medium text-lg"><%= @product.colour %></span>
             <% end %>
@@ -107,33 +124,31 @@
             </span>
           </div>
 
+          <%# Short Description %>
           <% if @product.description_standard_with_fallback.present? %>
-            <p class="text-lg text-gray-700 mb-6">
+            <p class="text-lg text-gray-700 mt-4">
               <%= @product.description_standard_with_fallback %>
             </p>
           <% end %>
 
+          <%# Variant Options %>
           <% if @product.active_variants.count > 1 %>
-            <div class="space-y-3 sm:space-y-4 my-3 sm:my-4">
-
+            <div class="space-y-4 mt-6">
               <% @product_options.each do |option| %>
                 <div class="w-full">
-                  <label class="label pb-2">
-                    <span class="label-text font-semibold">Select <%= option.name.downcase %>:</span>
+                  <label class="block text-sm font-semibold mb-2">
+                    Select <%= option.name.downcase %>:
                   </label>
                   <%
-                    # Get unique values for this option from all variants
                     option_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
-                    # Sort by numeric value (extract numbers from strings like "8oz", "12oz")
                     option_values = option_values.sort_by { |v| v.scan(/\d+/).first.to_i }
                     selected_value = @selected_variant.option_values[option.name]
                     target_name = option.name.downcase
                   %>
                   <div class="flex flex-wrap justify-center lg:justify-start gap-2">
                     <% option_values.each do |value| %>
-                      <%# data-value contains the value (for URLs), button text shows label (for display) %>
                       <button type="button"
-                              class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-3 py-2 sm:px-6 sm:py-3 cursor-pointer font-medium text-sm sm:text-base"
+                              class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-3 py-2 sm:px-6 sm:py-3 cursor-pointer font-medium text-sm sm:text-base transition-colors"
                               data-product-options-target="<%= target_name %>Button"
                               data-value="<%= value %>"
                               data-action="click->product-options#select<%= option.name.capitalize %>">
@@ -151,74 +166,76 @@
             </div>
           <% end %>
 
-          <%
-            pac_size = @selected_variant.pac_size || 1
-            min_qty = pac_size
-            max_qty = pac_size * 10
-            # Generate quantity options as multiples of pack size
-            quantity_options = (1..10).map { |i| pac_size * i }
-          %>
-          <div class="card-actions space-y-3 my-3 sm:my-4">
-            <%= form_with url: cart_cart_items_path, method: :post, class: "w-full space-y-3", local: false, data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
+          <%# Purchase Form %>
+          <div class="mt-6">
+            <%= form_with url: cart_cart_items_path, method: :post, class: "w-full space-y-4", local: false, data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", product_options_target: "form" } do |f| %>
               <input type="hidden"
                      name="cart_item[variant_sku]"
                      value="<%= @selected_variant.sku %>"
                      data-product-options-target="variantSkuInput" />
 
+              <%# Quantity Select %>
               <div class="form-control">
                 <div class="flex justify-between items-baseline mb-2">
-                  <label for="cart_item_quantity" class="label-text font-semibold">Select quantity:</label>
+                  <label for="cart_item_quantity" class="text-sm font-semibold">Select quantity:</label>
                   <span class="text-sm text-base-content/60" data-product-options-target="packSizeDisplay">
                     Pack size: <%= number_with_delimiter(pac_size) %> units
                   </span>
                 </div>
-                <%# Value is number of packs, display shows "X packs (Y units)" %>
-              <%= select_tag "cart_item[quantity]",
-                              options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
-                              id: "cart_item_quantity",
-                              class: "select select-bordered select-lg w-full",
-                              data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>
+                <%= select_tag "cart_item[quantity]",
+                                options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
+                                id: "cart_item_quantity",
+                                class: "select select-bordered select-lg w-full",
+                                data: { product_options_target: "quantitySelect", action: "change->product-options#updateQuantity" } %>
               </div>
 
-              <%# Compatible Lids Section - Only for cup products %>
+              <%# Compatible Lids Section - Mini Carousel %>
               <% if @product.name.downcase.include?('cup') && !@product.name.downcase.include?('lid') && @product.has_compatible_lids? %>
                 <div class="mt-6"
                      data-controller="compatible-lids"
                      data-compatible-lids-product-id-value="<%= @product.id %>"
                      data-action="product-options:variant-changed@window->compatible-lids#onVariantChanged product-options:quantity-changed@window->compatible-lids#onQuantityChanged">
 
-                  <div class="divider"></div>
-
-                  <h2 class="text-lg font-semibold mb-3">Add a matching lid</h2>
+                  <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-semibold">Add a matching lid</h3>
+                    <div class="flex gap-1">
+                      <button type="button" class="btn btn-ghost btn-xs btn-circle" data-action="compatible-lids#scrollLeft" aria-label="Scroll left">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                        </svg>
+                      </button>
+                      <button type="button" class="btn btn-ghost btn-xs btn-circle" data-action="compatible-lids#scrollRight" aria-label="Scroll right">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
 
                   <!-- Loading State -->
-                  <div id="lids-loading" data-compatible-lids-target="loading" style="display: none;" class="text-center py-4">
+                  <div data-compatible-lids-target="loading" style="display: none;" class="text-center py-4">
                     <span class="loading loading-spinner loading-md"></span>
                     <p class="text-base-content/60 text-sm mt-2">Loading compatible lids...</p>
                   </div>
 
-                  <!-- Lids Container -->
-                  <div data-compatible-lids-target="container" class="space-y-3">
-                    <!-- Lids will be loaded here dynamically -->
+                  <!-- Lids Carousel Container -->
+                  <div data-compatible-lids-target="container" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+                    <!-- Lids will be loaded here dynamically as compact cards -->
                   </div>
-
-                  <div class="divider"></div>
                 </div>
               <% end %>
 
-              <div class="my-4 sm:my-8 space-y-3">
-                <div class="flex items-center gap-2">
+              <%# Delivery Info & Total %>
+              <div class="mt-6 space-y-2">
+                <div class="flex items-center gap-2 justify-center lg:justify-start">
                   <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                   <span class="font-medium text-sm sm:text-base">Delivered in 2 to 3 working days</span>
                 </div>
-                <div class="mt-4 sm:mt-8 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4">
-                  <div>
-                    <p class="text-base sm:text-lg">Total (excl. VAT)</p>
-                    <p class="text-xs text-base-content/60">Free delivery on orders over £100</p>
-                  </div>
-                  <p class="text-xl sm:text-2xl font-semibold whitespace-nowrap" data-product-options-target="priceDisplay">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 border-t border-base-200">
+                  <p class="text-base sm:text-lg">Total (excl. VAT)</p>
+                  <p class="text-xl sm:text-2xl font-semibold" data-product-options-target="priceDisplay">
                     <% if @has_url_selection %>
                       <%= number_to_currency(@selected_variant.price) %>
                     <% else %>
@@ -228,39 +245,99 @@
                 </div>
               </div>
 
-              <%= f.submit "Add to cart", class: "btn btn-primary btn-lg w-full cursor-pointer", data: { product_options_target: "addToCartButton" } %>
+              <%# Add to Cart Button (Desktop) %>
+              <%= f.submit "Add to cart", class: "btn btn-primary btn-lg w-full cursor-pointer hidden lg:flex", data: { product_options_target: "addToCartButton" } %>
+              <p class="text-sm text-base-content/60 text-center mt-3 hidden lg:flex items-center justify-center gap-1.5">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                </svg>
+                Free delivery over £100
+              </p>
             <% end %>
           </div>
 
-          <% if @selected_variant.variant_attributes.any? %>
-            <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-              <table class="table table-zebra table-pin-cols">
-                <thead>
-                  <tr>
-                    <th colspan="2" class="bg-base-200 font-medium">Specifications</th>
-                   </thead>
-                <tbody>
-                <% @selected_variant.variant_attributes.each do |key, value| %>
-                  <tr>
-                    <td class="font-semibold"><%= key.to_s.humanize %></td>
-                    <td><%= value %></td>
-                  </tr>
-                <% end %>
-              </table>
-            </div>
-          <% end %>
-
-          <%# Product Details Section - T038-T043 %>
-          <% if @product.description_detailed_with_fallback.present? %>
-            <div class="mt-8">
-              <h2 class="text-2xl font-semibold mb-4">About Our <%= @product.name %></h2>
-              <div class="prose prose-lg max-w-none">
-                <%= simple_format(@product.description_detailed_with_fallback) %>
-              </div>
-            </div>
-          <% end %>
         </div>
       </div>
+
+      <%# ===== PRODUCT DETAILS ZONE (Full Width) ===== %>
+      <div class="mt-12 space-y-8">
+
+        <%# About / Detailed Description %>
+        <% if @product.description_detailed_with_fallback.present? %>
+          <section>
+            <h2 class="text-xl font-semibold mb-4">About Our <%= @product.name %></h2>
+            <div class="prose prose-lg max-w-none text-base-content/80">
+              <%= simple_format(@product.description_detailed_with_fallback) %>
+            </div>
+          </section>
+        <% end %>
+
+        <%# Specifications Grid %>
+        <% if @selected_variant.variant_attributes.any? %>
+          <section>
+            <h2 class="text-xl font-semibold mb-4">Specifications</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <% @selected_variant.variant_attributes.each do |key, value| %>
+                <div class="bg-base-100 border border-base-200 rounded-lg p-4">
+                  <p class="text-xs text-base-content/60 uppercase tracking-wide"><%= key.to_s.humanize %></p>
+                  <p class="font-medium mt-1"><%= value %></p>
+                </div>
+              <% end %>
+            </div>
+          </section>
+        <% end %>
+
+      </div>
+
+      <%# ===== RELATED PRODUCTS ZONE (Pattern Background) ===== %>
+      <% if @related_products&.any? %>
+        <section class="mt-12 py-8" data-controller="related-products">
+          <div class="flex items-center justify-between mb-6">
+            <h2 class="text-2xl font-semibold">You May Also Like</h2>
+            <div class="flex gap-1">
+              <button type="button" class="btn btn-ghost btn-sm btn-circle" data-action="related-products#scrollLeft" aria-label="Scroll left">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button type="button" class="btn btn-ghost btn-sm btn-circle" data-action="related-products#scrollRight" aria-label="Scroll right">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" data-related-products-target="container">
+            <% @related_products.each do |product| %>
+              <%= render "products/related_product_card", product: product %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+
+    </div>
+  </div>
+
+  <%# Mobile Sticky Add to Cart Bar %>
+  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-base-200 p-3 lg:hidden z-40 shadow-lg"
+       data-product-options-target="mobileBar">
+    <div class="flex items-center justify-between gap-4 max-w-lg mx-auto">
+      <div>
+        <p class="text-lg font-semibold" data-product-options-target="mobilePriceDisplay">
+          <% if @has_url_selection %>
+            <%= number_to_currency(@selected_variant.price) %>
+          <% else %>
+            <%= number_to_currency(@min_price) %>
+          <% end %>
+        </p>
+        <p class="text-xs text-base-content/60">excl. VAT</p>
+      </div>
+      <button type="button"
+              class="btn btn-primary flex-1 max-w-[200px]"
+              data-action="click->product-options#submitForm">
+        Add to Cart
+      </button>
     </div>
   </div>
 

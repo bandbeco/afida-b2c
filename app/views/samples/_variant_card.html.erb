@@ -50,8 +50,8 @@
     <figure class="px-4 pt-4">
       <% photo = variant.primary_photo || variant.product.primary_photo %>
       <% if photo %>
-        <%= image_tag photo.variant(resize_to_fill: [200, 200]),
-                      class: "rounded-lg w-full h-32 object-cover #{is_sample_in_cart ? 'opacity-90' : ''}",
+        <%= image_tag photo.variant(resize_and_pad: [200, 200, { background: [255, 255, 255] }]),
+                      class: "rounded-lg w-full h-32 object-contain bg-white #{is_sample_in_cart ? 'opacity-90' : ''}",
                       alt: variant.display_name %>
       <% else %>
         <div class="w-full h-32 bg-base-200 rounded-lg flex items-center justify-center">

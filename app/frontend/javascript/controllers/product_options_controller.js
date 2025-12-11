@@ -3,7 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 // Handles Size/Colour option selection on product pages with button selectors
 // Finds matching variant based on selected options
 export default class extends Controller {
-  static targets = ["sizeButton", "colourButton", "priceDisplay", "unitPriceDisplay", "imageDisplay", "variantSkuInput", "quantitySelect", "packSizeDisplay", "skuDisplay", "addToCartButton"]
+  static targets = ["sizeButton", "colourButton", "priceDisplay", "unitPriceDisplay", "imageDisplay", "variantSkuInput", "quantitySelect", "packSizeDisplay", "skuDisplay", "addToCartButton", "form", "mobileBar", "mobilePriceDisplay"]
 
   static values = {
     variants: Array,    // All product variants with their option_values
@@ -282,6 +282,19 @@ export default class extends Controller {
 
     // Update total price display
     this.priceDisplayTarget.textContent = formatter.format(totalPrice)
+
+    // Update mobile price display
+    if (this.hasMobilePriceDisplayTarget) {
+      this.mobilePriceDisplayTarget.textContent = formatter.format(totalPrice)
+    }
+  }
+
+  // Submit the form from mobile sticky bar
+  submitForm() {
+    if (this.hasFormTarget) {
+      // Trigger form submission via requestSubmit to fire events
+      this.formTarget.requestSubmit()
+    }
   }
 
   updateUrl(variant) {

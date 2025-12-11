@@ -46,13 +46,10 @@
 
                   <div class="flex -space-x-2 mb-4">
                     <% order.order_items.limit(3).each do |item| %>
-                      <% if item.product_variant&.product_photo&.attached? %>
-                        <%= image_tag item.product_variant.product_photo.variant(resize_to_fill: [80, 80]), class: "h-10 w-10 object-cover rounded-full border-2 border-white", alt: item.product_name %>
-                      <% else %>
-                        <div class="h-10 w-10 bg-gray-200 rounded-full border-2 border-white flex items-center justify-center">
-                          <span class="text-gray-400 text-xs">?</span>
-                        </div>
-                      <% end %>
+                      <%= product_photo_tag(item.product_variant&.primary_photo,
+                                            variant: { resize_and_pad: [80, 80, { background: [255, 255, 255] }] },
+                                            class: "h-10 w-10 object-contain rounded-full border-2 border-white bg-white",
+                                            alt: item.product_name) %>
                     <% end %>
 
                     <% if order.order_items.count > 3 %>

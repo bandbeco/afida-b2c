@@ -1,17 +1,18 @@
 <div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card h-full flex flex-col" data-product-id="<%= product.id %>">
   <%= link_to product_path(product.slug), class: "flex flex-col flex-1", data: { turbo_frame: "_top" } do %>
-    <figure class="aspect-square overflow-hidden flex-shrink-0">
+    <figure class="aspect-square bg-white flex-shrink-0 overflow-hidden">
       <%= product_photo_tag(product.primary_photo,
                             alt: product.name,
-                            class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
-                            variant: { resize_to_limit: [400, 400] },
+                            class: "w-full h-full object-contain hover:scale-105 transition-transform duration-300",
+                            variant: { resize_and_pad: [400, 400, { background: [255, 255, 255] }] },
                             loading: "lazy") %>
     </figure>
 
     <div class="card-body p-4 flex flex-col flex-1">
       <h2 class="card-title text-lg"><%= product.name %></h2>
 
-      <% if product.description_short_with_fallback.present? %>
+      <% show_description = local_assigns.fetch(:show_description, true) %>
+      <% if show_description && product.description_short_with_fallback.present? %>
         <p class="text-sm text-gray-600 mb-2 line-clamp-2 flex-1"><%= product.description_short_with_fallback %></p>
       <% else %>
         <div class="flex-1"></div>

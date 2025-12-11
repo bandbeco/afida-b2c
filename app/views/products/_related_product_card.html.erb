@@ -1,0 +1,27 @@
+<%# Related product card for carousel - sized to show 4 items with peek on desktop %>
+<%= link_to product_path(product), class: "flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] lg:w-[calc(23%-12px)] bg-white rounded-xl shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-200 group block overflow-hidden" do %>
+  <% if product.primary_photo&.attached? %>
+    <%= image_tag product.primary_photo.variant(resize_and_pad: [200, 200, { background: [255, 255, 255] }]),
+                  alt: product.name,
+                  class: "w-full h-40 object-contain bg-white group-hover:scale-105 transition-transform",
+                  loading: "lazy" %>
+  <% else %>
+    <div class="w-full h-40 bg-base-200 flex items-center justify-center">
+      <span class="text-base-content/40 text-sm">No image</span>
+    </div>
+  <% end %>
+
+  <div class="p-4">
+    <h3 class="font-medium text-sm group-hover:text-primary line-clamp-2">
+      <%= product.name %>
+    </h3>
+    <p class="text-sm text-base-content/60 mt-2">
+      <% price = product.price_range %>
+      <% if price.is_a?(Array) %>
+        from <%= number_to_currency(price.first) %>
+      <% elsif price %>
+        <%= number_to_currency(price) %>
+      <% end %>
+    </p>
+  </div>
+<% end %>

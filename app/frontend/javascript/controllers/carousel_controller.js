@@ -4,8 +4,10 @@ import { Navigation, Pagination, Autoplay } from "swiper/modules"
 
 export default class extends Controller {
   connect() {
-    // Check if this is an addon carousel (multiple slides per view)
+    // Check if this is a multi-slide carousel (addon or related products)
     const isAddonCarousel = this.element.classList.contains('addon-carousel')
+    const isRelatedProductsCarousel = this.element.classList.contains('related-products-carousel')
+    const isMultiSlideCarousel = isAddonCarousel || isRelatedProductsCarousel
 
     // Count slides to determine if loop should be enabled
     const slideCount = this.element.querySelectorAll('.swiper-slide').length
@@ -20,8 +22,8 @@ export default class extends Controller {
         clickable: true,
       },
       navigation: {
-        nextEl: ".bestsellers-button-next, .swiper-button-next",
-        prevEl: ".bestsellers-button-prev, .swiper-button-prev",
+        nextEl: ".bestsellers-button-next, .related-products-button-next, .swiper-button-next",
+        prevEl: ".bestsellers-button-prev, .related-products-button-prev, .swiper-button-prev",
       },
       autoplay: slideCount > 1 ? {
         delay: 5000,
@@ -30,8 +32,8 @@ export default class extends Controller {
       } : false, // Disable autoplay if only 1 slide
     }
 
-    // Add responsive breakpoints for addon carousel
-    if (isAddonCarousel) {
+    // Add responsive breakpoints for multi-slide carousels
+    if (isMultiSlideCarousel) {
       config.slidesPerView = 2
       config.spaceBetween = 20
       config.breakpoints = {
