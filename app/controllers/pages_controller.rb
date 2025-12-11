@@ -57,6 +57,12 @@ class PagesController < ApplicationController
   def cookies_policy
   end
 
+  def accessibility_statement
+  end
+
+  def articles
+  end
+
   def pattern_demo
   end
 

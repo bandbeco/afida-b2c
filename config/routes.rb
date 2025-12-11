@@ -1,6 +1,26 @@
 Rails.application.routes.draw do
   root "pages#home"
 
+  # =============================================================================
+  # Legacy URL Redirects (301 Permanent)
+  # From old Wix site (afida.com) - preserves SEO and backlinks
+  # =============================================================================
+
+  # Legacy category redirects (preserves query params for UTM tracking)
+  get "/category/cold-cups-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/hot-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/hot-cup-extras", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/napkins", to: redirect(status: 301) { |_params, req| "/categories/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/straws", to: redirect(status: 301) { |_params, req| "/categories/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/takeaway-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/takeaway-extras#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/all-products", to: redirect(status: 301) { |_params, req| "/shop#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
+  # Legacy page redirects (preserves query params for UTM tracking)
+  get "/branded-packaging", to: redirect(status: 301) { |_params, req| "/branding#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/blog", to: redirect(status: 301) { |_params, req| "/articles#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
   get "shop", to: "pages#shop"
   get "branding", to: "pages#branding"
   resources :samples, only: [ :index ] do
@@ -13,6 +33,8 @@ Rails.application.routes.draw do
   get "terms-conditions", to: "pages#terms_conditions"
   get "privacy-policy", to: "pages#privacy_policy"
   get "cookies-policy", to: "pages#cookies_policy"
+  get "accessibility-statement", to: "pages#accessibility_statement"
+  get "articles", to: "pages#articles"
   get "pattern-demo", to: "pages#pattern_demo" if Rails.env.development?
   get "sentry-test", to: "pages#sentry_test" if Rails.env.development?
 
