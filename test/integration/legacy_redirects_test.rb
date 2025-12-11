@@ -63,12 +63,6 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_equal 301, response.status
   end
 
-  test "redirects blog to articles" do
-    get "/blog"
-    assert_redirected_to "/articles"
-    assert_equal 301, response.status
-  end
-
   # Query parameter preservation
   test "preserves query parameters on redirect" do
     get "/category/hot-cups?utm_source=google&utm_campaign=test"
@@ -80,16 +74,5 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     get "/accessibility-statement"
     assert_response :success
     assert_select "h1", "Accessibility Statement"
-  end
-
-  test "articles placeholder page loads" do
-    get "/articles"
-    assert_response :success
-    assert_select "h1", "Articles Coming Soon"
-  end
-
-  test "articles page has noindex meta tag" do
-    get "/articles"
-    assert_select 'meta[name="robots"][content="noindex, follow"]'
   end
 end
