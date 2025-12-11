@@ -588,7 +588,7 @@ After deploying SEO updates:
 ### Configuration
 
 **Required environment variables:**
-- `APP_HOST` - Used by sitemap generator (e.g., "afida.co.uk")
+- `APP_HOST` - Used by sitemap generator (e.g., "afida.com")
 - Set to production domain in production environment
 
 **Database fields:**
