@@ -367,7 +367,7 @@ google:
   oauth_client_id: YOUR_CLIENT_ID
   oauth_client_secret: YOUR_CLIENT_SECRET
   oauth_refresh_token: YOUR_REFRESH_TOKEN
-  site_url: https://afida.co.uk  # Your GSC property
+  site_url: https://afida.com  # Your GSC property
 ```
 
 **Testing:**

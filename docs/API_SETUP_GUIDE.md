@@ -93,7 +93,7 @@ puts '✅ SerpAPI working!' if results[:organic_results]
 
 - You must own/manage the website in Google Search Console
 - Verify: Go to https://search.google.com/search-console
-- Confirm your site (e.g., afida.co.uk) appears in the property list
+- Confirm your site (e.g., afida.com) appears in the property list
 
 ### Step 3.1: Create Google Cloud Project
 
@@ -118,8 +118,8 @@ puts '✅ SerpAPI working!' if results[:organic_results]
 3. **Click**: "Create"
 4. **App Information**:
    - App name: `Afida SEO Engine`
-   - User support email: your-email@afida.co.uk
-   - Developer contact: your-email@afida.co.uk
+   - User support email: hello@afida.com
+   - Developer contact: hello@afida.com
 5. **Click**: "Save and Continue"
 6. **Scopes**:
    - Click "Add or Remove Scopes"
@@ -143,7 +143,7 @@ puts '✅ SerpAPI working!' if results[:organic_results]
 5. **Authorized redirect URIs**: Add these two:
    ```
    http://localhost:3000/auth/google/callback
-   https://afida.co.uk/auth/google/callback
+   https://afida.com/auth/google/callback
    ```
    (Adjust production domain if different)
 6. **Click**: "Create"

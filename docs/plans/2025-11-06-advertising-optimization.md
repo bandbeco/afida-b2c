@@ -1016,7 +1016,7 @@ end
     </p>
 
     <p style="color: #666; font-size: 12px;">
-      Need help? Reply to this email or contact us at hello@afida.co.uk
+      Need help? Reply to this email or contact us at hello@afida.com
     </p>
   </body>
 </html>
@@ -1043,7 +1043,7 @@ Questions about our products? We're here to help.
 
 Complete your order: <%= cart_url %>
 
-Need help? Contact us at hello@afida.co.uk
+Need help? Contact us at hello@afida.com
 ```
 
 **Step 5: Create shipping offer templates**
@@ -2114,7 +2114,7 @@ git commit -m "feat: add request quote form for B2B leads
    ```
 
 4. **Google Merchant Center:**
-   - Submit feed: `https://afida.co.uk/feeds/google-merchant.xml`
+   - Submit feed: `https://afida.com/feeds/google-merchant.xml`
    - Verify products are approved
    - Set up automatic daily fetches
 

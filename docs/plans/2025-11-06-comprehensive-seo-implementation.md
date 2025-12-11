@@ -114,7 +114,7 @@ module SeoHelper
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "Customer Service",
-        "email": "hello@afida.co.uk"
+        "email": "hello@afida.com"
       },
       "sameAs": [
         # Add social media URLs when available

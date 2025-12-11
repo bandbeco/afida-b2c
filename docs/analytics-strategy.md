@@ -376,7 +376,7 @@ Drawback: Requires platform migration (not applicable now)
 #### 1.1 Google Analytics 4 Setup
 
 **Tasks:**
-1. Create GA4 property for production domain (afida.co.uk)
+1. Create GA4 property for production domain (afida.com)
 2. Create separate GA4 property for staging (for testing without polluting data)
 3. Implement Google Tag Manager (GTM) container
 4. Set up ecommerce event schema (see schema above)

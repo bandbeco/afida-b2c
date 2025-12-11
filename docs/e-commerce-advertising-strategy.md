@@ -446,7 +446,7 @@ Complete your order and join the movement.
           products at competitive prices. EN 13432 certified,
           trusted by 500+ UK cafes."
 [Action] "Make the switch today. Free shipping on orders £50+.
-          Visit afida.co.uk"
+          Visit afida.com"
 ```
 
 ### The 4 C's (Clear, Concise, Compelling, Credible)
