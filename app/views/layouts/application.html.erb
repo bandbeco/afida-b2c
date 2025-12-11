@@ -4,10 +4,10 @@
     <%# Google Tag Manager - must be first in head for accurate tracking %>
     <%= render "layouts/google_tag_manager" %>
 
-    <%# Block search engine indexing on staging domains %>
-    <% if request.host.include?("kiyuro.com") %>
-      <meta name="robots" content="noindex, nofollow">
-    <% end %>
+    <%# Block search engine indexing on staging domains - add domain checks here if needed %>
+    <%# Example: <% if request.host.include?("staging.example.com") %> %>
+    <%#   <meta name="robots" content="noindex, nofollow"> %>
+    <%# <% end %> %>
 
     <title><%= content_for(:title) %></title>
     <meta name="description" content="<%= content_for(:meta_description) %>">
