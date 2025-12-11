@@ -56,7 +56,7 @@
           <% end %>
         </div>
 
-        <div class="mt-8 mb-12 flex flex-wrap items-center justify-center lg:justify-start gap-6 text-sm text-neutral-600">
+        <div class="mt-8 mb-12 flex flex-col items-center lg:items-start gap-1.5 text-sm text-neutral-600">
           <div class="flex items-center gap-2">
             <div class="flex -space-x-2">
               <%# Exclude the-grove.webp from hero avatars to keep visual balance (10 logos fit better in small avatar circles) %>
@@ -68,6 +68,8 @@
             </div>
             <span class="font-semibold">Trusted by 500+ UK businesses</span>
           </div>
+          <%# Google Business Profile rating - subtle trust signal %>
+          <%= render "shared/gbp_badge", variant: :homepage %>
         </div>
       </div>
 

@@ -30,6 +30,36 @@ module SeoHelper
     data.to_json
   end
 
+  # Google Business Profile rating data accessor with memoization
+  def gbp_rating_data
+    @gbp_rating_data ||= {
+      rating: Rails.application.credentials.dig(:google_business, :rating),
+      review_count: Rails.application.credentials.dig(:google_business, :review_count),
+      profile_url: Rails.application.credentials.dig(:google_business, :profile_url),
+      place_id: Rails.application.credentials.dig(:google_business, :place_id)
+    }
+  end
+
+  def gbp_configured?
+    gbp_rating_data[:rating].present? && gbp_rating_data[:review_count].present?
+  end
+
+  def gbp_profile_url
+    return gbp_rating_data[:profile_url] if gbp_rating_data[:profile_url].present?
+
+    # Support both Place ID (ChIJ...) and CID (numeric) formats
+    place_id = gbp_rating_data[:place_id]
+    if place_id.present?
+      if place_id.to_s.match?(/^\d+$/)
+        # CID format - use Google Maps cid parameter
+        "https://www.google.com/maps?cid=#{place_id}"
+      else
+        # Place ID format - use search local reviews
+        "https://search.google.com/local/reviews?placeid=#{place_id}"
+      end
+    end
+  end
+
   def organization_structured_data
     logo_url = begin
       vite_asset_path("images/logo.svg")
@@ -38,21 +68,37 @@ module SeoHelper
       "/vite/assets/images/logo.svg"
     end
 
-    {
+    data = {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Afida",
       "url": root_url,
       "logo": logo_url,
+      "description": "Eco-friendly catering supplies for UK businesses",
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "Customer Service",
-        "email": "hello@afida.co.uk"
+        "email": "hello@afida.com"
       },
       "sameAs": [
-        # Add social media URLs when available
-      ]
-    }.to_json
+        "https://www.linkedin.com/company/afidasupplies",
+        "https://www.instagram.com/afidasupplies",
+        gbp_configured? ? gbp_profile_url : nil
+      ].compact
+    }
+
+    # Add aggregate rating if GBP is configured
+    if gbp_configured?
+      data[:aggregateRating] = {
+        "@type": "AggregateRating",
+        "ratingValue": gbp_rating_data[:rating].to_s,
+        "reviewCount": gbp_rating_data[:review_count].to_s,
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    end
+
+    data.to_json
   end
 
   def breadcrumb_structured_data(items)
