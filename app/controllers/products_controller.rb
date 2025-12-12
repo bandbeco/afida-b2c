@@ -38,29 +38,38 @@ class ProductsController < ApplicationController
     # Check if this is an explicit selection (URL params present)
     @has_url_selection = params[:size].present? || params[:colour].present? || params[:variant_id].present?
 
-    # Detect consolidated products (have material option in variant option_values)
-    # Consolidated products use the configurator partial with dynamic filtering
-    # Only use configurator if there are actual choices (multiple variants with different options)
-    has_material = @product.active_variants.any? { |v| v.option_values["material"].present? }
+    # Detect products that need the configurator (sparse matrix of options)
+    # Use configurator when: multiple variants with 2+ option types AND not all combinations exist
+    # This prevents impossible state selection (e.g., selecting size + colour that has no variant)
+    if @product.active_variants.count > 1
+      # Collect all option keys used across variants
+      all_option_keys = @product.active_variants.flat_map { |v| v.option_values.keys }.uniq
 
-    if has_material && @product.active_variants.count > 1
-      # Build configurator options directly from variant data (not ProductOption tables)
-      # Order: material first, then colour (quality-first flow)
+      # Build configurator options from variant data (order matters for UX)
+      # Priority: material > size > colour (quality/size first, then aesthetic)
+      option_priority = %w[material size colour]
+      ordered_keys = (option_priority & all_option_keys) + (all_option_keys - option_priority)
+
       @configurator_options = {}
+      ordered_keys.each do |key|
+        values = @product.active_variants.map { |v| v.option_values[key] }.compact.uniq
+        @configurator_options[key] = values if values.count > 1
+      end
 
-      # Collect unique values for each option type
-      materials = @product.active_variants.map { |v| v.option_values["material"] }.compact.uniq
-      colours = @product.active_variants.map { |v| v.option_values["colour"] }.compact.uniq
+      # Check if this is a sparse matrix (not all combinations exist)
+      # If product has 2+ option types with multiple values, check if it's sparse
+      if @configurator_options.size >= 2
+        total_combinations = @configurator_options.values.map(&:count).reduce(1, :*)
+        actual_variants = @product.active_variants.count
+        is_sparse = actual_variants < total_combinations
 
-      # Only include options that have multiple values (real choices)
-      @configurator_options["material"] = materials if materials.count > 1
-      @configurator_options["colour"] = colours if colours.count > 1
+        # Use configurator for sparse matrices OR products with material option (consolidated products)
+        has_material = @configurator_options.key?("material")
+        @is_consolidated = is_sparse || has_material
 
-      # Only use consolidated template if there are actual options to choose from
-      @is_consolidated = @configurator_options.any?
-
-      # For consolidated products, we don't pre-select anything
-      @has_url_selection = false if @is_consolidated
+        # For consolidated products, we don't pre-select anything
+        @has_url_selection = false if @is_consolidated
+      end
     end
 
     unless @is_consolidated
