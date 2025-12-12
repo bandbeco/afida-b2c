@@ -68,18 +68,18 @@
   pac_size = @selected_variant.pac_size || 1
 %>
 
-<div class="drawer drawer-end">
+<div class="drawer drawer-end"
+     data-controller="product-options"
+     data-product-options-variants-value="<%= @variants_json.to_json %>"
+     data-product-options-pac-size-value="<%= pac_size %>"
+     data-product-options-min-price-value="<%= @min_price.to_f %>"
+     data-product-options-has-selection-value="<%= @has_url_selection.to_s %>">
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
     <div class="container mx-auto min-h-screen py-4 pb-24 lg:pb-8">
 
       <%# ===== PURCHASE ZONE ===== %>
-      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12"
-           data-controller="product-options"
-           data-product-options-variants-value="<%= @variants_json.to_json %>"
-           data-product-options-pac-size-value="<%= pac_size %>"
-           data-product-options-min-price-value="<%= @min_price.to_f %>"
-           data-product-options-has-selection-value="<%= @has_url_selection.to_s %>">
+      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
 
         <%# Image Section - No card wrapper %>
         <div class="lg:w-1/2 flex-shrink-0">
