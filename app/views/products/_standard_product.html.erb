@@ -289,7 +289,7 @@
 
       </div>
 
-      <%# ===== RELATED PRODUCTS ZONE (Pattern Background) ===== %>
+      <%# ===== RELATED PRODUCTS ZONE ===== %>
       <% if @related_products&.any? %>
         <section class="mt-12 py-8" data-controller="related-products">
           <div class="flex items-center justify-between mb-6">
@@ -310,7 +310,9 @@
 
           <div class="flex gap-4 overflow-x-auto pb-4 scrollbar-hide" data-related-products-target="container">
             <% @related_products.each do |product| %>
-              <%= render "products/related_product_card", product: product %>
+              <div class="flex-shrink-0 w-[calc(50%-8px)] sm:w-[calc(33.333%-11px)] lg:w-[calc(25%-12px)]">
+                <%= render "products/card", product: product, show_quick_add: true %>
+              </div>
             <% end %>
           </div>
         </section>
