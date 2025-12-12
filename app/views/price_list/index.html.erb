@@ -1,0 +1,88 @@
+<% content_for :title, "Price List | Afida" %>
+<% content_for :meta_description, "Complete price list for Afida eco-friendly catering supplies. Filter by category, material, or size. Export to Excel or PDF." %>
+
+<div class="drawer drawer-end" data-controller="cart-drawer">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" data-cart-drawer-target="checkbox" aria-label="Toggle shopping cart" />
+
+  <div class="drawer-content">
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header -->
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
+        <div>
+          <h1 class="text-3xl font-bold">Price List</h1>
+          <p class="text-gray-600 mt-1">All prices exclude VAT. Free UK delivery on orders over £100.</p>
+        </div>
+        <div class="flex gap-2 mt-4 md:mt-0">
+          <%= link_to price_list_export_path(request.query_parameters.merge(format: :xlsx)),
+              class: "btn btn-outline btn-sm", data: { turbo: false } do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Excel
+          <% end %>
+          <%= link_to price_list_export_path(request.query_parameters.merge(format: :pdf)),
+              class: "btn btn-outline btn-sm", data: { turbo: false } do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            PDF
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Filter Bar -->
+      <%= form_with url: price_list_path, method: :get, data: { controller: "form", turbo_frame: "price_list_table" } do %>
+        <div class="flex flex-wrap gap-3 mb-6 items-end">
+          <div class="form-control w-full md:w-48">
+            <%= label_tag :category, "Category", class: "label label-text" %>
+            <%= select_tag :category,
+                options_for_select([["All Categories", ""]] + @categories.map { |c| [c.name, c.slug] }, params[:category]),
+                class: "select select-bordered select-sm w-full",
+                data: { action: "change->form#submit" } %>
+          </div>
+
+          <div class="form-control w-full md:w-40">
+            <%= label_tag :material, "Material", class: "label label-text" %>
+            <%= select_tag :material,
+                options_for_select([["All Materials", ""]] + @materials.map { |m| [m, m] }, params[:material]),
+                class: "select select-bordered select-sm w-full",
+                data: { action: "change->form#submit" } %>
+          </div>
+
+          <div class="form-control w-full md:w-32">
+            <%= label_tag :size, "Size", class: "label label-text" %>
+            <%= select_tag :size,
+                options_for_select([["All Sizes", ""]] + @sizes.map { |s| [s, s] }, params[:size]),
+                class: "select select-bordered select-sm w-full",
+                data: { action: "change->form#submit" } %>
+          </div>
+
+          <div class="form-control flex-1 min-w-[200px]">
+            <%= label_tag :q, "Search", class: "label label-text" %>
+            <%= text_field_tag :q, params[:q],
+                placeholder: "Search products...",
+                class: "input input-bordered input-sm w-full",
+                data: { controller: "search", action: "input->search#debounce" } %>
+          </div>
+
+          <% if params[:category].present? || params[:material].present? || params[:size].present? || params[:q].present? %>
+            <%= link_to "Clear", price_list_path, class: "btn btn-ghost btn-sm" %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <!-- Table -->
+      <%= turbo_frame_tag "price_list_table" do %>
+        <%= render "table", variants: @variants %>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Cart Drawer -->
+  <div class="drawer-side z-50">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="bg-base-200 w-80 min-h-full p-4">
+      <%= render "shared/drawer_cart_content" %>
+    </div>
+  </div>
+</div>

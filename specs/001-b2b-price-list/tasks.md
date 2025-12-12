@@ -19,8 +19,8 @@
 
 **Purpose**: Project initialization and dependencies
 
-- [ ] T001 Add caxlsx gem to `Gemfile` for Excel export (after prawn gems)
-- [ ] T002 Run `bundle install` to install new dependency
+- [x] T001 Add caxlsx gem to `Gemfile` for Excel export (after prawn gems)
+- [x] T002 Run `bundle install` to install new dependency
 
 ---
 
@@ -30,11 +30,11 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T003 Add routes for price list in `config/routes.rb` (GET /price-list, GET /price-list/export)
-- [ ] T004 Create `PriceListController` with base filtering logic in `app/controllers/price_list_controller.rb`
-- [ ] T005 [P] Verify `form_controller.js` exists in `app/frontend/javascript/controllers/` (creates if missing)
-- [ ] T006 [P] Verify `search_controller.js` exists in `app/frontend/javascript/controllers/` (creates if missing)
-- [ ] T007 [P] Register form and search controllers in `app/frontend/entrypoints/application.js` (if not already)
+- [x] T003 Add routes for price list in `config/routes.rb` (GET /price-list, GET /price-list/export)
+- [x] T004 Create `PriceListController` with base filtering logic in `app/controllers/price_list_controller.rb`
+- [x] T005 [P] Verify `form_controller.js` exists in `app/frontend/javascript/controllers/` (creates if missing)
+- [x] T006 [P] Verify `search_controller.js` exists in `app/frontend/javascript/controllers/` (creates if missing)
+- [x] T007 [P] Register form and search controllers in `app/frontend/entrypoints/application.js` (if not already)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -48,12 +48,12 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [US1] Create index view layout in `app/views/price_list/index.html.erb` with header, VAT notice, and Turbo Frame wrapper
-- [ ] T009 [US1] Create table partial in `app/views/price_list/_table.html.erb` with column headers and empty state
-- [ ] T010 [US1] Create row partial in `app/views/price_list/_row.html.erb` with product link, SKU, size, material, pack size, price columns
-- [ ] T011 [US1] Add responsive column hiding in `_table.html.erb` (hide SKU, material, price/unit on mobile)
-- [ ] T012 [US1] Add "Price List" link to desktop navigation in `app/views/shared/_navbar.html.erb`
-- [ ] T013 [US1] Add "Price List" link to mobile navigation in `app/views/shared/_navbar.html.erb`
+- [x] T008 [US1] Create index view layout in `app/views/price_list/index.html.erb` with header, VAT notice, and Turbo Frame wrapper
+- [x] T009 [US1] Create table partial in `app/views/price_list/_table.html.erb` with column headers and empty state
+- [x] T010 [US1] Create row partial in `app/views/price_list/_row.html.erb` with product link, SKU, size, material, pack size, price columns
+- [x] T011 [US1] Add responsive column hiding in `_table.html.erb` (hide SKU, material, price/unit on mobile)
+- [x] T012 [US1] Add "Price List" link to desktop navigation in `app/views/shared/_navbar.html.erb`
+- [x] T013 [US1] Add "Price List" link to mobile navigation in `app/views/shared/_navbar.html.erb`
 
 **Checkpoint**: User Story 1 complete - table displays all products, navigation works, responsive layout
 
@@ -67,17 +67,17 @@
 
 ### Implementation for User Story 2
 
-- [ ] T014 [US2] Add filter form to `app/views/price_list/index.html.erb` with Turbo Frame targeting
-- [ ] T015 [US2] Add Category dropdown filter to filter form in `app/views/price_list/index.html.erb`
-- [ ] T016 [US2] Add Material dropdown filter to filter form in `app/views/price_list/index.html.erb`
-- [ ] T017 [US2] Add Size dropdown filter to filter form in `app/views/price_list/index.html.erb`
-- [ ] T018 [US2] Add search text field to filter form in `app/views/price_list/index.html.erb`
-- [ ] T019 [US2] Add Clear button (shown when filters active) in `app/views/price_list/index.html.erb`
-- [ ] T020 [US2] Add result count display in `app/views/price_list/_table.html.erb`
-- [ ] T021 [US2] Implement JSONB material filtering in `PriceListController#filter_by_material`
-- [ ] T022 [US2] Implement JSONB size filtering in `PriceListController#filter_by_size`
-- [ ] T023 [US2] Implement text search in `PriceListController#search_variants`
-- [ ] T024 [US2] Add `available_materials` and `available_sizes` methods to controller for dropdown options
+- [x] T014 [US2] Add filter form to `app/views/price_list/index.html.erb` with Turbo Frame targeting
+- [x] T015 [US2] Add Category dropdown filter to filter form in `app/views/price_list/index.html.erb`
+- [x] T016 [US2] Add Material dropdown filter to filter form in `app/views/price_list/index.html.erb`
+- [x] T017 [US2] Add Size dropdown filter to filter form in `app/views/price_list/index.html.erb`
+- [x] T018 [US2] Add search text field to filter form in `app/views/price_list/index.html.erb`
+- [x] T019 [US2] Add Clear button (shown when filters active) in `app/views/price_list/index.html.erb`
+- [x] T020 [US2] Add result count display in `app/views/price_list/_table.html.erb`
+- [x] T021 [US2] Implement JSONB material filtering in `PriceListController#filter_by_material`
+- [x] T022 [US2] Implement JSONB size filtering in `PriceListController#filter_by_size`
+- [x] T023 [US2] Implement text search in `PriceListController#search_variants`
+- [x] T024 [US2] Add `available_materials` and `available_sizes` methods to controller for dropdown options
 
 **Checkpoint**: User Story 2 complete - all filter types work, instant updates via Turbo Frame
 
@@ -91,10 +91,10 @@
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Add quantity dropdown (1, 2, 3, 5, 10) to row partial in `app/views/price_list/_row.html.erb`
-- [ ] T026 [US3] Add "Add" button with form posting to `cart_cart_items_path` in `app/views/price_list/_row.html.erb`
-- [ ] T027 [US3] Add cart drawer markup to `app/views/price_list/index.html.erb` (wrapper with drawer-end class)
-- [ ] T028 [US3] Verify cart drawer opens on add (existing `cart_drawer_controller.js` handles this)
+- [x] T025 [US3] Add quantity dropdown (1, 2, 3, 5, 10) to row partial in `app/views/price_list/_row.html.erb`
+- [x] T026 [US3] Add "Add" button with form posting to `cart_cart_items_path` in `app/views/price_list/_row.html.erb`
+- [x] T027 [US3] Add cart drawer markup to `app/views/price_list/index.html.erb` (wrapper with drawer-end class)
+- [x] T028 [US3] Verify cart drawer opens on add (existing `cart_drawer_controller.js` handles this)
 
 **Checkpoint**: User Story 3 complete - add to cart works, drawer opens, quantity increments for existing items
 
@@ -108,11 +108,11 @@
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Add export action to `app/controllers/price_list_controller.rb` with xlsx format handling
-- [ ] T030 [US4] Create Excel template in `app/views/price_list/export.xlsx.axlsx` with header styling and data rows
-- [ ] T031 [US4] Add Excel download button to header in `app/views/price_list/index.html.erb`
-- [ ] T032 [US4] Add `export_filename` helper method to controller (includes date and filter category)
-- [ ] T033 [US4] Verify export respects current filter state (uses same `filtered_variants` query)
+- [x] T029 [US4] Add export action to `app/controllers/price_list_controller.rb` with xlsx format handling
+- [x] T030 [US4] Create Excel template in `app/views/price_list/export.xlsx.axlsx` with header styling and data rows
+- [x] T031 [US4] Add Excel download button to header in `app/views/price_list/index.html.erb`
+- [x] T032 [US4] Add `export_filename` helper method to controller (includes date and filter category)
+- [x] T033 [US4] Verify export respects current filter state (uses same `filtered_variants` query)
 
 **Checkpoint**: User Story 4 complete - Excel exports work with filters, proper filename
 
@@ -126,13 +126,13 @@
 
 ### Implementation for User Story 5
 
-- [ ] T034 [US5] Create `PriceListPdf` service class in `app/services/price_list_pdf.rb`
-- [ ] T035 [US5] Implement header section in PDF service (title, filter description, date, VAT notice)
-- [ ] T036 [US5] Implement table section in PDF service (styled header row, data rows)
-- [ ] T037 [US5] Implement footer section in PDF service (page numbers)
-- [ ] T038 [US5] Add PDF format handling to export action in `app/controllers/price_list_controller.rb`
-- [ ] T039 [US5] Add PDF download button to header in `app/views/price_list/index.html.erb`
-- [ ] T040 [US5] Add `filter_description` helper method to controller for PDF header
+- [x] T034 [US5] Create `PriceListPdf` service class in `app/services/price_list_pdf.rb`
+- [x] T035 [US5] Implement header section in PDF service (title, filter description, date, VAT notice)
+- [x] T036 [US5] Implement table section in PDF service (styled header row, data rows)
+- [x] T037 [US5] Implement footer section in PDF service (page numbers)
+- [x] T038 [US5] Add PDF format handling to export action in `app/controllers/price_list_controller.rb`
+- [x] T039 [US5] Add PDF download button to header in `app/views/price_list/index.html.erb`
+- [x] T040 [US5] Add `filter_description` helper method to controller for PDF header
 
 **Checkpoint**: User Story 5 complete - PDF exports work with branding, proper layout
 
@@ -142,8 +142,8 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T041 Add meta title and description in `app/views/price_list/index.html.erb`
-- [ ] T042 [P] Verify RuboCop compliance on new controller and service files
+- [x] T041 Add meta title and description in `app/views/price_list/index.html.erb`
+- [x] T042 [P] Verify RuboCop compliance on new controller and service files
 - [ ] T043 Manual testing: complete all 14 checklist items (page load, filters, cart, exports, mobile, nav)
 - [ ] T044 Commit final polish based on testing feedback
 

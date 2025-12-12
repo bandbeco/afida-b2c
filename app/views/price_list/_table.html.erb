@@ -1,0 +1,31 @@
+<div class="overflow-x-auto">
+  <table class="table table-zebra w-full">
+    <thead>
+      <tr class="bg-base-200">
+        <th class="text-left">Product</th>
+        <th class="text-left hidden md:table-cell">SKU</th>
+        <th class="text-left">Size</th>
+        <th class="text-left hidden lg:table-cell">Material</th>
+        <th class="text-right hidden md:table-cell">Pack Size</th>
+        <th class="text-right">Price/Pack</th>
+        <th class="text-right hidden lg:table-cell">Price/Unit</th>
+        <th class="text-center">Qty</th>
+        <th class="text-center"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% variants.each do |variant| %>
+        <%= render "row", variant: variant %>
+      <% end %>
+    </tbody>
+  </table>
+</div>
+
+<% if variants.empty? %>
+  <div class="text-center py-12">
+    <p class="text-gray-500">No products found matching your filters.</p>
+    <%= link_to "Clear filters", price_list_path, class: "btn btn-outline btn-sm mt-4" %>
+  </div>
+<% else %>
+  <p class="text-sm text-gray-500 mt-4"><%= pluralize(variants.count, "product") %> shown</p>
+<% end %>
