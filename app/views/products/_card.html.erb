@@ -11,12 +11,7 @@
     <div class="card-body p-4 flex flex-col flex-1">
       <h2 class="card-title text-lg"><%= product.name %></h2>
 
-      <% show_description = local_assigns.fetch(:show_description, true) %>
-      <% if show_description && product.description_short_with_fallback.present? %>
-        <p class="text-sm text-gray-600 mb-2 line-clamp-2 flex-1"><%= product.description_short_with_fallback %></p>
-      <% else %>
-        <div class="flex-1"></div>
-      <% end %>
+      <div class="flex-1"></div>
 
       <% price_range = product.price_range %>
       <% price_unit = product.customizable_template? ? "unit" : "pack" %>
