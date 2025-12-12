@@ -38,21 +38,49 @@ class ProductsController < ApplicationController
     # Check if this is an explicit selection (URL params present)
     @has_url_selection = params[:size].present? || params[:colour].present? || params[:variant_id].present?
 
-    # Prepare data for option selectors
-    # Exclude options where all variants have identical values (not a real choice)
-    # Eager load option values to prevent N+1 queries
-    all_options = @product.options.includes(:values).order(:position)
-    @product_options = all_options.select do |option|
-      unique_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
-      unique_values.count > 1
+    # Detect consolidated products (have material option in variant option_values)
+    # Consolidated products use the configurator partial with dynamic filtering
+    # Only use configurator if there are actual choices (multiple variants with different options)
+    has_material = @product.active_variants.any? { |v| v.option_values["material"].present? }
+
+    if has_material && @product.active_variants.count > 1
+      # Build configurator options directly from variant data (not ProductOption tables)
+      # Order: material first, then colour (quality-first flow)
+      @configurator_options = {}
+
+      # Collect unique values for each option type
+      materials = @product.active_variants.map { |v| v.option_values["material"] }.compact.uniq
+      colours = @product.active_variants.map { |v| v.option_values["colour"] }.compact.uniq
+
+      # Only include options that have multiple values (real choices)
+      @configurator_options["material"] = materials if materials.count > 1
+      @configurator_options["colour"] = colours if colours.count > 1
+
+      # Only use consolidated template if there are actual options to choose from
+      @is_consolidated = @configurator_options.any?
+
+      # For consolidated products, we don't pre-select anything
+      @has_url_selection = false if @is_consolidated
     end
 
-    # Build lookup hash for O(1) label access in views (prevents N+1 queries)
-    @option_labels = {}
-    @product_options.each do |option|
-      @option_labels[option.name] ||= {}
-      option.values.each do |ov|
-        @option_labels[option.name][ov.value] = ov.label.presence || ov.value
+    unless @is_consolidated
+      # Standard product flow - use ProductOption tables
+      # Prepare data for option selectors
+      # Exclude options where all variants have identical values (not a real choice)
+      # Eager load option values to prevent N+1 queries
+      all_options = @product.options.includes(:values).order(:position)
+      @product_options = all_options.select do |option|
+        unique_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
+        unique_values.count > 1
+      end
+
+      # Build lookup hash for O(1) label access in views (prevents N+1 queries)
+      @option_labels = {}
+      @product_options.each do |option|
+        @option_labels[option.name] ||= {}
+        option.values.each do |ov|
+          @option_labels[option.name][ov.value] = ov.label.presence || ov.value
+        end
       end
     end
 
