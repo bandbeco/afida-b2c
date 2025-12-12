@@ -67,13 +67,25 @@ class ProductsController < ApplicationController
       }
     end
 
-    # Related products from same category (for "Complete your order" section)
+    # Related products from same category (for "You May Also Like" section)
     @related_products = @product.category.products
                                 .standard
                                 .where.not(id: @product.id)
                                 .includes(:active_variants)
                                 .with_attached_product_photo
                                 .limit(8)
+
+    # Fallback to bestsellers if not enough same-category products
+    if @related_products.length < 4
+      exclude_ids = [ @product.id ] + @related_products.map(&:id)
+      bestsellers = Product.standard
+                           .featured
+                           .where.not(id: exclude_ids)
+                           .includes(:active_variants)
+                           .with_attached_product_photo
+                           .limit(8 - @related_products.length)
+      @related_products = @related_products.to_a + bestsellers.to_a
+    end
   end
 
   def quick_add
