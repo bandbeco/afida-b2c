@@ -25,8 +25,8 @@
 
 **Purpose**: Prepare test infrastructure (no project setup needed - existing Rails app)
 
-- [ ] T001 Create system test file structure in test/system/homepage_branding_test.rb
-- [ ] T002 Verify existing branding images are accessible in app/frontend/images/branding/
+- [x] T001 Create system test file structure in test/system/homepage_branding_test.rb
+- [x] T002 Verify existing branding images are accessible in app/frontend/images/branding/
 
 **Checkpoint**: Test file exists and can be run (will fail with no tests)
 
@@ -38,8 +38,8 @@
 
 **⚠️ CRITICAL**: This establishes the section wrapper that US1, US2, US3 all render inside
 
-- [ ] T003 Replace existing _branding.html.erb with new section container (pink background, rounded corners, padding) in app/views/pages/partials/_branding.html.erb
-- [ ] T004 Verify section renders on homepage without errors by visiting root_path
+- [x] T003 Replace existing _branding.html.erb with new section container (pink background, rounded corners, padding) in app/views/pages/partials/_branding.html.erb
+- [x] T004 Verify section renders on homepage without errors by visiting root_path
 
 **Checkpoint**: Empty pink section visible on homepage at #branding anchor
 
@@ -55,15 +55,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T005 [US1] Write system test for collage image presence (6 images with alt text) in test/system/homepage_branding_test.rb
+- [x] T005 [US1] Write system test for collage image presence (6 images with alt text) in test/system/homepage_branding_test.rb
 
 ### Implementation for User Story 1
 
-- [ ] T006 [US1] Implement masonry collage container using CSS columns (columns-2 md:columns-3) in app/views/pages/partials/_branding.html.erb
-- [ ] T007 [US1] Add first 3 photos (DSC_6621, DSC_6736, DSC_6770) with vite_image_tag, alt text, and neobrutalist styling in app/views/pages/partials/_branding.html.erb
-- [ ] T008 [US1] Add remaining 3 photos (DSC_6872, DSC_7193, DSC_7239) with vite_image_tag, alt text, and neobrutalist styling in app/views/pages/partials/_branding.html.erb
-- [ ] T009 [US1] Add hover effects (scale transform) to collage photos in app/views/pages/partials/_branding.html.erb
-- [ ] T010 [US1] Run system test T005 - verify it passes
+- [x] T006 [US1] Implement masonry collage container using CSS columns (columns-2 md:columns-3) in app/views/pages/partials/_branding.html.erb
+- [x] T007 [US1] Add first 3 photos (DSC_6621, DSC_6736, DSC_6770) with vite_image_tag, alt text, and neobrutalist styling in app/views/pages/partials/_branding.html.erb
+- [x] T008 [US1] Add remaining 3 photos (DSC_6872, DSC_7193, DSC_7239) with vite_image_tag, alt text, and neobrutalist styling in app/views/pages/partials/_branding.html.erb
+- [x] T009 [US1] Add hover effects (scale transform) to collage photos in app/views/pages/partials/_branding.html.erb
+- [x] T010 [US1] Run system test T005 - verify it passes
 
 **Checkpoint**: User Story 1 complete - collage displays correctly on mobile and desktop, tests pass
 
@@ -79,19 +79,19 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T011 [US2] Write system test for headline text presence in test/system/homepage_branding_test.rb
-- [ ] T012 [P] [US2] Write system test for trust badges (UK, 1,000, 20 days, £0) in test/system/homepage_branding_test.rb
+- [x] T011 [US2] Write system test for headline text presence in test/system/homepage_branding_test.rb
+- [x] T012 [P] [US2] Write system test for trust badges (UK, 1,000, 20 days, £0) in test/system/homepage_branding_test.rb
 
 ### Implementation for User Story 2
 
-- [ ] T013 [US2] Add headline "Your Brand. Your Cup." with gradient text styling below collage in app/views/pages/partials/_branding.html.erb
-- [ ] T014 [US2] Add supporting text line below headline in app/views/pages/partials/_branding.html.erb
-- [ ] T015 [US2] Add trust badges container (grid-cols-2 md:grid-cols-4) in app/views/pages/partials/_branding.html.erb
-- [ ] T016 [P] [US2] Implement UK Production badge (emoji, value, label, mint background) in app/views/pages/partials/_branding.html.erb
-- [ ] T017 [P] [US2] Implement Minimum Order badge (box SVG, 1,000, label, pink background) in app/views/pages/partials/_branding.html.erb
-- [ ] T018 [P] [US2] Implement Turnaround badge (clock SVG, 20 days, label, yellow background) in app/views/pages/partials/_branding.html.erb
-- [ ] T019 [P] [US2] Implement Setup Fees badge (checkmark SVG, £0, label, purple background) in app/views/pages/partials/_branding.html.erb
-- [ ] T020 [US2] Run system tests T011, T012 - verify they pass
+- [x] T013 [US2] Add headline "Your Brand. Your Cup." with gradient text styling below collage in app/views/pages/partials/_branding.html.erb
+- [x] T014 [US2] Add supporting text line below headline in app/views/pages/partials/_branding.html.erb
+- [x] T015 [US2] Add trust badges container (grid-cols-2 md:grid-cols-4) in app/views/pages/partials/_branding.html.erb
+- [x] T016 [P] [US2] Implement UK Production badge (emoji, value, label, mint background) in app/views/pages/partials/_branding.html.erb
+- [x] T017 [P] [US2] Implement Minimum Order badge (box SVG, 1,000, label, pink background) in app/views/pages/partials/_branding.html.erb
+- [x] T018 [P] [US2] Implement Turnaround badge (clock SVG, 20 days, label, yellow background) in app/views/pages/partials/_branding.html.erb
+- [x] T019 [P] [US2] Implement Setup Fees badge (checkmark SVG, £0, label, purple background) in app/views/pages/partials/_branding.html.erb
+- [x] T020 [US2] Run system tests T011, T012 - verify they pass
 
 **Checkpoint**: User Story 2 complete - headline and all 4 trust badges visible, tests pass
 
@@ -107,14 +107,14 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T021 [US3] Write system test for CTA button presence and text in test/system/homepage_branding_test.rb
-- [ ] T022 [US3] Write system test for CTA navigation to branded_products_path in test/system/homepage_branding_test.rb
+- [x] T021 [US3] Write system test for CTA button presence and text in test/system/homepage_branding_test.rb
+- [x] T022 [US3] Write system test for CTA navigation to branded_products_path in test/system/homepage_branding_test.rb
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Add CTA button container with centered layout below trust badges in app/views/pages/partials/_branding.html.erb
-- [ ] T024 [US3] Implement "Start Designing" button with link_to branded_products_path and primary button styling in app/views/pages/partials/_branding.html.erb
-- [ ] T025 [US3] Run system tests T021, T022 - verify they pass
+- [x] T023 [US3] Add CTA button container with centered layout below trust badges in app/views/pages/partials/_branding.html.erb
+- [x] T024 [US3] Implement "Start Designing" button with link_to branded_products_path and primary button styling in app/views/pages/partials/_branding.html.erb
+- [x] T025 [US3] Run system tests T021, T022 - verify they pass
 
 **Checkpoint**: User Story 3 complete - CTA button works, tests pass
 
@@ -124,10 +124,10 @@
 
 **Purpose**: Final cleanup and full test suite verification
 
-- [ ] T026 [P] Run full system test suite for branding section (all tests in test/system/homepage_branding_test.rb)
+- [x] T026 [P] Run full system test suite for branding section (all tests in test/system/homepage_branding_test.rb)
 - [ ] T027 [P] Verify responsive behavior at 375px, 768px, 1280px, 1920px viewports
-- [ ] T028 Run RuboCop linter on modified files
-- [ ] T029 Manual verification against quickstart.md checklist
+- [x] T028 Run RuboCop linter on modified files
+- [x] T029 Manual verification against quickstart.md checklist
 - [ ] T030 Commit completed feature with descriptive message
 
 ---
