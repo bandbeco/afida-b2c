@@ -8,9 +8,9 @@ class HomepageBrandingTest < ApplicationSystemTestCase
     visit root_path
 
     within "#branding" do
-      # Verify 6 collage images are present (branded cups from gallery)
-      # Using broader selector since alt text varies
-      assert_selector "img.rounded-xl", minimum: 6
+      # Verify 4 collage images are present (branded cups from gallery)
+      # Images are inside rounded-xl containers with object-cover styling
+      assert_selector "img.object-cover", minimum: 4
     end
   end
 
@@ -37,11 +37,11 @@ class HomepageBrandingTest < ApplicationSystemTestCase
   end
 
   # US3: Taking Action - CTA Button Presence
-  test "displays Start Designing CTA button" do
+  test "displays Start Branding CTA button" do
     visit root_path
 
     within "#branding" do
-      assert_link "Start Designing"
+      assert_link "Start Branding"
     end
   end
 
@@ -50,7 +50,7 @@ class HomepageBrandingTest < ApplicationSystemTestCase
     visit root_path
 
     within "#branding" do
-      click_link "Start Designing"
+      click_link "Start Branding"
     end
 
     assert_current_path branded_products_path

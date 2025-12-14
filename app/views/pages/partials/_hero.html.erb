@@ -45,18 +45,21 @@
         </div>
 
         <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
-          <%= link_to samples_path, class: "btn btn-outline btn-lg border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white" do %>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            Request Free Samples
-          <% end %>
           <%= link_to shop_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
             Shop Products
+          <% end %>
+          <%= link_to samples_path, class: "btn btn-outline btn-lg border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white" do %>
+            Request Free Samples
           <% end %>
         </div>
 
         <div class="mt-8 mb-12 flex flex-col items-center lg:items-start gap-1.5 text-sm text-neutral-600">
+          <div class="pl-1">
+            <%= render "shared/gbp_badge", variant: :homepage %>
+          </div>
           <div class="flex items-center gap-2">
             <div class="flex -space-x-2">
               <%# Exclude the-grove.webp from hero avatars to keep visual balance (10 logos fit better in small avatar circles) %>
@@ -68,8 +71,6 @@
             </div>
             <span class="font-semibold">Trusted by 500+ UK businesses</span>
           </div>
-          <%# Google Business Profile rating - subtle trust signal %>
-          <%= render "shared/gbp_badge", variant: :homepage %>
         </div>
       </div>
 

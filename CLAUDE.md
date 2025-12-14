@@ -607,6 +607,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (6 new engine tables: seo_ai_opportunities, seo_ai_content_briefs, seo_ai_content_drafts, seo_ai_content_items, seo_ai_performance_snapshots, seo_ai_budget_trackings) (006-ai-seo-engine)
 - Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionView), Hotwire (Turbo Frames + Stimulus), TailwindCSS 4, DaisyUI, Stripe Checkout (011-variant-samples)
 - PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items`, `orders`, `order_items` tables) (011-variant-samples)
+- Ruby 3.3.0+ / Rails 8.x + Vite Rails, TailwindCSS 4, DaisyUI, Hotwire (Turbo + Stimulus) (013-homepage-branding)
+- N/A (no data changes - view-only feature) (013-homepage-branding)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

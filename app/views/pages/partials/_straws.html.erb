@@ -1,5 +1,5 @@
 <!-- Featured Product -->
-<section class="py-12 sm:py-24">
+<section class="py-4 sm:py-6">
   <div class="container mx-auto px-4">
     <div class="bg-neutral-900 text-white overflow-hidden rounded-3xl py-16 px-8 sm:px-12 relative">
       <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 30px 30px;"></div>
@@ -24,10 +24,20 @@
             </div>
 
             <div class="mt-10">
-              <% if false %>
-                <%= link_to "Shop Bio Fibre Straws", product_path(@featured_straw_product), class: "btn btn-primary btn-lg" %>
+              <% if @featured_straw_product.present? %>
+                <%= link_to product_path(@featured_straw_product), class: "btn btn-primary btn-xl" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Shop Bio Fibre Straws
+                <% end %>
               <% else %>
-                <%= link_to "Shop Straws", category_path("straws"), class: "btn btn-primary btn-lg" %>
+                <%= link_to category_path("straws"), class: "btn btn-primary btn-xl" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Shop Straws
+                <% end %>
               <% end %>
             </div>
           </div>

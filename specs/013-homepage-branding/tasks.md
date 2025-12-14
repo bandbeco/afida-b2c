@@ -125,10 +125,10 @@
 **Purpose**: Final cleanup and full test suite verification
 
 - [x] T026 [P] Run full system test suite for branding section (all tests in test/system/homepage_branding_test.rb)
-- [ ] T027 [P] Verify responsive behavior at 375px, 768px, 1280px, 1920px viewports
+- [x] T027 [P] Verify responsive behavior at 375px, 768px, 1280px, 1920px viewports
 - [x] T028 Run RuboCop linter on modified files
 - [x] T029 Manual verification against quickstart.md checklist
-- [ ] T030 Commit completed feature with descriptive message
+- [x] T030 Commit completed feature with descriptive message
 
 ---
 
