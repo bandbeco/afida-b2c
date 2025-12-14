@@ -6,7 +6,7 @@ class PagesController < ApplicationController
                                 .with_attached_product_photo
                                 .includes(:variants)
                                 .limit(8)
-    @featured_straw_product = Product.standard.find_by(slug: "biodegradable-straws")
+    @featured_straw_product = Product.standard.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
     @client_logos = client_logos
   end
