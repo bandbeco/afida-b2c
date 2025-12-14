@@ -1,0 +1,43 @@
+# frozen_string_literal: true
+
+wb = xlsx_package.workbook
+
+wb.add_worksheet(name: "Price List") do |sheet|
+  # Header style
+  header_style = sheet.styles.add_style(
+    b: true,
+    bg_color: "4A5568",
+    fg_color: "FFFFFF",
+    alignment: { horizontal: :center }
+  )
+
+  currency_style = sheet.styles.add_style(format_code: "£#,##0.00")  # GBP with 2 decimals
+  unit_price_style = sheet.styles.add_style(format_code: "£#,##0.000")  # GBP with 3 decimals
+
+  # Header row
+  sheet.add_row [
+    "Product",
+    "SKU",
+    "Size",
+    "Material",
+    "Pack Size",
+    "Price/Pack",
+    "Price/Unit"
+  ], style: header_style
+
+  # Data rows
+  @variants.each do |variant|
+    sheet.add_row [
+      variant.product.name,
+      variant.sku,
+      variant.option_values["size"] || variant.name,
+      variant.option_values["material"] || "",
+      variant.pac_size || 1,
+      variant.price.to_f,
+      variant.unit_price.to_f
+    ], style: [ nil, nil, nil, nil, nil, currency_style, unit_price_style ]
+  end
+
+  # Auto-width columns
+  sheet.column_widths 40, 15, 15, 15, 12, 12, 12
+end

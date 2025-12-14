@@ -1,0 +1,30 @@
+<tr class="hover" id="<%= dom_id(variant) %>">
+  <td>
+    <%= link_to product_path(variant.product), class: "link link-hover font-medium" do %>
+      <%= variant.product.name %>
+    <% end %>
+  </td>
+  <td class="hidden md:table-cell text-gray-500 font-mono text-sm"><%= variant.sku %></td>
+  <td><%= variant.option_values["size"] || variant.name %></td>
+  <td class="hidden lg:table-cell"><%= variant.option_values["material"] || "-" %></td>
+  <td class="text-right hidden md:table-cell"><%= number_with_delimiter(variant.pac_size || 1) %></td>
+  <td class="text-right font-medium"><%= number_to_currency(variant.price) %></td>
+  <td class="text-right hidden lg:table-cell text-gray-500">
+    <%= number_to_currency(variant.unit_price, precision: 4) %>
+  </td>
+  <td class="text-center">
+    <%= form_with url: cart_cart_items_path,
+        method: :post,
+        data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
+      <%= f.hidden_field :cart_item, value: variant.sku, name: "cart_item[variant_sku]" %>
+      <%= f.select :quantity,
+          options_for_select(price_list_quantity_options, 1),
+          {},
+          { name: "cart_item[quantity]", class: "select select-bordered select-xs w-16" } %>
+      <button type="submit" class="btn btn-primary btn-xs ml-1">
+        Add
+      </button>
+    <% end %>
+  </td>
+  <td></td>
+</tr>

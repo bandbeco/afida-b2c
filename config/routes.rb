@@ -39,6 +39,10 @@ Rails.application.routes.draw do
   # FAQ page
   get "faqs", to: "faqs#index"
 
+  # B2B Price List
+  get "price-list", to: "price_list#index", as: :price_list
+  get "price-list/export", to: "price_list#export", as: :price_list_export
+
   # Blog pages
   resources :blogs, only: [ :index, :show ], path: "blog"
 
