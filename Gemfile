@@ -101,5 +101,3 @@ gem "redcarpet"
 
 # Local engines
 gem "seo_ai_engine", path: "engines/seo_ai_engine"
-
-gem "intercom-rails", "~> 1.0"

@@ -15,6 +15,9 @@ module Webhooks
     skip_forgery_protection
     allow_unauthenticated_access
 
+    # Stripe uses minor currency units (pence for GBP)
+    MINOR_CURRENCY_MULTIPLIER = 100
+
     # POST /webhooks/stripe
     def create
       payload = request.body.read
@@ -23,9 +26,18 @@ module Webhooks
       begin
         event = verify_webhook_signature(payload, sig_header)
       rescue Stripe::SignatureVerificationError => e
-        Rails.logger.error("Stripe webhook signature verification failed: #{e.message}")
+        Rails.event.notify("webhook.stripe.signature_failed", { error: e.message })
         return head :bad_request
       end
+
+      # Set context for all events during this webhook request (Rails 8.1 structured events)
+      # Context is automatically cleared after the request
+      Rails.event.set_context(
+        stripe_event_id: event["id"],
+        stripe_event_type: event["type"]
+      )
+
+      Rails.event.notify("webhook.stripe.received")
 
       handle_event(event)
       head :ok
@@ -56,7 +68,7 @@ module Webhooks
       when "invoice.payment_failed"
         handle_invoice_payment_failed(event["data"]["object"])
       else
-        Rails.logger.info("Unhandled Stripe event type: #{event['type']}")
+        Rails.event.notify("webhook.stripe.unhandled")
       end
     end
 
@@ -71,28 +83,35 @@ module Webhooks
       invoice_id = invoice["id"]
       subscription_id = invoice["subscription"]
 
+      # Add invoice context to all subsequent events
+      Rails.event.set_context(
+        stripe_invoice_id: invoice_id,
+        stripe_subscription_id: subscription_id,
+        billing_reason: billing_reason
+      )
+
       # T040: Skip first invoice (created during checkout)
       if billing_reason == "subscription_create"
-        Rails.logger.info("Skipping first invoice for subscription: #{subscription_id}")
+        Rails.event.notify("webhook.stripe.invoice.skipped", { reason: "first_invoice" })
         return
       end
 
       # Only process renewal invoices
       unless billing_reason == "subscription_cycle"
-        Rails.logger.info("Skipping invoice with billing_reason: #{billing_reason}")
+        Rails.event.notify("webhook.stripe.invoice.skipped", { reason: "non_renewal" })
         return
       end
 
       # T045: Idempotency check - don't create duplicate orders
       if Order.exists?(stripe_invoice_id: invoice_id)
-        Rails.logger.info("Order already exists for invoice: #{invoice_id}")
+        Rails.event.notify("webhook.stripe.invoice.skipped", { reason: "duplicate" })
         return
       end
 
       # Find the subscription
       subscription = Subscription.find_by(stripe_subscription_id: subscription_id)
       unless subscription
-        Rails.logger.error("Subscription not found for renewal: #{subscription_id}")
+        Rails.event.notify("webhook.stripe.subscription_not_found")
         return
       end
 
@@ -102,7 +121,10 @@ module Webhooks
       if order
         # T051: Send email notification
         SubscriptionMailer.order_placed(order).deliver_later
-        Rails.logger.info("Created renewal order #{order.id} for subscription #{subscription.id}")
+        Rails.event.notify("webhook.stripe.renewal_order.created", {
+          order_id: order.id,
+          subscription_id: subscription.id
+        })
       end
     end
 
@@ -117,9 +139,9 @@ module Webhooks
       address = shipping_snapshot["address"] || {}
 
       # Calculate amounts from snapshot (already in minor units)
-      subtotal = (items_snapshot["subtotal_minor"] || 0) / 100.0
-      vat = (items_snapshot["vat_minor"] || 0) / 100.0
-      shipping = (shipping_snapshot["cost_minor"] || 0) / 100.0
+      subtotal = (items_snapshot["subtotal_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
+      vat = (items_snapshot["vat_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
+      shipping = (shipping_snapshot["cost_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
       total = subtotal + vat + shipping
 
       ActiveRecord::Base.transaction do
@@ -145,12 +167,21 @@ module Webhooks
         (items_snapshot["items"] || []).each do |item|
           variant = ProductVariant.find_by(id: item["product_variant_id"])
 
+          # Emit warning if variant was deleted but proceed with order creation
+          # Items snapshot has all needed data (name, sku, price, pac_size)
+          if variant.nil?
+            Rails.event.notify("webhook.stripe.variant_not_found", {
+              variant_id: item["product_variant_id"],
+              variant_name: item["name"]
+            })
+          end
+
           OrderItem.create!(
             order: order,
             product_variant: variant,
             product: variant&.product,
             quantity: item["quantity"],
-            price: item["unit_price_minor"] / 100.0,
+            price: item["unit_price_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f,
             product_name: item["name"],
             product_sku: item["sku"],
             pac_size: item["pac_size"] || 1
@@ -160,7 +191,17 @@ module Webhooks
         order
       end
     rescue ActiveRecord::RecordInvalid => e
-      Rails.logger.error("Failed to create renewal order: #{e.message}")
+      Rails.event.notify("webhook.stripe.renewal_order.failed", {
+        subscription_id: subscription.id,
+        invoice_id: invoice["id"],
+        error: e.message
+      })
+      # Alert monitoring - this is a critical failure that loses revenue
+      Sentry.capture_exception(e, extra: {
+        subscription_id: subscription.id,
+        invoice_id: invoice["id"],
+        items_snapshot: subscription.items_snapshot
+      })
       nil
     end
 
@@ -170,9 +211,11 @@ module Webhooks
     # Handles pause_collection for detecting paused state.
     #
     def handle_subscription_updated(subscription_data)
+      Rails.event.set_context(stripe_subscription_id: subscription_data["id"])
+
       subscription = Subscription.find_by(stripe_subscription_id: subscription_data["id"])
       unless subscription
-        Rails.logger.warn("Subscription not found for update: #{subscription_data['id']}")
+        Rails.event.notify("webhook.stripe.subscription_not_found")
         return
       end
 
@@ -186,7 +229,10 @@ module Webhooks
         current_period_end: Time.at(subscription_data["current_period_end"])
       )
 
-      Rails.logger.info("Subscription #{subscription.id} updated: status=#{new_status}")
+      Rails.event.notify("webhook.stripe.subscription.updated", {
+        subscription_id: subscription.id,
+        new_status: new_status
+      })
     end
 
     # T061-T062: Handle subscription deletion (cancellation)
@@ -194,9 +240,11 @@ module Webhooks
     # Sets status to cancelled and records cancelled_at timestamp.
     #
     def handle_subscription_deleted(subscription_data)
+      Rails.event.set_context(stripe_subscription_id: subscription_data["id"])
+
       subscription = Subscription.find_by(stripe_subscription_id: subscription_data["id"])
       unless subscription
-        Rails.logger.warn("Subscription not found for deletion: #{subscription_data['id']}")
+        Rails.event.notify("webhook.stripe.subscription_not_found")
         return
       end
 
@@ -205,21 +253,43 @@ module Webhooks
         cancelled_at: Time.current
       )
 
-      Rails.logger.info("Subscription #{subscription.id} cancelled")
+      Rails.event.notify("webhook.stripe.subscription.cancelled", {
+        subscription_id: subscription.id
+      })
     end
 
     # T063: Handle payment failures
     #
-    # Logs warning for monitoring. Future: could notify user or retry.
+    # Logs warning and alerts monitoring. Stripe handles retries automatically.
+    # Future: could notify user via email.
     #
     def handle_invoice_payment_failed(invoice)
       subscription_id = invoice["subscription"]
       attempt_count = invoice["attempt_count"]
 
-      Rails.logger.warn(
-        "Invoice payment failed: #{invoice['id']} " \
-        "(subscription: #{subscription_id}, attempt: #{attempt_count})"
+      Rails.event.set_context(
+        stripe_invoice_id: invoice["id"],
+        stripe_subscription_id: subscription_id,
+        attempt_count: attempt_count
       )
+
+      Rails.event.notify("webhook.stripe.payment.failed", {
+        customer_id: invoice["customer"]
+      })
+
+      # Alert on final attempt failures (Stripe default is 4 attempts)
+      if attempt_count >= 3
+        Sentry.capture_message(
+          "Subscription payment failing repeatedly",
+          level: :warning,
+          extra: {
+            invoice_id: invoice["id"],
+            subscription_id: subscription_id,
+            attempt_count: attempt_count,
+            customer_id: invoice["customer"]
+          }
+        )
+      end
     end
 
     # T060: Map Stripe subscription status to local enum

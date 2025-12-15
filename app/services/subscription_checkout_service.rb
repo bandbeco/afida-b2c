@@ -31,12 +31,21 @@ class SubscriptionCheckoutService
   # UK VAT rate (20%)
   VAT_RATE = BigDecimal("0.2")
 
+  # Stripe uses minor currency units (pence for GBP)
+  MINOR_CURRENCY_MULTIPLIER = 100
+
   attr_reader :cart, :user, :frequency
 
   def initialize(cart:, user:, frequency:)
     @cart = cart
     @user = user
     @frequency = frequency&.to_sym
+  end
+
+  # Memoized eager-loaded cart items to prevent N+1 queries
+  # Called by build_line_items, build_items_snapshot, and create_first_order
+  def cart_items_with_associations
+    @cart_items_with_associations ||= cart.cart_items.includes(product_variant: :product).to_a
   end
 
   # Create a Stripe Checkout Session for subscription
@@ -80,6 +89,12 @@ class SubscriptionCheckoutService
   def complete_checkout(session_id)
     stripe_session = retrieve_stripe_session(session_id)
 
+    # Validate subscription exists in session
+    unless stripe_session.subscription.present?
+      Rails.logger.error("SubscriptionCheckoutService: Stripe session #{session_id} has no subscription")
+      return Result.new(success?: false, error_message: "Unable to create subscription. Please contact support.")
+    end
+
     # Idempotency: check if subscription already exists
     existing = Subscription.find_by(stripe_subscription_id: stripe_session.subscription.id)
     if existing
@@ -106,8 +121,8 @@ class SubscriptionCheckoutService
   rescue Stripe::StripeError => e
     Rails.logger.error("SubscriptionCheckoutService Stripe error: #{e.message}")
     Result.new(success?: false, error_message: "Payment session not found. Please contact support.")
-  rescue ActiveRecord::RecordInvalid => e
-    Rails.logger.error("SubscriptionCheckoutService record invalid: #{e.message}")
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::InvalidForeignKey => e
+    Rails.logger.error("SubscriptionCheckoutService record error: #{e.message}")
     Result.new(success?: false, error_message: "Unable to create subscription. Please contact support.")
   end
 
@@ -134,7 +149,7 @@ class SubscriptionCheckoutService
   #
   # @return [Array<Hash>]
   def build_line_items
-    cart.cart_items.includes(product_variant: :product).map do |item|
+    cart_items_with_associations.map do |item|
       variant = item.product_variant
 
       {
@@ -149,7 +164,7 @@ class SubscriptionCheckoutService
               sku: variant.sku
             }
           },
-          unit_amount: (variant.price * 100).to_i,
+          unit_amount: (variant.price * MINOR_CURRENCY_MULTIPLIER).to_i,
           recurring: stripe_recurring_params
         },
         quantity: item.quantity
@@ -161,9 +176,9 @@ class SubscriptionCheckoutService
   #
   # @return [Hash]
   def build_items_snapshot
-    items = cart.cart_items.includes(product_variant: :product).map do |item|
+    items = cart_items_with_associations.map do |item|
       variant = item.product_variant
-      unit_price_minor = (variant.price * 100).to_i
+      unit_price_minor = (variant.price * MINOR_CURRENCY_MULTIPLIER).to_i
       total_minor = unit_price_minor * item.quantity
 
       {
@@ -246,9 +261,9 @@ class SubscriptionCheckoutService
     items_snapshot = JSON.parse(items_snapshot) if items_snapshot.is_a?(String)
 
     # Calculate amounts in pounds from minor units
-    subtotal = items_snapshot["subtotal_minor"] / 100.0
-    vat = items_snapshot["vat_minor"] / 100.0
-    shipping = shipping_snapshot["cost_minor"] / 100.0
+    subtotal = items_snapshot["subtotal_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
+    vat = items_snapshot["vat_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
+    shipping = shipping_snapshot["cost_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
     total = subtotal + vat + shipping
 
     order = Order.create!(
@@ -271,8 +286,8 @@ class SubscriptionCheckoutService
       shipping_country: address["country"]
     )
 
-    # Create order items from cart items
-    cart.cart_items.each do |cart_item|
+    # Create order items from cart items (reuse memoized collection)
+    cart_items_with_associations.each do |cart_item|
       OrderItem.create_from_cart_item(cart_item, order).save!
     end
 
@@ -300,20 +315,10 @@ class SubscriptionCheckoutService
   end
 
   # Helper: Determine shipping options based on cart value
+  #
+  # Delegates to Shipping module defined in config/initializers/shipping.rb
+  # which handles free shipping threshold logic.
   def shipping_options_for_cart
-    # Use existing Shipping class if available, otherwise default
-    if defined?(Shipping) && Shipping.respond_to?(:shipping_options_for_subtotal)
-      Shipping.shipping_options_for_subtotal(cart.subtotal_amount)
-    else
-      [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            fixed_amount: { amount: 0, currency: "gbp" },
-            display_name: "Free Delivery"
-          }
-        }
-      ]
-    end
+    Shipping.shipping_options_for_subtotal(cart.subtotal_amount)
   end
 end

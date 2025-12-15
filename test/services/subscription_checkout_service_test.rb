@@ -442,4 +442,299 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       assert_equal existing_subscription.id, result.subscription.id
     end
   end
+
+  # ==========================================================================
+  # Error Scenario Tests
+  # ==========================================================================
+
+  test "create_checkout_session handles network timeout" do
+    @user.update!(stripe_customer_id: "cus_test123")
+
+    mock_customer = OpenStruct.new(id: "cus_test123")
+    Stripe::Customer.expects(:retrieve).returns(mock_customer)
+
+    # Simulate network timeout (Stripe raises Timeout::Error wrapped in APIConnectionError)
+    Stripe::Checkout::Session.expects(:create).raises(
+      Stripe::APIConnectionError.new("Connection timed out")
+    )
+
+    assert_raises(Stripe::APIConnectionError) do
+      @service.create_checkout_session(
+        success_url: "http://localhost/success",
+        cancel_url: "http://localhost/cancel"
+      )
+    end
+  end
+
+  test "complete_checkout handles network timeout" do
+    Stripe::Checkout::Session.expects(:retrieve).raises(
+      Stripe::APIConnectionError.new("Connection timed out")
+    )
+
+    result = @service.complete_checkout("cs_test_session")
+
+    assert_not result.success?
+    assert_includes result.error_message, "session"
+  end
+
+  test "complete_checkout handles unexpected Stripe subscription status" do
+    # Subscription exists but in incomplete status (payment failed)
+    stripe_subscription = OpenStruct.new(
+      id: "sub_incomplete123",
+      status: "incomplete",
+      customer: "cus_test123",
+      items: OpenStruct.new(
+        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
+      ),
+      current_period_start: Time.current.to_i,
+      current_period_end: 1.month.from_now.to_i
+    )
+
+    stripe_session = OpenStruct.new(
+      id: "cs_test_session123",
+      subscription: stripe_subscription,
+      customer: "cus_test123",
+      customer_details: OpenStruct.new(
+        email: @user.email_address,
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Test St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      ),
+      shipping_cost: OpenStruct.new(amount_total: 0)
+    )
+
+    Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
+
+    # Should still create subscription record (status tracking is separate)
+    # The Stripe subscription status doesn't prevent record creation
+    assert_difference "Subscription.count", 1 do
+      result = @service.complete_checkout("cs_test_session123")
+      assert result.success?
+    end
+  end
+
+  test "complete_checkout handles nil subscription in session" do
+    # Edge case: session exists but subscription is nil (shouldn't happen in practice)
+    stripe_session = OpenStruct.new(
+      id: "cs_test_session123",
+      subscription: nil,
+      customer: "cus_test123",
+      customer_details: OpenStruct.new(
+        email: @user.email_address,
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Test St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      ),
+      shipping_cost: OpenStruct.new(amount_total: 0)
+    )
+
+    Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
+
+    # The service will fail when trying to access subscription.id
+    result = @service.complete_checkout("cs_test_session123")
+
+    assert_not result.success?
+    assert_includes result.error_message, "Unable to create subscription"
+  end
+
+  test "complete_checkout handles cart items changed between session creation and completion" do
+    stripe_subscription = OpenStruct.new(
+      id: "sub_test_cart_changed",
+      customer: "cus_test123",
+      items: OpenStruct.new(
+        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
+      ),
+      current_period_start: Time.current.to_i,
+      current_period_end: 1.month.from_now.to_i
+    )
+
+    stripe_session = OpenStruct.new(
+      id: "cs_test_session123",
+      subscription: stripe_subscription,
+      customer: "cus_test123",
+      customer_details: OpenStruct.new(
+        email: @user.email_address,
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Test St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      ),
+      shipping_cost: OpenStruct.new(amount_total: 0)
+    )
+
+    Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
+
+    # Cart was modified after checkout started (user added more items in another tab)
+    another_variant = product_variants(:single_wall_12oz_white)
+    @cart.cart_items.create!(
+      product_variant: another_variant,
+      quantity: 5,
+      price: another_variant.price
+    )
+
+    # The service should still complete - it uses the snapshot from when session was created
+    # The items_snapshot is built from current cart, but this is acceptable because:
+    # 1. Stripe has already charged for the original items
+    # 2. The cart will be cleared after completion
+    # This is a known limitation documented in the service
+    result = @service.complete_checkout("cs_test_session123")
+
+    assert result.success?
+    # Verify cart is still cleared despite changes
+    assert_equal 0, @cart.reload.cart_items.count
+  end
+
+  test "complete_checkout handles empty cart at completion time" do
+    stripe_subscription = OpenStruct.new(
+      id: "sub_test_empty_cart",
+      customer: "cus_test123",
+      items: OpenStruct.new(
+        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
+      ),
+      current_period_start: Time.current.to_i,
+      current_period_end: 1.month.from_now.to_i
+    )
+
+    stripe_session = OpenStruct.new(
+      id: "cs_test_session123",
+      subscription: stripe_subscription,
+      customer: "cus_test123",
+      customer_details: OpenStruct.new(
+        email: @user.email_address,
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Test St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      ),
+      shipping_cost: OpenStruct.new(amount_total: 0)
+    )
+
+    Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
+
+    # Cart emptied (maybe user completed checkout in another tab)
+    @cart.cart_items.destroy_all
+
+    # Service should still create records (snapshot will have empty items)
+    # This is edge case - order_items will be empty
+    result = @service.complete_checkout("cs_test_session123")
+
+    # The service creates the subscription regardless of cart state
+    # because the Stripe subscription already exists
+    assert result.success?
+  end
+
+  test "complete_checkout handles user deleted between checkout and success" do
+    # Create a temporary user that we'll delete
+    temp_user = User.create!(
+      email_address: "temp_checkout_user@example.com",
+      password: "password123"
+    )
+    temp_cart = Cart.create!(user: temp_user)
+    temp_cart.cart_items.create!(
+      product_variant: @product_variant,
+      quantity: 1,
+      price: @product_variant.price
+    )
+
+    temp_service = SubscriptionCheckoutService.new(
+      cart: temp_cart,
+      user: temp_user,
+      frequency: "every_month"
+    )
+
+    stripe_subscription = OpenStruct.new(
+      id: "sub_test_deleted_user",
+      customer: "cus_temp123",
+      items: OpenStruct.new(
+        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
+      ),
+      current_period_start: Time.current.to_i,
+      current_period_end: 1.month.from_now.to_i
+    )
+
+    stripe_session = OpenStruct.new(
+      id: "cs_test_session123",
+      subscription: stripe_subscription,
+      customer: "cus_temp123",
+      customer_details: OpenStruct.new(
+        email: temp_user.email_address,
+        name: "Temp User",
+        address: OpenStruct.new(
+          line1: "123 Test St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      ),
+      shipping_cost: OpenStruct.new(amount_total: 0)
+    )
+
+    Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
+
+    # Delete the user (simulating account deletion during checkout)
+    temp_user.destroy
+
+    # Service should fail because user association is gone
+    # The transaction will roll back due to foreign key constraint
+    result = temp_service.complete_checkout("cs_test_session123")
+
+    # Should fail gracefully
+    assert_not result.success?
+    assert_includes result.error_message, "Unable to create subscription"
+  end
+
+  test "complete_checkout handles invalid frequency raises ArgumentError" do
+    invalid_service = SubscriptionCheckoutService.new(
+      cart: @cart,
+      user: @user,
+      frequency: "invalid_frequency"
+    )
+
+    assert_raises(ArgumentError) do
+      invalid_service.send(:stripe_recurring_params)
+    end
+  end
+
+  test "create_checkout_session handles Stripe rate limit error" do
+    @user.update!(stripe_customer_id: "cus_test123")
+
+    mock_customer = OpenStruct.new(id: "cus_test123")
+    Stripe::Customer.expects(:retrieve).returns(mock_customer)
+
+    Stripe::Checkout::Session.expects(:create).raises(
+      Stripe::RateLimitError.new("Rate limit exceeded")
+    )
+
+    assert_raises(Stripe::RateLimitError) do
+      @service.create_checkout_session(
+        success_url: "http://localhost/success",
+        cancel_url: "http://localhost/cancel"
+      )
+    end
+  end
+
+  test "complete_checkout handles Stripe API error" do
+    Stripe::Checkout::Session.expects(:retrieve).raises(
+      Stripe::APIError.new("Internal Stripe error")
+    )
+
+    result = @service.complete_checkout("cs_test_session")
+
+    assert_not result.success?
+    assert_includes result.error_message, "session"
+  end
 end

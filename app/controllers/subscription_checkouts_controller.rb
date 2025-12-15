@@ -11,6 +11,15 @@
 #   GET  /subscription_checkouts/cancel  -> cancel
 #
 class SubscriptionCheckoutsController < ApplicationController
+  # Rate limit checkout creation to prevent abuse (5 attempts per minute per user)
+  rate_limit to: 5, within: 1.minute, only: :create, with: -> {
+    flash[:alert] = "Too many checkout attempts. Please wait a moment and try again."
+    redirect_to cart_path
+  }
+
+  # Subscriptions require authentication - no guest subscriptions
+  before_action :require_authentication
+
   # T023: Cart must have items
   before_action :require_cart_with_items, only: :create
 

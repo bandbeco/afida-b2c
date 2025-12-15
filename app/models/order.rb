@@ -12,6 +12,7 @@ class Order < ApplicationRecord
   validates :stripe_session_id, uniqueness: true, allow_nil: true
   validates :stripe_invoice_id, uniqueness: true, allow_nil: true
   validate :stripe_identifier_presence
+  validate :stripe_identifier_exclusivity
   validates :order_number, presence: true, uniqueness: true
   validates :status, presence: true
   validates :subtotal_amount, :vat_amount, :shipping_amount, :total_amount,
@@ -125,6 +126,13 @@ class Order < ApplicationRecord
   def stripe_identifier_presence
     unless stripe_session_id.present? || stripe_invoice_id.present?
       errors.add(:base, "must have either stripe_session_id or stripe_invoice_id")
+    end
+  end
+
+  # Orders cannot have both stripe identifiers (mutually exclusive)
+  def stripe_identifier_exclusivity
+    if stripe_session_id.present? && stripe_invoice_id.present?
+      errors.add(:base, "cannot have both stripe_session_id and stripe_invoice_id")
     end
   end
 

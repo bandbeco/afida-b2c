@@ -473,4 +473,42 @@ class OrderTest < ActiveSupport::TestCase
 
     assert_not order.sample_request?
   end
+
+  # ============================================================================
+  # Stripe Identifier Validation Tests
+  # ============================================================================
+
+  test "order requires stripe_session_id or stripe_invoice_id" do
+    order = Order.new(@valid_attributes.except(:stripe_session_id))
+    order.order_number = "ORD-NO-STRIPE-ID"
+
+    assert_not order.valid?
+    assert_includes order.errors[:base], "must have either stripe_session_id or stripe_invoice_id"
+  end
+
+  test "order with only stripe_session_id is valid" do
+    order = Order.new(@valid_attributes.merge(stripe_invoice_id: nil, order_number: nil))
+    assert order.valid?, "Order with only stripe_session_id should be valid: #{order.errors.full_messages}"
+  end
+
+  test "order with only stripe_invoice_id is valid" do
+    attrs = @valid_attributes.merge(
+      stripe_session_id: nil,
+      stripe_invoice_id: "in_test_renewal_123",
+      order_number: nil
+    )
+    order = Order.new(attrs)
+    assert order.valid?, "Order with only stripe_invoice_id should be valid: #{order.errors.full_messages}"
+  end
+
+  test "order cannot have both stripe_session_id and stripe_invoice_id" do
+    attrs = @valid_attributes.merge(
+      stripe_invoice_id: "in_test_conflict_123",
+      order_number: nil
+    )
+    order = Order.new(attrs)
+
+    assert_not order.valid?
+    assert_includes order.errors[:base], "cannot have both stripe_session_id and stripe_invoice_id"
+  end
 end

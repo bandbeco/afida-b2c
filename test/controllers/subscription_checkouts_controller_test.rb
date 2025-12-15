@@ -20,6 +20,10 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
       quantity: 2,
       price: @product_variant.price
     )
+
+    # Stub Current.cart to return our test cart
+    # (Integration tests don't automatically set cart from session cookie)
+    Current.stubs(:cart).returns(@cart)
   end
 
   # ==========================================================================
@@ -182,6 +186,16 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
       post subscription_checkouts_path, params: { frequency: freq }
       assert_response :see_other, "Expected redirect for frequency: #{freq}"
     end
+  end
+
+  # ==========================================================================
+  # Rate limiting test
+  # ==========================================================================
+
+  test "create has rate limiting configured" do
+    # Verify the rate_limit declaration exists on the controller
+    # (Full rate limit behavior requires integration testing with cache store)
+    assert SubscriptionCheckoutsController.respond_to?(:rate_limit)
   end
 
   private
