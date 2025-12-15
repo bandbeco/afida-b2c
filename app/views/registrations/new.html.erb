@@ -1,44 +1,100 @@
-<div class="flex justify-center items-center">
-  <%= form_with model: @user, url: registration_path, html: { class: "fieldset bg-base-100 border-base-300 rounded-box w-full max-w-sm border p-6 shadow-xl" } do |form| %>
-    <legend class="text-2xl font-bold text-center mb-6">Sign Up</legend>
+<div class="min-h-[80vh] flex items-center justify-center py-12 px-4">
+  <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
 
-    <% if @user.errors.any? %>
-      <div class="alert alert-error mb-4">
-        <ul class="list-disc list-inside">
-          <% @user.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </ul>
+    <%# Left column: Value proposition %>
+    <div class="order-2 lg:order-1">
+      <h1 class="text-4xl lg:text-5xl font-bold text-base-content leading-tight mb-6">
+        Reorder in seconds
+      </h1>
+      <p class="text-xl text-base-content/70 mb-10">
+        Your order history, saved and ready.
+      </p>
+
+      <div class="space-y-6">
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-base-content">Order History</h3>
+            <p class="text-base-content/70">View your complete order history</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-base-content">One-Click Reorder</h3>
+            <p class="text-base-content/70">Reorder previous orders in one click</p>
+          </div>
+        </div>
+
+        <div class="flex items-start gap-4">
+          <div class="flex-shrink-0 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-semibold text-lg text-base-content">Recurring Orders</h3>
+            <p class="text-base-content/70">Recurring orders coming soon</p>
+          </div>
+        </div>
       </div>
-    <% end %>
+    </div>
 
-    <div class="form-control">
-      <%= form.label :email_address, class: "label" do %>
-        <span class="label-text">Email</span>
+    <%# Right column: Sign up form %>
+    <div class="order-1 lg:order-2">
+      <%= form_with model: @user, url: registration_path, html: { class: "bg-base-100 border-base-300 rounded-2xl border p-8 shadow-xl" } do |form| %>
+        <h2 class="text-2xl font-bold text-center mb-8">Create your account</h2>
+
+        <% if @user.errors.any? %>
+          <div class="alert alert-error mb-6">
+            <ul class="list-disc list-inside">
+              <% @user.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div class="form-control">
+          <%= form.label :email_address, class: "label" do %>
+            <span class="label-text font-medium">Email</span>
+          <% end %>
+          <%= form.email_field :email_address, required: true, autofocus: true, class: "input input-bordered w-full input-lg", placeholder: "you@company.com" %>
+        </div>
+
+        <div class="form-control mt-5">
+          <%= form.label :password, class: "label" do %>
+            <span class="label-text font-medium">Password <span class="font-normal text-base-content/50">(min. 8 characters)</span></span>
+          <% end %>
+          <%= form.password_field :password, required: true, minlength: 8, class: "input input-bordered w-full input-lg", placeholder: "Create a password" %>
+        </div>
+
+        <div class="form-control mt-5">
+          <%= form.label :password_confirmation, class: "label" do %>
+            <span class="label-text font-medium">Confirm Password</span>
+          <% end %>
+          <%= form.password_field :password_confirmation, required: true, minlength: 8, class: "input input-bordered w-full input-lg", placeholder: "Confirm your password" %>
+        </div>
+
+        <div class="form-control mt-8">
+          <%= form.submit "Sign Up", class: "btn btn-primary w-full btn-lg text-lg" %>
+        </div>
+
+        <div class="text-center mt-6">
+          <span class="text-base-content/60">Already have an account?</span>
+          <%= link_to "Log In", new_session_path, class: "link link-primary font-medium ml-1" %>
+        </div>
       <% end %>
-      <%= form.email_field :email_address, required: true, autofocus: true, class: "input input-bordered w-full", placeholder: "Enter your email" %>
     </div>
 
-    <div class="form-control mt-4">
-      <%= form.label :password, class: "label" do %>
-        <span class="label-text">Password</span>
-      <% end %>
-      <%= form.password_field :password, required: true, class: "input input-bordered w-full", placeholder: "Enter your password" %>
-    </div>
-
-    <div class="form-control mt-4">
-      <%= form.label :password_confirmation, class: "label" do %>
-        <span class="label-text">Confirm Password</span>
-      <% end %>
-      <%= form.password_field :password_confirmation, required: true, class: "input input-bordered w-full", placeholder: "Confirm your password" %>
-    </div>
-
-    <div class="form-control mt-6">
-      <%= form.submit "Sign Up", class: "btn btn-primary w-full" %>
-    </div>
-
-    <div class="text-center mt-4">
-      <%= link_to "Already have an account? Log In", new_session_path, class: "link link-hover link-primary" %>
-    </div>
-  <% end %>
+  </div>
 </div>
