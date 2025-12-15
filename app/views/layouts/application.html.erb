@@ -34,11 +34,6 @@
   <body class="flex flex-col h-screen">
     <%= render "layouts/google_tag_manager_noscript" %>
 
-    <!-- Delivery Banner -->
-    <div class="bg-black text-pink-300 py-2 px-4 text-center text-sm font-medium">
-      🚚 <span class="mx-2">Free delivery on all mainland UK orders over £100 excl. VAT</span> 🚚
-    </div>
-
     <%= tag.div notice, class: "alert alert-info", data: { turbo_temporary: true } if notice %>
     <%= tag.div alert, class: "alert alert-error", data: { turbo_temporary: true } if alert %>
 
