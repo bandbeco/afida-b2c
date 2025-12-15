@@ -3,6 +3,7 @@ class User < ApplicationRecord
   has_email_address_verification
 
   has_secure_password
+  validates :password, length: { minimum: 8 }, if: -> { password.present? }
 
   belongs_to :organization, optional: true
   has_many :sessions, dependent: :destroy

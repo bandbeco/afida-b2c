@@ -20,14 +20,17 @@ class Subscription < ApplicationRecord
   end
 
   def cancel!
+    # TODO: Phase 7 - Call Stripe API to cancel subscription before updating local status
     update!(status: :cancelled, cancelled_at: Time.current)
   end
 
   def pause!
+    # TODO: Phase 7 - Call Stripe API to pause subscription before updating local status
     update!(status: :paused)
   end
 
   def resume!
+    # TODO: Phase 7 - Call Stripe API to resume subscription before updating local status
     update!(status: :active)
   end
 

@@ -20,6 +20,11 @@
       <p class="text-green-600 mt-2">A confirmation email has been sent to <strong><%= @order.email %></strong></p>
     </div>
 
+    <%# Account Conversion Form (for guests only) %>
+    <% if @order.user_id.blank? && !authenticated? %>
+      <%= render "orders/account_conversion_form", order: @order %>
+    <% end %>
+
     <%# What Happens Next %>
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="px-6 py-4 bg-gray-50 border-b">

@@ -11,6 +11,13 @@ class OrdersController < ApplicationController
   before_action :authorize_order_access!, only: [ :show, :confirmation ]
 
   def confirmation
+    # Guest users visiting via email link (valid token) need session[:recent_order_id]
+    # set so they can convert to an account from the confirmation page.
+    # Skip if session already owns order (set during checkout success redirect).
+    if valid_token_access? && !session_owns_order?
+      session[:recent_order_id] = @order.id
+    end
+
     # Atomic GA4 tracking - prevents race condition on concurrent requests
     # Returns true only if THIS request set the timestamp (first time)
     @should_track_ga4 = @order.mark_ga4_tracked!
