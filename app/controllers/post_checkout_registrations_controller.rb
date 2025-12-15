@@ -21,23 +21,34 @@ class PostCheckoutRegistrationsController < ApplicationController
   before_action :require_order_without_user
 
   def create
-    @user = User.new(
-      email_address: @order.email,
-      password: user_params[:password],
-      password_confirmation: user_params[:password_confirmation]
-    )
+    Order.transaction do
+      # Pessimistic lock prevents race condition on double-submit
+      @order.lock!
 
-    if @user.save
-      # Link order to new user
-      @order.update!(user: @user)
+      # Re-check after lock (another request may have claimed it)
+      if @order.user_id.present?
+        redirect_to root_path, alert: "This order already has an account."
+        return
+      end
 
-      # Log in the new user
-      start_new_session_for(@user)
+      @user = User.new(
+        email_address: @order.email,
+        password: user_params[:password],
+        password_confirmation: user_params[:password_confirmation]
+      )
 
-      redirect_to confirmation_order_path(@order, token: @order.signed_access_token),
-                  notice: "Account created! You can now view your order history."
-    else
-      handle_registration_failure
+      if @user.save
+        # Link order to new user (inside transaction)
+        @order.update!(user: @user)
+
+        # Log in the new user
+        start_new_session_for(@user)
+
+        redirect_to confirmation_order_path(@order, token: @order.signed_access_token),
+                    notice: "Account created! You can now view your order history."
+      else
+        handle_registration_failure
+      end
     end
   end
 

@@ -63,20 +63,19 @@ class ReorderService
     existing_cart_item = @existing_cart_items[variant.id]
 
     if existing_cart_item
-      # Merge: add quantity to existing item
       existing_cart_item.update!(quantity: existing_cart_item.quantity + item.quantity)
     else
-      # New item: use current price from variant
       new_item = @cart.cart_items.create!(
         product_variant: variant,
         price: variant.price,
         quantity: item.quantity
       )
-      # Add to cache in case same variant appears again in order
       @existing_cart_items[variant.id] = new_item
     end
 
     @added_count += 1
+  rescue ActiveRecord::RecordInvalid => e
+    @skipped_items << { name: variant.display_name, reason: "Could not add to cart: #{e.message}" }
   end
 
   def skip_item(item)
@@ -110,9 +109,21 @@ class ReorderService
         success?: false,
         added_count: 0,
         skipped_items: @skipped_items,
-        error: "No items could be added to your cart. All items are no longer available.",
+        error: "No items could be added to your cart. #{skipped_reason_summary}",
         cart: @cart
       )
+    end
+  end
+
+  def skipped_reason_summary
+    reasons = @skipped_items.map { |item| item[:reason] }
+
+    if reasons.all? { |r| r.include?("sample") }
+      "This order only contained samples."
+    elsif reasons.all? { |r| r.include?("configured") || r.include?("branded") }
+      "This order only contained custom/branded items."
+    else
+      "All items are no longer available."
     end
   end
 

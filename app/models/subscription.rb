@@ -20,29 +20,64 @@ class Subscription < ApplicationRecord
   end
 
   def cancel!
-    # TODO: Phase 7 - Call Stripe API to cancel subscription before updating local status
-    update!(status: :cancelled, cancelled_at: Time.current)
+    Stripe::Subscription.cancel(stripe_subscription_id)
+    update!(status: :cancelled, cancelled_at: Time.current) unless cancelled?
+  rescue Stripe::StripeError => e
+    log_stripe_error("cancel", e)
+    errors.add(:base, "Failed to cancel subscription: #{e.message}")
+    raise ActiveRecord::RecordInvalid, self
   end
 
   def pause!
-    # TODO: Phase 7 - Call Stripe API to pause subscription before updating local status
-    update!(status: :paused)
+    Stripe::Subscription.update(stripe_subscription_id, pause_collection: { behavior: "void" })
+    update!(status: :paused) unless paused?
+  rescue Stripe::StripeError => e
+    log_stripe_error("pause", e)
+    errors.add(:base, "Failed to pause subscription: #{e.message}")
+    raise ActiveRecord::RecordInvalid, self
   end
 
   def resume!
-    # TODO: Phase 7 - Call Stripe API to resume subscription before updating local status
-    update!(status: :active)
+    Stripe::Subscription.update(stripe_subscription_id, pause_collection: "")
+    update!(status: :active) unless active?
+  rescue Stripe::StripeError => e
+    log_stripe_error("resume", e)
+    errors.add(:base, "Failed to resume subscription: #{e.message}")
+    raise ActiveRecord::RecordInvalid, self
   end
 
   def items
-    items_snapshot["items"] || []
+    parsed_items_snapshot["items"] || []
   end
 
   def total_amount
-    items_snapshot["total"]&.to_d || 0
+    parsed_items_snapshot["total"]&.to_d || 0
+  end
+
+  def parsed_items_snapshot
+    @parsed_items_snapshot ||= parse_json_field(items_snapshot)
+  end
+
+  def parsed_shipping_snapshot
+    @parsed_shipping_snapshot ||= parse_json_field(shipping_snapshot)
   end
 
   def frequency_display
     frequency&.humanize
+  end
+
+  private
+
+  def log_stripe_error(action, error)
+    Rails.logger.error("Subscription##{id} #{action} failed: #{error.class} - #{error.message}")
+  end
+
+  def parse_json_field(value)
+    return value if value.is_a?(Hash)
+    return JSON.parse(value) if value.is_a?(String)
+    {}
+  rescue JSON::ParserError => e
+    Rails.logger.error("Subscription##{id}: Failed to parse JSON - #{e.message}")
+    {}
   end
 end

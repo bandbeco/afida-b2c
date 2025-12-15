@@ -83,7 +83,12 @@ Rails.application.routes.draw do
   resource :post_checkout_registration, only: [ :create ]
 
   # Subscriptions
-  resources :subscriptions, only: [ :index, :destroy ]
+  resources :subscriptions, only: [ :index, :destroy ] do
+    member do
+      patch :pause
+      patch :resume
+    end
+  end
 
   # Subscription checkout
   resources :subscription_checkouts, only: [ :create ] do

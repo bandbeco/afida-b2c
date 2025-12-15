@@ -328,6 +328,55 @@ class ReorderServiceTest < ActiveSupport::TestCase
     assert_equal 20.00, cart_item.price.to_f
   end
 
+  # Error handling
+  test "handles cart item validation errors gracefully and continues with remaining items" do
+    second_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Second Variant",
+      sku: "SECOND-VARIANT-1",
+      price: 15.00,
+      active: true
+    )
+
+    # First item: quantity exceeds max (30000) - will fail validation
+    @order.order_items.create!(
+      product_variant: @active_variant,
+      product: @active_variant.product,
+      product_name: @active_variant.name,
+      product_sku: @active_variant.sku,
+      price: @active_variant.price,
+      quantity: 50000,
+      line_total: @active_variant.price * 50000
+    )
+
+    # Second item: valid quantity - should succeed
+    @order.order_items.create!(
+      product_variant: second_variant,
+      product: second_variant.product,
+      product_name: second_variant.name,
+      product_sku: second_variant.sku,
+      price: second_variant.price,
+      quantity: 2,
+      line_total: second_variant.price * 2
+    )
+
+    result = ReorderService.call(order: @order, cart: @cart)
+
+    # Should partially succeed - one item added, one skipped due to validation error
+    assert result.success?
+    assert_equal 1, result.added_count
+    assert_equal 1, result.skipped_items.length
+
+    # Skipped item should have informative error message with display name
+    skipped = result.skipped_items.first
+    assert_equal @active_variant.display_name, skipped[:name]
+    assert_includes skipped[:reason], "Could not add to cart"
+
+    # Cart should have the valid item
+    assert_equal 1, @cart.reload.cart_items.count
+    assert_equal second_variant, @cart.cart_items.first.product_variant
+  end
+
   # Result object interface
   test "result object has expected interface" do
     @order.order_items.create!(

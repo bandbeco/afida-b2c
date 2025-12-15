@@ -13,8 +13,11 @@ class OrdersController < ApplicationController
   def confirmation
     # Guest users visiting via email link (valid token) need session[:recent_order_id]
     # set so they can convert to an account from the confirmation page.
-    # Skip if session already owns order (set during checkout success redirect).
-    if valid_token_access? && !session_owns_order?
+    # Only set if:
+    # 1. Valid token access (cryptographically verified)
+    # 2. Session doesn't already own this order (set during checkout success redirect)
+    # 3. Session has NO recent_order_id yet (prevents token-based session hijacking)
+    if valid_token_access? && !session_owns_order? && session[:recent_order_id].nil?
       session[:recent_order_id] = @order.id
     end
 
@@ -27,7 +30,7 @@ class OrdersController < ApplicationController
   end
 
   def index
-    @orders = Current.user.orders.recent.includes(:order_items, :products)
+    @orders = Current.user.orders.recent.includes(order_items: { product_variant: :product })
   end
 
   def reorder
