@@ -24,7 +24,7 @@ Transform the plain `/branding` page into a full landing page experience that sh
 **Content:**
 - Headline: "Your Brand. Your Cup."
 - Subtext: "Custom branded double wall coffee cups, designed by you. No setup fees, UK production, delivered in 20 business days."
-- CTA: "Start Designing" → `branded_products_path`
+- CTA: "Start Branding" → `branded_products_path`
 
 **Style:** Neobrutalist, continues homepage aesthetic (pink/mint accents, bold shadows)
 
@@ -53,7 +53,7 @@ Transform the plain `/branding` page into a full landing page experience that sh
 2. **Order** - "Add to cart and checkout - no quotes, no waiting"
 3. **Receive** - "UK-printed and delivered to your door in 20 business days"
 
-**CTA:** "Start Designing →"
+**CTA:** "Start Branding →"
 
 **Style:** Large numbered circles, dotted connecting line
 
@@ -101,7 +101,7 @@ Transform the plain `/branding` page into a full landing page experience that sh
 **Headline:** "Ready to Brand Your Cups?"
 **Subtext:** "Design your custom double wall cups in minutes. No setup fees, delivered in 20 days."
 
-**CTA:** "Start Designing" → `branded_products_path`
+**CTA:** "Start Branding" → `branded_products_path`
 **Secondary:** "Have questions? Contact us" → contact page
 
 **Style:** Bold, attention-grabbing, neobrutalist button with shadow

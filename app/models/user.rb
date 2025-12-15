@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :carts, dependent: :destroy
   has_many :orders, dependent: :destroy
+  has_many :subscriptions, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 

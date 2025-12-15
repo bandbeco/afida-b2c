@@ -53,7 +53,7 @@ This feature redesigns the homepage branding section to be more visually impactf
 │                                                             │
 │  ┌───────────────────────────────────────────────────────┐ │
 │  │  CTA BUTTON                                            │ │
-│  │  "Start Designing" → /branded_products                 │ │
+│  │  "Start Branding" → /branded_products                 │ │
 │  └───────────────────────────────────────────────────────┘ │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -131,7 +131,7 @@ This feature redesigns the homepage branding section to be more visually impactf
    - CTA button present with correct text
 
 3. **CTA Functionality**
-   - "Start Designing" button navigates to `/branded_products`
+   - "Start Branding" button navigates to `/branded_products`
 
 4. **Responsive Behavior**
    - Mobile viewport: verify layout adapts
@@ -162,7 +162,7 @@ class HomepageBrandingTest < ApplicationSystemTestCase
       assert_text "£0"
 
       # Verify CTA
-      assert_link "Start Designing"
+      assert_link "Start Branding"
     end
   end
 
@@ -170,7 +170,7 @@ class HomepageBrandingTest < ApplicationSystemTestCase
     visit root_path
 
     within "#branding" do
-      click_link "Start Designing"
+      click_link "Start Branding"
     end
 
     assert_current_path branded_products_path

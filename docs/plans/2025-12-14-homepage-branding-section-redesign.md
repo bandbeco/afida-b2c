@@ -33,7 +33,7 @@ Redesign the homepage branding section to be bolder and more compelling, drawing
 │                                                             │
 │     [UK]     [1,000 min]     [20 days]     [£0]            │
 │                                                             │
-│                  [ Start Designing ]                        │
+│                  [ Start Branding ]                        │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -135,7 +135,7 @@ Horizontal row of 4 badges (same style as branding page, but compact):
 
 ```html
 <%= link_to branded_products_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
-  Start Designing
+  Start Branding
 <% end %>
 ```
 
@@ -178,6 +178,6 @@ Horizontal row of 4 badges (same style as branding page, but compact):
 - [ ] Collage displays 6 customer photos in masonry layout
 - [ ] "Your Brand. Your Cup." headline with gradient
 - [ ] 4 trust badges with concrete numbers
-- [ ] "Start Designing" CTA links to `/branded_products`
+- [ ] "Start Branding" CTA links to `/branded_products`
 - [ ] Responsive: works on mobile, tablet, desktop
 - [ ] Maintains neobrutalist design language (borders, shadows, bold colors)

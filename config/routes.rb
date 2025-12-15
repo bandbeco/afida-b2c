@@ -72,7 +72,30 @@ Rails.application.routes.draw do
   resources :orders, only: [ :show, :index ] do
     member do
       get :confirmation
+      post :reorder
     end
+  end
+
+  # Account management
+  resource :account, only: [ :show, :update ]
+
+  # Post-checkout guest-to-account conversion
+  resource :post_checkout_registration, only: [ :create ]
+
+  # Subscriptions
+  resources :subscriptions, only: [ :index, :destroy ]
+
+  # Subscription checkout
+  resources :subscription_checkouts, only: [ :create ] do
+    collection do
+      get :success
+      get :cancel
+    end
+  end
+
+  # Stripe webhooks
+  namespace :webhooks do
+    post :stripe, to: "stripe#create"
   end
 
   namespace :branded_products do

@@ -1,12 +1,13 @@
 class OrdersController < ApplicationController
   # Allow guest access to show and confirmation (for order confirmation after checkout)
-  # Index requires authentication (order history)
+  # Index and reorder require authentication (order history)
   allow_unauthenticated_access only: [ :show, :confirmation ]
-  before_action :require_authentication, only: [ :index ]
+  before_action :require_authentication, only: [ :index, :reorder ]
 
   # Resume session for show/confirmation so we can check if user owns the order
   before_action :resume_session, only: [ :show, :confirmation ]
   before_action :set_order, only: [ :show, :confirmation ]
+  before_action :set_user_order, only: [ :reorder ]
   before_action :authorize_order_access!, only: [ :show, :confirmation ]
 
   def confirmation
@@ -22,12 +23,44 @@ class OrdersController < ApplicationController
     @orders = Current.user.orders.recent.includes(:order_items, :products)
   end
 
+  def reorder
+    cart = Current.cart || Cart.create!(user: Current.user)
+    result = ReorderService.call(order: @order, cart: cart)
+
+    if result.success?
+      message = build_reorder_message(result)
+      redirect_to cart_path, notice: message
+    else
+      redirect_to orders_path, alert: result.error
+    end
+  end
+
   private
+
+  def build_reorder_message(result)
+    item_text = result.added_count == 1 ? "1 item" : "#{result.added_count} items"
+    message = "#{item_text} added to your cart."
+
+    if result.skipped_items.any?
+      skipped_count = result.skipped_items.count
+      skipped_text = skipped_count == 1 ? "1 item is" : "#{skipped_count} items are"
+      message += " #{skipped_text} no longer available."
+    end
+
+    message
+  end
 
   def set_order
     @order = Order.includes(order_items: { product_variant: :product }).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path, alert: "Order not found"
+  end
+
+  # For reorder action: only allow accessing current user's orders
+  def set_user_order
+    @order = Current.user.orders.includes(order_items: { product_variant: :product }).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to orders_path, alert: "Order not found"
   end
 
   # Single authorization method for both show and confirmation actions

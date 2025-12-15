@@ -101,7 +101,7 @@
 
 **Goal**: Visitors can click CTA button to navigate to branded products page
 
-**Independent Test**: "Start Designing" button is visible and navigates to /branded_products
+**Independent Test**: "Start Branding" button is visible and navigates to /branded_products
 
 ### Tests for User Story 3 ⚠️
 
@@ -113,7 +113,7 @@
 ### Implementation for User Story 3
 
 - [x] T023 [US3] Add CTA button container with centered layout below trust badges in app/views/pages/partials/_branding.html.erb
-- [x] T024 [US3] Implement "Start Designing" button with link_to branded_products_path and primary button styling in app/views/pages/partials/_branding.html.erb
+- [x] T024 [US3] Implement "Start Branding" button with link_to branded_products_path and primary button styling in app/views/pages/partials/_branding.html.erb
 - [x] T025 [US3] Run system tests T021, T022 - verify they pass
 
 **Checkpoint**: User Story 3 complete - CTA button works, tests pass

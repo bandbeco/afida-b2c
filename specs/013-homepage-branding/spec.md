@@ -49,7 +49,7 @@ A visitor who is interested in the branding service can easily take action by cl
 
 **Acceptance Scenarios**:
 
-1. **Given** a visitor interested in branding, **When** they click the "Start Designing" button, **Then** they are navigated to the branded products page
+1. **Given** a visitor interested in branding, **When** they click the "Start Branding" button, **Then** they are navigated to the branded products page
 2. **Given** a visitor on the branding section, **When** they look for a way to proceed, **Then** the CTA button is clearly visible and prominently styled
 3. **Given** a visitor on mobile, **When** they want to take action, **Then** the CTA button is easily tappable and above the fold after scrolling through the collage
 
@@ -70,7 +70,7 @@ A visitor who is interested in the branding service can easily take action by cl
 - **FR-003**: Section MUST display the headline "Your Brand. Your Cup." with "Your Cup." in gradient text (green tones)
 - **FR-004**: Section MUST display 4 trust badges showing: UK production, 1,000 minimum units, 20-day turnaround, £0 setup fees
 - **FR-005**: Each trust badge MUST include an icon, a prominent number/value, and a descriptive label
-- **FR-006**: Section MUST include a primary CTA button labeled "Start Designing" linking to the branded products page
+- **FR-006**: Section MUST include a primary CTA button labeled "Start Branding" linking to the branded products page
 - **FR-007**: Collage MUST display in 3 columns on desktop and 2 columns on mobile/tablet
 - **FR-008**: Trust badges MUST display in a horizontal row (4 across) on desktop and 2x2 grid on mobile
 - **FR-009**: Section MUST maintain the pink background color (#ffb7c5) consistent with Afida's branding page

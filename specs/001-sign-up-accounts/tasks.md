@@ -29,11 +29,11 @@ Rails monolith structure per plan.md:
 
 **Purpose**: Database migrations and route configuration needed by all user stories
 
-- [ ] T001 Create subscriptions table migration in db/migrate/YYYYMMDDHHMMSS_create_subscriptions.rb
-- [ ] T002 Create add_subscription_to_orders migration in db/migrate/YYYYMMDDHHMMSS_add_subscription_to_orders.rb
-- [ ] T003 Run migrations: `rails db:migrate`
-- [ ] T004 Add new routes to config/routes.rb (account, subscriptions, subscription_checkouts, reorder, post_checkout_registration, webhooks)
-- [ ] T005 [P] Register new Stimulus controllers in app/frontend/entrypoints/application.js (account_dropdown, subscription_toggle)
+- [X] T001 Create subscriptions table migration in db/migrate/YYYYMMDDHHMMSS_create_subscriptions.rb
+- [X] T002 Create add_subscription_to_orders migration in db/migrate/YYYYMMDDHHMMSS_add_subscription_to_orders.rb
+- [X] T003 Run migrations: `rails db:migrate`
+- [X] T004 Add new routes to config/routes.rb (account, subscriptions, subscription_checkouts, reorder, post_checkout_registration, webhooks)
+- [X] T005 [P] Register new Stimulus controllers in app/frontend/entrypoints/application.js (account_dropdown, subscription_toggle)
 
 ---
 
@@ -43,12 +43,12 @@ Rails monolith structure per plan.md:
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create Subscription model in app/models/subscription.rb with validations and enums (frequency, status)
-- [ ] T007 Add `has_many :subscriptions` association to app/models/user.rb
-- [ ] T008 Add `belongs_to :subscription, optional: true` to app/models/order.rb
-- [ ] T009 [P] Create test fixtures for subscriptions in test/fixtures/subscriptions.yml
-- [ ] T010 Write Subscription model tests in test/models/subscription_test.rb (validations, enums, associations)
-- [ ] T011 Run and verify Subscription model tests pass: `rails test test/models/subscription_test.rb`
+- [X] T006 Create Subscription model in app/models/subscription.rb with validations and enums (frequency, status)
+- [X] T007 Add `has_many :subscriptions` association to app/models/user.rb
+- [X] T008 Add `belongs_to :subscription, optional: true` to app/models/order.rb
+- [X] T009 [P] Create test fixtures for subscriptions in test/fixtures/subscriptions.yml
+- [X] T010 Write Subscription model tests in test/models/subscription_test.rb (validations, enums, associations)
+- [X] T011 Run and verify Subscription model tests pass: `rails test test/models/subscription_test.rb`
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 

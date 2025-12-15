@@ -1,0 +1,114 @@
+# Subscriptions fixtures for testing
+
+active_monthly:
+  user: one
+  stripe_subscription_id: sub_test_monthly_123
+  stripe_customer_id: cus_test_123
+  stripe_price_id: price_test_monthly
+  frequency: every_month
+  status: active
+  current_period_start: <%= 7.days.ago.to_fs(:db) %>
+  current_period_end: <%= 7.days.from_now.to_fs(:db) %>
+  items_snapshot: >
+    {
+      "items": [
+        {"product_variant_id": 1, "product_name": "Single Wall Cup 8oz", "product_sku": "SWC-8OZ", "quantity": 2, "price": "16.00"}
+      ],
+      "subtotal": "32.00",
+      "vat": "6.40",
+      "shipping": "0.00",
+      "total": "38.40"
+    }
+  shipping_snapshot: >
+    {
+      "name": "John Smith",
+      "line1": "123 Business St",
+      "city": "London",
+      "postal_code": "EC1A 1BB",
+      "country": "GB"
+    }
+
+active_quarterly:
+  user: two
+  stripe_subscription_id: sub_test_quarterly_456
+  stripe_customer_id: cus_test_456
+  stripe_price_id: price_test_quarterly
+  frequency: every_3_months
+  status: active
+  current_period_start: <%= 14.days.ago.to_fs(:db) %>
+  current_period_end: <%= 14.days.from_now.to_fs(:db) %>
+  items_snapshot: >
+    {
+      "items": [
+        {"product_variant_id": 2, "product_name": "Paper Napkins", "product_sku": "NAP-100", "quantity": 5, "price": "8.00"}
+      ],
+      "subtotal": "40.00",
+      "vat": "8.00",
+      "shipping": "5.00",
+      "total": "53.00"
+    }
+  shipping_snapshot: >
+    {
+      "name": "Jane Doe",
+      "line1": "456 Cafe Lane",
+      "city": "Manchester",
+      "postal_code": "M1 2AB",
+      "country": "GB"
+    }
+
+paused_subscription:
+  user: one
+  stripe_subscription_id: sub_test_paused_789
+  stripe_customer_id: cus_test_123
+  stripe_price_id: price_test_monthly
+  frequency: every_month
+  status: paused
+  current_period_start: <%= 30.days.ago.to_fs(:db) %>
+  current_period_end: <%= Time.current.to_fs(:db) %>
+  items_snapshot: >
+    {
+      "items": [
+        {"product_variant_id": 3, "product_name": "Pizza Box 12\"", "product_sku": "PB-12", "quantity": 10, "price": "2.50"}
+      ],
+      "subtotal": "25.00",
+      "vat": "5.00",
+      "shipping": "0.00",
+      "total": "30.00"
+    }
+  shipping_snapshot: >
+    {
+      "name": "John Smith",
+      "line1": "123 Business St",
+      "city": "London",
+      "postal_code": "EC1A 1BB",
+      "country": "GB"
+    }
+
+cancelled_subscription:
+  user: two
+  stripe_subscription_id: sub_test_cancelled_000
+  stripe_customer_id: cus_test_456
+  stripe_price_id: price_test_monthly
+  frequency: every_month
+  status: cancelled
+  cancelled_at: <%= 5.days.ago.to_fs(:db) %>
+  current_period_start: <%= 12.days.ago.to_fs(:db) %>
+  current_period_end: <%= 5.days.ago.to_fs(:db) %>
+  items_snapshot: >
+    {
+      "items": [
+        {"product_variant_id": 1, "product_name": "Single Wall Cup 8oz", "product_sku": "SWC-8OZ", "quantity": 1, "price": "16.00"}
+      ],
+      "subtotal": "16.00",
+      "vat": "3.20",
+      "shipping": "5.00",
+      "total": "24.20"
+    }
+  shipping_snapshot: >
+    {
+      "name": "Jane Doe",
+      "line1": "456 Cafe Lane",
+      "city": "Manchester",
+      "postal_code": "M1 2AB",
+      "country": "GB"
+    }
