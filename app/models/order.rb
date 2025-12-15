@@ -2,6 +2,7 @@ class Order < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :organization, optional: true
   belongs_to :placed_by_user, class_name: "User", optional: true
+  belongs_to :subscription, optional: true
   has_many :order_items, dependent: :destroy
   has_many :products, through: :order_items
 

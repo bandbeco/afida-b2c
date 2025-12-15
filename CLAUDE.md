@@ -609,6 +609,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items`, `orders`, `order_items` tables) (011-variant-samples)
 - Ruby 3.3.0+ / Rails 8.x + Vite Rails, TailwindCSS 4, DaisyUI, Hotwire (Turbo + Stimulus) (013-homepage-branding)
 - N/A (no data changes - view-only feature) (013-homepage-branding)
+- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (001-sign-up-accounts)
+- PostgreSQL 14+ (existing `users`, `orders`, `order_items` tables; new `subscriptions` table) (001-sign-up-accounts)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

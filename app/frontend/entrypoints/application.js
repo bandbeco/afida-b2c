@@ -40,7 +40,9 @@ const lazyControllers = {
   "category-expand": () => import("../javascript/controllers/category_expand_controller"),
   "sample-counter": () => import("../javascript/controllers/sample_counter_controller"),
   "related-products": () => import("../javascript/controllers/related_products_controller"),
-  "product-configurator": () => import("../javascript/controllers/product_configurator_controller")
+  "product-configurator": () => import("../javascript/controllers/product_configurator_controller"),
+  "account-dropdown": () => import("../javascript/controllers/account_dropdown_controller"),
+  "subscription-toggle": () => import("../javascript/controllers/subscription_toggle_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM

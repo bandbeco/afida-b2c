@@ -1,15 +1,26 @@
 class OrdersController < ApplicationController
   # Allow guest access to show and confirmation (for order confirmation after checkout)
-  # Index requires authentication (order history)
+  # Index and reorder require authentication (order history)
   allow_unauthenticated_access only: [ :show, :confirmation ]
-  before_action :require_authentication, only: [ :index ]
+  before_action :require_authentication, only: [ :index, :reorder ]
 
   # Resume session for show/confirmation so we can check if user owns the order
   before_action :resume_session, only: [ :show, :confirmation ]
   before_action :set_order, only: [ :show, :confirmation ]
+  before_action :set_user_order, only: [ :reorder ]
   before_action :authorize_order_access!, only: [ :show, :confirmation ]
 
   def confirmation
+    # Guest users visiting via email link (valid token) need session[:recent_order_id]
+    # set so they can convert to an account from the confirmation page.
+    # Only set if:
+    # 1. Valid token access (cryptographically verified)
+    # 2. Session doesn't already own this order (set during checkout success redirect)
+    # 3. Session has NO recent_order_id yet (prevents token-based session hijacking)
+    if valid_token_access? && !session_owns_order? && session[:recent_order_id].nil?
+      session[:recent_order_id] = @order.id
+    end
+
     # Atomic GA4 tracking - prevents race condition on concurrent requests
     # Returns true only if THIS request set the timestamp (first time)
     @should_track_ga4 = @order.mark_ga4_tracked!
@@ -19,15 +30,47 @@ class OrdersController < ApplicationController
   end
 
   def index
-    @orders = Current.user.orders.recent.includes(:order_items, :products)
+    @orders = Current.user.orders.recent.includes(order_items: { product_variant: :product })
+  end
+
+  def reorder
+    cart = Current.cart || Cart.create!(user: Current.user)
+    result = ReorderService.call(order: @order, cart: cart)
+
+    if result.success?
+      message = build_reorder_message(result)
+      redirect_to cart_path, notice: message
+    else
+      redirect_to orders_path, alert: result.error
+    end
   end
 
   private
+
+  def build_reorder_message(result)
+    item_text = result.added_count == 1 ? "1 item" : "#{result.added_count} items"
+    message = "#{item_text} added to your cart."
+
+    if result.skipped_items.any?
+      skipped_count = result.skipped_items.count
+      skipped_text = skipped_count == 1 ? "1 item is" : "#{skipped_count} items are"
+      message += " #{skipped_text} no longer available."
+    end
+
+    message
+  end
 
   def set_order
     @order = Order.includes(order_items: { product_variant: :product }).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path, alert: "Order not found"
+  end
+
+  # For reorder action: only allow accessing current user's orders
+  def set_user_order
+    @order = Current.user.orders.includes(order_items: { product_variant: :product }).find(params[:id])
+  rescue ActiveRecord::RecordNotFound
+    redirect_to orders_path, alert: "Order not found"
   end
 
   # Single authorization method for both show and confirmation actions

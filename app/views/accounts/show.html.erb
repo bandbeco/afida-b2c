@@ -1,0 +1,79 @@
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+  <h1 class="text-3xl font-bold mb-8">Account Settings</h1>
+
+  <%= form_with model: @user, url: account_path, method: :patch, html: { class: "space-y-6" } do |form| %>
+    <% if @user.errors.any? %>
+      <div class="alert alert-error">
+        <ul class="list-disc list-inside">
+          <% @user.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%# Email (read-only) %>
+    <div class="form-control">
+      <%= form.label :email_address, "Email", class: "label" do %>
+        <span class="label-text font-medium">Email</span>
+      <% end %>
+      <%= form.email_field :email_address, disabled: true, class: "input input-bordered w-full bg-base-200" %>
+      <label class="label">
+        <span class="label-text-alt text-base-content/60">Contact support to change your email address</span>
+      </label>
+    </div>
+
+    <div class="divider"></div>
+
+    <%# Profile information %>
+    <h2 class="text-xl font-semibold">Profile Information</h2>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="form-control">
+        <%= form.label :first_name, class: "label" do %>
+          <span class="label-text font-medium">First name</span>
+        <% end %>
+        <%= form.text_field :first_name, class: "input input-bordered w-full", placeholder: "Your first name" %>
+      </div>
+
+      <div class="form-control">
+        <%= form.label :last_name, class: "label" do %>
+          <span class="label-text font-medium">Last name</span>
+        <% end %>
+        <%= form.text_field :last_name, class: "input input-bordered w-full", placeholder: "Your last name" %>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <%# Password change %>
+    <h2 class="text-xl font-semibold">Change Password</h2>
+    <p class="text-base-content/60 text-sm mb-4">Leave blank to keep your current password</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="form-control">
+        <%= form.label :password, "New password", class: "label" do %>
+          <span class="label-text font-medium">New password</span>
+        <% end %>
+        <%= form.password_field :password, class: "input input-bordered w-full", placeholder: "New password", minlength: 8, autocomplete: "new-password" %>
+        <label class="label">
+          <span class="label-text-alt text-base-content/60">Minimum 8 characters</span>
+        </label>
+      </div>
+
+      <div class="form-control">
+        <%= form.label :password_confirmation, "Confirm new password", class: "label" do %>
+          <span class="label-text font-medium">Confirm new password</span>
+        <% end %>
+        <%= form.password_field :password_confirmation, class: "input input-bordered w-full", placeholder: "Confirm new password", minlength: 8, autocomplete: "new-password" %>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <%# Submit %>
+    <div class="flex justify-end">
+      <%= form.submit "Save Changes", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>
