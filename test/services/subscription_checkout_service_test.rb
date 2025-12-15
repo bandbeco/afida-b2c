@@ -115,13 +115,33 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       has_entries(
         email: @user.email_address,
         metadata: has_entries(user_id: @user.id.to_s)
-      )
+      ),
+      has_entries(idempotency_key: "customer_create_user_#{@user.id}")
     ).returns(mock_customer)
 
     customer = @service.send(:ensure_stripe_customer)
 
     assert_equal "cus_new123", customer.id
     assert_equal "cus_new123", @user.reload.stripe_customer_id
+  end
+
+  test "ensure_stripe_customer uses idempotency key to prevent duplicate customers" do
+    @user.update!(stripe_customer_id: nil)
+
+    # First call creates customer
+    mock_customer = OpenStruct.new(id: "cus_idempotent123", email: @user.email_address)
+
+    # Capture the idempotency key used
+    captured_idempotency_key = nil
+    Stripe::Customer.expects(:create).with { |params, options|
+      captured_idempotency_key = options[:idempotency_key]
+      true
+    }.returns(mock_customer)
+
+    @service.send(:ensure_stripe_customer)
+
+    # Verify idempotency key format
+    assert_equal "customer_create_user_#{@user.id}", captured_idempotency_key
   end
 
   # ==========================================================================

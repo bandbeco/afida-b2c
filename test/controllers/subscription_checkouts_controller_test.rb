@@ -121,6 +121,29 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # T018b: success sends confirmation email
+  # ==========================================================================
+
+  test "success sends confirmation email for first subscription order" do
+    sign_in_as(@user)
+
+    order = orders(:one)
+    result = SubscriptionCheckoutService::Result.new(
+      success?: true,
+      subscription: subscriptions(:active_monthly),
+      order: order
+    )
+
+    SubscriptionCheckoutService.any_instance.expects(:complete_checkout)
+      .with("cs_test_email_123")
+      .returns(result)
+
+    assert_enqueued_emails 1 do
+      get success_subscription_checkouts_path, params: { session_id: "cs_test_email_123" }
+    end
+  end
+
+  # ==========================================================================
   # T019: success clears cart (verified via service)
   # ==========================================================================
 

@@ -132,6 +132,26 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal existing_rate_id, params_captured[:line_items].first[:tax_rates].first
   end
 
+  test "create uses cached tax rate ID from credentials when present" do
+    cached_tax_rate_id = "txr_cached_123456"
+
+    # Mock credentials to return cached tax_rate_id
+    Rails.application.credentials.stubs(:dig).with(:stripe, :tax_rate_id).returns(cached_tax_rate_id)
+    Rails.application.credentials.stubs(:dig).with(:stripe, :publishable_key).returns("pk_test")
+    Rails.application.credentials.stubs(:dig).with(:stripe, :secret_key).returns("sk_test")
+
+    params_captured = nil
+    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
+      params_captured = params
+      FakeStripe::CheckoutSession.new(params)
+    end
+
+    post checkout_path
+
+    # Should use cached tax rate ID, not search/create
+    assert_equal cached_tax_rate_id, params_captured[:line_items].first[:tax_rates].first
+  end
+
   # ============================================================================
   # SUCCESS ACTION TESTS (GET /checkouts/success)
   # ============================================================================

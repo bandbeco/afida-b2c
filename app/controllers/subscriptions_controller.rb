@@ -4,6 +4,10 @@ class SubscriptionsController < ApplicationController
   before_action :require_authentication
   before_action :set_subscription, only: [ :destroy, :pause, :resume ]
 
+  # Rescue Stripe errors and validation failures from subscription actions
+  rescue_from ActiveRecord::RecordInvalid, with: :handle_subscription_error
+  rescue_from Stripe::StripeError, with: :handle_stripe_error
+
   def index
     @subscriptions = Current.user.subscriptions.order(created_at: :desc)
   end
@@ -53,5 +57,16 @@ class SubscriptionsController < ApplicationController
   def set_subscription
     @subscription = Current.user.subscriptions.find_by(id: params[:id])
     head :not_found unless @subscription
+  end
+
+  def handle_subscription_error(exception)
+    Rails.logger.error("Subscription action failed: #{exception.message}")
+    error_message = @subscription&.errors&.full_messages&.first || "Unable to update subscription. Please try again."
+    redirect_to subscriptions_path, alert: error_message
+  end
+
+  def handle_stripe_error(exception)
+    Rails.logger.error("Stripe error in subscription action: #{exception.message}")
+    redirect_to subscriptions_path, alert: "Payment service temporarily unavailable. Please try again later."
   end
 end

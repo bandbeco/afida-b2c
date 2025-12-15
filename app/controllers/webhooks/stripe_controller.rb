@@ -11,6 +11,20 @@ module Webhooks
   #   - customer.subscription.deleted: Marks subscription as cancelled
   #   - invoice.payment_failed: Logs payment failures
   #
+  # KNOWN LIMITATION: Subscription Item Changes
+  #   If a customer modifies their subscription items via Stripe's Customer Portal
+  #   or Dashboard (add/remove products, change quantities), our items_snapshot
+  #   will NOT be updated. Renewal orders will continue to use the original
+  #   items_snapshot until the customer creates a new subscription.
+  #
+  #   To support subscription item modifications, implement:
+  #   1. Handle 'customer.subscription.updated' to detect item changes
+  #   2. Compare invoice line_items with items_snapshot
+  #   3. Update items_snapshot when differences are detected
+  #
+  #   For now, item modifications are only supported by cancelling and
+  #   creating a new subscription.
+  #
   class StripeController < ApplicationController
     skip_forgery_protection
     allow_unauthenticated_access

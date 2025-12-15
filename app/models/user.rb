@@ -14,6 +14,10 @@ class User < ApplicationRecord
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
   validates :email_address, presence: true, uniqueness: true
+  # Stripe customer IDs always start with "cus_" followed by alphanumeric characters
+  validates :stripe_customer_id,
+            format: { with: /\Acus_[a-zA-Z0-9]+\z/, message: "must be a valid Stripe customer ID" },
+            allow_nil: true
 
   enum :role, { owner: "owner", admin: "admin", member: "member" }, validate: { allow_nil: true }
 

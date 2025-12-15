@@ -130,15 +130,21 @@ class SubscriptionCheckoutService
 
   # T008: Ensures user has a Stripe customer, creating one if needed
   #
+  # Uses idempotency key based on user_id to prevent duplicate customers
+  # if the request is retried (e.g., network timeout during checkout).
+  #
   # @return [Stripe::Customer]
   def ensure_stripe_customer
     if user.stripe_customer_id.present?
       Stripe::Customer.retrieve(user.stripe_customer_id)
     else
       customer = Stripe::Customer.create(
-        email: user.email_address,
-        name: user.respond_to?(:full_name) ? user.full_name : nil,
-        metadata: { user_id: user.id.to_s }
+        {
+          email: user.email_address,
+          name: user.respond_to?(:full_name) ? user.full_name : nil,
+          metadata: { user_id: user.id.to_s }
+        },
+        { idempotency_key: "customer_create_user_#{user.id}" }
       )
       user.update!(stripe_customer_id: customer.id)
       customer
@@ -306,6 +312,9 @@ class SubscriptionCheckoutService
 
   # Creates first order from subscription checkout
   #
+  # Uses items_snapshot (derived from Stripe's line_items) as source of truth,
+  # not cart items, to prevent race condition where cart is modified during payment.
+  #
   # @return [Order]
   def create_first_order(stripe_session, subscription, shipping_snapshot)
     address = shipping_snapshot["address"]
@@ -338,9 +347,21 @@ class SubscriptionCheckoutService
       shipping_country: address["country"]
     )
 
-    # Create order items from cart items (reuse memoized collection)
-    cart_items_with_associations.each do |cart_item|
-      OrderItem.create_from_cart_item(cart_item, order).save!
+    # Create order items from items_snapshot (source of truth from Stripe)
+    # This ensures order reflects what was actually charged, not current cart state
+    (items_snapshot["items"] || []).each do |item|
+      variant = ProductVariant.find_by(id: item["product_variant_id"])
+
+      OrderItem.create!(
+        order: order,
+        product_variant: variant,
+        product: variant&.product,
+        quantity: item["quantity"],
+        price: item["unit_price_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f,
+        product_name: item["name"],
+        product_sku: item["sku"],
+        pac_size: item["pac_size"] || 1
+      )
     end
 
     order

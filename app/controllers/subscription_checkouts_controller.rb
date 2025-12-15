@@ -96,6 +96,10 @@ class SubscriptionCheckoutsController < ApplicationController
 
     if result.success?
       Rails.logger.info("[Subscription] Subscription created: subscription=#{result.subscription&.id} order=#{result.order&.id}")
+
+      # Send confirmation email for first subscription order
+      OrderMailer.with(order: result.order).confirmation_email.deliver_later
+
       flash[:notice] = "Subscription created! Your first order has been placed."
       redirect_to order_path(result.order)
     else

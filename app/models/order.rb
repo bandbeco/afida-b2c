@@ -92,12 +92,6 @@ class Order < ApplicationRecord
     contains_samples? && order_items.non_samples.none?
   end
 
-  # Generate a secure token for accessing this order without authentication
-  # Used in email links for guest checkout orders
-  def secure_access_token
-    Digest::SHA256.hexdigest("#{id}-#{stripe_session_id}-#{Rails.application.secret_key_base}")
-  end
-
   # Generate signed access token using Rails built-in signed global ID
   # More secure than custom token generation, with built-in expiration
   def signed_access_token

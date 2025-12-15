@@ -309,18 +309,46 @@ class CheckoutsController < ApplicationController
     }
   end
 
+  # Returns the Stripe TaxRate for UK VAT (20%)
+  #
+  # Performance: Uses cached tax_rate_id from credentials to avoid API calls.
+  # If not configured, falls back to searching/creating (one-time operation).
+  #
+  # Setup: After first checkout creates the tax rate, add to credentials:
+  #   rails credentials:edit
+  #   stripe:
+  #     tax_rate_id: txr_xxx
+  #
   def tax_rate
     @tax_rate ||= begin
-      # Try to find existing UK VAT tax rate to avoid creating duplicates
-      existing_rates = Stripe::TaxRate.list(active: true, limit: 100)
-      uk_vat_rate = existing_rates.data.find do |rate|
-        rate.percentage == 20.0 &&
-          rate.country == "GB" &&
-          rate.inclusive == false
-      end
+      cached_id = Rails.application.credentials.dig(:stripe, :tax_rate_id)
 
-      # Use existing rate if found, otherwise create new one
-      uk_vat_rate || Stripe::TaxRate.create({
+      if cached_id.present?
+        # Fast path: retrieve by ID (single API call, cached for request)
+        Stripe::TaxRate.retrieve(cached_id)
+      else
+        # Slow path: search for existing or create new (logs warning)
+        Rails.logger.warn("[Checkout] No stripe.tax_rate_id in credentials - searching/creating tax rate")
+        find_or_create_uk_vat_rate
+      end
+    end
+  end
+
+  # Finds existing UK VAT rate or creates one
+  # Called only when tax_rate_id not configured in credentials
+  def find_or_create_uk_vat_rate
+    existing_rates = Stripe::TaxRate.list(active: true, limit: 100)
+    uk_vat_rate = existing_rates.data.find do |rate|
+      rate.percentage == 20.0 &&
+        rate.country == "GB" &&
+        rate.inclusive == false
+    end
+
+    if uk_vat_rate
+      Rails.logger.info("[Checkout] Found existing UK VAT rate: #{uk_vat_rate.id} - add to credentials")
+      uk_vat_rate
+    else
+      new_rate = Stripe::TaxRate.create({
         display_name: "VAT",
         percentage: 20,
         country: "GB",
@@ -328,6 +356,8 @@ class CheckoutsController < ApplicationController
         description: "Value Added Tax",
         inclusive: false
       })
+      Rails.logger.info("[Checkout] Created UK VAT rate: #{new_rate.id} - add to credentials")
+      new_rate
     end
   end
 end

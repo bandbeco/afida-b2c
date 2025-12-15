@@ -186,6 +186,65 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/cannot be resumed/i, response.body)
   end
 
+  # ============================================
+  # Error Handling Tests
+  # ============================================
+
+  # NOTE: The Subscription model catches Stripe errors and re-raises them as
+  # ActiveRecord::RecordInvalid with a descriptive error message. These tests verify
+  # the full flow from Stripe error through model handling to controller response.
+
+  test "handles Stripe error during cancel gracefully" do
+    sign_in_as(@user)
+    # Simulate Stripe API failure - model will catch and convert to RecordInvalid
+    Stripe::Subscription.stubs(:cancel).raises(Stripe::StripeError.new("Stripe unavailable"))
+
+    delete subscription_path(@active_subscription)
+
+    assert_redirected_to subscriptions_path
+    follow_redirect!
+    # Model adds "Failed to cancel subscription: ..." to errors.base
+    assert_match(/failed to cancel subscription/i, response.body)
+  end
+
+  test "handles Stripe error during pause gracefully" do
+    sign_in_as(@user)
+    Stripe::Subscription.stubs(:update).raises(Stripe::StripeError.new("Stripe unavailable"))
+
+    patch pause_subscription_path(@active_subscription)
+
+    assert_redirected_to subscriptions_path
+    follow_redirect!
+    # Model adds "Failed to pause subscription: ..." to errors.base
+    assert_match(/failed to pause subscription/i, response.body)
+  end
+
+  test "handles Stripe error during resume gracefully" do
+    sign_in_as(@user)
+    Stripe::Subscription.stubs(:update).raises(Stripe::StripeError.new("Stripe unavailable"))
+
+    patch resume_subscription_path(@paused_subscription)
+
+    assert_redirected_to subscriptions_path
+    follow_redirect!
+    # Model adds "Failed to resume subscription: ..." to errors.base
+    assert_match(/failed to resume subscription/i, response.body)
+  end
+
+  test "handles generic record invalid error during cancel with fallback message" do
+    sign_in_as(@user)
+    # When ActiveRecord::RecordInvalid is raised without errors.base messages,
+    # the controller falls back to a generic message
+    Subscription.any_instance.stubs(:cancel!).raises(ActiveRecord::RecordInvalid.new(@active_subscription))
+
+    delete subscription_path(@active_subscription)
+
+    assert_redirected_to subscriptions_path
+    follow_redirect!
+    # Controller shows fallback message when no specific errors.base message
+    assert_match(/unable to update subscription/i, response.body)
+  end
+
   private
 
   def sign_in_as(user)

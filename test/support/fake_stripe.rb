@@ -19,6 +19,7 @@ module FakeStripe
     CheckoutSession.reset!
     TaxRate.reset!
     Subscription.reset!
+    Customer.reset!
   end
 
   # Configure default behavior
@@ -263,6 +264,25 @@ module FakeStripe
       ListObject.new(results.take(limit))
     end
 
+    def self.retrieve(tax_rate_id)
+      rate = @@tax_rates.find { |r| r.id == tax_rate_id }
+
+      if rate.nil?
+        # Return a default UK VAT rate if not found (simulates cached credential lookup)
+        new(
+          id: tax_rate_id,
+          display_name: "VAT",
+          percentage: 20.0,
+          country: "GB",
+          jurisdiction: "United Kingdom",
+          description: "Value Added Tax",
+          inclusive: false
+        )
+      else
+        rate
+      end
+    end
+
     def self.reset!
       @@tax_rates = []
       @@next_id = 1
@@ -287,6 +307,50 @@ module FakeStripe
       def initialize(data)
         @data = data
       end
+    end
+  end
+
+  class Customer
+    attr_reader :id, :email, :name, :metadata
+
+    @@customers = {}
+    @@idempotency_keys = {}
+
+    def initialize(params = {})
+      # Generate ID matching Stripe's format: cus_ + alphanumeric (no underscores)
+      @id = params[:id] || "cus_#{SecureRandom.alphanumeric(24)}"
+      @email = params[:email]
+      @name = params[:name]
+      @metadata = params[:metadata] || {}
+      @@customers[@id] = self
+    end
+
+    # Supports idempotency key as second argument (Stripe SDK pattern)
+    def self.create(params, options = {})
+      idempotency_key = options[:idempotency_key]
+
+      # If idempotency key provided and already used, return cached customer
+      if idempotency_key && @@idempotency_keys[idempotency_key]
+        return @@idempotency_keys[idempotency_key]
+      end
+
+      customer = new(params)
+
+      # Cache by idempotency key if provided
+      if idempotency_key
+        @@idempotency_keys[idempotency_key] = customer
+      end
+
+      customer
+    end
+
+    def self.retrieve(customer_id)
+      @@customers[customer_id] || new(id: customer_id)
+    end
+
+    def self.reset!
+      @@customers = {}
+      @@idempotency_keys = {}
     end
   end
 
@@ -366,6 +430,7 @@ if defined?(Rails) && Rails.env.test?
     Checkout::Session = FakeStripe::CheckoutSession
     TaxRate = FakeStripe::TaxRate
     Subscription = FakeStripe::Subscription
+    Customer = FakeStripe::Customer
 
     # Ensure Stripe error classes exist for testing
     class StripeError < StandardError; end

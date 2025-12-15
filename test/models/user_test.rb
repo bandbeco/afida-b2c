@@ -301,4 +301,48 @@ class UserTest < ActiveSupport::TestCase
     assert_not owner2.valid?
     assert_includes owner2.errors[:role], "organization already has an owner"
   end
+
+  # ============================================
+  # Stripe Customer ID Tests
+  # ============================================
+
+  test "accepts valid stripe_customer_id format" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: "cus_ABC123xyz"))
+    assert user.valid?
+  end
+
+  test "accepts nil stripe_customer_id" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: nil))
+    assert user.valid?
+  end
+
+  test "rejects stripe_customer_id without cus_ prefix" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: "customer_ABC123"))
+    assert_not user.valid?
+    assert_includes user.errors[:stripe_customer_id], "must be a valid Stripe customer ID"
+  end
+
+  test "rejects stripe_customer_id with wrong prefix" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: "sub_ABC123xyz"))
+    assert_not user.valid?
+    assert_includes user.errors[:stripe_customer_id], "must be a valid Stripe customer ID"
+  end
+
+  test "rejects stripe_customer_id with special characters" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: "cus_ABC-123_xyz"))
+    assert_not user.valid?
+    assert_includes user.errors[:stripe_customer_id], "must be a valid Stripe customer ID"
+  end
+
+  test "rejects blank stripe_customer_id" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: ""))
+    # Blank string is treated differently than nil - it's still invalid format
+    # but allow_nil doesn't prevent blank strings from being validated
+    assert_not user.valid?
+  end
+
+  test "accepts stripe_customer_id with only alphanumeric after prefix" do
+    user = User.new(@valid_attributes.merge(stripe_customer_id: "cus_14HOpH5j1GGsBt"))
+    assert user.valid?
+  end
 end
