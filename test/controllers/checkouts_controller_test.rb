@@ -152,6 +152,38 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal cached_tax_rate_id, params_captured[:line_items].first[:tax_rates].first
   end
 
+  test "create falls back to find_or_create when cached tax rate is invalid" do
+    invalid_tax_rate_id = "txr_deleted_invalid"
+
+    # Mock credentials to return invalid tax_rate_id
+    Rails.application.credentials.stubs(:dig).with(:stripe, :tax_rate_id).returns(invalid_tax_rate_id)
+    Rails.application.credentials.stubs(:dig).with(:stripe, :publishable_key).returns("pk_test")
+    Rails.application.credentials.stubs(:dig).with(:stripe, :secret_key).returns("sk_test")
+    Rails.application.credentials.stubs(:dig).with(:stripe, :webhook_signing_secret).returns(nil)
+
+    # Stub TaxRate.retrieve to raise InvalidRequestError (deleted tax rate)
+    Stripe::TaxRate.stubs(:retrieve).with(invalid_tax_rate_id).raises(
+      Stripe::InvalidRequestError.new("No such tax rate: #{invalid_tax_rate_id}", param: "tax_rate")
+    )
+
+    # Stub TaxRate.list to return an existing rate (the fallback should find it)
+    existing_rate = stub(id: "txr_fallback_123", percentage: 20.0, country: "GB", inclusive: false)
+    Stripe::TaxRate.stubs(:list).with(active: true, limit: 100).returns(stub(data: [ existing_rate ]))
+
+    params_captured = nil
+    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
+      params_captured = params
+      FakeStripe::CheckoutSession.new(params)
+    end
+
+    # Should not raise error - should fall back to find_or_create
+    post checkout_path
+
+    assert_response :redirect
+    # Should use the fallback tax rate, not the invalid cached one
+    assert_equal "txr_fallback_123", params_captured[:line_items].first[:tax_rates].first
+  end
+
   # ============================================================================
   # SUCCESS ACTION TESTS (GET /checkouts/success)
   # ============================================================================

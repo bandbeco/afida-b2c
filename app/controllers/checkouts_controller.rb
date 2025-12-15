@@ -331,6 +331,10 @@ class CheckoutsController < ApplicationController
         Rails.logger.warn("[Checkout] No stripe.tax_rate_id in credentials - searching/creating tax rate")
         find_or_create_uk_vat_rate
       end
+    rescue Stripe::InvalidRequestError => e
+      # Cached tax_rate_id was deleted or invalid - fall back to recreation
+      Rails.logger.warn("[Checkout] Cached tax_rate_id invalid: #{e.message} - recreating")
+      find_or_create_uk_vat_rate
     end
   end
 
