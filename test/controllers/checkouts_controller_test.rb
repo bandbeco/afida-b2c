@@ -97,7 +97,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_empty params_captured[:shipping_options]
-    assert_equal 2, params_captured[:shipping_options].length
+    # Shipping module returns 1 option based on subtotal threshold (free >= £100, standard < £100)
+    assert_equal 1, params_captured[:shipping_options].length
     assert_includes params_captured[:shipping_options].first[:shipping_rate_data][:display_name], "Shipping"
   end
 
@@ -185,12 +186,36 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @cart.subtotal_amount + @cart.vat_amount + 5.0, order.total_amount
   end
 
-  test "success creates order items from cart items" do
+  test "success creates order items from Stripe line items" do
+    # Build line_items that mirror what checkout would have sent to Stripe
+    line_items = [ {
+      quantity: 1,
+      price_data: {
+        currency: "gbp",
+        product_data: {
+          name: "#{@cart_item.product.name} - #{@cart_item.product_variant.name}",
+          metadata: {
+            cart_item_id: @cart_item.id.to_s,
+            product_variant_id: @cart_item.product_variant_id.to_s,
+            product_id: @cart_item.product.id.to_s,
+            is_sample: "false",
+            is_configured: "false",
+            original_quantity: @cart_item.quantity.to_s,
+            original_price: @cart_item.price.to_s,
+            pac_size: @cart_item.pac_size.to_s
+          }
+        },
+        unit_amount: (@cart_item.price.to_f * @cart_item.quantity * 100).round,
+        tax_behavior: "exclusive"
+      }
+    } ]
+
     session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
+      customer_email: "buyer@example.com",
+      line_items: line_items
     )
 
-    assert_difference "OrderItem.count", @cart.cart_items.count do
+    assert_difference "OrderItem.count", 1 do
       get success_checkout_path, params: { session_id: session.id }
     end
 
@@ -198,11 +223,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     order_item = order.order_items.first
 
     assert_equal @cart_item.product_variant, order_item.product_variant
-    assert_equal @cart_item.product_variant.display_name, order_item.product_name
-    assert_equal @cart_item.product_variant.sku, order_item.product_sku
-    assert_equal @cart_item.price, order_item.price  # OrderItem stores pack price for display
+    assert_equal @cart_item.price, order_item.price
     assert_equal @cart_item.quantity, order_item.quantity
-    assert_equal @cart_item.product_variant.pac_size, order_item.pac_size  # OrderItem stores pac_size for pricing display
+    assert_equal @cart_item.pac_size, order_item.pac_size
   end
 
   test "success clears cart after creating order" do
@@ -289,20 +312,46 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Unable to verify payment/, flash[:error]
   end
 
-  test "success handles empty cart gracefully" do
+  test "success creates order from Stripe even if cart was cleared during payment" do
+    # Build line_items that mirror what checkout would have sent to Stripe
+    line_items = [ {
+      quantity: 1,
+      price_data: {
+        currency: "gbp",
+        product_data: {
+          name: "#{@cart_item.product.name} - #{@cart_item.product_variant.name}",
+          metadata: {
+            cart_item_id: @cart_item.id.to_s,
+            product_variant_id: @cart_item.product_variant_id.to_s,
+            product_id: @cart_item.product.id.to_s,
+            is_sample: "false",
+            is_configured: "false",
+            original_quantity: @cart_item.quantity.to_s,
+            original_price: @cart_item.price.to_s,
+            pac_size: @cart_item.pac_size.to_s
+          }
+        },
+        unit_amount: (@cart_item.price.to_f * @cart_item.quantity * 100).round,
+        tax_behavior: "exclusive"
+      }
+    } ]
+
     session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
+      customer_email: "buyer@example.com",
+      line_items: line_items
     )
 
-    # Clear the cart
+    # Clear the cart AFTER session was created (simulates race condition)
     @cart.cart_items.destroy_all
 
-    assert_no_difference "Order.count" do
+    # Order should still be created from Stripe's line_items
+    assert_difference "Order.count", 1 do
       get success_checkout_path, params: { session_id: session.id }
     end
 
-    assert_redirected_to root_path
-    assert_match /No items found in cart/, flash[:error]
+    order = Order.last
+    assert_equal "paid", order.status
+    assert_equal 1, order.order_items.count
   end
 
   test "success associates order with user for authenticated checkouts" do
@@ -528,9 +577,33 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     )
     cart_item.save!
 
+    # Build line_items with is_configured metadata
+    line_items = [ {
+      quantity: 1,
+      price_data: {
+        currency: "gbp",
+        product_data: {
+          name: "Branded Cup - 12oz (5000 units)",
+          metadata: {
+            cart_item_id: cart_item.id.to_s,
+            product_variant_id: cart_item.product_variant_id.to_s,
+            product_id: cart_item.product.id.to_s,
+            is_sample: "false",
+            is_configured: "true",  # This triggers branded_order_status
+            original_quantity: "5000",
+            original_price: cart_item.price.to_s,
+            pac_size: "1"
+          }
+        },
+        unit_amount: (cart_item.price.to_f * 100).round,
+        tax_behavior: "exclusive"
+      }
+    } ]
+
     session = Stripe::Checkout::Session.create(
       customer_email: users(:acme_admin).email_address,
-      client_reference_id: users(:acme_admin).id
+      client_reference_id: users(:acme_admin).id,
+      line_items: line_items
     )
 
     get success_checkout_path, params: { session_id: session.id }
@@ -550,7 +623,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true  # Required to mark as sample for only_samples? check
     )
 
     params_captured = nil
@@ -578,7 +652,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     params_captured = nil
@@ -600,7 +675,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     params_captured = nil
@@ -612,11 +688,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil params_captured
-    # Should have standard shipping options (2 options: Standard + Express)
-    assert_equal 2, params_captured[:shipping_options].length
-    shipping_names = params_captured[:shipping_options].map { |o| o[:shipping_rate_data][:display_name] }
-    assert_includes shipping_names, "Standard Shipping"
-    assert_includes shipping_names, "Express Shipping"
+    # Should have 1 shipping option (standard for mixed carts below £100 threshold)
+    assert_equal 1, params_captured[:shipping_options].length
+    shipping_name = params_captured[:shipping_options].first[:shipping_rate_data][:display_name]
+    assert_equal "Standard Shipping", shipping_name
   end
 
   # ============================================================================

@@ -32,13 +32,13 @@ module FakeStripe
 
     @@sessions = {}
     @@next_id = 1
+    @@pending_line_items = nil  # Cart items captured at create time
 
     def initialize(params = {})
       @id = "sess_test_#{SecureRandom.hex(12)}"
       @url = "https://checkout.stripe.com/test/#{@id}"
       @payment_status = params[:payment_status] || "paid"
       @client_reference_id = params[:client_reference_id]
-      @line_items = params[:line_items] || []
 
       # Build customer details from params or use defaults
       email = params[:customer_email] || "test@example.com"
@@ -59,15 +59,29 @@ module FakeStripe
         amount_total: params[:shipping_amount_total] || 500
       )
 
+      # Build line_items from the params (what was passed to Stripe at checkout)
+      # or use pending_line_items if set
+      @line_items = build_line_items(params[:line_items] || @@pending_line_items || [])
+      @@pending_line_items = nil
+
       # Store for later retrieval
       @@sessions[@id] = self
     end
 
     def self.create(params)
+      # Capture line_items at create time (simulates Stripe storing what was charged)
+      @@pending_line_items = params[:line_items]
       new(params)
     end
 
-    def self.retrieve(session_id)
+    def self.retrieve(session_id_or_params)
+      # Support both old-style (just ID) and new-style (hash with id and expand)
+      session_id = if session_id_or_params.is_a?(Hash)
+        session_id_or_params[:id]
+      else
+        session_id_or_params
+      end
+
       session = @@sessions[session_id]
 
       if session.nil?
@@ -85,6 +99,7 @@ module FakeStripe
     def self.reset!
       @@sessions = {}
       @@next_id = 1
+      @@pending_line_items = nil
     end
 
     # Helper to create a session with unpaid status
@@ -99,6 +114,82 @@ module FakeStripe
         customer_name: customer_params[:name],
         client_reference_id: customer_params[:user_id]
       )
+    end
+
+    private
+
+    # Build line_items structure that mirrors Stripe's expanded response
+    def build_line_items(raw_line_items)
+      return LineItemsCollection.new([]) if raw_line_items.nil? || raw_line_items.empty?
+
+      items = raw_line_items.map do |item|
+        price_data = item[:price_data] || {}
+        product_data = price_data[:product_data] || {}
+        unit_amount = price_data[:unit_amount] || 0
+        quantity = item[:quantity] || 1
+
+        LineItem.new(
+          description: product_data[:name] || "Unknown Product",
+          quantity: quantity,
+          amount_subtotal: unit_amount * quantity,
+          amount_tax: ((unit_amount * quantity) * 0.2).to_i,  # 20% VAT
+          amount_total: (unit_amount * quantity * 1.2).to_i,
+          price: Price.new(
+            unit_amount: unit_amount,
+            product: Product.new(
+              metadata: product_data[:metadata] || {}
+            )
+          )
+        )
+      end
+
+      LineItemsCollection.new(items)
+    end
+
+    public
+
+    # Nested class for line items collection (supports .data accessor)
+    class LineItemsCollection
+      attr_reader :data
+
+      def initialize(items)
+        @data = items
+      end
+    end
+
+    # Nested class for line item
+    class LineItem
+      attr_reader :description, :quantity, :amount_subtotal, :amount_tax, :amount_total, :price
+
+      def initialize(description:, quantity:, amount_subtotal:, amount_tax:, amount_total:, price:)
+        @description = description
+        @quantity = quantity
+        @amount_subtotal = amount_subtotal
+        @amount_tax = amount_tax
+        @amount_total = amount_total
+        @price = price
+      end
+    end
+
+    # Nested class for price
+    class Price
+      attr_reader :unit_amount, :product
+
+      def initialize(unit_amount:, product:)
+        @unit_amount = unit_amount
+        @product = product
+      end
+    end
+
+    # Nested class for product (with metadata)
+    # Stripe returns metadata with string keys, so we convert symbol keys
+    class Product
+      attr_reader :metadata
+
+      def initialize(metadata:)
+        # Convert symbol keys to string keys to match real Stripe behavior
+        @metadata = (metadata || {}).transform_keys(&:to_s)
+      end
     end
 
     # Nested class for customer details
