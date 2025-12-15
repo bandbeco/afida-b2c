@@ -1,5 +1,6 @@
 class CartsController < ApplicationController
   allow_unauthenticated_access
+  before_action :resume_session  # Need user context for subscription toggle
   before_action :eager_load_cart, only: :show
 
   def show

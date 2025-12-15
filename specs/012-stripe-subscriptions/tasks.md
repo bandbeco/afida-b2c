@@ -28,10 +28,10 @@ Rails monolith structure per plan.md:
 
 **Purpose**: Database migration and routes configuration
 
-- [ ] T001 Create migration for stripe_invoice_id column in db/migrate/YYYYMMDDHHMMSS_add_stripe_invoice_id_to_orders.rb
-- [ ] T002 Run migration and verify schema in db/schema.rb
-- [ ] T003 Add stripe_invoice_id uniqueness validation to app/models/order.rb
-- [ ] T004 Add subscription_checkouts routes to config/routes.rb
+- [x] T001 Create migration for stripe_invoice_id column in db/migrate/YYYYMMDDHHMMSS_add_stripe_invoice_id_to_orders.rb
+- [x] T002 Run migration and verify schema in db/schema.rb
+- [x] T003 Add stripe_invoice_id uniqueness validation to app/models/order.rb
+- [x] T004 Add subscription_checkouts routes to config/routes.rb (already existed)
 
 ---
 
@@ -41,14 +41,14 @@ Rails monolith structure per plan.md:
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T005 [P] Create test fixtures for subscriptions in test/fixtures/subscriptions.yml
-- [ ] T006 [P] Create SubscriptionCheckoutService test file at test/services/subscription_checkout_service_test.rb
-- [ ] T007 Implement SubscriptionCheckoutService in app/services/subscription_checkout_service.rb
-- [ ] T008 Add ensure_stripe_customer method to SubscriptionCheckoutService (lazy customer creation)
-- [ ] T009 Add build_line_items method with price_data and recurring params
-- [ ] T010 Add build_items_snapshot method for JSONB storage
-- [ ] T011 Add build_shipping_snapshot method for JSONB storage
-- [ ] T012 Add complete_checkout method with subscription and order creation
+- [x] T005 [P] Create test fixtures for subscriptions in test/fixtures/subscriptions.yml
+- [x] T006 [P] Create SubscriptionCheckoutService test file at test/services/subscription_checkout_service_test.rb
+- [x] T007 Implement SubscriptionCheckoutService in app/services/subscription_checkout_service.rb
+- [x] T008 Add ensure_stripe_customer method to SubscriptionCheckoutService (lazy customer creation)
+- [x] T009 Add build_line_items method with price_data and recurring params
+- [x] T010 Add build_items_snapshot method for JSONB storage
+- [x] T011 Add build_shipping_snapshot method for JSONB storage
+- [x] T012 Add complete_checkout method with subscription and order creation
 
 **Checkpoint**: Foundation ready - SubscriptionCheckoutService functional with tests
 
@@ -64,33 +64,33 @@ Rails monolith structure per plan.md:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T013 [P] [US1] Create controller test file at test/controllers/subscription_checkouts_controller_test.rb
-- [ ] T014 [P] [US1] Write test: create requires authentication
-- [ ] T015 [P] [US1] Write test: create requires non-empty cart
-- [ ] T016 [P] [US1] Write test: create rejects samples-only cart
-- [ ] T017 [P] [US1] Write test: create redirects to Stripe on success
-- [ ] T018 [P] [US1] Write test: success creates subscription and order
-- [ ] T019 [P] [US1] Write test: success clears cart
-- [ ] T020 [P] [US1] Write test: cancel redirects to cart with flash
+- [x] T013 [P] [US1] Create controller test file at test/controllers/subscription_checkouts_controller_test.rb
+- [x] T014 [P] [US1] Write test: create requires authentication
+- [x] T015 [P] [US1] Write test: create requires non-empty cart
+- [x] T016 [P] [US1] Write test: create rejects samples-only cart
+- [x] T017 [P] [US1] Write test: create redirects to Stripe on success
+- [x] T018 [P] [US1] Write test: success creates subscription and order
+- [x] T019 [P] [US1] Write test: success clears cart
+- [x] T020 [P] [US1] Write test: cancel redirects to cart with flash
 
 ### Implementation for User Story 1
 
-- [ ] T021 [US1] Create SubscriptionCheckoutsController in app/controllers/subscription_checkouts_controller.rb
-- [ ] T022 [US1] Add require_authentication before_action filter
-- [ ] T023 [US1] Add require_cart_with_items before_action filter
-- [ ] T024 [US1] Add reject_samples_only_cart before_action filter
-- [ ] T025 [US1] Implement create action (validates frequency, calls service, redirects to Stripe)
-- [ ] T026 [US1] Implement success action (retrieves session, completes checkout, redirects to order)
-- [ ] T027 [US1] Implement cancel action (redirects to cart with flash message)
-- [ ] T028 [P] [US1] Create subscription toggle partial at app/views/cart_items/_subscription_toggle.html.erb
-- [ ] T029 [P] [US1] Create Stimulus controller at app/frontend/javascript/controllers/subscription_toggle_controller.js
-- [ ] T030 [US1] Register subscription_toggle_controller in app/frontend/entrypoints/application.js
-- [ ] T031 [US1] Add frequency selector to toggle partial (weekly, every 2 weeks, monthly, every 3 months)
-- [ ] T032 [US1] Add "Subscribe & Checkout" button to toggle partial
-- [ ] T033 [US1] Update app/views/cart_items/_index.html.erb to render subscription toggle for logged-in users
-- [ ] T034 [US1] Add toggle enable/disable behavior via Stimulus (shows/hides frequency selector)
-- [ ] T035 [US1] Create system test at test/system/subscription_checkout_test.rb
-- [ ] T036 [US1] Run all US1 tests and verify passing
+- [x] T021 [US1] Create SubscriptionCheckoutsController in app/controllers/subscription_checkouts_controller.rb
+- [x] T022 [US1] Add require_authentication before_action filter
+- [x] T023 [US1] Add require_cart_with_items before_action filter
+- [x] T024 [US1] Add reject_samples_only_cart before_action filter
+- [x] T025 [US1] Implement create action (validates frequency, calls service, redirects to Stripe)
+- [x] T026 [US1] Implement success action (retrieves session, completes checkout, redirects to order)
+- [x] T027 [US1] Implement cancel action (redirects to cart with flash message)
+- [x] T028 [P] [US1] Create subscription toggle partial at app/views/cart_items/_subscription_toggle.html.erb
+- [x] T029 [P] [US1] Create Stimulus controller at app/frontend/javascript/controllers/subscription_toggle_controller.js
+- [x] T030 [US1] Register subscription_toggle_controller in app/frontend/entrypoints/application.js
+- [x] T031 [US1] Add frequency selector to toggle partial (weekly, every 2 weeks, monthly, every 3 months)
+- [x] T032 [US1] Add "Subscribe & Checkout" button to toggle partial
+- [x] T033 [US1] Update app/views/cart_items/_index.html.erb to render subscription toggle for logged-in users
+- [x] T034 [US1] Add toggle enable/disable behavior via Stimulus (shows/hides frequency selector)
+- [x] T035 [US1] Create system test at test/system/subscription_checkout_test.rb
+- [x] T036 [US1] Run all US1 tests and verify passing
 
 **Checkpoint**: User Story 1 complete - users can set up recurring orders from cart
 
@@ -106,25 +106,25 @@ Rails monolith structure per plan.md:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T037 [P] [US2] Add webhook tests to test/controllers/webhooks/stripe_controller_test.rb
-- [ ] T038 [P] [US2] Write test: invoice.paid creates renewal order
-- [ ] T039 [P] [US2] Write test: invoice.paid is idempotent (no duplicate orders)
-- [ ] T040 [P] [US2] Write test: invoice.paid skips first invoice (subscription_create)
-- [ ] T041 [P] [US2] Write test: invoice.paid sends email notification
-- [ ] T042 [P] [US2] Create mailer test at test/mailers/subscription_mailer_test.rb
+- [x] T037 [P] [US2] Add webhook tests to test/controllers/webhooks/stripe_controller_test.rb
+- [x] T038 [P] [US2] Write test: invoice.paid creates renewal order
+- [x] T039 [P] [US2] Write test: invoice.paid is idempotent (no duplicate orders)
+- [x] T040 [P] [US2] Write test: invoice.paid skips first invoice (subscription_create)
+- [x] T041 [P] [US2] Write test: invoice.paid sends email notification
+- [x] T042 [P] [US2] Create mailer test at test/mailers/subscription_mailer_test.rb
 
 ### Implementation for User Story 2
 
-- [ ] T043 [US2] Add invoice.paid handler to app/controllers/webhooks/stripe_controller.rb
-- [ ] T044 [US2] Implement handle_invoice_paid method with billing_reason check
-- [ ] T045 [US2] Add idempotency check using stripe_invoice_id
-- [ ] T046 [US2] Implement create_renewal_order method from items_snapshot
-- [ ] T047 [US2] Create SubscriptionMailer at app/mailers/subscription_mailer.rb
-- [ ] T048 [US2] Implement order_placed mailer method
-- [ ] T049 [US2] Create email template at app/views/subscription_mailer/order_placed.html.erb
-- [ ] T050 [US2] Create text email template at app/views/subscription_mailer/order_placed.text.erb
-- [ ] T051 [US2] Add email delivery to handle_invoice_paid (deliver_later)
-- [ ] T052 [US2] Run all US2 tests and verify passing
+- [x] T043 [US2] Add invoice.paid handler to app/controllers/webhooks/stripe_controller.rb
+- [x] T044 [US2] Implement handle_invoice_paid method with billing_reason check
+- [x] T045 [US2] Add idempotency check using stripe_invoice_id
+- [x] T046 [US2] Implement create_renewal_order method from items_snapshot
+- [x] T047 [US2] Create SubscriptionMailer at app/mailers/subscription_mailer.rb
+- [x] T048 [US2] Implement order_placed mailer method
+- [x] T049 [US2] Create email template at app/views/subscription_mailer/order_placed.html.erb
+- [x] T050 [US2] Create text email template at app/views/subscription_mailer/order_placed.text.erb
+- [x] T051 [US2] Add email delivery to handle_invoice_paid (deliver_later)
+- [x] T052 [US2] Run all US2 tests and verify passing
 
 **Checkpoint**: User Story 2 complete - renewal orders created automatically with email notification
 
@@ -140,21 +140,21 @@ Rails monolith structure per plan.md:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T053 [P] [US3] Write test: customer.subscription.updated syncs status
-- [ ] T054 [P] [US3] Write test: customer.subscription.updated syncs billing period dates
-- [ ] T055 [P] [US3] Write test: customer.subscription.deleted marks as cancelled
-- [ ] T056 [P] [US3] Write test: invoice.payment_failed logs warning
-- [ ] T057 [P] [US3] Write test: status mapping from Stripe to local enum (paused detection)
+- [x] T053 [P] [US3] Write test: customer.subscription.updated syncs status
+- [x] T054 [P] [US3] Write test: customer.subscription.updated syncs billing period dates
+- [x] T055 [P] [US3] Write test: customer.subscription.deleted marks as cancelled
+- [x] T056 [P] [US3] Write test: invoice.payment_failed logs warning
+- [x] T057 [P] [US3] Write test: status mapping from Stripe to local enum (paused detection)
 
 ### Implementation for User Story 3
 
-- [ ] T058 [US3] Add customer.subscription.updated handler to app/controllers/webhooks/stripe_controller.rb
-- [ ] T059 [US3] Implement handle_subscription_updated method
-- [ ] T060 [US3] Implement map_stripe_status helper (handles pause_collection for paused state)
-- [ ] T061 [US3] Add customer.subscription.deleted handler
-- [ ] T062 [US3] Implement handle_subscription_deleted method (sets status and cancelled_at)
-- [ ] T063 [US3] Add invoice.payment_failed handler with logging
-- [ ] T064 [US3] Run all US3 tests and verify passing
+- [x] T058 [US3] Add customer.subscription.updated handler to app/controllers/webhooks/stripe_controller.rb
+- [x] T059 [US3] Implement handle_subscription_updated method
+- [x] T060 [US3] Implement map_stripe_status helper (handles pause_collection for paused state)
+- [x] T061 [US3] Add customer.subscription.deleted handler
+- [x] T062 [US3] Implement handle_subscription_deleted method (sets status and cancelled_at)
+- [x] T063 [US3] Add invoice.payment_failed handler with logging
+- [x] T064 [US3] Run all US3 tests and verify passing
 
 **Checkpoint**: User Story 3 complete - subscription status syncs from external changes
 

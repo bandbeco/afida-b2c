@@ -9,7 +9,9 @@ class Order < ApplicationRecord
   normalizes :email, with: ->(email) { email.strip.downcase }
 
   validates :email, presence: true, format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :stripe_session_id, presence: true, uniqueness: true
+  validates :stripe_session_id, uniqueness: true, allow_nil: true
+  validates :stripe_invoice_id, uniqueness: true, allow_nil: true
+  validate :stripe_identifier_presence
   validates :order_number, presence: true, uniqueness: true
   validates :status, presence: true
   validates :subtotal_amount, :vat_amount, :shipping_amount, :total_amount,
@@ -112,7 +114,19 @@ class Order < ApplicationRecord
     ga4_purchase_tracked_at.present?
   end
 
+  # Returns true if this is a subscription renewal order (created via webhook)
+  def renewal_order?
+    subscription_id.present? && stripe_invoice_id.present?
+  end
+
   private
+
+  # Orders must have either stripe_session_id (checkout) or stripe_invoice_id (renewal)
+  def stripe_identifier_presence
+    unless stripe_session_id.present? || stripe_invoice_id.present?
+      errors.add(:base, "must have either stripe_session_id or stripe_invoice_id")
+    end
+  end
 
   def generate_order_number
     return if order_number.present?

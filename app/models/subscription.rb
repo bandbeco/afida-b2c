@@ -11,7 +11,19 @@ class Subscription < ApplicationRecord
   validates :shipping_snapshot, presence: true
 
   enum :frequency, [ :every_week, :every_two_weeks, :every_month, :every_3_months ], validate: true
-  enum :status, [ :active, :paused, :cancelled ], validate: true, default: :active
+  # Status enum includes all possible Stripe subscription states plus our custom "paused"
+  # Stripe statuses: active, past_due, incomplete, incomplete_expired, trialing, canceled, unpaid
+  # Our additions: paused (mapped from Stripe's pause_collection)
+  enum :status, [
+    :active,
+    :paused,
+    :cancelled,
+    :past_due,
+    :incomplete,
+    :incomplete_expired,
+    :trialing,
+    :unpaid
+  ], validate: true, default: :active
 
   scope :active_subscriptions, -> { where(status: :active) }
 

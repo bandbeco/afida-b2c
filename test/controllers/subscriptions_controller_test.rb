@@ -60,7 +60,10 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows empty state when no subscriptions" do
-    sign_in_as(users(:consumer))
+    # Use a user who has no subscriptions in fixtures
+    # (one, two, consumer all have subscriptions)
+    user_without_subs = users(:acme_owner)
+    sign_in_as(user_without_subs)
     get subscriptions_path
     assert_response :success
     assert_match(/no subscriptions/i, response.body)

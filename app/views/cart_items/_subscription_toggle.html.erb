@@ -1,0 +1,109 @@
+<%#
+  Subscription Toggle Partial
+  Allows logged-in users to convert their cart to a recurring subscription.
+
+  Contains a single checkout button that dynamically switches between:
+  - "Proceed to Checkout" (POST /checkout) when toggle is OFF
+  - "Subscribe & Checkout" (POST /subscription_checkouts) when toggle is ON
+
+  Guest users see disabled toggle with sign-in prompt.
+  Samples-only carts show disabled toggle with explanatory message.
+%>
+
+<div data-controller="subscription-toggle"
+     data-subscription-toggle-enabled-value="false"
+     data-subscription-toggle-checkout-url-value="<%= checkout_path %>"
+     data-subscription-toggle-subscription-url-value="<%= subscription_checkouts_path %>">
+
+  <% if Current.user && !Current.cart.only_samples? %>
+    <%# Logged-in user with regular items: show subscription option %>
+    <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="font-medium text-gray-800">Make this a recurring order</span>
+        </div>
+
+        <input type="checkbox"
+               class="toggle toggle-primary"
+               data-subscription-toggle-target="toggle"
+               data-action="change->subscription-toggle#toggleSubscription" />
+      </div>
+
+      <%# Frequency selector (hidden by default) %>
+      <div class="hidden mt-4 pt-4 border-t border-emerald-200" data-subscription-toggle-target="options">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Delivery frequency</label>
+        <select class="select select-bordered w-full"
+                data-subscription-toggle-target="frequencySelect"
+                data-action="change->subscription-toggle#frequencyChanged">
+          <option value="every_week">Every week</option>
+          <option value="every_two_weeks">Every 2 weeks</option>
+          <option value="every_month" selected>Every month</option>
+          <option value="every_3_months">Every 3 months</option>
+        </select>
+        <p class="text-xs text-gray-500 mt-2">
+          You can pause or cancel anytime from your account.
+        </p>
+      </div>
+
+      <%# Helper text when collapsed %>
+      <p class="text-sm text-gray-600 mt-2" data-subscription-toggle-target="helperText">
+        Save time by automatically reordering your supplies on a schedule.
+      </p>
+    </div>
+  <% elsif Current.user && Current.cart.only_samples? %>
+    <%# Samples-only cart: disabled toggle %>
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="font-medium text-gray-500">Make this a recurring order</span>
+        </div>
+        <input type="checkbox" class="toggle" disabled />
+      </div>
+      <p class="text-sm text-gray-500 mt-2">
+        Subscriptions are not available for sample orders.
+      </p>
+    </div>
+  <% else %>
+    <%# Guest user: disabled toggle with sign-in prompt %>
+    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span class="font-medium text-gray-500">Make this a recurring order</span>
+        </div>
+        <input type="checkbox" class="toggle" disabled />
+      </div>
+      <p class="text-sm text-gray-600 mt-2">
+        <%= link_to "Sign in", new_session_path(return_to: cart_path), class: "link text-primary font-medium" %>
+        to set up recurring orders.
+      </p>
+    </div>
+  <% end %>
+
+  <%# Single checkout form with dynamic action %>
+  <form action="<%= checkout_path %>"
+        method="post"
+        data-subscription-toggle-target="checkoutForm"
+        data-turbo="false"
+        data-controller="analytics"
+        data-analytics-cart-value-value="<%= Current.cart.total_amount.to_f %>"
+        data-analytics-cart-items-value="<%= ga4_cart_items_json(Current.cart) %>"
+        data-action="submit->analytics#beginCheckout">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <input type="hidden" name="frequency" value="every_month" data-subscription-toggle-target="frequencyInput" />
+
+    <button type="submit"
+            class="btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20"
+            data-subscription-toggle-target="checkoutButton">
+      <span data-subscription-toggle-target="buttonText">Proceed to Checkout</span>
+    </button>
+  </form>
+</div>

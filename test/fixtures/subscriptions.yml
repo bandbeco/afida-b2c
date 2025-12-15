@@ -1,4 +1,5 @@
 # Subscriptions fixtures for testing
+# Note: items_snapshot uses minor currency units (pence) per data-model.md
 
 active_monthly:
   user: one
@@ -12,53 +13,123 @@ active_monthly:
   items_snapshot: >
     {
       "items": [
-        {"product_variant_id": 1, "product_name": "Single Wall Cup 8oz", "product_sku": "SWC-8OZ", "quantity": 2, "price": "16.00"}
+        {
+          "product_variant_id": 1,
+          "product_id": 1,
+          "sku": "SWC-8OZ",
+          "name": "Single Wall Cup 8oz",
+          "quantity": 2,
+          "unit_price_minor": 1600,
+          "pac_size": 500,
+          "total_minor": 3200
+        }
       ],
-      "subtotal": "32.00",
-      "vat": "6.40",
-      "shipping": "0.00",
-      "total": "38.40"
+      "subtotal_minor": 3200,
+      "vat_minor": 640,
+      "total_minor": 3840,
+      "currency": "gbp"
     }
   shipping_snapshot: >
     {
-      "name": "John Smith",
-      "line1": "123 Business St",
-      "city": "London",
-      "postal_code": "EC1A 1BB",
-      "country": "GB"
+      "method": "standard",
+      "cost_minor": 0,
+      "name": "Standard Delivery",
+      "address": {
+        "line1": "123 Business St",
+        "city": "London",
+        "postal_code": "EC1A 1BB",
+        "country": "GB"
+      },
+      "recipient_name": "John Smith"
+    }
+
+active_weekly:
+  user: consumer
+  stripe_subscription_id: sub_test_weekly_456
+  stripe_customer_id: cus_test_consumer
+  stripe_price_id: price_test_weekly
+  frequency: every_week
+  status: active
+  current_period_start: <%= 3.days.ago.to_fs(:db) %>
+  current_period_end: <%= 4.days.from_now.to_fs(:db) %>
+  items_snapshot: >
+    {
+      "items": [
+        {
+          "product_variant_id": 2,
+          "product_id": 2,
+          "sku": "NAP-100",
+          "name": "Paper Napkins",
+          "quantity": 5,
+          "unit_price_minor": 800,
+          "pac_size": 100,
+          "total_minor": 4000
+        }
+      ],
+      "subtotal_minor": 4000,
+      "vat_minor": 800,
+      "total_minor": 4800,
+      "currency": "gbp"
+    }
+  shipping_snapshot: >
+    {
+      "method": "standard",
+      "cost_minor": 795,
+      "name": "Standard Delivery",
+      "address": {
+        "line1": "789 Consumer Ave",
+        "city": "Birmingham",
+        "postal_code": "B1 1AA",
+        "country": "GB"
+      },
+      "recipient_name": "Consumer User"
     }
 
 active_quarterly:
   user: two
-  stripe_subscription_id: sub_test_quarterly_456
+  stripe_subscription_id: sub_test_quarterly_789
   stripe_customer_id: cus_test_456
   stripe_price_id: price_test_quarterly
   frequency: every_3_months
   status: active
   current_period_start: <%= 14.days.ago.to_fs(:db) %>
-  current_period_end: <%= 14.days.from_now.to_fs(:db) %>
+  current_period_end: <%= 76.days.from_now.to_fs(:db) %>
   items_snapshot: >
     {
       "items": [
-        {"product_variant_id": 2, "product_name": "Paper Napkins", "product_sku": "NAP-100", "quantity": 5, "price": "8.00"}
+        {
+          "product_variant_id": 3,
+          "product_id": 3,
+          "sku": "PB-12",
+          "name": "Pizza Box 12\"",
+          "quantity": 10,
+          "unit_price_minor": 250,
+          "pac_size": 50,
+          "total_minor": 2500
+        }
       ],
-      "subtotal": "40.00",
-      "vat": "8.00",
-      "shipping": "5.00",
-      "total": "53.00"
+      "subtotal_minor": 2500,
+      "vat_minor": 500,
+      "total_minor": 3000,
+      "currency": "gbp"
     }
   shipping_snapshot: >
     {
-      "name": "Jane Doe",
-      "line1": "456 Cafe Lane",
-      "city": "Manchester",
-      "postal_code": "M1 2AB",
-      "country": "GB"
+      "method": "express",
+      "cost_minor": 995,
+      "name": "Express Delivery",
+      "address": {
+        "line1": "456 Cafe Lane",
+        "city": "Manchester",
+        "postal_code": "M1 2AB",
+        "country": "GB"
+      },
+      "recipient_name": "Jane Doe"
     }
 
 paused_subscription:
   user: one
-  stripe_subscription_id: sub_test_paused_789
+  stripe_subscription_id: sub_test_paused_000
   stripe_customer_id: cus_test_123
   stripe_price_id: price_test_monthly
   frequency: every_month
@@ -68,25 +139,39 @@ paused_subscription:
   items_snapshot: >
     {
       "items": [
-        {"product_variant_id": 3, "product_name": "Pizza Box 12\"", "product_sku": "PB-12", "quantity": 10, "price": "2.50"}
+        {
+          "product_variant_id": 1,
+          "product_id": 1,
+          "sku": "SWC-8OZ",
+          "name": "Single Wall Cup 8oz",
+          "quantity": 1,
+          "unit_price_minor": 1600,
+          "pac_size": 500,
+          "total_minor": 1600
+        }
       ],
-      "subtotal": "25.00",
-      "vat": "5.00",
-      "shipping": "0.00",
-      "total": "30.00"
+      "subtotal_minor": 1600,
+      "vat_minor": 320,
+      "total_minor": 1920,
+      "currency": "gbp"
     }
   shipping_snapshot: >
     {
-      "name": "John Smith",
-      "line1": "123 Business St",
-      "city": "London",
-      "postal_code": "EC1A 1BB",
-      "country": "GB"
+      "method": "standard",
+      "cost_minor": 0,
+      "name": "Standard Delivery",
+      "address": {
+        "line1": "123 Business St",
+        "city": "London",
+        "postal_code": "EC1A 1BB",
+        "country": "GB"
+      },
+      "recipient_name": "John Smith"
     }
 
 cancelled_subscription:
   user: two
-  stripe_subscription_id: sub_test_cancelled_000
+  stripe_subscription_id: sub_test_cancelled_111
   stripe_customer_id: cus_test_456
   stripe_price_id: price_test_monthly
   frequency: every_month
@@ -97,18 +182,32 @@ cancelled_subscription:
   items_snapshot: >
     {
       "items": [
-        {"product_variant_id": 1, "product_name": "Single Wall Cup 8oz", "product_sku": "SWC-8OZ", "quantity": 1, "price": "16.00"}
+        {
+          "product_variant_id": 1,
+          "product_id": 1,
+          "sku": "SWC-8OZ",
+          "name": "Single Wall Cup 8oz",
+          "quantity": 1,
+          "unit_price_minor": 1600,
+          "pac_size": 500,
+          "total_minor": 1600
+        }
       ],
-      "subtotal": "16.00",
-      "vat": "3.20",
-      "shipping": "5.00",
-      "total": "24.20"
+      "subtotal_minor": 1600,
+      "vat_minor": 320,
+      "total_minor": 1920,
+      "currency": "gbp"
     }
   shipping_snapshot: >
     {
-      "name": "Jane Doe",
-      "line1": "456 Cafe Lane",
-      "city": "Manchester",
-      "postal_code": "M1 2AB",
-      "country": "GB"
+      "method": "standard",
+      "cost_minor": 795,
+      "name": "Standard Delivery",
+      "address": {
+        "line1": "456 Cafe Lane",
+        "city": "Manchester",
+        "postal_code": "M1 2AB",
+        "country": "GB"
+      },
+      "recipient_name": "Jane Doe"
     }

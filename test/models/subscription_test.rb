@@ -110,7 +110,8 @@ class SubscriptionTest < ActiveSupport::TestCase
   end
 
   test "status enum includes all expected values" do
-    expected_statuses = %w[active paused cancelled]
+    # Includes core states plus additional Stripe subscription states
+    expected_statuses = %w[active cancelled incomplete incomplete_expired past_due paused trialing unpaid]
     assert_equal expected_statuses.sort, Subscription.statuses.keys.sort
   end
 
