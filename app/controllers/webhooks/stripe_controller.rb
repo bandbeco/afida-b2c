@@ -28,6 +28,7 @@ module Webhooks
   class StripeController < ApplicationController
     skip_forgery_protection
     allow_unauthenticated_access
+    before_action :verify_stripe_ip, only: :create
 
     # Stripe uses minor currency units (pence for GBP)
     MINOR_CURRENCY_MULTIPLIER = 100
@@ -303,6 +304,26 @@ module Webhooks
             customer_id: invoice["customer"]
           }
         )
+      end
+    end
+
+    # Verify request comes from Stripe's webhook IP addresses
+    #
+    # Defense-in-depth: IP allowlisting supplements signature verification.
+    # Skipped in development/test where requests come from localhost.
+    #
+    # If Stripe adds new IPs, update STRIPE_WEBHOOK_IPS in config/initializers/stripe.rb
+    # Subscribe to updates: https://groups.google.com/a/lists.stripe.com/g/api-announce
+    #
+    def verify_stripe_ip
+      return if Rails.env.local? # Skip in development/test
+
+      allowed_ips = Rails.configuration.stripe[:webhook_ips] || []
+      client_ip = request.remote_ip
+
+      unless allowed_ips.include?(client_ip)
+        Rails.event.notify("webhook.stripe.ip_rejected", { ip: client_ip })
+        head :forbidden
       end
     end
 

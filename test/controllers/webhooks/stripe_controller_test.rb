@@ -269,6 +269,53 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # T043b: IP allowlisting security
+  # ==========================================================================
+
+  test "rejects webhook from non-Stripe IP in production" do
+    # Simulate production environment
+    Rails.env.stubs(:local?).returns(false)
+
+    event = build_invoice_paid_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_ip_test_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Request from unauthorized IP (default test IP is 127.0.0.1)
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :forbidden
+  end
+
+  test "accepts webhook from allowlisted Stripe IP in production" do
+    # Simulate production environment
+    Rails.env.stubs(:local?).returns(false)
+
+    event = build_invoice_paid_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_allowed_ip_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Simulate request from allowed Stripe IP
+    allowed_ip = STRIPE_WEBHOOK_IPS.first
+    ActionDispatch::Request.any_instance.stubs(:remote_ip).returns(allowed_ip)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_path,
+           params: event.to_json,
+           headers: webhook_headers(event.to_json)
+    end
+
+    assert_response :success
+  end
+
+  # ==========================================================================
   # T057: status mapping from Stripe to local enum
   # ==========================================================================
 
