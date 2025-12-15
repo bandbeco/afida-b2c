@@ -102,8 +102,8 @@ class SubscriptionCheckoutService
       return Result.new(success?: true, subscription: existing, order: order)
     end
 
-    # Build snapshots
-    items_snapshot = build_items_snapshot
+    # Build snapshots from Stripe session (not cart - cart may have changed)
+    items_snapshot = build_items_snapshot_from_stripe(stripe_session)
     shipping_snapshot = build_shipping_snapshot(stripe_session)
 
     ActiveRecord::Base.transaction do
@@ -190,6 +190,58 @@ class SubscriptionCheckoutService
         "unit_price_minor" => unit_price_minor,
         "pac_size" => variant.pac_size,
         "total_minor" => total_minor
+      }
+    end
+
+    subtotal_minor = items.sum { |i| i["total_minor"] }
+    vat_minor = (subtotal_minor * VAT_RATE).to_i
+
+    {
+      "items" => items,
+      "subtotal_minor" => subtotal_minor,
+      "vat_minor" => vat_minor,
+      "total_minor" => subtotal_minor + vat_minor,
+      "currency" => "gbp"
+    }
+  end
+
+  # Builds items snapshot from Stripe session line_items
+  #
+  # Uses Stripe's line_items (what was actually charged) instead of current cart
+  # to prevent race condition where cart is modified during checkout.
+  #
+  # The line_items contain the exact quantities and prices that Stripe charged,
+  # ensuring the subscription snapshot matches what the customer paid for.
+  #
+  # @param stripe_session [Stripe::Checkout::Session]
+  # @return [Hash]
+  def build_items_snapshot_from_stripe(stripe_session)
+    line_items = stripe_session.line_items.data
+
+    items = line_items.map do |line_item|
+      price = line_item.price
+
+      # For ad-hoc prices, we need to expand 'product' to get metadata
+      # Retrieve the product to access our stored metadata
+      stripe_product = Stripe::Product.retrieve(price.product)
+      metadata = stripe_product.metadata
+
+      product_variant_id = metadata["product_variant_id"]&.to_i
+      product_id = metadata["product_id"]&.to_i
+      sku = metadata["sku"]
+
+      # Look up variant for pac_size (or default to 1 if variant was deleted)
+      variant = ProductVariant.find_by(id: product_variant_id)
+
+      {
+        "product_variant_id" => product_variant_id,
+        "product_id" => product_id,
+        "sku" => sku,
+        "name" => line_item.description,
+        "quantity" => line_item.quantity,
+        "unit_price_minor" => price.unit_amount,
+        "pac_size" => variant&.pac_size || 1,
+        "total_minor" => line_item.amount_total
       }
     end
 
@@ -306,11 +358,11 @@ class SubscriptionCheckoutService
     "#{variant.product.name} - #{variant.name}"
   end
 
-  # Helper: Retrieve Stripe session with subscription expanded
+  # Helper: Retrieve Stripe session with subscription and line_items expanded
   def retrieve_stripe_session(session_id)
     Stripe::Checkout::Session.retrieve(
       id: session_id,
-      expand: [ "subscription" ]
+      expand: [ "subscription", "line_items" ]
     )
   end
 

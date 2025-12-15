@@ -23,6 +23,75 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
     )
   end
 
+  # Helper to build a mock Stripe checkout session with line_items
+  def build_mock_stripe_session(options = {})
+    variant = options[:variant] || @product_variant
+    quantity = options[:quantity] || 2
+    unit_amount = (variant.price * 100).to_i
+
+    stripe_subscription = OpenStruct.new(
+      id: options[:subscription_id] || "sub_test123",
+      customer: options[:customer_id] || "cus_test123",
+      items: OpenStruct.new(
+        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
+      ),
+      current_period_start: Time.current.to_i,
+      current_period_end: 1.month.from_now.to_i
+    )
+
+    # Build line_items that mirror what Stripe returns
+    line_items = OpenStruct.new(
+      data: [
+        OpenStruct.new(
+          description: "#{variant.product.name} - #{variant.name}",
+          quantity: quantity,
+          amount_total: unit_amount * quantity,
+          price: OpenStruct.new(
+            unit_amount: unit_amount,
+            product: "prod_mock123"
+          )
+        )
+      ]
+    )
+
+    OpenStruct.new(
+      id: options[:session_id] || "cs_test_session123",
+      subscription: options[:subscription] || stripe_subscription,
+      customer: options[:customer_id] || "cus_test123",
+      line_items: line_items,
+      metadata: OpenStruct.new(
+        user_id: @user.id.to_s,
+        frequency: options[:frequency] || "every_month",
+        cart_id: @cart.id.to_s
+      ),
+      customer_details: OpenStruct.new(
+        email: @user.email_address,
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Test St",
+          line2: nil,
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      ),
+      shipping_cost: OpenStruct.new(amount_total: 0)
+    )
+  end
+
+  # Helper to mock Stripe::Product.retrieve for line_items metadata
+  def stub_stripe_product_retrieve(variant)
+    mock_product = OpenStruct.new(
+      id: "prod_mock123",
+      metadata: {
+        "product_variant_id" => variant.id.to_s,
+        "product_id" => variant.product_id.to_s,
+        "sku" => variant.sku
+      }
+    )
+    Stripe::Product.stubs(:retrieve).with("prod_mock123").returns(mock_product)
+  end
+
   # ==========================================================================
   # T008: ensure_stripe_customer tests
   # ==========================================================================
@@ -280,42 +349,11 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
   # ==========================================================================
 
   test "complete_checkout creates subscription and order from Stripe session" do
-    stripe_subscription = OpenStruct.new(
-      id: "sub_test123",
-      customer: "cus_test123",
-      items: OpenStruct.new(
-        data: [
-          OpenStruct.new(price: OpenStruct.new(id: "price_test123"))
-        ]
-      ),
-      current_period_start: Time.current.to_i,
-      current_period_end: 1.month.from_now.to_i
-    )
-
-    stripe_session = OpenStruct.new(
-      id: "cs_test_session123",
-      subscription: stripe_subscription,
-      customer: "cus_test123",
-      metadata: OpenStruct.new(
-        user_id: @user.id.to_s,
-        frequency: "every_month",
-        cart_id: @cart.id.to_s
-      ),
-      customer_details: OpenStruct.new(
-        email: @user.email_address,
-        name: "John Smith",
-        address: OpenStruct.new(
-          line1: "123 Test St",
-          city: "London",
-          postal_code: "EC1A 1BB",
-          country: "GB"
-        )
-      ),
-      shipping_cost: OpenStruct.new(amount_total: 0)
-    )
+    stripe_session = build_mock_stripe_session
+    stub_stripe_product_retrieve(@product_variant)
 
     Stripe::Checkout::Session.expects(:retrieve).with(
-      has_entries(expand: [ "subscription" ])
+      has_entries(expand: [ "subscription", "line_items" ])
     ).returns(stripe_session)
 
     assert_difference [ "Subscription.count", "Order.count" ], 1 do
@@ -339,37 +377,8 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
   end
 
   test "complete_checkout clears the cart" do
-    stripe_subscription = OpenStruct.new(
-      id: "sub_test123",
-      customer: "cus_test123",
-      items: OpenStruct.new(
-        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
-      ),
-      current_period_start: Time.current.to_i,
-      current_period_end: 1.month.from_now.to_i
-    )
-
-    stripe_session = OpenStruct.new(
-      id: "cs_test_session123",
-      subscription: stripe_subscription,
-      customer: "cus_test123",
-      metadata: OpenStruct.new(
-        user_id: @user.id.to_s,
-        frequency: "every_month",
-        cart_id: @cart.id.to_s
-      ),
-      customer_details: OpenStruct.new(
-        email: @user.email_address,
-        name: "John Smith",
-        address: OpenStruct.new(
-          line1: "123 Test St",
-          city: "London",
-          postal_code: "EC1A 1BB",
-          country: "GB"
-        )
-      ),
-      shipping_cost: OpenStruct.new(amount_total: 0)
-    )
+    stripe_session = build_mock_stripe_session
+    stub_stripe_product_retrieve(@product_variant)
 
     Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
 
@@ -401,7 +410,7 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       shipping_snapshot: { "address" => {} }
     )
 
-    # Simulate the Stripe session returning the same subscription ID
+    # Build session with the existing subscription ID - returns early so no line_items needed
     stripe_subscription = OpenStruct.new(
       id: "sub_already_exists",
       customer: "cus_test123",
@@ -412,26 +421,9 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       current_period_end: 1.month.from_now.to_i
     )
 
-    stripe_session = OpenStruct.new(
-      id: "cs_duplicate_attempt",
-      subscription: stripe_subscription,
-      customer: "cus_test123",
-      metadata: OpenStruct.new(
-        user_id: @user.id.to_s,
-        frequency: "every_month",
-        cart_id: @cart.id.to_s
-      ),
-      customer_details: OpenStruct.new(
-        email: @user.email_address,
-        name: "John Smith",
-        address: OpenStruct.new(
-          line1: "123 Test St",
-          city: "London",
-          postal_code: "EC1A 1BB",
-          country: "GB"
-        )
-      ),
-      shipping_cost: OpenStruct.new(amount_total: 0)
+    stripe_session = build_mock_stripe_session(
+      session_id: "cs_duplicate_attempt",
+      subscription: stripe_subscription
     )
 
     Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
@@ -490,22 +482,8 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       current_period_end: 1.month.from_now.to_i
     )
 
-    stripe_session = OpenStruct.new(
-      id: "cs_test_session123",
-      subscription: stripe_subscription,
-      customer: "cus_test123",
-      customer_details: OpenStruct.new(
-        email: @user.email_address,
-        name: "John Smith",
-        address: OpenStruct.new(
-          line1: "123 Test St",
-          city: "London",
-          postal_code: "EC1A 1BB",
-          country: "GB"
-        )
-      ),
-      shipping_cost: OpenStruct.new(amount_total: 0)
-    )
+    stripe_session = build_mock_stripe_session(subscription: stripe_subscription)
+    stub_stripe_product_retrieve(@product_variant)
 
     Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
 
@@ -545,37 +523,19 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
     assert_includes result.error_message, "Unable to create subscription"
   end
 
-  test "complete_checkout handles cart items changed between session creation and completion" do
-    stripe_subscription = OpenStruct.new(
-      id: "sub_test_cart_changed",
-      customer: "cus_test123",
-      items: OpenStruct.new(
-        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
-      ),
-      current_period_start: Time.current.to_i,
-      current_period_end: 1.month.from_now.to_i
-    )
+  test "complete_checkout uses Stripe line_items not cart items (prevents race condition)" do
+    # This test verifies the fix for the cart state consistency race condition:
+    # items_snapshot is built from Stripe's line_items (what was actually charged)
+    # not from the current cart state (which may have changed)
 
-    stripe_session = OpenStruct.new(
-      id: "cs_test_session123",
-      subscription: stripe_subscription,
-      customer: "cus_test123",
-      customer_details: OpenStruct.new(
-        email: @user.email_address,
-        name: "John Smith",
-        address: OpenStruct.new(
-          line1: "123 Test St",
-          city: "London",
-          postal_code: "EC1A 1BB",
-          country: "GB"
-        )
-      ),
-      shipping_cost: OpenStruct.new(amount_total: 0)
-    )
+    # Build a session with ONLY the original cart item (quantity: 2)
+    stripe_session = build_mock_stripe_session
+    stub_stripe_product_retrieve(@product_variant)
 
     Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
 
-    # Cart was modified after checkout started (user added more items in another tab)
+    # Simulate race condition: cart was modified AFTER checkout started
+    # User added more items in another tab
     another_variant = product_variants(:single_wall_12oz_white)
     @cart.cart_items.create!(
       product_variant: another_variant,
@@ -583,58 +543,45 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       price: another_variant.price
     )
 
-    # The service should still complete - it uses the snapshot from when session was created
-    # The items_snapshot is built from current cart, but this is acceptable because:
-    # 1. Stripe has already charged for the original items
-    # 2. The cart will be cleared after completion
-    # This is a known limitation documented in the service
-    result = @service.complete_checkout("cs_test_session123")
+    # Cart now has 2 items, but Stripe session only has 1 item
+    assert_equal 2, @cart.cart_items.count
 
+    result = @service.complete_checkout("cs_test_session123")
     assert result.success?
-    # Verify cart is still cleared despite changes
+
+    # Verify: subscription snapshot uses Stripe data (1 item), NOT cart data (2 items)
+    subscription = result.subscription
+    items = subscription.items_snapshot["items"]
+    assert_equal 1, items.length, "Should only have 1 item from Stripe, not 2 from cart"
+    assert_equal @product_variant.id, items.first["product_variant_id"]
+
+    # Cart should still be cleared
     assert_equal 0, @cart.reload.cart_items.count
   end
 
-  test "complete_checkout handles empty cart at completion time" do
-    stripe_subscription = OpenStruct.new(
-      id: "sub_test_empty_cart",
-      customer: "cus_test123",
-      items: OpenStruct.new(
-        data: [ OpenStruct.new(price: OpenStruct.new(id: "price_test123")) ]
-      ),
-      current_period_start: Time.current.to_i,
-      current_period_end: 1.month.from_now.to_i
-    )
+  test "complete_checkout succeeds even if cart is empty (uses Stripe data)" do
+    # Cart can be empty at completion time (user completed in another tab, then hit back button)
+    # Service should still work because it uses Stripe line_items, not cart
 
-    stripe_session = OpenStruct.new(
-      id: "cs_test_session123",
-      subscription: stripe_subscription,
-      customer: "cus_test123",
-      customer_details: OpenStruct.new(
-        email: @user.email_address,
-        name: "John Smith",
-        address: OpenStruct.new(
-          line1: "123 Test St",
-          city: "London",
-          postal_code: "EC1A 1BB",
-          country: "GB"
-        )
-      ),
-      shipping_cost: OpenStruct.new(amount_total: 0)
-    )
+    stripe_session = build_mock_stripe_session
+    stub_stripe_product_retrieve(@product_variant)
 
     Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
 
-    # Cart emptied (maybe user completed checkout in another tab)
+    # Empty the cart before completion
     @cart.cart_items.destroy_all
+    assert_equal 0, @cart.cart_items.count
 
-    # Service should still create records (snapshot will have empty items)
-    # This is edge case - order_items will be empty
     result = @service.complete_checkout("cs_test_session123")
 
-    # The service creates the subscription regardless of cart state
-    # because the Stripe subscription already exists
+    # Should succeed because Stripe line_items has the data
     assert result.success?
+
+    # Subscription should have items from Stripe, not from empty cart
+    subscription = result.subscription
+    items = subscription.items_snapshot["items"]
+    assert_equal 1, items.length
+    assert_equal @product_variant.id, items.first["product_variant_id"]
   end
 
   test "complete_checkout handles user deleted between checkout and success" do
@@ -656,6 +603,8 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       frequency: "every_month"
     )
 
+    # Build mock session with line_items (using variant from temp_cart)
+    unit_amount = (@product_variant.price * 100).to_i
     stripe_subscription = OpenStruct.new(
       id: "sub_test_deleted_user",
       customer: "cus_temp123",
@@ -666,15 +615,36 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       current_period_end: 1.month.from_now.to_i
     )
 
+    line_items = OpenStruct.new(
+      data: [
+        OpenStruct.new(
+          description: "#{@product_variant.product.name} - #{@product_variant.name}",
+          quantity: 1,
+          amount_total: unit_amount,
+          price: OpenStruct.new(
+            unit_amount: unit_amount,
+            product: "prod_mock123"
+          )
+        )
+      ]
+    )
+
     stripe_session = OpenStruct.new(
       id: "cs_test_session123",
       subscription: stripe_subscription,
       customer: "cus_temp123",
+      line_items: line_items,
+      metadata: OpenStruct.new(
+        user_id: temp_user.id.to_s,
+        frequency: "every_month",
+        cart_id: temp_cart.id.to_s
+      ),
       customer_details: OpenStruct.new(
         email: temp_user.email_address,
         name: "Temp User",
         address: OpenStruct.new(
           line1: "123 Test St",
+          line2: nil,
           city: "London",
           postal_code: "EC1A 1BB",
           country: "GB"
@@ -683,6 +653,7 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
       shipping_cost: OpenStruct.new(amount_total: 0)
     )
 
+    stub_stripe_product_retrieve(@product_variant)
     Stripe::Checkout::Session.expects(:retrieve).returns(stripe_session)
 
     # Delete the user (simulating account deletion during checkout)
