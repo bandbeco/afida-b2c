@@ -10,11 +10,15 @@ class PendingOrderConfirmationService
   end
 
   def confirm!
-    return error_result("Order has already been confirmed") if @pending_order.confirmed?
-    return error_result("Order has expired") if @pending_order.expired?
-    return error_result("Order is empty - no items to confirm") if @pending_order.items.empty?
-
     ActiveRecord::Base.transaction do
+      # Pessimistic lock prevents race condition where two concurrent requests
+      # could both pass status checks before either updates the database
+      @pending_order.lock!
+
+      return error_result("Order has already been confirmed") if @pending_order.confirmed?
+      return error_result("Order has expired") if @pending_order.expired?
+      return error_result("Order is empty - no items to confirm") if @pending_order.items.empty?
+
       payment_intent = charge_payment!
       order = create_order!(payment_intent)
       @pending_order.confirm!(order)
