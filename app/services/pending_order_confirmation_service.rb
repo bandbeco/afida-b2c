@@ -10,6 +10,15 @@ class PendingOrderConfirmationService
   end
 
   def confirm!
+    # Check for existing order with same payment intent (recovery from partial failure)
+    existing_order = Order.find_by(stripe_session_id: idempotency_key)
+    if existing_order
+      @pending_order.confirm!(existing_order) unless @pending_order.confirmed?
+      return success_result(existing_order)
+    end
+
+    payment_intent = nil
+
     ActiveRecord::Base.transaction do
       # Pessimistic lock prevents race condition where two concurrent requests
       # could both pass status checks before either updates the database
@@ -31,36 +40,59 @@ class PendingOrderConfirmationService
     error_result(e.message)
   rescue Stripe::StripeError => e
     error_result("Payment failed: #{e.message}")
-  rescue ActiveRecord::RecordInvalid => e
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound => e
+    # Payment succeeded but order creation failed - refund the charge
+    refund_payment(payment_intent) if payment_intent
     error_result("Order creation failed: #{e.message}")
   end
 
   private
 
+  # Idempotency key ensures retries don't create duplicate charges
+  # Using pending_order ID ensures same charge for same pending order
+  def idempotency_key
+    "pending_order_#{@pending_order.id}"
+  end
+
   def charge_payment!
     amount_in_cents = (@pending_order.total_amount * 100).to_i
 
     Stripe::PaymentIntent.create(
-      amount: amount_in_cents,
-      currency: "gbp",
-      customer: @user.stripe_customer_id,
-      payment_method: @schedule.stripe_payment_method_id,
-      off_session: true,
-      confirm: true,
-      description: "Scheduled reorder ##{@pending_order.id}",
-      metadata: {
-        pending_order_id: @pending_order.id,
-        user_id: @user.id,
-        schedule_id: @schedule.id
-      }
+      {
+        amount: amount_in_cents,
+        currency: "gbp",
+        customer: @user.stripe_customer_id,
+        payment_method: @schedule.stripe_payment_method_id,
+        off_session: true,
+        confirm: true,
+        description: "Scheduled reorder ##{@pending_order.id}",
+        metadata: {
+          pending_order_id: @pending_order.id,
+          user_id: @user.id,
+          schedule_id: @schedule.id
+        }
+      },
+      { idempotency_key: idempotency_key }
     )
+  end
+
+  def refund_payment(payment_intent)
+    return unless payment_intent&.id
+
+    Stripe::Refund.create(
+      payment_intent: payment_intent.id,
+      reason: "requested_by_customer"
+    )
+  rescue Stripe::StripeError => e
+    # Log refund failure but don't raise - original error is more important
+    Rails.logger.error("Failed to refund payment #{payment_intent.id}: #{e.message}")
   end
 
   def create_order!(payment_intent)
     order = Order.create!(
       user: @user,
       email: @user.email_address,
-      stripe_session_id: payment_intent.id,
+      stripe_session_id: idempotency_key,
       order_number: generate_order_number,
       status: :paid,
       subtotal_amount: @pending_order.subtotal_amount,
