@@ -118,8 +118,8 @@ class PendingOrdersController < ApplicationController
     end
 
     subtotal = available_items.sum { |i| i["line_total"].to_d }
-    vat = subtotal * 0.20
-    shipping = subtotal >= 100 ? 0 : 6.99
+    vat = subtotal * VAT_RATE
+    shipping = subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : (Shipping::STANDARD_COST / 100.0)
     total = subtotal + vat + shipping
 
     {

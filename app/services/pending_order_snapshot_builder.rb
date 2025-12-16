@@ -1,10 +1,6 @@
 # frozen_string_literal: true
 
 class PendingOrderSnapshotBuilder
-  VAT_RATE = 0.20
-  FREE_SHIPPING_THRESHOLD = 100.00
-  STANDARD_SHIPPING = 6.99
-
   def initialize(schedule)
     @schedule = schedule
   end
@@ -92,7 +88,7 @@ class PendingOrderSnapshotBuilder
   end
 
   def calculate_shipping(subtotal)
-    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_SHIPPING
+    subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : (Shipping::STANDARD_COST / 100.0)
   end
 
   def format_amount(amount)
