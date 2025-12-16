@@ -16,7 +16,7 @@ class SignUpPageTest < ApplicationSystemTestCase
     # Check for benefits list
     assert_text "View your complete order history"
     assert_text "Reorder previous orders in one click"
-    assert_text "Recurring orders coming soon"
+    assert_text "Set up automatic reorders on your schedule"
   end
 
   test "sign-up page has functional registration form" do
