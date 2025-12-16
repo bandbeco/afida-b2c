@@ -88,7 +88,8 @@ class SubscriptionCheckoutService
       shipping_address_collection: {
         allowed_countries: [ "GB" ]
       },
-      shipping_options: shipping_options_for_cart,
+      # Note: shipping_options not supported in subscription mode
+      # Subscribers get free shipping as a benefit
       automatic_tax: { enabled: false }
     )
   end
@@ -459,13 +460,5 @@ class SubscriptionCheckoutService
       id: session_id,
       expand: [ "subscription", "line_items" ]
     )
-  end
-
-  # Helper: Determine shipping options based on cart value
-  #
-  # Delegates to Shipping module defined in config/initializers/shipping.rb
-  # which handles free shipping threshold logic.
-  def shipping_options_for_cart
-    Shipping.shipping_options_for_subtotal(cart.subtotal_amount)
   end
 end
