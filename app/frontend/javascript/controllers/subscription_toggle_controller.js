@@ -63,7 +63,6 @@ export default class extends Controller {
     }
   }
 
-  // Sync frequency select value to hidden input when changed
   frequencyChanged(event) {
     this.syncFrequency()
   }
