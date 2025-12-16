@@ -42,7 +42,8 @@ const lazyControllers = {
   "related-products": () => import("../javascript/controllers/related_products_controller"),
   "product-configurator": () => import("../javascript/controllers/product_configurator_controller"),
   "account-dropdown": () => import("../javascript/controllers/account_dropdown_controller"),
-  "subscription-toggle": () => import("../javascript/controllers/subscription_toggle_controller")
+  "subscription-toggle": () => import("../javascript/controllers/subscription_toggle_controller"),
+  "sign-in-modal": () => import("../javascript/controllers/sign_in_modal_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM

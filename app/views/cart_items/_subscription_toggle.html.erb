@@ -108,7 +108,7 @@
         <input type="checkbox" class="toggle" disabled />
       </div>
       <p class="text-sm text-gray-600 mt-2">
-        <%= link_to "Sign in", new_session_path(return_to: cart_path), class: "link text-primary font-medium", data: { turbo_frame: "_top" } %>
+        <%= link_to "Sign in", modal_session_path(return_to: cart_path), class: "link text-primary font-medium", data: { turbo_frame: "sign-in-modal" } %>
         to set up recurring orders.
       </p>
     </div>

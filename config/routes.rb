@@ -54,7 +54,9 @@ Rails.application.routes.draw do
   resources :categories, only: [ :show ]
   resources :branded_products, only: [ :index, :show ], path: "branded-products", param: :slug
 
-  resource :session, path: "signin", path_names: { new: "" }
+  resource :session, path: "signin", path_names: { new: "" } do
+    get :modal, on: :collection
+  end
   resources :passwords, param: :token
   resource :registration, only: [ :new, :create ], path: "signup", path_names: { new: "" }
 

@@ -1,0 +1,46 @@
+<turbo-frame id="sign-in-modal">
+  <div class="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="sign-in-modal-title">
+    <div class="modal-box max-w-sm">
+      <h3 id="sign-in-modal-title" class="font-bold text-xl text-center mb-6">Sign In</h3>
+
+      <%= form_with url: session_path, data: { turbo_frame: "_top" } do |form| %>
+        <%= hidden_field_tag :return_to, @return_to || cart_path %>
+
+        <div class="form-control">
+          <%= form.label :email_address, class: "label" do %>
+            <span class="label-text">Email</span>
+          <% end %>
+          <%= form.email_field :email_address, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your email", class: "input input-bordered w-full" %>
+        </div>
+
+        <div class="form-control mt-4">
+          <%= form.label :password, class: "label" do %>
+            <span class="label-text">Password</span>
+          <% end %>
+          <%= form.password_field :password, required: true, autocomplete: "current-password", placeholder: "Enter your password", maxlength: 72, class: "input input-bordered w-full" %>
+        </div>
+
+        <div class="form-control mt-6">
+          <%= form.submit "Sign In", class: "btn btn-primary w-full" %>
+        </div>
+      <% end %>
+
+      <div class="text-sm text-center mt-4 space-y-2">
+        <div>
+          <%= link_to "Forgot password?", new_password_path, class: "link link-hover link-secondary", data: { turbo_frame: "_top" } %>
+        </div>
+        <div>
+          <%= link_to "Don't have an account? Sign Up", new_registration_path, class: "link link-hover link-primary", data: { turbo_frame: "_top" } %>
+        </div>
+      </div>
+
+      <div class="modal-action justify-center mt-4 pt-4 border-t">
+        <button type="button"
+                class="btn btn-ghost btn-sm"
+                data-action="click->sign-in-modal#close">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+</turbo-frame>
