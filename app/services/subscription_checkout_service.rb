@@ -31,9 +31,6 @@ class SubscriptionCheckoutService
   # UK VAT rate (20%)
   VAT_RATE = BigDecimal("0.2")
 
-  # Stripe uses minor currency units (pence for GBP)
-  MINOR_CURRENCY_MULTIPLIER = 100
-
   # Shipping costs (pence) - uses same logic as regular checkout
   STANDARD_SHIPPING_COST = Shipping::STANDARD_COST
   FREE_SHIPPING_THRESHOLD = Shipping::FREE_SHIPPING_THRESHOLD
@@ -210,7 +207,7 @@ class SubscriptionCheckoutService
             recurring: "true"
           }
         },
-        unit_amount: (item.price * MINOR_CURRENCY_MULTIPLIER).to_i,
+        unit_amount: (item.price * Currency::MINOR_UNIT_MULTIPLIER).to_i,
         recurring: stripe_recurring_params
       },
       quantity: item.quantity
@@ -245,7 +242,7 @@ class SubscriptionCheckoutService
             is_configured: item.configured?.to_s
           }
         },
-        unit_amount: (item.price * MINOR_CURRENCY_MULTIPLIER).to_i
+        unit_amount: (item.price * Currency::MINOR_UNIT_MULTIPLIER).to_i
         # Note: No `recurring` key - Stripe charges this only on first invoice
       },
       quantity: item.quantity
@@ -258,7 +255,7 @@ class SubscriptionCheckoutService
   def build_items_snapshot
     items = cart_items_with_associations.map do |item|
       variant = item.product_variant
-      unit_price_minor = (variant.price * MINOR_CURRENCY_MULTIPLIER).to_i
+      unit_price_minor = (variant.price * Currency::MINOR_UNIT_MULTIPLIER).to_i
       total_minor = unit_price_minor * item.quantity
 
       {
@@ -361,7 +358,7 @@ class SubscriptionCheckoutService
     # Calculate shipping based on recurring items subtotal (excluding VAT)
     # Only recurring items count toward the threshold since they're what
     # the customer will pay on each renewal
-    subtotal_pounds = items_snapshot["subtotal_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
+    subtotal_pounds = items_snapshot["subtotal_minor"] / Currency::MINOR_UNIT_MULTIPLIER.to_f
     cost_minor = Shipping.cost_for_subtotal(subtotal_pounds)
     shipping_name = cost_minor.zero? ? "Free Shipping" : "Standard Delivery"
 
@@ -413,9 +410,9 @@ class SubscriptionCheckoutService
     items_snapshot = JSON.parse(items_snapshot) if items_snapshot.is_a?(String)
 
     # Calculate amounts in pounds from minor units
-    subtotal = items_snapshot["subtotal_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
-    vat = items_snapshot["vat_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
-    shipping = shipping_snapshot["cost_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
+    subtotal = items_snapshot["subtotal_minor"] / Currency::MINOR_UNIT_MULTIPLIER.to_f
+    vat = items_snapshot["vat_minor"] / Currency::MINOR_UNIT_MULTIPLIER.to_f
+    shipping = shipping_snapshot["cost_minor"] / Currency::MINOR_UNIT_MULTIPLIER.to_f
     total = subtotal + vat + shipping
 
     order = Order.create!(
@@ -448,7 +445,7 @@ class SubscriptionCheckoutService
         product_variant: variant,
         product: variant&.product,
         quantity: item["quantity"],
-        price: item["unit_price_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f,
+        price: item["unit_price_minor"] / Currency::MINOR_UNIT_MULTIPLIER.to_f,
         product_name: item["name"],
         product_sku: item["sku"],
         pac_size: item["pac_size"] || 1

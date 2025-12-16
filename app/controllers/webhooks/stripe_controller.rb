@@ -30,9 +30,6 @@ module Webhooks
     skip_forgery_protection
     allow_unauthenticated_access
 
-    # Stripe uses minor currency units (pence for GBP)
-    MINOR_CURRENCY_MULTIPLIER = 100
-
     # POST /webhooks/stripe
     def create
       payload = request.body.read
@@ -138,7 +135,7 @@ module Webhooks
       items_snapshot = subscription.items_snapshot
       items_snapshot = JSON.parse(items_snapshot) if items_snapshot.is_a?(String)
 
-      subtotal_pounds = (items_snapshot["subtotal_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
+      subtotal_pounds = (items_snapshot["subtotal_minor"] || 0) / Currency::MINOR_UNIT_MULTIPLIER.to_f
       shipping_cost_minor = Shipping.cost_for_subtotal(subtotal_pounds)
 
       # Add shipping line item if not free
@@ -245,13 +242,13 @@ module Webhooks
       address = shipping_snapshot["address"] || {}
 
       # Calculate amounts from snapshot (already in minor units)
-      subtotal = (items_snapshot["subtotal_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
-      vat = (items_snapshot["vat_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
+      subtotal = (items_snapshot["subtotal_minor"] || 0) / Currency::MINOR_UNIT_MULTIPLIER.to_f
+      vat = (items_snapshot["vat_minor"] || 0) / Currency::MINOR_UNIT_MULTIPLIER.to_f
 
       # Recalculate shipping based on current subtotal to apply free shipping threshold
       # This ensures orders >= £100 get free shipping on every renewal
       shipping_cost_minor = Shipping.cost_for_subtotal(subtotal)
-      shipping = shipping_cost_minor / MINOR_CURRENCY_MULTIPLIER.to_f
+      shipping = shipping_cost_minor / Currency::MINOR_UNIT_MULTIPLIER.to_f
       total = subtotal + vat + shipping
 
       ActiveRecord::Base.transaction do
@@ -291,7 +288,7 @@ module Webhooks
             product_variant: variant,
             product: variant&.product,
             quantity: item["quantity"],
-            price: item["unit_price_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f,
+            price: item["unit_price_minor"] / Currency::MINOR_UNIT_MULTIPLIER.to_f,
             product_name: item["name"],
             product_sku: item["sku"],
             pac_size: item["pac_size"] || 1
