@@ -26,6 +26,9 @@ class SubscriptionCheckoutsController < ApplicationController
   # T024: Samples-only carts cannot be subscriptions
   before_action :reject_samples_only_cart, only: :create
 
+  # Branded/configured products cannot be subscriptions
+  before_action :reject_configured_items, only: :create
+
   # T025: Create subscription checkout session
   #
   # Creates a Stripe Checkout Session in subscription mode and redirects
@@ -134,6 +137,14 @@ class SubscriptionCheckoutsController < ApplicationController
   def reject_samples_only_cart
     if Current.cart.only_samples?
       flash[:alert] = "Subscriptions are not available for sample orders"
+      redirect_to cart_path
+    end
+  end
+
+  # Reject carts containing branded/configured products
+  def reject_configured_items
+    if Current.cart.has_configured_items?
+      flash[:alert] = "Subscriptions are not available for branded products"
       redirect_to cart_path
     end
   end

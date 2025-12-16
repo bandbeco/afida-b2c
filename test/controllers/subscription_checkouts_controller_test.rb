@@ -78,6 +78,40 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # create rejects carts with branded/configured products
+  # ==========================================================================
+
+  test "create rejects cart with configured items" do
+    sign_in_as(@user)
+
+    # Add a configured (branded) item to cart
+    @cart.cart_items.destroy_all
+    variant = product_variants(:single_wall_8oz_white)
+
+    # Build the cart item with configuration and attach design before saving
+    item = @cart.cart_items.build(
+      product_variant: variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+
+    # Attach design before validation runs
+    item.design.attach(
+      io: StringIO.new("fake design content"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    item.save!
+
+    post subscription_checkouts_path, params: { frequency: "every_month" }
+
+    assert_redirected_to cart_path
+    assert_match(/branded/i, flash[:alert])
+  end
+
+  # ==========================================================================
   # T017: create redirects to Stripe on success
   # ==========================================================================
 

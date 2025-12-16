@@ -109,4 +109,18 @@ class Cart < ApplicationRecord
   def at_sample_limit?
     sample_count >= SAMPLE_LIMIT
   end
+
+  # Branded/configured product methods
+  # Configured items have a configuration hash (branded products with custom design)
+
+  # Returns true if cart contains any configured (branded) items
+  def has_configured_items?
+    cart_items.any?(&:configured?)
+  end
+
+  # Returns true if cart is eligible for subscription checkout
+  # Requirements: has items, not samples-only, no configured/branded items
+  def subscription_eligible?
+    cart_items.any? && !only_samples? && !has_configured_items?
+  end
 end

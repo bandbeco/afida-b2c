@@ -331,4 +331,170 @@ class CartTest < ActiveSupport::TestCase
 
     assert_not cart.at_sample_limit?
   end
+
+  # ==========================================================================
+  # has_configured_items? tests
+  # ==========================================================================
+
+  test "has_configured_items? returns true when cart has configured item" do
+    cart = Cart.create
+
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured Test Variant",
+      sku: "CONFIGURED-TEST-1",
+      price: 0.18,
+      active: true
+    )
+
+    # Build item with configuration and attach design before saving
+    item = cart.cart_items.build(
+      product_variant: variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+    item.design.attach(
+      io: StringIO.new("fake design"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    item.save!
+
+    assert cart.has_configured_items?
+  end
+
+  test "has_configured_items? returns false when cart has only standard items" do
+    cart = Cart.create
+
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Test Variant",
+      sku: "STANDARD-TEST-1",
+      price: 10.0,
+      active: true
+    )
+
+    cart.cart_items.create!(product_variant: variant, quantity: 2, price: 10.0)
+
+    assert_not cart.has_configured_items?
+  end
+
+  test "has_configured_items? returns false for empty cart" do
+    cart = Cart.create
+
+    assert_not cart.has_configured_items?
+  end
+
+  # ==========================================================================
+  # subscription_eligible? tests
+  # ==========================================================================
+
+  test "subscription_eligible? returns true for cart with standard items" do
+    cart = Cart.create
+
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Subscription Eligible Variant",
+      sku: "SUB-ELIGIBLE-1",
+      price: 10.0,
+      active: true
+    )
+
+    cart.cart_items.create!(product_variant: variant, quantity: 2, price: 10.0)
+
+    assert cart.subscription_eligible?
+  end
+
+  test "subscription_eligible? returns false for empty cart" do
+    cart = Cart.create
+
+    assert_not cart.subscription_eligible?
+  end
+
+  test "subscription_eligible? returns false for samples-only cart" do
+    cart = Cart.create
+
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Only Subscription Test",
+      sku: "SAMPLE-SUB-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    assert_not cart.subscription_eligible?
+  end
+
+  test "subscription_eligible? returns false for cart with configured items" do
+    cart = Cart.create
+
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured Subscription Test",
+      sku: "CONFIGURED-SUB-TEST-1",
+      price: 0.18,
+      active: true
+    )
+
+    # Build item with configuration and attach design before saving
+    item = cart.cart_items.build(
+      product_variant: variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+    item.design.attach(
+      io: StringIO.new("fake design"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    item.save!
+
+    assert_not cart.subscription_eligible?
+  end
+
+  test "subscription_eligible? returns false for mixed cart with configured items" do
+    cart = Cart.create
+
+    # Add standard item
+    standard_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Mixed Variant",
+      sku: "STANDARD-MIXED-1",
+      price: 10.0,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: standard_variant, quantity: 2, price: 10.0)
+
+    # Add configured item - build and attach design before saving
+    configured_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured Mixed Variant",
+      sku: "CONFIGURED-MIXED-1",
+      price: 0.18,
+      active: true
+    )
+    item = cart.cart_items.build(
+      product_variant: configured_variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+    item.design.attach(
+      io: StringIO.new("fake design"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    item.save!
+
+    # Even with standard items, cart is not subscription eligible due to configured item
+    assert_not cart.subscription_eligible?
+  end
 end
