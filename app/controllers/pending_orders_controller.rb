@@ -98,38 +98,7 @@ class PendingOrdersController < ApplicationController
   end
 
   def rebuild_snapshot(items)
-    # Build new snapshot with provided items
-    available_items = items.filter_map do |item|
-      variant = ProductVariant.find_by(id: item[:product_variant_id])
-      next unless variant&.active? && variant.product&.active?
-
-      current_price = variant.price
-      quantity = item[:quantity].to_i
-
-      {
-        "product_variant_id" => variant.id,
-        "product_name" => variant.product&.name || "Unknown Product",
-        "variant_name" => variant.display_name,
-        "quantity" => quantity,
-        "price" => "%.2f" % current_price,
-        "line_total" => "%.2f" % (current_price * quantity),
-        "available" => true
-      }
-    end
-
-    subtotal = available_items.sum { |i| i["line_total"].to_d }
-    vat = subtotal * VAT_RATE
-    shipping = subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : (Shipping::STANDARD_COST / 100.0)
-    total = subtotal + vat + shipping
-
-    {
-      "items" => available_items,
-      "subtotal" => "%.2f" % subtotal,
-      "vat" => "%.2f" % vat,
-      "shipping" => "%.2f" % shipping,
-      "total" => "%.2f" % total,
-      "unavailable_items" => []
-    }
+    PendingOrderSnapshotBuilder.build_from_items(items)
   end
 
   def render_not_found

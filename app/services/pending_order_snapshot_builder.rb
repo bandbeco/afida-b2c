@@ -19,9 +19,38 @@ class PendingOrderSnapshotBuilder
       end
     end
 
-    subtotal = calculate_subtotal(available_items)
-    vat = calculate_vat(subtotal)
-    shipping = calculate_shipping(subtotal)
+    build_snapshot(available_items, unavailable_items)
+  end
+
+  # Builds a snapshot from raw items array (used when editing pending orders)
+  # items: array of { product_variant_id:, quantity: }
+  def self.build_from_items(items)
+    available_items = items.filter_map do |item|
+      variant = ProductVariant.find_by(id: item[:product_variant_id])
+      next unless variant&.active? && variant.product&.active?
+
+      current_price = variant.price
+      quantity = item[:quantity].to_i
+
+      {
+        "product_variant_id" => variant.id,
+        "product_name" => variant.product&.name || "Unknown Product",
+        "variant_name" => variant.display_name,
+        "quantity" => quantity,
+        "price" => format_amount(current_price),
+        "line_total" => format_amount(current_price * quantity),
+        "available" => true
+      }
+    end
+
+    build_snapshot(available_items, [])
+  end
+
+  # Shared logic for building the final snapshot hash
+  def self.build_snapshot(available_items, unavailable_items)
+    subtotal = available_items.sum { |item| item["line_total"].to_d }
+    vat = subtotal * VAT_RATE
+    shipping = subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : (Shipping::STANDARD_COST / 100.0)
     total = subtotal + vat + shipping
 
     {
@@ -34,7 +63,15 @@ class PendingOrderSnapshotBuilder
     }
   end
 
+  def self.format_amount(amount)
+    "%.2f" % amount
+  end
+
   private
+
+  def build_snapshot(available_items, unavailable_items)
+    self.class.build_snapshot(available_items, unavailable_items)
+  end
 
   def item_available?(item)
     return false unless item.product_variant&.active?
@@ -52,8 +89,8 @@ class PendingOrderSnapshotBuilder
       "product_name" => variant.product&.name || "Unknown Product",
       "variant_name" => variant.display_name,
       "quantity" => item.quantity,
-      "price" => format_amount(current_price),
-      "line_total" => format_amount(current_price * item.quantity),
+      "price" => self.class.format_amount(current_price),
+      "line_total" => self.class.format_amount(current_price * item.quantity),
       "available" => true
     }
   end
@@ -77,21 +114,5 @@ class PendingOrderSnapshotBuilder
       "variant_name" => variant&.display_name || "Unknown",
       "reason" => reason
     }
-  end
-
-  def calculate_subtotal(items)
-    items.sum { |item| item["line_total"].to_d }
-  end
-
-  def calculate_vat(subtotal)
-    subtotal * VAT_RATE
-  end
-
-  def calculate_shipping(subtotal)
-    subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : (Shipping::STANDARD_COST / 100.0)
-  end
-
-  def format_amount(amount)
-    "%.2f" % amount
   end
 end
