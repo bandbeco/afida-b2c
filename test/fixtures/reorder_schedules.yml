@@ -1,0 +1,44 @@
+# frozen_string_literal: true
+
+# Reorder schedule fixtures
+# Used for testing scheduled reorder functionality
+
+# Active monthly schedule with payment method
+active_monthly:
+  user: one
+  frequency: every_month
+  status: active
+  next_scheduled_date: <%= 3.days.from_now.to_date %>
+  stripe_payment_method_id: pm_test_active_monthly
+  card_brand: visa
+  card_last4: "4242"
+
+# Paused schedule (user temporarily stopped)
+paused_schedule:
+  user: one
+  frequency: every_two_weeks
+  status: paused
+  next_scheduled_date: <%= 1.week.from_now.to_date %>
+  stripe_payment_method_id: pm_test_paused
+  card_brand: mastercard
+  card_last4: "5555"
+
+# Cancelled schedule (permanently stopped)
+cancelled_schedule:
+  user: two
+  frequency: every_month
+  status: cancelled
+  next_scheduled_date: <%= 1.month.from_now.to_date %>
+  stripe_payment_method_id: pm_test_cancelled
+  card_brand: visa
+  card_last4: "1234"
+
+# Schedule due today
+due_today:
+  user: two
+  frequency: every_week
+  status: active
+  next_scheduled_date: <%= Date.current %>
+  stripe_payment_method_id: pm_test_due_today
+  card_brand: amex
+  card_last4: "0005"

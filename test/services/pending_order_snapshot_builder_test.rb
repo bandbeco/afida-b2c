@@ -7,25 +7,18 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     @user = users(:one)
     @product = products(:one)
     @product_variant = product_variants(:one)
+    @schedule = reorder_schedules(:active_monthly)
+    @schedule_item = reorder_schedule_items(:active_monthly_item_one)
 
-    # Ensure product and variant are active
+    # Ensure product and variant are active with consistent test price
     @product.update!(active: true)
     @product_variant.update!(active: true, price: 10.00)
 
-    @schedule = ReorderSchedule.create!(
-      user: @user,
-      frequency: :every_month,
-      status: :active,
-      next_scheduled_date: 3.days.from_now.to_date,
-      stripe_payment_method_id: "pm_test_123"
-    )
+    # Update schedule item to use consistent test price
+    @schedule_item.update!(price: 10.00)
 
-    @schedule_item = ReorderScheduleItem.create!(
-      reorder_schedule: @schedule,
-      product_variant: @product_variant,
-      quantity: 2,
-      price: @product_variant.price
-    )
+    # Remove second fixture item to start with single-item schedule
+    reorder_schedule_items(:active_monthly_item_two).destroy
   end
 
   # ==========================================================================
