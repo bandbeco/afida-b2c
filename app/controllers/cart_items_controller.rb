@@ -99,6 +99,19 @@ class CartItemsController < ApplicationController
                     status: :unprocessable_entity
     end
 
+    # Idempotency: Check if a configured item for this product already exists
+    existing_configured_item = @cart.cart_items
+      .where.not(configuration: nil)
+      .joins(:product_variant)
+      .where(product_variants: { product_id: product.id })
+      .first
+
+    if existing_configured_item
+      return render json: {
+        error: "You already have a branded #{product.name} in your cart. Please remove it first or proceed to checkout."
+      }, status: :unprocessable_entity
+    end
+
     # For configured products, use the first variant as a placeholder
     product_variant = product.active_variants.first
     unless product_variant

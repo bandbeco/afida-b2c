@@ -324,6 +324,37 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "prevents duplicate configured items for same product" do
+    sign_in_as users(:consumer)
+
+    branded_product = products(:branded_double_wall_template)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    # First add should succeed
+    assert_difference "CartItem.count", 1 do
+      post cart_cart_items_path, params: {
+        product_id: branded_product.id,
+        configuration: { size: "12oz", quantity: 5000 },
+        calculated_price: 1000.00,
+        design: design_file
+      }
+    end
+
+    # Second add for same product should fail (idempotency protection)
+    design_file2 = fixture_file_upload("test_design.pdf", "application/pdf")
+    assert_no_difference "CartItem.count" do
+      post cart_cart_items_path, params: {
+        product_id: branded_product.id,
+        configuration: { size: "8oz", quantity: 1000 },
+        calculated_price: 300.00,
+        design: design_file2
+      }, as: :json
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.parsed_body["error"], "already have a branded"
+  end
+
   test "standard product cart item creation still works" do
     sign_in_as users(:consumer)
 
