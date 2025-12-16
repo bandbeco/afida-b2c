@@ -6,9 +6,13 @@
   - "Proceed to Checkout" (POST /checkout) when toggle is OFF
   - "Subscribe & Checkout" (POST /subscription_checkouts) when toggle is ON
 
+  Mixed carts are now supported:
+  - Standard products become recurring (billed every delivery)
+  - Samples ship free with first order only
+  - Branded products are charged once and ship with first order
+
   Guest users see disabled toggle with sign-in prompt.
-  Samples-only carts show disabled toggle with explanatory message.
-  Branded/configured products carts show disabled toggle with explanatory message.
+  Carts with only samples/branded items show disabled toggle.
 %>
 
 <div data-controller="subscription-toggle"
@@ -47,6 +51,21 @@
         <p class="text-xs text-gray-500 mt-2">
           You can pause or cancel anytime from your account.
         </p>
+
+        <% if Current.cart.has_mixed_subscription_items? %>
+          <%# Mixed cart messaging - shown only when subscription is enabled %>
+          <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded text-sm">
+            <p class="font-medium text-amber-800">Some items are one-time only:</p>
+            <ul class="mt-1 text-amber-700 list-disc list-inside">
+              <% if Current.cart.sample_items.any? %>
+                <li>Samples ship with your first order only (free)</li>
+              <% end %>
+              <% if Current.cart.configured_items.any? %>
+                <li>Branded products are charged once and ship with your first order</li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
       </div>
 
       <%# Helper text when collapsed %>
@@ -54,8 +73,8 @@
         Save time by automatically reordering your supplies on a schedule.
       </p>
     </div>
-  <% elsif Current.user && Current.cart.only_samples? %>
-    <%# Samples-only cart: disabled toggle %>
+  <% elsif Current.user %>
+    <%# Logged-in user but no subscription-eligible items: disabled toggle %>
     <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2">
@@ -67,23 +86,13 @@
         <input type="checkbox" class="toggle" disabled />
       </div>
       <p class="text-sm text-gray-500 mt-2">
-        Subscriptions are not available for sample orders.
-      </p>
-    </div>
-  <% elsif Current.user && Current.cart.has_configured_items? %>
-    <%# Cart with branded/configured products: disabled toggle %>
-    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span class="font-medium text-gray-500">Make this a recurring order</span>
-        </div>
-        <input type="checkbox" class="toggle" disabled />
-      </div>
-      <p class="text-sm text-gray-500 mt-2">
-        Subscriptions are not available for branded products.
+        <% if Current.cart.only_samples? %>
+          Subscriptions require at least one standard product. Add products to enable recurring orders.
+        <% elsif Current.cart.cart_items.all?(&:configured?) %>
+          Subscriptions are not available for branded products only. Add standard products to enable recurring orders.
+        <% else %>
+          Subscriptions are available for standard products only.
+        <% end %>
       </p>
     </div>
   <% else %>

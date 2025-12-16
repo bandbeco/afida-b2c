@@ -118,9 +118,37 @@ class Cart < ApplicationRecord
     cart_items.any?(&:configured?)
   end
 
+  # Returns cart items with branded/configured products
+  def configured_items
+    cart_items.select(&:configured?)
+  end
+
+  # Subscription eligibility methods
+  # Mixed carts are now supported: standard items become recurring,
+  # samples and branded items become one-time charges on first invoice
+
+  # Returns cart items eligible for recurring subscription billing
+  # Standard products only (not samples, not configured/branded)
+  def subscription_eligible_items
+    cart_items.reject { |item| item.sample? || item.configured? }
+  end
+
+  # Returns cart items that will be one-time purchases in a subscription
+  # Samples (free) and branded/configured products (charged once)
+  def one_time_items
+    cart_items.select { |item| item.sample? || item.configured? }
+  end
+
+  # Returns true if cart has both recurring-eligible and one-time items
+  # Used to show mixed cart messaging in subscription checkout
+  def has_mixed_subscription_items?
+    subscription_eligible_items.any? && one_time_items.any?
+  end
+
   # Returns true if cart is eligible for subscription checkout
-  # Requirements: has items, not samples-only, no configured/branded items
+  # Requires at least one standard product that can be recurring
+  # Samples and branded items are now allowed (become one-time charges)
   def subscription_eligible?
-    cart_items.any? && !only_samples? && !has_configured_items?
+    subscription_eligible_items.any?
   end
 end

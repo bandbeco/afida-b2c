@@ -40,6 +40,7 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
     )
 
     # Build line_items that mirror what Stripe returns
+    # recurring must be present for items to be included in the subscription snapshot
     line_items = OpenStruct.new(
       data: [
         OpenStruct.new(
@@ -48,7 +49,8 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
           amount_total: unit_amount * quantity,
           price: OpenStruct.new(
             unit_amount: unit_amount,
-            product: "prod_mock123"
+            product: "prod_mock123",
+            recurring: OpenStruct.new(interval: "month", interval_count: 1)
           )
         )
       ]
@@ -643,7 +645,8 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
           amount_total: unit_amount,
           price: OpenStruct.new(
             unit_amount: unit_amount,
-            product: "prod_mock123"
+            product: "prod_mock123",
+            recurring: OpenStruct.new(interval: "month", interval_count: 1)
           )
         )
       ]

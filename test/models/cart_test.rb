@@ -388,7 +388,217 @@ class CartTest < ActiveSupport::TestCase
   end
 
   # ==========================================================================
-  # subscription_eligible? tests
+  # configured_items tests
+  # ==========================================================================
+
+  test "configured_items returns cart items with configuration" do
+    cart = Cart.create
+
+    # Add a configured item
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured Item Test",
+      sku: "CONFIGURED-ITEMS-TEST-1",
+      price: 0.18,
+      active: true
+    )
+
+    item = cart.cart_items.build(
+      product_variant: variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+    item.design.attach(
+      io: StringIO.new("fake design"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    item.save!
+
+    # Add a standard item
+    standard_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Item",
+      sku: "STANDARD-ITEMS-TEST-1",
+      price: 10.0,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: standard_variant, quantity: 2, price: 10.0)
+
+    configured = cart.configured_items
+    assert_equal 1, configured.count
+    assert_includes configured, item
+  end
+
+  # ==========================================================================
+  # subscription_eligible_items tests
+  # ==========================================================================
+
+  test "subscription_eligible_items returns standard items only" do
+    cart = Cart.create
+
+    # Add standard item
+    standard_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Eligible Item",
+      sku: "STANDARD-ELIGIBLE-1",
+      price: 10.0,
+      active: true
+    )
+    standard_item = cart.cart_items.create!(product_variant: standard_variant, quantity: 2, price: 10.0)
+
+    # Add sample item
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Eligible Item",
+      sku: "SAMPLE-ELIGIBLE-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    # Add configured item
+    configured_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured Eligible Item",
+      sku: "CONFIGURED-ELIGIBLE-1",
+      price: 0.18,
+      active: true
+    )
+    item = cart.cart_items.build(
+      product_variant: configured_variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+    item.design.attach(io: StringIO.new("fake design"), filename: "design.pdf", content_type: "application/pdf")
+    item.save!
+
+    eligible = cart.subscription_eligible_items
+    assert_equal 1, eligible.count
+    assert_includes eligible, standard_item
+  end
+
+  # ==========================================================================
+  # one_time_items tests
+  # ==========================================================================
+
+  test "one_time_items returns samples and configured items" do
+    cart = Cart.create
+
+    # Add standard item (not one-time)
+    standard_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard One-Time Test",
+      sku: "STANDARD-ONETIME-1",
+      price: 10.0,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: standard_variant, quantity: 2, price: 10.0)
+
+    # Add sample item (one-time)
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample One-Time Test",
+      sku: "SAMPLE-ONETIME-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+    sample_item = cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    # Add configured item (one-time)
+    configured_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured One-Time Test",
+      sku: "CONFIGURED-ONETIME-1",
+      price: 0.18,
+      active: true
+    )
+    configured_item = cart.cart_items.build(
+      product_variant: configured_variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+    configured_item.design.attach(io: StringIO.new("fake design"), filename: "design.pdf", content_type: "application/pdf")
+    configured_item.save!
+
+    one_time = cart.one_time_items
+    assert_equal 2, one_time.count
+    assert_includes one_time, sample_item
+    assert_includes one_time, configured_item
+  end
+
+  # ==========================================================================
+  # has_mixed_subscription_items? tests
+  # ==========================================================================
+
+  test "has_mixed_subscription_items? returns true for cart with standard and sample items" do
+    cart = Cart.create
+
+    # Add standard item
+    standard_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Mixed Test",
+      sku: "STANDARD-MIXED-TEST-1",
+      price: 10.0,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: standard_variant, quantity: 2, price: 10.0)
+
+    # Add sample item
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Mixed Test",
+      sku: "SAMPLE-MIXED-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    assert cart.has_mixed_subscription_items?
+  end
+
+  test "has_mixed_subscription_items? returns false for cart with only standard items" do
+    cart = Cart.create
+
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Only Mixed Test",
+      sku: "STANDARD-ONLY-MIXED-1",
+      price: 10.0,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: variant, quantity: 2, price: 10.0)
+
+    assert_not cart.has_mixed_subscription_items?
+  end
+
+  test "has_mixed_subscription_items? returns false for cart with only samples" do
+    cart = Cart.create
+
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Only Mixed Test",
+      sku: "SAMPLE-ONLY-MIXED-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    assert_not cart.has_mixed_subscription_items?
+  end
+
+  # ==========================================================================
+  # subscription_eligible? tests (updated semantics)
   # ==========================================================================
 
   test "subscription_eligible? returns true for cart with standard items" do
@@ -430,7 +640,7 @@ class CartTest < ActiveSupport::TestCase
     assert_not cart.subscription_eligible?
   end
 
-  test "subscription_eligible? returns false for cart with configured items" do
+  test "subscription_eligible? returns false for cart with only configured items" do
     cart = Cart.create
 
     variant = ProductVariant.create!(
@@ -459,7 +669,7 @@ class CartTest < ActiveSupport::TestCase
     assert_not cart.subscription_eligible?
   end
 
-  test "subscription_eligible? returns false for mixed cart with configured items" do
+  test "subscription_eligible? returns true for mixed cart with standard and configured items" do
     cart = Cart.create
 
     # Add standard item
@@ -494,7 +704,35 @@ class CartTest < ActiveSupport::TestCase
     )
     item.save!
 
-    # Even with standard items, cart is not subscription eligible due to configured item
-    assert_not cart.subscription_eligible?
+    # Mixed carts ARE now subscription eligible (standard items become recurring)
+    assert cart.subscription_eligible?
+  end
+
+  test "subscription_eligible? returns true for mixed cart with standard and sample items" do
+    cart = Cart.create
+
+    # Add standard item
+    standard_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Standard Mixed Sample Variant",
+      sku: "STANDARD-MIXED-SAMPLE-1",
+      price: 10.0,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: standard_variant, quantity: 2, price: 10.0)
+
+    # Add sample item
+    sample_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Mixed Standard Variant",
+      sku: "SAMPLE-MIXED-STANDARD-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+    cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+
+    # Mixed carts ARE subscription eligible (samples become one-time)
+    assert cart.subscription_eligible?
   end
 end

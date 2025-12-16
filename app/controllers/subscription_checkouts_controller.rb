@@ -5,6 +5,11 @@
 # Handles creating Stripe Checkout Sessions in subscription mode,
 # processing successful checkouts, and handling cancellations.
 #
+# Mixed carts are supported:
+# - Standard products become recurring (billed every delivery)
+# - Samples ship free with first order only
+# - Branded products are charged once and ship with first order
+#
 # Routes:
 #   POST /subscription_checkouts      -> create
 #   GET  /subscription_checkouts/success -> success
@@ -20,14 +25,8 @@ class SubscriptionCheckoutsController < ApplicationController
   # Subscriptions require authentication - no guest subscriptions
   before_action :require_authentication
 
-  # T023: Cart must have items
-  before_action :require_cart_with_items, only: :create
-
-  # T024: Samples-only carts cannot be subscriptions
-  before_action :reject_samples_only_cart, only: :create
-
-  # Branded/configured products cannot be subscriptions
-  before_action :reject_configured_items, only: :create
+  # Cart must have at least one subscription-eligible item (standard product)
+  before_action :require_subscription_eligible_items, only: :create
 
   # T025: Create subscription checkout session
   #
@@ -125,26 +124,13 @@ class SubscriptionCheckoutsController < ApplicationController
 
   private
 
-  # T023: Require cart to have items
-  def require_cart_with_items
-    if Current.cart.blank? || Current.cart.cart_items.empty?
-      flash[:alert] = "Your cart is empty"
-      redirect_to cart_path
-    end
-  end
-
-  # T024: Reject carts that only contain samples
-  def reject_samples_only_cart
-    if Current.cart.only_samples?
-      flash[:alert] = "Subscriptions are not available for sample orders"
-      redirect_to cart_path
-    end
-  end
-
-  # Reject carts containing branded/configured products
-  def reject_configured_items
-    if Current.cart.has_configured_items?
-      flash[:alert] = "Subscriptions are not available for branded products"
+  # Require cart to have at least one subscription-eligible item
+  #
+  # Subscription-eligible items are standard products (not samples, not branded).
+  # Mixed carts are allowed - samples and branded items become one-time charges.
+  def require_subscription_eligible_items
+    if Current.cart.blank? || !Current.cart.subscription_eligible?
+      flash[:alert] = "Your cart has no items eligible for subscription"
       redirect_to cart_path
     end
   end

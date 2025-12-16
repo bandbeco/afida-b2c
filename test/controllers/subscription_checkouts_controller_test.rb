@@ -37,7 +37,7 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
-  # T015: create requires non-empty cart
+  # T015: create requires subscription-eligible items
   # ==========================================================================
 
   test "create requires non-empty cart" do
@@ -49,11 +49,11 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
     post subscription_checkouts_path, params: { frequency: "every_month" }
 
     assert_redirected_to cart_path
-    assert_match(/empty/i, flash[:alert])
+    assert_match(/no items eligible/i, flash[:alert])
   end
 
   # ==========================================================================
-  # T016: create rejects samples-only cart
+  # T016: create rejects samples-only cart (no subscription-eligible items)
   # ==========================================================================
 
   test "create rejects samples-only cart" do
@@ -74,17 +74,17 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
     post subscription_checkouts_path, params: { frequency: "every_month" }
 
     assert_redirected_to cart_path
-    assert_match(/sample/i, flash[:alert])
+    assert_match(/no items eligible/i, flash[:alert])
   end
 
   # ==========================================================================
-  # create rejects carts with branded/configured products
+  # create rejects carts with only branded/configured products
   # ==========================================================================
 
-  test "create rejects cart with configured items" do
+  test "create rejects cart with only configured items" do
     sign_in_as(@user)
 
-    # Add a configured (branded) item to cart
+    # Add only a configured (branded) item to cart
     @cart.cart_items.destroy_all
     variant = product_variants(:single_wall_8oz_white)
 
@@ -108,7 +108,90 @@ class SubscriptionCheckoutsControllerTest < ActionDispatch::IntegrationTest
     post subscription_checkouts_path, params: { frequency: "every_month" }
 
     assert_redirected_to cart_path
-    assert_match(/branded/i, flash[:alert])
+    assert_match(/no items eligible/i, flash[:alert])
+  end
+
+  # ==========================================================================
+  # Mixed carts are now accepted
+  # ==========================================================================
+
+  test "create accepts mixed cart with standard and sample items" do
+    sign_in_as(@user)
+
+    # Cart already has a standard item from setup
+    # Add a sample item
+    sample_variant = product_variants(:single_wall_8oz_white)
+    sample_variant.update!(sample_eligible: true)
+
+    # Need a different variant for the sample to avoid uniqueness conflict
+    other_variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Sample Mixed Test",
+      sku: "SAMPLE-MIXED-CTRL-TEST-1",
+      price: 10.0,
+      sample_eligible: true,
+      active: true
+    )
+
+    @cart.cart_items.create!(
+      product_variant: other_variant,
+      quantity: 1,
+      price: 0,
+      is_sample: true
+    )
+
+    mock_session = OpenStruct.new(
+      id: "cs_test_mixed",
+      url: "https://checkout.stripe.com/c/pay/cs_test_mixed"
+    )
+
+    SubscriptionCheckoutService.any_instance.expects(:create_checkout_session).returns(mock_session)
+
+    post subscription_checkouts_path, params: { frequency: "every_month" }
+
+    assert_response :see_other
+    assert_redirected_to "https://checkout.stripe.com/c/pay/cs_test_mixed"
+  end
+
+  test "create accepts mixed cart with standard and configured items" do
+    sign_in_as(@user)
+
+    # Cart already has a standard item from setup
+    # Add a configured (branded) item
+    variant = ProductVariant.create!(
+      product: products(:one),
+      name: "Configured Mixed Test",
+      sku: "CONFIGURED-MIXED-CTRL-TEST-1",
+      price: 0.18,
+      active: true
+    )
+
+    item = @cart.cart_items.build(
+      product_variant: variant,
+      quantity: 5000,
+      price: 0.18,
+      configuration: { design_id: "test_design" },
+      calculated_price: 0.18
+    )
+
+    item.design.attach(
+      io: StringIO.new("fake design content"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    item.save!
+
+    mock_session = OpenStruct.new(
+      id: "cs_test_mixed_configured",
+      url: "https://checkout.stripe.com/c/pay/cs_test_mixed_configured"
+    )
+
+    SubscriptionCheckoutService.any_instance.expects(:create_checkout_session).returns(mock_session)
+
+    post subscription_checkouts_path, params: { frequency: "every_month" }
+
+    assert_response :see_other
+    assert_redirected_to "https://checkout.stripe.com/c/pay/cs_test_mixed_configured"
   end
 
   # ==========================================================================

@@ -48,6 +48,17 @@ class SubscriptionCheckoutService
     @cart_items_with_associations ||= cart.cart_items.includes(product_variant: :product).to_a
   end
 
+  # Memoized partition of cart items by subscription behavior
+  # Returns items eligible for recurring billing (standard products)
+  def recurring_cart_items
+    @recurring_cart_items ||= cart_items_with_associations.reject { |item| item.sample? || item.configured? }
+  end
+
+  # Returns items for one-time purchase (samples and branded products)
+  def one_time_cart_items
+    @one_time_cart_items ||= cart_items_with_associations.select { |item| item.sample? || item.configured? }
+  end
+
   # Create a Stripe Checkout Session for subscription
   #
   # @param success_url [String] URL to redirect after successful payment
@@ -151,31 +162,89 @@ class SubscriptionCheckoutService
     end
   end
 
-  # T009: Builds Stripe line items with ad-hoc prices and recurring params
+  # T009: Builds Stripe line items with ad-hoc prices
+  #
+  # Partitions cart items into:
+  # - Recurring items (standard products): billed on every invoice
+  # - One-time items (samples, branded): billed once on first invoice
+  #
+  # Stripe subscription mode supports mixing recurring and one-time line items.
+  # One-time items (without `recurring` key) are charged only on first invoice.
   #
   # @return [Array<Hash>]
   def build_line_items
-    cart_items_with_associations.map do |item|
-      variant = item.product_variant
+    line_items = []
 
-      {
-        price_data: {
-          currency: "gbp",
-          product_data: {
-            name: variant_display_name(variant),
-            description: variant.pac_size.present? && variant.pac_size > 1 ? "#{variant.pac_size} units per pack" : nil,
-            metadata: {
-              product_variant_id: variant.id.to_s,
-              product_id: variant.product_id.to_s,
-              sku: variant.sku
-            }
-          },
-          unit_amount: (variant.price * MINOR_CURRENCY_MULTIPLIER).to_i,
-          recurring: stripe_recurring_params
-        },
-        quantity: item.quantity
-      }
+    # Add recurring items (standard products - billed every delivery)
+    recurring_cart_items.each do |item|
+      line_items << build_recurring_line_item(item)
     end
+
+    # Add one-time items (samples and branded - charged once)
+    one_time_cart_items.each do |item|
+      line_items << build_one_time_line_item(item)
+    end
+
+    line_items
+  end
+
+  # Build a recurring line item for standard products
+  def build_recurring_line_item(item)
+    variant = item.product_variant
+
+    {
+      price_data: {
+        currency: "gbp",
+        product_data: {
+          name: variant_display_name(variant),
+          description: variant.pac_size.present? && variant.pac_size > 1 ? "#{variant.pac_size} units per pack" : nil,
+          metadata: {
+            product_variant_id: variant.id.to_s,
+            product_id: variant.product_id.to_s,
+            sku: variant.sku,
+            recurring: "true"
+          }
+        },
+        unit_amount: (item.price * MINOR_CURRENCY_MULTIPLIER).to_i,
+        recurring: stripe_recurring_params
+      },
+      quantity: item.quantity
+    }
+  end
+
+  # Build a one-time line item for samples and branded products
+  # No `recurring` key = charged on first invoice only
+  def build_one_time_line_item(item)
+    variant = item.product_variant
+    display_name = variant_display_name(variant)
+
+    # Annotate name so customer knows this is one-time
+    if item.sample?
+      display_name = "#{display_name} (Sample - ships with first order)"
+    else
+      display_name = "#{display_name} (One-time - ships with first order)"
+    end
+
+    {
+      price_data: {
+        currency: "gbp",
+        product_data: {
+          name: display_name,
+          description: item.sample? ? "Free sample" : nil,
+          metadata: {
+            product_variant_id: variant.id.to_s,
+            product_id: variant.product_id.to_s,
+            sku: variant.sku,
+            recurring: "false",
+            is_sample: item.sample?.to_s,
+            is_configured: item.configured?.to_s
+          }
+        },
+        unit_amount: (item.price * MINOR_CURRENCY_MULTIPLIER).to_i
+        # Note: No `recurring` key - Stripe charges this only on first invoice
+      },
+      quantity: item.quantity
+    }
   end
 
   # T010: Builds items snapshot for JSONB storage (in minor currency units)
@@ -216,15 +285,20 @@ class SubscriptionCheckoutService
   # Uses Stripe's line_items (what was actually charged) instead of current cart
   # to prevent race condition where cart is modified during checkout.
   #
-  # The line_items contain the exact quantities and prices that Stripe charged,
-  # ensuring the subscription snapshot matches what the customer paid for.
+  # IMPORTANT: Only includes RECURRING items in the snapshot.
+  # This snapshot is used by the webhook to create renewal orders.
+  # One-time items (samples, branded) should NOT be included in renewals.
   #
   # @param stripe_session [Stripe::Checkout::Session]
   # @return [Hash]
   def build_items_snapshot_from_stripe(stripe_session)
     line_items = stripe_session.line_items.data
 
-    items = line_items.map do |line_item|
+    # Filter to only recurring items (those with recurring pricing)
+    # One-time items (samples, branded) don't have recurring pricing
+    recurring_line_items = line_items.select { |item| item.price.recurring.present? }
+
+    items = recurring_line_items.map do |line_item|
       price = line_item.price
 
       # For ad-hoc prices, we need to expand 'product' to get metadata
