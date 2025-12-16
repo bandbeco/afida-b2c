@@ -10,8 +10,8 @@ class CartItemsController < ApplicationController
     @cart = Current.cart
 
     if params[:configuration].present?
-      # Configured product (branded cups)
-      create_configured_cart_item
+      # Branded product (custom-printed cups, etc.)
+      create_branded_product_cart_item
     elsif params[:sample].present?
       # Sample request
       create_sample_cart_item
@@ -91,7 +91,7 @@ class CartItemsController < ApplicationController
     redirect_to cart_path, alert: "Cart item not found."
   end
 
-  def create_configured_cart_item
+  def create_branded_product_cart_item
     product = Product.find(params[:product_id])
 
     unless product.customizable_template?
