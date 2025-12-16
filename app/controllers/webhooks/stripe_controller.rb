@@ -58,8 +58,21 @@ module Webhooks
     private
 
     # T043: Verify webhook signature
+    #
+    # SECURITY: Raises if webhook_signing_secret is not configured.
+    # Without a secret, signature verification cannot work and webhooks
+    # could be forged by anyone.
+    #
     def verify_webhook_signature(payload, sig_header)
       webhook_secret = Rails.application.credentials.dig(:stripe, :webhook_signing_secret)
+
+      if webhook_secret.blank?
+        Rails.logger.error("[SECURITY] Stripe webhook_signing_secret not configured - rejecting all webhooks")
+        raise Stripe::SignatureVerificationError.new(
+          "Webhook signing secret not configured",
+          sig_header
+        )
+      end
 
       Stripe::Webhook.construct_event(
         payload,

@@ -159,6 +159,23 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "returns 400 when webhook_signing_secret is not configured" do
+    # SECURITY: Ensure webhooks are rejected if secret is missing
+    # This prevents signature verification bypass
+    Rails.application.credentials.stubs(:dig).with(:stripe, :webhook_signing_secret).returns(nil)
+
+    # Don't stub construct_event - let the controller's validation run
+    Stripe::Webhook.unstub(:construct_event)
+
+    payload = { type: "invoice.paid" }
+
+    post webhooks_stripe_path,
+         params: payload.to_json,
+         headers: { "Content-Type" => "application/json", "Stripe-Signature" => "any_signature" }
+
+    assert_response :bad_request
+  end
+
   # ==========================================================================
   # T053: customer.subscription.updated syncs status
   # ==========================================================================
