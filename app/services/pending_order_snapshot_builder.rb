@@ -111,7 +111,7 @@ class PendingOrderSnapshotBuilder
     {
       "product_variant_id" => variant&.id,
       "product_name" => variant&.product&.name || "Unknown Product",
-      "variant_name" => variant&.display_name || "Unknown",
+      "variant_name" => variant&.name || "Unknown",
       "reason" => reason
     }
   end
