@@ -1,0 +1,71 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <h1 class="text-3xl font-bold mb-6">Reorder Schedules</h1>
+
+  <% if @schedules.any? %>
+    <div class="space-y-4">
+      <% @schedules.each do |schedule| %>
+        <%= link_to reorder_schedule_path(schedule), class: "block bg-base-100 rounded-lg shadow-sm border border-base-200 p-6 hover:shadow-md transition-shadow" do %>
+          <div class="flex justify-between items-center gap-4">
+            <%# Schedule details %>
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="badge <%= schedule.active? ? 'badge-success' : 'badge-warning' %>">
+                  <%= schedule.status.titleize %>
+                </span>
+                <span class="text-lg font-medium">
+                  <%= schedule.frequency.titleize.gsub('_', ' ') %>
+                </span>
+              </div>
+              <p class="text-sm text-base-content/70">
+                <%= pluralize(schedule.reorder_schedule_items.size, 'item') %> · Next delivery: <%= schedule.next_scheduled_date.strftime('%B %d, %Y') %>
+              </p>
+            </div>
+
+            <%# Stacked product images %>
+            <div class="flex -space-x-3 flex-shrink-0">
+              <% schedule.reorder_schedule_items.first(5).each_with_index do |item, index| %>
+                <% photo = item.product_variant.primary_photo || item.product_variant.product.primary_photo %>
+                <div class="w-12 h-12 rounded-full border-2 border-base-100 bg-base-200 overflow-hidden shadow-sm"
+                     style="z-index: <%= 10 - index %>;">
+                  <% if photo %>
+                    <%= image_tag photo.variant(resize_to_fill: [96, 96]),
+                                  class: "w-full h-full object-cover",
+                                  alt: item.product_variant.display_name %>
+                  <% else %>
+                    <div class="w-full h-full flex items-center justify-center text-base-content/30">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+              <% if schedule.reorder_schedule_items.size > 5 %>
+                <div class="w-12 h-12 rounded-full border-2 border-base-100 bg-base-300 flex items-center justify-center text-xs font-medium shadow-sm"
+                     style="z-index: 5;">
+                  +<%= schedule.reorder_schedule_items.size - 5 %>
+                </div>
+              <% end %>
+            </div>
+
+            <%# Arrow %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-base-content/50 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+            </svg>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-base-100 rounded-lg border border-base-200">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+      <h3 class="text-lg font-medium mb-2">No Reorder Schedules</h3>
+      <p class="text-base-content/70 mb-4">
+        Set up automatic reorders from your past orders.
+      </p>
+      <%= link_to "View Your Orders", orders_path, class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

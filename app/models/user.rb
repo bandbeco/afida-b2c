@@ -11,6 +11,7 @@ class User < ApplicationRecord
   has_many :orders, dependent: :destroy
   has_many :subscriptions, dependent: :destroy
   has_many :addresses, dependent: :destroy
+  has_many :reorder_schedules, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
@@ -35,6 +36,20 @@ class User < ApplicationRecord
 
   def verify_email_address!
     update!(email_address_verified: true)
+  end
+
+  # Get or create a Stripe Customer for this user
+  # Used for saving payment methods for reorder schedules
+  def stripe_customer
+    return Stripe::Customer.retrieve(stripe_customer_id) if stripe_customer_id.present?
+
+    customer = Stripe::Customer.create(
+      email: email_address,
+      name: [ first_name, last_name ].compact.join(" ").presence,
+      metadata: { user_id: id }
+    )
+    update!(stripe_customer_id: customer.id)
+    customer
   end
 
   def email_address_verification_token_expired?

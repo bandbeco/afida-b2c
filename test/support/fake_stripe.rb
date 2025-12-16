@@ -20,6 +20,7 @@ module FakeStripe
     TaxRate.reset!
     Subscription.reset!
     Customer.reset!
+    PaymentIntent.reset!
   end
 
   # Configure default behavior
@@ -294,6 +295,37 @@ module FakeStripe
     end
   end
 
+  class PaymentIntent
+    attr_reader :id, :status, :amount, :currency, :customer, :payment_method,
+                :metadata, :description
+
+    @@payment_intents = {}
+
+    def initialize(params = {})
+      @id = params[:id] || "pi_test_#{SecureRandom.hex(12)}"
+      @status = params[:status] || "succeeded"
+      @amount = params[:amount]
+      @currency = params[:currency]
+      @customer = params[:customer]
+      @payment_method = params[:payment_method]
+      @metadata = params[:metadata] || {}
+      @description = params[:description]
+      @@payment_intents[@id] = self
+    end
+
+    def self.create(params = {})
+      new(params)
+    end
+
+    def self.retrieve(payment_intent_id)
+      @@payment_intents[payment_intent_id] || new(id: payment_intent_id)
+    end
+
+    def self.reset!
+      @@payment_intents = {}
+    end
+  end
+
   class Subscription
     attr_reader :id, :status, :pause_collection
 
@@ -426,6 +458,7 @@ if defined?(Rails) && Rails.env.test?
     TaxRate = FakeStripe::TaxRate
     Subscription = FakeStripe::Subscription
     Customer = FakeStripe::Customer
+    PaymentIntent = FakeStripe::PaymentIntent
 
     # Ensure Stripe error classes exist for testing
     class StripeError < StandardError; end

@@ -8,3 +8,14 @@
 #     command: "SoftDeletedRecord.due.delete_all"
 #     priority: 2
 #     schedule: at 5am every day
+
+# Reorder Schedule Jobs
+production:
+  create_pending_orders:
+    class: CreatePendingOrdersJob
+    queue: default
+    schedule: at 6am every day
+  expire_pending_orders:
+    class: ExpirePendingOrdersJob
+    queue: default
+    schedule: at 6am every day

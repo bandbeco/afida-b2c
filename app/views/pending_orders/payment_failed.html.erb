@@ -1,0 +1,53 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-2xl mx-auto text-center">
+
+    <div class="bg-red-50 border border-red-200 rounded-lg p-8 mb-8">
+      <svg class="h-16 w-16 text-red-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      <h1 class="text-2xl font-bold text-red-800 mb-2">Payment Failed</h1>
+      <p class="text-red-600"><%= flash[:alert] %></p>
+    </div>
+
+    <div class="bg-white shadow-lg rounded-lg p-6 mb-8">
+      <h2 class="text-xl font-semibold mb-4">What to do next?</h2>
+      <ul class="text-left space-y-2 text-gray-600">
+        <li class="flex items-start">
+          <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Check that your card has sufficient funds
+        </li>
+        <li class="flex items-start">
+          <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Verify your card details are up to date
+        </li>
+        <li class="flex items-start">
+          <svg class="h-5 w-5 text-gray-400 mr-2 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Contact your bank if the issue persists
+        </li>
+      </ul>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+      <%= link_to "Try Again",
+          confirm_pending_order_path(@pending_order, token: @pending_order.confirmation_token),
+          method: :post,
+          data: { turbo_method: :post },
+          class: "btn btn-primary" %>
+      <%= link_to "Edit Order",
+          edit_pending_order_path(@pending_order, token: @pending_order.edit_token),
+          class: "btn btn-outline" %>
+    </div>
+
+    <p class="mt-6 text-sm text-gray-500">
+      Your order will remain pending until <%= @pending_order.scheduled_for.strftime("%B %d, %Y") %>.
+      After that date, it will expire automatically.
+    </p>
+
+  </div>
+</div>

@@ -19,14 +19,14 @@
 
 **Purpose**: Database schema and project structure
 
-- [ ] T001 Create migration for reorder_schedules table in db/migrate/YYYYMMDDHHMMSS_create_reorder_schedules.rb
-- [ ] T002 Create migration for reorder_schedule_items table in db/migrate/YYYYMMDDHHMMSS_create_reorder_schedule_items.rb
-- [ ] T003 Create migration for pending_orders table in db/migrate/YYYYMMDDHHMMSS_create_pending_orders.rb
-- [ ] T004 Create migration to add stripe_customer_id to users in db/migrate/YYYYMMDDHHMMSS_add_stripe_customer_id_to_users.rb
-- [ ] T005 Create migration to add reorder_schedule_id to orders in db/migrate/YYYYMMDDHHMMSS_add_reorder_schedule_id_to_orders.rb
-- [ ] T006 Run migrations and verify schema in db/schema.rb
-- [ ] T007 Add routes for reorder_schedules and pending_orders in config/routes.rb
-- [ ] T008 [P] Add recurring job configuration in config/recurring.yml for CreatePendingOrdersJob and ExpirePendingOrdersJob
+- [x] T001 Create migration for reorder_schedules table in db/migrate/YYYYMMDDHHMMSS_create_reorder_schedules.rb
+- [x] T002 Create migration for reorder_schedule_items table in db/migrate/YYYYMMDDHHMMSS_create_reorder_schedule_items.rb
+- [x] T003 Create migration for pending_orders table in db/migrate/YYYYMMDDHHMMSS_create_pending_orders.rb
+- [x] T004 Create migration to add stripe_customer_id to users in db/migrate/YYYYMMDDHHMMSS_add_stripe_customer_id_to_users.rb
+- [x] T005 Create migration to add reorder_schedule_id to orders in db/migrate/YYYYMMDDHHMMSS_add_reorder_schedule_id_to_orders.rb
+- [x] T006 Run migrations and verify schema in db/schema.rb
+- [x] T007 Add routes for reorder_schedules and pending_orders in config/routes.rb
+- [x] T008 [P] Add recurring job configuration in config/recurring.yml for CreatePendingOrdersJob and ExpirePendingOrdersJob
 
 ---
 
@@ -38,19 +38,19 @@
 
 ### Tests for Foundational
 
-- [ ] T009 [P] Write failing tests for ReorderSchedule model in test/models/reorder_schedule_test.rb
-- [ ] T010 [P] Write failing tests for ReorderScheduleItem model in test/models/reorder_schedule_item_test.rb
-- [ ] T011 [P] Write failing tests for PendingOrder model in test/models/pending_order_test.rb
+- [x] T009 [P] Write failing tests for ReorderSchedule model in test/models/reorder_schedule_test.rb
+- [x] T010 [P] Write failing tests for ReorderScheduleItem model in test/models/reorder_schedule_item_test.rb
+- [x] T011 [P] Write failing tests for PendingOrder model in test/models/pending_order_test.rb
 
 ### Implementation for Foundational
 
-- [ ] T012 [P] Implement ReorderSchedule model in app/models/reorder_schedule.rb (enums, validations, scopes, state methods)
-- [ ] T013 [P] Implement ReorderScheduleItem model in app/models/reorder_schedule_item.rb (validations, availability check)
-- [ ] T014 [P] Implement PendingOrder model in app/models/pending_order.rb (enums, validations, token generation, snapshot accessors)
-- [ ] T015 [P] Add has_many :reorder_schedules association to User model in app/models/user.rb
-- [ ] T016 [P] Add belongs_to :reorder_schedule association to Order model in app/models/order.rb
-- [ ] T017 Add stripe_customer method to User model in app/models/user.rb (get or create Stripe Customer)
-- [ ] T018 Run model tests and verify all pass
+- [x] T012 [P] Implement ReorderSchedule model in app/models/reorder_schedule.rb (enums, validations, scopes, state methods)
+- [x] T013 [P] Implement ReorderScheduleItem model in app/models/reorder_schedule_item.rb (validations, availability check)
+- [x] T014 [P] Implement PendingOrder model in app/models/pending_order.rb (enums, validations, token generation, snapshot accessors)
+- [x] T015 [P] Add has_many :reorder_schedules association to User model in app/models/user.rb
+- [x] T016 [P] Add belongs_to :reorder_schedule association to Order model in app/models/order.rb
+- [x] T017 Add stripe_customer method to User model in app/models/user.rb (get or create Stripe Customer)
+- [x] T018 Run model tests and verify all pass
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
