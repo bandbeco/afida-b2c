@@ -73,6 +73,6 @@ class SubscriptionToggleTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Should see disabled toggle with samples message
     assert_select "input[type='checkbox'][disabled]"
-    assert_match(/Subscriptions are not available for sample orders/, response.body)
+    assert_match(/Subscriptions require at least one standard product/, response.body)
   end
 end

@@ -9,7 +9,7 @@
   Mixed carts are now supported:
   - Standard products become recurring (billed every delivery)
   - Samples ship free with first order only
-  - Branded products are charged once and ship with first order
+  - Branded products are charged once and shipped separately
 
   Guest users see disabled toggle with sign-in prompt.
   Carts with only samples/branded items show disabled toggle.
@@ -58,10 +58,10 @@
             <p class="font-medium text-amber-800">Some items are one-time only:</p>
             <ul class="mt-1 text-amber-700 list-disc list-inside">
               <% if Current.cart.sample_items.any? %>
-                <li>Samples ship with your first order only (free)</li>
+                <li>Samples ship with your first order only</li>
               <% end %>
               <% if Current.cart.configured_items.any? %>
-                <li>Branded products are charged once and ship with your first order</li>
+                <li>Branded products are charged once and shipped separately</li>
               <% end %>
             </ul>
           </div>
@@ -108,7 +108,7 @@
         <input type="checkbox" class="toggle" disabled />
       </div>
       <p class="text-sm text-gray-600 mt-2">
-        <%= link_to "Sign in", new_session_path(return_to: cart_path), class: "link text-primary font-medium" %>
+        <%= link_to "Sign in", new_session_path(return_to: cart_path), class: "link text-primary font-medium", data: { turbo_frame: "_top" } %>
         to set up recurring orders.
       </p>
     </div>
