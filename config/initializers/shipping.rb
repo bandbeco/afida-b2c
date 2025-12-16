@@ -23,6 +23,15 @@ module Shipping
   # Currency
   CURRENCY = "gbp"
 
+  # Calculate shipping cost in pence based on subtotal (excluding VAT)
+  # Used by subscription services where Stripe shipping_options aren't available
+  #
+  # @param subtotal [Numeric] Order subtotal in pounds (excluding VAT)
+  # @return [Integer] Shipping cost in pence (0 for free shipping, STANDARD_COST otherwise)
+  def self.cost_for_subtotal(subtotal)
+    subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_COST
+  end
+
   # Get shipping options based on cart subtotal (excluding VAT)
   # - Orders >= £100: Free shipping only
   # - Orders < £100: Standard shipping (£5) only

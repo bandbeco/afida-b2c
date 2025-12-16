@@ -6,6 +6,7 @@ module Webhooks
   # Endpoint: POST /webhooks/stripe
   #
   # Supported events:
+  #   - invoice.created: Adds shipping line item to draft invoices for renewals
   #   - invoice.paid: Creates renewal orders for subscriptions
   #   - customer.subscription.updated: Syncs subscription status
   #   - customer.subscription.deleted: Marks subscription as cancelled
@@ -74,6 +75,8 @@ module Webhooks
     # Route events to appropriate handlers
     def handle_event(event)
       case event["type"]
+      when "invoice.created"
+        handle_invoice_created(event["data"]["object"])
       when "invoice.paid"
         handle_invoice_paid(event["data"]["object"])
       when "customer.subscription.updated"
@@ -85,6 +88,90 @@ module Webhooks
       else
         Rails.event.notify("webhook.stripe.unhandled")
       end
+    end
+
+    # Handle invoice.created event
+    #
+    # Adds shipping line item to draft invoices for subscription renewals.
+    # This ensures customers are charged for shipping on each renewal based
+    # on the FREE_SHIPPING_THRESHOLD (orders >= £100 get free shipping).
+    #
+    # Stripe creates invoices in "draft" status, giving us time to add
+    # line items before the invoice is finalized and charged.
+    #
+    # Skips:
+    #   - First invoice (subscription_create) - shipping handled in checkout
+    #   - Non-subscription invoices
+    #   - Subscriptions not in our database
+    #
+    def handle_invoice_created(invoice)
+      billing_reason = invoice["billing_reason"]
+      invoice_id = invoice["id"]
+      subscription_id = invoice["subscription"]
+      customer_id = invoice["customer"]
+
+      Rails.event.set_context(
+        stripe_invoice_id: invoice_id,
+        stripe_subscription_id: subscription_id,
+        billing_reason: billing_reason
+      )
+
+      # Skip first invoice (shipping handled during checkout)
+      if billing_reason == "subscription_create"
+        Rails.event.notify("webhook.stripe.invoice_created.skipped", { reason: "first_invoice" })
+        return
+      end
+
+      # Only process subscription renewal invoices
+      unless subscription_id.present?
+        Rails.event.notify("webhook.stripe.invoice_created.skipped", { reason: "non_subscription" })
+        return
+      end
+
+      # Find subscription in our database
+      subscription = Subscription.find_by(stripe_subscription_id: subscription_id)
+      unless subscription
+        Rails.event.notify("webhook.stripe.invoice_created.skipped", { reason: "subscription_not_found" })
+        return
+      end
+
+      # Calculate shipping based on items_snapshot subtotal
+      items_snapshot = subscription.items_snapshot
+      items_snapshot = JSON.parse(items_snapshot) if items_snapshot.is_a?(String)
+
+      subtotal_pounds = (items_snapshot["subtotal_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
+      shipping_cost_minor = Shipping.cost_for_subtotal(subtotal_pounds)
+
+      # Add shipping line item if not free
+      if shipping_cost_minor > 0
+        Stripe::InvoiceItem.create(
+          customer: customer_id,
+          invoice: invoice_id,
+          amount: shipping_cost_minor,
+          currency: Shipping::CURRENCY,
+          description: "Standard Shipping"
+        )
+
+        Rails.event.notify("webhook.stripe.invoice_created.shipping_added", {
+          subscription_id: subscription.id,
+          shipping_amount: shipping_cost_minor
+        })
+      else
+        Rails.event.notify("webhook.stripe.invoice_created.free_shipping", {
+          subscription_id: subscription.id,
+          subtotal: subtotal_pounds
+        })
+      end
+    rescue Stripe::StripeError => e
+      # Log error but don't fail the webhook - Stripe will retry
+      Rails.event.notify("webhook.stripe.invoice_created.error", {
+        error: e.message,
+        subscription_id: subscription&.id
+      })
+      Sentry.capture_exception(e, extra: {
+        invoice_id: invoice_id,
+        subscription_id: subscription_id
+      })
     end
 
     # T044: Handle invoice.paid event
@@ -144,6 +231,11 @@ module Webhooks
     end
 
     # T046: Create renewal order from subscription's items_snapshot
+    #
+    # Recalculates shipping for each renewal based on the FREE_SHIPPING_THRESHOLD:
+    # - Orders >= £100 subtotal: Free shipping
+    # - Orders < £100 subtotal: Standard shipping (£5)
+    #
     def create_renewal_order(subscription, invoice)
       items_snapshot = subscription.items_snapshot
       items_snapshot = JSON.parse(items_snapshot) if items_snapshot.is_a?(String)
@@ -156,7 +248,11 @@ module Webhooks
       # Calculate amounts from snapshot (already in minor units)
       subtotal = (items_snapshot["subtotal_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
       vat = (items_snapshot["vat_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
-      shipping = (shipping_snapshot["cost_minor"] || 0) / MINOR_CURRENCY_MULTIPLIER.to_f
+
+      # Recalculate shipping based on current subtotal to apply free shipping threshold
+      # This ensures orders >= £100 get free shipping on every renewal
+      shipping_cost_minor = Shipping.cost_for_subtotal(subtotal)
+      shipping = shipping_cost_minor / MINOR_CURRENCY_MULTIPLIER.to_f
       total = subtotal + vat + shipping
 
       ActiveRecord::Base.transaction do

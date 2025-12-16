@@ -316,6 +316,306 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # Free shipping threshold tests for renewal orders
+  # ==========================================================================
+
+  test "invoice.paid applies free shipping for renewal orders >= £100 subtotal" do
+    # Update subscription to have subtotal above threshold (£120 = 12000 pence)
+    @subscription.update!(
+      items_snapshot: {
+        "items" => [
+          {
+            "product_variant_id" => 1,
+            "product_id" => 1,
+            "sku" => "SWC-8OZ",
+            "name" => "Single Wall Cup 8oz",
+            "quantity" => 10,
+            "unit_price_minor" => 1200,
+            "pac_size" => 500,
+            "total_minor" => 12000
+          }
+        ],
+        "subtotal_minor" => 12000,
+        "vat_minor" => 2400,
+        "total_minor" => 14400,
+        "currency" => "gbp"
+      }
+    )
+
+    event = build_invoice_paid_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_free_shipping_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_path,
+           params: event.to_json,
+           headers: webhook_headers(event.to_json)
+    end
+
+    order = Order.last
+    assert_equal 0.0, order.shipping_amount, "Shipping should be free for orders >= £100"
+  end
+
+  test "invoice.paid applies standard shipping for renewal orders below £100 subtotal" do
+    # Subscription fixture has subtotal_minor: 3200 (£32) - below threshold
+    # The shipping_snapshot cost is irrelevant - we recalculate based on subtotal
+    # Update shipping_snapshot to verify we ignore the stored cost
+    shipping = JSON.parse(@subscription.shipping_snapshot)
+    shipping["cost_minor"] = 0  # Set to 0 to prove we recalculate, not use stored value
+    @subscription.update!(shipping_snapshot: shipping)
+
+    event = build_invoice_paid_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_standard_shipping_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_path,
+           params: event.to_json,
+           headers: webhook_headers(event.to_json)
+    end
+
+    order = Order.last
+    expected_shipping = Shipping::STANDARD_COST / 100.0
+    assert_equal expected_shipping, order.shipping_amount, "Shipping should be £5 for orders below £100"
+  end
+
+  test "invoice.paid applies free shipping at exactly £100 threshold" do
+    # Update subscription to have subtotal exactly at threshold (£100 = 10000 pence)
+    @subscription.update!(
+      items_snapshot: {
+        "items" => [
+          {
+            "product_variant_id" => 1,
+            "product_id" => 1,
+            "sku" => "SWC-8OZ",
+            "name" => "Single Wall Cup 8oz",
+            "quantity" => 5,
+            "unit_price_minor" => 2000,
+            "pac_size" => 500,
+            "total_minor" => 10000
+          }
+        ],
+        "subtotal_minor" => 10000,
+        "vat_minor" => 2000,
+        "total_minor" => 12000,
+        "currency" => "gbp"
+      }
+    )
+
+    event = build_invoice_paid_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_threshold_shipping_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_path,
+           params: event.to_json,
+           headers: webhook_headers(event.to_json)
+    end
+
+    order = Order.last
+    assert_equal 0.0, order.shipping_amount, "Shipping should be free at exactly £100 threshold"
+  end
+
+  # ==========================================================================
+  # invoice.created adds shipping line item to draft invoices
+  # ==========================================================================
+
+  test "invoice.created adds shipping line item for subscription renewal below £100" do
+    # Subscription fixture has subtotal_minor: 3200 (£32) - below threshold
+    invoice_id = "in_created_#{SecureRandom.hex(8)}"
+    customer_id = @subscription.stripe_customer_id
+
+    event = build_invoice_created_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: invoice_id,
+      customer_id: customer_id
+    )
+    stub_webhook_event(event)
+
+    # Expect Stripe::InvoiceItem.create to be called with shipping amount
+    Stripe::InvoiceItem.expects(:create).with(
+      customer: customer_id,
+      invoice: invoice_id,
+      amount: Shipping::STANDARD_COST,
+      currency: "gbp",
+      description: "Standard Shipping"
+    ).once
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :success
+  end
+
+  test "invoice.created does NOT add shipping for subscription renewal >= £100" do
+    # Update subscription to have subtotal above threshold (£120 = 12000 pence)
+    @subscription.update!(
+      items_snapshot: {
+        "items" => [
+          {
+            "product_variant_id" => 1,
+            "product_id" => 1,
+            "sku" => "SWC-8OZ",
+            "name" => "Single Wall Cup 8oz",
+            "quantity" => 10,
+            "unit_price_minor" => 1200,
+            "pac_size" => 500,
+            "total_minor" => 12000
+          }
+        ],
+        "subtotal_minor" => 12000,
+        "vat_minor" => 2400,
+        "total_minor" => 14400,
+        "currency" => "gbp"
+      }
+    )
+
+    event = build_invoice_created_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_free_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Expect Stripe::InvoiceItem.create to NOT be called
+    Stripe::InvoiceItem.expects(:create).never
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :success
+  end
+
+  test "invoice.created does NOT add shipping at exactly £100 threshold" do
+    # Update subscription to have subtotal exactly at threshold (£100 = 10000 pence)
+    @subscription.update!(
+      items_snapshot: {
+        "items" => [
+          {
+            "product_variant_id" => 1,
+            "product_id" => 1,
+            "sku" => "SWC-8OZ",
+            "name" => "Single Wall Cup 8oz",
+            "quantity" => 5,
+            "unit_price_minor" => 2000,
+            "pac_size" => 500,
+            "total_minor" => 10000
+          }
+        ],
+        "subtotal_minor" => 10000,
+        "vat_minor" => 2000,
+        "total_minor" => 12000,
+        "currency" => "gbp"
+      }
+    )
+
+    event = build_invoice_created_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_threshold_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Expect Stripe::InvoiceItem.create to NOT be called (free shipping at threshold)
+    Stripe::InvoiceItem.expects(:create).never
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :success
+  end
+
+  test "invoice.created skips first invoice (subscription_create)" do
+    event = build_invoice_created_event(
+      billing_reason: "subscription_create",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_first_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Expect Stripe::InvoiceItem.create to NOT be called
+    Stripe::InvoiceItem.expects(:create).never
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :success
+  end
+
+  test "invoice.created skips non-subscription invoices" do
+    event = build_invoice_created_event(
+      billing_reason: "manual",
+      subscription_id: nil,
+      invoice_id: "in_manual_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Expect Stripe::InvoiceItem.create to NOT be called
+    Stripe::InvoiceItem.expects(:create).never
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :success
+  end
+
+  test "invoice.created skips unknown subscriptions" do
+    event = build_invoice_created_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: "sub_unknown_#{SecureRandom.hex(8)}",
+      invoice_id: "in_unknown_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Expect Stripe::InvoiceItem.create to NOT be called
+    Stripe::InvoiceItem.expects(:create).never
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    assert_response :success
+  end
+
+  test "invoice.created handles Stripe API errors gracefully" do
+    # Subscription fixture has subtotal_minor: 3200 (£32) - below threshold
+    event = build_invoice_created_event(
+      billing_reason: "subscription_cycle",
+      subscription_id: @subscription.stripe_subscription_id,
+      invoice_id: "in_error_#{SecureRandom.hex(8)}"
+    )
+    stub_webhook_event(event)
+
+    # Simulate Stripe API error
+    Stripe::InvoiceItem.stubs(:create).raises(Stripe::InvalidRequestError.new("Invoice is already finalized", param: "invoice"))
+
+    # Stub Sentry to verify error is captured
+    Sentry.expects(:capture_exception).once
+
+    post webhooks_stripe_path,
+         params: event.to_json,
+         headers: webhook_headers(event.to_json)
+
+    # Should still return success (webhook received, error logged)
+    assert_response :success
+  end
+
+  # ==========================================================================
   # T057: status mapping from Stripe to local enum
   # ==========================================================================
 
@@ -418,6 +718,23 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
           subscription: subscription_id,
           attempt_count: 1,
           next_payment_attempt: 3.days.from_now.to_i
+        }
+      }
+    }
+  end
+
+  def build_invoice_created_event(billing_reason:, subscription_id:, invoice_id:, customer_id: nil)
+    {
+      id: "evt_#{SecureRandom.hex(8)}",
+      type: "invoice.created",
+      data: {
+        object: {
+          id: invoice_id,
+          subscription: subscription_id,
+          customer: customer_id || @subscription.stripe_customer_id,
+          billing_reason: billing_reason,
+          status: "draft",
+          currency: "gbp"
         }
       }
     }

@@ -34,6 +34,10 @@ class SubscriptionCheckoutService
   # Stripe uses minor currency units (pence for GBP)
   MINOR_CURRENCY_MULTIPLIER = 100
 
+  # Shipping costs (pence) - uses same logic as regular checkout
+  STANDARD_SHIPPING_COST = Shipping::STANDARD_COST
+  FREE_SHIPPING_THRESHOLD = Shipping::FREE_SHIPPING_THRESHOLD
+
   attr_reader :cart, :user, :frequency
 
   def initialize(cart:, user:, frequency:)
@@ -116,7 +120,7 @@ class SubscriptionCheckoutService
 
     # Build snapshots from Stripe session (not cart - cart may have changed)
     items_snapshot = build_items_snapshot_from_stripe(stripe_session)
-    shipping_snapshot = build_shipping_snapshot(stripe_session)
+    shipping_snapshot = build_shipping_snapshot(stripe_session, items_snapshot)
 
     ActiveRecord::Base.transaction do
       # Create subscription record
@@ -340,19 +344,31 @@ class SubscriptionCheckoutService
 
   # T011: Builds shipping snapshot from Stripe session
   #
+  # Calculates shipping cost based on recurring items subtotal:
+  # - Orders >= £100 subtotal: Free shipping
+  # - Orders < £100 subtotal: Standard shipping (£5)
+  #
+  # Note: Stripe subscription mode doesn't support shipping_options, so we
+  # calculate shipping ourselves based on the FREE_SHIPPING_THRESHOLD.
+  #
   # @param stripe_session [Stripe::Checkout::Session]
+  # @param items_snapshot [Hash] Pre-built items snapshot to avoid duplicate API calls
   # @return [Hash]
-  def build_shipping_snapshot(stripe_session)
+  def build_shipping_snapshot(stripe_session, items_snapshot)
     customer_details = stripe_session.customer_details
     address = customer_details&.address
 
-    shipping_cost = stripe_session.shipping_cost
-    cost_minor = shipping_cost ? shipping_cost.amount_total : 0
+    # Calculate shipping based on recurring items subtotal (excluding VAT)
+    # Only recurring items count toward the threshold since they're what
+    # the customer will pay on each renewal
+    subtotal_pounds = items_snapshot["subtotal_minor"] / MINOR_CURRENCY_MULTIPLIER.to_f
+    cost_minor = Shipping.cost_for_subtotal(subtotal_pounds)
+    shipping_name = cost_minor.zero? ? "Free Shipping" : "Standard Delivery"
 
     {
       "method" => "standard",
       "cost_minor" => cost_minor,
-      "name" => "Standard Delivery",
+      "name" => shipping_name,
       "address" => {
         "line1" => address&.line1,
         "line2" => address&.line2,

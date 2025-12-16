@@ -257,14 +257,13 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
           postal_code: "EC1A 1BB",
           country: "GB"
         )
-      ),
-      shipping_cost: OpenStruct.new(
-        amount_total: 795,
-        shipping_rate: "shr_standard"
       )
     )
 
-    snapshot = @service.send(:build_shipping_snapshot, stripe_session)
+    # Items snapshot with subtotal below threshold (£50 = 5000 pence)
+    items_snapshot = { "subtotal_minor" => 5000 }
+
+    snapshot = @service.send(:build_shipping_snapshot, stripe_session, items_snapshot)
 
     assert_equal "John Smith", snapshot["recipient_name"]
     assert_equal "123 Business St", snapshot["address"]["line1"]
@@ -272,10 +271,9 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
     assert_equal "London", snapshot["address"]["city"]
     assert_equal "EC1A 1BB", snapshot["address"]["postal_code"]
     assert_equal "GB", snapshot["address"]["country"]
-    assert_equal 795, snapshot["cost_minor"]
   end
 
-  test "build_shipping_snapshot handles missing shipping cost" do
+  test "build_shipping_snapshot applies free shipping for orders >= £100" do
     stripe_session = OpenStruct.new(
       customer_details: OpenStruct.new(
         name: "John Smith",
@@ -285,13 +283,82 @@ class SubscriptionCheckoutServiceTest < ActiveSupport::TestCase
           postal_code: "EC1A 1BB",
           country: "GB"
         )
-      ),
-      shipping_cost: nil
+      )
     )
 
-    snapshot = @service.send(:build_shipping_snapshot, stripe_session)
+    # Items snapshot with subtotal at threshold (£100 = 10000 pence)
+    items_snapshot = { "subtotal_minor" => 10000 }
+
+    snapshot = @service.send(:build_shipping_snapshot, stripe_session, items_snapshot)
 
     assert_equal 0, snapshot["cost_minor"]
+    assert_equal "Free Shipping", snapshot["name"]
+  end
+
+  test "build_shipping_snapshot applies free shipping for orders above £100" do
+    stripe_session = OpenStruct.new(
+      customer_details: OpenStruct.new(
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Business St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      )
+    )
+
+    # Items snapshot with subtotal above threshold (£150 = 15000 pence)
+    items_snapshot = { "subtotal_minor" => 15000 }
+
+    snapshot = @service.send(:build_shipping_snapshot, stripe_session, items_snapshot)
+
+    assert_equal 0, snapshot["cost_minor"]
+    assert_equal "Free Shipping", snapshot["name"]
+  end
+
+  test "build_shipping_snapshot applies standard shipping for orders below £100" do
+    stripe_session = OpenStruct.new(
+      customer_details: OpenStruct.new(
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Business St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      )
+    )
+
+    # Items snapshot with subtotal below threshold (£50 = 5000 pence)
+    items_snapshot = { "subtotal_minor" => 5000 }
+
+    snapshot = @service.send(:build_shipping_snapshot, stripe_session, items_snapshot)
+
+    assert_equal Shipping::STANDARD_COST, snapshot["cost_minor"]
+    assert_equal "Standard Delivery", snapshot["name"]
+  end
+
+  test "build_shipping_snapshot handles edge case just below £100 threshold" do
+    stripe_session = OpenStruct.new(
+      customer_details: OpenStruct.new(
+        name: "John Smith",
+        address: OpenStruct.new(
+          line1: "123 Business St",
+          city: "London",
+          postal_code: "EC1A 1BB",
+          country: "GB"
+        )
+      )
+    )
+
+    # Items snapshot with subtotal just below threshold (£99.99 = 9999 pence)
+    items_snapshot = { "subtotal_minor" => 9999 }
+
+    snapshot = @service.send(:build_shipping_snapshot, stripe_session, items_snapshot)
+
+    assert_equal Shipping::STANDARD_COST, snapshot["cost_minor"]
+    assert_equal "Standard Delivery", snapshot["name"]
   end
 
   # ==========================================================================
