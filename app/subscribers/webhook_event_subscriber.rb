@@ -36,7 +36,6 @@ class WebhookEventSubscriber
     "webhook.stripe.signature_failed" => :warn,
     "webhook.stripe.subscription_not_found" => :warn,
     "webhook.stripe.variant_not_found" => :warn,
-    "webhook.stripe.ip_rejected" => :warn,
     "webhook.stripe.payment.failed" => :warn,
 
     # Error events
