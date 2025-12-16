@@ -17,37 +17,16 @@
   --color-secondary-content: #ffffff;
 }
 
-/* Override all DaisyUI button styles */
+/* Keep pill shape for all buttons */
 .btn {
-  background-color: #79ebc0;
-  color: #000000;
-  border-color: #79ebc0;
   border-radius: 9999px;
 }
 
-.btn:hover {
-  background-color: #5fd9a8;
-  border-color: #5fd9a8;
-  color: #000000;
-}
-
-/* Outlined buttons should have transparent background */
-.btn-outline {
-  background-color: transparent;
-  border-color: #79ebc0;
-  color: #79ebc0;
-}
-
-.btn-outline:hover {
-  background-color: #79ebc0;
-  color: #000000;
-}
-
+/* Custom primary button (Afida green) */
 .btn-primary {
   background-color: #79ebc0;
   color: #000000;
   border-color: #79ebc0;
-  border-radius: 9999px;
 }
 
 .btn-primary:hover {

@@ -31,7 +31,7 @@
 
       <% if @schedule.reorder_schedule_items.any? %>
         <div>
-          <label class="block text-sm font-medium mb-3">Items in Schedule</label>
+          <label class="block text-sm font-medium mb-3">Items in Scheduled Reorder</label>
           <div class="space-y-3">
             <%= f.fields_for :reorder_schedule_items do |item_form| %>
               <div class="flex items-center gap-4 p-4 bg-base-200/50 rounded-lg">

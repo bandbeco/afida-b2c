@@ -33,15 +33,15 @@ class ReorderScheduleSetupService
   def complete_setup(session_id:, frequency:)
     session = Stripe::Checkout::Session.retrieve({
       id: session_id,
-      expand: [ "setup_intent" ]
+      expand: [ "setup_intent.payment_method" ]
     })
-    payment_method_id = session.setup_intent.payment_method
+    payment_method = session.setup_intent.payment_method
     order_id = session.metadata["order_id"]
     order = Order.find(order_id)
 
     schedule = create_schedule(
       frequency: frequency,
-      payment_method_id: payment_method_id,
+      payment_method: payment_method,
       order: order
     )
 
@@ -67,12 +67,14 @@ class ReorderScheduleSetupService
     end
   end
 
-  def create_schedule(frequency:, payment_method_id:, order:)
+  def create_schedule(frequency:, payment_method:, order:)
     ReorderSchedule.transaction do
       schedule = @user.reorder_schedules.create!(
         frequency: frequency,
         next_scheduled_date: calculate_next_date(frequency),
-        stripe_payment_method_id: payment_method_id,
+        stripe_payment_method_id: payment_method.id,
+        card_brand: payment_method.card&.brand,
+        card_last4: payment_method.card&.last4,
         status: :active
       )
 
