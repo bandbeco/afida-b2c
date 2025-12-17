@@ -181,7 +181,7 @@ branded_cup_8oz_variant_small:
 
 flat_lid_8oz_variant:
   product: flat_lid_8oz
-  name: Standard Pack
+  name: 8oz Pack
   sku: LID-FLAT-8-1000
   pac_size: 1000
   price: 15.00
@@ -192,7 +192,7 @@ flat_lid_8oz_variant:
 
 domed_lid_8oz_variant:
   product: domed_lid_8oz
-  name: Standard Pack
+  name: 8oz Pack
   sku: LID-DOME-8-1000
   pac_size: 1000
   price: 18.00
