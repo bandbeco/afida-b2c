@@ -66,8 +66,10 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
   test "complete_setup creates schedule from stripe session" do
     service = ReorderScheduleSetupService.new(user: @user)
 
-    # Mock Stripe session retrieval
-    setup_intent = OpenStruct.new(payment_method: "pm_test_456")
+    # Mock Stripe session retrieval with proper payment method structure
+    card = OpenStruct.new(brand: "visa", last4: "4242")
+    payment_method = OpenStruct.new(id: "pm_test_456", card: card)
+    setup_intent = OpenStruct.new(payment_method: payment_method)
     session = OpenStruct.new(
       id: "cs_test_session",
       setup_intent: setup_intent,
@@ -88,7 +90,9 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
   test "complete_setup creates schedule items from order items" do
     service = ReorderScheduleSetupService.new(user: @user)
 
-    setup_intent = OpenStruct.new(payment_method: "pm_test_456")
+    card = OpenStruct.new(brand: "visa", last4: "4242")
+    payment_method = OpenStruct.new(id: "pm_test_456", card: card)
+    setup_intent = OpenStruct.new(payment_method: payment_method)
     session = OpenStruct.new(
       id: "cs_test_session",
       setup_intent: setup_intent,
@@ -109,7 +113,9 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
   test "complete_setup sets next_scheduled_date based on frequency" do
     service = ReorderScheduleSetupService.new(user: @user)
 
-    setup_intent = OpenStruct.new(payment_method: "pm_test_456")
+    card = OpenStruct.new(brand: "visa", last4: "4242")
+    payment_method = OpenStruct.new(id: "pm_test_456", card: card)
+    setup_intent = OpenStruct.new(payment_method: payment_method)
     session = OpenStruct.new(
       id: "cs_test_session",
       setup_intent: setup_intent,
