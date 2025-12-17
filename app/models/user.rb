@@ -10,6 +10,7 @@ class User < ApplicationRecord
   has_many :carts, dependent: :destroy
   has_many :orders, dependent: :destroy
   has_many :subscriptions, dependent: :destroy
+  has_many :addresses, dependent: :destroy
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
@@ -38,6 +39,32 @@ class User < ApplicationRecord
 
   def email_address_verification_token_expired?
     email_address_verification_token_expires_at < Time.current
+  end
+
+  # Returns the user's default address, or the oldest address if no default is set
+  def default_address
+    addresses.find_by(default: true) || addresses.order(:created_at).first
+  end
+
+  # Returns true if user has any saved addresses
+  def has_saved_addresses?
+    addresses.exists?
+  end
+
+  # Returns true if the given address (line1 + postcode) matches any saved address
+  def has_matching_address?(line1:, postcode:)
+    addresses.exists?(line1: line1, postcode: postcode)
+  end
+
+  # Returns true if this user has a Stripe Customer ID
+  def has_stripe_customer?
+    stripe_customer_id.present?
+  end
+
+  # Syncs user with Stripe Customer, creating if necessary.
+  # Optionally syncs a specific address (defaults to default_address).
+  def sync_stripe_customer!(address: nil)
+    StripeCustomerSyncService.sync(self, address: address)
   end
 
   private

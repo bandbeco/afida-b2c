@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -40,6 +40,26 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "addresses", force: :cascade do |t|
+    t.string "city", limit: 100, null: false
+    t.string "company_name", limit: 100
+    t.string "country", limit: 2, default: "GB", null: false
+    t.datetime "created_at", null: false
+    t.boolean "default", default: false, null: false
+    t.string "line1", limit: 200, null: false
+    t.string "line2", limit: 100
+    t.string "nickname", limit: 50, null: false
+    t.string "phone", limit: 30
+    t.string "postcode", limit: 20, null: false
+    t.string "recipient_name", limit: 100, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id", "default"], name: "idx_addresses_user_default", where: "(\"default\" = true)"
+    t.index ["user_id", "line1", "postcode"], name: "index_addresses_on_user_line1_postcode"
+    t.index ["user_id"], name: "index_addresses_on_user_id"
+    t.index ["user_id"], name: "index_addresses_on_user_id_where_default", unique: true, where: "(\"default\" = true)"
   end
 
   create_table "branded_product_prices", force: :cascade do |t|
@@ -105,7 +125,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.bigint "product_id"
     t.string "product_name", null: false
     t.string "product_sku", null: false
-    t.bigint "product_variant_id", null: false
+    t.bigint "product_variant_id"
     t.integer "quantity", null: false
     t.datetime "updated_at", null: false
     t.index ["configuration"], name: "index_order_items_on_configuration", using: :gin
@@ -123,6 +143,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.string "order_number", null: false
     t.bigint "organization_id"
     t.bigint "placed_by_user_id"
+    t.bigint "reorder_schedule_id"
     t.string "shipping_address_line1", null: false
     t.string "shipping_address_line2"
     t.decimal "shipping_amount", precision: 10, scale: 2, null: false
@@ -131,7 +152,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.string "shipping_name", null: false
     t.string "shipping_postal_code", null: false
     t.string "status", default: "pending", null: false
-    t.string "stripe_session_id", null: false
+    t.string "stripe_invoice_id"
+    t.string "stripe_session_id"
     t.bigint "subscription_id"
     t.decimal "subtotal_amount", precision: 10, scale: 2, null: false
     t.decimal "total_amount", precision: 10, scale: 2, null: false
@@ -144,7 +166,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.index ["organization_id", "created_at"], name: "index_orders_on_organization_id_and_created_at"
     t.index ["organization_id"], name: "index_orders_on_organization_id"
     t.index ["placed_by_user_id"], name: "index_orders_on_placed_by_user_id"
+    t.index ["reorder_schedule_id"], name: "index_orders_on_reorder_schedule_id"
     t.index ["status"], name: "index_orders_on_status"
+    t.index ["stripe_invoice_id"], name: "index_orders_on_stripe_invoice_id", unique: true, where: "(stripe_invoice_id IS NOT NULL)"
     t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id", unique: true
     t.index ["subscription_id"], name: "index_orders_on_subscription_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
@@ -158,6 +182,22 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.string "phone"
     t.datetime "updated_at", null: false
     t.index ["billing_email"], name: "index_organizations_on_billing_email"
+  end
+
+  create_table "pending_orders", force: :cascade do |t|
+    t.datetime "confirmed_at"
+    t.datetime "created_at", null: false
+    t.datetime "expired_at"
+    t.jsonb "items_snapshot", default: {}, null: false
+    t.bigint "order_id"
+    t.bigint "reorder_schedule_id", null: false
+    t.date "scheduled_for", null: false
+    t.integer "status", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["order_id"], name: "index_pending_orders_on_order_id"
+    t.index ["reorder_schedule_id"], name: "index_pending_orders_on_reorder_schedule_id"
+    t.index ["scheduled_for"], name: "index_pending_orders_on_scheduled_for"
+    t.index ["status", "scheduled_for"], name: "index_pending_orders_on_status_and_scheduled_for"
   end
 
   create_table "product_compatible_lids", force: :cascade do |t|
@@ -284,6 +324,35 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.index ["profit_margin"], name: "index_products_on_profit_margin"
     t.index ["sku"], name: "index_products_on_sku"
     t.index ["slug", "product_type"], name: "index_products_on_slug_and_product_type", unique: true
+  end
+
+  create_table "reorder_schedule_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.bigint "product_variant_id", null: false
+    t.integer "quantity", null: false
+    t.bigint "reorder_schedule_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_variant_id"], name: "index_reorder_schedule_items_on_product_variant_id"
+    t.index ["reorder_schedule_id", "product_variant_id"], name: "idx_schedule_items_unique", unique: true
+    t.index ["reorder_schedule_id"], name: "index_reorder_schedule_items_on_reorder_schedule_id"
+  end
+
+  create_table "reorder_schedules", force: :cascade do |t|
+    t.datetime "cancelled_at"
+    t.string "card_brand"
+    t.string "card_last4"
+    t.datetime "created_at", null: false
+    t.integer "frequency", null: false
+    t.date "next_scheduled_date", null: false
+    t.datetime "paused_at"
+    t.integer "status", default: 0, null: false
+    t.string "stripe_payment_method_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["next_scheduled_date"], name: "index_reorder_schedules_on_next_scheduled_date"
+    t.index ["status", "next_scheduled_date"], name: "index_reorder_schedules_on_status_and_next_scheduled_date"
+    t.index ["user_id"], name: "index_reorder_schedules_on_user_id"
   end
 
   create_table "seo_ai_budget_trackings", force: :cascade do |t|
@@ -438,6 +507,8 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
 
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.jsonb "default_billing_address", default: {}, null: false
+    t.jsonb "default_shipping_address", default: {}, null: false
     t.string "email_address", null: false
     t.boolean "email_address_verified", default: false
     t.string "first_name"
@@ -445,14 +516,17 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
     t.bigint "organization_id"
     t.string "password_digest", null: false
     t.string "role"
+    t.string "stripe_customer_id"
     t.datetime "updated_at", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
     t.index ["organization_id", "role"], name: "index_users_on_organization_id_and_role"
     t.index ["organization_id"], name: "index_users_on_organization_id"
+    t.index ["stripe_customer_id"], name: "index_users_on_stripe_customer_id", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "addresses", "users"
   add_foreign_key "branded_product_prices", "products"
   add_foreign_key "cart_items", "carts"
   add_foreign_key "cart_items", "product_variants"
@@ -461,9 +535,12 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
   add_foreign_key "order_items", "product_variants"
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "organizations"
+  add_foreign_key "orders", "reorder_schedules"
   add_foreign_key "orders", "subscriptions"
   add_foreign_key "orders", "users"
   add_foreign_key "orders", "users", column: "placed_by_user_id"
+  add_foreign_key "pending_orders", "orders"
+  add_foreign_key "pending_orders", "reorder_schedules"
   add_foreign_key "product_compatible_lids", "products"
   add_foreign_key "product_compatible_lids", "products", column: "compatible_lid_id"
   add_foreign_key "product_option_assignments", "product_options"
@@ -473,6 +550,9 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_15_083737) do
   add_foreign_key "products", "categories"
   add_foreign_key "products", "organizations"
   add_foreign_key "products", "products", column: "parent_product_id"
+  add_foreign_key "reorder_schedule_items", "product_variants"
+  add_foreign_key "reorder_schedule_items", "reorder_schedules"
+  add_foreign_key "reorder_schedules", "users"
   add_foreign_key "seo_ai_content_briefs", "seo_ai_opportunities"
   add_foreign_key "seo_ai_content_drafts", "seo_ai_content_briefs"
   add_foreign_key "seo_ai_content_items", "seo_ai_content_drafts"

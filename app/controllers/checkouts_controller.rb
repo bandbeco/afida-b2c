@@ -78,8 +78,27 @@ class CheckoutsController < ApplicationController
       }
 
       if Current.user
-        session_params[:customer_email] = Current.user.email_address
         session_params[:client_reference_id] = Current.user.id
+
+        # If user selected an address, sync it to Stripe Customer for prefill
+        if params[:address_id].present?
+          address = Current.user.addresses.find_by(id: params[:address_id])
+          if address
+            # Sync address to Stripe Customer (creates customer if needed)
+            Current.user.sync_stripe_customer!(address: address)
+            session[:selected_address_id] = params[:address_id]
+
+            # Use Stripe Customer for address prefill
+            session_params[:customer] = Current.user.stripe_customer_id
+          else
+            # Address not found - fall back to email only
+            session_params[:customer_email] = Current.user.email_address
+          end
+        else
+          # User chose "Enter a different address" or has no addresses
+          # Use customer_email so Stripe doesn't prefill from existing Customer
+          session_params[:customer_email] = Current.user.email_address
+        end
       end
 
       session = Stripe::Checkout::Session.create(session_params)
@@ -101,7 +120,10 @@ class CheckoutsController < ApplicationController
     end
 
     begin
-      stripe_session = Stripe::Checkout::Session.retrieve(session_id)
+      stripe_session = Stripe::Checkout::Session.retrieve(
+        id: session_id,
+        expand: [ "collected_information" ]
+      )
 
       unless stripe_session.payment_status == "paid"
         flash[:error] = "Payment was not completed successfully"
@@ -218,15 +240,28 @@ class CheckoutsController < ApplicationController
   end
 
   def extract_shipping_address(stripe_session)
-    return {} unless stripe_session.customer_details
+    # Use with_indifferent_access for reliable key access (Stripe returns symbol keys)
+    # Requires Stripe API Clover release (2025-03-31+) where shipping_details
+    # moved to collected_information.shipping_details
+    # https://docs.stripe.com/changelog/basil/2025-03-31/checkout-session-remove-shipping-details
+    session_hash = stripe_session.to_hash.with_indifferent_access
+
+    shipping = session_hash.dig(:collected_information, :shipping_details)
+    return {} unless shipping
+
+    shipping = shipping.with_indifferent_access if shipping.respond_to?(:with_indifferent_access)
+    address = shipping[:address]
+    return {} unless address
+
+    address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
 
     {
-      name: stripe_session.customer_details.name,
-      line1: stripe_session.customer_details.address.line1,
-      line2: stripe_session.customer_details.address.line2,
-      city: stripe_session.customer_details.address.city,
-      postal_code: stripe_session.customer_details.address.postal_code,
-      country: stripe_session.customer_details.address.country
+      name: shipping[:name],
+      line1: address[:line1],
+      line2: address[:line2],
+      city: address[:city],
+      postal_code: address[:postal_code],
+      country: address[:country]
     }
   end
 

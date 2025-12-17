@@ -1,0 +1,54 @@
+# User one has two addresses (office is default)
+office:
+  user: one
+  nickname: Office
+  recipient_name: John Smith
+  company_name: Acme Ltd
+  line1: 123 High Street
+  line2: Unit 4
+  city: London
+  postcode: SW1A 1AA
+  phone: "07700900123"
+  country: GB
+  default: true
+
+home:
+  user: one
+  nickname: Home
+  recipient_name: John Smith
+  company_name:
+  line1: 45 Residential Road
+  line2: Flat 2B
+  city: Manchester
+  postcode: M1 1AA
+  phone: "07700900456"
+  country: GB
+  default: false
+
+# User two has one address (warehouse, no default set explicitly)
+warehouse:
+  user: two
+  nickname: Warehouse
+  recipient_name: Jane Doe
+  company_name: Logistics Co
+  line1: 789 Industrial Estate
+  line2:
+  city: Birmingham
+  postcode: B1 1AA
+  phone:
+  country: GB
+  default: false
+
+# Consumer has one address (default)
+consumer_home:
+  user: consumer
+  nickname: My Place
+  recipient_name: Consumer User
+  company_name:
+  line1: 10 Consumer Lane
+  line2:
+  city: Bristol
+  postcode: BS1 1AA
+  phone: "07700900789"
+  country: GB
+  default: true

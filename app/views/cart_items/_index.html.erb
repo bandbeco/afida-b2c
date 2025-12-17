@@ -62,19 +62,63 @@
             </span>
           </div>
 
-          <div class="mt-4 sm:mt-8">
-            <%= button_to "Proceed to Checkout", checkout_path,
-                  class: "btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20",
-                  data: { turbo: false },
-                  form: {
-                    data: {
-                      controller: "analytics",
-                      analytics_cart_value_value: Current.cart.total_amount.to_f,
-                      analytics_cart_items_value: ga4_cart_items_json(Current.cart),
-                      action: "submit->analytics#beginCheckout"
-                    }
-                  } %>
-          </div>
+          <%# Checkout form with optional address selection %>
+          <%= form_with url: checkout_path, method: :post, data: {
+                turbo: false,
+                controller: "analytics",
+                action: "submit->analytics#beginCheckout",
+                analytics_cart_value_value: Current.cart.total_amount.to_f,
+                analytics_cart_items_value: ga4_cart_items_json(Current.cart)
+              } do |f| %>
+
+            <% if Current.user&.has_saved_addresses? %>
+              <%# Inline address selector for logged-in users %>
+              <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-sm font-medium text-gray-700 mb-3">Deliver to:</p>
+                <div class="space-y-2">
+                  <% Current.user.addresses.default_first.each do |address| %>
+                    <label class="flex items-start gap-2 p-2 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors has-[:checked]:bg-primary/10 has-[:checked]:ring-1 has-[:checked]:ring-primary">
+                      <input type="radio"
+                             name="address_id"
+                             value="<%= address.id %>"
+                             class="radio radio-primary radio-sm mt-0.5"
+                             <%= "checked" if address.default? %>>
+                      <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-2">
+                          <span class="font-medium text-sm truncate"><%= address.nickname %></span>
+                          <% if address.default? %>
+                            <span class="badge badge-primary badge-xs">Default</span>
+                          <% end %>
+                        </div>
+                        <p class="text-xs text-gray-500 truncate">
+                          <%= address.line1 %>, <%= address.city %> <%= address.postcode %>
+                        </p>
+                      </div>
+                    </label>
+                  <% end %>
+
+                  <%# Option to enter a different address %>
+                  <label class="flex items-start gap-2 p-2 rounded-lg cursor-pointer hover:bg-gray-200 transition-colors has-[:checked]:bg-primary/10 has-[:checked]:ring-1 has-[:checked]:ring-primary">
+                    <input type="radio"
+                           name="address_id"
+                           value=""
+                           class="radio radio-primary radio-sm mt-0.5">
+                    <div class="flex-1">
+                      <span class="font-medium text-sm">Enter a different address</span>
+                      <p class="text-xs text-gray-500">I'll enter my address at checkout</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+            <% end %>
+
+            <div class="mt-4 sm:mt-6">
+              <button type="submit"
+                      class="btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20">
+                Proceed to Checkout
+              </button>
+            </div>
+          <% end %>
 
           <div class="mt-4 flex justify-center">
             <%= render "shared/payment_methods" %>
@@ -87,6 +131,7 @@
           </div>
         </div>
       </div>
+
     <% else %>
       <div class="text-center py-20 bg-white rounded-lg shadow-md p-8">
         <svg aria-hidden="true" focusable="false" class="mx-auto h-24 w-24 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">

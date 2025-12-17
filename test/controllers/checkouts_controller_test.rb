@@ -4,6 +4,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:one)
 
+    # Reset FakeStripe state before each test
+    FakeStripe.reset!
+
     # Create a fresh cart with items for testing
     @cart = Cart.create!(user: @user)
     @cart_item = @cart.cart_items.create!(
