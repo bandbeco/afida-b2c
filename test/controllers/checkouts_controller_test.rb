@@ -99,9 +99,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     post checkout_path
 
+    # Shipping module returns 1 option based on subtotal:
+    # - Orders < £100: Standard Shipping
+    # - Orders >= £100: Free Shipping
     assert_not_empty params_captured[:shipping_options]
-    assert_equal 2, params_captured[:shipping_options].length
-    assert_includes params_captured[:shipping_options].first[:shipping_rate_data][:display_name], "Shipping"
+    assert_equal 1, params_captured[:shipping_options].length
+    assert_equal "Standard Shipping", params_captured[:shipping_options].first[:shipping_rate_data][:display_name]
   end
 
   test "create includes success and cancel URLs" do
@@ -430,8 +433,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       customer_email: "buyer@example.com"
     )
 
-    # Override customer_details to have nil address fields
-    session.customer_details.address.instance_variable_set(:@line1, nil)
+    # Controller reads shipping from collected_information.shipping_details
+    # Override shipping_details address to have nil line1
+    session.collected_information.shipping_details.address.instance_variable_set(:@line1, nil)
 
     # Stub retrieve to return our modified session
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
@@ -553,7 +557,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     params_captured = nil
@@ -581,7 +586,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     params_captured = nil
@@ -598,12 +604,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "mixed cart (samples + paid) uses standard shipping options" do
-    # Add sample to existing cart
+    # Add sample to existing cart (which already has paid items)
     sample_variant = product_variants(:sample_cup_8oz)
     @cart.cart_items.create!(
       product_variant: sample_variant,
       quantity: 1,
-      price: 0
+      price: 0,
+      is_sample: true
     )
 
     params_captured = nil
@@ -615,11 +622,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil params_captured
-    # Should have standard shipping options (2 options: Standard + Express)
-    assert_equal 2, params_captured[:shipping_options].length
-    shipping_names = params_captured[:shipping_options].map { |o| o[:shipping_rate_data][:display_name] }
-    assert_includes shipping_names, "Standard Shipping"
-    assert_includes shipping_names, "Express Shipping"
+    # Mixed cart uses subtotal-based shipping:
+    # - Orders < £100: Standard Shipping
+    # - Orders >= £100: Free Shipping
+    # Test cart has ~£20 subtotal, so should get Standard Shipping
+    assert_equal 1, params_captured[:shipping_options].length
+    assert_equal "Standard Shipping", params_captured[:shipping_options].first[:shipping_rate_data][:display_name]
   end
 
   # ============================================================================
