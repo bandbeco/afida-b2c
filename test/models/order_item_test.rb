@@ -27,14 +27,17 @@ class OrderItemTest < ActiveSupport::TestCase
     assert_includes order_item.errors[:price], "can't be blank"
   end
 
-  test "validates price is greater than zero" do
-    order_item = OrderItem.new(@valid_attributes.merge(price: 0))
+  test "validates price is non-negative" do
+    # Price can be 0 for samples (validated by price_must_be_positive_unless_sample)
+    # but negative prices are never allowed
+    order_item = OrderItem.new(@valid_attributes.merge(price: -5))
     assert_not order_item.valid?
-    assert_includes order_item.errors[:price], "must be greater than 0"
+    assert_includes order_item.errors[:price], "must be greater than or equal to 0"
   end
 
-  test "validates price is numeric" do
-    order_item = OrderItem.new(@valid_attributes.merge(price: -5))
+  test "validates price zero requires sample-eligible variant" do
+    # Price 0 is only allowed for sample-eligible variants
+    order_item = OrderItem.new(@valid_attributes.merge(price: 0))
     assert_not order_item.valid?
     assert_includes order_item.errors[:price], "must be greater than 0"
   end
