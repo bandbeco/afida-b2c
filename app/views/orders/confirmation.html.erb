@@ -25,6 +25,13 @@
       <%= render "orders/account_conversion_form", order: @order %>
     <% end %>
 
+    <%# Save Address Prompt (for logged-in users with new addresses) %>
+    <% if authenticated? && Current.user && @order.user_id == Current.user.id %>
+      <% unless Current.user.has_matching_address?(line1: @order.shipping_address_line1, postcode: @order.shipping_postal_code) %>
+        <%= render "orders/save_address_prompt", order: @order %>
+      <% end %>
+    <% end %>
+
     <%# What Happens Next %>
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="px-6 py-4 bg-gray-50 border-b">

@@ -1,0 +1,7 @@
+<%# Update the newly defaulted address %>
+<%= turbo_stream.replace @address %>
+
+<%# Update all other addresses to remove default badge and show "Set as default" button %>
+<% Current.user.addresses.where.not(id: @address.id).each do |address| %>
+  <%= turbo_stream.replace address %>
+<% end %>

@@ -1,5 +1,6 @@
 class CartsController < ApplicationController
   allow_unauthenticated_access
+  before_action :resume_session  # Resume session to check if user is logged in (for address modal)
   before_action :eager_load_cart, only: :show
 
   def show

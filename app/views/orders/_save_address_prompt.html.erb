@@ -1,0 +1,49 @@
+<%# Save address prompt - shown to logged-in users who used a new address %>
+<%# Only display if user doesn't already have this address saved %>
+
+<div class="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8"
+     data-testid="save-address-prompt"
+     data-controller="save-address-prompt">
+  <div class="flex items-start gap-4">
+    <div class="flex-shrink-0">
+      <svg class="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    </div>
+
+    <div class="flex-1">
+      <h3 class="text-lg font-semibold text-blue-800 mb-2">Save this address for faster checkout?</h3>
+
+      <div class="text-blue-700 text-sm mb-4">
+        <p class="font-medium"><%= order.shipping_name %></p>
+        <p><%= order.shipping_address_line1 %></p>
+        <% if order.shipping_address_line2.present? %>
+          <p><%= order.shipping_address_line2 %></p>
+        <% end %>
+        <p><%= order.shipping_city %>, <%= order.shipping_postal_code %></p>
+      </div>
+
+      <%= form_with url: create_from_order_account_addresses_path, method: :post, class: "flex flex-col gap-3", data: { turbo_frame: "_top" } do |f| %>
+        <%= f.hidden_field :order_id, value: order.id %>
+
+        <div class="flex-1">
+          <%= f.label :nickname, "Address name", class: "label label-text text-blue-700 font-medium" %>
+          <%= f.text_field :nickname,
+                placeholder: "e.g. Home, Office, Warehouse",
+                class: "input input-bordered w-full",
+                required: true %>
+        </div>
+
+        <div class="flex gap-2">
+          <%= f.submit "Save Address", class: "btn btn-primary" %>
+          <button type="button"
+                  class="btn btn-ghost"
+                  data-action="click->save-address-prompt#dismiss">
+            No thanks
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

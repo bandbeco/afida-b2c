@@ -1,0 +1,169 @@
+<%= form_with model: address, url: form_url, data: { turbo: false }, html: { class: "space-y-6", novalidate: true } do |form| %>
+  <% if address.errors.any? %>
+    <div class="alert alert-error" role="alert" aria-labelledby="error-summary-title">
+      <div>
+        <span id="error-summary-title" class="font-semibold">Please fix the following errors:</span>
+        <ul class="list-disc list-inside mt-1">
+          <% address.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Nickname %>
+  <div class="form-control">
+    <%= form.label :nickname, class: "label" do %>
+      <span class="label-text font-medium">Nickname <span class="text-error" aria-hidden="true">*</span><span class="sr-only">(required)</span></span>
+    <% end %>
+    <%= form.text_field :nickname,
+        class: "input input-bordered w-full #{address.errors[:nickname].any? ? 'input-error' : ''}",
+        placeholder: "e.g. Office, Home, Warehouse",
+        required: true,
+        aria: {
+          required: true,
+          describedby: "nickname-hint#{address.errors[:nickname].any? ? ' nickname-error' : ''}",
+          invalid: address.errors[:nickname].any?
+        } %>
+    <label class="label">
+      <span id="nickname-hint" class="label-text-alt text-base-content/60">A friendly name to identify this address</span>
+    </label>
+    <% if address.errors[:nickname].any? %>
+      <p id="nickname-error" class="text-error text-sm mt-1" role="alert"><%= address.errors[:nickname].first %></p>
+    <% end %>
+  </div>
+
+  <div class="divider"></div>
+
+  <%# Recipient details %>
+  <h2 class="text-lg font-semibold">Recipient Details</h2>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= form.label :recipient_name, class: "label" do %>
+        <span class="label-text font-medium">Recipient name <span class="text-error" aria-hidden="true">*</span><span class="sr-only">(required)</span></span>
+      <% end %>
+      <%= form.text_field :recipient_name,
+          class: "input input-bordered w-full #{address.errors[:recipient_name].any? ? 'input-error' : ''}",
+          placeholder: "Full name",
+          required: true,
+          autocomplete: "name",
+          aria: {
+            required: true,
+            invalid: address.errors[:recipient_name].any?
+          } %>
+      <% if address.errors[:recipient_name].any? %>
+        <p id="recipient-name-error" class="text-error text-sm mt-1" role="alert"><%= address.errors[:recipient_name].first %></p>
+      <% end %>
+    </div>
+
+    <div class="form-control">
+      <%= form.label :company_name, class: "label" do %>
+        <span class="label-text font-medium">Company name</span>
+      <% end %>
+      <%= form.text_field :company_name,
+          class: "input input-bordered w-full #{address.errors[:company_name].any? ? 'input-error' : ''}",
+          placeholder: "Optional",
+          autocomplete: "organization",
+          aria: { invalid: address.errors[:company_name].any? } %>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <%# Address %>
+  <h2 class="text-lg font-semibold">Address</h2>
+
+  <div class="form-control">
+    <%= form.label :line1, "Address line 1", class: "label" do %>
+      <span class="label-text font-medium">Address line 1 <span class="text-error" aria-hidden="true">*</span><span class="sr-only">(required)</span></span>
+    <% end %>
+    <%= form.text_field :line1,
+        class: "input input-bordered w-full #{address.errors[:line1].any? ? 'input-error' : ''}",
+        placeholder: "Street address",
+        required: true,
+        autocomplete: "address-line1",
+        aria: {
+          required: true,
+          invalid: address.errors[:line1].any?
+        } %>
+    <% if address.errors[:line1].any? %>
+      <p id="line1-error" class="text-error text-sm mt-1" role="alert"><%= address.errors[:line1].first %></p>
+    <% end %>
+  </div>
+
+  <div class="form-control">
+    <%= form.label :line2, "Address line 2", class: "label" do %>
+      <span class="label-text font-medium">Address line 2</span>
+    <% end %>
+    <%= form.text_field :line2,
+        class: "input input-bordered w-full",
+        placeholder: "Apartment, suite, unit, etc. (optional)",
+        autocomplete: "address-line2" %>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <div class="form-control">
+      <%= form.label :city, class: "label" do %>
+        <span class="label-text font-medium">City <span class="text-error" aria-hidden="true">*</span><span class="sr-only">(required)</span></span>
+      <% end %>
+      <%= form.text_field :city,
+          class: "input input-bordered w-full #{address.errors[:city].any? ? 'input-error' : ''}",
+          placeholder: "City or town",
+          required: true,
+          autocomplete: "address-level2",
+          aria: {
+            required: true,
+            invalid: address.errors[:city].any?
+          } %>
+      <% if address.errors[:city].any? %>
+        <p id="city-error" class="text-error text-sm mt-1" role="alert"><%= address.errors[:city].first %></p>
+      <% end %>
+    </div>
+
+    <div class="form-control">
+      <%= form.label :postcode, class: "label" do %>
+        <span class="label-text font-medium">Postcode <span class="text-error" aria-hidden="true">*</span><span class="sr-only">(required)</span></span>
+      <% end %>
+      <%= form.text_field :postcode,
+          class: "input input-bordered w-full #{address.errors[:postcode].any? ? 'input-error' : ''}",
+          placeholder: "e.g. SW1A 1AA",
+          required: true,
+          autocomplete: "postal-code",
+          aria: {
+            required: true,
+            invalid: address.errors[:postcode].any?
+          } %>
+      <% if address.errors[:postcode].any? %>
+        <p id="postcode-error" class="text-error text-sm mt-1" role="alert"><%= address.errors[:postcode].first %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="form-control">
+    <%= form.label :phone, class: "label" do %>
+      <span class="label-text font-medium">Phone</span>
+    <% end %>
+    <%= form.telephone_field :phone,
+        class: "input input-bordered w-full",
+        placeholder: "Contact number for delivery (optional)",
+        autocomplete: "tel" %>
+  </div>
+
+  <div class="divider"></div>
+
+  <%# Default checkbox %>
+  <div class="form-control">
+    <label class="label cursor-pointer justify-start gap-3">
+      <%= form.check_box :default, class: "checkbox checkbox-primary" %>
+      <span class="label-text">Set as my default delivery address</span>
+    </label>
+  </div>
+
+  <%# Submit %>
+  <div class="flex justify-between items-center pt-4">
+    <%= link_to "Cancel", account_addresses_path, class: "btn btn-ghost" %>
+    <%= form.submit "Save address", class: "btn btn-primary" %>
+  </div>
+<% end %>

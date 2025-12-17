@@ -79,6 +79,18 @@ Rails.application.routes.draw do
   # Account management
   resource :account, only: [ :show, :update ]
 
+  # Account sub-resources (addresses, etc.)
+  namespace :account do
+    resources :addresses, except: [ :show ] do
+      member do
+        patch :set_default
+      end
+      collection do
+        post :create_from_order
+      end
+    end
+  end
+
   # Post-checkout guest-to-account conversion
   resource :post_checkout_registration, only: [ :create ]
 

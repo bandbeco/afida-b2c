@@ -19,6 +19,7 @@ module FakeStripe
     CheckoutSession.reset!
     TaxRate.reset!
     Subscription.reset!
+    Customer.reset!
   end
 
   # Configure default behavior
@@ -27,11 +28,17 @@ module FakeStripe
   end
 
   class CheckoutSession
-    attr_reader :id, :url, :payment_status, :customer_details,
+    attr_reader :id, :url, :payment_status, :customer_details, :collected_information,
                 :shipping_cost, :client_reference_id, :line_items
 
     @@sessions = {}
     @@next_id = 1
+    @@last_create_params = nil
+
+    # Access the params passed to the most recent create call (for testing)
+    def self.last_create_params
+      @@last_create_params
+    end
 
     def initialize(params = {})
       @id = "sess_test_#{SecureRandom.hex(12)}"
@@ -40,7 +47,7 @@ module FakeStripe
       @client_reference_id = params[:client_reference_id]
       @line_items = params[:line_items] || []
 
-      # Build customer details from params or use defaults
+      # Build customer details from params or use defaults (billing info)
       email = params[:customer_email] || "test@example.com"
       @customer_details = CustomerDetails.new(
         email: email,
@@ -54,6 +61,22 @@ module FakeStripe
         }
       )
 
+      # Build collected_information with shipping_details (Stripe API 2025-03-31+)
+      # https://docs.stripe.com/changelog/basil/2025-03-31/checkout-session-remove-shipping-details
+      # Use customer_name as fallback for shipping name (backward compat with existing tests)
+      @collected_information = CollectedInformation.new(
+        shipping_details: ShippingDetails.new(
+          name: params[:shipping_name] || params[:customer_name] || "Test Customer",
+          address: {
+            line1: "123 Test Street",
+            line2: "Flat 4",
+            city: "London",
+            postal_code: "SW1A 1AA",
+            country: "GB"
+          }
+        )
+      )
+
       # Default shipping cost (£5.00 = 500 pence)
       @shipping_cost = ShippingCost.new(
         amount_total: params[:shipping_amount_total] || 500
@@ -63,11 +86,32 @@ module FakeStripe
       @@sessions[@id] = self
     end
 
+    def to_hash
+      {
+        id: @id,
+        payment_status: @payment_status,
+        client_reference_id: @client_reference_id,
+        customer_details: @customer_details.to_hash,
+        collected_information: @collected_information.to_hash,
+        shipping_cost: { amount_total: @shipping_cost.amount_total }
+      }
+    end
+
     def self.create(params)
+      @@last_create_params = params
       new(params)
     end
 
-    def self.retrieve(session_id)
+    def self.retrieve(session_id_or_params, params = nil)
+      # Support both calling conventions:
+      # 1. retrieve(session_id) - simple string
+      # 2. retrieve(id: session_id, expand: [...]) - hash with options
+      session_id = if session_id_or_params.is_a?(Hash)
+        session_id_or_params[:id]
+      else
+        session_id_or_params
+      end
+
       session = @@sessions[session_id]
 
       if session.nil?
@@ -85,6 +129,7 @@ module FakeStripe
     def self.reset!
       @@sessions = {}
       @@next_id = 1
+      @@last_create_params = nil
     end
 
     # Helper to create a session with unpaid status
@@ -101,7 +146,7 @@ module FakeStripe
       )
     end
 
-    # Nested class for customer details
+    # Nested class for customer details (billing info)
     class CustomerDetails
       attr_reader :email, :name, :address
 
@@ -109,6 +154,46 @@ module FakeStripe
         @email = email
         @name = name
         @address = Address.new(address)
+      end
+
+      def to_hash
+        {
+          email: @email,
+          name: @name,
+          address: @address.to_hash
+        }
+      end
+    end
+
+    # Nested class for collected_information (Stripe API 2025-03-31+)
+    class CollectedInformation
+      attr_reader :shipping_details
+
+      def initialize(shipping_details:)
+        @shipping_details = shipping_details
+      end
+
+      def to_hash
+        {
+          shipping_details: @shipping_details.to_hash
+        }
+      end
+    end
+
+    # Nested class for shipping details (shipping address)
+    class ShippingDetails
+      attr_reader :name, :address
+
+      def initialize(name:, address:)
+        @name = name
+        @address = Address.new(address)
+      end
+
+      def to_hash
+        {
+          name: @name,
+          address: @address.to_hash
+        }
       end
     end
 
@@ -122,6 +207,16 @@ module FakeStripe
         @city = params[:city]
         @postal_code = params[:postal_code]
         @country = params[:country]
+      end
+
+      def to_hash
+        {
+          line1: @line1,
+          line2: @line2,
+          city: @city,
+          postal_code: @postal_code,
+          country: @country
+        }
       end
     end
 
@@ -235,6 +330,61 @@ module FakeStripe
     end
   end
 
+  class Customer
+    attr_reader :id, :email, :name, :shipping, :metadata
+
+    @@customers = {}
+    @@last_create_params = nil
+    @@last_update_params = nil
+
+    def self.last_create_params
+      @@last_create_params
+    end
+
+    def self.last_update_params
+      @@last_update_params
+    end
+
+    def initialize(params = {})
+      @id = params[:id] || "cus_test_#{SecureRandom.hex(12)}"
+      @email = params[:email]
+      @name = params[:name]
+      @shipping = params[:shipping]
+      @metadata = params[:metadata] || {}
+      @@customers[@id] = self
+    end
+
+    def self.create(params)
+      @@last_create_params = params
+      new(params)
+    end
+
+    def self.update(customer_id, params = {})
+      @@last_update_params = { customer_id: customer_id, params: params }
+      customer = @@customers[customer_id]
+      if customer
+        customer.instance_variable_set(:@email, params[:email]) if params[:email]
+        customer.instance_variable_set(:@name, params[:name]) if params[:name]
+        customer.instance_variable_set(:@shipping, params[:shipping]) if params[:shipping]
+        customer
+      else
+        new(params.merge(id: customer_id))
+      end
+    end
+
+    def self.retrieve(customer_id)
+      customer = @@customers[customer_id]
+      raise Stripe::InvalidRequestError.new("No such customer: '#{customer_id}'", param: "id") unless customer
+      customer
+    end
+
+    def self.reset!
+      @@customers = {}
+      @@last_create_params = nil
+      @@last_update_params = nil
+    end
+  end
+
   # Mock Stripe errors for testing error handling
   module Errors
     def self.card_declined
@@ -275,6 +425,7 @@ if defined?(Rails) && Rails.env.test?
     Checkout::Session = FakeStripe::CheckoutSession
     TaxRate = FakeStripe::TaxRate
     Subscription = FakeStripe::Subscription
+    Customer = FakeStripe::Customer
 
     # Ensure Stripe error classes exist for testing
     class StripeError < StandardError; end
@@ -289,5 +440,6 @@ if defined?(Rails) && Rails.env.test?
     end
     class APIConnectionError < StripeError; end
     class APIError < StripeError; end
+    class RateLimitError < StripeError; end
   end
 end
