@@ -6,8 +6,8 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: /Shop/
-    # Check that products are displayed
-    Product.limit(5).each do |product|
+    # Shop page only shows standard products (not customizable templates)
+    Product.standard.limit(5).each do |product|
       assert_select "a[href=?]", product_path(product.slug)
     end
   end
