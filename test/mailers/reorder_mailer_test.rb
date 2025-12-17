@@ -102,14 +102,15 @@ class ReorderMailerTest < ActionMailer::TestCase
     assert_match(/edit/i, email.body.encoded)
   end
 
-  test "order_ready confirm link contains valid token" do
+  test "order_ready review link contains valid token" do
     email = ReorderMailer.order_ready(@pending_order)
 
-    # Extract the confirm URL from the email body
-    confirm_url_match = email.body.encoded.match(/pending-orders\/\d+\/confirm\?token=([^"&\s]+)/)
-    assert confirm_url_match, "Confirm URL not found in email"
+    # Extract the review URL from the email body (show action, not confirm action)
+    # The email links to the review page where user can see details before confirming
+    review_url_match = email.body.encoded.match(/pending-orders\/\d+\?token=([^"&\s]+)/)
+    assert review_url_match, "Review URL not found in email"
 
-    token = CGI.unescape(confirm_url_match[1])
+    token = CGI.unescape(review_url_match[1])
     # Verify token is a valid SGID that resolves to the pending order
     resolved = GlobalID::Locator.locate_signed(token, for: "pending_order_confirm")
     assert_equal @pending_order, resolved
