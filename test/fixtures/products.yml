@@ -22,6 +22,18 @@ two:
   slug: "product-2"
   product_type: standard
 
+inactive_product:
+  name: "Inactive Product"
+  sku: "INACTIVE-001"
+  base_sku: "INACTIVE-001"
+  description_short: "An inactive product for testing"
+  description_standard: "An inactive product used to test default scope filtering"
+  description_detailed: "An inactive product with full details for testing the default scope behavior"
+  active: false
+  category: :one
+  slug: "inactive-product"
+  product_type: standard
+
 single_wall_cups:
   name: Single-Wall Cups
   slug: single-wall-cups

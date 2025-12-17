@@ -13,7 +13,7 @@ class ProductTest < ActiveSupport::TestCase
   test "default scope should return active products" do
     active_products = Product.all
     assert active_products.include?(@product_one)
-    assert_not active_products.include?(products(:two)) # Product two is inactive
+    assert_not active_products.include?(products(:inactive_product)) # Inactive product is excluded
   end
 
   test "should validate presence of name" do
