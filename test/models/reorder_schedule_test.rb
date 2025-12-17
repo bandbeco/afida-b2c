@@ -74,6 +74,37 @@ class ReorderScheduleTest < ActiveSupport::TestCase
     assert_includes @schedule.errors[:status], "is not included in the list"
   end
 
+  test "active schedule requires at least one item on update" do
+    @schedule.save!
+    product_variant = product_variants(:one)
+    item = @schedule.reorder_schedule_items.create!(
+      product_variant: product_variant,
+      quantity: 1,
+      price: product_variant.price
+    )
+
+    # Simulate nested attributes removing the item
+    @schedule.reorder_schedule_items_attributes = [
+      { id: item.id, _destroy: "1" }
+    ]
+
+    assert_not @schedule.valid?
+    assert_includes @schedule.errors[:base], "Schedule must have at least one item. Pause or cancel instead."
+  end
+
+  test "paused schedule can have zero items" do
+    @schedule.save!
+    @schedule.pause!
+
+    # Paused schedules don't need the item check
+    assert @schedule.valid?
+  end
+
+  test "new schedule does not require items" do
+    # On create, we don't require items (they're added after setup)
+    assert @schedule.valid?
+  end
+
   # ==========================================================================
   # Enums
   # ==========================================================================

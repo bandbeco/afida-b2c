@@ -503,12 +503,38 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to reorder_schedule_url(schedule)
   end
 
-  test "update removes schedule item with _destroy" do
+  test "update removes schedule item with _destroy when other items exist" do
+    sign_in(@user)
+    schedule = create_schedule_with_items_for(@user)
+    # Add second item so we can delete one
+    product_variant_two = product_variants(:two)
+    schedule.reorder_schedule_items.create!(
+      product_variant: product_variant_two,
+      quantity: 1,
+      price: product_variant_two.price
+    )
+    item_to_delete = schedule.reorder_schedule_items.first
+
+    assert_difference "ReorderScheduleItem.count", -1 do
+      patch reorder_schedule_url(schedule), params: {
+        reorder_schedule: {
+          reorder_schedule_items_attributes: {
+            "0" => { id: item_to_delete.id, _destroy: "1" }
+          }
+        }
+      }
+    end
+
+    assert_redirected_to reorder_schedule_url(schedule)
+  end
+
+  test "update rejects removing last item from active schedule" do
     sign_in(@user)
     schedule = create_schedule_with_items_for(@user)
     item = schedule.reorder_schedule_items.first
 
-    assert_difference "ReorderScheduleItem.count", -1 do
+    # Only one item exists - can't remove it
+    assert_no_difference "ReorderScheduleItem.count" do
       patch reorder_schedule_url(schedule), params: {
         reorder_schedule: {
           reorder_schedule_items_attributes: {
@@ -518,7 +544,7 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to reorder_schedule_url(schedule)
+    assert_response :unprocessable_entity
   end
 
   test "update adds new schedule item" do

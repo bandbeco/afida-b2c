@@ -22,6 +22,7 @@ class ReorderSchedule < ApplicationRecord
 
   validates :next_scheduled_date, presence: true
   validates :stripe_payment_method_id, presence: true
+  validate :must_have_at_least_one_item, on: :update, if: -> { active? && items_being_modified? }
 
   scope :active, -> { where(status: :active) }
   scope :due_in_days, ->(days) { where(next_scheduled_date: days.days.from_now.to_date) }
@@ -58,6 +59,20 @@ class ReorderSchedule < ApplicationRecord
   end
 
   private
+
+  def items_being_modified?
+    # Only validate items when they're being changed via nested attributes
+    reorder_schedule_items.any?(&:marked_for_destruction?) ||
+      reorder_schedule_items.any? { |item| item.new_record? || item.changed? }
+  end
+
+  def must_have_at_least_one_item
+    # Count items that aren't marked for destruction (nested attributes)
+    remaining_items = reorder_schedule_items.reject(&:marked_for_destruction?)
+    if remaining_items.empty?
+      errors.add(:base, "Schedule must have at least one item. Pause or cancel instead.")
+    end
+  end
 
   def calculate_next_date(from: next_scheduled_date)
     case frequency
