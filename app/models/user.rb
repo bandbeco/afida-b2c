@@ -9,7 +9,6 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :carts, dependent: :destroy
   has_many :orders, dependent: :destroy
-  has_many :subscriptions, dependent: :destroy
   has_many :addresses, dependent: :destroy
   has_many :reorder_schedules, dependent: :destroy
 

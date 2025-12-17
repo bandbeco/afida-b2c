@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_17_215354) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -153,7 +153,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
     t.string "shipping_postal_code", null: false
     t.string "status", default: "pending", null: false
     t.string "stripe_session_id", null: false
-    t.bigint "subscription_id"
     t.decimal "subtotal_amount", precision: 10, scale: 2, null: false
     t.decimal "total_amount", precision: 10, scale: 2, null: false
     t.datetime "updated_at", null: false
@@ -168,7 +167,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
     t.index ["reorder_schedule_id"], name: "index_orders_on_reorder_schedule_id"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id", unique: true
-    t.index ["subscription_id"], name: "index_orders_on_subscription_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
   end
 
@@ -472,25 +470,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
-  create_table "subscriptions", force: :cascade do |t|
-    t.datetime "cancelled_at"
-    t.datetime "created_at", null: false
-    t.datetime "current_period_end"
-    t.datetime "current_period_start"
-    t.integer "frequency", null: false
-    t.jsonb "items_snapshot", default: {}, null: false
-    t.jsonb "shipping_snapshot", default: {}, null: false
-    t.integer "status", default: 0, null: false
-    t.string "stripe_customer_id", null: false
-    t.string "stripe_price_id", null: false
-    t.string "stripe_subscription_id", null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id", null: false
-    t.index ["status"], name: "index_subscriptions_on_status"
-    t.index ["stripe_subscription_id"], name: "index_subscriptions_on_stripe_subscription_id", unique: true
-    t.index ["user_id"], name: "index_subscriptions_on_user_id"
-  end
-
   create_table "url_redirects", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -535,7 +514,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "organizations"
   add_foreign_key "orders", "reorder_schedules"
-  add_foreign_key "orders", "subscriptions"
   add_foreign_key "orders", "users"
   add_foreign_key "orders", "users", column: "placed_by_user_id"
   add_foreign_key "pending_orders", "orders"
@@ -557,6 +535,5 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
   add_foreign_key "seo_ai_content_items", "seo_ai_content_drafts"
   add_foreign_key "seo_ai_performance_snapshots", "seo_ai_content_items"
   add_foreign_key "sessions", "users"
-  add_foreign_key "subscriptions", "users"
   add_foreign_key "users", "organizations"
 end

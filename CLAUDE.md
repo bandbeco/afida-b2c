@@ -134,7 +134,6 @@ Controllers will NOT work if they are not registered. The lazy loading system au
   - Captures shipping details from Stripe Checkout
 - `User` / `Session` - Authentication (Rails 8 built-in authentication with bcrypt)
 - `Address` - User saved delivery addresses (multiple per user, one default)
-- `Subscription` - Stripe subscription tracking
 - `ReorderSchedule` / `ReorderScheduleItem` - Scheduled automatic reorders
 - `PendingOrder` - Orders awaiting customer confirmation before charging
 - `Organization` - B2B customer organizations
@@ -153,7 +152,6 @@ Controllers will NOT work if they are not registered. The lazy loading system au
 - `OrdersController` - Order history and details
 - `AccountsController` - User account management
 - `Account::AddressesController` - Saved address CRUD
-- `SubscriptionsController` - Stripe subscription management
 - `ReorderSchedulesController` - Scheduled reorder management
 - `PendingOrdersController` - Pending order review and confirmation
 - `BrandedProductsController` - Custom branded product configurator
@@ -727,7 +725,7 @@ After deploying SEO updates:
 - Ruby 3.3.0+ / Rails 8.x + Vite Rails, TailwindCSS 4, DaisyUI, Hotwire (Turbo + Stimulus) (013-homepage-branding)
 - N/A (no data changes - view-only feature) (013-homepage-branding)
 - Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (001-sign-up-accounts)
-- PostgreSQL 14+ (existing `users`, `orders`, `order_items` tables; new `subscriptions` table) (001-sign-up-accounts)
+- PostgreSQL 14+ (existing `users`, `orders`, `order_items` tables) (001-sign-up-accounts)
 - Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI, Stripe Ruby SDK (001-user-address-storage)
 - PostgreSQL 14+ (new `addresses` table) (001-user-address-storage)
 - Ruby 3.3.0+ / Rails 8.x + Rails 8, Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (014-scheduled-reorder)

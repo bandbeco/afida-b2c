@@ -91,14 +91,6 @@ Rails.application.routes.draw do
     end
   end
 
-  # Subscriptions management
-  resources :subscriptions, only: [ :index, :destroy ] do
-    member do
-      patch :pause
-      patch :resume
-    end
-  end
-
   # Post-checkout guest-to-account conversion
   resource :post_checkout_registration, only: [ :create ]
 

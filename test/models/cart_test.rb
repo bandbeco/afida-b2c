@@ -8,8 +8,8 @@ class CartTest < ActiveSupport::TestCase
     @user_cart = Cart.create(user: users(:one))
   end
 
-  test "items_count returns number of distinct cart items" do
-    assert_equal 1, @cart.items_count  # Changed: counts distinct items, not quantity sum
+  test "items_count returns total quantity across all cart items" do
+    assert_equal 2, @cart.items_count  # Cart :one has 1 item with quantity: 2
     assert_equal 0, @empty_cart.items_count
   end
 
@@ -47,9 +47,9 @@ class CartTest < ActiveSupport::TestCase
     count2 = @cart.items_count
     assert_equal count1, count2
 
-    # After reload, count is recalculated (distinct items, not quantity sum)
+    # After reload, count is recalculated (sum of quantities: 2 + 5 = 7)
     @cart.reload
-    assert_equal 2, @cart.items_count  # Changed: 2 distinct items total
+    assert_equal 7, @cart.items_count
   end
 
   test "subtotal_amount is memoized within request" do
@@ -81,7 +81,7 @@ class CartTest < ActiveSupport::TestCase
     @cart.reload
 
     # Values should be recalculated on next access
-    assert_equal 1, @cart.items_count  # Changed: counts distinct items
+    assert_equal 2, @cart.items_count  # Sum of quantities (cart :one has qty: 2)
     assert_equal 20.0, @cart.subtotal_amount
   end
 
@@ -117,6 +117,8 @@ class CartTest < ActiveSupport::TestCase
   end
 
   # Pack-based pricing tests
+  # Note: quantity in cart_items represents number of PACKS, not units
+  # subtotal_amount = price (per pack) × quantity (packs)
   test "subtotal_amount calculates correctly for standard product with pack pricing" do
     cart = Cart.create
     product = products(:one)
@@ -131,10 +133,10 @@ class CartTest < ActiveSupport::TestCase
       active: true
     )
 
-    # Add 1500 units to cart (requires 2 packs)
+    # Add 2 packs to cart
     cart.cart_items.create!(
       product_variant: variant,
-      quantity: 1500,
+      quantity: 2,
       price: variant.price
     )
 
@@ -169,17 +171,17 @@ class CartTest < ActiveSupport::TestCase
       active: true
     )
 
-    # Add first product: 750 units (needs 2 packs) = £100
+    # Add first product: 2 packs × £50 = £100
     cart.cart_items.create!(
       product_variant: variant1,
-      quantity: 750,
+      quantity: 2,
       price: variant1.price
     )
 
-    # Add second product: 2500 units (needs 3 packs) = £240
+    # Add second product: 3 packs × £80 = £240
     cart.cart_items.create!(
       product_variant: variant2,
-      quantity: 2500,
+      quantity: 3,
       price: variant2.price
     )
 

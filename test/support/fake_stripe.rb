@@ -18,7 +18,6 @@ module FakeStripe
   def self.reset!
     CheckoutSession.reset!
     TaxRate.reset!
-    Subscription.reset!
     Customer.reset!
     PaymentIntent.reset!
   end
@@ -376,42 +375,6 @@ module FakeStripe
     end
   end
 
-  class Subscription
-    attr_reader :id, :status, :pause_collection
-
-    @@subscriptions = {}
-
-    def initialize(params = {})
-      @id = params[:id] || "sub_test_#{SecureRandom.hex(12)}"
-      @status = params[:status] || "active"
-      @pause_collection = params[:pause_collection]
-      @@subscriptions[@id] = self
-    end
-
-    # Stripe API signature: Stripe::Subscription.update(id, params)
-    def self.update(subscription_id, params = {})
-      sub = @@subscriptions[subscription_id] || new(id: subscription_id)
-      sub.instance_variable_set(:@pause_collection, params[:pause_collection])
-      sub
-    end
-
-    # Stripe API signature: Stripe::Subscription.cancel(id)
-    # DELETE requests are idempotent by definition - no idempotency key needed
-    def self.cancel(subscription_id)
-      sub = @@subscriptions[subscription_id] || new(id: subscription_id)
-      sub.instance_variable_set(:@status, "canceled")
-      sub
-    end
-
-    def self.retrieve(subscription_id)
-      @@subscriptions[subscription_id] || new(id: subscription_id)
-    end
-
-    def self.reset!
-      @@subscriptions = {}
-    end
-  end
-
   class Customer
     attr_reader :id, :email, :name, :shipping, :metadata
 
@@ -506,7 +469,6 @@ if defined?(Rails) && Rails.env.test?
     Checkout = Module.new unless defined?(Checkout)
     Checkout::Session = FakeStripe::CheckoutSession
     TaxRate = FakeStripe::TaxRate
-    Subscription = FakeStripe::Subscription
     Customer = FakeStripe::Customer
     PaymentIntent = FakeStripe::PaymentIntent
     Refund = FakeStripe::Refund

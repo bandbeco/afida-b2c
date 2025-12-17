@@ -26,12 +26,11 @@ class Cart < ApplicationRecord
   has_many :cart_items, dependent: :destroy
   has_many :products, through: :cart_items
 
-  # Total number of distinct items in cart
-  # For standard products: counts individual items
-  # For configured products: counts as 1 item (not thousands of units)
+  # Total quantity of all items in cart (sum of quantities, not distinct items)
+  # e.g., 4 of the same SKU = 4, not 1
   # Memoized to prevent repeated database calls within same request
   def items_count
-    @items_count ||= cart_items.count
+    @items_count ||= cart_items.sum(:quantity)
   end
 
   # Sum of all cart item subtotals (before VAT)
