@@ -38,7 +38,7 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     get reorder_schedules_url
 
     assert_response :success
-    assert_select "h1", /Reorder Schedules/i
+    assert_select "h1", /Scheduled Reorders/i
   end
 
   test "index does not show other users schedules" do
@@ -89,6 +89,16 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_select "form"
   end
 
+  test "setup redirects to add address when user has no addresses" do
+    sign_in(@user)
+    @user.addresses.destroy_all
+
+    get setup_reorder_schedules_url(order_id: @order.id)
+
+    assert_redirected_to new_account_address_path(return_to: setup_reorder_schedules_path(order_id: @order.id))
+    assert_match(/address/, flash[:alert])
+  end
+
   test "setup redirects for invalid order" do
     sign_in(@user)
 
@@ -129,6 +139,18 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to "https://checkout.stripe.com/pay/cs_test_session"
   end
 
+  test "create redirects to add address when user has no addresses" do
+    sign_in(@user)
+    @user.addresses.destroy_all
+
+    post reorder_schedules_url, params: {
+      reorder_schedule: { order_id: @order.id, frequency: "every_month" }
+    }
+
+    assert_redirected_to new_account_address_path
+    assert_match(/address/, flash[:alert])
+  end
+
   # ==========================================================================
   # Setup Success (after Stripe redirect)
   # ==========================================================================
@@ -136,8 +158,10 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
   test "setup_success creates schedule and redirects to show" do
     sign_in(@user)
 
-    # Mock Stripe session retrieval
-    setup_intent = OpenStruct.new(payment_method: "pm_test_456")
+    # Mock Stripe session retrieval with nested payment_method object
+    card = OpenStruct.new(brand: "visa", last4: "4242")
+    payment_method = OpenStruct.new(id: "pm_test_456", card: card)
+    setup_intent = OpenStruct.new(payment_method: payment_method)
     session = OpenStruct.new(
       id: "cs_test_session",
       setup_intent: setup_intent,

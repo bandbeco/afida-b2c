@@ -17,11 +17,23 @@ class ReorderSchedulesController < ApplicationController
 
   # GET /reorder_schedules/setup?order_id=X
   def setup
+    unless Current.user.has_saved_addresses?
+      flash[:alert] = "Please add a delivery address before setting up a reorder schedule."
+      redirect_to new_account_address_path(return_to: setup_reorder_schedules_path(order_id: @order.id))
+      return
+    end
+
     @frequencies = ReorderSchedule.frequencies.keys
   end
 
   # POST /reorder_schedules
   def create
+    unless Current.user.has_saved_addresses?
+      flash[:alert] = "Please add a delivery address before setting up a reorder schedule."
+      redirect_to new_account_address_path
+      return
+    end
+
     frequency = reorder_schedule_params[:frequency]
 
     service = ReorderScheduleSetupService.new(user: Current.user)

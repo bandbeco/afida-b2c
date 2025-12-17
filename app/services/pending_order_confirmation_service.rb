@@ -129,28 +129,18 @@ class PendingOrderConfirmationService
   end
 
   def shipping_address_attributes
-    # Use user's default shipping address if available
-    # Otherwise fall back to basic info
-    if @user.respond_to?(:shipping_name) && @user.shipping_name.present?
-      {
-        shipping_name: @user.shipping_name,
-        shipping_address_line1: @user.shipping_address_line1,
-        shipping_address_line2: @user.shipping_address_line2,
-        shipping_city: @user.shipping_city,
-        shipping_postal_code: @user.shipping_postal_code,
-        shipping_country: @user.shipping_country || "GB"
-      }
-    else
-      # Fallback - use email as name placeholder
-      {
-        shipping_name: @user.email_address.split("@").first.titleize,
-        shipping_address_line1: "Address pending update",
-        shipping_address_line2: nil,
-        shipping_city: "London",
-        shipping_postal_code: "SW1A 1AA",
-        shipping_country: "GB"
-      }
-    end
+    address = @user.default_address
+
+    raise ActiveRecord::RecordInvalid.new(@user), "No delivery address on file" unless address
+
+    {
+      shipping_name: address.recipient_name,
+      shipping_address_line1: address.line1,
+      shipping_address_line2: address.line2,
+      shipping_city: address.city,
+      shipping_postal_code: address.postcode,
+      shipping_country: address.country
+    }
   end
 
   def generate_order_number

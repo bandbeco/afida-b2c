@@ -326,6 +326,21 @@ module FakeStripe
     end
   end
 
+  class Refund
+    attr_reader :id, :status, :payment_intent, :amount
+
+    def initialize(params = {})
+      @id = "re_test_#{SecureRandom.hex(12)}"
+      @status = "succeeded"
+      @payment_intent = params[:payment_intent]
+      @amount = params[:amount]
+    end
+
+    def self.create(params = {})
+      new(params)
+    end
+  end
+
   class Subscription
     attr_reader :id, :status, :pause_collection
 
@@ -459,6 +474,7 @@ if defined?(Rails) && Rails.env.test?
     Subscription = FakeStripe::Subscription
     Customer = FakeStripe::Customer
     PaymentIntent = FakeStripe::PaymentIntent
+    Refund = FakeStripe::Refund
 
     # Ensure Stripe error classes exist for testing
     class StripeError < StandardError; end

@@ -231,20 +231,33 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
   test "confirm! uses user default shipping address" do
     mock_successful_payment
 
-    # Assume user has shipping address (may need to add to user fixture/model)
-    @user.update!(
-      shipping_name: "Test User",
-      shipping_address_line1: "123 Test St",
-      shipping_city: "London",
-      shipping_postal_code: "SW1A 1AA",
-      shipping_country: "GB"
-    ) if @user.respond_to?(:shipping_name=)
+    # User one already has addresses from fixtures (office is default)
+    address = @user.default_address
+    assert address.present?, "Test requires user to have an address"
 
     service = PendingOrderConfirmationService.new(@pending_order)
     result = service.confirm!
 
-    assert result.order.shipping_name.present?
-    assert result.order.shipping_address_line1.present?
+    assert result.success?
+    assert_equal address.recipient_name, result.order.shipping_name
+    assert_equal address.line1, result.order.shipping_address_line1
+    assert_equal address.line2, result.order.shipping_address_line2
+    assert_equal address.city, result.order.shipping_city
+    assert_equal address.postcode, result.order.shipping_postal_code
+    assert_equal address.country, result.order.shipping_country
+  end
+
+  test "confirm! fails when user has no delivery address" do
+    mock_successful_payment
+
+    # Remove all addresses from user
+    @user.addresses.destroy_all
+
+    service = PendingOrderConfirmationService.new(@pending_order)
+    result = service.confirm!
+
+    assert_not result.success?
+    assert_includes result.error, "address"
   end
 
   private
