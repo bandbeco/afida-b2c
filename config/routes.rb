@@ -116,9 +116,11 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :pending_orders, path: "pending-orders", only: [ :edit, :update ] do
+  resources :pending_orders, path: "pending-orders", only: [ :show, :edit, :update ] do
     member do
-      post :confirm        # One-click confirmation
+      post :confirm                       # Confirmation after reviewing order
+      post :update_payment_method         # Redirect to Stripe to update card
+      get :update_payment_method_success  # Callback after Stripe updates card
     end
   end
 

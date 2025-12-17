@@ -10,7 +10,8 @@ class ReorderMailer < ApplicationMailer
     @schedule = pending_order.reorder_schedule
     @user = @schedule.user
 
-    @confirm_url = confirm_pending_order_url(
+    # Link to review page (GET) where user can see details before confirming
+    @review_url = pending_order_url(
       @pending_order,
       token: @pending_order.confirmation_token
     )

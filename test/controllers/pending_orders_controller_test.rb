@@ -42,6 +42,84 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # Show Action (Review Page)
+  # ==========================================================================
+
+  test "show requires valid token" do
+    get pending_order_path(@pending_order), params: { token: "invalid_token" }
+    assert_response :not_found
+  end
+
+  test "show accepts valid confirmation token" do
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+    assert_response :success
+  end
+
+  test "show rejects edit token" do
+    # Edit token should NOT work for show action (requires confirmation token)
+    get pending_order_path(@pending_order), params: { token: @edit_token }
+    assert_response :not_found
+  end
+
+  test "show displays order summary" do
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :success
+    assert_select "h1", /Your Order is Ready/i
+    assert_select "h2", /Order Items/i
+    assert_select "h2", /Order Summary/i
+  end
+
+  test "show displays confirm button" do
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :success
+    assert_select "button", /Confirm/i
+  end
+
+  test "show displays payment method info" do
+    @schedule.update!(card_brand: "visa", card_last4: "4242")
+
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :success
+    assert_match /Visa/i, response.body
+    assert_match /4242/, response.body
+  end
+
+  test "show returns 410 for already confirmed order" do
+    @pending_order.update!(status: :confirmed, confirmed_at: Time.current)
+
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :gone
+  end
+
+  test "show returns 410 for expired order" do
+    @pending_order.expire!
+
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :gone
+  end
+
+  test "show displays unavailable items warning" do
+    @pending_order.update!(
+      items_snapshot: @pending_order.items_snapshot.merge(
+        "unavailable_items" => [
+          { "product_name" => "Old Product", "reason" => "Discontinued" }
+        ]
+      )
+    )
+
+    get pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :success
+    assert_match /no longer available/i, response.body
+    assert_match /Old Product/i, response.body
+  end
+
+  # ==========================================================================
   # Token Authentication
   # ==========================================================================
 
@@ -295,6 +373,123 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
 
     # Should fail because token is for @pending_order, not other_pending_order
     assert_response :not_found
+  end
+
+  # ==========================================================================
+  # Update Payment Method Action
+  # ==========================================================================
+
+  test "update_payment_method requires valid token" do
+    post update_payment_method_pending_order_path(@pending_order), params: { token: "invalid_token" }
+    assert_response :not_found
+  end
+
+  test "update_payment_method accepts valid confirmation token" do
+    post update_payment_method_pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    # Should redirect to Stripe Checkout
+    assert_response :redirect
+    assert_match %r{checkout\.stripe\.com}, response.location
+  end
+
+  test "update_payment_method rejects edit token" do
+    post update_payment_method_pending_order_path(@pending_order), params: { token: @edit_token }
+    assert_response :not_found
+  end
+
+  test "update_payment_method returns 410 for already confirmed order" do
+    @pending_order.update!(status: :confirmed, confirmed_at: Time.current)
+
+    post update_payment_method_pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :gone
+  end
+
+  test "update_payment_method returns 410 for expired order" do
+    @pending_order.expire!
+
+    post update_payment_method_pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :gone
+  end
+
+  test "update_payment_method creates stripe customer if not exists" do
+    @user.update!(stripe_customer_id: nil)
+
+    post update_payment_method_pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    @user.reload
+    assert @user.stripe_customer_id.present?
+  end
+
+  # ==========================================================================
+  # Update Payment Method Success Action
+  # ==========================================================================
+
+  test "update_payment_method_success requires valid token" do
+    get update_payment_method_success_pending_order_path(@pending_order), params: {
+      token: "invalid_token",
+      session_id: "sess_test_123"
+    }
+    assert_response :not_found
+  end
+
+  test "update_payment_method_success requires session_id" do
+    get update_payment_method_success_pending_order_path(@pending_order), params: { token: @confirm_token }
+
+    assert_response :redirect
+    assert_match /Invalid payment session/, flash[:alert]
+  end
+
+  test "update_payment_method_success updates schedule payment method" do
+    # Create a setup mode session first so it can be retrieved
+    session = Stripe::Checkout::Session.create(mode: "setup")
+    mock_successful_payment
+
+    get update_payment_method_success_pending_order_path(@pending_order), params: {
+      token: @confirm_token,
+      session_id: session.id
+    }
+
+    @schedule.reload
+    assert_equal "visa", @schedule.card_brand
+    assert_equal "4242", @schedule.card_last4
+    assert @schedule.stripe_payment_method_id.start_with?("pm_test_")
+  end
+
+  test "update_payment_method_success confirms order after updating payment method" do
+    session = Stripe::Checkout::Session.create(mode: "setup")
+    mock_successful_payment
+
+    assert_difference "Order.count", 1 do
+      get update_payment_method_success_pending_order_path(@pending_order), params: {
+        token: @confirm_token,
+        session_id: session.id
+      }
+    end
+
+    assert_redirected_to confirmation_order_path(Order.last)
+    assert_match /Payment method updated/, flash[:notice]
+  end
+
+  test "update_payment_method_success shows error if charge fails after card update" do
+    session = Stripe::Checkout::Session.create(mode: "setup")
+    Stripe::PaymentIntent.stubs(:create).raises(
+      Stripe::CardError.new("Your card was declined", "card_declined", code: "card_declined")
+    )
+
+    get update_payment_method_success_pending_order_path(@pending_order), params: {
+      token: @confirm_token,
+      session_id: session.id
+    }
+
+    # Should still update the payment method
+    @schedule.reload
+    assert_equal "visa", @schedule.card_brand
+
+    # But show error page for failed charge
+    assert_response :unprocessable_entity
+    assert flash[:alert].present?
   end
 
   private
