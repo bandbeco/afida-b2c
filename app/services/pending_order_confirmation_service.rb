@@ -93,7 +93,6 @@ class PendingOrderConfirmationService
       user: @user,
       email: @user.email_address,
       stripe_session_id: idempotency_key,
-      order_number: generate_order_number,
       status: :paid,
       subtotal_amount: @pending_order.subtotal_amount,
       vat_amount: @pending_order.vat_amount,
@@ -141,13 +140,6 @@ class PendingOrderConfirmationService
       shipping_postal_code: address.postcode,
       shipping_country: address.country
     }
-  end
-
-  def generate_order_number
-    # Same format as Order model
-    year = Date.current.year
-    random_part = SecureRandom.alphanumeric(6).upcase
-    "#{year}-#{random_part}"
   end
 
   def send_confirmation_email(order)
