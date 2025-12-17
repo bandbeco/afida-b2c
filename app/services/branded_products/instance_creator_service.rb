@@ -45,7 +45,7 @@ module BrandedProducts
         category: @order_item.product.category,
         configuration_data: @order_item.configuration,
         active: true,
-        description: "Custom branded product for #{@order.organization.name}"
+        description_short: "Custom branded product for #{@order.organization.name}"
       )
     end
 
