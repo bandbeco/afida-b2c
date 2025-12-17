@@ -1,0 +1,74 @@
+<div class="container mx-auto px-4 py-8 max-w-2xl">
+  <div class="mb-6">
+    <%= link_to order_path(@order), class: "text-sm text-base-content/70 hover:text-base-content inline-flex items-center gap-1" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      Back to Order
+    <% end %>
+  </div>
+
+  <div class="bg-base-100 rounded-lg shadow-sm border border-base-200 p-6">
+    <h1 class="text-2xl font-bold mb-2">Set Up Reorder Schedule</h1>
+    <p class="text-base-content/70 mb-6">
+      Choose how often you'd like to receive this order. We'll send you a reminder email 3 days before each delivery.
+    </p>
+
+    <%= form_with url: reorder_schedules_path, method: :post, class: "space-y-6", data: { turbo: false } do |f| %>
+      <%= hidden_field_tag "reorder_schedule[order_id]", @order.id %>
+
+      <div>
+        <label class="block text-sm font-medium mb-3">Delivery Frequency</label>
+        <div class="grid grid-cols-2 gap-3">
+          <% @frequencies.each do |frequency| %>
+            <label class="cursor-pointer">
+              <input type="radio"
+                     name="reorder_schedule[frequency]"
+                     value="<%= frequency %>"
+                     class="peer sr-only"
+                     <%= 'checked' if frequency == 'every_month' %>>
+              <div class="p-4 border-2 border-base-200 rounded-lg text-center transition-all peer-checked:border-primary peer-checked:bg-primary/5">
+                <span class="block font-medium"><%= frequency.titleize.gsub('_', ' ') %></span>
+              </div>
+            </label>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="bg-base-200/50 rounded-lg p-4">
+        <h3 class="font-medium mb-3">Items in this order</h3>
+        <div class="space-y-2 text-sm">
+          <% @order.order_items.includes(:product_variant).each do |item| %>
+            <div class="flex justify-between">
+              <span><%= item.product_variant.display_name %> x <%= item.quantity %></span>
+              <span><%= number_to_currency(item.line_total, unit: '£') %></span>
+            </div>
+          <% end %>
+          <div class="border-t border-base-300 pt-2 mt-2 flex justify-between font-medium">
+            <span>Total per delivery</span>
+            <span><%= number_to_currency(@order.total_amount, unit: '£') %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-info/10 border border-info/20 rounded-lg p-4 text-sm">
+        <div class="flex gap-3">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-info flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+          </svg>
+          <div>
+            <p class="font-medium text-info">How it works</p>
+            <ul class="mt-1 text-base-content/70 space-y-1">
+              <li>We'll save your payment method securely</li>
+              <li>3 days before each delivery, you'll get an email</li>
+              <li>Confirm with one click, or edit the order</li>
+              <li>You can pause or cancel anytime</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <%= f.submit "Continue to Payment Setup", class: "btn btn-primary w-full" %>
+    <% end %>
+  </div>
+</div>

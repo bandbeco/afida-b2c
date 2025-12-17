@@ -1,0 +1,32 @@
+# frozen_string_literal: true
+
+# Reorder schedule item fixtures
+# Used for testing scheduled reorder functionality
+
+# Item for active monthly schedule
+active_monthly_item_one:
+  reorder_schedule: active_monthly
+  product_variant: one
+  quantity: 2
+  price: 9.99
+
+# Second item for active monthly schedule (for multi-item tests)
+active_monthly_item_two:
+  reorder_schedule: active_monthly
+  product_variant: two
+  quantity: 1
+  price: 9.99
+
+# Item for paused schedule
+paused_schedule_item:
+  reorder_schedule: paused_schedule
+  product_variant: one
+  quantity: 3
+  price: 9.99
+
+# Item for due today schedule
+due_today_item:
+  reorder_schedule: due_today
+  product_variant: two
+  quantity: 5
+  price: 9.99

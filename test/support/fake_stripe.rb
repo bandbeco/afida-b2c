@@ -20,6 +20,7 @@ module FakeStripe
     TaxRate.reset!
     Subscription.reset!
     Customer.reset!
+    PaymentIntent.reset!
   end
 
   # Configure default behavior
@@ -29,7 +30,7 @@ module FakeStripe
 
   class CheckoutSession
     attr_reader :id, :url, :payment_status, :customer_details, :collected_information,
-                :shipping_cost, :client_reference_id, :line_items
+                :shipping_cost, :client_reference_id, :line_items, :setup_intent, :metadata
 
     @@sessions = {}
     @@next_id = 1
@@ -46,6 +47,12 @@ module FakeStripe
       @payment_status = params[:payment_status] || "paid"
       @client_reference_id = params[:client_reference_id]
       @line_items = params[:line_items] || []
+      @metadata = params[:metadata] || {}
+
+      # For setup mode sessions, create a setup_intent with payment_method
+      if params[:mode] == "setup"
+        @setup_intent = SetupIntent.new
+      end
 
       # Build customer details from params or use defaults (billing info)
       email = params[:customer_email] || "test@example.com"
@@ -228,6 +235,35 @@ module FakeStripe
         @amount_total = amount_total
       end
     end
+
+    # Nested class for setup intent (used in setup mode sessions)
+    class SetupIntent
+      attr_reader :id, :payment_method
+
+      def initialize
+        @id = "seti_test_#{SecureRandom.hex(12)}"
+        @payment_method = PaymentMethod.new
+      end
+    end
+
+    # Nested class for payment method (attached to setup intent)
+    class PaymentMethod
+      attr_reader :id, :card
+
+      def initialize
+        @id = "pm_test_#{SecureRandom.hex(12)}"
+        @card = Card.new
+      end
+
+      class Card
+        attr_reader :brand, :last4
+
+        def initialize
+          @brand = "visa"
+          @last4 = "4242"
+        end
+      end
+    end
   end
 
   class TaxRate
@@ -291,6 +327,52 @@ module FakeStripe
       def initialize(data)
         @data = data
       end
+    end
+  end
+
+  class PaymentIntent
+    attr_reader :id, :status, :amount, :currency, :customer, :payment_method,
+                :metadata, :description
+
+    @@payment_intents = {}
+
+    def initialize(params = {})
+      @id = params[:id] || "pi_test_#{SecureRandom.hex(12)}"
+      @status = params[:status] || "succeeded"
+      @amount = params[:amount]
+      @currency = params[:currency]
+      @customer = params[:customer]
+      @payment_method = params[:payment_method]
+      @metadata = params[:metadata] || {}
+      @description = params[:description]
+      @@payment_intents[@id] = self
+    end
+
+    def self.create(params = {})
+      new(params)
+    end
+
+    def self.retrieve(payment_intent_id)
+      @@payment_intents[payment_intent_id] || new(id: payment_intent_id)
+    end
+
+    def self.reset!
+      @@payment_intents = {}
+    end
+  end
+
+  class Refund
+    attr_reader :id, :status, :payment_intent, :amount
+
+    def initialize(params = {})
+      @id = "re_test_#{SecureRandom.hex(12)}"
+      @status = "succeeded"
+      @payment_intent = params[:payment_intent]
+      @amount = params[:amount]
+    end
+
+    def self.create(params = {})
+      new(params)
     end
   end
 
@@ -426,6 +508,8 @@ if defined?(Rails) && Rails.env.test?
     TaxRate = FakeStripe::TaxRate
     Subscription = FakeStripe::Subscription
     Customer = FakeStripe::Customer
+    PaymentIntent = FakeStripe::PaymentIntent
+    Refund = FakeStripe::Refund
 
     # Ensure Stripe error classes exist for testing
     class StripeError < StandardError; end

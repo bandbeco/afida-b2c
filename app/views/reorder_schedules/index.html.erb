@@ -1,0 +1,105 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-6xl mx-auto">
+
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Scheduled Reorders</h1>
+      <p class="mt-2 text-gray-600">Manage your automatic reorder schedules</p>
+    </div>
+
+    <% if @schedules.any? %>
+      <div class="space-y-6">
+        <% @schedules.each do |schedule| %>
+          <article class="bg-white shadow-lg rounded-lg overflow-hidden" aria-label="<%= schedule.frequency.titleize.gsub('_', ' ') %> schedule">
+            <div class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-lg font-semibold text-gray-900"><%= schedule.frequency.titleize.gsub('_', ' ') %></h3>
+                  <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full
+                    <%= schedule.active? ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800' %>">
+                    <%= schedule.status.titleize %>
+                  </span>
+                </div>
+                <p class="text-sm text-gray-600">
+                  Next delivery: <%= schedule.next_scheduled_date.strftime("%B %d, %Y") %>
+                  <% if schedule.card_brand.present? && schedule.card_last4.present? %>
+                    · <%= schedule.card_brand.capitalize %> •••• <%= schedule.card_last4 %>
+                  <% end %>
+                </p>
+              </div>
+
+              <%= link_to reorder_schedule_path(schedule), class: "btn btn-ghost btn-sm btn-circle", title: "View Details" do %>
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              <% end %>
+            </div>
+
+            <div class="p-6">
+              <div class="flex justify-between items-start">
+                <div class="flex-1">
+                  <p class="text-sm text-gray-600 mb-2">
+                    <%= pluralize(schedule.reorder_schedule_items.size, 'item') %> · Total: <%= number_to_currency(schedule.reorder_schedule_items.sum { |i| i.price * i.quantity }, unit: '£') %>
+                  </p>
+
+                  <div class="flex -space-x-2 mb-4">
+                    <% schedule.reorder_schedule_items.first(3).each do |item| %>
+                      <% photo = item.product_variant.primary_photo || item.product_variant.product.primary_photo %>
+                      <% if photo %>
+                        <%= image_tag photo.variant(resize_and_pad: [80, 80, { background: [255, 255, 255] }]),
+                                      class: "h-10 w-10 object-contain rounded-full border-2 border-white bg-white",
+                                      alt: item.product_variant.display_name %>
+                      <% else %>
+                        <div class="h-10 w-10 rounded-full border-2 border-white bg-gray-100 flex items-center justify-center">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                          </svg>
+                        </div>
+                      <% end %>
+                    <% end %>
+
+                    <% if schedule.reorder_schedule_items.size > 3 %>
+                      <div class="h-10 w-10 bg-gray-100 rounded-full border-2 border-white flex items-center justify-center">
+                        <span class="text-xs text-gray-600">+<%= schedule.reorder_schedule_items.size - 3 %></span>
+                      </div>
+                    <% end %>
+                  </div>
+
+                </div>
+
+                <div class="ml-6 flex flex-col sm:flex-row gap-2">
+                  <% if schedule.active? %>
+                    <%= button_to pause_reorder_schedule_path(schedule), method: :patch, class: "btn btn-warning btn-outline btn-sm" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clip-rule="evenodd" />
+                      </svg>
+                      Pause
+                    <% end %>
+                  <% elsif schedule.paused? %>
+                    <%= button_to resume_reorder_schedule_path(schedule), method: :patch, class: "btn btn-success btn-outline btn-sm" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+                      </svg>
+                      Resume
+                    <% end %>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-12">
+        <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+        <h3 class="mt-2 text-sm font-medium text-gray-900">No scheduled reorders</h3>
+        <p class="mt-1 text-sm text-gray-500">Set up automatic reorders from your past orders.</p>
+        <div class="mt-6">
+          <%= link_to "View Your Orders", orders_path, class: "btn btn-primary" %>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+</div>

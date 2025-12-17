@@ -5,7 +5,7 @@
 
 module Shipping
   # Standard shipping option
-  STANDARD_COST = ENV.fetch("STANDARD_SHIPPING_COST", "500").to_i  # £5.00
+  STANDARD_COST = ENV.fetch("STANDARD_SHIPPING_COST", "699").to_i  # £6.99
   STANDARD_MIN_DAYS = 2
   STANDARD_MAX_DAYS = 3
 

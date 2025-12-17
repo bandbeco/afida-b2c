@@ -3,6 +3,7 @@ class Order < ApplicationRecord
   belongs_to :organization, optional: true
   belongs_to :placed_by_user, class_name: "User", optional: true
   belongs_to :subscription, optional: true
+  belongs_to :reorder_schedule, optional: true
   has_many :order_items, dependent: :destroy
   has_many :products, through: :order_items
 
@@ -110,6 +111,11 @@ class Order < ApplicationRecord
 
   def ga4_tracked?
     ga4_purchase_tracked_at.present?
+  end
+
+  # Returns true if this order has an associated reorder schedule
+  def has_reorder_schedule?
+    reorder_schedule_id.present?
   end
 
   private

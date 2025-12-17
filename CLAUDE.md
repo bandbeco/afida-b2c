@@ -37,6 +37,30 @@ rails test test/models/product_test.rb              # Run a specific test file
 rails test test/models/product_test.rb:10           # Run specific test by line number
 ```
 
+**⚠️ IMPORTANT: Always Use Fixtures in Tests**:
+- **ALWAYS** use fixtures (`test/fixtures/*.yml`) instead of creating records manually with `Model.create!`
+- Fixtures are loaded once per test run, making tests faster and more consistent
+- Reference fixtures using the accessor methods: `users(:one)`, `products(:widget)`, `reorder_schedules(:active_monthly)`
+- If a test needs specific data that doesn't exist in fixtures, **add it to the fixture file** rather than creating it inline
+- Only modify fixture data within a test when testing specific behavior (e.g., `@user.update!(active: false)`)
+- If fixture data interferes with what you're testing, modify it in the test setup rather than deleting fixtures with `delete_all`
+
+**Bad (don't do this):**
+```ruby
+setup do
+  ReorderSchedule.delete_all  # DON'T nuke fixtures
+  @schedule = ReorderSchedule.create!(user: users(:one), ...)  # DON'T create inline
+end
+```
+
+**Good (do this):**
+```ruby
+setup do
+  @schedule = reorder_schedules(:active_monthly)  # USE fixtures
+  @user = @schedule.user
+end
+```
+
 ### Code Quality
 ```bash
 rubocop                 # Run RuboCop linter (uses rails-omakase config)
@@ -68,8 +92,13 @@ rails c                 # Shorthand
 **JavaScript Stack**:
 - Hotwire Turbo for SPA-like navigation
 - Stimulus controllers for interactive components (`app/frontend/javascript/controllers/`)
+  - 27 controllers total, key ones include:
+  - `cart_drawer_controller.js` - Shopping cart drawer
   - `carousel_controller.js` - Swiper.js carousel integration
-  - `cart_drawer_controller.js` - Shopping cart drawer functionality
+  - `product_options_controller.js` - Product variant selection
+  - `quick_add_modal_controller.js` - Quick add to cart modal
+  - `branded_configurator_controller.js` - Branded product configuration
+  - `sample_counter_controller.js` - Sample selection tracking
 - Swiper for carousels
 - Active Storage for file uploads
 
@@ -95,6 +124,7 @@ Controllers will NOT work if they are not registered. The lazy loading system au
 - `Product` - Has variants, belongs to category, uses slugs for URLs
   - Default scope filters active products and orders by sort_order
   - `ProductVariant` - Price and inventory tracking (SKU, stock, price)
+  - `ProductCompatibleLid` - Join table for cup/lid compatibility
 - `Category` - Organizes products
 - `Cart` / `CartItem` - Shopping cart (supports both guest and user carts)
   - VAT calculation at 20% (UK)
@@ -103,20 +133,34 @@ Controllers will NOT work if they are not registered. The lazy loading system au
   - Stores Stripe session ID
   - Captures shipping details from Stripe Checkout
 - `User` / `Session` - Authentication (Rails 8 built-in authentication with bcrypt)
+- `Address` - User saved delivery addresses (multiple per user, one default)
+- `Subscription` - Stripe subscription tracking
+- `ReorderSchedule` / `ReorderScheduleItem` - Scheduled automatic reorders
+- `PendingOrder` - Orders awaiting customer confirmation before charging
+- `Organization` - B2B customer organizations
 - `Current` - ActiveSupport::CurrentAttributes for request-scoped state (user, session, cart)
 
 **Controllers**:
-- `PagesController` - Static pages (home, shop, about, contact, terms, privacy, cookies)
+- `PagesController` - Static pages (home, shop, branding, about, contact, terms, privacy, cookies, accessibility)
 - `ProductsController` - Product listing and detail pages
 - `CategoriesController` - Category pages
+- `SamplesController` - Free sample selection pages
 - `CartsController` / `CartItemsController` - Shopping cart management
 - `CheckoutsController` - Stripe Checkout integration
   - Creates Stripe sessions with line items, shipping, and tax
   - Handles success callback to create orders
   - Uses `Current.cart` for cart state
 - `OrdersController` - Order history and details
+- `AccountsController` - User account management
+- `Account::AddressesController` - Saved address CRUD
+- `SubscriptionsController` - Stripe subscription management
+- `ReorderSchedulesController` - Scheduled reorder management
+- `PendingOrdersController` - Pending order review and confirmation
+- `BrandedProductsController` - Custom branded product configurator
+- `BlogsController` / `FaqsController` - Content pages
 - `Admin::ProductsController` - Admin product management
 - `Admin::OrdersController` - Admin order management
+- `Admin::BrandedOrdersController` - Admin branded order management
 - `FeedsController` - Google Merchant feed generation
 
 **Key Patterns**:
@@ -154,9 +198,10 @@ Development uses single PostgreSQL database: `shop_development`
 ### Email Configuration
 
 - Uses Mailgun gem for transactional emails
-- Order confirmation emails sent via `OrderMailer`
-- Registration emails for email verification
-- Password reset functionality
+- `OrderMailer` - Order confirmation emails
+- `RegistrationMailer` - Email verification
+- `PasswordsMailer` - Password reset
+- `ReorderMailer` - Scheduled reorder notifications (order ready, reminders)
 
 ### Third-Party Services
 
@@ -379,7 +424,7 @@ Visit `/pattern-demo` in development to see all variants and usage examples.
 ### Working with Cart
 - Use `Current.cart` to access current user's cart
 - Cart automatically handles guest vs authenticated users
-- VAT calculated at `Cart::VAT_RATE` (0.2)
+- VAT calculated at `VAT_RATE` (0.2) - defined globally in `config/initializers/vat.rb`
 - Cart methods: `items_count`, `subtotal_amount`, `vat_amount`, `total_amount`
 
 ### Working with Samples
@@ -422,6 +467,78 @@ cart.at_sample_limit?                  # True if 5+ samples
 1. Edit a product variant in admin
 2. Check "Sample eligible" checkbox
 3. Optionally set custom `sample_sku` for fulfillment tracking
+
+### Scheduled Reorders
+
+Customers can set up automatic recurring orders that are charged on a schedule.
+
+**Data Model**:
+- `ReorderSchedule` - The recurring schedule configuration
+  - `user_id` - Owner of the schedule
+  - `frequency` - Enum: `every_month`, `every_two_months`, `every_three_months`
+  - `status` - Enum: `active`, `paused`, `cancelled`
+  - `next_scheduled_date` - When the next order will be created
+  - `stripe_payment_method_id` - Saved card for off-session charging
+  - `card_brand`, `card_last4` - Display info for the saved card
+- `ReorderScheduleItem` - Items in the schedule (product_variant + quantity)
+- `PendingOrder` - Created 3 days before charge date for customer review
+  - `items_snapshot` - JSONB capturing prices at creation time
+  - `status` - Enum: `pending`, `confirmed`, `expired`
+  - Token-based access (no login required to review/confirm)
+
+**Flow**:
+1. User creates schedule from order confirmation page
+2. `CreatePendingOrdersJob` runs daily, creates `PendingOrder` 3 days before `next_scheduled_date`
+3. User receives email with link to review order
+4. User clicks link → lands on review page (`PendingOrdersController#show`)
+5. User clicks "Confirm & Pay" → charges card, creates order
+6. If payment fails → shows `payment_failed.html.erb` with options to update card
+
+**Token Authentication**:
+Pending orders use Rails GlobalID signed tokens for secure, login-free access:
+```ruby
+pending_order.confirmation_token  # For show/confirm actions (7-day expiry)
+pending_order.edit_token          # For edit/update actions (7-day expiry)
+```
+
+**Key Files**:
+- `app/controllers/reorder_schedules_controller.rb` - Schedule CRUD
+- `app/controllers/pending_orders_controller.rb` - Review and confirm pending orders
+- `app/services/pending_order_confirmation_service.rb` - Handles payment and order creation
+- `app/services/pending_order_snapshot_builder.rb` - Builds price snapshots
+- `app/jobs/create_pending_orders_job.rb` - Daily job to create pending orders
+- `app/mailers/reorder_mailer.rb` - Email notifications
+
+**Routes**:
+```
+/reorder-schedules           # List user's schedules
+/reorder-schedules/:id       # Show/edit schedule
+/reorder-schedules/setup     # Create from order
+/pending-orders/:id?token=x  # Review pending order
+/pending-orders/:id/confirm  # Confirm and charge
+/pending-orders/:id/edit     # Edit items before confirming
+```
+
+### User Addresses
+
+Users can save multiple delivery addresses for faster checkout.
+
+**Data Model**:
+- `Address` belongs to `User`
+- Fields: `nickname`, `recipient_name`, `company_name`, `line1`, `line2`, `city`, `postcode`, `country`, `phone`
+- One address per user can be marked as `default`
+
+**Checkout Integration**:
+- If user has saved addresses, checkout shows address selector
+- Selected address is synced to Stripe Customer for prefill
+- User can also choose "Enter a different address" for one-time addresses
+
+**Routes**:
+```
+/account/addresses           # List addresses
+/account/addresses/new       # Add new address
+/account/addresses/:id/edit  # Edit address
+```
 
 ### Pricing Model (Pack vs Unit Pricing)
 
@@ -613,6 +730,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (existing `users`, `orders`, `order_items` tables; new `subscriptions` table) (001-sign-up-accounts)
 - Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI, Stripe Ruby SDK (001-user-address-storage)
 - PostgreSQL 14+ (new `addresses` table) (001-user-address-storage)
+- Ruby 3.3.0+ / Rails 8.x + Rails 8, Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (014-scheduled-reorder)
+- PostgreSQL 14+ (3 new tables: `reorder_schedules`, `reorder_schedule_items`, `pending_orders`) (014-scheduled-reorder)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

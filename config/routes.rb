@@ -91,10 +91,7 @@ Rails.application.routes.draw do
     end
   end
 
-  # Post-checkout guest-to-account conversion
-  resource :post_checkout_registration, only: [ :create ]
-
-  # Subscriptions
+  # Subscriptions management
   resources :subscriptions, only: [ :index, :destroy ] do
     member do
       patch :pause
@@ -102,11 +99,28 @@ Rails.application.routes.draw do
     end
   end
 
-  # Subscription checkout
-  resources :subscription_checkouts, only: [ :create ] do
+  # Post-checkout guest-to-account conversion
+  resource :post_checkout_registration, only: [ :create ]
+
+  # Reorder Schedules
+  resources :reorder_schedules, path: "reorder-schedules" do
+    member do
+      patch :pause
+      patch :resume
+      patch :skip_next
+    end
     collection do
-      get :success
-      get :cancel
+      get :setup           # Start setup flow (from order)
+      get :setup_success   # Stripe redirect after payment method saved
+      get :setup_cancel    # Stripe redirect on cancel
+    end
+  end
+
+  resources :pending_orders, path: "pending-orders", only: [ :show, :edit, :update ] do
+    member do
+      post :confirm                       # Confirmation after reviewing order
+      post :update_payment_method         # Redirect to Stripe to update card
+      get :update_payment_method_success  # Callback after Stripe updates card
     end
   end
 

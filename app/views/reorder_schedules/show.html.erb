@@ -1,0 +1,123 @@
+<div class="container mx-auto px-4 py-8 max-w-4xl">
+  <div class="mb-6">
+    <%= link_to reorder_schedules_path, class: "text-sm text-base-content/70 hover:text-base-content inline-flex items-center gap-1" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+      </svg>
+      Back to Schedules
+    <% end %>
+  </div>
+
+  <div class="bg-base-100 rounded-lg shadow-sm border border-base-200 p-6 mb-6">
+    <div class="flex justify-between items-start mb-6">
+      <div>
+        <h1 class="text-2xl font-bold mb-2">
+          <%= @schedule.frequency.titleize.gsub('_', ' ') %> Reorder
+        </h1>
+        <span class="badge <%= @schedule.active? ? 'badge-success' : 'badge-warning' %>">
+          <%= @schedule.status.titleize %>
+        </span>
+      </div>
+
+      <div class="flex gap-2">
+        <% if @schedule.active? %>
+          <%= button_to pause_reorder_schedule_path(@schedule), method: :patch, class: "btn btn-warning btn-outline btn-sm" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75-.75H9a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H7.5a.75.75 0 01-.75-.75V5.25zm7.5 0A.75.75 0 0115 4.5h1.5a.75.75 0 01.75.75v13.5a.75.75 0 01-.75.75H15a.75.75 0 01-.75-.75V5.25z" clip-rule="evenodd" />
+            </svg>
+            Pause
+          <% end %>
+          <%= button_to reorder_schedule_path(@schedule), method: :delete, class: "btn btn-error btn-outline btn-sm", data: { turbo_confirm: "Are you sure you want to cancel this reorder schedule? This cannot be undone." } do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm6-2.438c0-.724.588-1.312 1.313-1.312h4.874c.725 0 1.313.588 1.313 1.313v4.874c0 .725-.588 1.313-1.313 1.313H9.564a1.312 1.312 0 01-1.313-1.313V9.564z" clip-rule="evenodd" />
+            </svg>
+            Cancel
+          <% end %>
+        <% elsif @schedule.paused? %>
+          <%= button_to resume_reorder_schedule_path(@schedule), method: :patch, class: "btn btn-success btn-outline btn-sm" do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
+              <path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" />
+            </svg>
+            Resume
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-4 text-sm">
+      <div>
+        <span class="text-base-content/70">Next Scheduled Date</span>
+        <p class="font-medium"><%= @schedule.next_scheduled_date.strftime('%B %d, %Y') %></p>
+      </div>
+      <div>
+        <span class="text-base-content/70">Frequency</span>
+        <p class="font-medium"><%= @schedule.frequency.titleize.gsub('_', ' ') %></p>
+      </div>
+      <div>
+        <span class="text-base-content/70">Payment Method</span>
+        <% if @schedule.card_brand.present? && @schedule.card_last4.present? %>
+          <p class="font-medium"><%= @schedule.card_brand.capitalize %> •••• <%= @schedule.card_last4 %></p>
+        <% else %>
+          <p class="font-medium text-base-content/50">Not available</p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <div class="bg-base-100 rounded-lg shadow-sm border border-base-200 p-6">
+    <h2 class="text-lg font-semibold mb-4">Items in Scheduled Reorder</h2>
+
+    <div class="divide-y divide-base-200">
+      <% @schedule.reorder_schedule_items.includes(:product_variant).each do |item| %>
+        <div class="py-4 flex justify-between items-center">
+          <div class="flex items-center gap-4">
+            <% if item.product_variant.product&.primary_photo&.attached? %>
+              <%= image_tag item.product_variant.product.primary_photo.variant(resize_to_fill: [64, 64]),
+                            class: "w-16 h-16 object-cover rounded" %>
+            <% else %>
+              <div class="w-16 h-16 bg-base-200 rounded flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+              </div>
+            <% end %>
+            <div>
+              <p class="font-medium"><%= item.product_variant.display_name %></p>
+              <p class="text-sm text-base-content/70">Qty: <%= item.quantity %></p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-medium"><%= number_to_currency(item.price * item.quantity, unit: '£') %></p>
+            <% unless item.available? %>
+              <span class="badge badge-error badge-sm">Unavailable</span>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Order totals %>
+    <% subtotal = @schedule.reorder_schedule_items.sum { |i| i.price * i.quantity } %>
+    <% vat = subtotal * 0.2 %>
+    <% total = subtotal + vat %>
+    <div class="border-t border-base-200 mt-4 pt-4 space-y-2">
+      <div class="flex justify-between text-sm">
+        <span class="text-base-content/70">Subtotal</span>
+        <span><%= number_to_currency(subtotal, unit: '£') %></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-base-content/70">VAT (20%)</span>
+        <span><%= number_to_currency(vat, unit: '£') %></span>
+      </div>
+      <div class="flex justify-between text-sm">
+        <span class="text-base-content/70">Shipping</span>
+        <span class="text-base-content/50">Calculated at checkout</span>
+      </div>
+      <div class="flex justify-between font-semibold text-lg pt-2 border-t border-base-200">
+        <span>Total</span>
+        <span><%= number_to_currency(total, unit: '£') %></span>
+      </div>
+    </div>
+  </div>
+
+</div>

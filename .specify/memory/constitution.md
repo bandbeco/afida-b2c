@@ -1,15 +1,15 @@
 <!--
 Sync Impact Report
 ==================
-Version Change: Initial → 1.0.0
-Rationale: Initial constitution establishment for Afida E-Commerce Shop project
+Version Change: 1.0.0 → 1.1.0
+Rationale: Added mandatory fixtures requirement to Test-First Development principle
 
-Principles Established:
-- Test-First Development (TDD)
-- SEO & Structured Data
-- Performance & Scalability
-- Security & Payment Integrity
-- Code Quality & Maintainability
+Principles Updated:
+- Test-First Development (TDD): Added "Fixtures MUST Be Used" subsection
+  - Tests MUST use fixtures instead of inline Model.create!
+  - Reference fixtures using accessor methods
+  - NEVER delete fixtures with delete_all
+  - Only use create! when testing creation-specific behavior
 
 Templates Status:
 ✅ plan-template.md - Constitution Check section aligns with principles
@@ -18,7 +18,7 @@ Templates Status:
 ✅ No agent-specific references found (generic guidance maintained)
 
 Follow-up TODOs:
-- None - all placeholders filled with concrete values
+- None - principle addition is backward compatible
 -->
 
 # Afida E-Commerce Shop Constitution
@@ -35,7 +35,14 @@ All features MUST follow strict Test-Driven Development (TDD):
 - Test coverage tracked for models, controllers, services, and integrations
 - System tests required for critical user flows (checkout, authentication, cart)
 
-**Rationale**: TDD ensures code correctness, prevents regressions, and serves as living documentation. For an e-commerce platform handling payments and customer data, test coverage is non-negotiable for reliability and trust.
+**Fixtures MUST Be Used (NON-NEGOTIABLE)**:
+- Tests MUST use fixtures (`test/fixtures/*.yml`) instead of creating records inline with `Model.create!`
+- Reference fixtures using accessor methods: `users(:one)`, `products(:widget)`, `reorder_schedules(:active_monthly)`
+- If a test needs specific data not in fixtures, ADD it to the fixture file
+- NEVER delete fixtures with `delete_all` to avoid test pollution—modify fixture data in setup instead
+- Only use `Model.create!` when testing creation-specific behavior (e.g., validations, callbacks)
+
+**Rationale**: TDD ensures code correctness, prevents regressions, and serves as living documentation. For an e-commerce platform handling payments and customer data, test coverage is non-negotiable for reliability and trust. Fixtures provide consistent, fast, and predictable test data that is shared across the test suite and easier to maintain than inline record creation.
 
 ### II. SEO & Structured Data
 
@@ -214,4 +221,4 @@ Constitution follows semantic versioning:
 - Complexity and deviation from principles MUST be justified before approval
 - Technical debt introduced by violating principles MUST be tracked and scheduled for remediation
 
-**Version**: 1.0.0 | **Ratified**: 2025-01-13 | **Last Amended**: 2025-01-13
+**Version**: 1.1.0 | **Ratified**: 2025-01-13 | **Last Amended**: 2025-12-17

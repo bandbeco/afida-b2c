@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -125,7 +125,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
     t.bigint "product_id"
     t.string "product_name", null: false
     t.string "product_sku", null: false
-    t.bigint "product_variant_id"
+    t.bigint "product_variant_id", null: false
     t.integer "quantity", null: false
     t.datetime "updated_at", null: false
     t.index ["configuration"], name: "index_order_items_on_configuration", using: :gin
@@ -152,8 +152,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
     t.string "shipping_name", null: false
     t.string "shipping_postal_code", null: false
     t.string "status", default: "pending", null: false
-    t.string "stripe_invoice_id"
-    t.string "stripe_session_id"
+    t.string "stripe_session_id", null: false
     t.bigint "subscription_id"
     t.decimal "subtotal_amount", precision: 10, scale: 2, null: false
     t.decimal "total_amount", precision: 10, scale: 2, null: false
@@ -168,7 +167,6 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
     t.index ["placed_by_user_id"], name: "index_orders_on_placed_by_user_id"
     t.index ["reorder_schedule_id"], name: "index_orders_on_reorder_schedule_id"
     t.index ["status"], name: "index_orders_on_status"
-    t.index ["stripe_invoice_id"], name: "index_orders_on_stripe_invoice_id", unique: true, where: "(stripe_invoice_id IS NOT NULL)"
     t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id", unique: true
     t.index ["subscription_id"], name: "index_orders_on_subscription_id"
     t.index ["user_id"], name: "index_orders_on_user_id"
@@ -195,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_pending_orders_on_order_id"
+    t.index ["reorder_schedule_id", "scheduled_for"], name: "index_pending_orders_unique_pending_per_schedule", unique: true, where: "(status = 0)"
     t.index ["reorder_schedule_id"], name: "index_pending_orders_on_reorder_schedule_id"
     t.index ["scheduled_for"], name: "index_pending_orders_on_scheduled_for"
     t.index ["status", "scheduled_for"], name: "index_pending_orders_on_status_and_scheduled_for"
@@ -322,7 +321,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
     t.index ["position"], name: "index_products_on_position"
     t.index ["product_type"], name: "index_products_on_product_type"
     t.index ["profit_margin"], name: "index_products_on_profit_margin"
-    t.index ["sku"], name: "index_products_on_sku"
+    t.index ["sku"], name: "index_products_on_sku", unique: true
     t.index ["slug", "product_type"], name: "index_products_on_slug_and_product_type", unique: true
   end
 

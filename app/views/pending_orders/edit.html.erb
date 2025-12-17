@@ -1,0 +1,99 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="max-w-4xl mx-auto">
+
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900">Edit Your Scheduled Order</h1>
+      <p class="text-gray-600">Scheduled for delivery on <%= @pending_order.scheduled_for.strftime("%B %d, %Y") %></p>
+    </div>
+
+    <% if @pending_order.unavailable_items.any? %>
+      <div class="alert alert-warning mb-8">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <div>
+          <h3 class="font-bold">Some items are no longer available</h3>
+          <ul class="mt-2 list-disc list-inside">
+            <% @pending_order.unavailable_items.each do |item| %>
+              <li><%= item["product_name"] %> - <%= item["reason"] %></li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+
+    <%= form_with url: pending_order_path(@pending_order, token: @pending_order.edit_token), method: :patch, local: true, class: "space-y-6" do |f| %>
+      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b">
+          <h2 class="text-xl font-semibold text-gray-900">Order Items</h2>
+        </div>
+
+        <div class="divide-y divide-gray-200">
+          <% @pending_order.items.each_with_index do |item, index| %>
+            <div class="p-6 flex items-center space-x-4">
+              <div class="flex-1">
+                <h3 class="text-lg font-medium text-gray-900"><%= item["product_name"] %></h3>
+                <p class="text-sm text-gray-500"><%= item["variant_name"] %></p>
+                <p class="text-sm text-gray-500">Unit price: &pound;<%= item["price"] %></p>
+              </div>
+
+              <div class="flex items-center space-x-2">
+                <input type="hidden" name="pending_order[items][<%= index %>][product_variant_id]" value="<%= item["product_variant_id"] %>">
+                <label class="text-sm text-gray-600">Qty:</label>
+                <input type="number"
+                       name="pending_order[items][<%= index %>][quantity]"
+                       value="<%= item["quantity"] %>"
+                       min="1"
+                       class="input input-bordered w-20">
+              </div>
+
+              <div class="text-right w-24">
+                <p class="text-lg font-medium text-gray-900">&pound;<%= item["line_total"] %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b">
+          <h2 class="text-xl font-semibold text-gray-900">Order Summary</h2>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div class="flex justify-between">
+            <span class="text-gray-600">Subtotal</span>
+            <span class="text-gray-900">&pound;<%= @pending_order.items_snapshot["subtotal"] %></span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">VAT (20%)</span>
+            <span class="text-gray-900">&pound;<%= @pending_order.items_snapshot["vat"] %></span>
+          </div>
+
+          <div class="flex justify-between">
+            <span class="text-gray-600">Shipping</span>
+            <span class="text-gray-900">&pound;<%= @pending_order.items_snapshot["shipping"] %></span>
+          </div>
+
+          <div class="border-t pt-4">
+            <div class="flex justify-between">
+              <span class="text-lg font-semibold text-gray-900">Total</span>
+              <span class="text-lg font-bold text-gray-900">&pound;<%= @pending_order.items_snapshot["total"] %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <%= submit_tag "Save Changes", class: "btn btn-outline btn-lg" %>
+        <%= link_to "Confirm Order",
+            confirm_pending_order_path(@pending_order, token: @pending_order.confirmation_token),
+            method: :post,
+            data: { turbo_method: :post },
+            class: "btn btn-primary btn-lg" %>
+      </div>
+    <% end %>
+
+  </div>
+</div>
