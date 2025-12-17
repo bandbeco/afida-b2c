@@ -51,8 +51,8 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
   test "optimized description has first 160 chars with key info" do
     product = products(:one)
-    # Remove existing description to test generated one
-    product.update!(description: nil)
+    # Remove existing descriptions to test generated one
+    product.update!(description_short: nil, description_standard: nil, description_detailed: nil)
 
     generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
     xml = Nokogiri::XML(generator.generate_xml)

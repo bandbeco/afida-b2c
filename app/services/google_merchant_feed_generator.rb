@@ -110,9 +110,10 @@ class GoogleMerchantFeedGenerator
     parts << product.material if product.material.present?
 
     # Eco feature (compostable, biodegradable, etc)
-    if product.description&.match?(/compostable/i)
+    description_text = product.description_detailed_with_fallback
+    if description_text&.match?(/compostable/i)
       parts << "Compostable"
-    elsif product.description&.match?(/biodegradable/i)
+    elsif description_text&.match?(/biodegradable/i)
       parts << "Biodegradable"
     end
 
@@ -146,7 +147,8 @@ class GoogleMerchantFeedGenerator
     full_description = first_part + quality + business + shipping
 
     # Use existing description if available, otherwise use generated
-    product.description.present? ? product.description : full_description
+    existing_description = product.description_detailed_with_fallback
+    existing_description.present? ? existing_description : full_description
   end
 
   def generate_item_group_id(product)
