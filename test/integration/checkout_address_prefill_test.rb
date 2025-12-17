@@ -1,6 +1,10 @@
 require "test_helper"
 
 class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
+  # Use the real Stripe gem classes for stubbing (bypass FakeStripe constants)
+  REAL_STRIPE_CUSTOMER = ::Stripe::Customer
+  REAL_STRIPE_CHECKOUT_SESSION = ::Stripe::Checkout::Session
+
   setup do
     @user = users(:one)
     @address = addresses(:office)
@@ -33,7 +37,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Verify checkout used customer (not customer_email) for prefill
     stripe_params = FakeStripe::CheckoutSession.last_create_params
-    assert_not_nil stripe_params
+    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
     assert_equal @user.stripe_customer_id, stripe_params[:customer]
     assert_nil stripe_params[:customer_email]
     assert_equal @user.id, stripe_params[:client_reference_id]
@@ -44,7 +48,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Verify shipping was synced to Stripe Customer
     customer_params = FakeStripe::Customer.last_create_params
-    assert_not_nil customer_params
+    assert_not_nil customer_params, "Expected Stripe::Customer.create to have been called"
     assert_equal @user.email_address, customer_params[:email]
     assert_not_nil customer_params[:shipping]
     assert_equal @address.recipient_name, customer_params[:shipping][:name]
@@ -64,6 +68,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Should use customer_email fallback
     stripe_params = FakeStripe::CheckoutSession.last_create_params
+    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
     assert_equal @user.email_address, stripe_params[:customer_email]
     assert_nil stripe_params[:customer]
   end
@@ -79,12 +84,13 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Should have updated existing customer (not created new)
     update_params = FakeStripe::Customer.last_update_params
-    assert_not_nil update_params
+    assert_not_nil update_params, "Expected Stripe::Customer.update to have been called"
     assert_equal "cus_existing_123", update_params[:customer_id]
     assert_equal @address.recipient_name, update_params[:params][:shipping][:name]
 
     # Checkout should use existing customer ID
     stripe_params = FakeStripe::CheckoutSession.last_create_params
+    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
     assert_equal "cus_existing_123", stripe_params[:customer]
   end
 
@@ -100,6 +106,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Should use customer_email, NOT customer (avoids prefill)
     stripe_params = FakeStripe::CheckoutSession.last_create_params
+    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
     assert_equal @user.email_address, stripe_params[:customer_email]
     assert_nil stripe_params[:customer]
   end
