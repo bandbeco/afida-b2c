@@ -88,8 +88,12 @@ class ReorderSchedulesController < ApplicationController
   end
 
   # PATCH /reorder_schedules/:id/resume
+  # Accepts optional resume_type param: "asap" (default) or "original_schedule"
   def resume
-    @schedule.resume! if @schedule.paused?
+    if @schedule.paused?
+      resume_type = params[:resume_type]&.to_sym || :asap
+      @schedule.resume!(resume_type: resume_type)
+    end
     flash[:notice] = "Your reorder schedule has been resumed."
     redirect_to reorder_schedule_path(@schedule)
   end

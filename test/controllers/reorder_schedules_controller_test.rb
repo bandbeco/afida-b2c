@@ -286,6 +286,51 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_match(/resumed/i, flash[:notice])
   end
 
+  test "resume with asap calculates next date from today" do
+    sign_in(@user)
+    schedule = create_schedule_for(@user)
+    schedule.update!(next_scheduled_date: 2.months.ago.to_date)
+    schedule.pause!
+
+    patch resume_reorder_schedule_url(schedule), params: { resume_type: "asap" }
+
+    schedule.reload
+    assert_equal "active", schedule.status
+    # Next date should be one month from today
+    assert_equal Date.current + 1.month, schedule.next_scheduled_date
+  end
+
+  test "resume with original_schedule advances until future date" do
+    sign_in(@user)
+    schedule = create_schedule_for(@user)
+    original_date = 2.months.ago.to_date
+    schedule.update!(next_scheduled_date: original_date)
+    schedule.pause!
+
+    patch resume_reorder_schedule_url(schedule), params: { resume_type: "original_schedule" }
+
+    schedule.reload
+    assert_equal "active", schedule.status
+    # Should advance the original schedule forward until it's in the future
+    # 2 months ago + 3 months = 1 month from now
+    expected_date = original_date + 3.months
+    assert_equal expected_date, schedule.next_scheduled_date
+    assert schedule.next_scheduled_date > Date.current
+  end
+
+  test "resume defaults to asap when no resume_type provided" do
+    sign_in(@user)
+    schedule = create_schedule_for(@user)
+    schedule.update!(next_scheduled_date: 2.months.ago.to_date)
+    schedule.pause!
+
+    patch resume_reorder_schedule_url(schedule)
+
+    schedule.reload
+    # Default is asap, so should be one month from today
+    assert_equal Date.current + 1.month, schedule.next_scheduled_date
+  end
+
   test "resume does not allow resuming other users schedule" do
     sign_in(@user)
     other_user = users(:two)

@@ -35,8 +35,22 @@ class ReorderSchedule < ApplicationRecord
     update!(status: :paused, paused_at: Time.current)
   end
 
-  def resume!
-    update!(status: :active, paused_at: nil, next_scheduled_date: calculate_next_date(from: Date.current))
+  # Resume a paused schedule with choice of when to send next delivery
+  # @param resume_type [Symbol] :asap (default) or :original_schedule
+  #   - :asap - Next delivery based on frequency from today
+  #   - :original_schedule - Keep original schedule, advancing if date has passed
+  def resume!(resume_type: :asap)
+    next_date = case resume_type
+    when :original_schedule
+      # Advance original schedule until it's in the future
+      date = next_scheduled_date
+      date = calculate_next_date(from: date) while date <= Date.current
+      date
+    else # :asap
+      calculate_next_date(from: Date.current)
+    end
+
+    update!(status: :active, paused_at: nil, next_scheduled_date: next_date)
   end
 
   def cancel!

@@ -157,6 +157,55 @@ class ReorderScheduleTest < ActiveSupport::TestCase
     assert @schedule.next_scheduled_date >= Date.current
   end
 
+  test "resume! with asap calculates next date from today" do
+    @schedule.frequency = :every_month
+    @schedule.status = :paused
+    @schedule.next_scheduled_date = 2.months.ago.to_date
+    @schedule.paused_at = 2.months.ago
+    @schedule.save!
+
+    @schedule.resume!(resume_type: :asap)
+
+    assert @schedule.active?
+    assert_equal Date.current + 1.month, @schedule.next_scheduled_date
+  end
+
+  test "resume! with original_schedule advances until future date" do
+    @schedule.frequency = :every_month
+    @schedule.status = :paused
+    @schedule.next_scheduled_date = 2.months.ago.to_date
+    @schedule.paused_at = 2.months.ago
+    @schedule.save!
+
+    original_date = @schedule.next_scheduled_date
+
+    @schedule.resume!(resume_type: :original_schedule)
+
+    assert @schedule.active?
+    # Should advance the original schedule forward until it's in the future
+    # 2 months ago + 3 months = 1 month from now
+    expected_date = original_date + 3.months
+    assert_equal expected_date, @schedule.next_scheduled_date
+    assert @schedule.next_scheduled_date > Date.current
+  end
+
+  test "resume! with original_schedule keeps date if already in future" do
+    @schedule.frequency = :every_month
+    @schedule.status = :paused
+    @schedule.next_scheduled_date = 1.week.from_now.to_date
+    @schedule.paused_at = 1.day.ago
+    @schedule.save!
+
+    original_date = @schedule.next_scheduled_date
+
+    @schedule.resume!(resume_type: :original_schedule)
+
+    assert @schedule.active?
+    # Date was already in the future, so it should advance by one interval
+    # (since the condition is date <= Date.current)
+    assert_equal original_date, @schedule.next_scheduled_date
+  end
+
   test "cancel! changes status to cancelled and sets cancelled_at" do
     @schedule.save!
     freeze_time do
