@@ -17,8 +17,8 @@ class OrderPricingDisplayIntegrationTest < ActionDispatch::IntegrationTest
       product_sku: "CUP-500PK",
       price: 16.00,
       pac_size: 500,
-      quantity: 500,
-      line_total: 16.00,
+      quantity: 2,
+      line_total: 32.00,
       configuration: {}
     )
 
@@ -26,9 +26,10 @@ class OrderPricingDisplayIntegrationTest < ActionDispatch::IntegrationTest
     get order_path(@order)
 
     assert_response :success
-    # Pack-priced item should show "£16.00 / pack (£0.0320 / unit)"
+    # Pack-priced item should show "£16.00 / pack" format (unit price not shown inline)
     assert_match /£16\.00 \/ pack/, response.body
-    assert_match /£0\.0320 \/ unit/, response.body
+    # Verify it shows quantity in packs format
+    assert_match /2 packs/, response.body
   end
 
   test "order show page displays unit pricing format for branded/configured items" do
