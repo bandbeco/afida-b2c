@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
+ActiveRecord::Schema[8.1].define(version: 2025_12_17_212058) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -195,6 +195,7 @@ ActiveRecord::Schema[8.1].define(version: 2025_12_17_114606) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_pending_orders_on_order_id"
+    t.index ["reorder_schedule_id", "scheduled_for"], name: "index_pending_orders_unique_pending_per_schedule", unique: true, where: "(status = 0)"
     t.index ["reorder_schedule_id"], name: "index_pending_orders_on_reorder_schedule_id"
     t.index ["scheduled_for"], name: "index_pending_orders_on_scheduled_for"
     t.index ["status", "scheduled_for"], name: "index_pending_orders_on_status_and_scheduled_for"

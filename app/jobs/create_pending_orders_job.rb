@@ -9,8 +9,6 @@ class CreatePendingOrdersJob < ApplicationJob
   # and creates pending orders for them with current prices
   def perform
     schedules_due.each do |schedule|
-      next if pending_order_exists?(schedule)
-
       create_pending_order(schedule)
     end
   end
@@ -24,13 +22,6 @@ class CreatePendingOrdersJob < ApplicationJob
       .includes(reorder_schedule_items: { product_variant: :product })
   end
 
-  def pending_order_exists?(schedule)
-    schedule.pending_orders.exists?(
-      scheduled_for: schedule.next_scheduled_date,
-      status: :pending
-    )
-  end
-
   def create_pending_order(schedule)
     snapshot = PendingOrderSnapshotBuilder.new(schedule).build
 
@@ -40,6 +31,11 @@ class CreatePendingOrdersJob < ApplicationJob
     )
 
     send_reminder_email(pending_order)
+  rescue ActiveRecord::RecordNotUnique
+    # Already created by another worker - skip silently
+    # This handles race conditions when multiple Solid Queue workers
+    # process the same schedule concurrently
+    Rails.logger.info("Pending order already exists for schedule #{schedule.id}, date #{schedule.next_scheduled_date}")
   end
 
   def send_reminder_email(pending_order)
