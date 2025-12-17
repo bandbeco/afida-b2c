@@ -228,11 +228,11 @@ class PendingOrderTest < ActiveSupport::TestCase
     assert_equal @pending_order, located
   end
 
-  test "confirmation_token expires after 7 days" do
+  test "confirmation_token expires after 72 hours" do
     @pending_order.save!
     token = @pending_order.confirmation_token
 
-    travel 8.days do
+    travel 4.days do
       located = GlobalID::Locator.locate_signed(token, for: "pending_order_confirm")
       assert_nil located
     end

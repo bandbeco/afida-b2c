@@ -47,11 +47,15 @@ class PendingOrder < ApplicationRecord
   end
 
   # Generate signed token for email links
+  # Tokens expire in 72 hours - pending orders have a natural deadline anyway
+  # (the scheduled delivery date), so shorter expiration reduces abuse window
+  TOKEN_EXPIRATION = 72.hours
+
   def confirmation_token
-    to_sgid(expires_in: 7.days, for: "pending_order_confirm").to_s
+    to_sgid(expires_in: TOKEN_EXPIRATION, for: "pending_order_confirm").to_s
   end
 
   def edit_token
-    to_sgid(expires_in: 7.days, for: "pending_order_edit").to_s
+    to_sgid(expires_in: TOKEN_EXPIRATION, for: "pending_order_edit").to_s
   end
 end

@@ -142,8 +142,8 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "expired token returns 404" do
-    # Create token that expires immediately
-    travel 8.days do
+    # Token expires after 72 hours
+    travel 4.days do
       post confirm_pending_order_path(@pending_order), params: { token: @confirm_token }
       assert_response :not_found
     end
