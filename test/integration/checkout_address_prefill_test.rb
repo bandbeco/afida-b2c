@@ -1,17 +1,15 @@
 require "test_helper"
 
 class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
-  # Use the real Stripe gem classes for stubbing (bypass FakeStripe constants)
-  REAL_STRIPE_CUSTOMER = ::Stripe::Customer
-  REAL_STRIPE_CHECKOUT_SESSION = ::Stripe::Checkout::Session
-
   setup do
     @user = users(:one)
     @address = addresses(:office)
     @product_variant = product_variants(:one)
 
-    # Reset FakeStripe state before each test
-    FakeStripe.reset!
+    # Track params passed to Stripe APIs using test-local state
+    @captured_checkout_params = nil
+    @captured_customer_create_params = nil
+    @captured_customer_update_params = nil
 
     # Create a cart with items
     sign_in_as(@user)
@@ -23,6 +21,20 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
   test "checkout with address_id creates Stripe Customer and uses it" do
     assert_nil @user.stripe_customer_id
 
+    # Use Mocha to stub Stripe methods - test-scoped, reliable
+    mock_session = stub(url: "https://checkout.stripe.com/test/sess_123")
+    mock_customer = stub(id: "cus_test_123")
+
+    Stripe::Customer.stubs(:create).with do |params|
+      @captured_customer_create_params = params
+      true
+    end.returns(mock_customer)
+
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      @captured_checkout_params = params
+      true
+    end.returns(mock_session)
+
     post checkout_path, params: { address_id: @address.id }
 
     # Should redirect to Stripe checkout
@@ -33,30 +45,45 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Verify Stripe Customer was created
     @user.reload
-    assert_not_nil @user.stripe_customer_id
+    assert_equal "cus_test_123", @user.stripe_customer_id
 
     # Verify checkout used customer (not customer_email) for prefill
-    stripe_params = FakeStripe::CheckoutSession.last_create_params
-    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
-    assert_equal @user.stripe_customer_id, stripe_params[:customer]
-    assert_nil stripe_params[:customer_email]
-    assert_equal @user.id, stripe_params[:client_reference_id]
+    assert_not_nil @captured_checkout_params, "Expected Stripe::Checkout::Session.create to have been called"
+    assert_equal "cus_test_123", @captured_checkout_params[:customer]
+    assert_nil @captured_checkout_params[:customer_email]
+    assert_equal @user.id, @captured_checkout_params[:client_reference_id]
   end
 
   test "checkout with address syncs shipping address to Stripe Customer" do
+    mock_session = stub(url: "https://checkout.stripe.com/test/sess_456")
+    mock_customer = stub(id: "cus_test_456")
+
+    Stripe::Customer.stubs(:create).with do |params|
+      @captured_customer_create_params = params
+      true
+    end.returns(mock_customer)
+
+    Stripe::Checkout::Session.stubs(:create).returns(mock_session)
+
     post checkout_path, params: { address_id: @address.id }
 
     # Verify shipping was synced to Stripe Customer
-    customer_params = FakeStripe::Customer.last_create_params
-    assert_not_nil customer_params, "Expected Stripe::Customer.create to have been called"
-    assert_equal @user.email_address, customer_params[:email]
-    assert_not_nil customer_params[:shipping]
-    assert_equal @address.recipient_name, customer_params[:shipping][:name]
-    assert_equal @address.line1, customer_params[:shipping][:address][:line1]
-    assert_equal @address.postcode, customer_params[:shipping][:address][:postal_code]
+    assert_not_nil @captured_customer_create_params, "Expected Stripe::Customer.create to have been called"
+    assert_equal @user.email_address, @captured_customer_create_params[:email]
+    assert_not_nil @captured_customer_create_params[:shipping]
+    assert_equal @address.recipient_name, @captured_customer_create_params[:shipping][:name]
+    assert_equal @address.line1, @captured_customer_create_params[:shipping][:address][:line1]
+    assert_equal @address.postcode, @captured_customer_create_params[:shipping][:address][:postal_code]
   end
 
   test "checkout without address_id uses customer_email fallback" do
+    mock_session = stub(url: "https://checkout.stripe.com/test/sess_789")
+
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      @captured_checkout_params = params
+      true
+    end.returns(mock_session)
+
     post checkout_path
 
     assert_response :see_other
@@ -67,31 +94,40 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     assert_nil @user.stripe_customer_id
 
     # Should use customer_email fallback
-    stripe_params = FakeStripe::CheckoutSession.last_create_params
-    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
-    assert_equal @user.email_address, stripe_params[:customer_email]
-    assert_nil stripe_params[:customer]
+    assert_not_nil @captured_checkout_params, "Expected Stripe::Checkout::Session.create to have been called"
+    assert_equal @user.email_address, @captured_checkout_params[:customer_email]
+    assert_nil @captured_checkout_params[:customer]
   end
 
   test "checkout with existing Stripe Customer updates address" do
     # Pre-create a Stripe Customer for the user
     @user.update!(stripe_customer_id: "cus_existing_123")
-    FakeStripe::Customer.new(id: "cus_existing_123", email: @user.email_address)
+
+    mock_session = stub(url: "https://checkout.stripe.com/test/sess_existing")
+    mock_customer = stub(id: "cus_existing_123")
+
+    Stripe::Customer.stubs(:update).with do |customer_id, params|
+      @captured_customer_update_params = { customer_id: customer_id, params: params }
+      true
+    end.returns(mock_customer)
+
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      @captured_checkout_params = params
+      true
+    end.returns(mock_session)
 
     post checkout_path, params: { address_id: @address.id }
 
     assert_response :see_other
 
     # Should have updated existing customer (not created new)
-    update_params = FakeStripe::Customer.last_update_params
-    assert_not_nil update_params, "Expected Stripe::Customer.update to have been called"
-    assert_equal "cus_existing_123", update_params[:customer_id]
-    assert_equal @address.recipient_name, update_params[:params][:shipping][:name]
+    assert_not_nil @captured_customer_update_params, "Expected Stripe::Customer.update to have been called"
+    assert_equal "cus_existing_123", @captured_customer_update_params[:customer_id]
+    assert_equal @address.recipient_name, @captured_customer_update_params[:params][:shipping][:name]
 
     # Checkout should use existing customer ID
-    stripe_params = FakeStripe::CheckoutSession.last_create_params
-    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
-    assert_equal "cus_existing_123", stripe_params[:customer]
+    assert_not_nil @captured_checkout_params, "Expected Stripe::Checkout::Session.create to have been called"
+    assert_equal "cus_existing_123", @captured_checkout_params[:customer]
   end
 
   test "checkout with empty address_id uses customer_email (no prefill)" do
@@ -99,16 +135,22 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     # should NOT prefill - use customer_email instead
     @user.update!(stripe_customer_id: "cus_existing_789")
 
+    mock_session = stub(url: "https://checkout.stripe.com/test/sess_empty")
+
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      @captured_checkout_params = params
+      true
+    end.returns(mock_session)
+
     post checkout_path, params: { address_id: "" }
 
     assert_response :see_other
     assert_nil session[:selected_address_id]
 
     # Should use customer_email, NOT customer (avoids prefill)
-    stripe_params = FakeStripe::CheckoutSession.last_create_params
-    assert_not_nil stripe_params, "Expected Stripe::Checkout::Session.create to have been called"
-    assert_equal @user.email_address, stripe_params[:customer_email]
-    assert_nil stripe_params[:customer]
+    assert_not_nil @captured_checkout_params, "Expected Stripe::Checkout::Session.create to have been called"
+    assert_equal @user.email_address, @captured_checkout_params[:customer_email]
+    assert_nil @captured_checkout_params[:customer]
   end
 
   test "guest checkout does not store address selection" do
@@ -118,6 +160,9 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     post cart_cart_items_path, params: {
       cart_item: { product_variant_id: @product_variant.id, quantity: 1 }
     }
+
+    mock_session = stub(url: "https://checkout.stripe.com/test/sess_guest")
+    Stripe::Checkout::Session.stubs(:create).returns(mock_session)
 
     post checkout_path
 

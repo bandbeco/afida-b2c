@@ -31,13 +31,13 @@ module FakeStripe
     attr_reader :id, :url, :payment_status, :customer_details, :collected_information,
                 :shipping_cost, :client_reference_id, :line_items, :setup_intent, :metadata
 
-    @@sessions = {}
-    @@next_id = 1
-    @@last_create_params = nil
+    # Use class instance variables instead of class variables for reliable state
+    @sessions = {}
+    @next_id = 1
+    @last_create_params = nil
 
-    # Access the params passed to the most recent create call (for testing)
-    def self.last_create_params
-      @@last_create_params
+    class << self
+      attr_accessor :sessions, :next_id, :last_create_params
     end
 
     def initialize(params = {})
@@ -89,7 +89,7 @@ module FakeStripe
       )
 
       # Store for later retrieval
-      @@sessions[@id] = self
+      self.class.sessions[@id] = self
     end
 
     def to_hash
@@ -104,7 +104,7 @@ module FakeStripe
     end
 
     def self.create(params)
-      @@last_create_params = params
+      self.last_create_params = params
       new(params)
     end
 
@@ -118,7 +118,7 @@ module FakeStripe
         session_id_or_params
       end
 
-      session = @@sessions[session_id]
+      session = sessions[session_id]
 
       if session.nil?
         error = Stripe::InvalidRequestError.new(
@@ -133,9 +133,9 @@ module FakeStripe
     end
 
     def self.reset!
-      @@sessions = {}
-      @@next_id = 1
-      @@last_create_params = nil
+      self.sessions = {}
+      self.next_id = 1
+      self.last_create_params = nil
     end
 
     # Helper to create a session with unpaid status
@@ -269,8 +269,13 @@ module FakeStripe
     attr_reader :id, :display_name, :percentage, :country,
                 :jurisdiction, :description, :inclusive
 
-    @@tax_rates = []
-    @@next_id = 1
+    # Use class instance variables instead of class variables for reliable state
+    @tax_rates = []
+    @next_id = 1
+
+    class << self
+      attr_accessor :tax_rates, :next_id
+    end
 
     def initialize(params = {})
       @id = params[:id] || "txr_test_#{SecureRandom.hex(8)}"
@@ -282,7 +287,7 @@ module FakeStripe
       @inclusive = params[:inclusive] || false
 
       # Store for later retrieval
-      @@tax_rates << self
+      self.class.tax_rates << self
     end
 
     def self.create(params)
@@ -294,17 +299,17 @@ module FakeStripe
       limit = filters[:limit] || 100
 
       results = if active.nil?
-        @@tax_rates
+        tax_rates
       else
-        @@tax_rates # In real Stripe, would filter by active status
+        tax_rates # In real Stripe, would filter by active status
       end
 
       ListObject.new(results.take(limit))
     end
 
     def self.reset!
-      @@tax_rates = []
-      @@next_id = 1
+      self.tax_rates = []
+      self.next_id = 1
     end
 
     # Helper: Create UK VAT rate (20%)
@@ -333,7 +338,12 @@ module FakeStripe
     attr_reader :id, :status, :amount, :currency, :customer, :payment_method,
                 :metadata, :description
 
-    @@payment_intents = {}
+    # Use class instance variables instead of class variables for reliable state
+    @payment_intents = {}
+
+    class << self
+      attr_accessor :payment_intents
+    end
 
     def initialize(params = {})
       @id = params[:id] || "pi_test_#{SecureRandom.hex(12)}"
@@ -344,7 +354,7 @@ module FakeStripe
       @payment_method = params[:payment_method]
       @metadata = params[:metadata] || {}
       @description = params[:description]
-      @@payment_intents[@id] = self
+      self.class.payment_intents[@id] = self
     end
 
     def self.create(params = {})
@@ -352,11 +362,11 @@ module FakeStripe
     end
 
     def self.retrieve(payment_intent_id)
-      @@payment_intents[payment_intent_id] || new(id: payment_intent_id)
+      payment_intents[payment_intent_id] || new(id: payment_intent_id)
     end
 
     def self.reset!
-      @@payment_intents = {}
+      self.payment_intents = {}
     end
   end
 
@@ -378,16 +388,13 @@ module FakeStripe
   class Customer
     attr_reader :id, :email, :name, :shipping, :metadata
 
-    @@customers = {}
-    @@last_create_params = nil
-    @@last_update_params = nil
+    # Use class instance variables instead of class variables for reliable state
+    @customers = {}
+    @last_create_params = nil
+    @last_update_params = nil
 
-    def self.last_create_params
-      @@last_create_params
-    end
-
-    def self.last_update_params
-      @@last_update_params
+    class << self
+      attr_accessor :customers, :last_create_params, :last_update_params
     end
 
     def initialize(params = {})
@@ -396,17 +403,17 @@ module FakeStripe
       @name = params[:name]
       @shipping = params[:shipping]
       @metadata = params[:metadata] || {}
-      @@customers[@id] = self
+      self.class.customers[@id] = self
     end
 
     def self.create(params)
-      @@last_create_params = params
+      self.last_create_params = params
       new(params)
     end
 
     def self.update(customer_id, params = {})
-      @@last_update_params = { customer_id: customer_id, params: params }
-      customer = @@customers[customer_id]
+      self.last_update_params = { customer_id: customer_id, params: params }
+      customer = customers[customer_id]
       if customer
         customer.instance_variable_set(:@email, params[:email]) if params[:email]
         customer.instance_variable_set(:@name, params[:name]) if params[:name]
@@ -418,15 +425,15 @@ module FakeStripe
     end
 
     def self.retrieve(customer_id)
-      customer = @@customers[customer_id]
+      customer = customers[customer_id]
       raise Stripe::InvalidRequestError.new("No such customer: '#{customer_id}'", param: "id") unless customer
       customer
     end
 
     def self.reset!
-      @@customers = {}
-      @@last_create_params = nil
-      @@last_update_params = nil
+      self.customers = {}
+      self.last_create_params = nil
+      self.last_update_params = nil
     end
   end
 
