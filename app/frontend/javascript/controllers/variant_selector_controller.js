@@ -137,13 +137,13 @@ export default class extends Controller {
 
     this.selectedQuantity = quantity
 
-    // Update tier card selection UI - matches branded configurator
+    // Update tier card selection UI
     this.quantityContentTarget.querySelectorAll("[data-tier-card]").forEach(card => {
-      card.classList.remove("border-primary")
-      card.classList.add("border-gray-300")
+      card.classList.remove("border-primary", "border-2")
+      card.classList.add("border-gray-200", "border")
     })
-    tierCard.classList.remove("border-gray-300")
-    tierCard.classList.add("border-primary")
+    tierCard.classList.remove("border-gray-200", "border")
+    tierCard.classList.add("border-primary", "border-2")
 
     // Update quantity step header
     this.updateQuantityStepHeader()
@@ -398,7 +398,7 @@ export default class extends Controller {
 
   /**
    * Render pricing tier cards using safe DOM methods
-   * Matches branded configurator: full-width cards with horizontal layout
+   * Compact single-row layout: Quantity | Unit price | Save badge | Total
    */
   renderTierCards() {
     const tiers = this.selectedVariant.pricing_tiers
@@ -408,9 +408,9 @@ export default class extends Controller {
     // Clear existing content
     this.quantityContentTarget.textContent = ""
 
-    // Create vertical stack container (like branded configurator)
+    // Create vertical stack container
     const container = document.createElement("div")
-    container.className = "space-y-3 pt-4"
+    container.className = "space-y-2 pt-4"
 
     tiers.forEach((tier, index) => {
       const quantity = tier.quantity
@@ -420,43 +420,41 @@ export default class extends Controller {
       const total = price * quantity
       const savings = index > 0 ? Math.round((1 - price / basePrice) * 100) : 0
 
-      // Create tier card - full width, horizontal layout matching branded configurator
+      // Create tier card - grid layout for aligned columns
       const card = document.createElement("div")
-      card.className = "border-2 border-gray-300 bg-white rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary transition"
+      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3"
       card.dataset.tierCard = ""
       card.dataset.quantity = String(quantity)
       card.dataset.price = String(price)
       card.dataset.action = "click->variant-selector#selectTier"
 
-      // Row 1: Quantity | Savings Badge | Total Price
-      const row1 = document.createElement("div")
-      row1.className = "flex items-center justify-between"
-
-      // Quantity (left)
+      // Column 1: Quantity with units "1 pack (1,000 units)"
       const quantityDiv = document.createElement("div")
-      quantityDiv.className = "text-black font-semibold text-lg"
-      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
-      row1.appendChild(quantityDiv)
+      quantityDiv.className = "text-black whitespace-nowrap"
+      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
+      card.appendChild(quantityDiv)
 
-      // Savings badge (center) - hidden for first tier
-      const badge = document.createElement("div")
-      badge.className = `badge bg-pink-100 text-pink-800 border-0 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-semibold ${index === 0 ? "invisible" : ""}`
-      badge.textContent = savings > 0 ? `save ${savings}%` : ""
-      row1.appendChild(badge)
+      // Column 2: Unit price (grey, left-aligned) "£0.050/unit"
+      const unitPriceDiv = document.createElement("div")
+      unitPriceDiv.className = "text-gray-400"
+      unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
+      card.appendChild(unitPriceDiv)
 
-      // Total price (right)
+      // Column 3: Savings badge or empty placeholder
+      const badgeContainer = document.createElement("div")
+      if (savings > 0) {
+        const badge = document.createElement("span")
+        badge.className = "bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm"
+        badge.textContent = `save ${savings}%`
+        badgeContainer.appendChild(badge)
+      }
+      card.appendChild(badgeContainer)
+
+      // Column 4: Total price (right) "£49.82"
       const totalDiv = document.createElement("div")
-      totalDiv.className = "text-black font-semibold"
+      totalDiv.className = "text-black text-right"
       totalDiv.textContent = `£${total.toFixed(2)}`
-      row1.appendChild(totalDiv)
-
-      card.appendChild(row1)
-
-      // Row 2: Price per unit
-      const row2 = document.createElement("div")
-      row2.className = "text-gray-500 text-sm mt-1"
-      row2.textContent = `£${unitPrice.toFixed(3)}/unit`
-      card.appendChild(row2)
+      card.appendChild(totalDiv)
 
       container.appendChild(card)
     })
@@ -466,7 +464,7 @@ export default class extends Controller {
 
   /**
    * Render quantity buttons using safe DOM methods (fallback for non-tiered products)
-   * Matches branded configurator: full-width cards with horizontal layout
+   * Compact single-row layout: Quantity | Unit price | Total
    */
   renderQuantityButtons() {
     const pacSize = this.selectedVariant.pac_size || this.pacSizeValue
@@ -476,9 +474,9 @@ export default class extends Controller {
     // Clear existing content
     this.quantityContentTarget.textContent = ""
 
-    // Create vertical stack container (like branded configurator)
+    // Create vertical stack container
     const container = document.createElement("div")
-    container.className = "space-y-3 pt-4"
+    container.className = "space-y-2 pt-4"
 
     // Create quantity options (1-5 packs, then 10)
     const quantities = [1, 2, 3, 4, 5, 10]
@@ -487,36 +485,30 @@ export default class extends Controller {
       const units = quantity * pacSize
       const total = price * quantity
 
-      // Create quantity card - full width, horizontal layout matching branded configurator
+      // Create quantity card - grid layout for aligned columns
       const card = document.createElement("div")
-      card.className = "border-2 border-gray-300 bg-white rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary transition"
+      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[auto_1fr_auto] items-center gap-x-3"
       card.dataset.quantityCard = ""
       card.dataset.quantity = String(quantity)
       card.dataset.action = "click->variant-selector#selectQuantityCard"
 
-      // Row 1: Quantity | (empty center) | Total Price
-      const row1 = document.createElement("div")
-      row1.className = "flex items-center justify-between"
-
-      // Quantity (left)
+      // Column 1: Quantity with units "1 pack (1,000 units)"
       const quantityDiv = document.createElement("div")
-      quantityDiv.className = "text-black font-semibold text-lg"
-      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
-      row1.appendChild(quantityDiv)
+      quantityDiv.className = "text-black whitespace-nowrap"
+      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
+      card.appendChild(quantityDiv)
 
-      // Total price (right)
+      // Column 2: Unit price (grey, left-aligned) "£0.050/unit"
+      const unitPriceDiv = document.createElement("div")
+      unitPriceDiv.className = "text-gray-400"
+      unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
+      card.appendChild(unitPriceDiv)
+
+      // Column 3: Total price (right) "£49.82"
       const totalDiv = document.createElement("div")
-      totalDiv.className = "text-black font-semibold"
+      totalDiv.className = "text-black text-right"
       totalDiv.textContent = `£${total.toFixed(2)}`
-      row1.appendChild(totalDiv)
-
-      card.appendChild(row1)
-
-      // Row 2: Price per unit
-      const row2 = document.createElement("div")
-      row2.className = "text-gray-500 text-sm mt-1"
-      row2.textContent = `£${unitPrice.toFixed(3)}/unit`
-      card.appendChild(row2)
+      card.appendChild(totalDiv)
 
       container.appendChild(card)
     })
@@ -534,13 +526,13 @@ export default class extends Controller {
 
     this.selectedQuantity = quantity
 
-    // Update card selection UI - matches branded configurator
+    // Update card selection UI
     this.quantityContentTarget.querySelectorAll("[data-quantity-card]").forEach(c => {
-      c.classList.remove("border-primary")
-      c.classList.add("border-gray-300")
+      c.classList.remove("border-primary", "border-2")
+      c.classList.add("border-gray-200", "border")
     })
-    card.classList.remove("border-gray-300")
-    card.classList.add("border-primary")
+    card.classList.remove("border-gray-200", "border")
+    card.classList.add("border-primary", "border-2")
 
     // Update quantity step header
     this.updateQuantityStepHeader()
