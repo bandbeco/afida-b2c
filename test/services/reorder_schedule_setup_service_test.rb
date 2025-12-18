@@ -133,7 +133,7 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
   test "complete_setup returns error for invalid session" do
     service = ReorderScheduleSetupService.new(user: @user)
 
-    Stripe::Checkout::Session.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("Invalid session"))
+    Stripe::Checkout::Session.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("Invalid session", nil))
 
     result = service.complete_setup(session_id: "invalid_session", frequency: "every_month")
 
