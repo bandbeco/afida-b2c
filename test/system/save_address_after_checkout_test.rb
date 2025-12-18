@@ -113,8 +113,8 @@ class SaveAddressAfterCheckoutTest < ApplicationSystemTestCase
     sign_in_as(@user)
     visit confirmation_order_path(order, token: order.signed_access_token)
 
-    # Fill in nickname and save
-    fill_in "Nickname", with: "My New Place"
+    # Fill in address name and save
+    fill_in "Address name", with: "My New Place"
     click_button "Save Address"
 
     # Should see success and address should be saved
@@ -160,8 +160,10 @@ class SaveAddressAfterCheckoutTest < ApplicationSystemTestCase
 
   def sign_in_as(user)
     visit new_session_path
-    fill_in "Enter your email", with: user.email_address
-    fill_in "Enter your password", with: "password"
+    fill_in "Email", with: user.email_address
+    fill_in "Password", with: "password"
     click_button "Sign In"
+    # Wait for redirect after successful sign-in
+    assert_current_path root_path
   end
 end
