@@ -135,17 +135,14 @@
                      data-variant-selector-target="stepHeader"
                      data-action="click->variant-selector#toggleStep">
 
-                  <%# Step Number / Checkmark - matches branded configurator %>
-                  <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  <%# Step Number / Checkmark - grey when pending, Afida green when completed %>
+                  <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
                         data-variant-selector-target="stepIndicator">
                     <%= index + 1 %>
                   </span>
 
-                  <span>Select <%= option_name.titleize %></span>
-
-                  <%# Selected Value (shown when collapsed) %>
-                  <span class="text-primary font-semibold ml-auto hidden"
-                        data-variant-selector-target="stepSelection"></span>
+                  <%# Title with inline selection value %>
+                  <span>Select <%= option_name.titleize.downcase %><span class="hidden" data-variant-selector-target="stepSelection"></span></span>
                 </div>
 
                 <%# Collapse Content %>
@@ -177,15 +174,13 @@
                    data-variant-selector-target="quantityStepHeader"
                    data-action="click->variant-selector#toggleStep">
 
-                <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold"
+                <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
                       data-variant-selector-target="quantityStepIndicator">
                   <%= @options.size + 1 %>
                 </span>
 
-                <span>Select Quantity</span>
-
-                <span class="text-primary font-semibold ml-auto hidden"
-                      data-variant-selector-target="quantityStepSelection"></span>
+                <%# Title with inline selection value %>
+                <span>Select quantity<span class="hidden" data-variant-selector-target="quantityStepSelection"></span></span>
               </div>
 
               <div class="collapse-content"

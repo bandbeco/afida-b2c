@@ -265,7 +265,7 @@ export default class extends Controller {
 
   /**
    * Update step headers to show selections
-   * Matches branded configurator styling with green checkmark indicator
+   * Uses Afida green checkmark indicator with inline selection text
    */
   updateStepHeaders() {
     this.stepTargets.forEach((step, index) => {
@@ -275,20 +275,21 @@ export default class extends Controller {
       const selectionDisplay = step.querySelector("[data-variant-selector-target='stepSelection']")
 
       if (selection) {
-        // Show checkmark and selection - green background with white checkmark
+        // Show checkmark - Afida green background with white checkmark
         indicator.textContent = "✓"
         indicator.classList.remove("bg-gray-300")
-        indicator.classList.add("bg-success", "text-white")
+        indicator.classList.add("bg-primary", "text-white")
 
+        // Show selection inline with title (": 7 inch" format)
         if (selectionDisplay) {
-          selectionDisplay.textContent = `: ${selection}`
+          selectionDisplay.textContent = ` : ${selection}`
           selectionDisplay.classList.remove("hidden")
         }
       } else {
-        // Show step number - gray background
+        // Show step number - light grey background with white text
         indicator.textContent = String(index + 1)
         indicator.classList.add("bg-gray-300")
-        indicator.classList.remove("bg-success")
+        indicator.classList.remove("bg-primary")
 
         if (selectionDisplay) {
           selectionDisplay.classList.add("hidden")
@@ -299,7 +300,7 @@ export default class extends Controller {
 
   /**
    * Update quantity step header
-   * Matches branded configurator styling with green checkmark indicator
+   * Uses Afida green checkmark indicator with inline selection text
    */
   updateQuantityStepHeader() {
     if (!this.hasQuantityStepSelectionTarget) return
@@ -307,14 +308,15 @@ export default class extends Controller {
     const pacSize = this.selectedVariant?.pac_size || this.pacSizeValue
     const units = this.selectedQuantity * pacSize
 
-    this.quantityStepSelectionTarget.textContent = `: ${this.selectedQuantity} pack${this.selectedQuantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
+    // Show selection inline with title (": 3 packs (1,500 units)" format)
+    this.quantityStepSelectionTarget.textContent = ` : ${this.selectedQuantity} pack${this.selectedQuantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
     this.quantityStepSelectionTarget.classList.remove("hidden")
 
-    // Update indicator to checkmark - green background with white checkmark
+    // Update indicator to checkmark - Afida green background with white checkmark
     if (this.hasQuantityStepIndicatorTarget) {
       this.quantityStepIndicatorTarget.textContent = "✓"
       this.quantityStepIndicatorTarget.classList.remove("bg-gray-300")
-      this.quantityStepIndicatorTarget.classList.add("bg-success", "text-white")
+      this.quantityStepIndicatorTarget.classList.add("bg-primary", "text-white")
     }
   }
 
