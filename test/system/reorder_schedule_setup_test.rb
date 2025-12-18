@@ -22,8 +22,8 @@ class ReorderScheduleSetupTest < ApplicationSystemTestCase
     # Visit order show page
     visit order_path(@order)
 
-    # Should see setup schedule button
-    assert_selector "a", text: /schedule.*order/i
+    # Should see schedule link (separate from reorder link)
+    assert_selector "a", text: /schedule/i
   end
 
   test "user can view their reorder schedules" do
@@ -40,8 +40,8 @@ class ReorderScheduleSetupTest < ApplicationSystemTestCase
     # Visit schedules index
     visit reorder_schedules_path
 
-    assert_selector "h1", text: /Reorder Schedules/i
-    assert_text "Monthly"
+    assert_selector "h1", text: /Scheduled Reorders/i
+    assert_text "Every Month"
   end
 
   test "user can view schedule details" do
@@ -65,7 +65,7 @@ class ReorderScheduleSetupTest < ApplicationSystemTestCase
 
     visit reorder_schedule_path(schedule)
 
-    assert_text "Monthly"
+    assert_text "Every Month"
     assert_text variant.name
   end
 
@@ -75,6 +75,9 @@ class ReorderScheduleSetupTest < ApplicationSystemTestCase
     visit new_session_path
     fill_in "Email", with: user.email_address
     fill_in "Password", with: "password"
-    click_button "Sign in"
+    click_button "Sign In"
+
+    # Wait for redirect after successful sign-in
+    assert_current_path root_path
   end
 end
