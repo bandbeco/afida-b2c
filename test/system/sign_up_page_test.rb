@@ -6,17 +6,17 @@ class SignUpPageTest < ApplicationSystemTestCase
   test "sign-up page displays value proposition tagline" do
     visit new_registration_path
 
-    assert_text "Reorder in seconds"
-    assert_text "Your order history, saved and ready"
+    assert_text "Your orders, remembered"
+    assert_text "Reorder your favourites in seconds"
   end
 
   test "sign-up page displays account benefits" do
     visit new_registration_path
 
     # Check for benefits list
-    assert_text "View your complete order history"
-    assert_text "Reorder previous orders in one click"
-    assert_text "Recurring orders coming soon"
+    assert_text "See what you've ordered and when"
+    assert_text "Repeat any order in two clicks"
+    assert_text "Set it and forget it"
   end
 
   test "sign-up page has functional registration form" do
@@ -24,7 +24,7 @@ class SignUpPageTest < ApplicationSystemTestCase
 
     # Form should be present with all fields
     assert_selector "input[type='email']"
-    assert_selector "input[type='password']", count: 2
+    assert_selector "input[type='password']"
     assert_selector "input[type='submit'][value='Sign Up']"
   end
 
@@ -32,8 +32,7 @@ class SignUpPageTest < ApplicationSystemTestCase
     visit new_registration_path
 
     fill_in "Email", with: "newuser@example.com"
-    fill_in "user[password]", with: "securepassword123"
-    fill_in "user[password_confirmation]", with: "securepassword123"
+    fill_in "Password", with: "securepassword123"
 
     click_button "Sign Up"
 
