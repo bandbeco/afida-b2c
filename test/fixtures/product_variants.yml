@@ -235,3 +235,176 @@ sample_cup_12oz:
   position: 11
   sample_eligible: true
   option_values: {}
+
+# Sparse matrix variants for Paper Straws
+# 6x140mm comes in: White, Kraft
+# 8x200mm comes in: Red/White only (sparse!)
+# This creates a sparse matrix: 2 sizes x 3 colours = 6 possible, but only 3 exist
+straw_6x140_white:
+  product: paper_straws
+  name: 6x140mm White
+  sku: STRAW-6-WHT
+  price: 8.00
+  stock_quantity: 1000
+  active: true
+  position: 1
+  option_values:
+    size: "6x140mm"
+    colour: "White"
+
+straw_6x140_kraft:
+  product: paper_straws
+  name: 6x140mm Kraft
+  sku: STRAW-6-KFT
+  price: 8.50
+  stock_quantity: 1000
+  active: true
+  position: 2
+  option_values:
+    size: "6x140mm"
+    colour: "Kraft"
+
+straw_8x200_redwhite:
+  product: paper_straws
+  name: 8x200mm Red/White
+  sku: STRAW-8-RW
+  price: 10.00
+  stock_quantity: 1000
+  active: true
+  position: 3
+  option_values:
+    size: "8x200mm"
+    colour: "Red/White"
+
+# Consolidated product variants (with material option)
+wooden_fork:
+  product: wooden_cutlery
+  name: Wooden Fork
+  sku: CUT-WOOD-FORK
+  price: 15.00
+  stock_quantity: 500
+  active: true
+  position: 1
+  option_values:
+    material: "Birch"
+    type: "Fork"
+
+wooden_knife:
+  product: wooden_cutlery
+  name: Wooden Knife
+  sku: CUT-WOOD-KNIFE
+  price: 15.00
+  stock_quantity: 500
+  active: true
+  position: 2
+  option_values:
+    material: "Birch"
+    type: "Knife"
+
+wooden_spoon:
+  product: wooden_cutlery
+  name: Wooden Spoon
+  sku: CUT-WOOD-SPOON
+  price: 15.00
+  stock_quantity: 500
+  active: true
+  position: 3
+  option_values:
+    material: "Birch"
+    type: "Spoon"
+
+bamboo_fork:
+  product: wooden_cutlery
+  name: Bamboo Fork
+  sku: CUT-BAM-FORK
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 4
+  option_values:
+    material: "Bamboo"
+    type: "Fork"
+
+bamboo_knife:
+  product: wooden_cutlery
+  name: Bamboo Knife
+  sku: CUT-BAM-KNIFE
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 5
+  option_values:
+    material: "Bamboo"
+    type: "Knife"
+
+bamboo_spoon:
+  product: wooden_cutlery
+  name: Bamboo Spoon
+  sku: CUT-BAM-SPOON
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 6
+  option_values:
+    material: "Bamboo"
+    type: "Spoon"
+
+# Full matrix variants - all size+colour combinations exist (2x2 = 4 variants)
+napkin_small_white:
+  product: napkins
+  name: Small White
+  sku: NAP-SM-WHT
+  price: 12.00
+  stock_quantity: 1000
+  active: true
+  position: 1
+  option_values:
+    size: "Small"
+    colour: "White"
+
+napkin_small_natural:
+  product: napkins
+  name: Small Natural
+  sku: NAP-SM-NAT
+  price: 12.00
+  stock_quantity: 1000
+  active: true
+  position: 2
+  option_values:
+    size: "Small"
+    colour: "Natural"
+
+napkin_large_white:
+  product: napkins
+  name: Large White
+  sku: NAP-LG-WHT
+  price: 15.00
+  stock_quantity: 1000
+  active: true
+  position: 3
+  option_values:
+    size: "Large"
+    colour: "White"
+
+napkin_large_natural:
+  product: napkins
+  name: Large Natural
+  sku: NAP-LG-NAT
+  price: 15.00
+  stock_quantity: 1000
+  active: true
+  position: 4
+  option_values:
+    size: "Large"
+    colour: "Natural"
+
+# Single variant product (for solo_product)
+solo_variant:
+  product: solo_product
+  name: Standard
+  sku: SOLO-001-STD
+  price: 25.00
+  stock_quantity: 100
+  active: true
+  position: 1
+  option_values: {}

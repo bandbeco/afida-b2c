@@ -8,6 +8,23 @@
 # - Wooden Cutlery: 4 products → 1 product with type option
 #
 # APPROACH: Moves existing variants to new consolidated products (preserves SKUs and order history)
+#
+# NOTE ON OPTION ARCHITECTURE:
+# These consolidated products store options (material, type, colour, size) in the variant's
+# `option_values` JSONB column ONLY. They intentionally bypass the ProductOption/ProductOptionValue
+# tables because:
+#
+# 1. Consolidated products use the "product-configurator" Stimulus controller which reads
+#    directly from variant JSONB data (see ProductsController#show lines 44-77)
+#
+# 2. The existing ProductOption "material" has values like "Recyclable, Compostable" (eco-certs),
+#    not actual materials like "Paper, Bamboo, Birch" used here - different semantic concepts
+#
+# 3. ProductOption tables are for standard products using the "product-options" controller,
+#    which needs display metadata (dropdown vs swatch, custom labels, ordering)
+#
+# This is intentional architecture: sparse-matrix products derive their UI from variant data,
+# while full-matrix products use ProductOption tables for richer UI controls.
 
 module ProductConsolidation
   class << self

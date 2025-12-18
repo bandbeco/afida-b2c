@@ -58,21 +58,19 @@
     <div class="container mx-auto min-h-screen py-4 pb-24 lg:pb-8">
 
       <%# ===== PURCHASE ZONE ===== %>
-      <%
-        option_order = @configurator_options.keys
-        pac_size = @selected_variant&.pac_size || @product.active_variants.first&.pac_size || 1
-      %>
+      <% option_order = @configurator_options.keys %>
       <div class="flex flex-col lg:flex-row gap-8 lg:gap-12"
            data-controller="product-configurator"
            data-product-configurator-variants-value="<%= @variants_json.to_json %>"
            data-product-configurator-option-order-value="<%= option_order.to_json %>"
-           data-product-configurator-pac-size-value="<%= pac_size %>"
+           data-product-configurator-pac-size-value="<%= @pac_size %>"
            data-product-configurator-min-price-value="<%= @min_price.to_f %>">
 
         <%# Image Section %>
+        <% initial_photo = @selected_variant&.primary_photo || @product.active_variants.first&.primary_photo || @product.primary_photo %>
         <div class="lg:w-1/2 flex-shrink-0">
           <div class="bg-white rounded-lg overflow-hidden">
-            <%= product_photo_tag(@selected_variant.primary_photo,
+            <%= product_photo_tag(initial_photo,
                                   alt: @product.name,
                                   class: "w-full h-auto object-contain",
                                   variant: { resize_and_pad: [800, 800, { background: [255, 255, 255] }] },

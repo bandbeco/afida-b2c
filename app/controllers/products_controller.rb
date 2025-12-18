@@ -41,9 +41,10 @@ class ProductsController < ApplicationController
     # Detect products that need the configurator (sparse matrix of options)
     # Use configurator when: multiple variants with 2+ option types AND not all combinations exist
     # This prevents impossible state selection (e.g., selecting size + colour that has no variant)
-    if @product.active_variants.count > 1
+    variants = @product.active_variants.to_a  # Materialize once to avoid repeated iteration
+    if variants.size > 1
       # Collect all option keys used across variants
-      all_option_keys = @product.active_variants.flat_map { |v| v.option_values.keys }.uniq
+      all_option_keys = variants.flat_map { |v| v.option_values.keys }.uniq
 
       # Build configurator options from variant data (order matters for UX)
       # Priority: material > type > size > colour (quality/type first, then size, then aesthetic)
@@ -52,7 +53,7 @@ class ProductsController < ApplicationController
 
       @configurator_options = {}
       ordered_keys.each do |key|
-        values = @product.active_variants.map { |v| v.option_values[key] }.compact.uniq
+        values = variants.map { |v| v.option_values[key] }.compact.uniq
         @configurator_options[key] = values if values.count > 1
       end
 
@@ -60,8 +61,7 @@ class ProductsController < ApplicationController
       # If product has 2+ option types with multiple values, check if it's sparse
       if @configurator_options.size >= 2
         total_combinations = @configurator_options.values.map(&:count).reduce(1, :*)
-        actual_variants = @product.active_variants.count
-        is_sparse = actual_variants < total_combinations
+        is_sparse = variants.size < total_combinations
 
         # Use configurator for sparse matrices OR products with material option (consolidated products)
         has_material = @configurator_options.key?("material")
@@ -74,6 +74,9 @@ class ProductsController < ApplicationController
 
       # For consolidated products, we don't pre-select anything
       @has_url_selection = false if @is_consolidated
+
+      # Set pac_size for consolidated products (used by configurator)
+      @pac_size = @selected_variant&.pac_size || variants.first&.pac_size || 1
     end
 
     unless @is_consolidated

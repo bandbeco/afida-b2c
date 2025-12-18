@@ -152,10 +152,16 @@ class ProductVariant < ApplicationRecord
     option_values[option_name]
   end
 
-  # Display string of all option values
-  # Example: "8oz White"
+  # Display string of all option values for cart/order subtitles
+  # For consolidated products: "Paper / 6x200mm / White" (material first)
+  # For standard products: "8oz White" (simple join)
   def options_display
-    option_values.values.join(" ")
+    return option_values.values.join(" ") unless consolidated_product?
+
+    # For consolidated products, display in priority order with slashes
+    priority = %w[material type size colour]
+    parts = priority.filter_map { |key| option_values[key]&.titleize }
+    parts.any? ? parts.join(" / ") : option_values.values.join(" ")
   end
 
   # Safe accessor methods for common option values
