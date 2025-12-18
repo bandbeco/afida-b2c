@@ -30,7 +30,8 @@ class ComprehensiveSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "category pages have structured data" do
-    category = categories(:cups)
+    # Use hot_cups_extras which has multiple products (won't redirect)
+    category = categories(:hot_cups_extras)
     get category_path(category)
     assert_includes response.body, '"@type":"CollectionPage"'
     assert_includes response.body, '"@type":"BreadcrumbList"'

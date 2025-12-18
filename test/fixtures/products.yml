@@ -139,3 +139,12 @@ sip_lid_8oz:
   meta_title: Sip Lid 8oz
   meta_description: Sip lid with built-in spout for 8oz cups
   compatible_cup_sizes: ["8oz"]
+
+solo_product:
+  name: Solo Product
+  slug: solo-product
+  sku: SOLO-001
+  category: single_product_category
+  active: true
+  product_type: standard
+  description_short: The only product in its category

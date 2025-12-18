@@ -22,3 +22,8 @@ hot_cups_extras:
   name: "Hot Cups Extras"
   slug: "hot-cups-extras"
   position: 5
+
+single_product_category:
+  name: "Single Product Category"
+  slug: "single-product-category"
+  position: 6
