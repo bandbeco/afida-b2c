@@ -43,7 +43,14 @@ class ProductsController < ApplicationController
     @options = @product.extract_options_from_variants
 
     # Build variants JSON with all fields needed by the selector (including pricing_tiers)
-    @variants_json = @product.variants_for_selector
+    # Populate image URLs here where URL helpers are available
+    @variants_json = @product.variants_for_selector.map do |variant_data|
+      variant = @product.active_variants.find { |v| v.id == variant_data[:id] }
+      if variant&.primary_photo&.attached?
+        variant_data[:image_url] = url_for(variant.primary_photo)
+      end
+      variant_data
+    end
 
     # Set pac_size for display (used in quantity calculations)
     @pac_size = @selected_variant&.pac_size || @product.active_variants.first&.pac_size || 1

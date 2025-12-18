@@ -231,6 +231,7 @@ class Product < ApplicationRecord
 
   # Returns variant data formatted for the variant selector JavaScript component
   # Includes all fields needed for option filtering and cart submission
+  # Note: image_url is set to nil here; controller should populate it using url_for
   def variants_for_selector
     active_variants.map do |v|
       {
@@ -240,7 +241,7 @@ class Product < ApplicationRecord
         pac_size: v.pac_size,
         option_values: v.option_values,
         pricing_tiers: v.pricing_tiers,
-        image_url: v.primary_photo&.url
+        image_url: nil # Populated by controller with proper URL helpers
       }
     end
   end
