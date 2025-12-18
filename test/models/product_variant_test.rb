@@ -284,6 +284,68 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_equal "8oz White", variant.options_display
   end
 
+  test "options_display formats consolidated products with slashes and material first" do
+    # Wooden cutlery is a consolidated product (material option with multiple values)
+    variant = product_variants(:wooden_fork)
+    # Consolidated products format as "Material / Type" with slashes
+    assert_equal "Birch / Fork", variant.options_display
+  end
+
+  test "options_display for different material variant" do
+    # Bamboo fork has different material
+    variant = product_variants(:bamboo_fork)
+    assert_equal "Bamboo / Fork", variant.options_display
+  end
+
+  # consolidated_product? tests
+  test "consolidated_product? returns true when material option has multiple values across siblings" do
+    # Wooden cutlery has both Birch and Bamboo material variants
+    variant = product_variants(:wooden_fork)
+    assert variant.consolidated_product?
+  end
+
+  test "consolidated_product? returns true for any variant of consolidated product" do
+    # All variants of wooden_cutlery should be consolidated
+    birch_fork = product_variants(:wooden_fork)
+    bamboo_fork = product_variants(:bamboo_fork)
+    bamboo_knife = product_variants(:bamboo_knife)
+
+    assert birch_fork.consolidated_product?
+    assert bamboo_fork.consolidated_product?
+    assert bamboo_knife.consolidated_product?
+  end
+
+  test "consolidated_product? returns false for standard product" do
+    # Standard products without material/type options with multiple values
+    variant = product_variants(:single_wall_8oz_white)
+    assert_not variant.consolidated_product?
+  end
+
+  test "consolidated_product? returns false when option_values is empty" do
+    variant = product_variants(:one)
+    variant.update!(option_values: {})
+    assert_not variant.consolidated_product?
+  end
+
+  # display_name tests for consolidated products
+  test "display_name builds from option_values for consolidated products" do
+    variant = product_variants(:wooden_fork)
+    # Should include product name and option values
+    assert_equal "Wooden Cutlery - Birch, Fork", variant.display_name
+  end
+
+  test "display_name uses option priority order for consolidated products" do
+    # Material should come before type
+    variant = product_variants(:bamboo_knife)
+    assert_equal "Wooden Cutlery - Bamboo, Knife", variant.display_name
+  end
+
+  test "display_name uses standard format for non-consolidated products" do
+    variant = product_variants(:single_wall_8oz_white)
+    expected = "#{variant.product.name} (#{variant.name})"
+    assert_equal expected, variant.display_name
+  end
+
   test "variant without option values returns empty hash" do
     variant = ProductVariant.create!(
       product: products(:branded_double_wall_template),

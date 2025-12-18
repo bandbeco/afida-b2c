@@ -40,6 +40,7 @@ CSV.foreach(csv_path, headers: true) do |row|
   products_data[key][:variants] << {
     size: row['size_value'],
     colour: row['colour_value'],
+    material: row['material_value'],
     sku: row['sku'],
     price: row['price']&.gsub('£', '')&.gsub(',', '')&.to_f || 0,
     pac_size: row['pac_size']&.to_i || 1,
@@ -75,10 +76,12 @@ products_data.each do |key, data|
 
   # Determine which options to assign
   sizes = data[:variants].map { |v| v[:size] }.compact.uniq
-  colours = data[:variants].map { |v| v[:colour] }.uniq
+  colours = data[:variants].map { |v| v[:colour] }.compact.uniq
+  materials = data[:variants].map { |v| v[:material] }.compact.uniq
 
   has_size_variants = sizes.length > 1
   has_color_variants = colours.length > 1
+  has_material_variants = materials.length > 1
 
   # Assign Size option if product has multiple sizes
   if has_size_variants && size_option
@@ -99,11 +102,12 @@ products_data.each do |key, data|
     option_values = {}
     option_values['size'] = variant_data[:size] if variant_data[:size].present?
     option_values['colour'] = variant_data[:colour] if variant_data[:colour].present?
+    option_values['material'] = variant_data[:material] if variant_data[:material].present?
 
     # Create variant name from options that actually vary
-    # Only include size if product has multiple sizes
-    # Only include colour if product has multiple colours
+    # Only include option if product has multiple values for that option
     variant_name_parts = []
+    variant_name_parts << variant_data[:material] if has_material_variants && variant_data[:material].present?
     variant_name_parts << variant_data[:size] if has_size_variants && variant_data[:size].present?
     variant_name_parts << variant_data[:colour] if has_color_variants && variant_data[:colour].present?
     variant_name = variant_name_parts.join(' ')
@@ -116,6 +120,7 @@ products_data.each do |key, data|
     variant.stock_quantity = 10000
     variant.option_values = option_values
     variant.active = variant_data[:active]
+    variant.sample_eligible = variant_data[:sample_eligible]
     variant.save!
   end
 

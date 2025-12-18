@@ -66,8 +66,8 @@ export default class extends Controller {
         const isAvailable = availableValues.includes(value)
         const isSelected = this.selections[optionName] === value
 
-        // Update button state
-        button.disabled = !isAvailable
+        // Update button state with accessibility attributes
+        this.setButtonDisabled(button, !isAvailable, optionName)
         button.classList.toggle('opacity-40', !isAvailable)
         button.classList.toggle('cursor-not-allowed', !isAvailable)
         this.setButtonSelected(button, isSelected)
@@ -323,6 +323,9 @@ export default class extends Controller {
   }
 
   setButtonSelected(button, selected) {
+    // Update ARIA pressed state for screen readers
+    button.setAttribute('aria-pressed', selected.toString())
+
     if (selected) {
       button.classList.remove('border-gray-300')
       button.classList.add('border-primary')
@@ -336,18 +339,32 @@ export default class extends Controller {
     }
   }
 
-  disableAddToCart() {
-    if (this.hasAddToCartButtonTarget) {
-      this.addToCartButtonTarget.disabled = true
-      this.addToCartButtonTarget.classList.add('btn-disabled')
+  setButtonDisabled(button, disabled, optionName) {
+    button.disabled = disabled
+    button.setAttribute('aria-disabled', disabled.toString())
+
+    if (disabled) {
+      // Explain why button is disabled for screen readers
+      button.setAttribute('aria-label', `${button.dataset.value} - unavailable with current ${optionName} selection`)
+    } else {
+      button.removeAttribute('aria-label')
     }
   }
 
+  disableAddToCart() {
+    this.addToCartButtonTargets.forEach(button => {
+      button.disabled = true
+      button.setAttribute('aria-disabled', 'true')
+      button.classList.add('btn-disabled')
+    })
+  }
+
   enableAddToCart() {
-    if (this.hasAddToCartButtonTarget) {
-      this.addToCartButtonTarget.disabled = false
-      this.addToCartButtonTarget.classList.remove('btn-disabled')
-    }
+    this.addToCartButtonTargets.forEach(button => {
+      button.disabled = false
+      button.setAttribute('aria-disabled', 'false')
+      button.classList.remove('btn-disabled')
+    })
   }
 
   submitForm() {

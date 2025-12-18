@@ -2,10 +2,6 @@
 <%# Uses product_configurator_controller.js for sparse matrix handling %>
 <%# NOTE: The controller wrapper is in _consolidated_product.html.erb to encompass all targets %>
 
-<%
-  pac_size = @selected_variant&.pac_size || @product.active_variants.first&.pac_size || 1
-%>
-
 <%# Option Groups %>
   <div class="space-y-4 mt-6">
     <% @configurator_options.each do |option_name, values| %>
@@ -19,13 +15,14 @@
           <% values.each do |value| %>
             <button type="button"
                     class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-3 py-2 sm:px-6 sm:py-3 cursor-pointer font-medium text-sm sm:text-base transition-colors"
+                    aria-pressed="false"
                     data-option-button
                     data-option-name="<%= option_name %>"
                     data-value="<%= value %>"
                     data-action="click->product-configurator#selectOption">
               <%= value %>
-              <span class="option-checkmark hidden absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 sm:w-4 sm:h-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+              <span class="option-checkmark hidden absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-primary rounded-full flex items-center justify-center" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3 h-3 sm:w-4 sm:h-4 text-white" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                 </svg>
               </span>
@@ -49,11 +46,11 @@
         <div class="flex justify-between items-baseline mb-2">
           <label for="cart_item_quantity" class="text-sm font-semibold">Select quantity:</label>
           <span class="text-sm text-base-content/60" data-product-configurator-target="packSizeDisplay">
-            Pack size: <%= number_with_delimiter(pac_size) %> units
+            Pack size: <%= number_with_delimiter(@pac_size) %> units
           </span>
         </div>
         <%= select_tag "cart_item[quantity]",
-                        options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * pac_size)} units)", num_packs] }, 1),
+                        options_for_select((1..10).map { |num_packs| ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(num_packs * @pac_size)} units)", num_packs] }, 1),
                         id: "cart_item_quantity",
                         class: "select select-bordered select-lg w-full",
                         data: { product_configurator_target: "quantitySelect", action: "change->product-configurator#updateQuantity" } %>
@@ -93,6 +90,8 @@
 
   <%# Mobile Sticky Add to Cart Bar %>
   <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-base-200 p-3 lg:hidden z-40 shadow-lg"
+       role="region"
+       aria-label="Purchase options"
        data-product-configurator-target="mobileBar">
     <div class="flex items-center justify-between gap-4 max-w-lg mx-auto">
       <div>
@@ -104,6 +103,7 @@
       <button type="button"
               class="btn btn-primary flex-1 max-w-[200px] btn-disabled"
               disabled
+              aria-disabled="true"
               data-product-configurator-target="addToCartButton"
               data-action="click->product-configurator#submitForm">
         Add to Cart

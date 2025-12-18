@@ -148,3 +148,34 @@ solo_product:
   active: true
   product_type: standard
   description_short: The only product in its category
+
+# Sparse matrix product - not all size+colour combinations exist
+# (e.g., Paper Straws where 8x200mm only comes in Red/White)
+paper_straws:
+  name: Paper Straws
+  slug: paper-straws
+  sku: STRAW-PAPER
+  category: straws
+  active: true
+  product_type: standard
+  description_short: Eco-friendly paper straws
+
+# Consolidated product with material option (wooden cutlery)
+wooden_cutlery:
+  name: Wooden Cutlery
+  slug: wooden-cutlery
+  sku: CUT-WOOD
+  category: cutlery
+  active: true
+  product_type: standard
+  description_short: Sustainable wooden cutlery
+
+# Full matrix product - all size+colour combinations exist
+napkins:
+  name: Paper Napkins
+  slug: paper-napkins
+  sku: NAP-PAPER
+  category: one
+  active: true
+  product_type: standard
+  description_short: Quality paper napkins

@@ -133,6 +133,122 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # Sparse matrix detection tests (lines 41-73 in ProductsController)
+  # These tests validate the consolidated product configurator logic
+  #
+  # The sparse matrix detection determines which UI to render:
+  # - Consolidated products use `data-controller="product-configurator"`
+  # - Standard products use `data-controller="product-options"`
+
+  test "show renders consolidated configurator for sparse matrix product" do
+    # Paper Straws: 2 sizes x 3 colours = 6 possible, but only 3 exist
+    # 6x140mm: White, Kraft
+    # 8x200mm: Red/White only (sparse!)
+    product = products(:paper_straws)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Sparse matrix products should render consolidated_product partial with product-configurator
+    assert_match 'data-controller="product-configurator"', response.body,
+                 "Expected sparse matrix product to render consolidated configurator"
+    assert_no_match 'data-controller="product-options"', response.body,
+                    "Sparse matrix product should NOT render standard product-options controller"
+  end
+
+  test "show renders consolidated configurator for product with material option" do
+    # Wooden Cutlery has material option (Birch, Bamboo) - consolidated product
+    product = products(:wooden_cutlery)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Products with material option should render consolidated_product partial
+    assert_match 'data-controller="product-configurator"', response.body,
+                 "Expected product with material option to render consolidated configurator"
+    # Verify configurator shows material options
+    assert_match "Birch", response.body
+    assert_match "Bamboo", response.body
+  end
+
+  test "show renders standard product-options for full matrix products" do
+    # Napkins: 2 sizes x 2 colours = 4 possible, and all 4 exist
+    product = products(:napkins)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Full matrix products should render standard_product partial with product-options
+    assert_match 'data-controller="product-options"', response.body,
+                 "Expected full matrix product to render standard product-options controller"
+    assert_no_match 'data-controller="product-configurator"', response.body,
+                    "Full matrix product should NOT render consolidated configurator"
+  end
+
+  test "show renders standard view for single variant products" do
+    # Solo Product has only 1 variant - no configuration needed
+    product = products(:solo_product)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Single variant products should render standard_product partial
+    # (they may or may not have product-options controller depending on options)
+    assert_no_match 'data-controller="product-configurator"', response.body,
+                    "Single variant product should NOT use consolidated configurator"
+  end
+
+  test "show renders standard view for single option type products" do
+    # Paper Lids has multiple variants but option_values are empty (size via name only)
+    product = products(:paper_lids)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Single option type without material/type = not consolidated
+    assert_no_match 'data-controller="product-configurator"', response.body,
+                    "Single option type product should NOT use consolidated configurator"
+  end
+
+  test "sparse matrix product shows variant options in configurator" do
+    product = products(:paper_straws)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Verify the sparse matrix options are available in the UI
+    assert_match "6x140mm", response.body
+    assert_match "8x200mm", response.body
+    assert_match "White", response.body
+    assert_match "Kraft", response.body
+    assert_match "Red/White", response.body
+  end
+
+  test "full matrix product shows all variant combinations" do
+    product = products(:napkins)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Verify all options are available
+    assert_match "Small", response.body
+    assert_match "Large", response.body
+    assert_match "White", response.body
+    assert_match "Natural", response.body
+  end
+
+  test "consolidated configurator includes variants JSON with option order" do
+    # The consolidated configurator needs variants data and option order for dynamic UI
+    product = products(:wooden_cutlery)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Verify the data attributes needed by the product-configurator controller
+    assert_match "data-product-configurator-variants-value", response.body
+    assert_match "data-product-configurator-option-order-value", response.body
+  end
+
   # GET /products/:id/quick_add
   test "quick_add renders modal for standard product" do
     standard_product = products(:one)  # Assuming product type is 'standard'

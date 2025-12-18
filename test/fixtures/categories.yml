@@ -27,3 +27,13 @@ single_product_category:
   name: "Single Product Category"
   slug: "single-product-category"
   position: 6
+
+straws:
+  name: "Straws"
+  slug: "straws"
+  position: 7
+
+cutlery:
+  name: "Cutlery"
+  slug: "cutlery"
+  position: 8
