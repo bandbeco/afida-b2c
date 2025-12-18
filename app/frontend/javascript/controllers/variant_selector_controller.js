@@ -137,13 +137,13 @@ export default class extends Controller {
 
     this.selectedQuantity = quantity
 
-    // Update tier card selection UI
+    // Update tier card selection UI - matches branded configurator
     this.quantityContentTarget.querySelectorAll("[data-tier-card]").forEach(card => {
-      card.classList.remove("border-primary", "bg-primary/5")
-      card.classList.add("border-base-300")
+      card.classList.remove("border-primary")
+      card.classList.add("border-gray-300")
     })
-    tierCard.classList.remove("border-base-300")
-    tierCard.classList.add("border-primary", "bg-primary/5")
+    tierCard.classList.remove("border-gray-300")
+    tierCard.classList.add("border-primary")
 
     // Update quantity step header
     this.updateQuantityStepHeader()
@@ -233,6 +233,7 @@ export default class extends Controller {
 
   /**
    * Update option button enabled/disabled states
+   * Uses pill button styling matching the branded configurator
    */
   updateOptionButtons() {
     this.optionButtonTargets.forEach(button => {
@@ -244,10 +245,19 @@ export default class extends Controller {
       const isAvailable = availableValues.has(value)
       const isSelected = this.selections[optionName] === value
 
-      // Update button state
+      // Update button state - pill button styling
       button.disabled = !isAvailable
-      button.classList.toggle("btn-primary", isSelected)
-      button.classList.toggle("btn-outline", !isSelected)
+
+      // Selected state: primary background
+      if (isSelected) {
+        button.classList.add("bg-primary", "text-white", "border-primary")
+        button.classList.remove("bg-white", "text-black", "border-gray-300")
+      } else {
+        button.classList.remove("bg-primary", "text-white", "border-primary")
+        button.classList.add("bg-white", "text-black", "border-gray-300")
+      }
+
+      // Disabled state
       button.classList.toggle("opacity-40", !isAvailable)
       button.classList.toggle("cursor-not-allowed", !isAvailable)
     })
@@ -255,6 +265,7 @@ export default class extends Controller {
 
   /**
    * Update step headers to show selections
+   * Matches branded configurator styling with green checkmark indicator
    */
   updateStepHeaders() {
     this.stepTargets.forEach((step, index) => {
@@ -264,20 +275,20 @@ export default class extends Controller {
       const selectionDisplay = step.querySelector("[data-variant-selector-target='stepSelection']")
 
       if (selection) {
-        // Show checkmark and selection
+        // Show checkmark and selection - green background with white checkmark
         indicator.textContent = "✓"
-        indicator.classList.remove("bg-base-200")
-        indicator.classList.add("bg-success", "text-success-content")
+        indicator.classList.remove("bg-gray-300")
+        indicator.classList.add("bg-success", "text-white")
 
         if (selectionDisplay) {
           selectionDisplay.textContent = `: ${selection}`
           selectionDisplay.classList.remove("hidden")
         }
       } else {
-        // Show step number
+        // Show step number - gray background
         indicator.textContent = String(index + 1)
-        indicator.classList.add("bg-base-200")
-        indicator.classList.remove("bg-success", "text-success-content")
+        indicator.classList.add("bg-gray-300")
+        indicator.classList.remove("bg-success")
 
         if (selectionDisplay) {
           selectionDisplay.classList.add("hidden")
@@ -288,6 +299,7 @@ export default class extends Controller {
 
   /**
    * Update quantity step header
+   * Matches branded configurator styling with green checkmark indicator
    */
   updateQuantityStepHeader() {
     if (!this.hasQuantityStepSelectionTarget) return
@@ -298,11 +310,11 @@ export default class extends Controller {
     this.quantityStepSelectionTarget.textContent = `: ${this.selectedQuantity} pack${this.selectedQuantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
     this.quantityStepSelectionTarget.classList.remove("hidden")
 
-    // Update indicator to checkmark
+    // Update indicator to checkmark - green background with white checkmark
     if (this.hasQuantityStepIndicatorTarget) {
       this.quantityStepIndicatorTarget.textContent = "✓"
-      this.quantityStepIndicatorTarget.classList.remove("bg-base-200")
-      this.quantityStepIndicatorTarget.classList.add("bg-success", "text-success-content")
+      this.quantityStepIndicatorTarget.classList.remove("bg-gray-300")
+      this.quantityStepIndicatorTarget.classList.add("bg-success", "text-white")
     }
   }
 
@@ -384,6 +396,7 @@ export default class extends Controller {
 
   /**
    * Render pricing tier cards using safe DOM methods
+   * Matches branded configurator: full-width cards with horizontal layout
    */
   renderTierCards() {
     const tiers = this.selectedVariant.pricing_tiers
@@ -393,78 +406,77 @@ export default class extends Controller {
     // Clear existing content
     this.quantityContentTarget.textContent = ""
 
-    // Create grid container
-    const grid = document.createElement("div")
-    grid.className = "grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2"
+    // Create vertical stack container (like branded configurator)
+    const container = document.createElement("div")
+    container.className = "space-y-3 pt-4"
 
     tiers.forEach((tier, index) => {
       const quantity = tier.quantity
       const price = parseFloat(tier.price)
       const units = quantity * pacSize
       const unitPrice = price / pacSize
+      const total = price * quantity
       const savings = index > 0 ? Math.round((1 - price / basePrice) * 100) : 0
 
-      // Create tier card button
-      const button = document.createElement("button")
-      button.type = "button"
-      button.className = "border-2 border-base-300 rounded-lg p-3 text-center hover:border-primary transition-colors"
-      button.dataset.tierCard = ""
-      button.dataset.quantity = String(quantity)
-      button.dataset.price = String(price)
-      button.dataset.action = "click->variant-selector#selectTier"
+      // Create tier card - full width, horizontal layout matching branded configurator
+      const card = document.createElement("div")
+      card.className = "border-2 border-gray-300 bg-white rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary transition"
+      card.dataset.tierCard = ""
+      card.dataset.quantity = String(quantity)
+      card.dataset.price = String(price)
+      card.dataset.action = "click->variant-selector#selectTier"
 
-      // Pack count
-      const packDiv = document.createElement("div")
-      packDiv.className = "text-lg font-bold"
-      packDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
-      button.appendChild(packDiv)
+      // Row 1: Quantity | Savings Badge | Total Price
+      const row1 = document.createElement("div")
+      row1.className = "flex items-center justify-between"
 
-      // Price per pack
-      const priceDiv = document.createElement("div")
-      priceDiv.className = "text-sm text-base-content/70"
-      priceDiv.textContent = `£${price.toFixed(2)}/pack`
-      button.appendChild(priceDiv)
+      // Quantity (left)
+      const quantityDiv = document.createElement("div")
+      quantityDiv.className = "text-black font-semibold text-lg"
+      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
+      row1.appendChild(quantityDiv)
 
-      // Unit count
-      const unitsDiv = document.createElement("div")
-      unitsDiv.className = "text-xs text-base-content/50 mt-1"
-      unitsDiv.textContent = `${units.toLocaleString()} units`
-      button.appendChild(unitsDiv)
+      // Savings badge (center) - hidden for first tier
+      const badge = document.createElement("div")
+      badge.className = `badge bg-pink-100 text-pink-800 border-0 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-semibold ${index === 0 ? "invisible" : ""}`
+      badge.textContent = savings > 0 ? `save ${savings}%` : ""
+      row1.appendChild(badge)
 
-      // Unit price
-      const unitPriceDiv = document.createElement("div")
-      unitPriceDiv.className = "text-xs text-base-content/50"
-      unitPriceDiv.textContent = `£${unitPrice.toFixed(4)}/unit`
-      button.appendChild(unitPriceDiv)
+      // Total price (right)
+      const totalDiv = document.createElement("div")
+      totalDiv.className = "text-black font-semibold"
+      totalDiv.textContent = `£${total.toFixed(2)}`
+      row1.appendChild(totalDiv)
 
-      // Savings badge
-      if (savings > 0) {
-        const badge = document.createElement("div")
-        badge.className = "badge badge-success badge-sm mt-2"
-        badge.textContent = `Save ${savings}%`
-        button.appendChild(badge)
-      }
+      card.appendChild(row1)
 
-      grid.appendChild(button)
+      // Row 2: Price per unit
+      const row2 = document.createElement("div")
+      row2.className = "text-gray-500 text-sm mt-1"
+      row2.textContent = `£${unitPrice.toFixed(3)}/unit`
+      card.appendChild(row2)
+
+      container.appendChild(card)
     })
 
-    this.quantityContentTarget.appendChild(grid)
+    this.quantityContentTarget.appendChild(container)
   }
 
   /**
    * Render quantity buttons using safe DOM methods (fallback for non-tiered products)
-   * Uses card-style buttons similar to the branded configurator
+   * Matches branded configurator: full-width cards with horizontal layout
    */
   renderQuantityButtons() {
     const pacSize = this.selectedVariant.pac_size || this.pacSizeValue
     const price = this.selectedVariant.price
+    const unitPrice = price / pacSize
 
     // Clear existing content
     this.quantityContentTarget.textContent = ""
 
-    // Create grid container for quantity cards
-    const grid = document.createElement("div")
-    grid.className = "grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2"
+    // Create vertical stack container (like branded configurator)
+    const container = document.createElement("div")
+    container.className = "space-y-3 pt-4"
 
     // Create quantity options (1-5 packs, then 10)
     const quantities = [1, 2, 3, 4, 5, 10]
@@ -473,46 +485,46 @@ export default class extends Controller {
       const units = quantity * pacSize
       const total = price * quantity
 
-      // Create quantity card button
-      const button = document.createElement("button")
-      button.type = "button"
-      button.className = "border-2 border-base-300 rounded-lg p-3 text-center hover:border-primary transition-colors"
-      button.dataset.quantityCard = ""
-      button.dataset.quantity = String(quantity)
-      button.dataset.action = "click->variant-selector#selectQuantityCard"
+      // Create quantity card - full width, horizontal layout matching branded configurator
+      const card = document.createElement("div")
+      card.className = "border-2 border-gray-300 bg-white rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary transition"
+      card.dataset.quantityCard = ""
+      card.dataset.quantity = String(quantity)
+      card.dataset.action = "click->variant-selector#selectQuantityCard"
 
-      // Pack count
-      const packDiv = document.createElement("div")
-      packDiv.className = "text-lg font-bold"
-      packDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
-      button.appendChild(packDiv)
+      // Row 1: Quantity | (empty center) | Total Price
+      const row1 = document.createElement("div")
+      row1.className = "flex items-center justify-between"
 
-      // Total price
-      const priceDiv = document.createElement("div")
-      priceDiv.className = "text-sm font-semibold text-primary"
-      priceDiv.textContent = `£${total.toFixed(2)}`
-      button.appendChild(priceDiv)
+      // Quantity (left)
+      const quantityDiv = document.createElement("div")
+      quantityDiv.className = "text-black font-semibold text-lg"
+      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
+      row1.appendChild(quantityDiv)
 
-      // Unit count
-      const unitsDiv = document.createElement("div")
-      unitsDiv.className = "text-xs text-base-content/50 mt-1"
-      unitsDiv.textContent = `${units.toLocaleString()} units`
-      button.appendChild(unitsDiv)
+      // Total price (right)
+      const totalDiv = document.createElement("div")
+      totalDiv.className = "text-black font-semibold"
+      totalDiv.textContent = `£${total.toFixed(2)}`
+      row1.appendChild(totalDiv)
 
-      grid.appendChild(button)
+      card.appendChild(row1)
+
+      // Row 2: Price per unit
+      const row2 = document.createElement("div")
+      row2.className = "text-gray-500 text-sm mt-1"
+      row2.textContent = `£${unitPrice.toFixed(3)}/unit`
+      card.appendChild(row2)
+
+      container.appendChild(card)
     })
 
-    this.quantityContentTarget.appendChild(grid)
-
-    // Price per pack info below grid
-    const priceInfo = document.createElement("p")
-    priceInfo.className = "text-sm text-base-content/60 mt-3 text-center"
-    priceInfo.textContent = `£${price.toFixed(2)} per pack · ${pacSize.toLocaleString()} units per pack`
-    this.quantityContentTarget.appendChild(priceInfo)
+    this.quantityContentTarget.appendChild(container)
   }
 
   /**
    * Handle quantity card selection (for non-tiered products)
+   * Matches branded configurator styling
    */
   selectQuantityCard(event) {
     const card = event.currentTarget
@@ -520,13 +532,13 @@ export default class extends Controller {
 
     this.selectedQuantity = quantity
 
-    // Update card selection UI
+    // Update card selection UI - matches branded configurator
     this.quantityContentTarget.querySelectorAll("[data-quantity-card]").forEach(c => {
-      c.classList.remove("border-primary", "bg-primary/5")
-      c.classList.add("border-base-300")
+      c.classList.remove("border-primary")
+      c.classList.add("border-gray-300")
     })
-    card.classList.remove("border-base-300")
-    card.classList.add("border-primary", "bg-primary/5")
+    card.classList.remove("border-gray-300")
+    card.classList.add("border-primary")
 
     // Update quantity step header
     this.updateQuantityStepHeader()
