@@ -7,37 +7,35 @@ class FaqTest < ApplicationSystemTestCase
     visit faqs_path
 
     assert_selector "h1", text: "Frequently Asked Questions"
-    assert_selector "h2", count: 10 # 10 category headers
-    assert_selector ".collapse", count: 33 # 33 question accordions
+    # Scope to main content to exclude footer and sidebar h2s
+    within "main#faq-content" do
+      assert_selector "h2", count: 10 # 10 category headers
+      assert_selector ".collapse", count: 33 # 33 question accordions
+    end
   end
 
-  test "accordion opens and closes questions" do
+  test "accordion opens and closes questions within same category" do
     visit faqs_path
 
-    # All questions start closed
+    # Each category has its own accordion group (independent radio groups)
     within "#about-products" do
-      # DaisyUI accordion uses radio inputs (only one open at a time)
-      first_question = first(".collapse")
-      radio = first_question.find('input[type="radio"]', visible: false)
+      # DaisyUI accordion uses radio inputs (only one open at a time within category)
+      collapses = all(".collapse")
+      skip "Need at least 2 questions to test accordion behavior" if collapses.count < 2
 
-      # Open the question
-      radio.click
-      assert radio.checked?
-    end
+      first_question = collapses[0]
+      second_question = collapses[1]
+      first_radio = first_question.find('input[type="radio"]', visible: false)
+      second_radio = second_question.find('input[type="radio"]', visible: false)
 
-    # Opening another question should close the first
-    within "#custom-printing" do
-      first_question = first(".collapse")
-      radio = first_question.find('input[type="radio"]', visible: false)
-      radio.click
-      assert radio.checked?
-    end
+      # Open the first question
+      first_radio.click
+      assert first_radio.checked?
 
-    # First question should now be closed
-    within "#about-products" do
-      first_question = first(".collapse")
-      radio = first_question.find('input[type="radio"]', visible: false)
-      assert_not radio.checked?
+      # Opening second question should close the first (same category = same radio group)
+      second_radio.click
+      assert second_radio.checked?
+      assert_not first_radio.checked?
     end
   end
 
@@ -56,7 +54,8 @@ class FaqTest < ApplicationSystemTestCase
   test "quick links navigate to categories" do
     visit faqs_path
 
-    within ".bg-base-200" do
+    # Use the sidebar nav with Table of Contents
+    within "aside nav" do
       click_link "Custom Printing & Branding"
     end
 
@@ -64,10 +63,12 @@ class FaqTest < ApplicationSystemTestCase
     assert_equal "custom-printing", URI.parse(current_url).fragment
   end
 
-  test "contact CTA appears at bottom of page" do
+  test "contact CTA appears in sidebar" do
     visit faqs_path
 
-    assert_text "Still have questions?"
+    # Contact info appears in sidebar "Need help?" section
+    assert_text "Need help?"
+    assert_text "We're here to assist you"
     assert_link "info@afida.com"
     assert_link "0203 302 7719"
   end
