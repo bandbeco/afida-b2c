@@ -27,8 +27,8 @@ class ProductDescriptionsTest < ApplicationSystemTestCase
 
     # Should see detailed description in product details section
     assert_text "This is the comprehensive detailed description"
-    # Should have Product Details heading
-    assert_selector "h2", text: "Product Details"
+    # Should have About heading with product name
+    assert_selector "h2", text: "About Our #{product.name}"
   end
 
   test "product page content flows continuously without tabs" do
