@@ -103,7 +103,7 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert add_button.disabled? || add_button["aria-disabled"] == "true",
            "Add to cart button should be disabled until selections complete"
 
-    # Complete all selections
+    # Complete all option selections
     steps = all("[data-variant-selector-target='step']")
     steps.each do |step|
       # Click to expand if collapsed
@@ -119,7 +119,18 @@ class VariantSelectorTest < ApplicationSystemTestCase
       sleep 0.2
     end
 
-    # After all selections, button should be enabled
+    # Select quantity (either tier card or quantity card)
+    quantity_step = find("[data-variant-selector-target='quantityStep']")
+    if quantity_step.has_css?("[data-tier-card]")
+      tier_card = quantity_step.find("[data-tier-card]", match: :first)
+      tier_card.click
+    elsif quantity_step.has_css?("[data-quantity-card]")
+      quantity_card = quantity_step.find("[data-quantity-card]", match: :first)
+      quantity_card.click
+    end
+    sleep 0.2
+
+    # After all selections and quantity, button should be enabled
     add_button = find("[data-variant-selector-target='addButton']")
     refute add_button.disabled?,
            "Add to cart button should be enabled after all selections complete"
@@ -147,7 +158,7 @@ class VariantSelectorTest < ApplicationSystemTestCase
   test "can add to cart after completing selections" do
     visit product_path(@multi_option_product.slug)
 
-    # Complete all selections
+    # Complete all option selections
     steps = all("[data-variant-selector-target='step']")
     steps.each do |step|
       header = step.find("[data-variant-selector-target='stepHeader']")
@@ -158,6 +169,17 @@ class VariantSelectorTest < ApplicationSystemTestCase
       option_button.click
       sleep 0.2
     end
+
+    # Select quantity (either tier card or quantity card)
+    quantity_step = find("[data-variant-selector-target='quantityStep']")
+    if quantity_step.has_css?("[data-tier-card]")
+      tier_card = quantity_step.find("[data-tier-card]", match: :first)
+      tier_card.click
+    elsif quantity_step.has_css?("[data-quantity-card]")
+      quantity_card = quantity_step.find("[data-quantity-card]", match: :first)
+      quantity_card.click
+    end
+    sleep 0.2
 
     # Click add to cart
     add_button = find("[data-variant-selector-target='addButton']")
@@ -277,8 +299,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
                  "Total display should show correct total for selected tier")
   end
 
-  # T022: Quantity dropdown fallback for non-tiered variants
-  test "quantity dropdown appears for variant without pricing_tiers" do
+  # T022: Quantity buttons fallback for non-tiered variants
+  test "quantity buttons appear for variant without pricing_tiers" do
     # Select the Black variant which has no pricing_tiers
     visit product_path(@multi_option_product.slug)
 
@@ -295,8 +317,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert quantity_step.matches_css?(".collapse-open"),
            "Quantity step should be expanded after all options selected"
 
-    # Should have a select dropdown, not tier cards
-    assert_selector "[data-variant-selector-target='quantityContent'] select", wait: 3
+    # Should have quantity card buttons, not tier cards
+    assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3
     refute_selector "[data-tier-card]"
   end
 
@@ -336,9 +358,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert quantity_step.matches_css?(".collapse-open"),
            "Quantity step should expand after single option selection"
 
-    # Add to cart should become enabled after quantity selection
-    # (dropdown auto-selects first option)
-    assert_selector "[data-variant-selector-target='quantityContent'] select", wait: 3
+    # Quantity buttons should be visible
+    assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3
   end
 
   # T029: Quantity-only products (no options) show only quantity step
@@ -357,8 +378,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert quantity_step.matches_css?(".collapse-open"),
            "Quantity step should be expanded for quantity-only products"
 
-    # Quantity content should be populated
-    assert_selector "[data-variant-selector-target='quantityContent'] select", wait: 3
+    # Quantity buttons should be visible
+    assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3
   end
 
   # T029: Can add quantity-only product to cart
@@ -366,13 +387,18 @@ class VariantSelectorTest < ApplicationSystemTestCase
     solo_product = products(:solo_product)
     visit product_path(solo_product.slug)
 
-    # Quantity dropdown should be visible immediately
-    assert_selector "[data-variant-selector-target='quantityContent'] select", wait: 3
+    # Quantity buttons should be visible immediately
+    assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3
 
-    # Add to cart button should be enabled (variant auto-selected)
+    # Select a quantity card to enable add to cart
+    quantity_card = find("[data-quantity-card]", match: :first)
+    quantity_card.click
+    sleep 0.2
+
+    # Add to cart button should be enabled
     add_button = find("[data-variant-selector-target='addButton']")
     refute add_button.disabled?,
-           "Add to cart should be enabled for quantity-only products"
+           "Add to cart should be enabled after selecting quantity"
 
     # Click add to cart
     add_button.click
@@ -455,7 +481,7 @@ class VariantSelectorTest < ApplicationSystemTestCase
   test "can revise selection and complete checkout flow" do
     visit product_path(@multi_option_product.slug)
 
-    # Complete all selections
+    # Complete all option selections
     steps = all("[data-variant-selector-target='step']")
     steps.each do |step|
       header = step.find("[data-variant-selector-target='stepHeader']")
@@ -466,11 +492,14 @@ class VariantSelectorTest < ApplicationSystemTestCase
       sleep 0.2
     end
 
-    # Select quantity
+    # Select quantity (either tier card or quantity card)
     quantity_step = find("[data-variant-selector-target='quantityStep']")
     if quantity_step.has_css?("[data-tier-card]")
       tier_card = quantity_step.find("[data-tier-card]", match: :first)
       tier_card.click
+    elsif quantity_step.has_css?("[data-quantity-card]")
+      quantity_card = quantity_step.find("[data-quantity-card]", match: :first)
+      quantity_card.click
     end
     sleep 0.2
 
@@ -499,13 +528,21 @@ class VariantSelectorTest < ApplicationSystemTestCase
       end
     end
 
-    # Select quantity if needed
+    # Select quantity again after revision (must expand and click a card)
     quantity_step = find("[data-variant-selector-target='quantityStep']")
-    if quantity_step.matches_css?(".collapse-open")
-      if quantity_step.has_css?("[data-tier-card]")
-        tier_card = quantity_step.find("[data-tier-card]", match: :first)
-        tier_card.click unless tier_card[:class].include?("border-primary")
-      end
+    # Expand quantity step if collapsed
+    unless quantity_step.matches_css?(".collapse-open")
+      quantity_header = quantity_step.find("[data-variant-selector-target='quantityStepHeader']")
+      quantity_header.click
+      sleep 0.2
+    end
+    # Select a quantity card or tier card
+    if quantity_step.has_css?("[data-tier-card]")
+      tier_card = quantity_step.find("[data-tier-card]", match: :first)
+      tier_card.click unless tier_card[:class].include?("border-primary")
+    elsif quantity_step.has_css?("[data-quantity-card]")
+      quantity_card = quantity_step.find("[data-quantity-card]", match: :first)
+      quantity_card.click unless quantity_card[:class].include?("border-primary")
     end
     sleep 0.2
 

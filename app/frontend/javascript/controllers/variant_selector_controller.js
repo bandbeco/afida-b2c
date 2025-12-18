@@ -159,17 +159,6 @@ export default class extends Controller {
   }
 
   /**
-   * Handle quantity dropdown change (for non-tiered products)
-   */
-  selectQuantity(event) {
-    this.selectedQuantity = parseInt(event.currentTarget.value, 10)
-    this.updateQuantityStepHeader()
-    this.updateTotalDisplay()
-    this.quantityInputTarget.value = this.selectedQuantity
-    this.enableAddToCart()
-  }
-
-  /**
    * Add to cart
    */
   addToCart() {
@@ -382,7 +371,7 @@ export default class extends Controller {
     if (hasTiers) {
       this.renderTierCards()
     } else {
-      this.renderQuantityDropdown()
+      this.renderQuantityButtons()
     }
   }
 
@@ -456,62 +445,92 @@ export default class extends Controller {
   }
 
   /**
-   * Render quantity dropdown using safe DOM methods (fallback for non-tiered products)
+   * Render quantity buttons using safe DOM methods (fallback for non-tiered products)
+   * Uses card-style buttons similar to the branded configurator
    */
-  renderQuantityDropdown() {
+  renderQuantityButtons() {
     const pacSize = this.selectedVariant.pac_size || this.pacSizeValue
     const price = this.selectedVariant.price
 
     // Clear existing content
     this.quantityContentTarget.textContent = ""
 
-    // Create container
-    const container = document.createElement("div")
-    container.className = "pt-2"
+    // Create grid container for quantity cards
+    const grid = document.createElement("div")
+    grid.className = "grid grid-cols-2 sm:grid-cols-5 gap-3 pt-2"
 
-    // Create label row
-    const labelRow = document.createElement("div")
-    labelRow.className = "flex justify-between items-baseline mb-2"
+    // Create quantity options (1-5 packs, then 10)
+    const quantities = [1, 2, 3, 4, 5, 10]
 
-    const label = document.createElement("label")
-    label.className = "text-sm font-semibold"
-    label.textContent = "Select quantity:"
-    labelRow.appendChild(label)
+    quantities.forEach((quantity, index) => {
+      const units = quantity * pacSize
+      const total = price * quantity
 
-    const packInfo = document.createElement("span")
-    packInfo.className = "text-sm text-base-content/60"
-    packInfo.textContent = `Pack size: ${pacSize} units`
-    labelRow.appendChild(packInfo)
+      // Create quantity card button
+      const button = document.createElement("button")
+      button.type = "button"
+      button.className = "border-2 border-base-300 rounded-lg p-3 text-center hover:border-primary transition-colors"
+      button.dataset.quantityCard = ""
+      button.dataset.quantity = String(quantity)
+      button.dataset.action = "click->variant-selector#selectQuantityCard"
 
-    container.appendChild(labelRow)
+      // Pack count
+      const packDiv = document.createElement("div")
+      packDiv.className = "text-lg font-bold"
+      packDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""}`
+      button.appendChild(packDiv)
 
-    // Create select dropdown
-    const select = document.createElement("select")
-    select.className = "select select-bordered select-lg w-full"
-    select.dataset.action = "change->variant-selector#selectQuantity"
+      // Total price
+      const priceDiv = document.createElement("div")
+      priceDiv.className = "text-sm font-semibold text-primary"
+      priceDiv.textContent = `£${total.toFixed(2)}`
+      button.appendChild(priceDiv)
 
-    for (let i = 1; i <= 10; i++) {
-      const units = i * pacSize
-      const option = document.createElement("option")
-      option.value = String(i)
-      option.textContent = `${i} pack${i > 1 ? "s" : ""} (${units.toLocaleString()} units)`
-      select.appendChild(option)
-    }
+      // Unit count
+      const unitsDiv = document.createElement("div")
+      unitsDiv.className = "text-xs text-base-content/50 mt-1"
+      unitsDiv.textContent = `${units.toLocaleString()} units`
+      button.appendChild(unitsDiv)
 
-    container.appendChild(select)
+      grid.appendChild(button)
+    })
 
-    // Create price info
+    this.quantityContentTarget.appendChild(grid)
+
+    // Price per pack info below grid
     const priceInfo = document.createElement("p")
-    priceInfo.className = "text-sm text-base-content/60 mt-2"
-    priceInfo.textContent = `£${price.toFixed(2)} per pack`
-    container.appendChild(priceInfo)
+    priceInfo.className = "text-sm text-base-content/60 mt-3 text-center"
+    priceInfo.textContent = `£${price.toFixed(2)} per pack · ${pacSize.toLocaleString()} units per pack`
+    this.quantityContentTarget.appendChild(priceInfo)
+  }
 
-    this.quantityContentTarget.appendChild(container)
+  /**
+   * Handle quantity card selection (for non-tiered products)
+   */
+  selectQuantityCard(event) {
+    const card = event.currentTarget
+    const quantity = parseInt(card.dataset.quantity, 10)
 
-    // Auto-select first quantity
-    this.selectedQuantity = 1
+    this.selectedQuantity = quantity
+
+    // Update card selection UI
+    this.quantityContentTarget.querySelectorAll("[data-quantity-card]").forEach(c => {
+      c.classList.remove("border-primary", "bg-primary/5")
+      c.classList.add("border-base-300")
+    })
+    card.classList.remove("border-base-300")
+    card.classList.add("border-primary", "bg-primary/5")
+
+    // Update quantity step header
+    this.updateQuantityStepHeader()
+
+    // Update totals
     this.updateTotalDisplay()
-    this.quantityInputTarget.value = 1
+
+    // Update form
+    this.quantityInputTarget.value = quantity
+
+    // Enable add to cart
     this.enableAddToCart()
   }
 
