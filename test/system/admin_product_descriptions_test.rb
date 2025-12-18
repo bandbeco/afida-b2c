@@ -3,6 +3,16 @@ require "application_system_test_case"
 class AdminProductDescriptionsTest < ApplicationSystemTestCase
   setup do
     @product = products(:one)
+    @admin_user = users(:acme_admin)
+    sign_in_as(@admin_user)
+  end
+
+  def sign_in_as(user)
+    visit new_session_path
+    fill_in "Email", with: user.email_address
+    fill_in "Password", with: "password"
+    click_button "Sign In"
+    assert_current_path root_path
   end
 
   test "admin form displays three description fields" do
@@ -75,10 +85,10 @@ class AdminProductDescriptionsTest < ApplicationSystemTestCase
     # Should save successfully
     assert_text "Product was successfully updated"
 
-    # Verify blank fields persisted
+    # Verify blank fields persisted (Rails forms submit "" not nil)
     @product.reload
-    assert_nil @product.description_short
-    assert_nil @product.description_standard
-    assert_nil @product.description_detailed
+    assert_predicate @product.description_short, :blank?
+    assert_predicate @product.description_standard, :blank?
+    assert_predicate @product.description_detailed, :blank?
   end
 end
