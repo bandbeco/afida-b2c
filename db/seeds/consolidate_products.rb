@@ -330,5 +330,5 @@ module ProductConsolidation
   end
 end
 
-# Run if executed directly
-ProductConsolidation.run! if __FILE__ == $0
+# Run the consolidation
+ProductConsolidation.run!
