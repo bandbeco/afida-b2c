@@ -730,6 +730,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (new `addresses` table) (001-user-address-storage)
 - Ruby 3.3.0+ / Rails 8.x + Rails 8, Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (014-scheduled-reorder)
 - PostgreSQL 14+ (3 new tables: `reorder_schedules`, `reorder_schedule_items`, `pending_orders`) (014-scheduled-reorder)
+- Ruby 3.3.0+ / Rails 8.x, JavaScript ES6+ (Stimulus) + Rails 8 (ActiveRecord, ActionView), Vite Rails, Stimulus, TailwindCSS 4, DaisyUI (015-variant-selector)
+- PostgreSQL 14+ (existing `products`, `product_variants` tables; new `pricing_tiers` JSONB column) (015-variant-selector)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+
