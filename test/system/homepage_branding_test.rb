@@ -19,8 +19,8 @@ class HomepageBrandingTest < ApplicationSystemTestCase
     visit root_path
 
     within "#branding" do
-      assert_text "Your Brand."
-      assert_text "Your Cup."
+      assert_text "Brand is who you are."
+      assert_text "Branding is how you show up."
     end
   end
 
@@ -29,10 +29,9 @@ class HomepageBrandingTest < ApplicationSystemTestCase
     visit root_path
 
     within "#branding" do
-      assert_text "UK"
-      assert_text "1,000"
-      assert_text "20 days"
-      assert_text "£0"
+      assert_text "Low MOQs"
+      assert_text "High Quality Printing"
+      assert_text "Free Storage"
     end
   end
 
