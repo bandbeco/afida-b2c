@@ -71,6 +71,47 @@ Add `pricing_tiers` JSONB column to `product_variants`:
 
 ## UI Design
 
+### Product Page Layout (Preserve Existing)
+
+The variant selector sits within the existing product page layout. These elements remain unchanged:
+
+```
+┌────────────────────────────────────────────────────────────────┐
+│  ┌──────────────────┐    Product Title                         │
+│  │                  │    ─────────────────                     │
+│  │   Product Image  │    From £25.00                           │
+│  │                  │                                          │
+│  │                  │    Short description text that explains  │
+│  │                  │    the product benefits and features.    │
+│  └──────────────────┘                                          │
+│                                                                │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │              VARIANT SELECTOR (new)                      │   │
+│  │              - Option steps (accordion)                  │   │
+│  │              - Quantity step                             │   │
+│  │              - Add to Cart button                        │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                │
+│  ┌─────────────────────────────────────────────────────────┐   │
+│  │         COMPATIBLE LIDS (separate section)              │   │
+│  └─────────────────────────────────────────────────────────┘   │
+│                                                                │
+│  Product Details (detailed description)                        │
+│  ...                                                           │
+└────────────────────────────────────────────────────────────────┘
+```
+
+**Elements to preserve:**
+- Product image gallery/carousel (left column on desktop)
+- Product title (`h1`)
+- Price range display ("From £X.XX")
+- Short description (`description_standard_with_fallback`)
+- Any badges or labels (eco-friendly, bestseller, etc.)
+
+**Image updates:**
+- When variant is selected, product image updates to show that variant's photo
+- This behavior already exists and should be retained
+
 ### Accordion Structure
 
 ```
