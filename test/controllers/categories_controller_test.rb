@@ -2,7 +2,8 @@ require "test_helper"
 
 class CategoriesControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @category = categories(:one)
+    # Use hot_cups_extras which has multiple active products (won't trigger redirect)
+    @category = categories(:hot_cups_extras)
   end
 
   # GET /categories/:id (show)
@@ -56,6 +57,25 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   test "category pages are publicly accessible" do
     # Verify no authentication required
     get category_url(@category.slug)
+    assert_response :success
+  end
+
+  test "redirects to product page when category has only one product" do
+    single_product_category = categories(:single_product_category)
+    solo_product = products(:solo_product)
+
+    get category_url(single_product_category.slug)
+
+    assert_redirected_to product_path(solo_product)
+    assert_response :moved_permanently
+  end
+
+  test "does not redirect when category has multiple products" do
+    # hot_cups_extras has multiple lid products
+    multi_product_category = categories(:hot_cups_extras)
+
+    get category_url(multi_product_category.slug)
+
     assert_response :success
   end
 
