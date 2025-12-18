@@ -14,11 +14,12 @@ class QuickAddAccessibilityTest < ApplicationSystemTestCase
       click_link "Quick Add"
     end
 
-    # Modal should open
-    assert_selector ".modal.modal-open"
+    # Wait for Turbo Frame to load modal content
+    assert_text product.name, wait: 5
+    assert_selector ".modal.modal-open", wait: 3
 
     # Verify modal has ARIA attributes
-    assert_selector "[role='dialog'][aria-modal='true']"
+    assert_selector "[role='dialog'][aria-modal='true']", wait: 2
 
     # Verify modal title has ID for aria-labelledby
     assert_selector "#quick-add-title"
@@ -40,8 +41,9 @@ class QuickAddAccessibilityTest < ApplicationSystemTestCase
       click_link "Quick Add"
     end
 
-    # Modal should be open
-    assert_selector ".modal.modal-open"
+    # Wait for Turbo Frame to load modal content
+    assert_text product.name, wait: 5
+    assert_selector ".modal.modal-open", wait: 3
 
     # Press ESC key
     page.driver.browser.action.send_keys(:escape).perform
@@ -56,14 +58,14 @@ class QuickAddAccessibilityTest < ApplicationSystemTestCase
     product = Product.quick_add_eligible.first
     skip "No quick_add_eligible products available" unless product
 
-    # Find the Quick Add button
-    quick_add_button = find("[data-product-id='#{product.id}'] a", text: "Quick Add", match: :first)
+    # Click Quick Add (using same pattern as other passing tests)
+    within("[data-product-id='#{product.id}']", match: :first) do
+      click_link "Quick Add"
+    end
 
-    # Click Quick Add
-    quick_add_button.click
-
-    # Modal should open
-    assert_selector ".modal.modal-open"
+    # Wait for Turbo Frame to load modal content
+    assert_text product.name, wait: 5
+    assert_selector ".modal.modal-open", wait: 3
 
     # Verify focus is within the modal (not on background elements)
     # Focus management is handled by Stimulus controller
@@ -90,8 +92,11 @@ class QuickAddAccessibilityTest < ApplicationSystemTestCase
       click_link "Quick Add"
     end
 
+    # Wait for Turbo Frame to load modal content
+    assert_text product.name, wait: 5
+
     # Modal should have proper ARIA attributes
-    assert_selector ".modal[role='dialog'][aria-modal='true']"
+    assert_selector ".modal[role='dialog'][aria-modal='true']", wait: 3
     assert_selector "[aria-labelledby='quick-add-title']"
     assert_selector "#quick-add-title"
 
@@ -113,8 +118,9 @@ class QuickAddAccessibilityTest < ApplicationSystemTestCase
       click_link "Quick Add"
     end
 
-    # Modal opens
-    assert_selector ".modal.modal-open"
+    # Wait for Turbo Frame to load modal content
+    assert_text product.name, wait: 5
+    assert_selector ".modal.modal-open", wait: 3
 
     # All interactive elements should be keyboard accessible (no tabindex=-1 on interactive elements)
     assert_no_selector "select[tabindex='-1'], button[tabindex='-1']:not([disabled])"
