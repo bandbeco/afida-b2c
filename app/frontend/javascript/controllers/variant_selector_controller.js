@@ -203,13 +203,20 @@ export default class extends Controller {
   }
 
   /**
-   * Get available values for an option based on current selections
+   * Get available values for an option based on UPSTREAM selections only
+   * This ensures users can always revise earlier choices without being locked out
    */
   getAvailableValues(optionName) {
-    // Filter variants that match all current selections (except this option)
+    const optionKeys = Object.keys(this.optionsValue)
+    const thisOptionIndex = optionKeys.indexOf(optionName)
+
+    // Filter variants that match only UPSTREAM selections (options before this one)
+    // This allows all valid choices when revising an earlier step
     const matchingVariants = this.variantsValue.filter(variant => {
       return Object.entries(this.selections).every(([key, value]) => {
-        if (key === optionName) return true // Skip the option we're checking
+        const keyIndex = optionKeys.indexOf(key)
+        // Skip this option and all downstream options (options that come after)
+        if (keyIndex >= thisOptionIndex) return true
         return variant.option_values[key] === value
       })
     })
