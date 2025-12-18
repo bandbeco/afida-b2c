@@ -5,7 +5,12 @@
   <% end %>
 
   <div class="flex items-center justify-between mb-4 flex-shrink-0">
-    <h2 class="text-xl font-bold">Shopping Cart</h2>
+    <h2 class="flex items-center gap-2">
+      Cart
+      <% if Current.cart && Current.cart.line_items_count > 0 %>
+        <span class="bg-primary text-primary-content text-sm px-2.5 py-0.5 rounded-full"><%= Current.cart.line_items_count %></span>
+      <% end %>
+    </h2>
   </div>
 
   <% if Current.cart && Current.cart.cart_items.any? %>
@@ -68,7 +73,7 @@
       </div>
 
       <div>
-        <%= button_to "Proceed to Checkout", checkout_path, class: "btn btn-primary btn-lg w-full", data: { turbo: false } %>
+        <%= button_to "Proceed to Checkout", checkout_path, class: "btn btn-primary w-full", data: { turbo: false } %>
       </div>
     </div>
   <% else %>

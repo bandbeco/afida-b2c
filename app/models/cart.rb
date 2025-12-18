@@ -33,6 +33,13 @@ class Cart < ApplicationRecord
     @items_count ||= cart_items.sum(:quantity)
   end
 
+  # Cart badge count: number of distinct cart entries
+  # Each product in cart = 1, regardless of quantity or product type
+  # e.g., 2 packs napkins + 1000 branded cups = 2
+  def line_items_count
+    @line_items_count ||= cart_items.count
+  end
+
   # Sum of all cart item subtotals (before VAT)
   # For standard products with pack pricing: sums calculated pack quantities
   # For configured/branded products: sums unit price * quantity
