@@ -46,8 +46,8 @@ class ProductsController < ApplicationController
       all_option_keys = @product.active_variants.flat_map { |v| v.option_values.keys }.uniq
 
       # Build configurator options from variant data (order matters for UX)
-      # Priority: material > size > colour (quality/size first, then aesthetic)
-      option_priority = %w[material size colour]
+      # Priority: material > type > size > colour (quality/type first, then size, then aesthetic)
+      option_priority = %w[material type size colour]
       ordered_keys = (option_priority & all_option_keys) + (all_option_keys - option_priority)
 
       @configurator_options = {}
@@ -66,10 +66,14 @@ class ProductsController < ApplicationController
         # Use configurator for sparse matrices OR products with material option (consolidated products)
         has_material = @configurator_options.key?("material")
         @is_consolidated = is_sparse || has_material
-
-        # For consolidated products, we don't pre-select anything
-        @has_url_selection = false if @is_consolidated
+      elsif @configurator_options.size == 1
+        # Single option products use configurator if they have material or type option
+        # (indicates a consolidated product like wooden cutlery)
+        @is_consolidated = @configurator_options.key?("material") || @configurator_options.key?("type")
       end
+
+      # For consolidated products, we don't pre-select anything
+      @has_url_selection = false if @is_consolidated
     end
 
     unless @is_consolidated

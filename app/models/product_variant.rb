@@ -78,15 +78,45 @@ class ProductVariant < ApplicationRecord
   alias_method :description, :description_standard_with_fallback
 
   # Display name for cart/order items
+  # For consolidated products (with material/type options that vary), builds name from options
+  # Example: "Cocktail Napkins - Paper, White"
+  # For standard products, uses variant name
   # Example: "Pizza Box - Kraft (14 inch)"
   def display_name
+    # Check if this is a consolidated product by looking for material/type options
+    # that have multiple values across the product's variants
+    if option_values.present? && consolidated_product?
+      # Build descriptive name from option_values
+      # Priority order for display: material/type first, then size, then colour
+      priority = %w[material type size colour]
+      parts = priority.filter_map { |key| option_values[key] }
+      return "#{product.name} - #{parts.join(', ')}" if parts.any?
+    end
+
+    # Standard product: use variant name
     "#{product.name} (#{name})"
+  end
+
+  # Check if this variant belongs to a consolidated product
+  # Consolidated products have material or type options with multiple distinct values
+  def consolidated_product?
+    return false unless option_values.present?
+
+    %w[material type].any? do |key|
+      next false unless option_values.key?(key)
+      # Check if siblings have different values for this key
+      product.active_variants.pluck(:option_values).map { |ov| ov[key] }.compact.uniq.size > 1
+    end
   end
 
   # Full product name with variant
   # Omits variant name if it's "Standard" or product has only one variant
   # Example: "Pizza Box - Kraft - 14 inch"
   def full_name
+    # For consolidated products, delegate to display_name
+    return display_name if consolidated_product?
+
+    # Standard products
     parts = [ product.name ]
     parts << "- #{name}" unless name == "Standard" || product.active_variants.count == 1
     parts.join(" ")
