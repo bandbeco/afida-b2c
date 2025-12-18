@@ -148,6 +148,10 @@ export default class extends Controller {
     // Update quantity step header
     this.updateQuantityStepHeader()
 
+    // Collapse the quantity step
+    const quantityStepIndex = this.stepTargets.length
+    this.collapseStep(quantityStepIndex)
+
     // Update totals
     this.updateTotalDisplay()
 
@@ -248,13 +252,13 @@ export default class extends Controller {
       // Update button state - pill button styling
       button.disabled = !isAvailable
 
-      // Selected state: primary background
+      // Selected state: thick green border (matching branded configurator)
       if (isSelected) {
-        button.classList.add("bg-primary", "text-white", "border-primary")
-        button.classList.remove("bg-white", "text-black", "border-gray-300")
+        button.classList.add("border-primary", "border-4")
+        button.classList.remove("border-gray-300", "border-2")
       } else {
-        button.classList.remove("bg-primary", "text-white", "border-primary")
-        button.classList.add("bg-white", "text-black", "border-gray-300")
+        button.classList.remove("border-primary", "border-4")
+        button.classList.add("border-gray-300", "border-2")
       }
 
       // Disabled state
@@ -547,6 +551,10 @@ export default class extends Controller {
 
     // Update quantity step header
     this.updateQuantityStepHeader()
+
+    // Collapse the quantity step
+    const quantityStepIndex = this.stepTargets.length
+    this.collapseStep(quantityStepIndex)
 
     // Update totals
     this.updateTotalDisplay()
