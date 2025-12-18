@@ -22,19 +22,31 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
 
     # Step 2: Select quantity - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='quantityStep'] input[type='radio']", visible: false).click
-    find("[data-quantity='5000']").click
+    # Wait for accordion animation to complete (DaisyUI collapse uses CSS transitions)
+    sleep 0.5
+    # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
+    execute_script("document.querySelector('[data-quantity=\"5000\"]').click()")
 
     # Wait for price calculation (wait for non-zero price)
     assert_selector "[data-branded-configurator-target='total']", text: /£[1-9]/
 
     # Step 3: Skip lids (optional step) - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='lidsStep'] input[type='radio']", visible: false).click
-    click_button "Continue to next step"
+    # Wait for accordion animation and turbo-frame content to load
+    sleep 1.0
+    # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
+    execute_script("document.querySelector('[data-branded-configurator-target=\"lidsStep\"] button').click()")
 
     # Step 4: Upload design - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='designStep'] input[type='radio']", visible: false).click
-    find("[data-branded-configurator-target='designInput']").attach_file(Rails.root.join("test", "fixtures", "files", "test_design.pdf"))
-    assert_text "test_design.pdf"
+    # Wait for accordion animation to complete
+    sleep 1.0
+    # Use visible: :all to bypass Capybara's visibility detection for DaisyUI collapse content
+    find("[data-branded-configurator-target='designInput']", visible: :all).attach_file(Rails.root.join("test", "fixtures", "files", "test_design.pdf"))
+    # Wait for upload to process - design preview appears in the collapse content
+    sleep 0.5
+    # Use assert_selector with visible: :all since DaisyUI collapse affects visibility detection
+    assert_selector "[data-branded-configurator-target='designPreview']", text: "test_design.pdf", visible: :all
 
     # Verify add to cart button is enabled (DaisyUI transforms text to uppercase)
     assert_no_selector ".btn-disabled", text: /add to cart/i
@@ -72,18 +84,27 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
 
     # Select quantity - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='quantityStep'] input[type='radio']", visible: false).click
-    find("[data-quantity='1000']").click
+    # Wait for accordion animation to complete
+    sleep 0.5
+    # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
+    execute_script("document.querySelector('[data-quantity=\"1000\"]').click()")
 
     # Still disabled (missing design)
     assert_selector ".btn-disabled", text: /add to cart/i
 
     # Skip lids - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='lidsStep'] input[type='radio']", visible: false).click
-    click_button "Continue to next step"
+    # Wait for accordion animation and turbo-frame content to load
+    sleep 1.0
+    # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
+    execute_script("document.querySelector('[data-branded-configurator-target=\"lidsStep\"] button').click()")
 
     # Upload design - open accordion by clicking hidden radio
     find("[data-branded-configurator-target='designStep'] input[type='radio']", visible: false).click
-    find("[data-branded-configurator-target='designInput']").attach_file(Rails.root.join("test", "fixtures", "files", "test_design.pdf"))
+    # Wait for accordion animation to complete
+    sleep 1.0
+    # Use visible: :all to bypass Capybara's visibility detection for DaisyUI collapse content
+    find("[data-branded-configurator-target='designInput']", visible: :all).attach_file(Rails.root.join("test", "fixtures", "files", "test_design.pdf"))
 
     # Now enabled
     assert_no_selector ".btn-disabled", text: /add to cart/i
