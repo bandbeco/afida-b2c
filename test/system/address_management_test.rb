@@ -110,8 +110,10 @@ class AddressManagementTest < ApplicationSystemTestCase
 
   def sign_in_as(user)
     visit new_session_path
-    fill_in "email_address", with: user.email_address
-    fill_in "password", with: "password"
+    fill_in "Email", with: user.email_address
+    fill_in "Password", with: "password"
     click_button "Sign In"
+    # Wait for redirect after successful sign-in
+    assert_current_path root_path
   end
 end
