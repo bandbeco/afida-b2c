@@ -372,7 +372,7 @@ export default class extends Controller {
     // Update price display
     if (this.selectedVariant && this.hasPriceDisplayTarget) {
       const price = this.selectedVariant.price
-      this.priceDisplayTarget.textContent = `£${price.toFixed(2)} / pack`
+      this.priceDisplayTarget.textContent = `£${price.toFixed(2)} / pack of ${this.selectedVariant.pac_size} units`
     }
 
     // Update image if variant has one
@@ -420,9 +420,12 @@ export default class extends Controller {
       const total = price * quantity
       const savings = index > 0 ? Math.round((1 - price / basePrice) * 100) : 0
 
-      // Create tier card - grid layout for aligned columns
+      // Create tier card - grid layout for aligned columns (inline style for JIT compatibility)
       const card = document.createElement("div")
-      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[auto_1fr_auto_auto] items-center gap-x-3"
+      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
+      card.style.display = "grid"
+      card.style.gridTemplateColumns = "1fr auto auto auto"
+      card.style.gap = "0.75rem"
       card.dataset.tierCard = ""
       card.dataset.quantity = String(quantity)
       card.dataset.price = String(price)
@@ -434,14 +437,16 @@ export default class extends Controller {
       quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
       card.appendChild(quantityDiv)
 
-      // Column 2: Unit price (grey, left-aligned) "£0.050/unit"
+      // Column 2: Unit price (grey, fixed width for alignment) "£0.050/unit"
       const unitPriceDiv = document.createElement("div")
       unitPriceDiv.className = "text-gray-400"
+      unitPriceDiv.style.width = "6rem"
       unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
       card.appendChild(unitPriceDiv)
 
-      // Column 3: Savings badge or empty placeholder
+      // Column 3: Savings badge or empty placeholder (fixed width for alignment)
       const badgeContainer = document.createElement("div")
+      badgeContainer.style.width = "5rem"
       if (savings > 0) {
         const badge = document.createElement("span")
         badge.className = "bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm"
@@ -450,9 +455,10 @@ export default class extends Controller {
       }
       card.appendChild(badgeContainer)
 
-      // Column 4: Total price (right) "£49.82"
+      // Column 4: Total price (right, fixed width for alignment) "£49.82"
       const totalDiv = document.createElement("div")
       totalDiv.className = "text-black text-right"
+      totalDiv.style.width = "4.5rem"
       totalDiv.textContent = `£${total.toFixed(2)}`
       card.appendChild(totalDiv)
 
@@ -485,9 +491,12 @@ export default class extends Controller {
       const units = quantity * pacSize
       const total = price * quantity
 
-      // Create quantity card - grid layout for aligned columns
+      // Create quantity card - grid layout for aligned columns (inline style for JIT compatibility)
       const card = document.createElement("div")
-      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[auto_1fr_auto] items-center gap-x-3"
+      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
+      card.style.display = "grid"
+      card.style.gridTemplateColumns = "1fr auto auto"
+      card.style.gap = "0.75rem"
       card.dataset.quantityCard = ""
       card.dataset.quantity = String(quantity)
       card.dataset.action = "click->variant-selector#selectQuantityCard"
@@ -498,15 +507,17 @@ export default class extends Controller {
       quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
       card.appendChild(quantityDiv)
 
-      // Column 2: Unit price (grey, left-aligned) "£0.050/unit"
+      // Column 2: Unit price (grey, fixed width for alignment) "£0.050/unit"
       const unitPriceDiv = document.createElement("div")
       unitPriceDiv.className = "text-gray-400"
+      unitPriceDiv.style.width = "6rem"
       unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
       card.appendChild(unitPriceDiv)
 
-      // Column 3: Total price (right) "£49.82"
+      // Column 3: Total price (right, fixed width for alignment) "£49.82"
       const totalDiv = document.createElement("div")
       totalDiv.className = "text-black text-right"
+      totalDiv.style.width = "4.5rem"
       totalDiv.textContent = `£${total.toFixed(2)}`
       card.appendChild(totalDiv)
 
