@@ -207,6 +207,44 @@ class Product < ApplicationRecord
     description_detailed
   end
 
+  # Extracts option names and values from variant option_values JSON
+  # Returns only options with multiple distinct values (single-value options are excluded)
+  # Sorted by priority order: material → type → size → colour
+  # Example: { "size" => ["8oz", "12oz"], "colour" => ["White", "Black"] }
+  def extract_options_from_variants
+    option_counts = Hash.new { |h, k| h[k] = Set.new }
+
+    active_variants.each do |variant|
+      variant.option_values&.each do |key, value|
+        option_counts[key] << value
+      end
+    end
+
+    # Filter to options with multiple values, sort by priority
+    priority = %w[material type size colour]
+    option_counts
+      .select { |_, values| values.size > 1 }
+      .sort_by { |key, _| priority.index(key) || 999 }
+      .to_h
+      .transform_values(&:to_a)
+  end
+
+  # Returns variant data formatted for the variant selector JavaScript component
+  # Includes all fields needed for option filtering and cart submission
+  def variants_for_selector
+    active_variants.map do |v|
+      {
+        id: v.id,
+        sku: v.sku,
+        price: v.price.to_f,
+        pac_size: v.pac_size,
+        option_values: v.option_values,
+        pricing_tiers: v.pricing_tiers,
+        image_url: v.primary_photo&.url
+      }
+    end
+  end
+
   private
 
   # T021: Truncates text to N words, adds ellipsis if truncated

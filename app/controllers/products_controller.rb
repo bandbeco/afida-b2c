@@ -35,81 +35,18 @@ class ProductsController < ApplicationController
     # Calculate minimum price for "from" display
     @min_price = @product.active_variants.minimum(:price)
 
-    # Check if this is an explicit selection (URL params present)
-    @has_url_selection = params[:size].present? || params[:colour].present? || params[:variant_id].present?
+    # === UNIFIED VARIANT SELECTOR ===
+    # Uses Product#extract_options_from_variants and Product#variants_for_selector
+    # for the new unified variant_selector Stimulus controller
 
-    # Detect products that need the configurator (sparse matrix of options)
-    # Use configurator when: multiple variants with 2+ option types AND not all combinations exist
-    # This prevents impossible state selection (e.g., selecting size + colour that has no variant)
-    variants = @product.active_variants.to_a  # Materialize once to avoid repeated iteration
-    if variants.size > 1
-      # Collect all option keys used across variants
-      all_option_keys = variants.flat_map { |v| v.option_values.keys }.uniq
+    # Extract options with multiple values, sorted by priority (material → type → size → colour)
+    @options = @product.extract_options_from_variants
 
-      # Build configurator options from variant data (order matters for UX)
-      # Priority: material > type > size > colour (quality/type first, then size, then aesthetic)
-      option_priority = %w[material type size colour]
-      ordered_keys = (option_priority & all_option_keys) + (all_option_keys - option_priority)
+    # Build variants JSON with all fields needed by the selector (including pricing_tiers)
+    @variants_json = @product.variants_for_selector
 
-      @configurator_options = {}
-      ordered_keys.each do |key|
-        values = variants.map { |v| v.option_values[key] }.compact.uniq
-        @configurator_options[key] = values if values.count > 1
-      end
-
-      # Check if this is a sparse matrix (not all combinations exist)
-      # If product has 2+ option types with multiple values, check if it's sparse
-      if @configurator_options.size >= 2
-        total_combinations = @configurator_options.values.map(&:count).reduce(1, :*)
-        is_sparse = variants.size < total_combinations
-
-        # Use configurator for sparse matrices OR products with material option (consolidated products)
-        has_material = @configurator_options.key?("material")
-        @is_consolidated = is_sparse || has_material
-      elsif @configurator_options.size == 1
-        # Single option products use configurator if they have material or type option
-        # (indicates a consolidated product like wooden cutlery)
-        @is_consolidated = @configurator_options.key?("material") || @configurator_options.key?("type")
-      end
-
-      # For consolidated products, we don't pre-select anything
-      @has_url_selection = false if @is_consolidated
-
-      # Set pac_size for consolidated products (used by configurator)
-      @pac_size = @selected_variant&.pac_size || variants.first&.pac_size || 1
-    end
-
-    unless @is_consolidated
-      # Standard product flow - use ProductOption tables
-      # Prepare data for option selectors
-      # Exclude options where all variants have identical values (not a real choice)
-      # Eager load option values to prevent N+1 queries
-      all_options = @product.options.includes(:values).order(:position)
-      @product_options = all_options.select do |option|
-        unique_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
-        unique_values.count > 1
-      end
-
-      # Build lookup hash for O(1) label access in views (prevents N+1 queries)
-      @option_labels = {}
-      @product_options.each do |option|
-        @option_labels[option.name] ||= {}
-        option.values.each do |ov|
-          @option_labels[option.name][ov.value] = ov.label.presence || ov.value
-        end
-      end
-    end
-
-    @variants_json = @product.active_variants.map do |v|
-      {
-        id: v.id,
-        sku: v.sku,
-        price: v.price.to_f,
-        pac_size: v.pac_size || 1,
-        option_values: v.option_values,
-        image_url: v.primary_photo&.attached? ? url_for(v.primary_photo.variant(resize_to_limit: [ 800, 800 ])) : nil
-      }
-    end
+    # Set pac_size for display (used in quantity calculations)
+    @pac_size = @selected_variant&.pac_size || @product.active_variants.first&.pac_size || 1
 
     # Related products from same category (for "You May Also Like" section)
     @related_products = @product.category.products

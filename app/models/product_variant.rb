@@ -71,6 +71,7 @@ class ProductVariant < ApplicationRecord
             format: { with: /\A\d{8}|\d{12}|\d{13}|\d{14}\z/, message: "must be 8, 12, 13, or 14 digits" },
             uniqueness: true,
             allow_blank: true
+  validate :pricing_tiers_format, if: :pricing_tiers?
 
   # Inherit these attributes from parent product
   delegate :category, :description_standard_with_fallback, :meta_title, :meta_description, :colour, to: :product
@@ -204,5 +205,38 @@ class ProductVariant < ApplicationRecord
   # Uses custom sample_sku if present, otherwise derives from main SKU
   def effective_sample_sku
     sample_sku.presence || "SAMPLE-#{sku}"
+  end
+
+  private
+
+  # Validates pricing_tiers JSON structure for volume discount tiers
+  # Structure: [{ "quantity": 1, "price": "26.00" }, { "quantity": 3, "price": "24.00" }]
+  def pricing_tiers_format
+    return if pricing_tiers.blank?
+
+    unless pricing_tiers.is_a?(Array)
+      errors.add(:pricing_tiers, "must be an array")
+      return
+    end
+
+    quantities = []
+    pricing_tiers.each_with_index do |tier, i|
+      unless tier.is_a?(Hash) && tier["quantity"].is_a?(Integer) && tier["quantity"] > 0
+        errors.add(:pricing_tiers, "tier #{i} must have positive integer quantity")
+      end
+
+      unless tier["price"].present? && tier["price"].to_s.match?(/\A\d+\.?\d*\z/)
+        errors.add(:pricing_tiers, "tier #{i} must have valid price")
+      end
+
+      if quantities.include?(tier["quantity"])
+        errors.add(:pricing_tiers, "duplicate quantity #{tier['quantity']}")
+      end
+      quantities << tier["quantity"]
+    end
+
+    unless quantities == quantities.sort
+      errors.add(:pricing_tiers, "must be sorted by quantity")
+    end
   end
 end

@@ -1,7 +1,6 @@
 <% if @product.customizable_template? %>
   <%= render "branded_configurator", product: @product %>
-<% elsif @is_consolidated %>
-  <%= render "consolidated_product", product: @product, selected_variant: @selected_variant %>
 <% else %>
-  <%= render "standard_product", product: @product, selected_variant: @selected_variant %>
+  <%# Unified variant selector for all standard products (multi-option, single-option, quantity-only) %>
+  <%= render "variant_selector", product: @product, selected_variant: @selected_variant %>
 <% end %>

@@ -568,4 +568,124 @@ class ProductVariantTest < ActiveSupport::TestCase
 
     assert_equal "SAMPLE-#{@variant.sku}", @variant.effective_sample_sku
   end
+
+  # Pricing tiers validation tests (T004)
+  test "pricing_tiers accepts valid array with quantity and price" do
+    variant = product_variants(:single_wall_8oz_white)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "26.00" },
+      { "quantity" => 3, "price" => "24.00" },
+      { "quantity" => 5, "price" => "22.00" }
+    ]
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "pricing_tiers allows nil (optional field)" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = nil
+    assert variant.valid?
+  end
+
+  test "pricing_tiers allows blank (empty array treated as nil)" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = []
+    # Empty array should be valid (no tiers = use standard pricing)
+    assert variant.valid?
+  end
+
+  test "pricing_tiers rejects non-array value" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = { "quantity" => 1, "price" => "10.00" }
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier without quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with non-integer quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => "five", "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with zero quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 0, "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with negative quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => -1, "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier without price" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1 }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with invalid price format" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "invalid" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects duplicate quantities" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "10.00" },
+      { "quantity" => 1, "price" => "9.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects unsorted quantities" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 5, "price" => "9.00" },
+      { "quantity" => 1, "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers accepts integer price strings" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "10" }
+    ]
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "pricing_tiers from fixture has valid structure" do
+    variant = product_variants(:single_wall_8oz_white)
+    assert variant.pricing_tiers.is_a?(Array)
+    assert variant.pricing_tiers.first["quantity"].is_a?(Integer)
+    assert variant.pricing_tiers.first["price"].is_a?(String)
+  end
 end
