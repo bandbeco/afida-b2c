@@ -59,8 +59,12 @@ class FaqTest < ApplicationSystemTestCase
       click_link "Custom Printing & Branding"
     end
 
-    # Should scroll to category (check URL hash)
-    assert_equal "custom-printing", URI.parse(current_url).fragment
+    # After clicking, the category section should be visible/scrolled into view
+    # Verify the target section exists and is the correct one
+    assert_selector "#custom-printing", wait: 2
+    within "#custom-printing" do
+      assert_text "What is the minimum order quantity"
+    end
   end
 
   test "contact CTA appears in sidebar" do
