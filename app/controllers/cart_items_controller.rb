@@ -116,7 +116,7 @@ class CartItemsController < ApplicationController
     quantity = params[:configuration][:quantity].to_i
     unit_price = total_price / quantity
 
-    cart_item = @cart.cart_items.build(
+    @cart_item = @cart.cart_items.build(
       product_variant: product_variant,
       quantity: quantity,  # Actual quantity from configuration
       price: unit_price,   # Unit price (so SUM(price * quantity) works)
@@ -125,20 +125,20 @@ class CartItemsController < ApplicationController
     )
 
     if params[:design].present?
-      cart_item.design.attach(params[:design])
+      @cart_item.design.attach(params[:design])
     end
 
-    if cart_item.save
+    if @cart_item.save
       respond_to do |format|
         format.turbo_stream
         format.html { redirect_to cart_path, notice: "Configured product added to cart" }
-        format.json { render json: { success: true, cart_item: cart_item }, status: :created }
+        format.json { render json: { success: true, cart_item: @cart_item }, status: :created }
       end
     else
       respond_to do |format|
         format.turbo_stream { render turbo_stream: turbo_stream.replace("cart_counter", partial: "shared/cart_counter") }
-        format.html { redirect_back fallback_location: root_path, alert: cart_item.errors.full_messages.join(", ") }
-        format.json { render json: { error: cart_item.errors.full_messages.join(", ") }, status: :unprocessable_entity }
+        format.html { redirect_back fallback_location: root_path, alert: @cart_item.errors.full_messages.join(", ") }
+        format.json { render json: { error: @cart_item.errors.full_messages.join(", ") }, status: :unprocessable_entity }
       end
     end
   end
