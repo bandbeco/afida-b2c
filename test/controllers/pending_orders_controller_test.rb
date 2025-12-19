@@ -2,6 +2,8 @@ require "test_helper"
 require "ostruct"
 
 class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
+  include StripeTestHelper
+
   setup do
     @user = users(:one)
     @user.update!(stripe_customer_id: "cus_test_123")
@@ -385,6 +387,8 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_payment_method accepts valid confirmation token" do
+    stub_stripe_session_create
+
     post update_payment_method_pending_order_path(@pending_order), params: { token: @confirm_token }
 
     # Should redirect to Stripe Checkout
@@ -415,6 +419,8 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
 
   test "update_payment_method creates stripe customer if not exists" do
     @user.update!(stripe_customer_id: nil)
+    stub_stripe_customer_create(id: "cus_new_test_123")
+    stub_stripe_session_create
 
     post update_payment_method_pending_order_path(@pending_order), params: { token: @confirm_token }
 
@@ -442,8 +448,8 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_payment_method_success updates schedule payment method" do
-    # Create a setup mode session first so it can be retrieved
-    session = Stripe::Checkout::Session.create(mode: "setup")
+    # Stub a setup mode session that can be retrieved
+    session = stub_stripe_session_retrieve(mode: "setup")
     mock_successful_payment
 
     get update_payment_method_success_pending_order_path(@pending_order), params: {
@@ -458,7 +464,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_payment_method_success confirms order after updating payment method" do
-    session = Stripe::Checkout::Session.create(mode: "setup")
+    session = stub_stripe_session_retrieve(mode: "setup")
     mock_successful_payment
 
     assert_difference "Order.count", 1 do
@@ -473,7 +479,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_payment_method_success shows error if charge fails after card update" do
-    session = Stripe::Checkout::Session.create(mode: "setup")
+    session = stub_stripe_session_retrieve(mode: "setup")
     Stripe::PaymentIntent.stubs(:create).raises(
       Stripe::CardError.new("Your card was declined", "card_declined", code: "card_declined")
     )

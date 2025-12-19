@@ -61,12 +61,22 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "redirects to product page when category has only one product" do
-    single_product_category = categories(:single_product_category)
-    solo_product = products(:solo_product)
+    category_with_one_product = categories(:category_with_one_product)
+    only_product_in_category = products(:only_product_in_category)
 
-    get category_url(single_product_category.slug)
+    get category_url(category_with_one_product.slug)
 
-    assert_redirected_to product_path(solo_product)
+    assert_redirected_to product_path(only_product_in_category)
+    assert_response :moved_permanently
+  end
+
+  test "single product redirect preserves query parameters" do
+    category_with_one_product = categories(:category_with_one_product)
+    only_product_in_category = products(:only_product_in_category)
+
+    get category_url(category_with_one_product.slug, utm_source: "email", utm_campaign: "test")
+
+    assert_redirected_to product_path(only_product_in_category, utm_source: "email", utm_campaign: "test")
     assert_response :moved_permanently
   end
 

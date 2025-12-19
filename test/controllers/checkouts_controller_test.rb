@@ -1,11 +1,10 @@
 require "test_helper"
 
 class CheckoutsControllerTest < ActionDispatch::IntegrationTest
+  include StripeTestHelper
+
   setup do
     @user = users(:one)
-
-    # Reset FakeStripe state before each test
-    FakeStripe.reset!
 
     # Create a fresh cart with items for testing
     @cart = Cart.create!(user: @user)
@@ -18,8 +17,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Stub Current.cart to return our test cart for all tests
     Current.stubs(:cart).returns(@cart)
 
-    # Create a UK VAT tax rate for the controller to find
-    FakeStripe::TaxRate.create_uk_vat
+    # Stub UK VAT tax rate lookup (used by controller)
+    stub_stripe_tax_rate_list
   end
 
   # ============================================================================
@@ -27,6 +26,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # ============================================================================
 
   test "create redirects to Stripe checkout session URL" do
+    stub_stripe_session_create
+
     post checkout_path
 
     assert_response :see_other
@@ -34,107 +35,113 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create builds line items from cart items" do
-    # Stub to capture the params passed to Stripe
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    # Capture the params passed to Stripe
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_not_nil params_captured
-    assert_equal "gbp", params_captured[:line_items].first[:price_data][:currency]
-    assert_equal "card", params_captured[:payment_method_types].first
-    assert_equal "payment", params_captured[:mode]
+    assert_not_nil captured_params
+    assert_equal "gbp", captured_params[:line_items].first[:price_data][:currency]
+    assert_equal "card", captured_params[:payment_method_types].first
+    assert_equal "payment", captured_params[:mode]
   end
 
   test "create includes customer email for authenticated users" do
     Current.stubs(:user).returns(@user)
 
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_equal @user.email_address, params_captured[:customer_email]
-    assert_equal @user.id, params_captured[:client_reference_id]
+    assert_equal @user.email_address, captured_params[:customer_email]
+    assert_equal @user.id, captured_params[:client_reference_id]
   end
 
   test "create does not include customer details for guest users" do
-    # Don't sign in - test as guest
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_nil params_captured[:customer_email]
-    assert_nil params_captured[:client_reference_id]
+    assert_nil captured_params[:customer_email]
+    assert_nil captured_params[:client_reference_id]
   end
 
   test "create includes UK shipping address collection" do
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_includes params_captured[:shipping_address_collection][:allowed_countries], "GB"
+    assert_includes captured_params[:shipping_address_collection][:allowed_countries], "GB"
   end
 
   test "create includes shipping options from Shipping module" do
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
     # Shipping module returns 1 option based on subtotal:
     # - Orders < £100: Standard Shipping
     # - Orders >= £100: Free Shipping
-    assert_not_empty params_captured[:shipping_options]
-    assert_equal 1, params_captured[:shipping_options].length
-    assert_equal "Standard Shipping", params_captured[:shipping_options].first[:shipping_rate_data][:display_name]
+    assert_not_empty captured_params[:shipping_options]
+    assert_equal 1, captured_params[:shipping_options].length
+    assert_equal "Standard Shipping", captured_params[:shipping_options].first[:shipping_rate_data][:display_name]
   end
 
   test "create includes success and cancel URLs" do
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_match /checkout\/success/, params_captured[:success_url]
-    assert_match /checkout\/cancel/, params_captured[:cancel_url]
-    assert_includes params_captured[:success_url], "{CHECKOUT_SESSION_ID}"
+    assert_match /checkout\/success/, captured_params[:success_url]
+    assert_match /checkout\/cancel/, captured_params[:cancel_url]
+    assert_includes captured_params[:success_url], "{CHECKOUT_SESSION_ID}"
   end
 
   test "create finds or creates UK VAT tax rate" do
-    # FakeStripe has a tax rate already from setup
-    existing_rate_id = Stripe::TaxRate.list.data.first.id
+    tax_rate = build_stripe_tax_rate(id: "txr_existing_123")
+    Stripe::TaxRate.stubs(:list).returns(build_stripe_list([ tax_rate ]))
 
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
     # Should reuse existing tax rate
-    assert_equal existing_rate_id, params_captured[:line_items].first[:tax_rates].first
+    assert_equal "txr_existing_123", captured_params[:line_items].first[:tax_rates].first
   end
 
   # ============================================================================
@@ -142,11 +149,11 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # ============================================================================
 
   test "success creates order from paid Stripe session" do
-    # Create a realistic checkout session
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
       customer_name: "Jane Buyer",
-      client_reference_id: @user.id
+      client_reference_id: @user.id,
+      payment_status: "paid"
     )
 
     assert_difference "Order.count", 1 do
@@ -160,9 +167,17 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success extracts shipping details from Stripe session" do
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
-      customer_name: "Test Buyer"
+      customer_name: "Test Buyer",
+      shipping_name: "Test Buyer",
+      shipping_address: {
+        line1: "123 Test Street",
+        line2: "Flat 4",
+        city: "London",
+        postal_code: "SW1A 1AA",
+        country: "GB"
+      }
     )
 
     get success_checkout_path, params: { session_id: session.id }
@@ -177,7 +192,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success calculates order totals from cart and Stripe session" do
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
       shipping_amount_total: 500 # £5.00 in pence
     )
@@ -192,9 +207,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success creates order items from cart items" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     assert_difference "OrderItem.count", @cart.cart_items.count do
       get success_checkout_path, params: { session_id: session.id }
@@ -212,9 +225,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success clears cart after creating order" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     initial_cart_items_count = @cart.cart_items.count
     assert initial_cart_items_count > 0, "Cart should have items before checkout"
@@ -226,9 +237,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success sends order confirmation email" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     assert_enqueued_with(job: ActionMailer::MailDeliveryJob) do
       get success_checkout_path, params: { session_id: session.id }
@@ -236,9 +245,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success redirects to confirmation page with token" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     get success_checkout_path, params: { session_id: session.id }
 
@@ -250,9 +257,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success prevents duplicate orders with same session_id" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     # First request creates order
     get success_checkout_path, params: { session_id: session.id }
@@ -276,8 +281,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success handles unpaid Stripe sessions" do
-    session = FakeStripe::CheckoutSession.create_unpaid(
-      customer_email: "buyer@example.com"
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      payment_status: "unpaid"
     )
 
     assert_no_difference "Order.count" do
@@ -289,6 +295,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success handles invalid session_id" do
+    Stripe::Checkout::Session.stubs(:retrieve).raises(
+      Stripe::InvalidRequestError.new("No such session", nil)
+    )
+
     get success_checkout_path, params: { session_id: "sess_invalid_12345" }
 
     assert_redirected_to cart_path
@@ -296,9 +306,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success handles empty cart gracefully" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     # Clear the cart
     @cart.cart_items.destroy_all
@@ -312,7 +320,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success associates order with user for authenticated checkouts" do
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: @user.email_address,
       client_reference_id: @user.id
     )
@@ -324,9 +332,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success creates guest order when no user is authenticated" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "guest@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "guest@example.com")
 
     get success_checkout_path, params: { session_id: session.id }
 
@@ -347,12 +353,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================================
-  # ERROR HANDLING TESTS (Using Mocha for edge cases)
+  # ERROR HANDLING TESTS
   # ============================================================================
 
   test "create handles Stripe API connection errors" do
     Stripe::Checkout::Session.stubs(:create).raises(
-      FakeStripe::Errors.api_connection_error
+      StripeErrors.api_connection_error
     )
 
     post checkout_path
@@ -364,7 +370,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "create handles Stripe API errors" do
     Stripe::Checkout::Session.stubs(:create).raises(
-      FakeStripe::Errors.api_error
+      StripeErrors.api_error
     )
 
     post checkout_path
@@ -375,7 +381,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "create handles Stripe invalid request errors" do
     Stripe::Checkout::Session.stubs(:create).raises(
-      FakeStripe::Errors.invalid_request("Invalid line items")
+      StripeErrors.invalid_request("Invalid line items")
     )
 
     post checkout_path
@@ -386,7 +392,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "create logs Stripe errors" do
     Stripe::Checkout::Session.stubs(:create).raises(
-      FakeStripe::Errors.api_connection_error
+      StripeErrors.api_connection_error
     )
 
     # Capture Rails.logger output
@@ -400,7 +406,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "success handles Stripe API errors when retrieving session" do
     Stripe::Checkout::Session.stubs(:retrieve).raises(
-      FakeStripe::Errors.api_connection_error
+      StripeErrors.api_connection_error
     )
 
     assert_no_difference "Order.count" do
@@ -412,9 +418,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success handles general errors during order creation" do
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
-    )
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     # Simulate an error during order creation (e.g., validation failure)
     Order.any_instance.stubs(:save!).raises(StandardError.new("Database error"))
@@ -428,16 +432,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success validates required shipping details presence" do
-    # Create session with missing shipping details
-    session = Stripe::Checkout::Session.create(
-      customer_email: "buyer@example.com"
+    # Use the helper with nil line1 to test validation
+    session = build_stripe_session(
+      id: "sess_test_missing_address",
+      payment_status: "paid",
+      shipping_address: { line1: nil, line2: "Flat 4", city: "London", postal_code: "SW1A 1AA", country: "GB" }
     )
-
-    # Controller reads shipping from collected_information.shipping_details
-    # Override shipping_details address to have nil line1
-    session.collected_information.shipping_details.address.instance_variable_set(:@line1, nil)
-
-    # Stub retrieve to return our modified session
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
     assert_no_difference "Order.count" do
@@ -449,6 +449,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create respects rate limiting" do
+    stub_stripe_session_create
+
     # Rate limit is 10 requests per minute
     # This test verifies the rate_limit declaration exists
     # (Actual rate limiting behavior would require integration test with time manipulation)
@@ -477,7 +479,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       price: 10.0
     )
 
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: users(:acme_admin).email_address,
       client_reference_id: users(:acme_admin).id
     )
@@ -501,7 +503,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       price: 10.0
     )
 
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: users(:consumer).email_address,
       client_reference_id: users(:consumer).id
     )
@@ -535,7 +537,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     )
     cart_item.save!
 
-    session = Stripe::Checkout::Session.create(
+    session = stub_stripe_session_retrieve(
       customer_email: users(:acme_admin).email_address,
       client_reference_id: users(:acme_admin).id
     )
@@ -561,20 +563,21 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       is_sample: true
     )
 
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
     assert_response :see_other
-    assert_not_nil params_captured
+    assert_not_nil captured_params
 
     # Should have single Sample Delivery shipping option
-    assert_equal 1, params_captured[:shipping_options].length
-    shipping_option = params_captured[:shipping_options].first
+    assert_equal 1, captured_params[:shipping_options].length
+    shipping_option = captured_params[:shipping_options].first
     assert_equal "Sample Delivery", shipping_option[:shipping_rate_data][:display_name]
     assert_equal 750, shipping_option[:shipping_rate_data][:fixed_amount][:amount]
   end
@@ -590,17 +593,18 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       is_sample: true
     )
 
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_not_nil params_captured
+    assert_not_nil captured_params
     # Sample line items should have unit_amount of 0
-    assert_equal 0, params_captured[:line_items].first[:price_data][:unit_amount]
+    assert_equal 0, captured_params[:line_items].first[:price_data][:unit_amount]
   end
 
   test "mixed cart (samples + paid) uses standard shipping options" do
@@ -613,21 +617,22 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       is_sample: true
     )
 
-    params_captured = nil
-    Stripe::Checkout::Session.define_singleton_method(:create) do |params|
-      params_captured = params
-      FakeStripe::CheckoutSession.new(params)
-    end
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
 
     post checkout_path
 
-    assert_not_nil params_captured
+    assert_not_nil captured_params
     # Mixed cart uses subtotal-based shipping:
     # - Orders < £100: Standard Shipping
     # - Orders >= £100: Free Shipping
     # Test cart has ~£20 subtotal, so should get Standard Shipping
-    assert_equal 1, params_captured[:shipping_options].length
-    assert_equal "Standard Shipping", params_captured[:shipping_options].first[:shipping_rate_data][:display_name]
+    assert_equal 1, captured_params[:shipping_options].length
+    assert_equal "Standard Shipping", captured_params[:shipping_options].first[:shipping_rate_data][:display_name]
   end
 
   # ============================================================================
