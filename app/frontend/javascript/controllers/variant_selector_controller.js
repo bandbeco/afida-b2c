@@ -486,77 +486,29 @@ export default class extends Controller {
 
   /**
    * Render pricing tier cards using safe DOM methods
-   * Compact single-row layout: Quantity | Unit price | Save badge | Total
+   * Uses shared createQuantityCard helper for consistent card structure
    */
   renderTierCards() {
     const tiers = this.selectedVariant.pricing_tiers
     const pacSize = this.selectedVariant.pac_size || this.pacSizeValue
     const basePrice = parseFloat(tiers[0].price)
 
-    // Clear existing content (Stimulus auto-unbinds data-action events)
+    // Clear existing content and create container
     this.clearQuantityContent()
-
-    // Create vertical stack container with listbox role for accessibility
-    const container = document.createElement("div")
-    container.className = "space-y-2 pt-4"
-    container.setAttribute("role", "listbox")
-    container.setAttribute("aria-label", "Select quantity")
+    const container = this.createQuantityContainer()
 
     tiers.forEach((tier, index) => {
       const quantity = tier.quantity
       const price = parseFloat(tier.price)
-      const units = quantity * pacSize
-      const unitPrice = price / pacSize
-      const total = price * quantity
       const savings = index > 0 ? Math.round((1 - price / basePrice) * 100) : 0
-      const label = `${quantity} pack${quantity > 1 ? "s" : ""}, ${units.toLocaleString()} units, £${total.toFixed(2)} total${savings > 0 ? `, save ${savings}%` : ""}`
 
-      // Create tier card - grid layout for aligned columns (inline style for JIT compatibility)
-      const card = document.createElement("div")
-      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
-      card.style.display = "grid"
-      card.style.gridTemplateColumns = "1fr auto auto auto"
-      card.style.gap = "0.75rem"
-      card.dataset.tierCard = ""
-      card.dataset.quantity = String(quantity)
-      card.dataset.price = String(price)
-      card.dataset.action = "click->variant-selector#selectTier keydown->variant-selector#handleCardKeydown"
-      card.setAttribute("role", "option")
-      card.setAttribute("aria-selected", "false")
-      card.setAttribute("aria-label", label)
-      card.setAttribute("tabindex", "0")
-
-      // Column 1: Quantity with units "1 pack (1,000 units)"
-      const quantityDiv = document.createElement("div")
-      quantityDiv.className = "text-black whitespace-nowrap"
-      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
-      card.appendChild(quantityDiv)
-
-      // Column 2: Unit price (grey, fixed width for alignment) "£0.050/unit"
-      const unitPriceDiv = document.createElement("div")
-      unitPriceDiv.className = "text-gray-400"
-      unitPriceDiv.style.width = "6rem"
-      unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
-      card.appendChild(unitPriceDiv)
-
-      // Column 3: Savings badge or empty placeholder (fixed width for alignment)
-      const badgeContainer = document.createElement("div")
-      badgeContainer.style.width = "5rem"
-      if (savings > 0) {
-        const badge = document.createElement("span")
-        badge.className = "bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm"
-        badge.textContent = `save ${savings}%`
-        badgeContainer.appendChild(badge)
-      }
-      card.appendChild(badgeContainer)
-
-      // Column 4: Total price (right, fixed width for alignment) "£49.82"
-      const totalDiv = document.createElement("div")
-      totalDiv.className = "text-black text-right"
-      totalDiv.style.width = "4.5rem"
-      totalDiv.textContent = `£${total.toFixed(2)}`
-      card.appendChild(totalDiv)
-
+      const card = this.createQuantityCard({
+        quantity,
+        price,
+        pacSize,
+        savings,
+        isTier: true
+      })
       container.appendChild(card)
     })
 
@@ -565,68 +517,119 @@ export default class extends Controller {
 
   /**
    * Render quantity buttons using safe DOM methods (fallback for non-tiered products)
-   * Compact single-row layout: Quantity | Unit price | Total
+   * Uses shared createQuantityCard helper for consistent card structure
    */
   renderQuantityButtons() {
     const pacSize = this.selectedVariant.pac_size || this.pacSizeValue
     const price = this.selectedVariant.price
-    const unitPrice = price / pacSize
 
-    // Clear existing content (Stimulus auto-unbinds data-action events)
+    // Clear existing content and create container
     this.clearQuantityContent()
-
-    // Create vertical stack container with listbox role for accessibility
-    const container = document.createElement("div")
-    container.className = "space-y-2 pt-4"
-    container.setAttribute("role", "listbox")
-    container.setAttribute("aria-label", "Select quantity")
+    const container = this.createQuantityContainer()
 
     // Create quantity options (1-5 packs, then 10)
     const quantities = [1, 2, 3, 4, 5, 10]
 
-    quantities.forEach((quantity, index) => {
-      const units = quantity * pacSize
-      const total = price * quantity
-      const label = `${quantity} pack${quantity > 1 ? "s" : ""}, ${units.toLocaleString()} units, £${total.toFixed(2)} total`
-
-      // Create quantity card - grid layout for aligned columns (inline style for JIT compatibility)
-      const card = document.createElement("div")
-      card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
-      card.style.display = "grid"
-      card.style.gridTemplateColumns = "1fr auto auto"
-      card.style.gap = "0.75rem"
-      card.dataset.quantityCard = ""
-      card.dataset.quantity = String(quantity)
-      card.dataset.action = "click->variant-selector#selectQuantityCard keydown->variant-selector#handleCardKeydown"
-      card.setAttribute("role", "option")
-      card.setAttribute("aria-selected", "false")
-      card.setAttribute("aria-label", label)
-      card.setAttribute("tabindex", "0")
-
-      // Column 1: Quantity with units "1 pack (1,000 units)"
-      const quantityDiv = document.createElement("div")
-      quantityDiv.className = "text-black whitespace-nowrap"
-      quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
-      card.appendChild(quantityDiv)
-
-      // Column 2: Unit price (grey, fixed width for alignment) "£0.050/unit"
-      const unitPriceDiv = document.createElement("div")
-      unitPriceDiv.className = "text-gray-400"
-      unitPriceDiv.style.width = "6rem"
-      unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
-      card.appendChild(unitPriceDiv)
-
-      // Column 3: Total price (right, fixed width for alignment) "£49.82"
-      const totalDiv = document.createElement("div")
-      totalDiv.className = "text-black text-right"
-      totalDiv.style.width = "4.5rem"
-      totalDiv.textContent = `£${total.toFixed(2)}`
-      card.appendChild(totalDiv)
-
+    quantities.forEach(quantity => {
+      const card = this.createQuantityCard({
+        quantity,
+        price,
+        pacSize,
+        savings: 0,
+        isTier: false
+      })
       container.appendChild(card)
     })
 
     this.quantityContentTarget.appendChild(container)
+  }
+
+  /**
+   * Create the quantity cards container with accessibility attributes
+   */
+  createQuantityContainer() {
+    const container = document.createElement("div")
+    container.className = "space-y-2 pt-4"
+    container.setAttribute("role", "listbox")
+    container.setAttribute("aria-label", "Select quantity")
+    return container
+  }
+
+  /**
+   * Create a quantity selection card (shared between tier and standard quantity cards)
+   * @param {Object} options - Card configuration
+   * @param {number} options.quantity - Number of packs
+   * @param {number} options.price - Price per pack
+   * @param {number} options.pacSize - Units per pack
+   * @param {number} options.savings - Savings percentage (0 for no savings)
+   * @param {boolean} options.isTier - Whether this is a pricing tier card
+   */
+  createQuantityCard({ quantity, price, pacSize, savings, isTier }) {
+    const units = quantity * pacSize
+    const unitPrice = price / pacSize
+    const total = price * quantity
+    const hasSavings = savings > 0
+
+    // Build accessible label
+    let label = `${quantity} pack${quantity > 1 ? "s" : ""}, ${units.toLocaleString()} units, £${total.toFixed(2)} total`
+    if (hasSavings) label += `, save ${savings}%`
+
+    // Create card with grid layout (4 columns for tiers with savings, 3 for standard)
+    const card = document.createElement("div")
+    card.className = "border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
+    card.style.display = "grid"
+    card.style.gridTemplateColumns = isTier ? "1fr auto auto auto" : "1fr auto auto"
+    card.style.gap = "0.75rem"
+
+    // Set card type and data attributes
+    if (isTier) {
+      card.dataset.tierCard = ""
+      card.dataset.price = String(price)
+      card.dataset.action = "click->variant-selector#selectTier keydown->variant-selector#handleCardKeydown"
+    } else {
+      card.dataset.quantityCard = ""
+      card.dataset.action = "click->variant-selector#selectQuantityCard keydown->variant-selector#handleCardKeydown"
+    }
+    card.dataset.quantity = String(quantity)
+    card.setAttribute("role", "option")
+    card.setAttribute("aria-selected", "false")
+    card.setAttribute("aria-label", label)
+    card.setAttribute("tabindex", "0")
+
+    // Column 1: Quantity with units "1 pack (1,000 units)"
+    const quantityDiv = document.createElement("div")
+    quantityDiv.className = "text-black whitespace-nowrap"
+    quantityDiv.textContent = `${quantity} pack${quantity > 1 ? "s" : ""} (${units.toLocaleString()} units)`
+    card.appendChild(quantityDiv)
+
+    // Column 2: Unit price "£0.050/unit"
+    const unitPriceDiv = document.createElement("div")
+    unitPriceDiv.className = "text-gray-400"
+    unitPriceDiv.style.width = "6rem"
+    unitPriceDiv.textContent = `£${unitPrice.toFixed(3)}/unit`
+    card.appendChild(unitPriceDiv)
+
+    // Column 3 (tier cards only): Savings badge or placeholder
+    if (isTier) {
+      const badgeContainer = document.createElement("div")
+      badgeContainer.style.width = "5rem"
+      if (hasSavings) {
+        const badge = document.createElement("span")
+        badge.className = "bg-green-100 text-green-800 rounded-full px-3 py-1 text-sm"
+        badge.textContent = `save ${savings}%`
+        badgeContainer.appendChild(badge)
+      }
+      card.appendChild(badgeContainer)
+    }
+
+    // Final column: Total price "£49.82"
+    const totalDiv = document.createElement("div")
+    totalDiv.className = "text-black text-right"
+    totalDiv.style.width = "4.5rem"
+    totalDiv.textContent = `£${total.toFixed(2)}`
+    card.appendChild(totalDiv)
+
+    return card
   }
 
   /**
