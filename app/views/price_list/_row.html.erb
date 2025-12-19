@@ -1,6 +1,6 @@
 <tr class="hover" id="<%= dom_id(variant) %>">
   <td>
-    <%= link_to product_path(variant.product), class: "link link-hover font-medium" do %>
+    <%= link_to product_path(variant.product), class: "link link-hover font-medium", data: { turbo_frame: "_top" } do %>
       <%= variant.product.name %>
     <% end %>
   </td>
