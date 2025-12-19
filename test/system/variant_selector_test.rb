@@ -477,6 +477,182 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert_selector "[data-variant-selector-target='step']"
   end
 
+  # ============================================================
+  # Edge Cases: URL Parameter Validation (T038-T040)
+  # ============================================================
+
+  # T038: Invalid URL parameter value is gracefully ignored
+  test "invalid URL parameter value is gracefully ignored" do
+    # Visit with an invalid size parameter that doesn't exist
+    visit product_path(@multi_option_product.slug, size: "INVALID_SIZE_XYZ")
+
+    # Page should load without error
+    assert_selector "[data-variant-selector-target='step']"
+
+    # First step should still be expanded (invalid param ignored)
+    first_step = find("[data-variant-selector-target='step']", match: :first)
+    assert first_step["data-expanded"] == "true" || first_step.matches_css?(".collapse-open"),
+           "First step should be expanded when URL param is invalid"
+
+    # No selection should be pre-made for the invalid value
+    selected_buttons = all("[data-variant-selector-target='optionButton'].border-primary, [data-variant-selector-target='optionButton'].border-4")
+    assert_equal 0, selected_buttons.count,
+                 "No option should be pre-selected for invalid URL param"
+  end
+
+  # T038: Valid URL parameter pre-selects option
+  test "valid URL parameter pre-selects option" do
+    # Get a valid option value from the product
+    variant = @multi_option_product.active_variants.first
+    option_name = variant.option_values.keys.first
+    option_value = variant.option_values[option_name]
+
+    # Visit with valid parameter
+    visit product_path(@multi_option_product.slug, option_name => option_value)
+
+    # Option should be pre-selected
+    sleep 0.3  # Allow JS to process URL params
+
+    # Check that the step header shows the selection
+    first_step = find("[data-variant-selector-target='step']", match: :first)
+    step_header = first_step.find("[data-variant-selector-target='stepHeader']")
+
+    # Either the selection text is visible or the option button has selection styling
+    has_selection = step_header.text.include?(option_value) ||
+                    first_step.has_css?("[data-variant-selector-target='optionButton'].border-primary[data-value='#{option_value}']") ||
+                    first_step.has_css?("[data-variant-selector-target='optionButton'].border-4[data-value='#{option_value}']")
+
+    assert has_selection, "Valid URL param should pre-select the option"
+  end
+
+  # T039: Multiple invalid URL parameters don't break the page
+  test "multiple invalid URL parameters don't break the page" do
+    # Visit with multiple invalid parameters
+    visit product_path(@multi_option_product.slug,
+                       size: "FAKE_SIZE",
+                       colour: "FAKE_COLOUR",
+                       material: "FAKE_MATERIAL")
+
+    # Page should load without error
+    assert_selector "[data-variant-selector-target='step']"
+
+    # Add to cart should be disabled (no valid selections)
+    add_button = find("[data-variant-selector-target='addButton']")
+    assert add_button.disabled?, "Add to cart should be disabled with invalid params"
+
+    # Should be able to make valid selections normally
+    first_option_button = find("[data-variant-selector-target='optionButton']", match: :first)
+    first_option_button.click
+    sleep 0.3
+
+    # Selection should work
+    first_step = find("[data-variant-selector-target='step']", match: :first)
+    assert first_step["data-expanded"] == "false" || !first_step.matches_css?(".collapse-open"),
+           "Step should collapse after valid selection"
+  end
+
+  # T040: URL injection attempt with special characters
+  test "URL parameters with special characters are safely handled" do
+    # Visit with potentially dangerous URL parameter values
+    visit product_path(@multi_option_product.slug,
+                       size: "<script>alert('xss')</script>",
+                       colour: "'; DROP TABLE products; --")
+
+    # Page should load without error
+    assert_selector "[data-variant-selector-target='step']"
+
+    # No JavaScript should have executed (XSS prevention)
+    # The page should simply ignore invalid parameters
+    first_step = find("[data-variant-selector-target='step']", match: :first)
+    assert first_step["data-expanded"] == "true" || first_step.matches_css?(".collapse-open"),
+           "First step should be expanded (invalid params ignored)"
+  end
+
+  # ============================================================
+  # Edge Cases: Browser Navigation (T041-T043)
+  # ============================================================
+
+  # T041: URL updates don't break browser back button
+  test "browser back button works after URL updates from selections" do
+    # First visit the home page
+    visit root_path
+    initial_path = page.current_path
+
+    # Navigate to product page
+    visit product_path(@multi_option_product.slug)
+    assert_selector "[data-variant-selector-target='step']"
+
+    # Make a selection (this updates URL via replaceState)
+    first_option_button = find("[data-variant-selector-target='optionButton']", match: :first)
+    first_option_button.click
+    sleep 0.3
+
+    # URL should have been updated
+    assert_match(/[?&](size|colour|material|type)=/, page.current_url,
+                 "URL should be updated with selection")
+
+    # Go back to previous page
+    page.go_back
+
+    # Should be back on initial page (not stuck on product)
+    # Note: replaceState doesn't add history entries, so back goes to previous page
+    assert_current_path initial_path
+  end
+
+  # T042: Refreshing page preserves selections via URL params
+  test "refreshing page preserves selections via URL params" do
+    visit product_path(@multi_option_product.slug)
+
+    # Make a selection
+    first_option_button = find("[data-variant-selector-target='optionButton']", match: :first)
+    option_value = first_option_button["data-value"]
+    first_option_button.click
+    sleep 0.3
+
+    # Capture current URL with params
+    url_with_params = page.current_url
+
+    # Refresh the page by visiting the same URL
+    visit url_with_params
+
+    # Selection should be restored
+    sleep 0.3
+    first_step = find("[data-variant-selector-target='step']", match: :first)
+
+    # Either the step shows selection in header or the button is highlighted
+    step_header = first_step.find("[data-variant-selector-target='stepHeader']")
+    selection_preserved = step_header.text.downcase.include?(option_value.downcase) ||
+                          first_step.has_css?("[data-variant-selector-target='optionButton'].border-primary[data-value='#{option_value}']") ||
+                          first_step.has_css?("[data-variant-selector-target='optionButton'].border-4[data-value='#{option_value}']")
+
+    assert selection_preserved, "Selection should be preserved after page refresh"
+  end
+
+  # T043: Direct URL with all params shows completed state
+  test "direct URL with all valid params shows completed selection state" do
+    # Find a complete variant to build URL params
+    variant = @multi_option_product.active_variants.first
+    params = variant.option_values.dup
+
+    # Visit with all option params
+    visit product_path(@multi_option_product.slug, params)
+    sleep 0.5  # Allow JS to process all URL params
+
+    # All option steps should show selections (checkmarks)
+    steps = all("[data-variant-selector-target='step']")
+
+    steps.each_with_index do |step, index|
+      indicator = step.find("[data-variant-selector-target='stepIndicator']")
+      has_checkmark = indicator.text == "✓" || indicator[:class].to_s.include?("bg-primary")
+      assert has_checkmark, "Step #{index + 1} should show checkmark when param is valid"
+    end
+
+    # Quantity step should be expanded (ready for quantity selection)
+    quantity_step = find("[data-variant-selector-target='quantityStep']")
+    assert quantity_step.matches_css?(".collapse-open"),
+           "Quantity step should be expanded when all options from URL are valid"
+  end
+
   # T033: Can change selection and proceed to checkout
   test "can revise selection and complete checkout flow" do
     visit product_path(@multi_option_product.slug)
