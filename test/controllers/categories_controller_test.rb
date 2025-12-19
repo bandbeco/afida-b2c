@@ -70,6 +70,16 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
   end
 
+  test "single product redirect preserves query parameters" do
+    category_with_one_product = categories(:category_with_one_product)
+    only_product_in_category = products(:only_product_in_category)
+
+    get category_url(category_with_one_product.slug, utm_source: "email", utm_campaign: "test")
+
+    assert_redirected_to product_path(only_product_in_category, utm_source: "email", utm_campaign: "test")
+    assert_response :moved_permanently
+  end
+
   test "does not redirect when category has multiple products" do
     # hot_cups_extras has multiple lid products
     multi_product_category = categories(:hot_cups_extras)

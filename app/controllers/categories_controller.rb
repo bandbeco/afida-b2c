@@ -6,7 +6,7 @@ class CategoriesController < ApplicationController
     @products = @category.products.catalog_products
 
     if @products.count == 1
-      redirect_to product_path(@products.first), status: :moved_permanently
+      redirect_to product_path(@products.first, request.query_parameters), status: :moved_permanently
       return
     end
 
