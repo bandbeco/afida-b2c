@@ -12,6 +12,13 @@
 #     session = stub_stripe_checkout_session(payment_status: "paid")
 #     Stripe::Checkout::Session.stubs(:create).returns(session)
 #   end
+#
+# Access patterns supported:
+#   - Hash access via to_hash: session.to_hash[:collected_information][:shipping_details]
+#   - Method chaining: session.collected_information.shipping_details.name
+#
+# NOTE: Mixed access (session.collected_information[:shipping_details]) is NOT supported.
+# The controller uses to_hash.with_indifferent_access for defensive hash-based access.
 
 module StripeTestHelper
   # Build a mock Stripe::Checkout::Session with realistic defaults
