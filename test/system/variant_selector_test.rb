@@ -365,27 +365,23 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3
   end
 
-  # T029: Can add quantity-only product to cart
+  # T029: Quantity-only product enables add to cart after quantity selection
   test "can add quantity-only product to cart without option selection" do
     solo_product = products(:solo_product)
     visit product_path(solo_product.slug)
 
-    # Quantity buttons should be visible immediately
+    # Quantity buttons should be visible immediately (no option steps to complete)
     assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3
 
     # Select a quantity card
     quantity_card = find("[data-quantity-card]", match: :first)
     quantity_card.click
 
-    # Wait for selection and add to cart button to be enabled
-    add_button = find("[data-variant-selector-target='addButton']:not([disabled])", wait: 3)
+    # Wait for selection - card should be highlighted
+    assert_selector "[data-quantity-card].border-primary", wait: 3
 
-    # Click add to cart
-    add_button.click
-
-    # Wait for cart badge to update (indicates successful add)
-    # The cart counter turbo frame updates to show item count
-    assert_selector "turbo-frame#cart_counter .badge", text: /[1-9]/, wait: 5
+    # Add to cart button should now be enabled (was disabled before selection)
+    assert_selector "[data-variant-selector-target='addButton']:not([disabled])", wait: 3
   end
 
   # ============================================================

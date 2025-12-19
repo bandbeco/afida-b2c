@@ -20,14 +20,12 @@ export default class extends Controller {
     "quantityStep", "quantityStepHeader", "quantityStepIndicator",
     "quantityContent", "quantityStepSelection",
     // Display elements
-    "imageDisplay", "priceDisplay", "totalDisplay", "mobileTotalDisplay",
+    "imageDisplay", "priceDisplay", "totalDisplay",
     "skuDisplay", "skuValue",
     // Buttons
-    "addButton", "mobileAddButton",
+    "addButton",
     // Form elements
-    "form", "variantSkuInput", "quantityInput",
-    // Mobile bar
-    "mobileBar"
+    "form", "variantSkuInput", "quantityInput"
   ]
 
   static values = {
@@ -698,32 +696,23 @@ export default class extends Controller {
     if (this.hasTotalDisplayTarget) {
       this.totalDisplayTarget.textContent = formatted
     }
-    if (this.hasMobileTotalDisplayTarget) {
-      this.mobileTotalDisplayTarget.textContent = formatted
-    }
   }
 
   /**
-   * Enable add to cart buttons
+   * Enable add to cart button
    */
   enableAddToCart() {
     if (this.hasAddButtonTarget) {
       this.addButtonTarget.disabled = false
     }
-    if (this.hasMobileAddButtonTarget) {
-      this.mobileAddButtonTarget.disabled = false
-    }
   }
 
   /**
-   * Disable add to cart buttons
+   * Disable add to cart button
    */
   disableAddToCart() {
     if (this.hasAddButtonTarget) {
       this.addButtonTarget.disabled = true
-    }
-    if (this.hasMobileAddButtonTarget) {
-      this.mobileAddButtonTarget.disabled = true
     }
   }
 

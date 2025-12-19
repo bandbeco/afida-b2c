@@ -70,7 +70,7 @@
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
 
   <div class="drawer-content">
-    <div class="container mx-auto min-h-screen py-4 pb-24 lg:pb-8">
+    <div class="container mx-auto min-h-screen py-4 pb-8">
 
       <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
 
@@ -238,16 +238,16 @@
             </div>
           </div>
 
-          <%# Add to Cart Button (Desktop) %>
+          <%# Add to Cart Button %>
           <button type="button"
-                  class="btn btn-primary btn-lg w-full mt-4 hidden lg:flex"
+                  class="btn btn-primary btn-lg w-full mt-4"
                   data-variant-selector-target="addButton"
                   data-action="click->variant-selector#addToCart"
                   disabled>
             Add to Cart
           </button>
 
-          <p class="text-sm text-base-content/60 text-center mt-3 hidden lg:flex items-center justify-center gap-1.5">
+          <p class="text-sm text-base-content/60 text-center mt-3 flex items-center justify-center gap-1.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
             </svg>
@@ -279,24 +279,6 @@
         </div>
       <% end %>
 
-    </div>
-  </div>
-
-  <%# Mobile Fixed Bottom Bar %>
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-base-200 p-3 lg:hidden z-40 shadow-lg"
-       data-variant-selector-target="mobileBar">
-    <div class="flex items-center justify-between gap-4 max-w-lg mx-auto">
-      <div>
-        <p class="text-lg font-semibold" data-variant-selector-target="mobileTotalDisplay">--</p>
-        <p class="text-xs text-base-content/60">excl. VAT</p>
-      </div>
-      <button type="button"
-              class="btn btn-primary flex-1 max-w-[200px]"
-              data-variant-selector-target="mobileAddButton"
-              data-action="click->variant-selector#addToCart"
-              disabled>
-        Add to Cart
-      </button>
     </div>
   </div>
 

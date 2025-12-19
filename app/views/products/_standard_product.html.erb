@@ -76,7 +76,7 @@
      data-product-options-has-selection-value="<%= @has_url_selection.to_s %>">
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
-    <div class="container mx-auto min-h-screen py-4 pb-24 lg:pb-8">
+    <div class="container mx-auto min-h-screen py-4 pb-8">
 
       <%# ===== PURCHASE ZONE ===== %>
       <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
@@ -250,9 +250,9 @@
                 </div>
               </div>
 
-              <%# Add to Cart Button (Desktop) %>
-              <%= f.submit "Add to cart", class: "btn btn-primary btn-lg w-full cursor-pointer hidden lg:flex", data: { product_options_target: "addToCartButton" } %>
-              <p class="text-sm text-base-content/60 text-center mt-3 hidden lg:flex items-center justify-center gap-1.5">
+              <%# Add to Cart Button %>
+              <%= f.submit "Add to cart", class: "btn btn-primary btn-lg w-full cursor-pointer", data: { product_options_target: "addToCartButton" } %>
+              <p class="text-sm text-base-content/60 text-center mt-3 flex items-center justify-center gap-1.5">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                 </svg>
@@ -323,28 +323,6 @@
         </section>
       <% end %>
 
-    </div>
-  </div>
-
-  <%# Mobile Sticky Add to Cart Bar %>
-  <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-base-200 p-3 lg:hidden z-40 shadow-lg"
-       data-product-options-target="mobileBar">
-    <div class="flex items-center justify-between gap-4 max-w-lg mx-auto">
-      <div>
-        <p class="text-lg font-semibold" data-product-options-target="mobilePriceDisplay">
-          <% if @has_url_selection %>
-            <%= number_to_currency(@selected_variant.price) %>
-          <% else %>
-            <%= number_to_currency(@min_price) %>
-          <% end %>
-        </p>
-        <p class="text-xs text-base-content/60">excl. VAT</p>
-      </div>
-      <button type="button"
-              class="btn btn-primary flex-1 max-w-[200px]"
-              data-action="click->product-options#submitForm">
-        Add to Cart
-      </button>
     </div>
   </div>
 
