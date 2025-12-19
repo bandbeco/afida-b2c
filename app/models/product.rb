@@ -232,8 +232,9 @@ class Product < ApplicationRecord
   # Returns variant data formatted for the variant selector JavaScript component
   # Includes all fields needed for option filtering and cart submission
   # Note: image_url is set to nil here; controller should populate it using url_for
-  def variants_for_selector
-    active_variants.map do |v|
+  # Pass preloaded variants to avoid N+1 query if already loaded in controller
+  def variants_for_selector(variants = nil)
+    (variants || active_variants).map do |v|
       {
         id: v.id,
         sku: v.sku,

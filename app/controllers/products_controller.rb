@@ -52,7 +52,7 @@ class ProductsController < ApplicationController
     # Build variants JSON with all fields needed by the selector (including pricing_tiers)
     # Populate image URLs here where URL helpers are available
     # Uses variant_lookup hash for O(1) access instead of O(n) Array#find
-    @variants_json = @product.variants_for_selector.map do |variant_data|
+    @variants_json = @product.variants_for_selector(@variants).map do |variant_data|
       variant = variant_lookup[variant_data[:id]]
       if variant&.primary_photo&.attached?
         variant_data[:image_url] = url_for(variant.primary_photo)
