@@ -281,7 +281,7 @@ class ProductVariantTest < ActiveSupport::TestCase
 
   test "variant display name includes option values" do
     variant = product_variants(:single_wall_8oz_white)
-    assert_equal "8oz White", variant.options_display
+    assert_equal "8oz / White", variant.options_display
   end
 
   test "options_display formats consolidated products with slashes and material first" do
