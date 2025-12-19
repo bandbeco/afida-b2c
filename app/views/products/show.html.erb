@@ -130,14 +130,20 @@
                    data-step-index="<%= index %>"
                    data-expanded="<%= index == 0 ? 'true' : 'false' %>">
 
-                <%# Collapse Header %>
+                <%# Collapse Header - accessible button role with keyboard support %>
                 <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+                     id="step-<%= index %>-header"
                      data-variant-selector-target="stepHeader"
-                     data-action="click->variant-selector#toggleStep">
+                     data-action="click->variant-selector#toggleStep keydown->variant-selector#handleStepKeydown"
+                     role="button"
+                     tabindex="0"
+                     aria-expanded="<%= index == 0 ? 'true' : 'false' %>"
+                     aria-controls="step-<%= index %>-content">
 
                   <%# Step Number / Checkmark - grey when pending, Afida green when completed %>
                   <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
-                        data-variant-selector-target="stepIndicator">
+                        data-variant-selector-target="stepIndicator"
+                        aria-hidden="true">
                     <%= index + 1 %>
                   </span>
 
@@ -147,15 +153,19 @@
 
                 <%# Collapse Content %>
                 <div class="collapse-content"
-                     data-variant-selector-target="stepContent">
-                  <div class="grid grid-cols-2 gap-2 pt-4">
+                     id="step-<%= index %>-content"
+                     data-variant-selector-target="stepContent"
+                     role="region"
+                     aria-labelledby="step-<%= index %>-header">
+                  <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="<%= option_name.titleize %> options">
                     <% natural_sort_sizes(values).each do |value| %>
                       <button type="button"
                               class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
                               data-variant-selector-target="optionButton"
                               data-option-name="<%= option_name %>"
                               data-value="<%= value %>"
-                              data-action="click->variant-selector#selectOption">
+                              data-action="click->variant-selector#selectOption"
+                              aria-pressed="false">
                         <%= value %>
                       </button>
                     <% end %>
@@ -171,11 +181,17 @@
                  data-expanded="false">
 
               <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+                   id="step-quantity-header"
                    data-variant-selector-target="quantityStepHeader"
-                   data-action="click->variant-selector#toggleStep">
+                   data-action="click->variant-selector#toggleStep keydown->variant-selector#handleStepKeydown"
+                   role="button"
+                   tabindex="0"
+                   aria-expanded="false"
+                   aria-controls="step-quantity-content">
 
                 <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
-                      data-variant-selector-target="quantityStepIndicator">
+                      data-variant-selector-target="quantityStepIndicator"
+                      aria-hidden="true">
                   <%= @options.size + 1 %>
                 </span>
 
@@ -184,7 +200,10 @@
               </div>
 
               <div class="collapse-content"
-                   data-variant-selector-target="quantityContent">
+                   id="step-quantity-content"
+                   data-variant-selector-target="quantityContent"
+                   role="region"
+                   aria-labelledby="step-quantity-header">
                 <%# Content populated by JavaScript based on pricing_tiers or standard quantity cards %>
               </div>
             </div>

@@ -138,6 +138,17 @@ export default class extends Controller {
   }
 
   /**
+   * Handle keyboard events on step headers (Enter/Space to toggle)
+   * Required for accessibility when using role="button" on non-button elements
+   */
+  handleStepKeydown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      this.toggleStep(event)
+    }
+  }
+
+  /**
    * Select a pricing tier
    * Includes processing guard to prevent race conditions from rapid double-clicks
    */
@@ -269,6 +280,9 @@ export default class extends Controller {
 
       // Update button state - pill button styling
       button.disabled = !isAvailable
+
+      // Update aria-pressed for accessibility (toggle button pattern)
+      button.setAttribute("aria-pressed", isSelected ? "true" : "false")
 
       // Selected state: thick green border (matching branded configurator)
       if (isSelected) {
@@ -676,6 +690,10 @@ export default class extends Controller {
     step.dataset.expanded = "true"
     // DaisyUI collapse uses collapse-open class to show content
     step.classList.add("collapse-open")
+
+    // Update aria-expanded on the header for accessibility
+    const header = step.querySelector("[role='button']")
+    if (header) header.setAttribute("aria-expanded", "true")
   }
 
   collapseStep(index) {
@@ -687,6 +705,10 @@ export default class extends Controller {
     step.dataset.expanded = "false"
     // DaisyUI collapse uses collapse-open class to show content
     step.classList.remove("collapse-open")
+
+    // Update aria-expanded on the header for accessibility
+    const header = step.querySelector("[role='button']")
+    if (header) header.setAttribute("aria-expanded", "false")
   }
 
   collapseAllSteps() {
