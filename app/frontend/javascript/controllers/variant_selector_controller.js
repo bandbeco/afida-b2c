@@ -51,12 +51,26 @@ export default class extends Controller {
     this.updateOptionButtons()
     this.updateStepHeaders()
 
-    // If all options selected, show quantity step
+    // Manage step expansion based on URL selections
+    // If selections came from URL, we need to override the HTML default (first step open)
+    const hasUrlSelections = Object.keys(this.selections).length > 0
+
     if (this.allOptionsSelected()) {
+      // All options selected - collapse all option steps, expand quantity step
+      this.collapseAllSteps()
       this.findMatchingVariant()
       this.updateQuantityStep()
       this.expandStep(Object.keys(this.optionsValue).length)
+    } else if (hasUrlSelections) {
+      // Partial selections from URL - collapse completed steps, expand first incomplete
+      this.collapseAllSteps()
+      const firstIncompleteIndex = this.getFirstIncompleteStepIndex()
+      this.expandStep(firstIncompleteIndex)
+
+      // Try to match a variant if we have partial selections (for image/price updates)
+      this.findMatchingVariant()
     }
+    // else: no URL selections - HTML default is correct (first step already open)
   }
 
   /**
@@ -224,28 +238,36 @@ export default class extends Controller {
 
   /**
    * Load selections from URL query params
+   * Performs case-insensitive matching since URLs use lowercase values
    */
   loadFromUrlParams() {
     const params = new URLSearchParams(window.location.search)
     const optionKeys = Object.keys(this.optionsValue)
 
     optionKeys.forEach(key => {
-      const value = params.get(key)
-      if (value && this.optionsValue[key]?.includes(value)) {
-        this.selections[key] = value
+      const urlValue = params.get(key)
+      if (urlValue) {
+        // Case-insensitive match against actual option values
+        const matchedValue = this.optionsValue[key]?.find(
+          v => v.toLowerCase() === urlValue.toLowerCase()
+        )
+        if (matchedValue) {
+          this.selections[key] = matchedValue
+        }
       }
     })
   }
 
   /**
    * Update URL with current selections
+   * Uses lowercase values for cleaner URLs that are case-insensitive on load
    */
   updateUrl() {
     const params = new URLSearchParams(window.location.search)
 
-    // Set params for each selection
+    // Set params for each selection (lowercase for cleaner URLs)
     Object.entries(this.selections).forEach(([key, value]) => {
-      params.set(key, value)
+      params.set(key, value.toLowerCase())
     })
 
     // Update URL without reload
@@ -722,9 +744,27 @@ export default class extends Controller {
 
   // ==================== STEP MANAGEMENT ====================
 
+  /**
+   * Get the index of an option step by option name
+   */
   getStepIndex(optionName) {
     const optionKeys = Object.keys(this.optionsValue)
     return optionKeys.indexOf(optionName)
+  }
+
+  /**
+   * Find the first step that doesn't have a selection
+   * Returns quantity step index if all options are selected
+   */
+  getFirstIncompleteStepIndex() {
+    const optionKeys = Object.keys(this.optionsValue)
+    for (let i = 0; i < optionKeys.length; i++) {
+      if (!this.selections[optionKeys[i]]) {
+        return i
+      }
+    }
+    // All options have selections, return quantity step index
+    return optionKeys.length
   }
 
   expandStep(index) {

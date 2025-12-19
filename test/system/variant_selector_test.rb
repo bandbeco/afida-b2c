@@ -136,7 +136,7 @@ class VariantSelectorTest < ApplicationSystemTestCase
            "Add to cart button should be enabled after all selections complete"
   end
 
-  # Additional test: URL params update as selections are made
+  # Additional test: URL params update as selections are made with lowercase values
   test "URL updates with option selections" do
     visit product_path(@multi_option_product.slug)
 
@@ -148,10 +148,13 @@ class VariantSelectorTest < ApplicationSystemTestCase
     # Wait for URL update
     sleep 0.3
 
-    # URL should contain the selection
+    # URL should contain the selection with lowercase value
     current_url = page.current_url
     assert_match(/[?&](size|colour|material|type)=/, current_url,
                  "URL should update with option selection")
+    # Values should be lowercase in URL
+    assert_match(/#{option_value.downcase}/i, current_url,
+                 "URL param values should be lowercase")
   end
 
   # Test: Can add product to cart after selection
@@ -626,6 +629,66 @@ class VariantSelectorTest < ApplicationSystemTestCase
                           first_step.has_css?("[data-variant-selector-target='optionButton'].border-4[data-value='#{option_value}']")
 
     assert selection_preserved, "Selection should be preserved after page refresh"
+  end
+
+  # T042b: Refreshing page with URL params keeps completed steps collapsed
+  test "page refresh with URL params keeps completed steps collapsed" do
+    # Get option names to build URL params
+    steps = nil
+    visit product_path(@multi_option_product.slug)
+    steps = all("[data-variant-selector-target='step']")
+    skip "Product needs at least 2 option steps" if steps.count < 2
+
+    first_option_name = steps[0]["data-option-name"]
+    second_option_name = steps[1]["data-option-name"]
+
+    # Get valid values for the first two options
+    variant = @multi_option_product.active_variants.first
+    first_value = variant.option_values[first_option_name]
+    second_value = variant.option_values[second_option_name]
+
+    skip "Variant needs values for first two options" unless first_value && second_value
+
+    # Visit with lowercase URL params (as they would be after selection)
+    visit product_path(@multi_option_product.slug,
+                       first_option_name => first_value.downcase,
+                       second_option_name => second_value.downcase)
+    sleep 0.5
+
+    # First step (has selection from URL) should be COLLAPSED
+    first_step = find("[data-variant-selector-target='step']", match: :first)
+    first_step_collapsed = first_step["data-expanded"] == "false" || !first_step.matches_css?(".collapse-open")
+    assert first_step_collapsed,
+           "First step with URL param selection should be collapsed on page load"
+
+    # Second step (also has selection from URL) should be COLLAPSED
+    second_step = all("[data-variant-selector-target='step']")[1]
+    second_step_collapsed = second_step["data-expanded"] == "false" || !second_step.matches_css?(".collapse-open")
+    assert second_step_collapsed,
+           "Second step with URL param selection should be collapsed on page load"
+
+    # Both steps should show checkmarks (selections were applied)
+    first_indicator = first_step.find("[data-variant-selector-target='stepIndicator']")
+    assert_equal "✓", first_indicator.text,
+                 "First step should show checkmark when selection is from URL"
+
+    second_indicator = second_step.find("[data-variant-selector-target='stepIndicator']")
+    assert_equal "✓", second_indicator.text,
+                 "Second step should show checkmark when selection is from URL"
+
+    # The first INCOMPLETE step (or quantity step) should be expanded
+    if steps.count > 2
+      third_step = all("[data-variant-selector-target='step']")[2]
+      third_step_expanded = third_step["data-expanded"] == "true" || third_step.matches_css?(".collapse-open")
+      assert third_step_expanded,
+             "First incomplete step should be expanded when URL has partial selections"
+    else
+      # If only 2 option steps, quantity step should be expanded
+      quantity_step = find("[data-variant-selector-target='quantityStep']")
+      quantity_expanded = quantity_step["data-expanded"] == "true" || quantity_step.matches_css?(".collapse-open")
+      assert quantity_expanded,
+             "Quantity step should be expanded when all option steps are from URL"
+    end
   end
 
   # T043: Direct URL with all params shows completed state
