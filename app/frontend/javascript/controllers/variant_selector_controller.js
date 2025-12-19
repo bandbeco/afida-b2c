@@ -33,7 +33,8 @@ export default class extends Controller {
     options: Object,
     priority: { type: Array, default: ["material", "type", "size", "colour"] },
     pacSize: { type: Number, default: 1 },
-    minPrice: Number
+    minPrice: Number,
+    quantityOptions: { type: Array, default: [1, 2, 3, 4, 5, 10] }
   }
 
   connect() {
@@ -525,10 +526,7 @@ export default class extends Controller {
     this.clearQuantityContent()
     const container = this.createQuantityContainer()
 
-    // Create quantity options (1-5 packs, then 10)
-    const quantities = [1, 2, 3, 4, 5, 10]
-
-    quantities.forEach(quantity => {
+    this.quantityOptionsValue.forEach(quantity => {
       const card = this.createQuantityCard({
         quantity,
         price,

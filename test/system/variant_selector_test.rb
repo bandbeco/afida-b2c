@@ -194,8 +194,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
     add_button = find("[data-variant-selector-target='addButton']:not([disabled])", wait: 3)
     add_button.click
 
-    # Should show success feedback - drawer opens showing cart content
-    assert_selector ".drawer-side", visible: true, wait: 5
+    # Should show success feedback - cart counter updates
+    assert_selector "turbo-frame#cart_counter .badge", wait: 5
   end
 
   # ============================================================
@@ -229,11 +229,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
     find("[data-variant-selector-target='step'][data-step-index='1'].collapse-open", wait: 3)
     find("[data-variant-selector-target='optionButton'][data-value='White']", wait: 3).click
 
-    # Wait for tier cards to appear
-    tier_cards = all("[data-tier-card]", wait: 3)
-    skip "No tier cards found" if tier_cards.empty?
-
-    first_card = tier_cards.first
+    # Wait for tier cards to appear with content
+    first_card = find("[data-tier-card]", match: :first, text: /pack/i, wait: 5)
     card_text = first_card.text
 
     # First tier should show "1 pack" or similar
@@ -242,6 +239,7 @@ class VariantSelectorTest < ApplicationSystemTestCase
     assert_match(/\d+.*units?/i, card_text, "Tier card should show unit count")
 
     # Higher tiers should show savings
+    tier_cards = all("[data-tier-card]")
     if tier_cards.length > 1
       later_card = tier_cards.last
       assert_match(/save\s*\d+%/i, later_card.text,
