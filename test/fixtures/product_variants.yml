@@ -43,6 +43,15 @@ single_wall_8oz_white:
   option_values:
     size: "8oz"
     color: "White"
+  pricing_tiers:
+    - quantity: 1
+      price: "26.00"
+    - quantity: 3
+      price: "24.00"
+    - quantity: 5
+      price: "22.00"
+    - quantity: 10
+      price: "20.00"
 
 single_wall_12oz_white:
   product: single_wall_cups
@@ -53,6 +62,13 @@ single_wall_12oz_white:
   option_values:
     size: "12oz"
     color: "White"
+  pricing_tiers:
+    - quantity: 1
+      price: "28.00"
+    - quantity: 3
+      price: "26.00"
+    - quantity: 5
+      price: "24.00"
 
 single_wall_8oz_black:
   product: single_wall_cups
@@ -89,7 +105,8 @@ paper_lid_80mm:
   stock_quantity: 10000
   active: true
   position: 1
-  option_values: {}
+  option_values:
+    size: "80mm"
 
 paper_lid_90mm:
   product: paper_lids
@@ -100,7 +117,8 @@ paper_lid_90mm:
   stock_quantity: 10000
   active: true
   position: 2
-  option_values: {}
+  option_values:
+    size: "90mm"
 
 recyclable_lid_black_62mm:
   product: recyclable_lids_black
@@ -245,12 +263,20 @@ straw_6x140_white:
   name: 6x140mm White
   sku: STRAW-6-WHT
   price: 8.00
+  pac_size: 250
   stock_quantity: 1000
   active: true
   position: 1
   option_values:
     size: "6x140mm"
     colour: "White"
+  pricing_tiers:
+    - quantity: 1
+      price: "8.00"
+    - quantity: 5
+      price: "7.50"
+    - quantity: 10
+      price: "7.00"
 
 straw_6x140_kraft:
   product: paper_straws

@@ -33,11 +33,11 @@
     <% end %>
   </figure>
   <div class="card-body text-center">
-    <h2 class="card-title justify-center">
-      <%= link_to branded_product_path(product), class: "text-xl font-medium" do %>
+    <h3 class="justify-center">
+      <%= link_to branded_product_path(product) do %>
         <%= product.name %>
       <% end %>
-    </h2>
+    </h3>
 
     <% if product.description_short_with_fallback.present? %>
       <p class="text-sm text-gray-600 mt-2"><%= product.description_short_with_fallback %></p>

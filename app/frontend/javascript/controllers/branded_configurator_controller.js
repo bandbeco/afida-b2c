@@ -175,7 +175,7 @@ export default class extends Controller {
     content.className = 'flex-1 min-w-0'
 
     const title = document.createElement('h3')
-    title.className = 'font-semibold text-base sm:text-lg mb-1 leading-tight'
+    title.className = 'text-base sm:text-lg mb-1 leading-tight'
     title.textContent = lid.name
 
     const price = document.createElement('div')

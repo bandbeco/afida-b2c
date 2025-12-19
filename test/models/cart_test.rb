@@ -72,9 +72,31 @@ class CartTest < ActiveSupport::TestCase
     assert_equal subtotal1 + 100.0, @cart.subtotal_amount
   end
 
+  test "line_items_count is memoized within request" do
+    # First call caches the value (cart :one has 1 distinct cart_item)
+    count1 = @cart.line_items_count
+    assert_equal 1, count1
+
+    # Add a new item directly to the association without reloading cart
+    @cart.cart_items.create!(
+      product_variant: product_variants(:two),
+      quantity: 5,
+      price: 10.0
+    )
+
+    # Second call returns cached value (doesn't reflect new distinct item)
+    count2 = @cart.line_items_count
+    assert_equal count1, count2
+
+    # After reload, count is recalculated (now 2 distinct cart_items)
+    @cart.reload
+    assert_equal 2, @cart.line_items_count
+  end
+
   test "reload clears memoized values" do
     # Trigger memoization
     @cart.items_count
+    @cart.line_items_count
     @cart.subtotal_amount
 
     # Reload should clear instance variables
@@ -82,6 +104,7 @@ class CartTest < ActiveSupport::TestCase
 
     # Values should be recalculated on next access
     assert_equal 2, @cart.items_count  # Sum of quantities (cart :one has qty: 2)
+    assert_equal 1, @cart.line_items_count
     assert_equal 20.0, @cart.subtotal_amount
   end
 

@@ -598,4 +598,127 @@ class ProductTest < ActiveSupport::TestCase
 
     assert_not_includes eligible, instance
   end
+
+  # T005: extract_options_from_variants tests
+  test "extract_options_from_variants returns only multi-value options" do
+    product = products(:paper_straws)
+    options = product.extract_options_from_variants
+
+    # Paper straws have size (6x140mm, 8x200mm) and colour (White, Kraft, Red/White) - both multi-value
+    assert options.key?("size")
+    assert options.key?("colour")
+    assert options["size"].size > 1
+    assert options["colour"].size > 1
+  end
+
+  test "extract_options_from_variants excludes single-value options" do
+    product = products(:single_wall_cups)
+    options = product.extract_options_from_variants
+
+    # Single wall cups have size (8oz, 12oz) and color (White, Black) - both multi-value
+    # If there was a single-value option, it would be excluded
+    options.each do |key, values|
+      assert values.size > 1, "Option #{key} should have multiple values but has #{values.size}"
+    end
+  end
+
+  test "extract_options_from_variants sorts by priority order" do
+    product = products(:wooden_cutlery)
+    options = product.extract_options_from_variants
+
+    # Wooden cutlery has material and type - priority is material → type → size → colour
+    keys = options.keys
+    assert_equal "material", keys.first if options.key?("material")
+
+    # If both material and type exist, material should come first
+    if keys.include?("material") && keys.include?("type")
+      assert keys.index("material") < keys.index("type")
+    end
+  end
+
+  test "extract_options_from_variants transforms values to arrays" do
+    product = products(:paper_straws)
+    options = product.extract_options_from_variants
+
+    options.each do |key, values|
+      assert values.is_a?(Array), "Values for #{key} should be an array"
+    end
+  end
+
+  test "extract_options_from_variants returns empty hash for product with empty option_values" do
+    product = products(:one)
+    options = product.extract_options_from_variants
+
+    assert_equal({}, options)
+  end
+
+  # T006: variants_for_selector tests
+  test "variants_for_selector returns correct shape" do
+    product = products(:paper_straws)
+    variants = product.variants_for_selector
+
+    assert variants.is_a?(Array)
+    assert variants.any?
+
+    variant = variants.first
+    assert variant.key?(:id)
+    assert variant.key?(:sku)
+    assert variant.key?(:price)
+    assert variant.key?(:pac_size)
+    assert variant.key?(:option_values)
+    assert variant.key?(:pricing_tiers)
+    assert variant.key?(:image_url)
+  end
+
+  test "variants_for_selector only includes active variants" do
+    product = products(:single_wall_cups)
+
+    # Get active variant IDs from association
+    active_ids = product.active_variants.pluck(:id)
+
+    # Get IDs from selector method
+    selector_ids = product.variants_for_selector.map { |v| v[:id] }
+
+    assert_equal active_ids.sort, selector_ids.sort
+  end
+
+  test "variants_for_selector includes pricing_tiers when present" do
+    product = products(:single_wall_cups)
+    variants = product.variants_for_selector
+
+    # single_wall_8oz_white has pricing_tiers in fixtures
+    variant_with_tiers = variants.find { |v| v[:sku] == "CUP-SW-8-WHT" }
+    assert_not_nil variant_with_tiers
+    assert_not_nil variant_with_tiers[:pricing_tiers]
+    assert variant_with_tiers[:pricing_tiers].is_a?(Array)
+  end
+
+  test "variants_for_selector includes nil pricing_tiers when not present" do
+    product = products(:paper_straws)
+    variants = product.variants_for_selector
+
+    # straw_6x140_kraft has no pricing_tiers in fixtures
+    variant_without_tiers = variants.find { |v| v[:sku] == "STRAW-6-KFT" }
+    assert_not_nil variant_without_tiers
+    assert_nil variant_without_tiers[:pricing_tiers]
+  end
+
+  test "variants_for_selector includes option_values" do
+    product = products(:paper_straws)
+    variants = product.variants_for_selector
+
+    variant = variants.find { |v| v[:sku] == "STRAW-6-WHT" }
+    assert_not_nil variant
+    assert_equal "6x140mm", variant[:option_values]["size"]
+    assert_equal "White", variant[:option_values]["colour"]
+  end
+
+  test "variants_for_selector price is a float" do
+    product = products(:paper_straws)
+    variants = product.variants_for_selector
+
+    variants.each do |v|
+      assert v[:price].is_a?(Float), "Price should be a float for #{v[:sku]}"
+    end
+  end
 end

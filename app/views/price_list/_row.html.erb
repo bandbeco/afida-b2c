@@ -1,14 +1,14 @@
 <tr class="hover" id="<%= dom_id(variant) %>">
   <td>
-    <%= link_to product_path(variant.product), class: "link link-hover font-medium" do %>
+    <%= link_to product_path(variant.product), class: "link link-hover", data: { turbo_frame: "_top" } do %>
       <%= variant.product.name %>
     <% end %>
   </td>
   <td class="hidden md:table-cell text-gray-500 font-mono text-sm"><%= variant.sku %></td>
-  <td><%= variant.option_values["size"] || variant.name %></td>
-  <td class="hidden lg:table-cell"><%= variant.option_values["material"] || "-" %></td>
+  <td><%= variant.option_values["size"]&.capitalize || variant.name&.capitalize %></td>
+  <td class="hidden lg:table-cell"><%= variant.option_values["material"]&.titleize || "-" %></td>
   <td class="text-right hidden md:table-cell"><%= number_with_delimiter(variant.pac_size || 1) %></td>
-  <td class="text-right font-medium"><%= number_to_currency(variant.price) %></td>
+  <td class="text-right"><%= number_to_currency(variant.price) %></td>
   <td class="text-right hidden lg:table-cell text-gray-500">
     <%= number_to_currency(variant.unit_price, precision: 4) %>
   </td>

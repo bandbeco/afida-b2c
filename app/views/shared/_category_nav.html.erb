@@ -17,7 +17,7 @@
     <ul class="flex gap-1 px-4 py-2 min-w-max">
       <% nav_categories.each do |cat| %>
         <li>
-          <%= link_to category_path(cat[:slug]), class: "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors #{current_page?(category_path(cat[:slug])) ? 'bg-primary text-primary-content' : 'bg-base-100 text-base-content hover:bg-base-300'}" do %>
+          <%= link_to category_path(cat[:slug]), class: "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors #{current_page?(category_path(cat[:slug])) ? 'bg-primary text-primary-content' : 'bg-base-100 text-base-content hover:bg-base-300'}" do %>
             <%= category_icon_tag(cat[:slug], alt: "#{cat[:name]} icon", class: "w-4 h-4") %>
             <span><%= cat[:name] %></span>
           <% end %>
@@ -35,7 +35,7 @@
         <li>
           <%= link_to category_path(cat[:slug]), class: "flex items-center gap-2 hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path(cat[:slug])) ? 'text-base-content underline decoration-secondary decoration-2 underline-offset-8' : 'text-base-content'}" do %>
             <%= category_icon_tag(cat[:slug], alt: "#{cat[:name]} icon") %>
-            <span class="text-base lg:text-lg font-medium"><%= cat[:name] %></span>
+            <span class="text-base lg:text-lg"><%= cat[:name] %></span>
           <% end %>
         </li>
       <% end %>

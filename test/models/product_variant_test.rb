@@ -281,7 +281,7 @@ class ProductVariantTest < ActiveSupport::TestCase
 
   test "variant display name includes option values" do
     variant = product_variants(:single_wall_8oz_white)
-    assert_equal "8oz White", variant.options_display
+    assert_equal "8oz / White", variant.options_display
   end
 
   test "options_display formats consolidated products with slashes and material first" do
@@ -567,5 +567,209 @@ class ProductVariantTest < ActiveSupport::TestCase
     @variant.update!(sample_eligible: true, sample_sku: "")
 
     assert_equal "SAMPLE-#{@variant.sku}", @variant.effective_sample_sku
+  end
+
+  # Pricing tiers validation tests (T004)
+  test "pricing_tiers accepts valid array with quantity and price" do
+    variant = product_variants(:single_wall_8oz_white)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "26.00" },
+      { "quantity" => 3, "price" => "24.00" },
+      { "quantity" => 5, "price" => "22.00" }
+    ]
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "pricing_tiers allows nil (optional field)" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = nil
+    assert variant.valid?
+  end
+
+  test "pricing_tiers allows blank (empty array treated as nil)" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = []
+    # Empty array should be valid (no tiers = use standard pricing)
+    assert variant.valid?
+  end
+
+  test "pricing_tiers rejects non-array value" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = { "quantity" => 1, "price" => "10.00" }
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier without quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with non-integer quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => "five", "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with zero quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 0, "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with negative quantity" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => -1, "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier without price" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1 }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects tier with invalid price format" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "invalid" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects duplicate quantities" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "10.00" },
+      { "quantity" => 1, "price" => "9.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers rejects unsorted quantities" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 5, "price" => "9.00" },
+      { "quantity" => 1, "price" => "10.00" }
+    ]
+    assert_not variant.valid?
+    assert variant.errors[:pricing_tiers].any?
+  end
+
+  test "pricing_tiers accepts integer price strings" do
+    variant = product_variants(:one)
+    variant.pricing_tiers = [
+      { "quantity" => 1, "price" => "10" }
+    ]
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "pricing_tiers from fixture has valid structure" do
+    variant = product_variants(:single_wall_8oz_white)
+    assert variant.pricing_tiers.is_a?(Array)
+    assert variant.pricing_tiers.first["quantity"].is_a?(Integer)
+    assert variant.pricing_tiers.first["price"].is_a?(String)
+  end
+
+  # Option values validation tests (T015 - data integrity)
+  test "option_values accepts valid hash with lowercase keys and string values" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "8oz", "colour" => "White" }
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "option_values allows nil (optional field)" do
+    variant = product_variants(:one)
+    variant.option_values = nil
+    assert variant.valid?
+  end
+
+  test "option_values allows empty hash" do
+    variant = product_variants(:one)
+    variant.option_values = {}
+    assert variant.valid?
+  end
+
+  test "option_values rejects non-hash value" do
+    variant = product_variants(:one)
+    variant.option_values = [ "size", "8oz" ]
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any?
+  end
+
+  test "option_values rejects uppercase keys" do
+    variant = product_variants(:one)
+    variant.option_values = { "Size" => "8oz" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("lowercase") }
+  end
+
+  test "option_values rejects keys with spaces" do
+    variant = product_variants(:one)
+    variant.option_values = { "cup size" => "8oz" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any?
+  end
+
+  test "option_values rejects non-string values" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => 8 }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("must be a string") }
+  end
+
+  test "option_values rejects values longer than 50 characters" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "A" * 51 }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("exceeds") }
+  end
+
+  test "option_values accepts values with common punctuation" do
+    variant = product_variants(:one)
+    variant.option_values = {
+      "size" => "8oz (Large)",
+      "colour" => "Red/Blue",
+      "style" => "Modern - Classic"
+    }
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "option_values rejects values with script tags" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "<script>alert('xss')</script>" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("invalid characters") }
+  end
+
+  test "option_values rejects values with HTML entities" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "8oz&nbsp;Large" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("invalid characters") }
+  end
+
+  test "option_values allows underscore in keys" do
+    variant = product_variants(:one)
+    variant.option_values = { "cup_size" => "8oz" }
+    assert variant.valid?, variant.errors.full_messages.join(", ")
   end
 end

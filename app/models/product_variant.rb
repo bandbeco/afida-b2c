@@ -71,6 +71,8 @@ class ProductVariant < ApplicationRecord
             format: { with: /\A\d{8}|\d{12}|\d{13}|\d{14}\z/, message: "must be 8, 12, 13, or 14 digits" },
             uniqueness: true,
             allow_blank: true
+  validate :pricing_tiers_format, if: :pricing_tiers?
+  validate :option_values_format, if: :option_values?
 
   # Inherit these attributes from parent product
   delegate :category, :description_standard_with_fallback, :meta_title, :meta_description, :colour, to: :product
@@ -86,10 +88,8 @@ class ProductVariant < ApplicationRecord
     # Check if this is a consolidated product by looking for material/type options
     # that have multiple values across the product's variants
     if option_values.present? && consolidated_product?
-      # Build descriptive name from option_values
-      # Priority order for display: material/type first, then size, then colour
-      priority = %w[material type size colour]
-      parts = priority.filter_map { |key| option_values[key] }
+      # Build descriptive name from option_values in priority order
+      parts = PRODUCT_OPTION_PRIORITY.filter_map { |key| option_values[key] }
       return "#{product.name} - #{parts.join(', ')}" if parts.any?
     end
 
@@ -153,15 +153,16 @@ class ProductVariant < ApplicationRecord
   end
 
   # Display string of all option values for cart/order subtitles
-  # For consolidated products: "Paper / 6x200mm / White" (material first)
-  # For standard products: "8oz White" (simple join)
+  # Format: "Material / Size / Colour" with titleize
+  # Example: "Paper / 8oz / White", "Bamboo / 6x200mm / Natural"
   def options_display
-    return option_values.values.join(" ") unless consolidated_product?
+    return "" unless option_values.present?
 
-    # For consolidated products, display in priority order with slashes
-    priority = %w[material type size colour]
-    parts = priority.filter_map { |key| option_values[key]&.titleize }
-    parts.any? ? parts.join(" / ") : option_values.values.join(" ")
+    # Display in priority order with slashes
+    # Note: also checks "color" as fallback for US spelling
+    priority_with_color_fallback = PRODUCT_OPTION_PRIORITY + %w[color]
+    parts = priority_with_color_fallback.filter_map { |key| option_values[key]&.titleize }
+    parts.any? ? parts.join(" / ") : option_values.values.map(&:titleize).join(" / ")
   end
 
   # Safe accessor methods for common option values
@@ -204,5 +205,73 @@ class ProductVariant < ApplicationRecord
   # Uses custom sample_sku if present, otherwise derives from main SKU
   def effective_sample_sku
     sample_sku.presence || "SAMPLE-#{sku}"
+  end
+
+  private
+
+  # Validates pricing_tiers JSON structure for volume discount tiers
+  # Structure: [{ "quantity": 1, "price": "26.00" }, { "quantity": 3, "price": "24.00" }]
+  def pricing_tiers_format
+    return if pricing_tiers.blank?
+
+    unless pricing_tiers.is_a?(Array)
+      errors.add(:pricing_tiers, "must be an array")
+      return
+    end
+
+    quantities = []
+    pricing_tiers.each_with_index do |tier, i|
+      unless tier.is_a?(Hash) && tier["quantity"].is_a?(Integer) && tier["quantity"] > 0
+        errors.add(:pricing_tiers, "tier #{i} must have positive integer quantity")
+      end
+
+      unless tier["price"].present? && tier["price"].to_s.match?(/\A\d+\.?\d*\z/)
+        errors.add(:pricing_tiers, "tier #{i} must have valid price")
+      end
+
+      if quantities.include?(tier["quantity"])
+        errors.add(:pricing_tiers, "duplicate quantity #{tier['quantity']}")
+      end
+      quantities << tier["quantity"]
+    end
+
+    unless quantities == quantities.sort
+      errors.add(:pricing_tiers, "must be sorted by quantity")
+    end
+  end
+
+  # Validates option_values JSON structure and content for data integrity
+  # Structure: { "size": "8oz", "colour": "White" }
+  # Values must be safe display strings (alphanumeric, spaces, common punctuation)
+  # This prevents accidental bad data entry in admin forms
+  OPTION_VALUE_PATTERN = /\A[\w\s\-\/\.\,\(\)]+\z/
+  MAX_OPTION_VALUE_LENGTH = 50
+
+  def option_values_format
+    return if option_values.blank?
+
+    unless option_values.is_a?(Hash)
+      errors.add(:option_values, "must be a hash")
+      return
+    end
+
+    option_values.each do |key, value|
+      unless key.is_a?(String) && key.match?(/\A[a-z_]+\z/)
+        errors.add(:option_values, "key '#{key}' must be lowercase letters and underscores")
+      end
+
+      unless value.is_a?(String)
+        errors.add(:option_values, "value for '#{key}' must be a string")
+        next
+      end
+
+      if value.length > MAX_OPTION_VALUE_LENGTH
+        errors.add(:option_values, "value for '#{key}' exceeds #{MAX_OPTION_VALUE_LENGTH} characters")
+      end
+
+      unless value.match?(OPTION_VALUE_PATTERN)
+        errors.add(:option_values, "value for '#{key}' contains invalid characters")
+      end
+    end
   end
 end
