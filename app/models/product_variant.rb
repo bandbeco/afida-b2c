@@ -72,6 +72,7 @@ class ProductVariant < ApplicationRecord
             uniqueness: true,
             allow_blank: true
   validate :pricing_tiers_format, if: :pricing_tiers?
+  validate :option_values_format, if: :option_values?
 
   # Inherit these attributes from parent product
   delegate :category, :description_standard_with_fallback, :meta_title, :meta_description, :colour, to: :product
@@ -238,6 +239,41 @@ class ProductVariant < ApplicationRecord
 
     unless quantities == quantities.sort
       errors.add(:pricing_tiers, "must be sorted by quantity")
+    end
+  end
+
+  # Validates option_values JSON structure and content for data integrity
+  # Structure: { "size": "8oz", "colour": "White" }
+  # Values must be safe display strings (alphanumeric, spaces, common punctuation)
+  # This prevents accidental bad data entry in admin forms
+  OPTION_VALUE_PATTERN = /\A[\w\s\-\/\.\,\(\)]+\z/
+  MAX_OPTION_VALUE_LENGTH = 50
+
+  def option_values_format
+    return if option_values.blank?
+
+    unless option_values.is_a?(Hash)
+      errors.add(:option_values, "must be a hash")
+      return
+    end
+
+    option_values.each do |key, value|
+      unless key.is_a?(String) && key.match?(/\A[a-z_]+\z/)
+        errors.add(:option_values, "key '#{key}' must be lowercase letters and underscores")
+      end
+
+      unless value.is_a?(String)
+        errors.add(:option_values, "value for '#{key}' must be a string")
+        next
+      end
+
+      if value.length > MAX_OPTION_VALUE_LENGTH
+        errors.add(:option_values, "value for '#{key}' exceeds #{MAX_OPTION_VALUE_LENGTH} characters")
+      end
+
+      unless value.match?(OPTION_VALUE_PATTERN)
+        errors.add(:option_values, "value for '#{key}' contains invalid characters")
+      end
     end
   end
 end

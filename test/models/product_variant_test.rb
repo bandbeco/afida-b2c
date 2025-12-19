@@ -688,4 +688,88 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert variant.pricing_tiers.first["quantity"].is_a?(Integer)
     assert variant.pricing_tiers.first["price"].is_a?(String)
   end
+
+  # Option values validation tests (T015 - data integrity)
+  test "option_values accepts valid hash with lowercase keys and string values" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "8oz", "colour" => "White" }
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "option_values allows nil (optional field)" do
+    variant = product_variants(:one)
+    variant.option_values = nil
+    assert variant.valid?
+  end
+
+  test "option_values allows empty hash" do
+    variant = product_variants(:one)
+    variant.option_values = {}
+    assert variant.valid?
+  end
+
+  test "option_values rejects non-hash value" do
+    variant = product_variants(:one)
+    variant.option_values = [ "size", "8oz" ]
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any?
+  end
+
+  test "option_values rejects uppercase keys" do
+    variant = product_variants(:one)
+    variant.option_values = { "Size" => "8oz" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("lowercase") }
+  end
+
+  test "option_values rejects keys with spaces" do
+    variant = product_variants(:one)
+    variant.option_values = { "cup size" => "8oz" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any?
+  end
+
+  test "option_values rejects non-string values" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => 8 }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("must be a string") }
+  end
+
+  test "option_values rejects values longer than 50 characters" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "A" * 51 }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("exceeds") }
+  end
+
+  test "option_values accepts values with common punctuation" do
+    variant = product_variants(:one)
+    variant.option_values = {
+      "size" => "8oz (Large)",
+      "colour" => "Red/Blue",
+      "style" => "Modern - Classic"
+    }
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
+
+  test "option_values rejects values with script tags" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "<script>alert('xss')</script>" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("invalid characters") }
+  end
+
+  test "option_values rejects values with HTML entities" do
+    variant = product_variants(:one)
+    variant.option_values = { "size" => "8oz&nbsp;Large" }
+    assert_not variant.valid?
+    assert variant.errors[:option_values].any? { |e| e.include?("invalid characters") }
+  end
+
+  test "option_values allows underscore in keys" do
+    variant = product_variants(:one)
+    variant.option_values = { "cup_size" => "8oz" }
+    assert variant.valid?, variant.errors.full_messages.join(", ")
+  end
 end
