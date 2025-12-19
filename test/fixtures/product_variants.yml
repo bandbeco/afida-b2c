@@ -424,11 +424,11 @@ napkin_large_natural:
     size: "Large"
     colour: "Natural"
 
-# Single variant product (for solo_product)
-solo_variant:
-  product: solo_product
+# Single variant product (for category redirect test)
+only_product_variant:
+  product: only_product_in_category
   name: Standard
-  sku: SOLO-001-STD
+  sku: ONLY-001-STD
   price: 25.00
   stock_quantity: 100
   active: true

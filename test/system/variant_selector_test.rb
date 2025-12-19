@@ -346,8 +346,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
 
   # T029: Quantity-only products (no options) show only quantity step
   test "quantity-only product shows just quantity step" do
-    solo_product = products(:solo_product)
-    visit product_path(solo_product.slug)
+    only_product_in_category = products(:only_product_in_category)
+    visit product_path(only_product_in_category.slug)
 
     # Should have NO option steps (empty options)
     option_steps = all("[data-variant-selector-target='step']")
@@ -365,8 +365,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
 
   # T029: Quantity-only product enables add to cart after quantity selection
   test "can add quantity-only product to cart without option selection" do
-    solo_product = products(:solo_product)
-    visit product_path(solo_product.slug)
+    only_product_in_category = products(:only_product_in_category)
+    visit product_path(only_product_in_category.slug)
 
     # Quantity buttons should be visible immediately (no option steps to complete)
     assert_selector "[data-variant-selector-target='quantityContent'] [data-quantity-card]", wait: 3

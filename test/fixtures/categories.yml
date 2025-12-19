@@ -23,9 +23,9 @@ hot_cups_extras:
   slug: "hot-cups-extras"
   position: 5
 
-single_product_category:
-  name: "Single Product Category"
-  slug: "single-product-category"
+category_with_one_product:
+  name: "Category With One Product"
+  slug: "category-with-one-product"
   position: 6
 
 straws:

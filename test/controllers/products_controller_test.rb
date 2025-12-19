@@ -175,8 +175,8 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show renders unified variant selector for single variant products" do
-    # Solo Product has only 1 variant
-    product = products(:solo_product)
+    # only_product_in_category has only 1 variant
+    product = products(:only_product_in_category)
 
     get product_url(product.slug)
 
