@@ -221,10 +221,9 @@ class Product < ApplicationRecord
     end
 
     # Filter to options with multiple values, sort by priority
-    priority = %w[material type size colour]
     option_counts
       .select { |_, values| values.size > 1 }
-      .sort_by { |key, _| priority.index(key) || 999 }
+      .sort_by { |key, _| PRODUCT_OPTION_PRIORITY.index(key) || 999 }
       .to_h
       .transform_values(&:to_a)
   end

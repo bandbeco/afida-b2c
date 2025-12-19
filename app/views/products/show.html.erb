@@ -63,7 +63,7 @@
      data-controller="variant-selector"
      data-variant-selector-variants-value="<%= @variants_json.to_json %>"
      data-variant-selector-options-value="<%= @options.to_json %>"
-     data-variant-selector-priority-value='["material","type","size","colour"]'
+     data-variant-selector-priority-value="<%= PRODUCT_OPTION_PRIORITY.to_json %>"
      data-variant-selector-pac-size-value="<%= @pac_size %>"
      data-variant-selector-min-price-value="<%= @min_price.to_f %>">
 

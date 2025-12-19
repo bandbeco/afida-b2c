@@ -70,6 +70,7 @@ class Cart < ApplicationRecord
   # Call this after adding/updating/removing cart items
   def reload(*)
     @items_count = nil
+    @line_items_count = nil
     @subtotal_amount = nil
     @sample_variant_ids = nil
     @regular_variant_ids = nil

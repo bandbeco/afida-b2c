@@ -88,10 +88,8 @@ class ProductVariant < ApplicationRecord
     # Check if this is a consolidated product by looking for material/type options
     # that have multiple values across the product's variants
     if option_values.present? && consolidated_product?
-      # Build descriptive name from option_values
-      # Priority order for display: material/type first, then size, then colour
-      priority = %w[material type size colour]
-      parts = priority.filter_map { |key| option_values[key] }
+      # Build descriptive name from option_values in priority order
+      parts = PRODUCT_OPTION_PRIORITY.filter_map { |key| option_values[key] }
       return "#{product.name} - #{parts.join(', ')}" if parts.any?
     end
 
@@ -161,9 +159,9 @@ class ProductVariant < ApplicationRecord
     return "" unless option_values.present?
 
     # Display in priority order with slashes
-    # Note: handles both "colour" and "color" spellings
-    priority = %w[material type size colour color]
-    parts = priority.filter_map { |key| option_values[key]&.titleize }
+    # Note: also checks "color" as fallback for US spelling
+    priority_with_color_fallback = PRODUCT_OPTION_PRIORITY + %w[color]
+    parts = priority_with_color_fallback.filter_map { |key| option_values[key]&.titleize }
     parts.any? ? parts.join(" / ") : option_values.values.map(&:titleize).join(" / ")
   end
 
