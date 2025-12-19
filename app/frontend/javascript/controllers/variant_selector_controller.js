@@ -149,6 +149,22 @@ export default class extends Controller {
   }
 
   /**
+   * Handle keyboard events on tier/quantity cards (Enter/Space to select)
+   * Required for accessibility when using role="option" on non-button elements
+   */
+  handleCardKeydown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      const card = event.currentTarget
+      if (card.dataset.tierCard !== undefined) {
+        this.selectTier(event)
+      } else if (card.dataset.quantityCard !== undefined) {
+        this.selectQuantityCard(event)
+      }
+    }
+  }
+
+  /**
    * Select a pricing tier
    * Includes processing guard to prevent race conditions from rapid double-clicks
    */
@@ -163,13 +179,15 @@ export default class extends Controller {
 
       this.selectedQuantity = quantity
 
-      // Update tier card selection UI
+      // Update tier card selection UI and aria-selected
       this.quantityContentTarget.querySelectorAll("[data-tier-card]").forEach(card => {
         card.classList.remove("border-primary", "border-2")
         card.classList.add("border-gray-200", "border")
+        card.setAttribute("aria-selected", "false")
       })
       tierCard.classList.remove("border-gray-200", "border")
       tierCard.classList.add("border-primary", "border-2")
+      tierCard.setAttribute("aria-selected", "true")
 
       // Update quantity step header
       this.updateQuantityStepHeader()
@@ -433,6 +451,18 @@ export default class extends Controller {
   }
 
   /**
+   * Clear quantity content with explicit cleanup
+   * Stimulus automatically unbinds data-action events when elements are removed,
+   * but explicit removal makes intent clear and is more defensive
+   */
+  clearQuantityContent() {
+    const container = this.quantityContentTarget
+    while (container.firstChild) {
+      container.removeChild(container.firstChild)
+    }
+  }
+
+  /**
    * Render pricing tier cards using safe DOM methods
    * Compact single-row layout: Quantity | Unit price | Save badge | Total
    */
@@ -441,12 +471,14 @@ export default class extends Controller {
     const pacSize = this.selectedVariant.pac_size || this.pacSizeValue
     const basePrice = parseFloat(tiers[0].price)
 
-    // Clear existing content
-    this.quantityContentTarget.textContent = ""
+    // Clear existing content (Stimulus auto-unbinds data-action events)
+    this.clearQuantityContent()
 
-    // Create vertical stack container
+    // Create vertical stack container with listbox role for accessibility
     const container = document.createElement("div")
     container.className = "space-y-2 pt-4"
+    container.setAttribute("role", "listbox")
+    container.setAttribute("aria-label", "Select quantity")
 
     tiers.forEach((tier, index) => {
       const quantity = tier.quantity
@@ -455,6 +487,7 @@ export default class extends Controller {
       const unitPrice = price / pacSize
       const total = price * quantity
       const savings = index > 0 ? Math.round((1 - price / basePrice) * 100) : 0
+      const label = `${quantity} pack${quantity > 1 ? "s" : ""}, ${units.toLocaleString()} units, £${total.toFixed(2)} total${savings > 0 ? `, save ${savings}%` : ""}`
 
       // Create tier card - grid layout for aligned columns (inline style for JIT compatibility)
       const card = document.createElement("div")
@@ -465,7 +498,11 @@ export default class extends Controller {
       card.dataset.tierCard = ""
       card.dataset.quantity = String(quantity)
       card.dataset.price = String(price)
-      card.dataset.action = "click->variant-selector#selectTier"
+      card.dataset.action = "click->variant-selector#selectTier keydown->variant-selector#handleCardKeydown"
+      card.setAttribute("role", "option")
+      card.setAttribute("aria-selected", "false")
+      card.setAttribute("aria-label", label)
+      card.setAttribute("tabindex", "0")
 
       // Column 1: Quantity with units "1 pack (1,000 units)"
       const quantityDiv = document.createElement("div")
@@ -513,12 +550,14 @@ export default class extends Controller {
     const price = this.selectedVariant.price
     const unitPrice = price / pacSize
 
-    // Clear existing content
-    this.quantityContentTarget.textContent = ""
+    // Clear existing content (Stimulus auto-unbinds data-action events)
+    this.clearQuantityContent()
 
-    // Create vertical stack container
+    // Create vertical stack container with listbox role for accessibility
     const container = document.createElement("div")
     container.className = "space-y-2 pt-4"
+    container.setAttribute("role", "listbox")
+    container.setAttribute("aria-label", "Select quantity")
 
     // Create quantity options (1-5 packs, then 10)
     const quantities = [1, 2, 3, 4, 5, 10]
@@ -526,6 +565,7 @@ export default class extends Controller {
     quantities.forEach((quantity, index) => {
       const units = quantity * pacSize
       const total = price * quantity
+      const label = `${quantity} pack${quantity > 1 ? "s" : ""}, ${units.toLocaleString()} units, £${total.toFixed(2)} total`
 
       // Create quantity card - grid layout for aligned columns (inline style for JIT compatibility)
       const card = document.createElement("div")
@@ -535,7 +575,11 @@ export default class extends Controller {
       card.style.gap = "0.75rem"
       card.dataset.quantityCard = ""
       card.dataset.quantity = String(quantity)
-      card.dataset.action = "click->variant-selector#selectQuantityCard"
+      card.dataset.action = "click->variant-selector#selectQuantityCard keydown->variant-selector#handleCardKeydown"
+      card.setAttribute("role", "option")
+      card.setAttribute("aria-selected", "false")
+      card.setAttribute("aria-label", label)
+      card.setAttribute("tabindex", "0")
 
       // Column 1: Quantity with units "1 pack (1,000 units)"
       const quantityDiv = document.createElement("div")
@@ -579,13 +623,15 @@ export default class extends Controller {
 
       this.selectedQuantity = quantity
 
-      // Update card selection UI
+      // Update card selection UI and aria-selected
       this.quantityContentTarget.querySelectorAll("[data-quantity-card]").forEach(c => {
         c.classList.remove("border-primary", "border-2")
         c.classList.add("border-gray-200", "border")
+        c.setAttribute("aria-selected", "false")
       })
       card.classList.remove("border-gray-200", "border")
       card.classList.add("border-primary", "border-2")
+      card.setAttribute("aria-selected", "true")
 
       // Update quantity step header
       this.updateQuantityStepHeader()
