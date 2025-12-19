@@ -259,18 +259,21 @@ export default class extends Controller {
 
   /**
    * Update URL with current selections
+   * Rebuilds params from scratch to remove stale downstream values when revising
    * Uses lowercase values for cleaner URLs that are case-insensitive on load
    */
   updateUrl() {
-    const params = new URLSearchParams(window.location.search)
+    // Start fresh - only include current selections
+    const params = new URLSearchParams()
 
-    // Set params for each selection (lowercase for cleaner URLs)
     Object.entries(this.selections).forEach(([key, value]) => {
       params.set(key, value.toLowerCase())
     })
 
-    // Update URL without reload
-    const newUrl = `${window.location.pathname}?${params.toString()}`
+    // Update URL without reload (use pathname alone if no selections)
+    const newUrl = params.toString()
+      ? `${window.location.pathname}?${params.toString()}`
+      : window.location.pathname
     window.history.replaceState({}, "", newUrl)
   }
 
