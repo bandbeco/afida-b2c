@@ -42,6 +42,7 @@ export default class extends Controller {
     this.selections = {}
     this.selectedVariant = null
     this.selectedQuantity = 1
+    this.isProcessing = false
 
     // Load selections from URL params
     this.loadFromUrlParams()
@@ -60,46 +61,54 @@ export default class extends Controller {
 
   /**
    * Handle option button click
+   * Includes processing guard to prevent race conditions from rapid double-clicks
    */
   selectOption(event) {
     const button = event.currentTarget
-    const optionName = button.dataset.optionName
-    const value = button.dataset.value
 
-    // Skip if button is disabled
-    if (button.disabled) return
+    // Skip if button is disabled or already processing
+    if (button.disabled || this.isProcessing) return
 
-    // Update selection
-    this.selections[optionName] = value
+    this.isProcessing = true
 
-    // Clear downstream selections if they're now invalid
-    this.clearInvalidDownstreamSelections(optionName)
+    try {
+      const optionName = button.dataset.optionName
+      const value = button.dataset.value
 
-    // Update UI
-    this.updateOptionButtons()
-    this.updateStepHeaders()
+      // Update selection
+      this.selections[optionName] = value
 
-    // Find matching variant
-    this.findMatchingVariant()
+      // Clear downstream selections if they're now invalid
+      this.clearInvalidDownstreamSelections(optionName)
 
-    // Collapse current step and expand next
-    const currentStepIndex = this.getStepIndex(optionName)
-    this.collapseStep(currentStepIndex)
+      // Update UI
+      this.updateOptionButtons()
+      this.updateStepHeaders()
 
-    // If all options selected, show quantity step
-    if (this.allOptionsSelected()) {
-      this.updateQuantityStep()
-      this.expandStep(Object.keys(this.optionsValue).length)
-    } else {
-      // Expand next option step
-      this.expandStep(currentStepIndex + 1)
+      // Find matching variant
+      this.findMatchingVariant()
+
+      // Collapse current step and expand next
+      const currentStepIndex = this.getStepIndex(optionName)
+      this.collapseStep(currentStepIndex)
+
+      // If all options selected, show quantity step
+      if (this.allOptionsSelected()) {
+        this.updateQuantityStep()
+        this.expandStep(Object.keys(this.optionsValue).length)
+      } else {
+        // Expand next option step
+        this.expandStep(currentStepIndex + 1)
+      }
+
+      // Update URL params
+      this.updateUrl()
+
+      // Emit event for compatible lids
+      this.emitVariantChanged()
+    } finally {
+      this.isProcessing = false
     }
-
-    // Update URL params
-    this.updateUrl()
-
-    // Emit event for compatible lids
-    this.emitVariantChanged()
   }
 
   /**
@@ -130,36 +139,45 @@ export default class extends Controller {
 
   /**
    * Select a pricing tier
+   * Includes processing guard to prevent race conditions from rapid double-clicks
    */
   selectTier(event) {
-    const tierCard = event.currentTarget
-    const quantity = parseInt(tierCard.dataset.quantity, 10)
+    if (this.isProcessing) return
 
-    this.selectedQuantity = quantity
+    this.isProcessing = true
 
-    // Update tier card selection UI
-    this.quantityContentTarget.querySelectorAll("[data-tier-card]").forEach(card => {
-      card.classList.remove("border-primary", "border-2")
-      card.classList.add("border-gray-200", "border")
-    })
-    tierCard.classList.remove("border-gray-200", "border")
-    tierCard.classList.add("border-primary", "border-2")
+    try {
+      const tierCard = event.currentTarget
+      const quantity = parseInt(tierCard.dataset.quantity, 10)
 
-    // Update quantity step header
-    this.updateQuantityStepHeader()
+      this.selectedQuantity = quantity
 
-    // Collapse the quantity step
-    const quantityStepIndex = this.stepTargets.length
-    this.collapseStep(quantityStepIndex)
+      // Update tier card selection UI
+      this.quantityContentTarget.querySelectorAll("[data-tier-card]").forEach(card => {
+        card.classList.remove("border-primary", "border-2")
+        card.classList.add("border-gray-200", "border")
+      })
+      tierCard.classList.remove("border-gray-200", "border")
+      tierCard.classList.add("border-primary", "border-2")
 
-    // Update totals
-    this.updateTotalDisplay()
+      // Update quantity step header
+      this.updateQuantityStepHeader()
 
-    // Update form
-    this.quantityInputTarget.value = quantity
+      // Collapse the quantity step
+      const quantityStepIndex = this.stepTargets.length
+      this.collapseStep(quantityStepIndex)
 
-    // Enable add to cart
-    this.enableAddToCart()
+      // Update totals
+      this.updateTotalDisplay()
+
+      // Update form
+      this.quantityInputTarget.value = quantity
+
+      // Enable add to cart
+      this.enableAddToCart()
+    } finally {
+      this.isProcessing = false
+    }
   }
 
   /**
@@ -534,36 +552,45 @@ export default class extends Controller {
   /**
    * Handle quantity card selection (for non-tiered products)
    * Matches branded configurator styling
+   * Includes processing guard to prevent race conditions from rapid double-clicks
    */
   selectQuantityCard(event) {
-    const card = event.currentTarget
-    const quantity = parseInt(card.dataset.quantity, 10)
+    if (this.isProcessing) return
 
-    this.selectedQuantity = quantity
+    this.isProcessing = true
 
-    // Update card selection UI
-    this.quantityContentTarget.querySelectorAll("[data-quantity-card]").forEach(c => {
-      c.classList.remove("border-primary", "border-2")
-      c.classList.add("border-gray-200", "border")
-    })
-    card.classList.remove("border-gray-200", "border")
-    card.classList.add("border-primary", "border-2")
+    try {
+      const card = event.currentTarget
+      const quantity = parseInt(card.dataset.quantity, 10)
 
-    // Update quantity step header
-    this.updateQuantityStepHeader()
+      this.selectedQuantity = quantity
 
-    // Collapse the quantity step
-    const quantityStepIndex = this.stepTargets.length
-    this.collapseStep(quantityStepIndex)
+      // Update card selection UI
+      this.quantityContentTarget.querySelectorAll("[data-quantity-card]").forEach(c => {
+        c.classList.remove("border-primary", "border-2")
+        c.classList.add("border-gray-200", "border")
+      })
+      card.classList.remove("border-gray-200", "border")
+      card.classList.add("border-primary", "border-2")
 
-    // Update totals
-    this.updateTotalDisplay()
+      // Update quantity step header
+      this.updateQuantityStepHeader()
 
-    // Update form
-    this.quantityInputTarget.value = quantity
+      // Collapse the quantity step
+      const quantityStepIndex = this.stepTargets.length
+      this.collapseStep(quantityStepIndex)
 
-    // Enable add to cart
-    this.enableAddToCart()
+      // Update totals
+      this.updateTotalDisplay()
+
+      // Update form
+      this.quantityInputTarget.value = quantity
+
+      // Enable add to cart
+      this.enableAddToCart()
+    } finally {
+      this.isProcessing = false
+    }
   }
 
   /**

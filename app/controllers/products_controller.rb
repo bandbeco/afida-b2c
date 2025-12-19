@@ -16,12 +16,19 @@ class ProductsController < ApplicationController
     @product = Product.standard
                      .includes(:category)
                      .find_by!(slug: params[:slug])
-    # Eager load variant photos for @variants_json mapping (primary_photo needs both)
-    @product.active_variants.includes(:product_photo_attachment, :lifestyle_photo_attachment).load
+
+    # Eager load variants with photos and blobs to prevent N+1 queries
+    # Store in instance variable to reuse throughout the action
+    @variants = @product.active_variants
+                        .includes(product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
+                        .to_a
+
+    # Build hash lookup for O(1) variant access in JSON building
+    variant_lookup = @variants.index_by(&:id)
 
     # Select variant based on params
     @selected_variant = if params[:variant_id].present?
-      @product.active_variants.find_by(id: params[:variant_id])
+      variant_lookup[params[:variant_id].to_i]
     end
 
     @selected_variant ||= @product.default_variant
@@ -33,7 +40,7 @@ class ProductsController < ApplicationController
     end
 
     # Calculate minimum price for "from" display
-    @min_price = @product.active_variants.minimum(:price)
+    @min_price = @variants.map(&:price).min
 
     # === UNIFIED VARIANT SELECTOR ===
     # Uses Product#extract_options_from_variants and Product#variants_for_selector
@@ -44,8 +51,9 @@ class ProductsController < ApplicationController
 
     # Build variants JSON with all fields needed by the selector (including pricing_tiers)
     # Populate image URLs here where URL helpers are available
+    # Uses variant_lookup hash for O(1) access instead of O(n) Array#find
     @variants_json = @product.variants_for_selector.map do |variant_data|
-      variant = @product.active_variants.find { |v| v.id == variant_data[:id] }
+      variant = variant_lookup[variant_data[:id]]
       if variant&.primary_photo&.attached?
         variant_data[:image_url] = url_for(variant.primary_photo)
       end
@@ -53,7 +61,7 @@ class ProductsController < ApplicationController
     end
 
     # Set pac_size for display (used in quantity calculations)
-    @pac_size = @selected_variant&.pac_size || @product.active_variants.first&.pac_size || 1
+    @pac_size = @selected_variant&.pac_size || @variants.first&.pac_size || 1
 
     # Related products from same category (for "You May Also Like" section)
     @related_products = @product.category.products
