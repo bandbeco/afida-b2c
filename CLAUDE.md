@@ -595,6 +595,44 @@ Use Stripe test mode card numbers:
 - Requires authentication: `4000 0025 0000 3155`
 - Declined: `4000 0000 0000 9995`
 
+### Testing with Stripe API
+
+Use `StripeTestHelper` for Stripe API mocking in tests:
+
+```ruby
+include StripeTestHelper
+
+test "checkout creates order" do
+  session = stub_stripe_session_retrieve(payment_status: "paid")
+  # Your test code
+end
+```
+
+**Available helpers:**
+- `stub_stripe_session_create` - Stub session creation
+- `stub_stripe_session_retrieve` - Stub session retrieval
+- `stub_stripe_tax_rate_list` - Stub UK VAT rate lookup
+- `stub_stripe_customer_create` - Stub customer creation
+- `stub_stripe_customer_update` - Stub customer update
+- `stub_stripe_customer_retrieve` - Stub customer retrieval
+- `stub_stripe_payment_intent_create` - Stub payment intent creation
+- `build_stripe_session` - Build a mock session without stubbing
+
+**Customizing mock data:**
+```ruby
+# Override default values
+session = stub_stripe_session_retrieve(
+  payment_status: "paid",
+  shipping_name: "John Doe",
+  shipping_address: { line1: "123 Main St", city: "London", postal_code: "SW1A 1AA" }
+)
+
+# Test error scenarios
+Stripe::Checkout::Session.stubs(:create).raises(StripeErrors.card_declined)
+```
+
+See `test/support/stripe_test_helper.rb` for full API.
+
 ### Google Merchant Feed
 - Available at `/feeds/google-merchant.xml`
 - Auto-generates product feed for Google Shopping
