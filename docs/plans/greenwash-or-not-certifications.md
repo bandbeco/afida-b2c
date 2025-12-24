@@ -1,7 +1,7 @@
 # Greenwash or Not? - Certification Database
 
 **Status:** Draft for review
-**Total entries:** 38 (20 certifications/logos + 18 marketing claims)
+**Total entries:** 45 (27 certifications/logos + 18 marketing claims)
 
 ---
 
@@ -281,9 +281,100 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
+### 21. OK Biobased
+
+**Type:** certification
+**Verdict:** partial
+
+**Truth:** TUV Austria certification verifying what percentage of a product comes from renewable biological sources (plants, not petroleum).
+
+**But...:** Bio-based has NOTHING to do with biodegradability. A 100% bio-based plastic can be just as permanent as petroleum plastic. Source ≠ fate.
+
+**Source:** https://www.groundedpackaging.co/certifications/ok-biobased
+
+---
+
+### 22. OK Marine Biodegradable
+
+**Type:** certification
+**Verdict:** legit
+
+**Truth:** One of the toughest certifications - proves a product will biodegrade in seawater. Very few products achieve this.
+
+**But...:** Extremely rare. If packaging has this, it's genuinely impressive. But don't confuse "biodegradable" claims with this specific marine certification.
+
+**Source:** https://www.groundedpackaging.co/certifications/ok-marine-degradable
+
+---
+
+### 23. OK Soil Biodegradable
+
+**Type:** certification
+**Verdict:** legit
+
+**Truth:** Certified to break down in soil environments (like agricultural mulch films). Different from composting.
+
+**But...:** Designed for products that stay in soil (farming), not for packaging you'd throw away. Rarely relevant to food service packaging.
+
+**Source:** https://www.groundedpackaging.co/certifications/ok-soil-biodegradable
+
+---
+
+### 24. Cradle to Cradle (C2C)
+
+**Type:** certification
+**Verdict:** legit
+
+**Truth:** The gold standard for circular design. Products are designed to be completely recycled or composted back into raw materials.
+
+**But...:** Rare and expensive to achieve. If you see C2C certification, the company has invested seriously in sustainable design - not just slapped a logo on.
+
+**Source:** https://www.groundedpackaging.co/certifications/cradle-to-cradle-c2c-certification
+
+---
+
+### 25. EU Ecolabel
+
+**Type:** certification
+**Verdict:** legit
+
+**Truth:** Official EU certification for products with reduced environmental impact throughout their lifecycle. Rigorous and trustworthy.
+
+**But...:** Post-Brexit, you'll see this less on UK products. It's still valid, but UK businesses may not pursue EU certification.
+
+**Source:** https://www.groundedpackaging.co/certifications/ecolabel
+
+---
+
+### 26. Rainforest Alliance
+
+**Type:** certification
+**Verdict:** partial
+
+**Truth:** Certifies sustainable agriculture and forestry practices. The green frog logo is well-recognised.
+
+**But...:** Like FSC, it's about sourcing, not disposal. Rainforest Alliance paper can still have a plastic lining that makes it non-recyclable.
+
+**Source:** https://www.groundedpackaging.co/certifications/rainforest-alliance
+
+---
+
+### 27. RCS (Recycled Claim Standard)
+
+**Type:** certification
+**Verdict:** legit
+
+**Truth:** Third-party verification of recycled content claims. If packaging says "50% recycled" with RCS, that percentage is audited.
+
+**But...:** Only verifies recycled INPUT, not recyclability of the OUTPUT. A product can be verified 50% recycled but end up in landfill.
+
+**Source:** https://www.groundedpackaging.co/certifications/rcs
+
+---
+
 ## MARKETING CLAIMS (Usually Greenwash)
 
-### 21. "Biodegradable"
+### 28. "Biodegradable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -296,7 +387,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 22. "Eco-Friendly"
+### 29. "Eco-Friendly"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -309,7 +400,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 23. "Environmentally Friendly"
+### 30. "Environmentally Friendly"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -322,7 +413,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 24. "Natural"
+### 31. "Natural"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -335,7 +426,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 25. "Plant-Based"
+### 32. "Plant-Based"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -348,7 +439,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 26. "Bio-Based"
+### 33. "Bio-Based"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -361,7 +452,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 27. "Made from Recycled Materials"
+### 34. "Made from Recycled Materials"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -374,7 +465,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 28. "Recyclable"
+### 35. "Recyclable"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -387,7 +478,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 29. "100% Recyclable"
+### 36. "100% Recyclable"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -400,7 +491,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 30. "Compostable" (No Logo)
+### 37. "Compostable" (No Logo)
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -413,7 +504,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 31. "Home Compostable" (No Certification)
+### 38. "Home Compostable" (No Certification)
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -426,7 +517,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 32. "Oxo-Degradable" / "Oxo-Biodegradable"
+### 39. "Oxo-Degradable" / "Oxo-Biodegradable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -439,7 +530,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 33. "Carbon Neutral"
+### 40. "Carbon Neutral"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -452,7 +543,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 34. "Carbon Neutral Packaging"
+### 41. "Carbon Neutral Packaging"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -465,7 +556,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 35. "Plastic-Free"
+### 42. "Plastic-Free"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -478,7 +569,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 36. "Sustainable"
+### 43. "Sustainable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -491,7 +582,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 37. "Green"
+### 44. "Green"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -504,7 +595,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 38. "Zero Waste"
+### 45. "Zero Waste"
 
 **Type:** marketing_claim
 **Verdict:** partial
