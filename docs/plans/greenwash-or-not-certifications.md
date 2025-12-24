@@ -1,7 +1,7 @@
 # Greenwash or Not? - Certification Database
 
 **Status:** Draft for review
-**Total entries:** 48 (30 certifications/logos + 18 marketing claims)
+**Total entries:** 49 (31 certifications/logos + 18 marketing claims)
 
 ---
 
@@ -411,9 +411,22 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
+### 31. BRCGS (BRC Packaging Materials)
+
+**Type:** certification
+**Verdict:** partial
+
+**Truth:** British Retail Consortium Global Standard for packaging safety and quality. Proves packaging meets food safety standards and won't contaminate products. Trusted by major UK retailers.
+
+**But...:** It's about safety and hygiene, NOT environmental impact. BRCGS-certified packaging can still be non-recyclable plastic. The logo means "safe to use," not "safe for the planet."
+
+**Source:** https://compliancygroup.co.uk/certifications/brc-packaging-materials/
+
+---
+
 ## MARKETING CLAIMS (Usually Greenwash)
 
-### 31. "Biodegradable"
+### 32. "Biodegradable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -426,7 +439,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 32. "Eco-Friendly"
+### 33. "Eco-Friendly"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -439,7 +452,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 33. "Environmentally Friendly"
+### 34. "Environmentally Friendly"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -452,7 +465,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 34. "Natural"
+### 35. "Natural"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -465,7 +478,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 35. "Plant-Based"
+### 36. "Plant-Based"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -478,7 +491,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 36. "Bio-Based"
+### 37. "Bio-Based"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -491,7 +504,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 37. "Made from Recycled Materials"
+### 38. "Made from Recycled Materials"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -504,7 +517,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 38. "Recyclable"
+### 39. "Recyclable"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -517,7 +530,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 39. "100% Recyclable"
+### 40. "100% Recyclable"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -530,7 +543,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 40. "Compostable" (No Logo)
+### 41. "Compostable" (No Logo)
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -543,7 +556,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 41. "Home Compostable" (No Certification)
+### 42. "Home Compostable" (No Certification)
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -556,7 +569,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 42. "Oxo-Degradable" / "Oxo-Biodegradable"
+### 43. "Oxo-Degradable" / "Oxo-Biodegradable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -569,7 +582,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 43. "Carbon Neutral"
+### 44. "Carbon Neutral"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -582,7 +595,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 44. "Carbon Neutral Packaging"
+### 45. "Carbon Neutral Packaging"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -595,7 +608,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 45. "Plastic-Free"
+### 46. "Plastic-Free"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -608,7 +621,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 46. "Sustainable"
+### 47. "Sustainable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -621,7 +634,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 47. "Green"
+### 48. "Green"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -634,7 +647,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 48. "Zero Waste"
+### 49. "Zero Waste"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -650,12 +663,12 @@ Review each entry and flag any that need correction or industry insight.
 ## Summary Statistics
 
 **Verdicts breakdown:**
-- **Legit:** 11 entries (23%)
-- **Partial:** 16 entries (33%)
-- **Greenwash:** 21 entries (44%)
+- **Legit:** 11 entries (22%)
+- **Partial:** 17 entries (35%)
+- **Greenwash:** 21 entries (43%)
 
 **By type:**
-- Certifications/logos: 30
+- Certifications/logos: 31
 - Marketing claims: 18
 
 ---
@@ -674,6 +687,8 @@ Review each entry and flag any that need correction or industry insight.
 - [EN 13432 Standard](https://www.organics-recycling.org.uk/uploads/article1983/EN%2013432%20Compostable%20Products%20and%20Packaging.pdf)
 - [Grounded Packaging Certifications](https://www.groundedpackaging.co/certifications)
 - [GWP Sustainable Packaging Accreditations](https://www.gwp.co.uk/sustainable-packaging/accreditations/)
+- [Allpack Certifications](https://www.allpack.uk.com/certifications-and-accreditations)
+- [Compliancy Group BRC Packaging](https://compliancygroup.co.uk/certifications/brc-packaging-materials/)
 
 ---
 
