@@ -1,7 +1,7 @@
 # Greenwash or Not? - Certification Database
 
 **Status:** Draft for review
-**Total entries:** 45 (27 certifications/logos + 18 marketing claims)
+**Total entries:** 48 (30 certifications/logos + 18 marketing claims)
 
 ---
 
@@ -372,9 +372,48 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
+### 28. ISO 14001
+
+**Type:** certification
+**Verdict:** partial
+
+**Truth:** International standard for environmental management systems. Proves a company has processes to minimise environmental impact and comply with regulations.
+
+**But...:** It's a company management certification, not a product certification. An ISO 14001 company can still sell non-recyclable products - the cert is about their processes, not what they make.
+
+**Source:** https://www.gwp.co.uk/sustainable-packaging/accreditations/
+
+---
+
+### 29. EcoVadis Rating (Gold/Silver/Bronze)
+
+**Type:** certification
+**Verdict:** partial
+
+**Truth:** Independent CSR rating covering environment, labour, ethics, and procurement. Gold = top 5% globally. Rigorous and credible.
+
+**But...:** It's a company scorecard, not a product certification. A Gold-rated company can still sell products with poor end-of-life outcomes. The medal tells you about the company, not the packaging in your hand.
+
+**Source:** https://www.gwp.co.uk/sustainable-packaging/accreditations/
+
+---
+
+### 30. Sedex Member
+
+**Type:** certification
+**Verdict:** partial
+
+**Truth:** Membership in ethical trade organisation focused on supply chain transparency, labour rights, and responsible sourcing.
+
+**But...:** Like B Corp, it's company-level, not product-level. Being a Sedex member says nothing about whether the packaging is compostable, recyclable, or eco-friendly.
+
+**Source:** https://www.gwp.co.uk/sustainable-packaging/accreditations/
+
+---
+
 ## MARKETING CLAIMS (Usually Greenwash)
 
-### 28. "Biodegradable"
+### 31. "Biodegradable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -387,7 +426,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 29. "Eco-Friendly"
+### 32. "Eco-Friendly"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -400,7 +439,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 30. "Environmentally Friendly"
+### 33. "Environmentally Friendly"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -413,7 +452,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 31. "Natural"
+### 34. "Natural"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -426,7 +465,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 32. "Plant-Based"
+### 35. "Plant-Based"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -439,7 +478,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 33. "Bio-Based"
+### 36. "Bio-Based"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -452,7 +491,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 34. "Made from Recycled Materials"
+### 37. "Made from Recycled Materials"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -465,7 +504,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 35. "Recyclable"
+### 38. "Recyclable"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -478,7 +517,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 36. "100% Recyclable"
+### 39. "100% Recyclable"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -491,7 +530,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 37. "Compostable" (No Logo)
+### 40. "Compostable" (No Logo)
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -504,7 +543,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 38. "Home Compostable" (No Certification)
+### 41. "Home Compostable" (No Certification)
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -517,7 +556,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 39. "Oxo-Degradable" / "Oxo-Biodegradable"
+### 42. "Oxo-Degradable" / "Oxo-Biodegradable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -530,7 +569,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 40. "Carbon Neutral"
+### 43. "Carbon Neutral"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -543,7 +582,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 41. "Carbon Neutral Packaging"
+### 44. "Carbon Neutral Packaging"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -556,7 +595,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 42. "Plastic-Free"
+### 45. "Plastic-Free"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -569,7 +608,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 43. "Sustainable"
+### 46. "Sustainable"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -582,7 +621,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 44. "Green"
+### 47. "Green"
 
 **Type:** marketing_claim
 **Verdict:** greenwash
@@ -595,7 +634,7 @@ Review each entry and flag any that need correction or industry insight.
 
 ---
 
-### 45. "Zero Waste"
+### 48. "Zero Waste"
 
 **Type:** marketing_claim
 **Verdict:** partial
@@ -611,12 +650,12 @@ Review each entry and flag any that need correction or industry insight.
 ## Summary Statistics
 
 **Verdicts breakdown:**
-- **Legit:** 11 entries (29%)
-- **Partial:** 13 entries (34%)
-- **Greenwash:** 14 entries (37%)
+- **Legit:** 11 entries (23%)
+- **Partial:** 16 entries (33%)
+- **Greenwash:** 21 entries (44%)
 
 **By type:**
-- Certifications/logos: 20
+- Certifications/logos: 30
 - Marketing claims: 18
 
 ---
@@ -633,6 +672,8 @@ Review each entry and flag any that need correction or industry insight.
 - [WRAP UK](https://www.wrap.ngo/)
 - [Packaging Europe](https://packagingeurope.com/)
 - [EN 13432 Standard](https://www.organics-recycling.org.uk/uploads/article1983/EN%2013432%20Compostable%20Products%20and%20Packaging.pdf)
+- [Grounded Packaging Certifications](https://www.groundedpackaging.co/certifications)
+- [GWP Sustainable Packaging Accreditations](https://www.gwp.co.uk/sustainable-packaging/accreditations/)
 
 ---
 
