@@ -73,15 +73,13 @@ class PriceListPdf < Prawn::Document
     return if @variants.empty?
 
     table_data = [
-      [ "Product", "SKU", "Size", "Material", "Pack Size", "Price/Pack", "Price/Unit" ]
+      [ "Product", "SKU", "Pack Size", "Price/Pack", "Price/Unit" ]
     ]
 
     @variants.each do |variant|
       table_data << [
         variant.full_name,
         variant.sku,
-        variant.option_values["size"] || variant.name,
-        variant.option_values["material"] || "-",
         number_with_delimiter(variant.pac_size || 1),
         number_to_currency(variant.price),
         number_to_currency(variant.unit_price, precision: 4)
@@ -97,16 +95,14 @@ class PriceListPdf < Prawn::Document
       t.cells.padding = [ 4, 6 ]
       t.cells.borders = [ :bottom ]
       t.cells.border_color = "DDDDDD"
-      t.column(0).width = 200
-      t.column(1).width = 100
-      t.column(2).width = 80
-      t.column(3).width = 100
-      t.column(4).width = 80
+      t.column(0).width = 300
+      t.column(1).width = 120
+      t.column(2).width = 100
+      t.column(2).align = :right
+      t.column(3).width = 120
+      t.column(3).align = :right
+      t.column(4).width = 120
       t.column(4).align = :right
-      t.column(5).width = 90
-      t.column(5).align = :right
-      t.column(6).width = 90
-      t.column(6).align = :right
     end
   end
 
