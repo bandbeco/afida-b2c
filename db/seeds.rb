@@ -53,6 +53,9 @@ load Rails.root.join('db', 'seeds', 'product_options.rb')
 # Load products from consolidated CSV (replaces YAML-based seeding)
 load Rails.root.join('db', 'seeds', 'products_from_csv.rb')
 
+# Populate lid compatibility relationships (cups → lids)
+load Rails.root.join('db', 'seeds', 'lid_compatibility.rb')
+
 # Load branded product pricing seed
 load Rails.root.join('db', 'seeds', 'branded_product_pricing.rb')
 
@@ -75,6 +78,7 @@ puts "Product variants created: #{ProductVariant.count}" if defined?(ProductVari
 puts "Product options created: #{ProductOption.count}" if defined?(ProductOption)
 puts "Product option values created: #{ProductOptionValue.count}" if defined?(ProductOptionValue)
 puts "Branded product prices created: #{BrandedProductPrice.count}" if defined?(BrandedProductPrice)
+puts "Lid compatibility relationships: #{ProductCompatibleLid.count}" if defined?(ProductCompatibleLid)
 puts "Products with photos: #{Product.joins(:product_photo_attachment).distinct.count}"
 puts "Variants with photos: #{ProductVariant.joins(:product_photo_attachment).distinct.count}" if defined?(ProductVariant)
 
