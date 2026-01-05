@@ -360,7 +360,7 @@ export default class extends Controller {
 
         // Show selection inline with title (": 7 inch" format)
         if (selectionDisplay) {
-          selectionDisplay.textContent = ` : ${selection}`
+          selectionDisplay.textContent = ` : ${this.titleize(selection)}`
           selectionDisplay.classList.remove("hidden")
         }
       } else {
@@ -793,5 +793,17 @@ export default class extends Controller {
   collapseAllSteps() {
     const allSteps = [...this.stepTargets, this.quantityStepTarget]
     allSteps.forEach((step, index) => this.collapseStep(index))
+  }
+
+  /**
+   * Convert slug-style string to title case for display
+   * "cutlery-kit" → "Cutlery Kit"
+   */
+  titleize(str) {
+    if (!str) return str
+    return str
+      .split('-')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
   }
 }
