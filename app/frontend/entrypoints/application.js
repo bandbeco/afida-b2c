@@ -1,4 +1,9 @@
 // Vite + Rails entrypoint with optimized lazy loading
+
+// Polyfills for beautiful confirm dialogs (broader browser support)
+import "invokers-polyfill"
+import "dialog-closedby-polyfill"
+
 import "@hotwired/turbo-rails"
 import { Application } from "@hotwired/stimulus"
 
@@ -85,3 +90,41 @@ if (document.querySelector('[data-direct-upload-url]')) {
     ActiveStorage.start()
   })
 }
+
+// Beautiful confirm dialogs (modern browsers)
+// Falls back to native confirm() for older browsers
+import { Turbo } from "@hotwired/turbo-rails"
+
+function setupTurboConfirm() {
+  const dialog = document.getElementById("turbo-confirm-dialog")
+  if (!dialog) return
+
+  const messageEl = document.getElementById("confirm-dialog-message")
+  const confirmBtn = dialog.querySelector('button[value="confirm"]')
+
+  Turbo.config.forms.confirm = (message, element, submitter) => {
+    // Feature detection - fallback to native for older browsers
+    if (!dialog.showModal) return Promise.resolve(confirm(message))
+
+    messageEl.textContent = message
+
+    // Allow custom button text via data-turbo-confirm-button
+    const buttonText = submitter?.dataset.turboConfirmButton || "Confirm"
+    confirmBtn.textContent = buttonText
+
+    // Destructive styling based on action
+    const isDestructive = submitter?.dataset.turboConfirmDestructive !== "false"
+    confirmBtn.className = isDestructive ? "btn btn-error" : "btn btn-primary"
+
+    dialog.showModal()
+
+    return new Promise((resolve) => {
+      dialog.addEventListener("close", () => {
+        resolve(dialog.returnValue === "confirm")
+      }, { once: true })
+    })
+  }
+}
+
+document.addEventListener("turbo:load", setupTurboConfirm)
+document.addEventListener("DOMContentLoaded", setupTurboConfirm)

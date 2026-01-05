@@ -1,0 +1,41 @@
+/* Beautiful confirmation dialog animations */
+/* Uses @starting-style for entrance and allow-discrete for exit */
+
+#turbo-confirm-dialog {
+  opacity: 1;
+  scale: 1;
+  transition: opacity 0.15s ease-out, scale 0.15s ease-out,
+              overlay 0.15s ease-out allow-discrete,
+              display 0.15s ease-out allow-discrete;
+}
+
+#turbo-confirm-dialog[open] {
+  @starting-style {
+    opacity: 0;
+    scale: 0.95;
+  }
+}
+
+#turbo-confirm-dialog:not([open]) {
+  opacity: 0;
+  scale: 0.95;
+}
+
+/* Backdrop animation */
+#turbo-confirm-dialog::backdrop {
+  background-color: rgb(0 0 0 / 0.5);
+  transition: background-color 0.15s ease-out,
+              overlay 0.15s ease-out allow-discrete,
+              display 0.15s ease-out allow-discrete;
+}
+
+#turbo-confirm-dialog[open]::backdrop {
+  @starting-style {
+    background-color: rgb(0 0 0 / 0);
+  }
+}
+
+/* Prevent background scroll when dialog is open */
+body:has(#turbo-confirm-dialog:modal) {
+  overflow: hidden;
+}

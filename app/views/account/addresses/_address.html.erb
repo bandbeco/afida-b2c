@@ -37,7 +37,7 @@
 
       <%= button_to "Delete", account_address_path(address),
           method: :delete,
-          form: { data: { turbo_confirm: "Are you sure you want to delete this address?" } },
+          form: { data: { turbo_confirm: "Are you sure you want to delete this address?", turbo_confirm_button: "Delete" } },
           class: "btn btn-ghost btn-sm text-error" %>
     </div>
   </div>

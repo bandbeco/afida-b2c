@@ -1,0 +1,23 @@
+<%# Beautiful confirmation dialog for Turbo data-turbo-confirm %>
+<%# Uses native <dialog> element with DaisyUI modal styling %>
+
+<dialog id="turbo-confirm-dialog"
+        class="modal"
+        closedby="any"
+        role="alertdialog"
+        aria-labelledby="confirm-dialog-title"
+        aria-describedby="confirm-dialog-message">
+  <div class="modal-box">
+    <h3 id="confirm-dialog-title" class="text-lg">⚠️ Please Confirm</h3>
+    <p id="confirm-dialog-message" class="py-4">Are you sure?</p>
+    <div class="modal-action">
+      <form method="dialog">
+        <button value="cancel" class="btn btn-ghost">Cancel</button>
+        <button value="confirm" class="btn btn-error">Confirm</button>
+      </form>
+    </div>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button value="cancel">close</button>
+  </form>
+</dialog>

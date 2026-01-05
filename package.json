@@ -16,6 +16,8 @@
     "@hotwired/turbo-rails": "^8.0.13",
     "@rails/activestorage": "^8.0.200",
     "daisyui": "^5.0.38",
+    "dialog-closedby-polyfill": "^1.1.0",
+    "invokers-polyfill": "^0.5.7",
     "swiper": "^11.2.8"
   }
 }
