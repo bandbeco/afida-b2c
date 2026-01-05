@@ -125,7 +125,7 @@ products_data.each do |key, data|
     variant.stock_quantity = 10000
     variant.option_values = option_values
     variant.active = variant_data[:active]
-    variant.sample_eligible = variant_data[:sample_eligible]
+    variant.sample_eligible = true  # All variants are sample eligible
     variant.save!
   end
 
