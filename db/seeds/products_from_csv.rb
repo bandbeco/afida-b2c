@@ -38,6 +38,7 @@ CSV.foreach(csv_path, headers: true) do |row|
   }
 
   products_data[key][:variants] << {
+    type: row['type_value'],
     size: row['size_value'],
     colour: row['colour_value'],
     material: row['material_value'],
@@ -75,10 +76,12 @@ products_data.each do |key, data|
   product.save!
 
   # Determine which options to assign
+  types = data[:variants].map { |v| v[:type] }.compact.uniq
   sizes = data[:variants].map { |v| v[:size] }.compact.uniq
   colours = data[:variants].map { |v| v[:colour] }.compact.uniq
   materials = data[:variants].map { |v| v[:material] }.compact.uniq
 
+  has_type_variants = types.length > 1
   has_size_variants = sizes.length > 1
   has_color_variants = colours.length > 1
   has_material_variants = materials.length > 1
@@ -100,6 +103,7 @@ products_data.each do |key, data|
   # Create variants
   data[:variants].each do |variant_data|
     option_values = {}
+    option_values['type'] = variant_data[:type] if variant_data[:type].present?
     option_values['size'] = variant_data[:size] if variant_data[:size].present?
     option_values['colour'] = variant_data[:colour] if variant_data[:colour].present?
     option_values['material'] = variant_data[:material] if variant_data[:material].present?
@@ -107,6 +111,7 @@ products_data.each do |key, data|
     # Create variant name from options that actually vary
     # Only include option if product has multiple values for that option
     variant_name_parts = []
+    variant_name_parts << variant_data[:type] if has_type_variants && variant_data[:type].present?
     variant_name_parts << variant_data[:material] if has_material_variants && variant_data[:material].present?
     variant_name_parts << variant_data[:size] if has_size_variants && variant_data[:size].present?
     variant_name_parts << variant_data[:colour] if has_color_variants && variant_data[:colour].present?
