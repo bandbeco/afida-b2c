@@ -9,9 +9,8 @@ export default class extends Controller {
   }
 
   connect() {
-    // Get initial cup quantity from the product quantity select if it exists
-    const quantitySelect = document.querySelector('[data-product-options-target="quantitySelect"]')
-    this.cupQuantity = quantitySelect ? parseInt(quantitySelect.value) : null
+    // Cup quantity is now handled by the variant selector's quantity step
+    this.cupQuantity = null
   }
 
   // Carousel scroll navigation
@@ -27,21 +26,12 @@ export default class extends Controller {
     }
   }
 
-  // Listen for variant changes from product-options controller
+  // Listen for variant changes from variant-selector controller
   onVariantChanged(event) {
-    const size = event.detail.size
+    const size = event.detail.optionValues?.size
     if (size) {
       this.loadCompatibleLids(size)
     }
-  }
-
-  // Listen for quantity changes from product-options controller
-  onQuantityChanged(event) {
-    const quantity = event.detail.quantity
-    this.cupQuantity = quantity
-
-    // Update all lid quantity selects to match cup quantity
-    this.updateLidQuantities(quantity)
   }
 
   updateLidQuantities(cupQuantity) {

@@ -724,7 +724,6 @@ export default class extends Controller {
     if (!this.selectedVariant) return
 
     const event = new CustomEvent("variant-selector:variant-changed", {
-      bubbles: true,
       detail: {
         variantId: this.selectedVariant.id,
         sku: this.selectedVariant.sku,
@@ -732,7 +731,8 @@ export default class extends Controller {
         optionValues: this.selectedVariant.option_values
       }
     })
-    this.element.dispatchEvent(event)
+    // Dispatch on window so compatible-lids controller can listen
+    window.dispatchEvent(event)
   }
 
   // ==================== STEP MANAGEMENT ====================
