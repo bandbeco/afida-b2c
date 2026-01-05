@@ -2,7 +2,7 @@
   <% if address.errors.any? %>
     <div class="alert alert-error" role="alert" aria-labelledby="error-summary-title">
       <div>
-        <span id="error-summary-title" class="font-semibold">Please fix the following errors:</span>
+        <span id="error-summary-title">Please fix the following errors:</span>
         <ul class="list-disc list-inside mt-1">
           <% address.errors.full_messages.each do |message| %>
             <li><%= message %></li>
@@ -37,7 +37,7 @@
   <div class="divider"></div>
 
   <%# Recipient details %>
-  <h2 class="text-lg font-semibold">Recipient Details</h2>
+  <h2 class="text-lg">Recipient Details</h2>
 
   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
     <div class="form-control">
@@ -73,7 +73,7 @@
   <div class="divider"></div>
 
   <%# Address %>
-  <h2 class="text-lg font-semibold">Address</h2>
+  <h2 class="text-lg">Address</h2>
 
   <div class="form-control">
     <%= form.label :line1, "Address line 1", class: "label" do %>

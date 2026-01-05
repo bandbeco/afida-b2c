@@ -1,5 +1,5 @@
 <div class="container mx-auto px-4 py-8 max-w-2xl">
-  <h1 class="text-3xl font-bold mb-8">Account Settings</h1>
+  <h1 class="text-3xl mb-8">Account Settings</h1>
 
   <%= form_with model: @user, url: account_path, method: :patch, html: { class: "space-y-6" } do |form| %>
     <% if @user.errors.any? %>
@@ -26,7 +26,7 @@
     <div class="divider"></div>
 
     <%# Profile information %>
-    <h2 class="text-xl font-semibold">Profile Information</h2>
+    <h2 class="text-xl">Profile Information</h2>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <div class="form-control">
@@ -47,7 +47,7 @@
     <div class="divider"></div>
 
     <%# Password change %>
-    <h2 class="text-xl font-semibold">Change Password</h2>
+    <h2 class="text-xl">Change Password</h2>
     <p class="text-base-content/60 text-sm mb-4">Leave blank to keep your current password</p>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

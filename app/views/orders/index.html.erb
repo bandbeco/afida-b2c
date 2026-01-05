@@ -2,7 +2,7 @@
   <div class="max-w-6xl mx-auto">
 
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900">Your Orders</h1>
+      <h1 class="text-3xl">Your Orders</h1>
       <p class="mt-2 text-gray-600">View and track your recent purchases</p>
     </div>
 
@@ -13,7 +13,7 @@
             <div class="px-6 py-4 bg-gray-50 border-b flex justify-between items-center">
               <div>
                 <div class="flex items-center gap-2">
-                  <h3 class="text-lg font-semibold text-gray-900">Order <%= order.display_number %></h3>
+                  <h3 class="text-lg">Order <%= order.display_number %></h3>
                   <span class="inline-flex px-2 py-0.5 text-xs font-medium rounded-full
                     <% case order.status %>
                     <% when 'pending' %>
@@ -93,7 +93,7 @@
         <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
         </svg>
-        <h3 class="mt-2 text-sm font-medium text-gray-900">No orders yet</h3>
+        <h3 class="mt-2 text-sm">No orders yet</h3>
         <p class="mt-1 text-sm text-gray-500">Start shopping to see your orders here.</p>
         <div class="mt-6">
           <%= link_to "Start Shopping", root_path, class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700" %>
