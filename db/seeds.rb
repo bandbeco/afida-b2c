@@ -62,14 +62,6 @@ load Rails.root.join('db', 'seeds', 'product_photos.rb')
 # Load URL redirect mappings
 load Rails.root.join('db', 'seeds', 'url_redirects.rb')
 
-# Consolidate related products into single configurable pages
-# (cocktail-napkins, dinner-napkins, straws, wooden-cutlery)
-load Rails.root.join('db', 'seeds', 'consolidate_products.rb')
-
-# Re-run product photos for consolidated products (created after initial photo seeding)
-puts "Attaching photos for consolidated products..."
-load Rails.root.join('db', 'seeds', 'product_photos.rb')
-
 # Mark 8 random products as featured
 puts "Marking featured products..."
 Product.update_all(featured: false)
