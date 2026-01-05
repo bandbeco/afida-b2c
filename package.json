@@ -9,7 +9,8 @@
     "@tailwindcss/vite": "^4.1.7",
     "tailwindcss": "^4.1.7",
     "vite": "^6.3.5",
-    "vite-plugin-rails": "^0.5.0"
+    "vite-plugin-full-reload": "^1.2.0",
+    "vite-plugin-ruby": "^3.2.2"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",

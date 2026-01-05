@@ -1,23 +1,19 @@
 import { defineConfig } from "vite";
-import ViteRails from "vite-plugin-rails";
 import tailwindcss from "@tailwindcss/vite";
+import RubyPlugin from "vite-plugin-ruby";
+import fullReload from "vite-plugin-full-reload";
 
-export default defineConfig({
+export default defineConfig(() => ({
   plugins: [
     tailwindcss(),
-    ViteRails({
-      envVars: { RAILS_ENV: "development" },
-      envOptions: { defineOn: "import.meta.env" },
-      fullReload: {
-        additionalPaths: ["config/routes.rb", "app/views/**/*"],
-        delay: 300,
-      },
-    }),
+    RubyPlugin(),
+    // Improve DX in dev without affecting production builds.
+    fullReload(["config/routes.rb", "app/views/**/*"], { delay: 300 }),
   ],
-  build: { 
+  build: {
     sourcemap: false,
   },
   optimizeDeps: {
     include: ["@hotwired/turbo-rails", "@rails/activestorage"],
   },
-});
+}));
