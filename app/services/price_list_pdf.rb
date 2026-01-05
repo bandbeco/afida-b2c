@@ -78,7 +78,7 @@ class PriceListPdf < Prawn::Document
 
     @variants.each do |variant|
       table_data << [
-        variant.product.name,
+        variant.full_name,
         variant.sku,
         variant.option_values["size"] || variant.name,
         variant.option_values["material"] || "-",

@@ -34,12 +34,10 @@
           <div class="text-base text-gray-600">
             <%= cart_item.product_variant.options_display %>
           </div>
-          <% if cart_item.product_variant.pac_size.present? && cart_item.product_variant.pac_size > 1 %>
-            <div class="text-gray-500 text-sm">
-              Pack of <%= cart_item.product_variant.pac_size %>
-            </div>
-          <% end %>
         <% end %>
+        <div class="text-gray-400 text-xs font-mono mt-1">
+          SKU: <%= cart_item.product_variant.sku %>
+        </div>
       </div>
     </div>
 

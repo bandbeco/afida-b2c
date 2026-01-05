@@ -180,12 +180,12 @@ class ProductVariant < ApplicationRecord
   end
 
   # Returns hash of URL parameters for linking to the product with this variant selected
-  # Example: { size: "8oz", colour: "White" }
+  # Includes all option_values, lowercased to match variant_selector_controller.js
+  # Example: { material: "bamboo-pulp", size: "6x150mm", colour: "natural" }
   def url_params
-    params = {}
-    params[:size] = option_values["size"] if option_values["size"].present?
-    params[:colour] = option_values["colour"] if option_values["colour"].present?
-    params
+    return {} unless option_values.present?
+
+    option_values.transform_keys(&:to_sym).transform_values { |v| v.to_s.downcase }
   end
 
   # Convert pack price to unit price for display
