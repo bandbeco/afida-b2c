@@ -1,19 +1,37 @@
 <%# Turbo Stream response for removing a sample from cart %>
 
-<%# Update the variant card to show "Add" state %>
+<%# Update the variant card to show "Add" state (samples page) %>
 <%= turbo_stream.replace dom_id(@variant, :sample),
       partial: "samples/variant_card",
       locals: { variant: @variant, in_cart: false, at_limit: @at_limit } %>
 
-<%# Update sample counter %>
+<%# Update sample counter (samples page) %>
 <%= turbo_stream.replace "sample_counter",
       partial: "samples/sample_counter",
       locals: { sample_count: @sample_count } %>
 
-<%# Update category header with new selected count %>
+<%# Update category header with new selected count (samples page) %>
 <%= turbo_stream.replace dom_id(@category, :sample_header),
       partial: "samples/category_header",
       locals: { category: @category, selected_count: @category_selected_count } %>
 
 <%# Update cart counter %>
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
+
+<%# Update cart items list (cart page) %>
+<%= turbo_stream.update "cart" do %>
+  <%= render partial: "cart_items/index", locals: { cart_items: Current.cart.cart_items.includes(:product, product_variant: :product).order('products.name ASC, product_variants.name ASC') } %>
+<% end %>
+
+<%# Update cart totals (cart page) %>
+<%= turbo_stream.update "vat" do %>
+  <%= number_to_currency(Current.cart.vat_amount) %>
+<% end %>
+
+<%= turbo_stream.update "subtotal" do %>
+  <%= number_to_currency(Current.cart.subtotal_amount) %>
+<% end %>
+
+<%= turbo_stream.update "grand_total" do %>
+  <%= number_to_currency(Current.cart.total_amount) %>
+<% end %>
