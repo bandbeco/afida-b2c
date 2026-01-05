@@ -5,12 +5,16 @@
   "repository": "git@github.com:bandbeco/afida-b2c.git",
   "author": "Laurent Curau <github@lqro.slmail.me>",
   "license": "MIT",
+  "scripts": {
+    "postinstall": "patch-package"
+  },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.7",
+    "patch-package": "^8.0.0",
     "tailwindcss": "^4.1.7",
-    "vite": "^6.3.5",
+    "vite": "^5.0.0",
     "vite-plugin-full-reload": "^1.2.0",
-    "vite-plugin-ruby": "^3.2.2"
+    "vite-plugin-ruby": "^5.1.2"
   },
   "dependencies": {
     "@hotwired/stimulus": "^3.2.2",

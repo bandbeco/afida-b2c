@@ -1,0 +1,13 @@
+diff --git a/node_modules/vite-plugin-ruby/dist/index.js b/node_modules/vite-plugin-ruby/dist/index.js
+index c4615b0..f39df2f 100644
+--- a/node_modules/vite-plugin-ruby/dist/index.js
++++ b/node_modules/vite-plugin-ruby/dist/index.js
+@@ -220,7 +220,7 @@ function config(userConfig, env) {
+   let rollupInput = rollupOptions == null ? void 0 : rollupOptions.input;
+   if (typeof rollupInput === "string")
+     rollupInput = { [rollupInput]: rollupInput };
+-  const isUsingRolldown = this.meta && this.meta.rolldownVersion;
++  const isUsingRolldown = typeof this !== "undefined" && this.meta && this.meta.rolldownVersion;
+   const optionsKey = isUsingRolldown ? "rolldownOptions" : "rollupOptions";
+   const build = {
+     emptyOutDir: (_c = (_b = userConfig.build) == null ? void 0 : _b.emptyOutDir) != null ? _c : ssrBuild || isLocal,
