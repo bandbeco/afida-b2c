@@ -3,21 +3,21 @@
 
     <%# Neutral Header - utilitarian view for past orders %>
     <div class="mb-8">
-      <h1 class="text-2xl font-bold text-gray-900">Order <%= @order.display_number %></h1>
+      <h1 class="text-gray-900">Order <%= @order.display_number %></h1>
       <p class="text-gray-600">Placed on <%= @order.created_at.strftime("%B %d, %Y at %I:%M %p") %></p>
     </div>
 
     <!-- Order Details -->
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="px-6 py-4 bg-gray-50 border-b">
-        <h2 class="text-xl font-semibold text-gray-900">Order Details</h2>
+        <h2 class="text-gray-900">Order Details</h2>
       </div>
 
       <div class="p-6">
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Order Number</h3>
-            <p class="mt-1 text-lg font-semibold text-gray-900"><%= @order.display_number %></p>
+            <p class="mt-1 text-gray-900"><%= @order.display_number %></p>
           </div>
 
           <div>
@@ -38,7 +38,7 @@
     <!-- Order Items -->
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="px-6 py-4 bg-gray-50 border-b">
-        <h2 class="text-xl font-semibold text-gray-900">Items Ordered</h2>
+        <h2 class="text-gray-900">Items Ordered</h2>
       </div>
 
       <div class="divide-y divide-gray-200">
@@ -53,11 +53,11 @@
 
             <div class="flex-1">
               <% if item.configured? %>
-                <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product.name, branded_product_path(item.product) %></h3>
+                <h3 class="text-gray-900"><%= link_to item.product.name, branded_product_path(item.product) %></h3>
                 <p class="text-sm text-gray-500">Custom branded with your design</p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% else %>
-                <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product_variant.display_name, product_path(item.product, item.product_variant.url_params) %></h3>
+                <h3 class="text-gray-900"><%= link_to item.product_variant.display_name, product_path(item.product, item.product_variant.url_params) %></h3>
                 <p class="text-sm text-gray-500">SKU: <%= item.product_variant.sku %></p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% end %>
@@ -83,7 +83,7 @@
       <!-- Order Summary -->
       <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="px-6 py-4 bg-gray-50 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">Order Summary</h2>
+          <h2 class="text-gray-900">Order Summary</h2>
         </div>
 
         <div class="p-6 space-y-4">
@@ -105,7 +105,7 @@
           <div class="border-t pt-4">
             <div class="flex justify-between">
               <span class="text-lg font-semibold text-gray-900">Total</span>
-              <span class="text-lg font-bold text-gray-900">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
+              <span class="text-lg font-semibold text-gray-900">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
             </div>
           </div>
         </div>
@@ -114,7 +114,7 @@
       <!-- Shipping Information -->
       <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="px-6 py-4 bg-gray-50 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">Shipping Address</h2>
+          <h2 class="text-gray-900">Shipping Address</h2>
         </div>
 
         <div class="p-6">
