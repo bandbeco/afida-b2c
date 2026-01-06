@@ -203,41 +203,6 @@
     </div>
   </div>
 
-  <%# DEPRECATED: Compatible Cup Sizes Section - Old system, kept for migration %>
-  <% if @product.persisted? && @product.name.downcase.include?('lid') %>
-    <div class="divider my-8"></div>
-
-    <%# Compatible Cup Sizes Section - Collapsible (Conditional for lids) %>
-    <div class="collapse collapse-arrow border border-neutral rounded-md">
-      <input type="checkbox" />
-      <div class="collapse-title text-xl font-medium">
-        Compatible Cup Sizes (DEPRECATED)
-        <span class="badge badge-warning badge-sm ml-2">Old System</span>
-      </div>
-      <div class="collapse-content">
-        <fieldset class="fieldset">
-          <p class="text-sm text-base-content/70 mb-4">
-            <strong>⚠️ This is the old compatibility system.</strong> The new system manages compatibility from the cup product page using the join table.
-            This field is kept for backwards compatibility during migration.
-          </p>
-
-          <div class="form-control">
-            <%= form.label :compatible_cup_sizes, "Compatible Cup Sizes", class: "label" %>
-            <div class="flex flex-wrap gap-3">
-              <% %w[4oz 6oz 8oz 10oz 12oz 16oz 20oz].each do |size| %>
-                <label class="label cursor-pointer gap-2 border border-base-300 rounded-lg px-4 py-2">
-                  <%= check_box_tag 'product[compatible_cup_sizes][]', size, @product.compatible_cup_sizes&.include?(size), class: "checkbox checkbox-sm" %>
-                  <span class="label-text"><%= size %></span>
-                </label>
-              <% end %>
-            </div>
-            <%= hidden_field_tag 'product[compatible_cup_sizes][]', '', id: nil %>
-          </div>
-        </fieldset>
-      </div>
-    </div>
-  <% end %>
-
   <div class="mt-8 flex justify-end">
     <%= form.submit "Update Product", class: "btn btn-primary" %>
   </div>
