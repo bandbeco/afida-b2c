@@ -151,14 +151,16 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     sign_in @user_one
     get confirmation_order_url(@order_one)
     assert_response :success
-    assert_select "h1", "Thank You for Your Order!"
+    # Page now uses progress steps design, check for order number instead
+    assert_match @order_one.display_number, response.body
   end
 
   test "confirmation page accessible with signed token" do
     token = @guest_order.signed_access_token
     get confirmation_order_url(@guest_order, token: token)
     assert_response :success
-    assert_select "h1", "Thank You for Your Order!"
+    # Page now uses progress steps design, check for order number instead
+    assert_match @guest_order.display_number, response.body
   end
 
   test "confirmation page fires GA4 only once" do
