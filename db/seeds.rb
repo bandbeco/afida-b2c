@@ -53,11 +53,12 @@ load Rails.root.join('db', 'seeds', 'product_options.rb')
 # Load products from consolidated CSV (replaces YAML-based seeding)
 load Rails.root.join('db', 'seeds', 'products_from_csv.rb')
 
-# Populate lid compatibility relationships (cups → lids)
-load Rails.root.join('db', 'seeds', 'lid_compatibility.rb')
-
-# Load branded product pricing seed
+# Load branded product pricing seed (must run before lid_compatibility)
 load Rails.root.join('db', 'seeds', 'branded_product_pricing.rb')
+
+# Populate lid compatibility relationships (cups → lids)
+# Runs after branded products exist so they get lid compatibility too
+load Rails.root.join('db', 'seeds', 'lid_compatibility.rb')
 
 # Load branded product photos (after branded products are created)
 load Rails.root.join('db', 'seeds', 'branded_product_photos.rb')
