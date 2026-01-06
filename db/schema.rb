@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_06_114610) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_06_223957) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -252,7 +252,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_114610) do
     t.integer "height_in_mm"
     t.integer "length_in_mm"
     t.string "name", null: false
-    t.jsonb "option_values", default: {}
     t.integer "pac_size"
     t.integer "position", default: 0
     t.decimal "price", precision: 10, scale: 2, null: false
@@ -268,7 +267,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_114610) do
     t.integer "width_in_mm"
     t.index ["active"], name: "index_product_variants_on_active"
     t.index ["gtin"], name: "index_product_variants_on_gtin", unique: true, where: "(gtin IS NOT NULL)"
-    t.index ["option_values"], name: "index_product_variants_on_option_values", using: :gin
     t.index ["product_id", "position"], name: "index_product_variants_on_product_id_and_position"
     t.index ["product_id", "sku"], name: "index_product_variants_on_product_id_and_sku", unique: true
     t.index ["product_id"], name: "index_product_variants_on_product_id"
@@ -395,6 +393,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_114610) do
     t.index ["stripe_customer_id"], name: "index_users_on_stripe_customer_id", unique: true
   end
 
+  create_table "variant_option_values", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "product_option_id", null: false
+    t.bigint "product_option_value_id", null: false
+    t.bigint "product_variant_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["product_option_id"], name: "index_variant_option_values_on_product_option_id"
+    t.index ["product_option_value_id"], name: "index_variant_option_values_on_product_option_value_id"
+    t.index ["product_variant_id", "product_option_id"], name: "idx_variant_one_value_per_option", unique: true
+    t.index ["product_variant_id", "product_option_value_id"], name: "idx_variant_option_values_unique", unique: true
+    t.index ["product_variant_id"], name: "index_variant_option_values_on_product_variant_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "addresses", "users"
@@ -425,4 +436,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_06_114610) do
   add_foreign_key "reorder_schedules", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "organizations"
+  add_foreign_key "variant_option_values", "product_option_values"
+  add_foreign_key "variant_option_values", "product_options"
+  add_foreign_key "variant_option_values", "product_variants"
 end
