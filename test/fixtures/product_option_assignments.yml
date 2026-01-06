@@ -1,19 +1,63 @@
+# Links products to the options they support
+# Example: Single Wall Cups has both Size and Colour options
+
+# Fixture product assignments
 one_size:
   product: one
   product_option: size
   position: 1
 
-one_color:
+one_colour:
   product: one
-  product_option: color
+  product_option: colour
   position: 2
 
-single_wall_size:
+# Single Wall Cups - Size and Colour
+single_wall_cups_size:
   product: single_wall_cups
   product_option: size
   position: 1
 
-single_wall_color:
+single_wall_cups_colour:
   product: single_wall_cups
-  product_option: color
+  product_option: colour
   position: 2
+
+# Paper Straws - Size and Colour (sparse matrix)
+paper_straws_size:
+  product: paper_straws
+  product_option: size
+  position: 1
+
+paper_straws_colour:
+  product: paper_straws
+  product_option: colour
+  position: 2
+
+# Wooden Cutlery - Material and Type
+wooden_cutlery_material:
+  product: wooden_cutlery
+  product_option: material
+  position: 1
+
+wooden_cutlery_type:
+  product: wooden_cutlery
+  product_option: type
+  position: 2
+
+# Napkins - Size and Colour (full matrix)
+napkins_size:
+  product: napkins
+  product_option: size
+  position: 1
+
+napkins_colour:
+  product: napkins
+  product_option: colour
+  position: 2
+
+# Paper Lids - Size only
+paper_lids_size:
+  product: paper_lids
+  product_option: size
+  position: 1

@@ -1,0 +1,178 @@
+# Join table linking ProductVariant to ProductOptionValue
+# Each record assigns one option value to a variant
+# product_option_id is auto-populated from product_option_value
+
+# Single Wall Cups - size + colour combinations
+single_wall_8oz_white_size:
+  product_variant: single_wall_8oz_white
+  product_option_value: size_8oz
+  product_option: size
+
+single_wall_8oz_white_colour:
+  product_variant: single_wall_8oz_white
+  product_option_value: colour_white
+  product_option: colour
+
+single_wall_12oz_white_size:
+  product_variant: single_wall_12oz_white
+  product_option_value: size_12oz
+  product_option: size
+
+single_wall_12oz_white_colour:
+  product_variant: single_wall_12oz_white
+  product_option_value: colour_white
+  product_option: colour
+
+single_wall_8oz_black_size:
+  product_variant: single_wall_8oz_black
+  product_option_value: size_8oz
+  product_option: size
+
+single_wall_8oz_black_colour:
+  product_variant: single_wall_8oz_black
+  product_option_value: colour_black
+  product_option: colour
+
+# Paper Straws - sparse matrix (not all combinations exist)
+straw_6x140_white_size:
+  product_variant: straw_6x140_white
+  product_option_value: size_6x140mm
+  product_option: size
+
+straw_6x140_white_colour:
+  product_variant: straw_6x140_white
+  product_option_value: colour_white
+  product_option: colour
+
+straw_6x140_kraft_size:
+  product_variant: straw_6x140_kraft
+  product_option_value: size_6x140mm
+  product_option: size
+
+straw_6x140_kraft_colour:
+  product_variant: straw_6x140_kraft
+  product_option_value: colour_kraft
+  product_option: colour
+
+straw_8x200_redwhite_size:
+  product_variant: straw_8x200_redwhite
+  product_option_value: size_8x200mm
+  product_option: size
+
+straw_8x200_redwhite_colour:
+  product_variant: straw_8x200_redwhite
+  product_option_value: colour_red_white
+  product_option: colour
+
+# Wooden Cutlery - material + type combinations
+wooden_fork_material:
+  product_variant: wooden_fork
+  product_option_value: material_birch
+  product_option: material
+
+wooden_fork_type:
+  product_variant: wooden_fork
+  product_option_value: type_fork
+  product_option: type
+
+wooden_knife_material:
+  product_variant: wooden_knife
+  product_option_value: material_birch
+  product_option: material
+
+wooden_knife_type:
+  product_variant: wooden_knife
+  product_option_value: type_knife
+  product_option: type
+
+wooden_spoon_material:
+  product_variant: wooden_spoon
+  product_option_value: material_birch
+  product_option: material
+
+wooden_spoon_type:
+  product_variant: wooden_spoon
+  product_option_value: type_spoon
+  product_option: type
+
+bamboo_fork_material:
+  product_variant: bamboo_fork
+  product_option_value: material_bamboo
+  product_option: material
+
+bamboo_fork_type:
+  product_variant: bamboo_fork
+  product_option_value: type_fork
+  product_option: type
+
+bamboo_knife_material:
+  product_variant: bamboo_knife
+  product_option_value: material_bamboo
+  product_option: material
+
+bamboo_knife_type:
+  product_variant: bamboo_knife
+  product_option_value: type_knife
+  product_option: type
+
+bamboo_spoon_material:
+  product_variant: bamboo_spoon
+  product_option_value: material_bamboo
+  product_option: material
+
+bamboo_spoon_type:
+  product_variant: bamboo_spoon
+  product_option_value: type_spoon
+  product_option: type
+
+# Napkins - full matrix (all size+colour combinations exist)
+napkin_small_white_size:
+  product_variant: napkin_small_white
+  product_option_value: size_small
+  product_option: size
+
+napkin_small_white_colour:
+  product_variant: napkin_small_white
+  product_option_value: colour_white
+  product_option: colour
+
+napkin_small_natural_size:
+  product_variant: napkin_small_natural
+  product_option_value: size_small
+  product_option: size
+
+napkin_small_natural_colour:
+  product_variant: napkin_small_natural
+  product_option_value: colour_natural
+  product_option: colour
+
+napkin_large_white_size:
+  product_variant: napkin_large_white
+  product_option_value: size_large
+  product_option: size
+
+napkin_large_white_colour:
+  product_variant: napkin_large_white
+  product_option_value: colour_white
+  product_option: colour
+
+napkin_large_natural_size:
+  product_variant: napkin_large_natural
+  product_option_value: size_large
+  product_option: size
+
+napkin_large_natural_colour:
+  product_variant: napkin_large_natural
+  product_option_value: colour_natural
+  product_option: colour
+
+# Paper lids - size only
+paper_lid_80mm_size:
+  product_variant: paper_lid_80mm
+  product_option_value: size_80mm
+  product_option: size
+
+paper_lid_90mm_size:
+  product_variant: paper_lid_90mm
+  product_option_value: size_90mm
+  product_option: size
