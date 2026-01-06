@@ -13,6 +13,8 @@ end
 # Get existing options
 size_option = ProductOption.find_by(name: 'size')
 color_option = ProductOption.find_by(name: 'colour')
+material_option = ProductOption.find_by(name: 'material')
+type_option = ProductOption.find_by(name: 'type')
 
 # Group CSV rows by product
 products_data = {}
@@ -100,6 +102,20 @@ products_data.each do |key, data|
     end
   end
 
+  # Assign Material option if product has multiple materials
+  if has_material_variants && material_option
+    product.option_assignments.find_or_create_by!(product_option: material_option) do |a|
+      a.position = 3
+    end
+  end
+
+  # Assign Type option if product has multiple types
+  if has_type_variants && type_option
+    product.option_assignments.find_or_create_by!(product_option: type_option) do |a|
+      a.position = 4
+    end
+  end
+
   # Create variants
   data[:variants].each do |variant_data|
     # Build option values hash for name generation
@@ -162,3 +178,5 @@ puts "  Total products: #{Product.standard.count}"
 puts "  Total variants: #{ProductVariant.count}"
 puts "  Products with Size option: #{ProductOptionAssignment.where(product_option: size_option).count}"
 puts "  Products with Colour option: #{ProductOptionAssignment.where(product_option: color_option).count}"
+puts "  Products with Material option: #{ProductOptionAssignment.where(product_option: material_option).count}"
+puts "  Products with Type option: #{ProductOptionAssignment.where(product_option: type_option).count}"

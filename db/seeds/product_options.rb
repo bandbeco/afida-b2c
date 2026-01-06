@@ -96,7 +96,17 @@ end
   end
 end
 
+# Type Option (for products with different types like cutlery: forks, knives, spoons)
+type_option = ProductOption.find_or_create_by!(name: "type") do |option|
+  option.display_type = "dropdown"
+  option.required = true
+  option.position = 4
+end
+
+# Type values will be auto-created by products_from_csv.rb based on CSV data
+
 puts "Product options created successfully!"
 puts "  - Size: #{size_option.values.count} values (cups, pizza boxes, straws, containers, etc.)"
 puts "  - Colour: #{color_option.values.count} values (White, Black, Kraft)"
 puts "  - Material: #{material_option.values.count} values (Recyclable, Compostable, Biodegradable)"
+puts "  - Type: #{type_option.values.count} values (auto-created from CSV)"
