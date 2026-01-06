@@ -57,11 +57,12 @@ end
 
 product_dirs.each do |product_dir|
   slug = File.basename(product_dir)
-  product = Product.find_by(slug: slug)
+  # Only attach to standard products (not branded/customizable_template)
+  product = Product.where(slug: slug, product_type: [ nil, 'standard' ]).first
 
   unless product
     stats[:products_not_found] += 1
-    puts "  ⚠ No product found for slug: #{slug}"
+    puts "  ⚠ No standard product found for slug: #{slug}"
     next
   end
 

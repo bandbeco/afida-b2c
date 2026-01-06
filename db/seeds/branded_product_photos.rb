@@ -1,7 +1,10 @@
 # Attach branded product photos from folder structure:
 # lib/data/branded/photos/{product-slug}/
-#   - main.webp → product.product_photo
-#   - lifestyle.webp → product.lifestyle_photo
+#   - main.webp → placeholder variant.product_photo
+#   - lifestyle.webp → placeholder variant.lifestyle_photo
+#
+# Photos are attached to the placeholder variant only.
+# Views should use variant.primary_photo (or product.variants.first.primary_photo).
 #
 puts 'Attaching branded product photos...'
 
@@ -66,18 +69,25 @@ product_dirs.each do |product_dir|
 
   stats[:products_found] += 1
 
-  # Attach main.webp as product_photo
+  # Find the placeholder variant for this branded product
+  variant = product.variants.first
+  unless variant
+    puts "  ⚠ #{slug}: no placeholder variant found"
+    next
+  end
+
+  # Attach main.webp as product_photo to the placeholder variant
   main_photo = Dir.glob(File.join(product_dir, 'main.{webp,png,jpg,jpeg}')).first
   if main_photo
-    if attach_branded_photo(product, :product_photo, main_photo, :product_photos_attached, stats)
+    if attach_branded_photo(variant, :product_photo, main_photo, :product_photos_attached, stats)
       puts "  ✓ #{slug}: attached main photo"
     end
   end
 
-  # Attach lifestyle.webp as lifestyle_photo
+  # Attach lifestyle.webp as lifestyle_photo to the placeholder variant
   lifestyle_photo = Dir.glob(File.join(product_dir, 'lifestyle.{webp,png,jpg,jpeg}')).first
   if lifestyle_photo
-    if attach_branded_photo(product, :lifestyle_photo, lifestyle_photo, :lifestyle_photos_attached, stats)
+    if attach_branded_photo(variant, :lifestyle_photo, lifestyle_photo, :lifestyle_photos_attached, stats)
       puts "  ✓ #{slug}: attached lifestyle photo"
     end
   end
@@ -89,5 +99,6 @@ puts "  Product folders processed: #{stats[:products_found]}"
 puts "  Product folders not found: #{stats[:products_not_found]}"
 puts "  Product photos attached: #{stats[:product_photos_attached]}"
 puts "  Lifestyle photos attached: #{stats[:lifestyle_photos_attached]}"
-puts "  Branded products with product_photo: #{Product.where(product_type: 'customizable_template').joins(:product_photo_attachment).distinct.count}"
-puts "  Branded products with lifestyle_photo: #{Product.where(product_type: 'customizable_template').joins(:lifestyle_photo_attachment).distinct.count}"
+branded_variants = ProductVariant.joins(:product).where(products: { product_type: 'customizable_template' })
+puts "  Placeholder variants with product_photo: #{branded_variants.joins(:product_photo_attachment).count}"
+puts "  Placeholder variants with lifestyle_photo: #{branded_variants.joins(:lifestyle_photo_attachment).count}"

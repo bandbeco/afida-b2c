@@ -1,12 +1,13 @@
 <% image_index ||= 999 %> <%# Default if index not provided %>
+<% variant = product.variants.first %>
 <div class="card shadow-sm bg-base-100"
      data-controller="product-card-hover"
      data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
   <figure class="max-w-[600px] max-h-[600px] bg-white">
     <%= link_to branded_product_path(product), class: "w-full h-full" do %>
       <div class="product-image-container">
-        <% if product.product_photo.attached? %>
-          <%= image_tag product.product_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
+        <% if variant&.product_photo&.attached? %>
+          <%= image_tag variant.product_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
                         alt: product.name,
                         class: "product-image object-contain",
                         width: 400,
@@ -15,8 +16,8 @@
                         data: { product_card_hover_target: "productPhoto" } %>
         <% end %>
 
-        <% if product.lifestyle_photo.attached? %>
-          <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
+        <% if variant&.lifestyle_photo&.attached? %>
+          <%= image_tag variant.lifestyle_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
                         alt: "#{product.name} lifestyle",
                         class: "product-image product-image-overlay object-contain",
                         width: 400,
@@ -24,7 +25,7 @@
                         data: { product_card_hover_target: "lifestylePhoto" } %>
         <% end %>
 
-        <% unless product.product_photo.attached? || product.lifestyle_photo.attached? %>
+        <% unless variant&.product_photo&.attached? || variant&.lifestyle_photo&.attached? %>
           <div class="w-full h-[400px] lg:h-[400px] bg-gray-200 shadow-md flex items-center justify-center">
             <span class="text-gray-700">Image not available</span>
           </div>

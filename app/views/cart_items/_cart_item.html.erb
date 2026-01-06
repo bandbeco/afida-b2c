@@ -12,9 +12,7 @@
   <div class="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-4 items-center p-3 sm:p-4 border-b hover:bg-gray-50 text-center md:text-left">
     <div class="col-span-full md:col-span-2 flex flex-row items-center gap-3 md:space-x-4">
       <%= link_to product_path(cart_item.product, url_params), "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
-        <% # Variant photo first, fall back to product photo (for branded products with placeholder variants) %>
-        <% display_photo = cart_item.product_variant.primary_photo || cart_item.product.primary_photo %>
-        <%= product_photo_tag(display_photo, alt: cart_item.product_variant.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow bg-white object-contain") %>
+        <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow bg-white object-contain") %>
         <% if cart_item.sample? %>
           <%= render "shared/sample_badge", size: :md %>
         <% end %>
