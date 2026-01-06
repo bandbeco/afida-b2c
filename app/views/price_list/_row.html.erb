@@ -7,7 +7,7 @@
       <% end %>
     <% end %>
   </td>
-  <td class="hidden md:table-cell text-gray-500 font-mono text-sm"><%= variant.sku %></td>
+  <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= variant.sku %></td>
   <td class="text-right hidden md:table-cell"><%= number_with_delimiter(variant.pac_size || 1) %></td>
   <td class="text-right"><%= number_to_currency(variant.price) %></td>
   <td class="text-right hidden lg:table-cell text-gray-500">

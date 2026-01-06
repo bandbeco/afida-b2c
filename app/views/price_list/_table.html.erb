@@ -1,13 +1,13 @@
 <div class="overflow-x-auto">
   <table class="table table-zebra w-full">
     <thead>
-      <tr class="bg-base-200">
+      <tr class="bg-base-200 text-xs">
         <th class="text-left font-medium uppercase">Product</th>
         <th class="text-left hidden md:table-cell font-medium uppercase">SKU</th>
         <th class="text-right hidden md:table-cell font-medium uppercase">Pack Size</th>
         <th class="text-right font-medium uppercase">Price/Pack</th>
         <th class="text-right hidden lg:table-cell font-medium uppercase">Price/Unit</th>
-        <th class="text-center font-medium uppercase">Qty</th>
+        <th class="text-center font-medium uppercase">Quantity</th>
         <th class="text-center"></th>
       </tr>
     </thead>
@@ -25,5 +25,7 @@
     <%= link_to "Clear filters", price_list_path, class: "btn btn-outline btn-sm mt-4" %>
   </div>
 <% else %>
-  <p class="text-sm text-gray-500 mt-4"><%= pluralize(variants.count, "product") %> shown</p>
+  <p class="text-sm text-gray-500 mt-4">
+    Showing <%= pluralize(variants.count, "product") %>
+  </p>
 <% end %>
