@@ -16,6 +16,7 @@ templates = [
   {
     name: "Double Wall Coffee Cups",
     slug: "double-wall-coffee-cups",
+    sku: "P-DWCC",
     min_qty: 5000,
     sort: 1,
     case_qty: 500,
@@ -42,6 +43,7 @@ templates = [
   # {
   #   name: "Single Wall Hot Cups",
   #   slug: "single-wall-hot-cups",
+  #   sku: "P-SWHC",
   #   min_qty: 30000,
   #   sort: 2,
   #   case_qty: 1000,
@@ -65,13 +67,13 @@ templates = [
   #   ]
   # },
 
-  # { name: "Single Wall Cold Cups", slug: "single-wall-cold-cups", min_qty: 30000, sort: 3, case_qty: 1000, pricing: [] },
-  # { name: "Clear Recyclable Cups", slug: "clear-recyclable-cups", min_qty: 30000, sort: 4, case_qty: 1000, pricing: [] },
-  # { name: "Ice Cream Cups", slug: "ice-cream-cups", min_qty: 50000, sort: 5, case_qty: 500, pricing: [] },
-  # { name: "Greaseproof Paper", slug: "greaseproof-paper", min_qty: 6000, sort: 6, case_qty: 1000, pricing: [] },
-  # { name: "Pizza Boxes", slug: "pizza-boxes", min_qty: 5000, sort: 7, case_qty: 100, pricing: [] },
-  # { name: "Kraft Containers", slug: "kraft-containers", min_qty: 10000, sort: 8, case_qty: 300, pricing: [] },
-  # { name: "Kraft Bags", slug: "kraft-bags", min_qty: 10000, sort: 9, case_qty: 250, pricing: [] }
+  # { name: "Single Wall Cold Cups", slug: "single-wall-cold-cups", sku: "P-SWCC", min_qty: 30000, sort: 3, case_qty: 1000, pricing: [] },
+  # { name: "Clear Recyclable Cups", slug: "clear-recyclable-cups", sku: "P-CRC", min_qty: 30000, sort: 4, case_qty: 1000, pricing: [] },
+  # { name: "Ice Cream Cups", slug: "ice-cream-cups", sku: "P-ICC", min_qty: 50000, sort: 5, case_qty: 500, pricing: [] },
+  # { name: "Greaseproof Paper", slug: "greaseproof-paper", sku: "P-GP", min_qty: 6000, sort: 6, case_qty: 1000, pricing: [] },
+  # { name: "Pizza Boxes", slug: "pizza-boxes", sku: "P-PB", min_qty: 5000, sort: 7, case_qty: 100, pricing: [] },
+  # { name: "Kraft Containers", slug: "kraft-containers", sku: "P-KC", min_qty: 10000, sort: 8, case_qty: 300, pricing: [] },
+  # { name: "Kraft Bags", slug: "kraft-bags", sku: "P-KB", min_qty: 10000, sort: 9, case_qty: 250, pricing: [] }
 ]
 
 # =============================================================================
@@ -93,7 +95,7 @@ templates.each do |template_data|
   end
 
   # Create placeholder variant (required by cart system)
-  product.variants.find_or_create_by!(sku: "PLACEHOLDER-#{template_data[:slug].upcase}") do |v|
+  product.variants.find_or_create_by!(sku: template_data[:sku]) do |v|
     v.name = 'Placeholder'
     v.price = 0.01
     v.stock_quantity = 0

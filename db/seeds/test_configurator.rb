@@ -38,7 +38,7 @@ pricing.each do |p|
 end
 
 # Create placeholder variant (required by cart_items relationship)
-template.variants.find_or_create_by!(sku: 'PLACEHOLDER-DW-BRANDED') do |v|
+template.variants.find_or_create_by!(sku: 'P-DWBC') do |v|
   v.name = 'Placeholder'
   v.price = 0.01
   v.stock_quantity = 0

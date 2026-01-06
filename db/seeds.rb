@@ -91,7 +91,7 @@ if defined?(ProductVariant)
     .active
     .joins(:product)
     .where.not(id: ProductVariant.joins(:product_photo_attachment).select(:id))
-    .where.not(sku: ProductVariant.where("sku LIKE 'PLACEHOLDER-%'").select(:sku))
+    .where.not(sku: ProductVariant.where("sku LIKE 'P-%'").select(:sku))
     .where(products: { product_type: [ nil, 'standard' ] })
     .includes(:product)
     .order('products.name', 'product_variants.sku')
