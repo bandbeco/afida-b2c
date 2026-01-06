@@ -1,39 +1,41 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #fef3c7; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    .info-box { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; }
-    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #6b7280; font-size: 0.9em; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Your Scheduled Order Has Expired</h1>
-      <p>Hi <%= @user.email_address.split('@').first %>,</p>
-      <p>The scheduled order for <%= @pending_order.scheduled_for.strftime("%B %d, %Y") %> was not confirmed in time and has expired.</p>
-    </div>
+<h1 style="font-size: 24px; font-weight: 600; color: #d97706; margin: 0 0 15px 0;">Your Scheduled Order Has Expired</h1>
 
-    <div class="info-box">
-      <h3>What happens next?</h3>
-      <p>Don't worry - your reorder schedule is still active. Your next order will be prepared for <strong><%= @next_date.strftime("%B %d, %Y") %></strong>.</p>
-      <p>You'll receive another reminder email 3 days before your next scheduled delivery.</p>
-    </div>
+<p style="color: #374151; font-size: 16px; margin: 0 0 20px 0;">
+  Hi <%= @user.email_address.split('@').first %>,
+  <br><br>
+  The scheduled order for <%= @pending_order.scheduled_for.strftime("%B %d, %Y") %> was not confirmed in time and has expired.
+</p>
 
-    <div class="info-box">
-      <h3>Need to order sooner?</h3>
-      <p>If you need supplies before your next scheduled date, you can always place an order directly on our website.</p>
-    </div>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
+  <tr>
+    <td style="padding: 15px;">
+      <p style="font-weight: 600; color: #111827; margin: 0 0 10px 0;">What happens next?</p>
+      <p style="color: #374151; margin: 0;">
+        Don't worry - your reorder schedule is still active. Your next order will be prepared for <strong><%= @next_date.strftime("%B %d, %Y") %></strong>.
+        <br><br>
+        You'll receive another reminder email 3 days before your next scheduled delivery.
+      </p>
+    </td>
+  </tr>
+</table>
 
-    <div class="footer">
-      <p>This notification is for your <%= @schedule.frequency.humanize.downcase %> reorder schedule.</p>
-      <p>You can manage your schedules at any time in your account settings.</p>
-      <p>&copy; <%= Date.current.year %> Afida. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
+  <tr>
+    <td style="padding: 15px;">
+      <p style="font-weight: 600; color: #111827; margin: 0 0 10px 0;">Need to order sooner?</p>
+      <p style="color: #374151; margin: 0;">
+        If you need supplies before your next scheduled date, you can always place an order directly on our website.
+      </p>
+    </td>
+  </tr>
+</table>
+
+<p style="text-align: center; margin: 25px 0;">
+  <a href="<%= shop_url %>" target="_blank" style="display: inline-block; background-color: #76e9bf; color: #000000; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 500;">
+    Shop Now
+  </a>
+</p>
+
+<p style="text-align: center; color: #6b7280; font-size: 13px; margin: 0;">
+  This notification is for your <%= @schedule.frequency.humanize.downcase %> reorder schedule.
+</p>

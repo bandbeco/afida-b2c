@@ -1,52 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta content="text/html; charset=UTF-8" http-equiv="Content-Type" />
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-    .header { background-color: #fee2e2; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-    .error-box { background-color: #fef2f2; border: 1px solid #ef4444; padding: 15px; border-radius: 8px; margin: 20px 0; }
-    .info-box { background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0; }
-    .btn { display: inline-block; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 600; margin: 5px; }
-    .btn-primary { background-color: #10b981; color: white; }
-    .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #6b7280; font-size: 0.9em; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>Payment Failed</h1>
-      <p>Hi <%= @user.email_address.split('@').first %>,</p>
-      <p>We couldn't process the payment for your scheduled order.</p>
-    </div>
+<h1 style="font-size: 24px; font-weight: 600; color: #dc2626; margin: 0 0 15px 0;">Payment Failed</h1>
 
-    <div class="error-box">
-      <strong>Error:</strong> <%= @error_message %>
-    </div>
+<p style="color: #374151; font-size: 16px; margin: 0 0 20px 0;">
+  Hi <%= @user.email_address.split('@').first %>,
+  <br><br>
+  We couldn't process the payment for your scheduled order.
+</p>
 
-    <div class="info-box">
-      <h3>How to fix this</h3>
-      <ol>
-        <li>Check that your payment method has sufficient funds</li>
-        <li>Verify your card details are up to date</li>
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #fef2f2; border: 1px solid #ef4444; border-radius: 8px; margin-bottom: 20px;">
+  <tr>
+    <td style="padding: 15px;">
+      <p style="color: #991b1b; margin: 0;"><strong>Error:</strong> <%= @error_message %></p>
+    </td>
+  </tr>
+</table>
+
+<table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
+  <tr>
+    <td style="padding: 15px;">
+      <p style="font-weight: 600; color: #111827; margin: 0 0 10px 0;">How to fix this:</p>
+      <ol style="margin: 0; padding-left: 20px; color: #374151;">
+        <li style="margin-bottom: 5px;">Check that your payment method has sufficient funds</li>
+        <li style="margin-bottom: 5px;">Verify your card details are up to date</li>
         <li>Click the button below to update your payment method or try again</li>
       </ol>
-    </div>
+    </td>
+  </tr>
+</table>
 
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="<%= @retry_url %>" class="btn btn-primary">Retry Payment</a>
-    </div>
+<p style="text-align: center; margin: 25px 0;">
+  <a href="<%= @retry_url %>" target="_blank" style="display: inline-block; background-color: #76e9bf; color: #000000; padding: 12px 30px; border-radius: 8px; text-decoration: none; font-weight: 500;">
+    Retry Payment
+  </a>
+</p>
 
-    <div class="info-box">
-      <p><strong>Note:</strong> Your order will remain pending until you successfully complete payment. If the payment isn't processed by <%= @pending_order.scheduled_for.strftime("%B %d, %Y") %>, the order will expire and your schedule will continue to the next cycle.</p>
-    </div>
-
-    <div class="footer">
-      <p>This payment was for your <%= @schedule.frequency.humanize.downcase %> reorder schedule.</p>
-      <p>If you need help, please contact our support team.</p>
-      <p>&copy; <%= Date.current.year %> Afida. All rights reserved.</p>
-    </div>
-  </div>
-</body>
-</html>
+<p style="color: #6b7280; font-size: 13px; margin: 0; text-align: center;">
+  Your order will remain pending until you successfully complete payment.
+  <br>
+  If the payment isn't processed by <%= @pending_order.scheduled_for.strftime("%B %d, %Y") %>, the order will expire.
+</p>

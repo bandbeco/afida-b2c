@@ -24,6 +24,7 @@ class ReorderMailerTest < ActionMailer::TestCase
             "variant_name" => "Pack of 500",
             "quantity" => 2,
             "price" => "16.00",
+            "line_total" => "32.00",
             "available" => true
           }
         ],
@@ -78,7 +79,8 @@ class ReorderMailerTest < ActionMailer::TestCase
   test "order_ready includes prices" do
     email = ReorderMailer.order_ready(@pending_order)
 
-    assert_match "16.00", email.body.encoded
+    # Template shows line_total (price × quantity)
+    assert_match "32.00", email.body.encoded
   end
 
   test "order_ready includes total" do
