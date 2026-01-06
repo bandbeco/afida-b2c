@@ -8,17 +8,37 @@
     <% end %>
   </div>
 
-  <div class="bg-base-100 rounded-lg shadow-sm border border-base-200 p-6">
-    <h1 class="text-2xl mb-2">Set Up Reorder Schedule</h1>
-    <p class="text-base-content/70 mb-6">
-      Choose how often you'd like to receive this order. We'll send you a reminder email 3 days before each delivery.
-    </p>
+  <div class="bg-base-100 p-6">
+    <%# ========== US1: Hero Section with Flexibility Messaging ========== %>
+    <div class="text-center mb-12">
+      <h1 class="text-2xl mb-2">Never Run Out Again</h1>
+      <p class="text-base-content/70 mb-4">
+        Automatic deliveries on your schedule. Adjust, pause, or cancel anytime.
+      </p>
+
+      <%# Flexibility badges %>
+      <div class="flex flex-wrap justify-center gap-4" data-testid="flexibility-badges">
+        <span class="inline-flex items-center gap-1.5 text-sm text-base-content">
+          <span>🚫</span>
+          Cancel anytime
+        </span>
+        <span class="inline-flex items-center gap-1.5 text-sm text-base-content">
+          <span>⏸️</span>
+          Skip or pause
+        </span>
+        <span class="inline-flex items-center gap-1.5 text-sm text-base-content">
+          <span>✏️</span>
+          Edit order
+        </span>
+      </div>
+    </div>
 
     <%= form_with url: reorder_schedules_path, method: :post, class: "space-y-6", data: { turbo: false } do |f| %>
       <%= hidden_field_tag "reorder_schedule[order_id]", @order.id %>
 
-      <div>
-        <label class="block text-sm font-medium mb-3">Delivery Frequency</label>
+      <%# ========== US2: Frequency Selector with Conversational Label ========== %>
+      <div class="shadow-sm rounded-lg border border-base-200 p-6">
+        <label class="block text-xl font-medium mb-6 text-center">How often do you need a refill?</label>
         <div class="grid grid-cols-2 gap-3">
           <% @frequencies.each do |frequency| %>
             <label class="cursor-pointer">
@@ -27,48 +47,112 @@
                      value="<%= frequency %>"
                      class="peer sr-only"
                      <%= 'checked' if frequency == 'every_month' %>>
-              <div class="p-4 border-2 border-base-200 rounded-lg text-center transition-all peer-checked:border-primary peer-checked:bg-primary/5">
+              <div class="p-4 border-2 border-base-200 rounded-lg text-center transition-all peer-checked:border-primary peer-checked:bg-primary/5 relative">
                 <span class="block font-medium"><%= frequency.titleize.gsub('_', ' ') %></span>
+                <% if frequency == 'every_month' %>
+                  <span class="badge badge-primary badge-sm absolute -top-2 -right-2">Most popular</span>
+                <% end %>
               </div>
             </label>
           <% end %>
         </div>
       </div>
 
-      <div class="bg-base-200/50 rounded-lg p-4">
-        <h3 class="font-medium mb-3">Items in this order</h3>
-        <div class="space-y-2 text-sm">
-          <% @order.order_items.includes(:product_variant).each do |item| %>
-            <div class="flex justify-between">
-              <span><%= item.product_variant.display_name %> x <%= item.quantity %></span>
-              <span><%= number_to_currency(item.line_total, unit: '£') %></span>
+      <%# Placeholder for future discount banner %>
+      <div class="hidden" data-testid="discount-banner-placeholder"></div>
+
+      <%# ========== US3: Collapsible Order Summary ========== %>
+      <div class="bg-base-200/50 rounded-lg p-4"
+           data-controller="order-summary-toggle"
+           data-order-summary-toggle-hidden-class="hidden"
+           data-testid="order-summary">
+        <%# Compact summary with expand button %>
+        <div class="flex items-center justify-between">
+          <span class="text-sm font-medium"><%= order_items_summary(@order) %></span>
+          <button type="button"
+                  class="text-sm text-base-content/70 hover:text-base-content inline-flex items-center gap-1 cursor-pointer"
+                  data-action="click->order-summary-toggle#toggle">
+            <span data-order-summary-toggle-target="buttonText">View items</span>
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="h-4 w-4 transition-transform"
+                 data-order-summary-toggle-target="icon"
+                 viewBox="0 0 20 20"
+                 fill="currentColor">
+              <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+            </svg>
+          </button>
+        </div>
+
+        <%# Expanded items list (hidden by default) %>
+        <div class="hidden mt-4 pt-4 border-t border-base-300"
+             data-order-summary-toggle-target="content"
+             data-testid="order-items-expanded">
+          <div class="space-y-2 text-sm">
+            <% @order.order_items.includes(:product_variant).each do |item| %>
+              <div class="flex justify-between">
+                <span><%= item.product_variant.display_name %> x <%= item.quantity %></span>
+                <span><%= number_to_currency(item.line_total, unit: '£') %></span>
+              </div>
+            <% end %>
+            <div class="border-t border-base-300 pt-2 mt-2 flex justify-between font-medium">
+              <span>Total per delivery</span>
+              <span><%= number_to_currency(@order.total_amount, unit: '£') %></span>
             </div>
-          <% end %>
-          <div class="border-t border-base-300 pt-2 mt-2 flex justify-between font-medium">
-            <span>Total per delivery</span>
-            <span><%= number_to_currency(@order.total_amount, unit: '£') %></span>
+          </div>
+        </div>
+
+        <%# Noscript fallback: show expanded view when JS disabled %>
+        <noscript>
+          <div class="mt-4 pt-4 border-t border-base-300">
+            <div class="space-y-2 text-sm">
+              <% @order.order_items.includes(:product_variant).each do |item| %>
+                <div class="flex justify-between">
+                  <span><%= item.product_variant.display_name %> x <%= item.quantity %></span>
+                  <span><%= number_to_currency(item.line_total, unit: '£') %></span>
+                </div>
+              <% end %>
+              <div class="border-t border-base-300 pt-2 mt-2 flex justify-between font-medium">
+                <span>Total per delivery</span>
+                <span><%= number_to_currency(@order.total_amount, unit: '£') %></span>
+              </div>
+            </div>
+          </div>
+        </noscript>
+      </div>
+
+      <%# ========== US4: How It Works - 3 Steps ========== %>
+      <div class="border border-base-200 rounded-lg shadow-sm p-4" data-testid="how-it-works">
+        <h3 class="text-sm font-medium text-base-content/70 mb-4 text-center">How it works</h3>
+        <div class="grid grid-cols-3 gap-4 text-center">
+          <div data-testid="step">
+            <div class="w-8 h-8 rounded-full bg-secondary text-sm text-white flex items-center justify-center mx-auto mb-2">1</div>
+            <p class="text-sm font-medium">Choose</p>
+            <p class="text-xs text-base-content/60">Pick your frequency</p>
+          </div>
+          <div data-testid="step">
+            <div class="w-8 h-8 rounded-full bg-secondary text-sm text-white flex items-center justify-center mx-auto mb-2">2</div>
+            <p class="text-sm font-medium">Remind</p>
+            <p class="text-xs text-base-content/60">Email 3 days before</p>
+          </div>
+          <div data-testid="step">
+            <div class="w-8 h-8 rounded-full bg-secondary text-sm text-white flex items-center justify-center mx-auto mb-2">3</div>
+            <p class="text-sm font-medium">Confirm</p>
+            <p class="text-xs text-base-content/60">One click to confirm</p>
           </div>
         </div>
       </div>
 
-      <div class="bg-info/10 border border-info/20 rounded-lg p-4 text-sm">
-        <div class="flex gap-3">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-info flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+      <%# ========== US5: CTA & Trust Section ========== %>
+      <%= f.submit "Set Up Automatic Delivery", class: "btn btn-primary w-full" %>
+
+      <div class="text-center text-sm text-base-content/60" data-testid="trust-section">
+        <div class="flex items-center justify-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd" />
           </svg>
-          <div>
-            <p class="font-medium text-info">How it works</p>
-            <ol class="mt-1 text-base-content/70 space-y-1">
-              <li>1. Our payment provider saves your payment method securely</li>
-              <li>2. Three days before each delivery, you get an email</li>
-              <li>3. Confirm with one click, or edit your order before confirming</li>
-              <li>4. You can pause or cancel anytime</li>
-            </ol>
-          </div>
+          <span>Secure payment via Stripe · Cancel anytime</span>
         </div>
       </div>
-
-      <%= f.submit "Continue to Payment Setup", class: "btn btn-primary w-full" %>
     <% end %>
   </div>
 </div>
