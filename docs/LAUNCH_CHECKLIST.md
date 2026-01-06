@@ -122,9 +122,13 @@ Configure in `.kamal/secrets`:
 - [ ] Run SEO validation: `rails seo:validate`
 - [ ] Verify Google Merchant feed: `https://afida.com/feeds/google-merchant.xml`
 
-### 10. Performance & Caching
+### 10. Background Jobs & Caching
 - [ ] Verify Solid Cache is working
 - [ ] Verify Solid Queue is processing jobs
+- [ ] **Verify recurring jobs are configured** (`config/recurring.yml`):
+  - [ ] `CreatePendingOrdersJob` - runs daily at 6am (creates pending reorders 3 days before scheduled date)
+  - [ ] `ExpirePendingOrdersJob` - runs daily at 6am (expires unconfirmed pending orders)
+- [ ] Test reorder schedule flow end-to-end
 - [ ] Check asset caching headers
 - [ ] Test page load times
 
