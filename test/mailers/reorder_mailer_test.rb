@@ -56,8 +56,8 @@ class ReorderMailerTest < ActionMailer::TestCase
   test "order_ready includes scheduled delivery date" do
     email = ReorderMailer.order_ready(@pending_order)
 
-    # Email uses human-readable format "December 19, 2025"
-    expected_date = @pending_order.scheduled_for.strftime("%B %-d, %Y")
+    # Email uses human-readable format "January 09, 2026" (zero-padded day)
+    expected_date = @pending_order.scheduled_for.strftime("%B %d, %Y")
     assert_match expected_date, email.body.encoded
   end
 
