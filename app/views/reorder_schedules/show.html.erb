@@ -11,7 +11,7 @@
   <div class="bg-base-100 rounded-lg shadow-sm border border-base-200 p-6 mb-6">
     <div class="flex justify-between items-start mb-6">
       <div>
-        <h1 class="text-2xl font-bold mb-2">
+        <h1 class="text-2xl mb-2">
           <%= @schedule.frequency.titleize.gsub('_', ' ') %> Reorder
         </h1>
         <span class="badge <%= @schedule.active? ? 'badge-success' : 'badge-warning' %>">
@@ -65,7 +65,7 @@
   </div>
 
   <div class="bg-base-100 rounded-lg shadow-sm border border-base-200 p-6">
-    <h2 class="text-lg font-semibold mb-4">Items in Scheduled Reorder</h2>
+    <h2 class="text-lg mb-4">Items in Scheduled Reorder</h2>
 
     <div class="divide-y divide-base-200">
       <% @schedule.reorder_schedule_items.includes(:product_variant).each do |item| %>
@@ -113,7 +113,7 @@
         <span class="text-base-content/70">Shipping</span>
         <span class="text-base-content/50">Calculated at checkout</span>
       </div>
-      <div class="flex justify-between font-semibold text-lg pt-2 border-t border-base-200">
+      <div class="flex justify-between text-lg pt-2 border-t border-base-200">
         <span>Total</span>
         <span><%= number_to_currency(total, unit: '£') %></span>
       </div>
