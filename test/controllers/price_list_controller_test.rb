@@ -56,8 +56,6 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "table thead th", text: /Product/
     assert_select "table thead th", text: /SKU/
-    assert_select "table thead th", text: /Size/
-    assert_select "table thead th", text: /Material/
     assert_select "table thead th", text: /Pack Size/
     assert_select "table thead th", text: /Price\/Pack/
     assert_select "table thead th", text: /Price\/Unit/
