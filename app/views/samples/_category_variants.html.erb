@@ -1,6 +1,6 @@
 <%# Turbo Frame response showing variants for a category %>
-<%= turbo_frame_tag "category_#{category.id}" do %>
-  <div class="p-6 pt-0 border-t border-base-200">
+<%= turbo_frame_tag category do %>
+  <div class="p-6 pt-4 border-t border-base-200">
     <% if variants.any? %>
       <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-1">
         <% variants.each do |variant| %>

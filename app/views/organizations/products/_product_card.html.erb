@@ -21,13 +21,13 @@
     <div class="space-y-2 text-sm">
       <div class="flex justify-between">
         <span class="text-gray-600">SKU:</span>
-        <span class="font-semibold"><%= product.active_variants.first&.sku || "N/A" %></span>
+        <span><%= product.active_variants.first&.sku || "N/A" %></span>
       </div>
 
       <% if product.configuration_data["size"].present? %>
         <div class="flex justify-between">
           <span class="text-gray-600">Size:</span>
-          <span class="font-semibold"><%= product.configuration_data["size"] %></span>
+          <span><%= product.configuration_data["size"] %></span>
         </div>
       <% end %>
 
@@ -35,7 +35,7 @@
         <% variant = product.active_variants.first %>
         <div class="flex justify-between">
           <span class="text-gray-600">Price:</span>
-          <span class="font-semibold">£<%= number_with_precision(variant.price, precision: 2) %>/unit</span>
+          <span>£<%= number_with_precision(variant.price, precision: 2) %>/unit</span>
         </div>
 
         <div class="flex justify-between">
