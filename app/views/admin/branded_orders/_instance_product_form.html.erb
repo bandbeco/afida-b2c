@@ -1,3 +1,6 @@
+<%# Customer name: use organization name for B2B, shipping name for B2C %>
+<% customer_name = order.organization&.name || order.shipping_name %>
+
 <div class="bg-base-200 p-6 rounded-lg">
   <h4 class="font-semibold text-lg mb-4">Create Customer Product</h4>
 
@@ -12,7 +15,7 @@
           <span class="label-text">Product Name</span>
         </label>
         <%= text_field_tag :product_name,
-                          "#{order.organization.name} #{order_item.configuration['size']} #{order_item.product.name}",
+                          "#{customer_name} #{order_item.configuration['size']} #{order_item.product.name}",
                           class: "input input-bordered",
                           required: true %>
       </div>
@@ -22,7 +25,7 @@
           <span class="label-text">SKU</span>
         </label>
         <%= text_field_tag :sku,
-                          "BRANDED-#{order.organization.name.parameterize.upcase}-#{order_item.configuration['size']}-#{SecureRandom.hex(3).upcase}",
+                          "BRANDED-#{customer_name.parameterize.upcase}-#{order_item.configuration['size']}-#{SecureRandom.hex(3).upcase}",
                           class: "input input-bordered",
                           required: true %>
       </div>
