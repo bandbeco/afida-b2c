@@ -770,6 +770,8 @@ After deploying SEO updates:
 - PostgreSQL 14+ (existing `products`, `product_variants` tables; new `pricing_tiers` JSONB column) (015-variant-selector)
 - Ruby 3.3.0+ / Rails 8.x + Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (001-reorder-schedule-conversion)
 - PostgreSQL (existing `orders`, `order_items`, `reorder_schedules` tables - no schema changes) (001-reorder-schedule-conversion)
+- Ruby 3.3.0+ / Rails 8.x + Rails ActiveRecord, PostgreSQL, Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (001-option-value-labels)
+- PostgreSQL 14+ (new `variant_option_values` join table) (001-option-value-labels)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+
