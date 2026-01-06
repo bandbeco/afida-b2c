@@ -29,9 +29,9 @@
 
 **Purpose**: Database schema changes and new model creation
 
-- [ ] T001 Create migration for variant_option_values table in db/migrate/YYYYMMDD_create_variant_option_values.rb
-- [ ] T002 Create migration to remove option_values JSONB column in db/migrate/YYYYMMDD_remove_option_values_from_product_variants.rb
-- [ ] T003 Run migrations with `rails db:migrate`
+- [x] T001 Create migration for variant_option_values table in db/migrate/YYYYMMDD_create_variant_option_values.rb
+- [x] T002 Create migration to remove option_values JSONB column in db/migrate/YYYYMMDD_remove_option_values_from_product_variants.rb
+- [x] T003 Run migrations with `rails db:migrate`
 
 ---
 
@@ -45,15 +45,15 @@
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T004 [P] Create test file for VariantOptionValue model in test/models/variant_option_value_test.rb
-- [ ] T005 [P] Create fixture file for variant_option_values in test/fixtures/variant_option_values.yml
+- [x] T004 [P] Create test file for VariantOptionValue model in test/models/variant_option_value_test.rb
+- [x] T005 [P] Create fixture file for variant_option_values in test/fixtures/variant_option_values.yml
 
 ### Implementation for Foundation
 
-- [ ] T006 Create VariantOptionValue model with associations and validations in app/models/variant_option_value.rb
-- [ ] T007 Add has_many :variant_option_values association to ProductVariant in app/models/product_variant.rb
-- [ ] T008 Add has_many :option_values through association to ProductVariant in app/models/product_variant.rb
-- [ ] T009 Verify all foundation tests pass with `rails test test/models/variant_option_value_test.rb`
+- [x] T006 Create VariantOptionValue model with associations and validations in app/models/variant_option_value.rb
+- [x] T007 Add has_many :variant_option_values association to ProductVariant in app/models/product_variant.rb
+- [x] T008 Add has_many :option_values through association to ProductVariant in app/models/product_variant.rb
+- [x] T009 Verify all foundation tests pass with `rails test test/models/variant_option_value_test.rb`
 
 **Checkpoint**: Foundation ready - VariantOptionValue model exists with associations. User story implementation can now begin.
 
