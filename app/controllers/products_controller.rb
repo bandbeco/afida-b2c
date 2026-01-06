@@ -43,11 +43,11 @@ class ProductsController < ApplicationController
     @min_price = @variants.map(&:price).min
 
     # === UNIFIED VARIANT SELECTOR ===
-    # Uses Product#extract_options_from_variants and Product#variants_for_selector
+    # Uses Product#available_options and Product#variants_for_selector
     # for the new unified variant_selector Stimulus controller
 
     # Extract options with multiple values, sorted by priority (material → type → size → colour)
-    @options = @product.extract_options_from_variants
+    @options = @product.available_options
 
     # Build variants JSON with all fields needed by the selector (including pricing_tiers)
     # Populate image URLs here where URL helpers are available
@@ -95,7 +95,7 @@ class ProductsController < ApplicationController
     # Exclude options where all variants have identical values (not a real choice)
     all_options = @product.options.includes(:values).order(:position)
     @product_options = all_options.select do |option|
-      unique_values = @product.active_variants.map { |v| v.option_values[option.name] }.compact.uniq
+      unique_values = @product.active_variants.map { |v| v.option_values_hash[option.name] }.compact.uniq
       unique_values.count > 1
     end
 

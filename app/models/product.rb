@@ -207,15 +207,15 @@ class Product < ApplicationRecord
     description_detailed
   end
 
-  # Extracts option names and values from variant option_values JSON
-  # Returns only options with multiple distinct values (single-value options are excluded)
+  # Returns available options with their values from variant join table
+  # Only includes options that have multiple distinct values (single-value options are excluded)
   # Sorted by priority order: material → type → size → colour
   # Example: { "size" => ["8oz", "12oz"], "colour" => ["White", "Black"] }
-  def extract_options_from_variants
+  def available_options
     option_counts = Hash.new { |h, k| h[k] = Set.new }
 
     active_variants.each do |variant|
-      variant.option_values&.each do |key, value|
+      variant.option_values_hash.each do |key, value|
         option_counts[key] << value
       end
     end
@@ -239,7 +239,7 @@ class Product < ApplicationRecord
         sku: v.sku,
         price: v.price.to_f,
         pac_size: v.pac_size,
-        option_values: v.option_values,
+        option_values: v.option_values_hash,
         pricing_tiers: v.pricing_tiers,
         image_url: nil # Populated by controller with proper URL helpers
       }

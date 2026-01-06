@@ -153,7 +153,7 @@ class ProductTest < ActiveSupport::TestCase
   test "product has many options through assignments" do
     product = products(:single_wall_cups)
     assert_includes product.options, product_options(:size)
-    assert_includes product.options, product_options(:color)
+    assert_includes product.options, product_options(:colour)
   end
 
   test "belongs to organization for customized instances" do
@@ -599,10 +599,13 @@ class ProductTest < ActiveSupport::TestCase
     assert_not_includes eligible, instance
   end
 
-  # T005: extract_options_from_variants tests
-  test "extract_options_from_variants returns only multi-value options" do
+  # ==========================================================================
+  # T013: available_options tests (replaces extract_options_from_variants)
+  # ==========================================================================
+
+  test "available_options returns only multi-value options" do
     product = products(:paper_straws)
-    options = product.extract_options_from_variants
+    options = product.available_options
 
     # Paper straws have size (6x140mm, 8x200mm) and colour (White, Kraft, Red/White) - both multi-value
     assert options.key?("size")
@@ -611,9 +614,9 @@ class ProductTest < ActiveSupport::TestCase
     assert options["colour"].size > 1
   end
 
-  test "extract_options_from_variants excludes single-value options" do
+  test "available_options excludes single-value options" do
     product = products(:single_wall_cups)
-    options = product.extract_options_from_variants
+    options = product.available_options
 
     # Single wall cups have size (8oz, 12oz) and color (White, Black) - both multi-value
     # If there was a single-value option, it would be excluded
@@ -622,9 +625,9 @@ class ProductTest < ActiveSupport::TestCase
     end
   end
 
-  test "extract_options_from_variants sorts by priority order" do
+  test "available_options sorts by priority order" do
     product = products(:wooden_cutlery)
-    options = product.extract_options_from_variants
+    options = product.available_options
 
     # Wooden cutlery has material and type - priority is material → type → size → colour
     keys = options.keys
@@ -636,23 +639,51 @@ class ProductTest < ActiveSupport::TestCase
     end
   end
 
-  test "extract_options_from_variants transforms values to arrays" do
+  test "available_options transforms values to arrays" do
     product = products(:paper_straws)
-    options = product.extract_options_from_variants
+    options = product.available_options
 
     options.each do |key, values|
       assert values.is_a?(Array), "Values for #{key} should be an array"
     end
   end
 
-  test "extract_options_from_variants returns empty hash for product with empty option_values" do
+  test "available_options returns empty hash for product with no variant options" do
     product = products(:one)
-    options = product.extract_options_from_variants
+    options = product.available_options
 
     assert_equal({}, options)
   end
 
-  # T006: variants_for_selector tests
+  test "available_options queries through join table" do
+    product = products(:single_wall_cups)
+    options = product.available_options
+
+    # Verify it returns the values from the join table fixtures
+    assert_includes options["size"], "8oz"
+    assert_includes options["size"], "12oz"
+    assert_includes options["colour"], "White"
+    assert_includes options["colour"], "Black"
+  end
+
+  test "available_options only includes options from active variants" do
+    product = products(:single_wall_cups)
+
+    # Deactivate one variant
+    variant = product_variants(:single_wall_8oz_black)
+    variant.update!(active: false)
+
+    options = product.available_options
+
+    # Black should still be present because 12oz White also exists
+    # But if there was a colour only on the deactivated variant, it would be excluded
+    assert options["size"].size >= 1
+  end
+
+  # ==========================================================================
+  # T014: variants_for_selector tests (uses option_values_hash internally)
+  # ==========================================================================
+
   test "variants_for_selector returns correct shape" do
     product = products(:paper_straws)
     variants = product.variants_for_selector

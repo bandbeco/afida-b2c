@@ -27,6 +27,10 @@ class ProductVariant < ApplicationRecord
   has_many :cart_items, dependent: :restrict_with_error
   has_many :order_items, dependent: :nullify
 
+  # Option value associations (join table for normalized option data)
+  has_many :variant_option_values, dependent: :destroy
+  has_many :option_values, through: :variant_option_values, source: :product_option_value
+
   has_one_attached :product_photo
   has_one_attached :lifestyle_photo
 
@@ -72,7 +76,6 @@ class ProductVariant < ApplicationRecord
             uniqueness: true,
             allow_blank: true
   validate :pricing_tiers_format, if: :pricing_tiers?
-  validate :option_values_format, if: :option_values?
 
   # Inherit these attributes from parent product
   delegate :category, :description_standard_with_fallback, :meta_title, :meta_description, :colour, to: :product
@@ -87,9 +90,10 @@ class ProductVariant < ApplicationRecord
   def display_name
     # Check if this is a consolidated product by looking for material/type options
     # that have multiple values across the product's variants
-    if option_values.present? && consolidated_product?
+    hash = option_values_hash
+    if hash.present? && consolidated_product?
       # Build descriptive name from option_values in priority order
-      parts = PRODUCT_OPTION_PRIORITY.filter_map { |key| option_values[key] }
+      parts = PRODUCT_OPTION_PRIORITY.filter_map { |key| hash[key] }
       return "#{product.name} - #{parts.join(', ')}" if parts.any?
     end
 
@@ -100,12 +104,13 @@ class ProductVariant < ApplicationRecord
   # Check if this variant belongs to a consolidated product
   # Consolidated products have material or type options with multiple distinct values
   def consolidated_product?
-    return false unless option_values.present?
+    hash = option_values_hash
+    return false unless hash.present?
 
     %w[material type].any? do |key|
-      next false unless option_values.key?(key)
+      next false unless hash.key?(key)
       # Check if siblings have different values for this key
-      product.active_variants.pluck(:option_values).map { |ov| ov[key] }.compact.uniq.size > 1
+      product.active_variants.map { |v| v.option_values_hash[key] }.compact.uniq.size > 1
     end
   end
 
@@ -146,46 +151,95 @@ class ProductVariant < ApplicationRecord
     }.reject { |_, value| value.blank? }
   end
 
+  # ==========================================================================
+  # Option Values Methods (querying join table)
+  # ==========================================================================
+
+  # Returns hash of option names to stored values
+  # Example: { "size" => "8oz", "colour" => "White" }
+  # Backwards compatible with old JSONB structure for frontend
+  def option_values_hash
+    @option_values_hash ||= variant_option_values
+      .includes(product_option_value: :product_option)
+      .each_with_object({}) do |vov, hash|
+        option_name = vov.product_option.name
+        hash[option_name] = vov.product_option_value.value
+      end
+  end
+
+  # Returns hash of option names to display labels (with value fallback)
+  # Example: { "size" => "8 oz", "colour" => "White" }
+  # Uses label when present, falls back to value
+  def option_labels_hash
+    @option_labels_hash ||= variant_option_values
+      .includes(product_option_value: :product_option)
+      .each_with_object({}) do |vov, hash|
+        option_name = vov.product_option.name
+        pov = vov.product_option_value
+        hash[option_name] = pov.label.presence || pov.value
+      end
+  end
+
+  # Returns comma-separated display labels for UI
+  # Example: "8 oz, White" or "Birch Wood, Fork"
+  # Respects PRODUCT_OPTION_PRIORITY for ordering
+  def options_summary
+    labels = option_labels_hash
+    return "" if labels.empty?
+
+    # Order by priority, then include any remaining
+    priority_order = PRODUCT_OPTION_PRIORITY + %w[color]
+    parts = priority_order.filter_map { |key| labels[key] }
+
+    # If priority didn't capture everything, add remaining
+    remaining = labels.except(*priority_order).values
+    parts.concat(remaining) if remaining.any?
+
+    parts.join(", ")
+  end
+
   # Get value for a specific option
   # Example: variant.option_value_for("size") => "8oz"
   def option_value_for(option_name)
-    option_values[option_name]
+    option_values_hash[option_name]
   end
 
   # Display string of all option values for cart/order subtitles
   # Format: "Material / Size / Colour" with titleize
   # Example: "Paper / 8oz / White", "Bamboo / 6x200mm / Natural"
   def options_display
-    return "" unless option_values.present?
+    hash = option_values_hash
+    return "" if hash.empty?
 
     # Display in priority order with slashes
     # Note: also checks "color" as fallback for US spelling
     priority_with_color_fallback = PRODUCT_OPTION_PRIORITY + %w[color]
-    parts = priority_with_color_fallback.filter_map { |key| option_values[key]&.titleize }
-    parts.any? ? parts.join(" / ") : option_values.values.map(&:titleize).join(" / ")
+    parts = priority_with_color_fallback.filter_map { |key| hash[key]&.titleize }
+    parts.any? ? parts.join(" / ") : hash.values.map(&:titleize).join(" / ")
   end
 
   # Safe accessor methods for common option values
   # Returns nil if option not present in variant
   def size_value
-    option_values["size"]
+    option_values_hash["size"]
   end
 
   def colour_value
-    option_values["colour"]
+    option_values_hash["colour"]
   end
 
   def material_value
-    option_values["material"]
+    option_values_hash["material"]
   end
 
   # Returns hash of URL parameters for linking to the product with this variant selected
   # Includes all option_values, lowercased to match variant_selector_controller.js
   # Example: { material: "bamboo-pulp", size: "6x150mm", colour: "natural" }
   def url_params
-    return {} unless option_values.present?
+    hash = option_values_hash
+    return {} if hash.empty?
 
-    option_values.transform_keys(&:to_sym).transform_values { |v| v.to_s.downcase }
+    hash.transform_keys(&:to_sym).transform_values { |v| v.to_s.downcase }
   end
 
   # Convert pack price to unit price for display
@@ -237,41 +291,6 @@ class ProductVariant < ApplicationRecord
 
     unless quantities == quantities.sort
       errors.add(:pricing_tiers, "must be sorted by quantity")
-    end
-  end
-
-  # Validates option_values JSON structure and content for data integrity
-  # Structure: { "size": "8oz", "colour": "White" }
-  # Values must be safe display strings (alphanumeric, spaces, common punctuation)
-  # This prevents accidental bad data entry in admin forms
-  OPTION_VALUE_PATTERN = /\A[\w\s\-\/\.\,\(\)]+\z/
-  MAX_OPTION_VALUE_LENGTH = 50
-
-  def option_values_format
-    return if option_values.blank?
-
-    unless option_values.is_a?(Hash)
-      errors.add(:option_values, "must be a hash")
-      return
-    end
-
-    option_values.each do |key, value|
-      unless key.is_a?(String) && key.match?(/\A[a-z_]+\z/)
-        errors.add(:option_values, "key '#{key}' must be lowercase letters and underscores")
-      end
-
-      unless value.is_a?(String)
-        errors.add(:option_values, "value for '#{key}' must be a string")
-        next
-      end
-
-      if value.length > MAX_OPTION_VALUE_LENGTH
-        errors.add(:option_values, "value for '#{key}' exceeds #{MAX_OPTION_VALUE_LENGTH} characters")
-      end
-
-      unless value.match?(OPTION_VALUE_PATTERN)
-        errors.add(:option_values, "value for '#{key}' contains invalid characters")
-      end
     end
   end
 end

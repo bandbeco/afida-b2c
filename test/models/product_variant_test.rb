@@ -226,15 +226,30 @@ class ProductVariantTest < ActiveSupport::TestCase
   end
 
   test "delegates meta_title to product" do
-    assert_equal @variant.product.meta_title, @variant.meta_title
+    # Fixture product has nil meta_title
+    if @variant.product.meta_title.nil?
+      assert_nil @variant.meta_title
+    else
+      assert_equal @variant.product.meta_title, @variant.meta_title
+    end
   end
 
   test "delegates meta_description to product" do
-    assert_equal @variant.product.meta_description, @variant.meta_description
+    # Fixture product has nil meta_description
+    if @variant.product.meta_description.nil?
+      assert_nil @variant.meta_description
+    else
+      assert_equal @variant.product.meta_description, @variant.meta_description
+    end
   end
 
   test "delegates colour to product" do
-    assert_equal @variant.product.colour, @variant.colour
+    # Fixture product has nil colour
+    if @variant.product.colour.nil?
+      assert_nil @variant.colour
+    else
+      assert_equal @variant.product.colour, @variant.colour
+    end
   end
 
   # Dependent destroy tests
@@ -266,96 +281,8 @@ class ProductVariantTest < ActiveSupport::TestCase
     # The association is nullified on delete
   end
 
-  # Option values tests
-  test "variant stores option values as jsonb" do
-    variant = product_variants(:single_wall_8oz_white)
-    assert_equal "8oz", variant.option_values["size"]
-    assert_equal "White", variant.option_values["color"]
-  end
-
-  test "variant can retrieve option value for specific option" do
-    variant = product_variants(:single_wall_8oz_white)
-    assert_equal "8oz", variant.option_value_for("size")
-    assert_equal "White", variant.option_value_for("color")
-  end
-
-  test "variant display name includes option values" do
-    variant = product_variants(:single_wall_8oz_white)
-    assert_equal "8oz / White", variant.options_display
-  end
-
-  test "options_display formats consolidated products with slashes and material first" do
-    # Wooden cutlery is a consolidated product (material option with multiple values)
-    variant = product_variants(:wooden_fork)
-    # Consolidated products format as "Material / Type" with slashes
-    assert_equal "Birch / Fork", variant.options_display
-  end
-
-  test "options_display for different material variant" do
-    # Bamboo fork has different material
-    variant = product_variants(:bamboo_fork)
-    assert_equal "Bamboo / Fork", variant.options_display
-  end
-
-  # consolidated_product? tests
-  test "consolidated_product? returns true when material option has multiple values across siblings" do
-    # Wooden cutlery has both Birch and Bamboo material variants
-    variant = product_variants(:wooden_fork)
-    assert variant.consolidated_product?
-  end
-
-  test "consolidated_product? returns true for any variant of consolidated product" do
-    # All variants of wooden_cutlery should be consolidated
-    birch_fork = product_variants(:wooden_fork)
-    bamboo_fork = product_variants(:bamboo_fork)
-    bamboo_knife = product_variants(:bamboo_knife)
-
-    assert birch_fork.consolidated_product?
-    assert bamboo_fork.consolidated_product?
-    assert bamboo_knife.consolidated_product?
-  end
-
-  test "consolidated_product? returns false for standard product" do
-    # Standard products without material/type options with multiple values
-    variant = product_variants(:single_wall_8oz_white)
-    assert_not variant.consolidated_product?
-  end
-
-  test "consolidated_product? returns false when option_values is empty" do
-    variant = product_variants(:one)
-    variant.update!(option_values: {})
-    assert_not variant.consolidated_product?
-  end
-
-  # display_name tests for consolidated products
-  test "display_name builds from option_values for consolidated products" do
-    variant = product_variants(:wooden_fork)
-    # Should include product name and option values
-    assert_equal "Wooden Cutlery - Birch, Fork", variant.display_name
-  end
-
-  test "display_name uses option priority order for consolidated products" do
-    # Material should come before type
-    variant = product_variants(:bamboo_knife)
-    assert_equal "Wooden Cutlery - Bamboo, Knife", variant.display_name
-  end
-
-  test "display_name uses standard format for non-consolidated products" do
-    variant = product_variants(:single_wall_8oz_white)
-    expected = "#{variant.product.name} (#{variant.name})"
-    assert_equal expected, variant.display_name
-  end
-
-  test "variant without option values returns empty hash" do
-    variant = ProductVariant.create!(
-      product: products(:branded_double_wall_template),
-      name: "Test Variant",
-      sku: "TEST-SKU",
-      price: 100,
-      stock_quantity: 0
-    )
-    assert_equal({}, variant.option_values)
-  end
+  # NOTE: Old JSONB option_values tests removed - column no longer exists
+  # See new join table tests at the end of this file (T010-T012)
 
   # Unit pricing tests
   test "unit_price returns price when pac_size is not set" do
@@ -689,87 +616,156 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert variant.pricing_tiers.first["price"].is_a?(String)
   end
 
-  # Option values validation tests (T015 - data integrity)
-  test "option_values accepts valid hash with lowercase keys and string values" do
-    variant = product_variants(:one)
-    variant.option_values = { "size" => "8oz", "colour" => "White" }
-    assert variant.valid?, variant.errors.full_messages.join(", ")
+  # NOTE: Old JSONB option_values validation tests removed - column no longer exists
+  # Validation now happens via the join table and VariantOptionValue model
+  # See test/models/variant_option_value_test.rb for constraint tests
+
+  # ==========================================================================
+  # New Option Values Methods (join table based) - T010, T011, T012
+  # ==========================================================================
+
+  # T010: option_values_hash tests
+  test "option_values_hash returns hash of option name to value" do
+    variant = product_variants(:single_wall_8oz_white)
+    hash = variant.option_values_hash
+
+    assert_equal "8oz", hash["size"]
+    assert_equal "White", hash["colour"]
   end
 
-  test "option_values allows nil (optional field)" do
-    variant = product_variants(:one)
-    variant.option_values = nil
-    assert variant.valid?
+  test "option_values_hash returns empty hash when no option values assigned" do
+    variant = product_variants(:one) # No option values in fixtures
+    assert_equal({}, variant.option_values_hash)
   end
 
-  test "option_values allows empty hash" do
-    variant = product_variants(:one)
-    variant.option_values = {}
-    assert variant.valid?
+  test "option_values_hash works with sparse matrix products" do
+    variant = product_variants(:straw_6x140_kraft)
+    hash = variant.option_values_hash
+
+    assert_equal "6x140mm", hash["size"]
+    assert_equal "Kraft", hash["colour"]
   end
 
-  test "option_values rejects non-hash value" do
-    variant = product_variants(:one)
-    variant.option_values = [ "size", "8oz" ]
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any?
+  test "option_values_hash works with material and type options" do
+    variant = product_variants(:bamboo_spoon)
+    hash = variant.option_values_hash
+
+    assert_equal "Bamboo", hash["material"]
+    assert_equal "Spoon", hash["type"]
   end
 
-  test "option_values rejects uppercase keys" do
-    variant = product_variants(:one)
-    variant.option_values = { "Size" => "8oz" }
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any? { |e| e.include?("lowercase") }
+  # T011: option_labels_hash tests
+  test "option_labels_hash returns labels when present" do
+    variant = product_variants(:single_wall_8oz_white)
+    hash = variant.option_labels_hash
+
+    # 8oz has label "8 oz" (with space)
+    assert_equal "8 oz", hash["size"]
+    # White has no label, so value is used
+    assert_equal "White", hash["colour"]
   end
 
-  test "option_values rejects keys with spaces" do
-    variant = product_variants(:one)
-    variant.option_values = { "cup size" => "8oz" }
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any?
+  test "option_labels_hash falls back to value when no label" do
+    variant = product_variants(:napkin_small_white)
+    hash = variant.option_labels_hash
+
+    # Small has no label set
+    assert_equal "Small", hash["size"]
+    # White has no label set
+    assert_equal "White", hash["colour"]
   end
 
-  test "option_values rejects non-string values" do
-    variant = product_variants(:one)
-    variant.option_values = { "size" => 8 }
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any? { |e| e.include?("must be a string") }
+  test "option_labels_hash returns formatted labels for sizes with units" do
+    variant = product_variants(:straw_6x140_white)
+    hash = variant.option_labels_hash
+
+    # 6x140mm has label "6mm × 140mm"
+    assert_equal "6mm × 140mm", hash["size"]
   end
 
-  test "option_values rejects values longer than 50 characters" do
+  test "option_labels_hash returns empty hash when no option values" do
     variant = product_variants(:one)
-    variant.option_values = { "size" => "A" * 51 }
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any? { |e| e.include?("exceeds") }
+    assert_equal({}, variant.option_labels_hash)
   end
 
-  test "option_values accepts values with common punctuation" do
-    variant = product_variants(:one)
-    variant.option_values = {
-      "size" => "8oz (Large)",
-      "colour" => "Red/Blue",
-      "style" => "Modern - Classic"
-    }
-    assert variant.valid?, variant.errors.full_messages.join(", ")
+  test "option_labels_hash works with material labels" do
+    variant = product_variants(:wooden_fork)
+    hash = variant.option_labels_hash
+
+    # Birch has label "Birch Wood"
+    assert_equal "Birch Wood", hash["material"]
+    # Fork has no label
+    assert_equal "Fork", hash["type"]
   end
 
-  test "option_values rejects values with script tags" do
-    variant = product_variants(:one)
-    variant.option_values = { "size" => "<script>alert('xss')</script>" }
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any? { |e| e.include?("invalid characters") }
+  # T012: options_summary tests
+  test "options_summary returns comma-separated labels" do
+    variant = product_variants(:single_wall_8oz_white)
+    summary = variant.options_summary
+
+    # Should use labels in display order
+    assert_equal "8 oz, White", summary
   end
 
-  test "option_values rejects values with HTML entities" do
-    variant = product_variants(:one)
-    variant.option_values = { "size" => "8oz&nbsp;Large" }
-    assert_not variant.valid?
-    assert variant.errors[:option_values].any? { |e| e.include?("invalid characters") }
+  test "options_summary respects option priority order" do
+    variant = product_variants(:wooden_fork)
+    summary = variant.options_summary
+
+    # Material comes before type in PRODUCT_OPTION_PRIORITY
+    assert_equal "Birch Wood, Fork", summary
   end
 
-  test "option_values allows underscore in keys" do
+  test "options_summary returns empty string when no option values" do
     variant = product_variants(:one)
-    variant.option_values = { "cup_size" => "8oz" }
-    assert variant.valid?, variant.errors.full_messages.join(", ")
+    assert_equal "", variant.options_summary
+  end
+
+  test "options_summary uses labels with value fallback" do
+    variant = product_variants(:napkin_large_natural)
+    summary = variant.options_summary
+
+    # Large and Natural have no labels, use values
+    assert_equal "Large, Natural", summary
+  end
+
+  test "options_summary for paper lids shows single option" do
+    variant = product_variants(:paper_lid_80mm)
+    summary = variant.options_summary
+
+    # Only has size option
+    assert_equal "80mm", summary
+  end
+
+  # Association tests for new join table
+  test "has_many variant_option_values association" do
+    variant = product_variants(:single_wall_8oz_white)
+    assert_respond_to variant, :variant_option_values
+    assert_equal 2, variant.variant_option_values.count
+  end
+
+  test "has_many option_values through association" do
+    variant = product_variants(:single_wall_8oz_white)
+    assert_respond_to variant, :option_values
+    assert_equal 2, variant.option_values.count
+  end
+
+  test "destroying variant destroys associated variant_option_values" do
+    # Create new variant to destroy
+    product = products(:one)
+    variant = ProductVariant.create!(
+      product: product,
+      name: "Test Destroy",
+      sku: "TEST-DESTROY-001",
+      price: 10.0
+    )
+    size_value = product_option_values(:size_8oz)
+    VariantOptionValue.create!(
+      product_variant: variant,
+      product_option_value: size_value
+    )
+
+    assert_difference "VariantOptionValue.count", -1 do
+      variant.destroy
+    end
   end
 end

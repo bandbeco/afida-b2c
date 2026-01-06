@@ -1,4 +1,5 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# NOTE: option_values are now stored in variant_option_values join table
 
 one:
   product: one
@@ -15,7 +16,6 @@ one:
   pac_size: 1
   active: true
   position: 1
-  option_values: {}
 
 two:
   product: two
@@ -32,7 +32,6 @@ two:
   pac_size: 1
   active: true
   position: 1
-  option_values: {}
 
 single_wall_8oz_white:
   product: single_wall_cups
@@ -40,9 +39,8 @@ single_wall_8oz_white:
   sku: CUP-SW-8-WHT
   price: 26.00
   stock_quantity: 1000
-  option_values:
-    size: "8oz"
-    color: "White"
+  active: true
+  position: 1
   pricing_tiers:
     - quantity: 1
       price: "26.00"
@@ -59,9 +57,8 @@ single_wall_12oz_white:
   sku: CUP-SW-12-WHT
   price: 28.00
   stock_quantity: 1000
-  option_values:
-    size: "12oz"
-    color: "White"
+  active: true
+  position: 2
   pricing_tiers:
     - quantity: 1
       price: "28.00"
@@ -76,9 +73,8 @@ single_wall_8oz_black:
   sku: CUP-SW-8-BLK
   price: 26.00
   stock_quantity: 500
-  option_values:
-    size: "8oz"
-    color: "Black"
+  active: true
+  position: 3
 
 branded_template_variant:
   product: branded_double_wall_template
@@ -86,7 +82,7 @@ branded_template_variant:
   sku: BRANDED-TEMPLATE-001
   price: 0.01
   stock_quantity: 999999
-  option_values: {}
+  active: true
 
 acme_cups_variant:
   product: acme_branded_cups
@@ -94,7 +90,7 @@ acme_cups_variant:
   sku: BRANDED-ACME-12DW-001
   price: 900.00
   stock_quantity: 5000
-  option_values: {}
+  active: true
 
 paper_lid_80mm:
   product: paper_lids
@@ -105,8 +101,6 @@ paper_lid_80mm:
   stock_quantity: 10000
   active: true
   position: 1
-  option_values:
-    size: "80mm"
 
 paper_lid_90mm:
   product: paper_lids
@@ -117,8 +111,6 @@ paper_lid_90mm:
   stock_quantity: 10000
   active: true
   position: 2
-  option_values:
-    size: "90mm"
 
 recyclable_lid_black_62mm:
   product: recyclable_lids_black
@@ -129,7 +121,6 @@ recyclable_lid_black_62mm:
   stock_quantity: 5000
   active: true
   position: 1
-  option_values: {}
 
 recyclable_lid_black_80mm:
   product: recyclable_lids_black
@@ -140,7 +131,6 @@ recyclable_lid_black_80mm:
   stock_quantity: 8000
   active: true
   position: 2
-  option_values: {}
 
 recyclable_lid_black_90mm:
   product: recyclable_lids_black
@@ -151,7 +141,6 @@ recyclable_lid_black_90mm:
   stock_quantity: 8000
   active: true
   position: 3
-  option_values: {}
 
 recyclable_lid_white_62mm:
   product: recyclable_lids_white
@@ -162,7 +151,6 @@ recyclable_lid_white_62mm:
   stock_quantity: 5000
   active: true
   position: 1
-  option_values: {}
 
 recyclable_lid_white_80mm:
   product: recyclable_lids_white
@@ -173,7 +161,6 @@ recyclable_lid_white_80mm:
   stock_quantity: 8000
   active: true
   position: 2
-  option_values: {}
 
 recyclable_lid_white_90mm:
   product: recyclable_lids_white
@@ -184,7 +171,6 @@ recyclable_lid_white_90mm:
   stock_quantity: 8000
   active: true
   position: 3
-  option_values: {}
 
 branded_cup_8oz_variant_small:
   product: branded_cup_8oz
@@ -195,7 +181,6 @@ branded_cup_8oz_variant_small:
   stock_quantity: 500
   active: true
   position: 1
-  option_values: {}
 
 flat_lid_8oz_variant:
   product: flat_lid_8oz
@@ -206,7 +191,6 @@ flat_lid_8oz_variant:
   stock_quantity: 500
   active: true
   position: 1
-  option_values: {}
 
 domed_lid_8oz_variant:
   product: domed_lid_8oz
@@ -217,7 +201,6 @@ domed_lid_8oz_variant:
   stock_quantity: 500
   active: true
   position: 1
-  option_values: {}
 
 sip_lid_8oz_variant:
   product: sip_lid_8oz
@@ -228,7 +211,6 @@ sip_lid_8oz_variant:
   stock_quantity: 0
   active: true
   position: 1
-  option_values: {}
 
 # Sample-eligible variants
 sample_cup_8oz:
@@ -241,7 +223,6 @@ sample_cup_8oz:
   position: 10
   sample_eligible: true
   sample_sku: SAMPLE-CUP-8OZ
-  option_values: {}
 
 sample_cup_12oz:
   product: single_wall_cups
@@ -252,7 +233,6 @@ sample_cup_12oz:
   active: true
   position: 11
   sample_eligible: true
-  option_values: {}
 
 # Sparse matrix variants for Paper Straws
 # 6x140mm comes in: White, Kraft
@@ -267,9 +247,6 @@ straw_6x140_white:
   stock_quantity: 1000
   active: true
   position: 1
-  option_values:
-    size: "6x140mm"
-    colour: "White"
   pricing_tiers:
     - quantity: 1
       price: "8.00"
@@ -286,9 +263,6 @@ straw_6x140_kraft:
   stock_quantity: 1000
   active: true
   position: 2
-  option_values:
-    size: "6x140mm"
-    colour: "Kraft"
 
 straw_8x200_redwhite:
   product: paper_straws
@@ -298,9 +272,6 @@ straw_8x200_redwhite:
   stock_quantity: 1000
   active: true
   position: 3
-  option_values:
-    size: "8x200mm"
-    colour: "Red/White"
 
 # Consolidated product variants (with material option)
 wooden_fork:
@@ -311,9 +282,6 @@ wooden_fork:
   stock_quantity: 500
   active: true
   position: 1
-  option_values:
-    material: "Birch"
-    type: "Fork"
 
 wooden_knife:
   product: wooden_cutlery
@@ -323,9 +291,6 @@ wooden_knife:
   stock_quantity: 500
   active: true
   position: 2
-  option_values:
-    material: "Birch"
-    type: "Knife"
 
 wooden_spoon:
   product: wooden_cutlery
@@ -335,9 +300,6 @@ wooden_spoon:
   stock_quantity: 500
   active: true
   position: 3
-  option_values:
-    material: "Birch"
-    type: "Spoon"
 
 bamboo_fork:
   product: wooden_cutlery
@@ -347,9 +309,6 @@ bamboo_fork:
   stock_quantity: 500
   active: true
   position: 4
-  option_values:
-    material: "Bamboo"
-    type: "Fork"
 
 bamboo_knife:
   product: wooden_cutlery
@@ -359,9 +318,6 @@ bamboo_knife:
   stock_quantity: 500
   active: true
   position: 5
-  option_values:
-    material: "Bamboo"
-    type: "Knife"
 
 bamboo_spoon:
   product: wooden_cutlery
@@ -371,9 +327,6 @@ bamboo_spoon:
   stock_quantity: 500
   active: true
   position: 6
-  option_values:
-    material: "Bamboo"
-    type: "Spoon"
 
 # Full matrix variants - all size+colour combinations exist (2x2 = 4 variants)
 napkin_small_white:
@@ -384,9 +337,6 @@ napkin_small_white:
   stock_quantity: 1000
   active: true
   position: 1
-  option_values:
-    size: "Small"
-    colour: "White"
 
 napkin_small_natural:
   product: napkins
@@ -396,9 +346,6 @@ napkin_small_natural:
   stock_quantity: 1000
   active: true
   position: 2
-  option_values:
-    size: "Small"
-    colour: "Natural"
 
 napkin_large_white:
   product: napkins
@@ -408,9 +355,6 @@ napkin_large_white:
   stock_quantity: 1000
   active: true
   position: 3
-  option_values:
-    size: "Large"
-    colour: "White"
 
 napkin_large_natural:
   product: napkins
@@ -420,9 +364,6 @@ napkin_large_natural:
   stock_quantity: 1000
   active: true
   position: 4
-  option_values:
-    size: "Large"
-    colour: "Natural"
 
 # Single variant product (for category redirect test)
 only_product_variant:
@@ -433,4 +374,3 @@ only_product_variant:
   stock_quantity: 100
   active: true
   position: 1
-  option_values: {}

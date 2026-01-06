@@ -166,8 +166,8 @@ class Admin::UrlRedirectsControllerTest < ActionDispatch::IntegrationTest
     variant_z1 = product_z.variants.create!(name: "Variant", sku: "ZZZ-V1", price: 10)
 
     redirect1 = UrlRedirect.create!(source_path: "/product/test-1", target_slug: product_z.slug, variant_params: {})
-    redirect2 = UrlRedirect.create!(source_path: "/product/test-2", target_slug: product_a.slug, variant_params: variant_a2.option_values)
-    redirect3 = UrlRedirect.create!(source_path: "/product/test-3", target_slug: product_a.slug, variant_params: variant_a1.option_values)
+    redirect2 = UrlRedirect.create!(source_path: "/product/test-2", target_slug: product_a.slug, variant_params: variant_a2.option_values_hash)
+    redirect3 = UrlRedirect.create!(source_path: "/product/test-3", target_slug: product_a.slug, variant_params: variant_a1.option_values_hash)
 
     get admin_url_redirects_url, headers: @headers
     assert_response :success

@@ -219,7 +219,7 @@ module Admin
                 id: variant.id,
                 name: variant.name,
                 display_name: display_parts.join(" - "),
-                option_values: variant.option_values
+                option_values: variant.option_values_hash
               }
             end
           }

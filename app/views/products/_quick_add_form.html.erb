@@ -26,7 +26,7 @@
       <% product_options.each do |option| %>
         <%
           # Get unique values for this option from all variants
-          option_values = variants.map { |v| v.option_values[option.name] }.compact.uniq
+          option_values = variants.map { |v| v.option_values_hash[option.name] }.compact.uniq
           # Sort by numeric value if present
           option_values = option_values.sort_by { |v| v.scan(/\d+/).first.to_i }
           # No pre-selection for multi-variant products - user must choose

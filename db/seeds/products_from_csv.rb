@@ -102,11 +102,12 @@ products_data.each do |key, data|
 
   # Create variants
   data[:variants].each do |variant_data|
-    option_values = {}
-    option_values['type'] = variant_data[:type] if variant_data[:type].present?
-    option_values['size'] = variant_data[:size] if variant_data[:size].present?
-    option_values['colour'] = variant_data[:colour] if variant_data[:colour].present?
-    option_values['material'] = variant_data[:material] if variant_data[:material].present?
+    # Build option values hash for name generation
+    option_values_hash = {}
+    option_values_hash['type'] = variant_data[:type] if variant_data[:type].present?
+    option_values_hash['size'] = variant_data[:size] if variant_data[:size].present?
+    option_values_hash['colour'] = variant_data[:colour] if variant_data[:colour].present?
+    option_values_hash['material'] = variant_data[:material] if variant_data[:material].present?
 
     # Create variant name from options that actually vary
     # Only include option if product has multiple values for that option
@@ -123,10 +124,29 @@ products_data.each do |key, data|
     variant.price = variant_data[:price]
     variant.pac_size = variant_data[:pac_size]
     variant.stock_quantity = 10000
-    variant.option_values = option_values
     variant.active = variant_data[:active]
     variant.sample_eligible = true  # All variants are sample eligible
     variant.save!
+
+    # Create variant_option_values join records (new normalized structure)
+    # Link variant to ProductOptionValue records via join table
+    option_values_hash.each do |option_name, option_value|
+      next if option_value.blank?
+
+      # Find the ProductOption (size, colour, material, type)
+      product_option = ProductOption.find_by(name: option_name)
+      next unless product_option
+
+      # Find the ProductOptionValue (e.g., "8oz" under "size")
+      product_option_value = product_option.values.find_by(value: option_value)
+      next unless product_option_value
+
+      # Create the join record (skip if exists)
+      variant.variant_option_values.find_or_create_by!(
+        product_option_value: product_option_value,
+        product_option: product_option
+      )
+    end
   end
 
   # Set product active if it has any active variants

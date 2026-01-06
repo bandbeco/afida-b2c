@@ -478,8 +478,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
   # T038: Valid URL parameter pre-selects option
   test "valid URL parameter pre-selects option" do
     variant = @multi_option_product.active_variants.first
-    option_name = variant.option_values.keys.first
-    option_value = variant.option_values[option_name]
+    option_name = variant.option_values_hash.keys.first
+    option_value = variant.option_values_hash[option_name]
 
     visit product_path(@multi_option_product.slug, option_name => option_value)
 
@@ -603,8 +603,8 @@ class VariantSelectorTest < ApplicationSystemTestCase
     second_option_name = steps[1]["data-option-name"]
 
     variant = @multi_option_product.active_variants.first
-    first_value = variant.option_values[first_option_name]
-    second_value = variant.option_values[second_option_name]
+    first_value = variant.option_values_hash[first_option_name]
+    second_value = variant.option_values_hash[second_option_name]
 
     skip "Variant needs values for first two options" unless first_value && second_value
 
@@ -646,7 +646,7 @@ class VariantSelectorTest < ApplicationSystemTestCase
   # T043: Direct URL with all params shows completed state
   test "direct URL with all valid params shows completed selection state" do
     variant = @multi_option_product.active_variants.first
-    params = variant.option_values.dup
+    params = variant.option_values_hash.dup
 
     visit product_path(@multi_option_product.slug, params)
 

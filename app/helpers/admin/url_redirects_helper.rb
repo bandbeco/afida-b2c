@@ -12,7 +12,7 @@ module Admin
       return nil unless product && variant_params.present?
 
       product.active_variants.find do |variant|
-        variant_params.all? { |key, value| variant.option_values[key] == value }
+        variant_params.all? { |key, value| variant.option_values_hash[key.to_s] == value }
       end
     end
   end

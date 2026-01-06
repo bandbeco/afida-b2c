@@ -11,9 +11,10 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     @category = categories(:one)
     @category_two = categories(:two)
 
-    # Set up variants with specific option_values for filtering tests
-    @variant.update!(option_values: { "material" => "Paper", "size" => "8oz" }, pac_size: 100)
-    @variant_two.update!(option_values: { "material" => "Plastic", "size" => "12oz" }, pac_size: 50)
+    # Set up variants with pac_size for price list tests
+    # Option values are now handled via join table (variant_option_values fixture)
+    @variant.update!(pac_size: 100)
+    @variant_two.update!(pac_size: 50)
   end
 
   # =============================================================================
