@@ -74,7 +74,8 @@
           <input type="radio" name="config-accordion" checked aria-label="Step 1: Select Size" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="sizeIndicator">1</span>
-            Select Size
+            <span>Select Size</span>
+            <span class="ml-auto text-sm font-normal text-primary hidden" data-branded-configurator-target="sizeSelection"></span>
           </div>
           <div class="collapse-content">
             <div class="grid grid-cols-2 gap-2 pt-4">
@@ -96,7 +97,8 @@
           <input type="radio" name="config-accordion" aria-label="Step 2: Select Quantity" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="quantityIndicator">2</span>
-            Select Quantity
+            <span>Select Quantity</span>
+            <span class="ml-auto text-sm font-normal text-primary hidden" data-branded-configurator-target="quantitySelection"></span>
           </div>
           <div class="collapse-content">
             <div class="space-y-3 pt-4">
@@ -138,7 +140,9 @@
           <input type="radio" name="config-accordion" aria-label="Step 3: Add Matching Lids (Optional)" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="lidsIndicator">3</span>
-            Add Matching Lids (Optional)
+            <span>Add Matching Lids</span>
+            <span class="text-sm font-normal text-base-content/60">(Optional)</span>
+            <span class="ml-auto text-sm font-normal text-primary hidden" data-branded-configurator-target="lidsSelection"></span>
           </div>
           <div class="collapse-content overflow-visible">
             <div class="pt-4 pr-1">
@@ -167,7 +171,8 @@
           <input type="radio" name="config-accordion" aria-label="Step 4: Upload Your Design" />
           <div class="collapse-title text-lg flex items-center gap-2">
             <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="designIndicator">4</span>
-            Upload Your Design
+            <span>Upload Your Design</span>
+            <span class="ml-auto text-sm font-normal text-primary hidden truncate max-w-[150px]" data-branded-configurator-target="designSelection"></span>
           </div>
           <div class="collapse-content">
             <div class="pt-4">

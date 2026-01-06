@@ -22,7 +22,11 @@ export default class extends Controller {
     "quantityStep",
     "lidsStep",
     "designStep",
-    "lidsContainer"
+    "lidsContainer",
+    "sizeSelection",
+    "quantitySelection",
+    "lidsSelection",
+    "designSelection"
   ]
 
   static values = {
@@ -88,6 +92,7 @@ export default class extends Controller {
     this.selectedSize = event.currentTarget.dataset.size
     this.updateUrl()
     this.showStepComplete('size')
+    this.updateSelectionDisplay('size', this.selectedSize)
     this.calculatePrice()
   }
 
@@ -105,6 +110,7 @@ export default class extends Controller {
     this.selectedQuantity = parseInt(event.currentTarget.dataset.quantity)
     this.updateUrl()
     this.showStepComplete('quantity')
+    this.updateSelectionDisplay('quantity', this.selectedQuantity.toLocaleString() + ' units')
 
     // Load compatible lids for next step (skip in modal mode)
     if (!this.inModalValue) {
@@ -405,6 +411,7 @@ export default class extends Controller {
 
     this.clearError()
     this.showStepComplete('design')
+    this.updateSelectionDisplay('design', file.name)
     this.updateAddToCartButton()
   }
 
@@ -454,6 +461,15 @@ export default class extends Controller {
   skipLids(event) {
     // Mark step complete and move to design
     this.showStepComplete('lids')
+    this.updateSelectionDisplay('lids', 'Skipped')
+  }
+
+  updateSelectionDisplay(step, value) {
+    const selectionTarget = `${step}SelectionTarget`
+    if (this[`has${step.charAt(0).toUpperCase() + step.slice(1)}SelectionTarget`] && this[selectionTarget]) {
+      this[selectionTarget].textContent = value
+      this[selectionTarget].classList.remove('hidden')
+    }
   }
 
   async addLidToCart(event) {
@@ -494,6 +510,10 @@ export default class extends Controller {
         button.textContent = '✓ Added to cart'
         button.classList.remove('bg-primary', 'hover:bg-primary-focus')
         button.classList.add('bg-success', 'hover:bg-success')
+
+        // Update step indicator and selection display
+        this.showStepComplete('lids')
+        this.updateSelectionDisplay('lids', 'Added')
 
         // Reset after 2 seconds
         setTimeout(() => {
@@ -637,14 +657,21 @@ export default class extends Controller {
       this.designPreviewTarget.classList.add("hidden")
     }
 
-    // Reset step indicators
-    const indicators = ['size', 'quantity', 'lids', 'design']
-    indicators.forEach(step => {
+    // Reset step indicators and selection displays
+    const steps = ['size', 'quantity', 'lids', 'design']
+    steps.forEach((step, index) => {
       const indicatorTarget = `${step}IndicatorTarget`
       if (this[indicatorTarget]) {
-        this[indicatorTarget].textContent = ''
+        this[indicatorTarget].textContent = (index + 1).toString()
         this[indicatorTarget].classList.remove('bg-success')
         this[indicatorTarget].classList.add('bg-gray-300')
+      }
+
+      const selectionTarget = `${step}SelectionTarget`
+      const hasMethod = `has${step.charAt(0).toUpperCase() + step.slice(1)}SelectionTarget`
+      if (this[hasMethod] && this[selectionTarget]) {
+        this[selectionTarget].textContent = ''
+        this[selectionTarget].classList.add('hidden')
       }
     })
 
