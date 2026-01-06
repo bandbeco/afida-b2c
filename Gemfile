@@ -98,6 +98,3 @@ gem "pagy", "~> 43.0"
 
 # Markdown rendering
 gem "redcarpet"
-
-# Local engines
-gem "seo_ai_engine", path: "engines/seo_ai_engine"

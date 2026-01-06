@@ -1,4 +1,0 @@
-[submodule "engines/seo_ai_engine"]
-	path = engines/seo_ai_engine
-	url = https://github.com/bandbeco/seo-ai-engine.git
-	branch = master
