@@ -1,1 +1,284 @@
-<%= render "branded_configurator", product: @product %>
+<% content_for :title do %>
+  <%= @product.meta_title.presence || "#{@product.name} | #{@product.category.name} | Afida" %>
+<% end %>
+
+<% content_for :meta_description do %>
+  <%= @product.meta_description.presence || @product.description_standard_with_fallback %>
+<% end %>
+
+<% content_for :head do %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": @product.name,
+      "description": @product.description_standard_with_fallback,
+      "brand": {
+        "@type": "Brand",
+        "name": "Afida"
+      },
+      "image": @product.variants.first&.product_photo&.attached? ? url_for(@product.variants.first.product_photo) : nil,
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "GBP",
+        "availability": "https://schema.org/InStock",
+        "url": branded_product_url(@product)
+      }
+    }.compact.to_json) %>
+  </script>
+
+  <script type="application/ld+json">
+    <%= raw breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: @product.category.name, url: category_url(@product.category) },
+      { name: @product.name, url: branded_product_url(@product) }
+    ]) %>
+  </script>
+<% end %>
+
+<% content_for :breadcrumbs do %>
+  <%= render "shared/breadcrumbs", product: @product %>
+<% end %>
+
+<div class="container mx-auto py-8 min-h-screen">
+  <div data-controller="branded-configurator"
+       data-branded-configurator-product-id-value="<%= @product.id %>"
+       data-branded-configurator-vat-rate-value="0.2">
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Left: Product Images -->
+    <div>
+      <% variant = @product.variants.first %>
+      <% if variant&.product_photo&.attached? %>
+        <figure class="rounded-lg overflow-hidden shadow-lg">
+          <%= image_tag variant.product_photo.variant(resize_to_limit: [600, 600]), alt: @product.name, class: "w-full h-auto" %>
+        </figure>
+      <% else %>
+        <div class="w-full h-96 bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
+          <span class="text-gray-700">Image not available</span>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Right: Configuration Panel -->
+    <div class="space-y-6">
+      <div>
+        <h1 class="text-3xl"><%= @product.name %></h1>
+        <p class="text-lg text-gray-600 mt-2"><%= @product.description_standard_with_fallback %></p>
+      </div>
+
+      <!-- Configuration Steps as Accordion -->
+      <div class="space-y-2">
+        <!-- Step 1: Select Size -->
+        <div class="collapse collapse-arrow bg-base-200 collapse-open"
+             data-branded-configurator-target="sizeStep"
+             data-step-index="0"
+             data-expanded="true">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-0-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="true"
+               aria-controls="step-0-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="sizeIndicator"
+                  aria-hidden="true">1</span>
+            <span>Select size<span class="hidden" data-branded-configurator-target="sizeSelection"></span></span>
+          </div>
+          <div class="collapse-content"
+               id="step-0-content"
+               role="region"
+               aria-labelledby="step-0-header">
+            <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="Size options">
+          <% Array(@available_sizes).each do |size| %>
+            <button type="button"
+                    class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
+                    data-branded-configurator-target="sizeOption"
+                    data-size="<%= size %>"
+                    data-action="click->branded-configurator#selectSize"
+                    aria-pressed="false">
+              <%= size %>
+            </button>
+          <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 2: Select Quantity -->
+        <div class="collapse collapse-arrow bg-base-200"
+             data-branded-configurator-target="quantityStep"
+             data-step-index="1"
+             data-expanded="false">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-1-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="step-1-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="quantityIndicator"
+                  aria-hidden="true">2</span>
+            <span>Select quantity<span class="hidden" data-branded-configurator-target="quantitySelection"></span></span>
+          </div>
+          <div class="collapse-content"
+               id="step-1-content"
+               role="region"
+               aria-labelledby="step-1-header">
+            <div class="space-y-2 pt-4" role="listbox" aria-label="Select quantity">
+          <% Array(@quantity_tiers).each_with_index do |quantity, index| %>
+            <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
+                 style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;"
+                 data-branded-configurator-target="quantityOption"
+                 data-quantity="<%= quantity %>"
+                 data-action="click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown"
+                 role="option"
+                 aria-selected="false"
+                 tabindex="0">
+              <%# Column 1: Quantity with units %>
+              <div class="text-black whitespace-nowrap" data-branded-configurator-target="quantityLabel">
+                <%= number_with_delimiter(quantity) %> units
+              </div>
+
+              <%# Column 2: Unit price %>
+              <div class="text-gray-400" style="width: 6rem;"
+                   data-branded-configurator-target="pricePerUnit">
+                <!-- Price per unit filled by JS -->
+              </div>
+
+              <%# Column 3: Savings badge %>
+              <div style="width: 5rem;"
+                   data-branded-configurator-target="savingsBadge"
+                   class="<%= 'invisible' if index == 0 %>">
+                <!-- Savings % filled by JS -->
+              </div>
+
+              <%# Column 4: Total price %>
+              <div class="text-black text-right" style="width: 4.5rem;"
+                   data-branded-configurator-target="totalPrice">
+                <!-- Total price filled by JS -->
+              </div>
+            </div>
+          <% end %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 3: Add Matching Lids (Optional) -->
+        <div class="collapse collapse-arrow bg-base-200"
+             data-branded-configurator-target="lidsStep"
+             data-step-index="2"
+             data-expanded="false">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-2-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="step-2-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="lidsIndicator"
+                  aria-hidden="true">3</span>
+            <span>Add matching lids<span class="text-sm font-normal text-base-content/60 ml-1">(optional)</span><span class="hidden" data-branded-configurator-target="lidsSelection"></span></span>
+          </div>
+          <div class="collapse-content overflow-visible"
+               id="step-2-content"
+               role="region"
+               aria-labelledby="step-2-header">
+            <div class="pt-4 pr-1">
+              <p class="text-sm text-gray-600 mb-4">Complete your order with compatible lids</p>
+
+              <div id="lids-loading" class="text-center py-8" style="display:none;" role="status" aria-live="polite">
+                <span class="loading loading-spinner loading-lg" aria-hidden="true"></span>
+                <span class="sr-only">Loading compatible lids...</span>
+              </div>
+
+              <div id="lids-grid" class="flex flex-col gap-3" data-branded-configurator-target="lidsContainer" aria-live="polite" aria-label="Compatible lids">
+                <!-- Lids will be loaded here via AJAX -->
+              </div>
+
+              <button type="button"
+                      class="btn btn-ghost mt-4"
+                      data-action="click->branded-configurator#skipLids">
+                Continue to next step
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step 4: Upload Design -->
+        <div class="collapse collapse-arrow bg-base-200"
+             data-branded-configurator-target="designStep"
+             data-step-index="3"
+             data-expanded="false">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-3-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="step-3-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="designIndicator"
+                  aria-hidden="true">4</span>
+            <span>Upload your design<span class="hidden" data-branded-configurator-target="designSelection"></span></span>
+          </div>
+          <div class="collapse-content"
+               id="step-3-content"
+               role="region"
+               aria-labelledby="step-3-header">
+            <div class="pt-4">
+              <input type="file"
+                     class="file-input file-input-bordered w-full"
+                     accept=".pdf,.png,.jpg,.jpeg,.ai"
+                     data-branded-configurator-target="designInput"
+                     data-action="change->branded-configurator#handleDesignUpload">
+              <label class="label">
+                <span class="label-text-alt">
+                  Accepted formats: PDF, PNG, JPG, AI (max 10MB)
+                  <%= link_to "Design Guidelines", "#", class: "link link-primary" %>
+                </span>
+              </label>
+              <div class="hidden mt-2 alert alert-success"
+                   data-branded-configurator-target="designPreview">
+                <!-- File name shown here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Messages -->
+      <div class="hidden alert alert-error"
+           data-branded-configurator-target="errorMessage">
+        <!-- Error text shown here -->
+      </div>
+
+      <!-- Delivery Info & Price Summary -->
+      <div class="my-8 space-y-3 rounded-lg pt-4 px-4">
+        <div class="flex items-center gap-2">
+          <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <span class="font-medium">Delivered in 3-4 weeks</span>
+        </div>
+        <div class="mt-8 grid grid-cols-[1fr_auto] gap-4 items-start">
+          <div>
+            <p class="text-lg">Total (excl. VAT)</p>
+            <p class="text-xs text-base-content/60">Free shipping on all orders</p>
+          </div>
+          <p class="text-2xl font-semibold whitespace-nowrap text-right" data-branded-configurator-target="total">£0.00</p>
+        </div>
+      </div>
+
+      <!-- Add to Cart Button -->
+      <button class="btn btn-primary btn-lg w-full btn-disabled cursor-pointer"
+              data-branded-configurator-target="addToCartButton"
+              data-action="click->branded-configurator#addToCart"
+              disabled>
+        Add to Cart
+      </button>
+      </div>
+  </div>
+</div>
