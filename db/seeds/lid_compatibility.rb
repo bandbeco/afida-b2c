@@ -30,11 +30,13 @@ cold_lid_names = [
 ]
 
 # Populate hot cup → hot lid relationships
+# Include both standard and branded (customizable_template) products
 hot_cups = Product.where(name: hot_cup_names)
-hot_lids = Product.where(name: hot_lid_names)
+hot_lids = Product.where(name: hot_lid_names, product_type: [ nil, 'standard' ])
 
 hot_cups.each do |cup|
-  puts "\nProcessing cup: #{cup.name}"
+  type_label = cup.product_type == 'customizable_template' ? ' (branded)' : ''
+  puts "\nProcessing cup: #{cup.name}#{type_label}"
 
   hot_lids.each_with_index do |lid, index|
     compatibility = ProductCompatibleLid.create!(
@@ -48,11 +50,13 @@ hot_cups.each do |cup|
 end
 
 # Populate cold cup → cold lid relationships
+# Include both standard and branded (customizable_template) products
 cold_cups = Product.where(name: cold_cup_names)
-cold_lids = Product.where(name: cold_lid_names)
+cold_lids = Product.where(name: cold_lid_names, product_type: [ nil, 'standard' ])
 
 cold_cups.each do |cup|
-  puts "\nProcessing cup: #{cup.name}"
+  type_label = cup.product_type == 'customizable_template' ? ' (branded)' : ''
+  puts "\nProcessing cup: #{cup.name}#{type_label}"
 
   cold_lids.each_with_index do |lid, index|
     compatibility = ProductCompatibleLid.create!(

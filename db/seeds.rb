@@ -59,6 +59,9 @@ load Rails.root.join('db', 'seeds', 'lid_compatibility.rb')
 # Load branded product pricing seed
 load Rails.root.join('db', 'seeds', 'branded_product_pricing.rb')
 
+# Load branded product photos (after branded products are created)
+load Rails.root.join('db', 'seeds', 'branded_product_photos.rb')
+
 # Load product photos (after products are created)
 load Rails.root.join('db', 'seeds', 'product_photos.rb')
 
