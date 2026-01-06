@@ -55,6 +55,13 @@ class Order < ApplicationRecord
     order_items.sum(:quantity)
   end
 
+  # Count of distinct line items (products) in order
+  # Each product = 1, regardless of quantity or product type
+  # e.g., 2 packs napkins + 5000 branded cups = 2
+  def line_items_count
+    order_items.count
+  end
+
   def full_shipping_address
     address_parts = [
       shipping_address_line1,

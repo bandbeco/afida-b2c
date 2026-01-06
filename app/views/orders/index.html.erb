@@ -46,7 +46,7 @@
               <div class="flex justify-between items-start">
                 <div class="flex-1">
                   <p class="text-sm text-gray-600 mb-2">
-                    <%= pluralize(order.items_count, 'item') %> • Total: £<%= number_with_precision(order.total_amount, precision: 2) %>
+                    <%= pluralize(order.line_items_count, 'item') %> • Total: £<%= number_with_precision(order.total_amount, precision: 2) %>
                   </p>
 
                   <div class="flex -space-x-2 mb-4">
@@ -65,7 +65,7 @@
                   </div>
 
                   <p class="text-sm text-gray-600">
-                    <strong>Ship to:</strong> <%= order.shipping_name %>, <%= order.shipping_city %>
+                    Ship to: <%= order.shipping_name %>, <%= order.shipping_city %>
                   </p>
                 </div>
 
