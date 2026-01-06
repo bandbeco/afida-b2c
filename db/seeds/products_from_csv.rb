@@ -137,9 +137,8 @@ products_data.each do |key, data|
       product_option = ProductOption.find_by(name: option_name)
       next unless product_option
 
-      # Find the ProductOptionValue (e.g., "8oz" under "size")
-      product_option_value = product_option.values.find_by(value: option_value)
-      next unless product_option_value
+      # Find or create the ProductOptionValue (e.g., "8oz" under "size", "Orange" under "colour")
+      product_option_value = product_option.values.find_or_create_by!(value: option_value)
 
       # Create the join record (skip if exists)
       variant.variant_option_values.find_or_create_by!(
