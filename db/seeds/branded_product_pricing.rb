@@ -14,8 +14,8 @@ end
 # =============================================================================
 templates = [
   {
-    name: "Double Wall Hot Cups",
-    slug: "double-wall-hot-cups",
+    name: "Double Wall Coffee Cups",
+    slug: "double-wall-coffee-cups",
     min_qty: 5000,
     sort: 1,
     case_qty: 500,
@@ -81,10 +81,9 @@ templates = [
 total_pricing_entries = 0
 
 templates.each do |template_data|
-  # Create the product
-  product = Product.find_or_create_by!(slug: template_data[:slug]) do |p|
+  # Create the product (match on slug AND product_type to allow same slug as standard products)
+  product = Product.find_or_create_by!(slug: template_data[:slug], product_type: "customizable_template") do |p|
     p.name = template_data[:name]
-    p.product_type = "customizable_template"
     p.category = branded_category
     p.description_short = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
     p.description_standard = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
