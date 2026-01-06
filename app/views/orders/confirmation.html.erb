@@ -15,9 +15,9 @@
       <svg class="h-16 w-16 text-green-500 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
-      <h1 class="text-3xl font-bold text-green-800 mb-2">Thank You for Your Order!</h1>
+      <h1 class="text-3xl text-green-800 mb-2">Thank You for Your Order!</h1>
       <p class="text-green-600 text-lg">Order <%= @order.display_number %> has been confirmed</p>
-      <p class="text-green-600 mt-2">A confirmation email has been sent to <strong><%= @order.email %></strong></p>
+      <p class="text-green-600 mt-2">A confirmation email has been sent to <%= @order.email %></p>
     </div>
 
     <%# Account Conversion Form (for guests only) %>
@@ -35,12 +35,12 @@
     <%# What Happens Next %>
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="px-6 py-4 bg-gray-50 border-b">
-        <h2 class="text-xl font-semibold text-gray-900">What Happens Next?</h2>
+        <h2 class="text-xl text-gray-900">What Happens Next?</h2>
       </div>
       <div class="p-6">
         <ol class="space-y-4">
           <li class="flex items-start">
-            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white font-semibold">
+            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-green-500 flex items-center justify-center text-white">
               <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
               </svg>
@@ -51,14 +51,14 @@
             </div>
           </li>
           <li class="flex items-start">
-            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">2</div>
+            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">2</div>
             <div class="ml-4">
               <h4 class="font-medium text-gray-900">Processing</h4>
               <p class="text-gray-600">We'll prepare your order within 1-2 business days</p>
             </div>
           </li>
           <li class="flex items-start">
-            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600 font-semibold">3</div>
+            <div class="flex-shrink-0 h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-600">3</div>
             <div class="ml-4">
               <h4 class="font-medium text-gray-900">Delivery</h4>
               <p class="text-gray-600">Your order will arrive in 3-5 business days</p>
@@ -71,7 +71,7 @@
     <%# Order Items %>
     <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
       <div class="px-6 py-4 bg-gray-50 border-b">
-        <h2 class="text-xl font-semibold text-gray-900">Items Ordered</h2>
+        <h2 class="text-xl text-gray-900">Items Ordered</h2>
       </div>
 
       <div class="divide-y divide-gray-200">
@@ -86,11 +86,11 @@
 
             <div class="flex-1">
               <% if item.configured? %>
-                <h3 class="text-lg font-medium text-gray-900"><%= item.product.name %></h3>
+                <h3 class="text-lg text-gray-900"><%= item.product.name %></h3>
                 <p class="text-sm text-gray-500">Custom branded with your design</p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% else %>
-                <h3 class="text-lg font-medium text-gray-900"><%= item.product_variant.display_name %></h3>
+                <h3 class="text-lg text-gray-900"><%= item.product_variant.display_name %></h3>
                 <p class="text-sm text-gray-500">SKU: <%= item.product_variant.sku %></p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% end %>
@@ -98,10 +98,10 @@
 
             <div class="text-right">
               <% if item.sample? %>
-                <p class="text-lg font-medium text-primary">Free</p>
+                <p class="text-lg text-primary">Free</p>
                 <p class="text-sm text-gray-500">Sample</p>
               <% else %>
-                <p class="text-lg font-medium text-gray-900">£<%= number_with_precision(item.line_total, precision: 2) %></p>
+                <p class="text-lg text-gray-900">£<%= number_with_precision(item.line_total, precision: 2) %></p>
                 <p class="text-sm text-gray-500"><%= format_price_display(item) %></p>
               <% end %>
             </div>
@@ -116,7 +116,7 @@
       <%# Order Summary %>
       <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="px-6 py-4 bg-gray-50 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">Order Summary</h2>
+          <h2 class="text-xl text-gray-900">Order Summary</h2>
         </div>
 
         <div class="p-6 space-y-4">
@@ -137,8 +137,8 @@
 
           <div class="border-t pt-4">
             <div class="flex justify-between">
-              <span class="text-lg font-semibold text-gray-900">Total</span>
-              <span class="text-lg font-bold text-gray-900">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
+              <span class="text-lg text-gray-900">Total</span>
+              <span class="text-lg text-gray-900">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
             </div>
           </div>
         </div>
@@ -147,12 +147,12 @@
       <%# Shipping Information %>
       <div class="bg-white shadow-lg rounded-lg overflow-hidden">
         <div class="px-6 py-4 bg-gray-50 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">Shipping Address</h2>
+          <h2 class="text-xl text-gray-900">Shipping Address</h2>
         </div>
 
         <div class="p-6">
           <div class="text-gray-900">
-            <p class="font-medium"><%= @order.shipping_name %></p>
+            <p><%= @order.shipping_name %></p>
             <p><%= @order.shipping_address_line1 %></p>
             <% if @order.shipping_address_line2.present? %>
               <p><%= @order.shipping_address_line2 %></p>
@@ -163,7 +163,7 @@
 
           <div class="mt-4 pt-4 border-t">
             <p class="text-sm text-gray-600">
-              <strong>Email:</strong> <%= @order.email %>
+              Email: <%= @order.email %>
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-primary mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
-        <h3 class="text-lg font-semibold mb-2">Need this order regularly?</h3>
+        <h3 class="text-lg mb-2">Need this order regularly?</h3>
         <p class="text-base-content/70 mb-4">Set up automatic reorders and never run out of supplies</p>
         <%= link_to "Set Up Reorder Schedule", setup_reorder_schedules_path(order_id: @order.id), class: "btn btn-primary" %>
       </div>
