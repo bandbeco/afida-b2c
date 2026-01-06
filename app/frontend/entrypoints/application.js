@@ -46,7 +46,6 @@ const lazyControllers = {
   "category-expand": () => import("../javascript/controllers/category_expand_controller"),
   "sample-counter": () => import("../javascript/controllers/sample_counter_controller"),
   "related-products": () => import("../javascript/controllers/related_products_controller"),
-  "product-configurator": () => import("../javascript/controllers/product_configurator_controller"),
   "account-dropdown": () => import("../javascript/controllers/account_dropdown_controller"),
   "password-visibility": () => import("../javascript/controllers/password_visibility_controller"),
   "save-address-prompt": () => import("../javascript/controllers/save_address_prompt_controller")
