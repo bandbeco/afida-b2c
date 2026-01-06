@@ -68,23 +68,36 @@
       </div>
 
       <!-- Configuration Steps as Accordion -->
-      <div class="space-y-4">
+      <div class="space-y-2">
         <!-- Step 1: Select Size -->
-        <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="sizeStep">
-          <input type="radio" name="config-accordion" checked aria-label="Step 1: Select Size" />
-          <div class="collapse-title text-lg flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="sizeIndicator">1</span>
-            <span>Select Size</span>
-            <span class="ml-auto text-sm font-normal text-primary hidden" data-branded-configurator-target="sizeSelection"></span>
+        <div class="collapse collapse-arrow bg-base-200 collapse-open"
+             data-branded-configurator-target="sizeStep"
+             data-step-index="0"
+             data-expanded="true">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-0-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="true"
+               aria-controls="step-0-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="sizeIndicator"
+                  aria-hidden="true">1</span>
+            <span>Select size<span class="hidden" data-branded-configurator-target="sizeSelection"></span></span>
           </div>
-          <div class="collapse-content">
-            <div class="grid grid-cols-2 gap-2 pt-4">
+          <div class="collapse-content"
+               id="step-0-content"
+               role="region"
+               aria-labelledby="step-0-header">
+            <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="Size options">
           <% Array(@available_sizes).each do |size| %>
             <button type="button"
                     class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
                     data-branded-configurator-target="sizeOption"
                     data-size="<%= size %>"
-                    data-action="click->branded-configurator#selectSize">
+                    data-action="click->branded-configurator#selectSize"
+                    aria-pressed="false">
               <%= size %>
             </button>
           <% end %>
@@ -93,41 +106,58 @@
         </div>
 
         <!-- Step 2: Select Quantity -->
-        <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="quantityStep">
-          <input type="radio" name="config-accordion" aria-label="Step 2: Select Quantity" />
-          <div class="collapse-title text-lg flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="quantityIndicator">2</span>
-            <span>Select Quantity</span>
-            <span class="ml-auto text-sm font-normal text-primary hidden" data-branded-configurator-target="quantitySelection"></span>
+        <div class="collapse collapse-arrow bg-base-200"
+             data-branded-configurator-target="quantityStep"
+             data-step-index="1"
+             data-expanded="false">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-1-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="step-1-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="quantityIndicator"
+                  aria-hidden="true">2</span>
+            <span>Select quantity<span class="hidden" data-branded-configurator-target="quantitySelection"></span></span>
           </div>
-          <div class="collapse-content">
-            <div class="space-y-3 pt-4">
+          <div class="collapse-content"
+               id="step-1-content"
+               role="region"
+               aria-labelledby="step-1-header">
+            <div class="space-y-2 pt-4" role="listbox" aria-label="Select quantity">
           <% Array(@quantity_tiers).each_with_index do |quantity, index| %>
-            <div class="border-2 border-gray-300 bg-white rounded-xl p-3 sm:p-4 cursor-pointer hover:border-primary transition"
+            <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
+                 style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;"
                  data-branded-configurator-target="quantityOption"
                  data-quantity="<%= quantity %>"
-                 data-action="click->branded-configurator#selectQuantity">
-              <div class="flex items-center justify-between">
-                <%# Quantity - always on left %>
-                <div class="text-black font-semibold text-lg"><%= number_with_delimiter(quantity) %></div>
-
-                <%# Savings badge - center on mobile, inline on desktop %>
-                <div class="badge bg-pink-100 text-pink-800 border-0 px-2 sm:px-3 py-1 sm:py-2 text-xs sm:text-sm font-semibold <%= 'invisible' if index == 0 %>"
-                     data-branded-configurator-target="savingsBadge">
-                  <!-- Savings % filled by JS -->
-                </div>
-
-                <%# Total price - always on right %>
-                <div class="text-black font-semibold"
-                     data-branded-configurator-target="totalPrice">
-                  <!-- Total price filled by JS -->
-                </div>
+                 data-action="click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown"
+                 role="option"
+                 aria-selected="false"
+                 tabindex="0">
+              <%# Column 1: Quantity with units %>
+              <div class="text-black whitespace-nowrap" data-branded-configurator-target="quantityLabel">
+                <%= number_with_delimiter(quantity) %> units
               </div>
 
-              <%# Price per unit - on its own row %>
-              <div class="text-gray-500 text-sm mt-1"
+              <%# Column 2: Unit price %>
+              <div class="text-gray-400" style="width: 6rem;"
                    data-branded-configurator-target="pricePerUnit">
                 <!-- Price per unit filled by JS -->
+              </div>
+
+              <%# Column 3: Savings badge %>
+              <div style="width: 5rem;"
+                   data-branded-configurator-target="savingsBadge"
+                   class="<%= 'invisible' if index == 0 %>">
+                <!-- Savings % filled by JS -->
+              </div>
+
+              <%# Column 4: Total price %>
+              <div class="text-black text-right" style="width: 4.5rem;"
+                   data-branded-configurator-target="totalPrice">
+                <!-- Total price filled by JS -->
               </div>
             </div>
           <% end %>
@@ -136,15 +166,26 @@
         </div>
 
         <!-- Step 3: Add Matching Lids (Optional) -->
-        <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="lidsStep">
-          <input type="radio" name="config-accordion" aria-label="Step 3: Add Matching Lids (Optional)" />
-          <div class="collapse-title text-lg flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="lidsIndicator">3</span>
-            <span>Add Matching Lids</span>
-            <span class="text-sm font-normal text-base-content/60">(Optional)</span>
-            <span class="ml-auto text-sm font-normal text-primary hidden" data-branded-configurator-target="lidsSelection"></span>
+        <div class="collapse collapse-arrow bg-base-200"
+             data-branded-configurator-target="lidsStep"
+             data-step-index="2"
+             data-expanded="false">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-2-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="step-2-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="lidsIndicator"
+                  aria-hidden="true">3</span>
+            <span>Add matching lids<span class="text-sm font-normal text-base-content/60 ml-1">(optional)</span><span class="hidden" data-branded-configurator-target="lidsSelection"></span></span>
           </div>
-          <div class="collapse-content overflow-visible">
+          <div class="collapse-content overflow-visible"
+               id="step-2-content"
+               role="region"
+               aria-labelledby="step-2-header">
             <div class="pt-4 pr-1">
               <p class="text-sm text-gray-600 mb-4">Complete your order with compatible lids</p>
 
@@ -167,29 +208,42 @@
         </div>
 
         <!-- Step 4: Upload Design -->
-        <div class="collapse collapse-arrow bg-base-200" data-branded-configurator-target="designStep">
-          <input type="radio" name="config-accordion" aria-label="Step 4: Upload Your Design" />
-          <div class="collapse-title text-lg flex items-center gap-2">
-            <span class="flex items-center justify-center w-6 h-6 rounded-full bg-gray-300 text-white text-sm font-bold" data-branded-configurator-target="designIndicator">4</span>
-            <span>Upload Your Design</span>
-            <span class="ml-auto text-sm font-normal text-primary hidden truncate max-w-[150px]" data-branded-configurator-target="designSelection"></span>
+        <div class="collapse collapse-arrow bg-base-200"
+             data-branded-configurator-target="designStep"
+             data-step-index="3"
+             data-expanded="false">
+          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+               id="step-3-header"
+               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+               role="button"
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="step-3-content">
+            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                  data-branded-configurator-target="designIndicator"
+                  aria-hidden="true">4</span>
+            <span>Upload your design<span class="hidden" data-branded-configurator-target="designSelection"></span></span>
           </div>
-          <div class="collapse-content">
+          <div class="collapse-content"
+               id="step-3-content"
+               role="region"
+               aria-labelledby="step-3-header">
             <div class="pt-4">
               <input type="file"
-               class="file-input file-input-bordered w-full"
-               accept=".pdf,.png,.jpg,.jpeg,.ai"
-               data-branded-configurator-target="designInput"
-               data-action="change->branded-configurator#handleDesignUpload">
-        <label class="label">
-          <span class="label-text-alt">
-            Accepted formats: PDF, PNG, JPG, AI (max 10MB)
-            <%= link_to "Design Guidelines", "#", class: "link link-primary" %>
-          </span>
-        </label>
-        <div class="hidden mt-2 alert alert-success"
-             data-branded-configurator-target="designPreview">
-          <!-- File name shown here -->
+                     class="file-input file-input-bordered w-full"
+                     accept=".pdf,.png,.jpg,.jpeg,.ai"
+                     data-branded-configurator-target="designInput"
+                     data-action="change->branded-configurator#handleDesignUpload">
+              <label class="label">
+                <span class="label-text-alt">
+                  Accepted formats: PDF, PNG, JPG, AI (max 10MB)
+                  <%= link_to "Design Guidelines", "#", class: "link link-primary" %>
+                </span>
+              </label>
+              <div class="hidden mt-2 alert alert-success"
+                   data-branded-configurator-target="designPreview">
+                <!-- File name shown here -->
+              </div>
             </div>
           </div>
         </div>

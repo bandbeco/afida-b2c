@@ -20,9 +20,8 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
     click_button "12oz"
     assert_selector ".border-primary", text: "12oz"
 
-    # Step 2: Select quantity - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='quantityStep'] input[type='radio']", visible: false).click
-    # Wait for accordion animation to complete (DaisyUI collapse uses CSS transitions)
+    # Step 2: Select quantity - accordion expands automatically after size selection
+    # Wait for accordion animation to complete
     sleep 0.5
     # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
     execute_script("document.querySelector('[data-quantity=\"5000\"]').click()")
@@ -30,15 +29,13 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
     # Wait for price calculation (wait for non-zero price)
     assert_selector "[data-branded-configurator-target='total']", text: /£[1-9]/
 
-    # Step 3: Skip lids (optional step) - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='lidsStep'] input[type='radio']", visible: false).click
+    # Step 3: Skip lids (optional step) - accordion expands automatically after quantity selection
     # Wait for accordion animation and turbo-frame content to load
     sleep 1.0
     # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
     execute_script("document.querySelector('[data-branded-configurator-target=\"lidsStep\"] button').click()")
 
-    # Step 4: Upload design - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='designStep'] input[type='radio']", visible: false).click
+    # Step 4: Upload design - accordion expands automatically after skipping lids
     # Wait for accordion animation to complete
     sleep 1.0
     # Use visible: :all to bypass Capybara's visibility detection for DaisyUI collapse content
@@ -82,8 +79,7 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
     # Still disabled (missing quantity and design)
     assert_selector ".btn-disabled", text: /add to cart/i
 
-    # Select quantity - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='quantityStep'] input[type='radio']", visible: false).click
+    # Select quantity - accordion expands automatically after size selection
     # Wait for accordion animation to complete
     sleep 0.5
     # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
@@ -92,15 +88,13 @@ class BrandedProductOrderingTest < ApplicationSystemTestCase
     # Still disabled (missing design)
     assert_selector ".btn-disabled", text: /add to cart/i
 
-    # Skip lids - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='lidsStep'] input[type='radio']", visible: false).click
+    # Skip lids - accordion expands automatically after quantity selection
     # Wait for accordion animation and turbo-frame content to load
     sleep 1.0
     # Use JavaScript to click (Capybara visibility detection issues with DaisyUI collapse)
     execute_script("document.querySelector('[data-branded-configurator-target=\"lidsStep\"] button').click()")
 
-    # Upload design - open accordion by clicking hidden radio
-    find("[data-branded-configurator-target='designStep'] input[type='radio']", visible: false).click
+    # Upload design - accordion expands automatically after skipping lids
     # Wait for accordion animation to complete
     sleep 1.0
     # Use visible: :all to bypass Capybara's visibility detection for DaisyUI collapse content

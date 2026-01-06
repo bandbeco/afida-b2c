@@ -4,6 +4,7 @@ export default class extends Controller {
   static targets = [
     "sizeOption",
     "quantityOption",
+    "quantityLabel",
     "pricePerUnit",
     "savingsBadge",
     "totalPrice",
@@ -39,6 +40,7 @@ export default class extends Controller {
     this.selectedSize = null
     this.selectedQuantity = null
     this.calculatedPrice = null
+    this.isProcessing = false
     this.updateAddToCartButton()
 
     // Check for URL parameters and pre-select configuration
@@ -78,46 +80,151 @@ export default class extends Controller {
     }
   }
 
+  // ==================== STEP MANAGEMENT ====================
+
+  /**
+   * Toggle step expansion when clicking header
+   */
+  toggleStep(event) {
+    // Prevent any default behavior
+    event.preventDefault()
+    event.stopPropagation()
+
+    const header = event.currentTarget
+    const step = header.closest("[data-step-index]")
+    if (!step) return
+
+    const stepIndex = parseInt(step.dataset.stepIndex, 10)
+    const isExpanded = step.dataset.expanded === "true"
+
+    if (isExpanded) {
+      this.collapseStep(step)
+    } else {
+      // Collapse all steps first
+      this.collapseAllSteps()
+      this.expandStep(step)
+    }
+  }
+
+  /**
+   * Handle keyboard events on step headers (Enter/Space to toggle)
+   */
+  handleStepKeydown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      this.toggleStep(event)
+    }
+  }
+
+  /**
+   * Handle keyboard events on quantity cards (Enter/Space to select)
+   */
+  handleCardKeydown(event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault()
+      this.selectQuantity(event)
+    }
+  }
+
+  expandStep(step) {
+    step.dataset.expanded = "true"
+    step.classList.add("collapse-open")
+
+    const header = step.querySelector("[role='button']")
+    if (header) header.setAttribute("aria-expanded", "true")
+  }
+
+  collapseStep(step) {
+    step.dataset.expanded = "false"
+    step.classList.remove("collapse-open")
+
+    const header = step.querySelector("[role='button']")
+    if (header) header.setAttribute("aria-expanded", "false")
+  }
+
+  collapseAllSteps() {
+    const allSteps = [
+      this.sizeStepTarget,
+      this.quantityStepTarget,
+      this.lidsStepTarget,
+      this.designStepTarget
+    ].filter(Boolean)
+
+    allSteps.forEach(step => this.collapseStep(step))
+  }
+
+  getStepByName(stepName) {
+    const targetName = `${stepName}StepTarget`
+    return this[targetName] || null
+  }
+
   selectSize(event) {
-    // Reset all size buttons to unselected state
-    this.sizeOptionTargets.forEach(el => {
-      el.classList.remove("border-primary", "border-4")
-      el.classList.add("border-gray-300", "border-2")
-    })
+    if (this.isProcessing) return
+    this.isProcessing = true
 
-    // Add selected state to clicked button
-    event.currentTarget.classList.remove("border-gray-300", "border-2")
-    event.currentTarget.classList.add("border-primary", "border-4")
+    try {
+      // Reset all size buttons to unselected state
+      this.sizeOptionTargets.forEach(el => {
+        el.classList.remove("border-primary", "border-4")
+        el.classList.add("border-gray-300", "border-2")
+        el.setAttribute("aria-pressed", "false")
+      })
 
-    this.selectedSize = event.currentTarget.dataset.size
-    this.updateUrl()
-    this.showStepComplete('size')
-    this.updateSelectionDisplay('size', this.selectedSize)
-    this.calculatePrice()
+      // Add selected state to clicked button
+      event.currentTarget.classList.remove("border-gray-300", "border-2")
+      event.currentTarget.classList.add("border-primary", "border-4")
+      event.currentTarget.setAttribute("aria-pressed", "true")
+
+      this.selectedSize = event.currentTarget.dataset.size
+      this.updateUrl()
+      this.showStepComplete('size')
+      this.updateSelectionDisplay('size', this.selectedSize)
+
+      // Collapse current step and expand next
+      this.collapseStep(this.sizeStepTarget)
+      this.expandStep(this.quantityStepTarget)
+
+      this.calculatePrice()
+    } finally {
+      this.isProcessing = false
+    }
   }
 
   selectQuantity(event) {
-    // Reset all quantity cards to unselected state
-    this.quantityOptionTargets.forEach(el => {
-      el.classList.remove("border-primary", "border-4")
-      el.classList.add("border-gray-300", "border-2")
-    })
+    if (this.isProcessing) return
+    this.isProcessing = true
 
-    // Add selected state to clicked card
-    event.currentTarget.classList.remove("border-gray-300", "border-2")
-    event.currentTarget.classList.add("border-primary", "border-4")
+    try {
+      // Reset all quantity cards to unselected state
+      this.quantityOptionTargets.forEach(el => {
+        el.classList.remove("border-primary", "border-2")
+        el.classList.add("border-gray-200", "border")
+        el.setAttribute("aria-selected", "false")
+      })
 
-    this.selectedQuantity = parseInt(event.currentTarget.dataset.quantity)
-    this.updateUrl()
-    this.showStepComplete('quantity')
-    this.updateSelectionDisplay('quantity', this.selectedQuantity.toLocaleString() + ' units')
+      // Add selected state to clicked card
+      event.currentTarget.classList.remove("border-gray-200", "border")
+      event.currentTarget.classList.add("border-primary", "border-2")
+      event.currentTarget.setAttribute("aria-selected", "true")
 
-    // Load compatible lids for next step (skip in modal mode)
-    if (!this.inModalValue) {
-      this.loadCompatibleLids()
+      this.selectedQuantity = parseInt(event.currentTarget.dataset.quantity)
+      this.updateUrl()
+      this.showStepComplete('quantity')
+      this.updateSelectionDisplay('quantity', this.selectedQuantity.toLocaleString() + ' units')
+
+      // Collapse quantity step and expand lids step (or design in modal mode)
+      this.collapseStep(this.quantityStepTarget)
+      if (this.inModalValue) {
+        this.expandStep(this.designStepTarget)
+      } else {
+        this.expandStep(this.lidsStepTarget)
+        this.loadCompatibleLids()
+      }
+
+      this.calculatePrice()
+    } finally {
+      this.isProcessing = false
     }
-
-    this.calculatePrice()
   }
 
   async loadCompatibleLids() {
@@ -125,7 +232,9 @@ export default class extends Controller {
 
     // Show loading state
     document.getElementById('lids-loading').style.display = 'block'
-    this.lidsContainerTarget.innerHTML = ''
+    while (this.lidsContainerTarget.firstChild) {
+      this.lidsContainerTarget.removeChild(this.lidsContainerTarget.firstChild)
+    }
 
     try {
       // Pass product_id to match lid type (not just size)
@@ -135,7 +244,7 @@ export default class extends Controller {
       document.getElementById('lids-loading').style.display = 'none'
 
       if (data.lids.length === 0) {
-        this.lidsContainerTarget.innerHTML = '<p class="text-gray-500 col-span-full text-center py-8">No compatible lids available for this size</p>'
+        this.showLidsMessage('No compatible lids available for this size', 'text-gray-500')
         return
       }
 
@@ -146,8 +255,18 @@ export default class extends Controller {
     } catch (error) {
       console.error('Failed to load compatible lids:', error)
       document.getElementById('lids-loading').style.display = 'none'
-      this.lidsContainerTarget.innerHTML = '<p class="text-error col-span-full text-center py-8">Failed to load lids. Please try again.</p>'
+      this.showLidsMessage('Failed to load lids. Please try again.', 'text-error')
     }
+  }
+
+  showLidsMessage(message, colorClass) {
+    while (this.lidsContainerTarget.firstChild) {
+      this.lidsContainerTarget.removeChild(this.lidsContainerTarget.firstChild)
+    }
+    const p = document.createElement('p')
+    p.className = `${colorClass} col-span-full text-center py-8`
+    p.textContent = message
+    this.lidsContainerTarget.appendChild(p)
   }
 
   createLidCard(lid) {
@@ -412,6 +531,10 @@ export default class extends Controller {
     this.clearError()
     this.showStepComplete('design')
     this.updateSelectionDisplay('design', file.name)
+
+    // Collapse design step after upload
+    this.collapseStep(this.designStepTarget)
+
     this.updateAddToCartButton()
   }
 
@@ -434,40 +557,31 @@ export default class extends Controller {
   showStepComplete(step) {
     const indicatorTarget = `${step}IndicatorTarget`
     if (this[indicatorTarget]) {
-      // Transform to checkmark
+      // Transform to checkmark - Afida green background with white checkmark
       this[indicatorTarget].textContent = '✓'
       this[indicatorTarget].classList.remove('bg-gray-300')
-      this[indicatorTarget].classList.add('bg-success')
-    }
-
-    // Open next step in accordion
-    // In modal mode, skip lids step and go directly from quantity to design
-    const stepMap = this.inModalValue
-      ? { size: 'quantity', quantity: 'design', design: null }
-      : { size: 'quantity', quantity: 'lids', lids: 'design' }
-
-    const nextStep = stepMap[step]
-    if (nextStep) {
-      const nextStepTarget = `${nextStep}StepTarget`
-      if (this[nextStepTarget]) {
-        const radioInput = this[nextStepTarget].querySelector('input[type="radio"]')
-        if (radioInput) {
-          radioInput.checked = true
-        }
-      }
+      this[indicatorTarget].classList.add('bg-primary', 'text-white')
     }
   }
 
   skipLids(event) {
     // Mark step complete and move to design
     this.showStepComplete('lids')
-    this.updateSelectionDisplay('lids', 'Skipped')
+    this.updateSelectionDisplay('lids', 'skipped')
+
+    // Collapse lids step and expand design step
+    this.collapseStep(this.lidsStepTarget)
+    this.expandStep(this.designStepTarget)
   }
 
+  /**
+   * Update selection display with colon format to match variant selector
+   * Shows ": value" inline with the step title
+   */
   updateSelectionDisplay(step, value) {
     const selectionTarget = `${step}SelectionTarget`
     if (this[`has${step.charAt(0).toUpperCase() + step.slice(1)}SelectionTarget`] && this[selectionTarget]) {
-      this[selectionTarget].textContent = value
+      this[selectionTarget].textContent = ` : ${value}`
       this[selectionTarget].classList.remove('hidden')
     }
   }
@@ -513,7 +627,11 @@ export default class extends Controller {
 
         // Update step indicator and selection display
         this.showStepComplete('lids')
-        this.updateSelectionDisplay('lids', 'Added')
+        this.updateSelectionDisplay('lids', 'added')
+
+        // Collapse lids step and expand design step
+        this.collapseStep(this.lidsStepTarget)
+        this.expandStep(this.designStepTarget)
 
         // Reset after 2 seconds
         setTimeout(() => {
@@ -639,12 +757,14 @@ export default class extends Controller {
     this.sizeOptionTargets.forEach(el => {
       el.classList.remove("border-primary", "border-4")
       el.classList.add("border-gray-300", "border-2")
+      el.setAttribute("aria-pressed", "false")
     })
 
     // Reset quantity cards
     this.quantityOptionTargets.forEach(el => {
-      el.classList.remove("border-primary", "border-4")
-      el.classList.add("border-gray-300", "border-2")
+      el.classList.remove("border-primary", "border-2")
+      el.classList.add("border-gray-200", "border")
+      el.setAttribute("aria-selected", "false")
     })
 
     // Reset design file input
@@ -663,7 +783,7 @@ export default class extends Controller {
       const indicatorTarget = `${step}IndicatorTarget`
       if (this[indicatorTarget]) {
         this[indicatorTarget].textContent = (index + 1).toString()
-        this[indicatorTarget].classList.remove('bg-success')
+        this[indicatorTarget].classList.remove('bg-primary', 'text-white')
         this[indicatorTarget].classList.add('bg-gray-300')
       }
 
@@ -686,17 +806,17 @@ export default class extends Controller {
       this.totalTarget.textContent = '£0.00'
     }
 
-    // Clear lids container (if not in modal)
+    // Clear lids container using safe DOM method (if not in modal)
     if (!this.inModalValue && this.hasLidsContainerTarget) {
-      this.lidsContainerTarget.innerHTML = ''
+      while (this.lidsContainerTarget.firstChild) {
+        this.lidsContainerTarget.removeChild(this.lidsContainerTarget.firstChild)
+      }
     }
 
-    // Collapse all accordion steps and open the first one (size)
+    // Collapse all steps and open the first one (size)
+    this.collapseAllSteps()
     if (this.hasSizeStepTarget) {
-      const radioInput = this.sizeStepTarget.querySelector('input[type="radio"]')
-      if (radioInput) {
-        radioInput.checked = true
-      }
+      this.expandStep(this.sizeStepTarget)
     }
 
     // Update add to cart button state
