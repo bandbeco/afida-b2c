@@ -70,7 +70,8 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
   test "index shows product count" do
     get price_list_url
     assert_response :success
-    assert_match /\d+ products? shown/, response.body
+    # View shows "Showing X products" format
+    assert_match /Showing \d+ products?/, response.body
   end
 
   # =============================================================================
