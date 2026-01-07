@@ -41,9 +41,13 @@ CSV.foreach(csv_path, headers: true) do |row|
 
   products_data[key][:variants] << {
     type: row['type_value'],
+    type_label: row['type_label'],
     size: row['size_value'],
+    size_label: row['size_label'],
     colour: row['colour_value'],
+    colour_label: row['colour_label'],
     material: row['material_value'],
+    material_label: row['material_label'],
     sku: row['sku'],
     price: row['price']&.gsub('£', '')&.gsub(',', '')&.to_f || 0,
     pac_size: row['pac_size']&.to_i || 1,
@@ -118,12 +122,20 @@ products_data.each do |key, data|
 
   # Create variants
   data[:variants].each do |variant_data|
-    # Build option values hash for name generation
+    # Build option values hash for name generation (includes labels from CSV)
     option_values_hash = {}
-    option_values_hash['type'] = variant_data[:type] if variant_data[:type].present?
-    option_values_hash['size'] = variant_data[:size] if variant_data[:size].present?
-    option_values_hash['colour'] = variant_data[:colour] if variant_data[:colour].present?
-    option_values_hash['material'] = variant_data[:material] if variant_data[:material].present?
+    if variant_data[:type].present?
+      option_values_hash['type'] = { value: variant_data[:type], label: variant_data[:type_label] }
+    end
+    if variant_data[:size].present?
+      option_values_hash['size'] = { value: variant_data[:size], label: variant_data[:size_label] }
+    end
+    if variant_data[:colour].present?
+      option_values_hash['colour'] = { value: variant_data[:colour], label: variant_data[:colour_label] }
+    end
+    if variant_data[:material].present?
+      option_values_hash['material'] = { value: variant_data[:material], label: variant_data[:material_label] }
+    end
 
     # Create variant name from options that actually vary
     # Only include option if product has multiple values for that option
@@ -146,15 +158,20 @@ products_data.each do |key, data|
 
     # Create variant_option_values join records (new normalized structure)
     # Link variant to ProductOptionValue records via join table
-    option_values_hash.each do |option_name, option_value|
-      next if option_value.blank?
+    option_values_hash.each do |option_name, option_data|
+      next if option_data.blank? || option_data[:value].blank?
 
       # Find the ProductOption (size, colour, material, type)
       product_option = ProductOption.find_by(name: option_name)
       next unless product_option
 
-      # Find or create the ProductOptionValue (e.g., "8oz" under "size", "Orange" under "colour")
-      product_option_value = product_option.values.find_or_create_by!(value: option_value)
+      # Find or create the ProductOptionValue with label from CSV
+      product_option_value = product_option.values.find_or_initialize_by(value: option_data[:value])
+      # Set/update the label if provided in CSV
+      if option_data[:label].present?
+        product_option_value.label = option_data[:label]
+      end
+      product_option_value.save!
 
       # Create the join record (skip if exists)
       variant.variant_option_values.find_or_create_by!(

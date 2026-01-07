@@ -47,7 +47,8 @@ class ProductsController < ApplicationController
     # for the new unified variant_selector Stimulus controller
 
     # Extract options with multiple values, sorted by priority (material → type → size → colour)
-    @options = @product.available_options
+    # Includes labels from ProductOptionValue for display
+    @options = @product.available_options_with_labels
 
     # Build variants JSON with all fields needed by the selector (including pricing_tiers)
     # Populate image URLs here where URL helpers are available

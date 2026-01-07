@@ -158,15 +158,15 @@
                      role="region"
                      aria-labelledby="step-<%= index %>-header">
                   <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="<%= option_name.titleize %> options">
-                    <% natural_sort_sizes(values).each do |value| %>
+                    <% natural_sort_options(values).each do |opt| %>
                       <button type="button"
                               class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
                               data-variant-selector-target="optionButton"
                               data-option-name="<%= option_name %>"
-                              data-value="<%= value %>"
+                              data-value="<%= opt[:value] %>"
                               data-action="click->variant-selector#selectOption"
                               aria-pressed="false">
-                        <%= format_option_value(option_name, value) %>
+                        <%= opt[:label] %>
                       </button>
                     <% end %>
                   </div>

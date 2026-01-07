@@ -228,6 +228,29 @@ class Product < ApplicationRecord
       .transform_values(&:to_a)
   end
 
+  # Returns available options with both values and labels for display
+  # Looks up labels from ProductOptionValue table
+  # Example: { "size" => [{ value: "8oz", label: "8oz" }, { value: "16-20oz", label: "16-20oz" }] }
+  def available_options_with_labels
+    # Build a lookup of option_name -> value -> label from ProductOptionValue
+    label_lookup = {}
+    ProductOption.includes(:values).find_each do |option|
+      label_lookup[option.name] = {}
+      option.values.each do |pov|
+        label_lookup[option.name][pov.value] = pov.label.presence || pov.value
+      end
+    end
+
+    # Transform available_options to include labels
+    available_options.transform_values do |values|
+      values.map do |value|
+        option_name = available_options.key(values)
+        label = label_lookup.dig(option_name, value) || value
+        { value: value, label: label }
+      end
+    end
+  end
+
   # Returns variant data formatted for the variant selector JavaScript component
   # Includes all fields needed for option filtering and cart submission
   # Note: image_url is set to nil here; controller should populate it using url_for
