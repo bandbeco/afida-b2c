@@ -14,4 +14,12 @@ module VariantSelectorHelper
       end
     end
   end
+
+  # Format option value for display
+  # Values are displayed as-is from the database (source CSV should have proper formatting)
+  def format_option_value(_option_name, value)
+    return value if value.blank?
+
+    value.strip
+  end
 end

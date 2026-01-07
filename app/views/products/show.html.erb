@@ -166,7 +166,7 @@
                               data-value="<%= value %>"
                               data-action="click->variant-selector#selectOption"
                               aria-pressed="false">
-                        <%= value.titleize %>
+                        <%= format_option_value(option_name, value) %>
                       </button>
                     <% end %>
                   </div>
