@@ -13,9 +13,9 @@ Implementation tasks for variant-level product pages. Tasks are organized by pha
 ## Phase 1: Setup & Foundation
 
 ### Task 1.1: Create feature branch and update fixtures
-- [ ] Ensure on `001-variant-pages` branch
-- [ ] Update `test/fixtures/product_variants.yml` to include `slug` field for all fixtures
-- [ ] Verify fixtures pass existing tests
+- [x] Ensure on `001-variant-pages` branch
+- [x] Update `test/fixtures/product_variants.yml` to include `slug` field for all fixtures
+- [x] Verify fixtures pass existing tests
 
 **Files**: `test/fixtures/product_variants.yml`
 **Dependencies**: None
