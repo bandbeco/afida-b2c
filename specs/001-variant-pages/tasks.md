@@ -44,12 +44,12 @@ end
 ---
 
 ### Task 1.3: Add search_vector column with trigger
-- [ ] Generate migration: `rails g migration AddSearchVectorToProductVariants`
-- [ ] Add `search_vector` tsvector column
-- [ ] Add GIN index for full-text search
-- [ ] Create Postgres trigger function
-- [ ] Create trigger on INSERT/UPDATE
-- [ ] Backfill existing records
+- [x] Generate migration: `rails g migration AddSearchVectorToProductVariants`
+- [x] Add `search_vector` tsvector column
+- [x] Add GIN index for full-text search
+- [x] Create Postgres trigger function
+- [x] Create trigger on INSERT/UPDATE
+- [x] Backfill existing records
 
 **Migration content** (see `data-model.md` for full SQL):
 ```ruby
