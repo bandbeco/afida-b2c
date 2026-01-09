@@ -146,11 +146,11 @@ end
 ---
 
 ### Task 2.2: Create ProductVariantsController
-- [ ] Create controller with `show` action
-- [ ] Find variant by slug: `ProductVariant.active.find_by!(slug: params[:slug])`
-- [ ] Handle 404 for missing/inactive variants
-- [ ] Load associated product and category for breadcrumbs
-- [ ] Write controller tests
+- [x] Create controller with `show` action
+- [x] Find variant by slug: `ProductVariant.active.find_by!(slug: params[:slug])`
+- [x] Handle 404 for missing/inactive variants
+- [x] Load associated product and category for breadcrumbs
+- [x] Write controller tests
 
 **Files**: `app/controllers/product_variants_controller.rb`, `test/controllers/product_variants_controller_test.rb`
 **Dependencies**: Task 2.1
