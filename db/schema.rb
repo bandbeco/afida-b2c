@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_09_233222) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_09_233308) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -261,7 +261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_09_233222) do
     t.string "sample_sku"
     t.tsvector "search_vector"
     t.string "sku", null: false
-    t.string "slug", limit: 255
+    t.string "slug", limit: 255, null: false
     t.integer "stock_quantity", default: 0
     t.datetime "updated_at", null: false
     t.integer "volume_in_ml"
