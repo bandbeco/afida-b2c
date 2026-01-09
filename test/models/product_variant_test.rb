@@ -900,4 +900,50 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_match(/\A[a-z0-9-]+\z/, variant.slug)
     assert variant.slug.present?
   end
+
+  # ==========================================================================
+  # Display Helpers Tests
+  # ==========================================================================
+
+  test "variant_meta_description returns truncated description" do
+    @variant.product.update!(description_standard: "This is a test description for the product that goes on and on.")
+    meta = @variant.variant_meta_description
+
+    assert meta.present?
+    assert meta.length <= 160
+  end
+
+  test "variant_meta_description returns fallback when no description" do
+    # Ensure product has no descriptions
+    @variant.product.update!(description_standard: nil, description_detailed: nil, description_short: nil)
+    meta = @variant.variant_meta_description
+
+    assert meta.present?
+    assert_includes meta, "Buy"
+    assert_includes meta, "Afida"
+  end
+
+  test "price_display includes pack info when pac_size set" do
+    @variant.update!(price: 36.05, pac_size: 1000)
+    display = @variant.price_display
+
+    assert_includes display, "£36.05"
+    assert_includes display, "pack"
+    assert_includes display, "1,000"
+  end
+
+  test "price_display shows simple price when no pac_size" do
+    @variant.update!(price: 10.00, pac_size: nil)
+    display = @variant.price_display
+
+    assert_includes display, "£10.00"
+    assert_not_includes display, "pack"
+  end
+
+  test "unit_price_display formats with 4 decimal places" do
+    @variant.update!(price: 36.00, pac_size: 1000)
+    display = @variant.unit_price_display
+
+    assert_includes display, "£0.0360"
+  end
 end

@@ -176,12 +176,12 @@ end
 ---
 
 ### Task 2.3: Create variant page view template
-- [ ] Create `app/views/product_variants/show.html.erb`
-- [ ] Display: product photo, variant name, price per pack, pack size, SKU
-- [ ] Include quantity selector (reuse existing pattern)
-- [ ] Include "Add to Cart" button with Turbo integration
-- [ ] Add breadcrumb navigation partial
-- [ ] Style with TailwindCSS/DaisyUI
+- [x] Create `app/views/product_variants/show.html.erb`
+- [x] Display: product photo, variant name, price per pack, pack size, SKU
+- [x] Include quantity selector (reuse existing pattern)
+- [x] Include "Add to Cart" button with Turbo integration
+- [x] Add breadcrumb navigation partial
+- [x] Style with TailwindCSS/DaisyUI
 
 **Files**: `app/views/product_variants/show.html.erb`
 **Dependencies**: Task 2.2
@@ -195,10 +195,11 @@ end
 ---
 
 ### Task 2.4: Add display helpers to ProductVariant
-- [ ] Add `display_name` method: `"#{name.titleize} #{product.name}"`
-- [ ] Add `meta_description` method
-- [ ] Add `price_display` method (format with pack info)
-- [ ] Write helper tests
+- [x] Add `display_name` method: `"#{name.titleize} #{product.name}"` (already existed)
+- [x] Add `variant_meta_description` method
+- [x] Add `price_display` method (format with pack info)
+- [x] Add `unit_price_display` method
+- [x] Write helper tests
 
 **Files**: `app/models/product_variant.rb`, `test/models/product_variant_test.rb`
 **Dependencies**: Task 2.3

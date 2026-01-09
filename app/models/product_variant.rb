@@ -264,6 +264,37 @@ class ProductVariant < ApplicationRecord
     sample_sku.presence || "SAMPLE-#{sku}"
   end
 
+  # ==========================================================================
+  # Display Helpers for Variant Pages
+  # ==========================================================================
+
+  # Returns meta description for SEO
+  # Falls back to product description if variant has no specific description
+  def variant_meta_description
+    if description.present?
+      description.truncate(160)
+    else
+      "Buy #{full_name} from Afida. Eco-friendly catering supplies at competitive prices."
+    end
+  end
+
+  # Returns formatted price display for variant page
+  # Format: "£36.05 / pack (1,000 units)" for pack-priced items
+  # Format: "£0.0360 / unit" for unit-priced items
+  def price_display
+    if pac_size.present? && pac_size > 1
+      "#{ActionController::Base.helpers.number_to_currency(price)} / pack (#{ActionController::Base.helpers.number_with_delimiter(pac_size)} units)"
+    else
+      "#{ActionController::Base.helpers.number_to_currency(price)}"
+    end
+  end
+
+  # Returns unit price display for variant page
+  # Useful when showing per-unit cost alongside pack price
+  def unit_price_display
+    ActionController::Base.helpers.number_to_currency(unit_price, precision: 4)
+  end
+
   # Override to_param for SEO-friendly URLs
   # Enables: product_variant_path(@variant) => /products/8oz-white-single-wall-cups
   def to_param
