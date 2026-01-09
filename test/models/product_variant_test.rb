@@ -768,4 +768,136 @@ class ProductVariantTest < ActiveSupport::TestCase
       variant.destroy
     end
   end
+
+  # ==========================================================================
+  # Slug Generation Tests
+  # ==========================================================================
+
+  test "generates slug from name and product name" do
+    product = Product.unscoped.create!(
+      name: "Unique Test Mugs",
+      category: categories(:one),
+      sku: "TEST-SLUG-PROD"
+    )
+    variant = ProductVariant.new(
+      product: product,
+      name: "Large Blue",
+      sku: "TEST-SLUG-001",
+      price: 10.0
+    )
+
+    variant.valid? # Triggers before_validation callback
+
+    assert_equal "large-blue-unique-test-mugs", variant.slug
+  end
+
+  test "handles duplicate slugs with counter" do
+    product = Product.unscoped.create!(
+      name: "Test Product",
+      category: categories(:one),
+      sku: "TEST-DUP-PROD"
+    )
+
+    # Create first variant
+    variant1 = ProductVariant.create!(
+      product: product,
+      name: "Large",
+      sku: "TEST-DUP-001",
+      price: 10.0
+    )
+    assert_equal "large-test-product", variant1.slug
+
+    # Create second variant with same base slug
+    variant2 = ProductVariant.create!(
+      product: product,
+      name: "Large",
+      sku: "TEST-DUP-002",
+      price: 12.0
+    )
+    assert_equal "large-test-product-2", variant2.slug
+
+    # Create third variant with same base slug
+    variant3 = ProductVariant.create!(
+      product: product,
+      name: "Large",
+      sku: "TEST-DUP-003",
+      price: 14.0
+    )
+    assert_equal "large-test-product-3", variant3.slug
+  end
+
+  test "to_param returns slug" do
+    variant = product_variants(:one)
+    assert_equal variant.slug, variant.to_param
+  end
+
+  test "validates presence of slug" do
+    variant = ProductVariant.new(
+      product: @product,
+      name: "Test",
+      sku: "UNIQUE-SLUG-TEST",
+      price: 10.0,
+      slug: nil
+    )
+    # Run validation which should generate the slug
+    variant.valid?
+
+    # Slug should have been auto-generated
+    assert_not_nil variant.slug
+    assert variant.slug.present?
+  end
+
+  test "validates uniqueness of slug" do
+    existing_variant = product_variants(:one)
+
+    variant = ProductVariant.new(
+      product: @product,
+      name: "Test",
+      sku: "UNIQUE-SKU-123",
+      price: 10.0,
+      slug: existing_variant.slug
+    )
+
+    assert_not variant.valid?
+    assert_includes variant.errors[:slug], "has already been taken"
+  end
+
+  test "does not regenerate slug if already present" do
+    product = Product.unscoped.create!(
+      name: "Custom Product",
+      category: categories(:one),
+      sku: "TEST-NO-REGEN"
+    )
+    variant = ProductVariant.new(
+      product: product,
+      name: "My Variant",
+      sku: "TEST-NO-REGEN-001",
+      price: 10.0,
+      slug: "custom-slug-preserved"
+    )
+
+    variant.valid?
+
+    assert_equal "custom-slug-preserved", variant.slug
+  end
+
+  test "generates slug with special characters parameterized" do
+    product = Product.unscoped.create!(
+      name: "Eco-Friendly Cups (Large)",
+      category: categories(:one),
+      sku: "TEST-SPECIAL-PROD"
+    )
+    variant = ProductVariant.new(
+      product: product,
+      name: "16oz / Extra-Large",
+      sku: "TEST-SPECIAL-001",
+      price: 10.0
+    )
+
+    variant.valid?
+
+    # parameterize handles special chars, spaces, slashes, parentheses
+    assert_match(/\A[a-z0-9-]+\z/, variant.slug)
+    assert variant.slug.present?
+  end
 end

@@ -71,11 +71,14 @@ class ProductVariant < ApplicationRecord
   validates :sku, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than: 0 }
   validates :name, presence: true
+  validates :slug, presence: true, uniqueness: true
   validates :gtin,
             format: { with: /\A\d{8}|\d{12}|\d{13}|\d{14}\z/, message: "must be 8, 12, 13, or 14 digits" },
             uniqueness: true,
             allow_blank: true
   validate :pricing_tiers_format, if: :pricing_tiers?
+
+  before_validation :generate_slug, if: -> { slug.blank? && name.present? && product.present? }
 
   # Inherit these attributes from parent product
   delegate :category, :description_standard_with_fallback, :meta_title, :meta_description, :colour, to: :product
@@ -261,7 +264,36 @@ class ProductVariant < ApplicationRecord
     sample_sku.presence || "SAMPLE-#{sku}"
   end
 
+  # Override to_param for SEO-friendly URLs
+  # Enables: product_variant_path(@variant) => /products/8oz-white-single-wall-cups
+  def to_param
+    slug
+  end
+
   private
+
+  # Generates a URL-friendly slug from variant name and product name
+  # Called before_validation when slug is blank
+  def generate_slug
+    return if slug.present?
+
+    base = "#{name} #{product.name}".parameterize
+    self.slug = ensure_unique_slug(base)
+  end
+
+  # Ensures slug uniqueness by appending counter if needed
+  # Example: "8oz-cups" -> "8oz-cups-2" -> "8oz-cups-3"
+  def ensure_unique_slug(base)
+    slug = base
+    counter = 2
+
+    while ProductVariant.where.not(id: id).exists?(slug: slug)
+      slug = "#{base}-#{counter}"
+      counter += 1
+    end
+
+    slug
+  end
 
   # Validates pricing_tiers JSON structure for volume discount tiers
   # Structure: [{ "quantity": 1, "price": "26.00" }, { "quantity": 3, "price": "24.00" }]

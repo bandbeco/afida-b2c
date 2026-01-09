@@ -93,10 +93,10 @@ end
 ---
 
 ### Task 1.4: Populate slugs for existing variants
-- [ ] Generate data migration: `rails g migration PopulateProductVariantSlugs`
-- [ ] Generate slugs from `"#{variant.name} #{product.name}".parameterize`
-- [ ] Handle duplicates with counter suffix
-- [ ] Add NOT NULL constraint after population
+- [x] Generate data migration: `rails g migration PopulateProductVariantSlugs`
+- [x] Generate slugs from `"#{variant.name} #{product.name}".parameterize`
+- [x] Handle duplicates with counter suffix
+- [x] Add NOT NULL constraint after population
 
 **Files**: `db/migrate/XXXXXX_populate_product_variant_slugs.rb`
 **Dependencies**: Task 1.3
@@ -104,12 +104,12 @@ end
 ---
 
 ### Task 1.5: Add slug generation to ProductVariant model
-- [ ] Add `before_validation :generate_slug` callback
-- [ ] Implement `generate_slug` method
-- [ ] Implement `ensure_unique_slug` private method
-- [ ] Add validation: `validates :slug, presence: true, uniqueness: true`
-- [ ] Add `to_param` method returning slug
-- [ ] Write tests for slug generation
+- [x] Add `before_validation :generate_slug` callback
+- [x] Implement `generate_slug` method
+- [x] Implement `ensure_unique_slug` private method
+- [x] Add validation: `validates :slug, presence: true, uniqueness: true`
+- [x] Add `to_param` method returning slug
+- [x] Write tests for slug generation
 
 **Files**: `app/models/product_variant.rb`, `test/models/product_variant_test.rb`
 **Dependencies**: Task 1.4
