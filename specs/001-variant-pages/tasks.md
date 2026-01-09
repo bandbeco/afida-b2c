@@ -207,11 +207,12 @@ end
 ---
 
 ### Task 2.5: Add SEO meta tags to variant pages
-- [ ] Set `content_for :title` with variant display name
-- [ ] Set `content_for :meta_description`
-- [ ] Add canonical URL
-- [ ] Add Product structured data (JSON-LD)
-- [ ] Update sitemap to include variant URLs
+- [x] Set `content_for :title` with variant display name
+- [x] Set `content_for :meta_description`
+- [x] Add canonical URL
+- [x] Add Product structured data (JSON-LD)
+- [x] Add Breadcrumb structured data (JSON-LD)
+- [x] Update sitemap to include variant URLs
 
 **Files**: `app/views/product_variants/show.html.erb`, `app/helpers/seo_helper.rb`, `app/services/sitemap_generator_service.rb`
 **Dependencies**: Task 2.4

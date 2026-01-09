@@ -117,4 +117,51 @@ class SeoHelperTest < ActionView::TestCase
     assert_equal "BreadcrumbList", data["@type"]
     assert_equal 2, data["itemListElement"].length
   end
+
+  # Variant structured data tests
+  test "generates variant JSON-LD structured data" do
+    variant = product_variants(:single_wall_8oz_white)
+
+    json = variant_structured_data(variant)
+    data = JSON.parse(json)
+
+    assert_equal "https://schema.org/", data["@context"]
+    assert_equal "Product", data["@type"]
+    assert_equal variant.full_name, data["name"]
+    assert_equal variant.sku, data["sku"]
+    assert_equal "Afida", data["brand"]["name"]
+    assert data["offers"].present?
+    assert_equal variant.price.to_s, data["offers"]["price"]
+    assert_equal "GBP", data["offers"]["priceCurrency"]
+    assert_includes data["offers"]["url"], variant.slug
+  end
+
+  test "variant structured data includes category" do
+    variant = product_variants(:single_wall_8oz_white)
+
+    json = variant_structured_data(variant)
+    data = JSON.parse(json)
+
+    assert_equal variant.category.name, data["category"]
+  end
+
+  test "variant structured data includes gtin when present" do
+    variant = product_variants(:single_wall_8oz_white)
+    variant.update!(gtin: "1234567890123")
+
+    json = variant_structured_data(variant)
+    data = JSON.parse(json)
+
+    assert_equal "1234567890123", data["gtin"]
+  end
+
+  test "variant structured data omits gtin when not present" do
+    variant = product_variants(:single_wall_8oz_white)
+    variant.update!(gtin: nil)
+
+    json = variant_structured_data(variant)
+    data = JSON.parse(json)
+
+    refute data.key?("gtin")
+  end
 end

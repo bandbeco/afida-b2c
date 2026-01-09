@@ -1,12 +1,30 @@
 <%# Product Variant Page - Individual SKU page for direct purchasing %>
-<%# This is a placeholder template that will be fully designed in Task 2.3 %>
 
 <% content_for :title do %>
-  <%= @variant.name %> - <%= @product.name %> | Afida
+  <%= @variant.full_name %> | Afida
 <% end %>
 
 <% content_for :meta_description do %>
-  <%= @variant.description.presence || "Buy #{@variant.name} #{@product.name} from Afida. Eco-friendly catering supplies." %>
+  <%= @variant.variant_meta_description %>
+<% end %>
+
+<% content_for :head do %>
+  <%# Canonical URL %>
+  <%= canonical_url(product_variant_url(@variant.slug)) %>
+
+  <%# Product Structured Data (JSON-LD) %>
+  <script type="application/ld+json">
+    <%= raw variant_structured_data(@variant) %>
+  </script>
+
+  <%# Breadcrumb Structured Data %>
+  <script type="application/ld+json">
+    <%= raw breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: @category.name, url: category_url(@category) },
+      { name: @variant.full_name, url: product_variant_url(@variant.slug) }
+    ]) %>
+  </script>
 <% end %>
 
 <div class="container mx-auto px-4 py-8">
