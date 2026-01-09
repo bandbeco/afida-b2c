@@ -23,10 +23,10 @@ Implementation tasks for variant-level product pages. Tasks are organized by pha
 ---
 
 ### Task 1.2: Add slug column to product_variants
-- [ ] Generate migration: `rails g migration AddSlugToProductVariants`
-- [ ] Add `slug` column (string, 255 chars)
-- [ ] Add unique index on `slug`
-- [ ] Run migration
+- [x] Generate migration: `rails g migration AddSlugToProductVariants`
+- [x] Add `slug` column (string, 255 chars)
+- [x] Add unique index on `slug`
+- [x] Run migration
 
 **Migration content**:
 ```ruby
