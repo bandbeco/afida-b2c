@@ -136,9 +136,9 @@ end
 > **Goal**: Customer can navigate to a variant URL, see product details, and add to cart.
 
 ### Task 2.1: Add routes for variant pages
-- [ ] Add route: `get 'products/:slug', to: 'product_variants#show', as: :product_variant`
-- [ ] Place route before any conflicting product routes
-- [ ] Verify route works with `rails routes | grep product_variant`
+- [x] Add route: `get 'products/:slug', to: 'product_variants#show', as: :product_variant`
+- [x] Place route before any conflicting product routes
+- [x] Verify route works with `rails routes | grep product_variant`
 
 **Files**: `config/routes.rb`
 **Dependencies**: Task 1.5
