@@ -2,9 +2,10 @@ class ProductsController < ApplicationController
   allow_unauthenticated_access
 
   def index
-    @products = Product.includes(:category, :active_variants)
-                       .with_attached_product_photo
-                       .all
+    # Shop page now displays individual variants instead of products
+    @variants = ProductVariant.active
+                              .includes(product: :category, product_photo_attachment: :blob)
+                              .order(position: :asc, id: :asc)
   end
 
   def show
