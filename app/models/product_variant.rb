@@ -205,6 +205,13 @@ class ProductVariant < ApplicationRecord
     stock_quantity.nil? || stock_quantity > 0
   end
 
+  # Returns other active variants from the same product
+  # Used for "See also" section on variant pages
+  # Excludes the current variant from results
+  def sibling_variants(limit: 8)
+    product.active_variants.where.not(id: id).limit(limit)
+  end
+
   # Returns hash of all product attributes for this variant
   # Used for Google Merchant feed and product detail pages
   # Filters out blank values

@@ -104,6 +104,49 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_not @variant.in_stock?
   end
 
+  # sibling_variants tests
+  test "sibling_variants returns other active variants from same product" do
+    variant1 = product_variants(:single_wall_8oz_white)
+    variant2 = product_variants(:single_wall_8oz_black)
+
+    siblings = variant1.sibling_variants
+    assert_includes siblings, variant2
+    assert_not_includes siblings, variant1
+  end
+
+  test "sibling_variants excludes inactive variants" do
+    variant1 = product_variants(:single_wall_8oz_white)
+    variant2 = product_variants(:single_wall_8oz_black)
+    variant2.update!(active: false)
+
+    siblings = variant1.sibling_variants
+    assert_not_includes siblings, variant2
+  end
+
+  test "sibling_variants respects limit parameter" do
+    variant = product_variants(:single_wall_8oz_white)
+    siblings = variant.sibling_variants(limit: 1)
+    assert_operator siblings.count, :<=, 1
+  end
+
+  test "sibling_variants returns empty for single-variant products" do
+    # Create a product with only one variant
+    product = Product.create!(
+      name: "Single Variant Product",
+      category: categories(:one),
+      active: true
+    )
+    variant = ProductVariant.create!(
+      product: product,
+      name: "Only Variant",
+      sku: "SINGLE-ONLY",
+      price: 10.0,
+      active: true
+    )
+
+    assert_empty variant.sibling_variants
+  end
+
   test "variant_attributes returns hash of non-blank attributes" do
     @variant.update(
       width_in_mm: 100,
