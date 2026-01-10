@@ -26,7 +26,7 @@ class PagesController < ApplicationController
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter
     if params[:q].present?
-      @variants = @variants.search(params[:q])
+      @variants = @variants.search_extended(params[:q])
     else
       @variants = @variants.in_categories(params[:categories])
     end

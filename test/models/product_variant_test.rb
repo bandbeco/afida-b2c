@@ -953,4 +953,61 @@ class ProductVariantTest < ActiveSupport::TestCase
 
     assert_includes display, "£0.0360"
   end
+
+  # ==========================================================================
+  # Search Scope Tests
+  # ==========================================================================
+
+  test "search scope finds variants by name" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.search("8oz")
+
+    assert_includes results, variant
+  end
+
+  test "search scope finds variants by SKU" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.search(variant.sku)
+
+    assert_includes results, variant
+  end
+
+  test "search scope returns all when query is blank" do
+    results = ProductVariant.search("")
+    assert_equal ProductVariant.count, results.count
+
+    results = ProductVariant.search(nil)
+    assert_equal ProductVariant.count, results.count
+  end
+
+  test "search scope truncates long queries" do
+    # Should not raise error with very long query
+    long_query = "a" * 200
+    results = ProductVariant.search(long_query)
+
+    assert_kind_of ActiveRecord::Relation, results
+  end
+
+  test "search_extended finds variants by product name" do
+    variant = product_variants(:single_wall_8oz_white)
+    product_name = variant.product.name
+
+    results = ProductVariant.search_extended(product_name.split.first)
+
+    assert_includes results, variant
+  end
+
+  test "search_extended finds variants by category name" do
+    variant = product_variants(:single_wall_8oz_white)
+    category_name = variant.product.category.name
+
+    results = ProductVariant.search_extended(category_name.split.first)
+
+    assert_includes results, variant
+  end
+
+  test "search_extended returns all when query is blank" do
+    results = ProductVariant.search_extended("")
+    assert_equal ProductVariant.count, results.count
+  end
 end
