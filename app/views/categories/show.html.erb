@@ -70,10 +70,8 @@
 <% end %>
 
 <div class="min-h-[60vh]">
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-    <% @products.each_with_index do |product, index| %>
-      <%= render "products/product", product: product, image_index: index %>
-    <% end %>
+  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+    <%= render partial: "products/variant_card", collection: @variants, as: :variant %>
   </div>
 </div>
 

@@ -60,23 +60,23 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "redirects to product page when category has only one product" do
+  test "redirects to variant page when category has only one variant" do
     category_with_one_product = categories(:category_with_one_product)
-    only_product_in_category = products(:only_product_in_category)
+    only_variant = product_variants(:only_product_variant)
 
     get category_url(category_with_one_product.slug)
 
-    assert_redirected_to product_path(only_product_in_category)
+    assert_redirected_to product_variant_path(only_variant.slug)
     assert_response :moved_permanently
   end
 
-  test "single product redirect preserves query parameters" do
+  test "single variant redirect preserves query parameters" do
     category_with_one_product = categories(:category_with_one_product)
-    only_product_in_category = products(:only_product_in_category)
+    only_variant = product_variants(:only_product_variant)
 
     get category_url(category_with_one_product.slug, utm_source: "email", utm_campaign: "test")
 
-    assert_redirected_to product_path(only_product_in_category, utm_source: "email", utm_campaign: "test")
+    assert_redirected_to product_variant_path(only_variant.slug, utm_source: "email", utm_campaign: "test")
     assert_response :moved_permanently
   end
 
