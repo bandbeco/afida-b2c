@@ -1010,4 +1010,93 @@ class ProductVariantTest < ActiveSupport::TestCase
     results = ProductVariant.search_extended("")
     assert_equal ProductVariant.count, results.count
   end
+
+  # ==========================================================================
+  # Filter Scope Tests
+  # ==========================================================================
+
+  test "with_option finds variants by option name and value" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_option("size", "8oz")
+
+    assert_includes results, variant
+  end
+
+  test "with_option is case-insensitive for option name" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_option("SIZE", "8oz")
+
+    assert_includes results, variant
+  end
+
+  test "with_option returns all when option_name is blank" do
+    results = ProductVariant.with_option("", "8oz")
+    assert_equal ProductVariant.count, results.count
+
+    results = ProductVariant.with_option(nil, "8oz")
+    assert_equal ProductVariant.count, results.count
+  end
+
+  test "with_option returns all when value is blank" do
+    results = ProductVariant.with_option("size", "")
+    assert_equal ProductVariant.count, results.count
+
+    results = ProductVariant.with_option("size", nil)
+    assert_equal ProductVariant.count, results.count
+  end
+
+  test "with_option returns empty when no match" do
+    results = ProductVariant.with_option("size", "nonexistent")
+
+    assert_empty results
+  end
+
+  test "with_size convenience scope works" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_size("8oz")
+
+    assert_includes results, variant
+  end
+
+  test "with_colour convenience scope works" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_colour("White")
+
+    assert_includes results, variant
+  end
+
+  test "with_material convenience scope works" do
+    variant = product_variants(:wooden_fork)
+    results = ProductVariant.with_material("Birch")
+
+    assert_includes results, variant
+  end
+
+  test "filter scopes can be chained" do
+    # Find variants with both size and colour
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_size("8oz").with_colour("White")
+
+    assert_includes results, variant
+    # Should not include variants with different colour
+    black_variant = product_variants(:single_wall_8oz_black)
+    assert_not_includes results, black_variant
+  end
+
+  test "filter scopes can be combined with in_categories" do
+    variant = product_variants(:single_wall_8oz_white)
+    category = variant.product.category
+
+    results = ProductVariant.in_categories(category.slug).with_size("8oz")
+
+    assert_includes results, variant
+  end
+
+  test "filter scopes can be combined with search" do
+    variant = product_variants(:single_wall_8oz_white)
+
+    results = ProductVariant.search("8oz").with_colour("White")
+
+    assert_includes results, variant
+  end
 end

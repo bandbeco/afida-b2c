@@ -94,6 +94,23 @@ class ProductVariant < ApplicationRecord
     )
   }
 
+  # Filter by option value (generic scope for any option type)
+  # Example: with_option("size", "8oz") or with_option("colour", "white")
+  # Uses subquery to allow chaining multiple with_option scopes
+  scope :with_option, ->(option_name, value) {
+    return all if option_name.blank? || value.blank?
+
+    where(id: joins(variant_option_values: { product_option_value: :product_option })
+      .where(product_options: { name: option_name.to_s.downcase })
+      .where(product_option_values: { value: value })
+      .select(:id))
+  }
+
+  # Convenience scopes for common options
+  scope :with_size, ->(size) { with_option("size", size) }
+  scope :with_colour, ->(colour) { with_option("colour", colour) }
+  scope :with_material, ->(material) { with_option("material", material) }
+
   scope :sorted, ->(sort_param) {
     case sort_param
     when "price_asc"
