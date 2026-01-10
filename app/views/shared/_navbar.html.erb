@@ -32,6 +32,46 @@
     </div>
 
     <div class="navbar-end">
+      <%# Header search with dropdown %>
+      <div class="relative mr-2" data-controller="header-search">
+        <%# Search icon button (mobile) %>
+        <button type="button"
+                class="btn btn-ghost btn-circle lg:hidden"
+                aria-label="Search products"
+                data-action="click->header-search#toggle">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
+
+        <%# Search input (always visible on desktop, toggle on mobile) %>
+        <div data-header-search-target="container" class="hidden lg:block absolute lg:relative right-0 lg:right-auto top-full lg:top-auto mt-2 lg:mt-0 w-64 lg:w-48 xl:w-64 z-50">
+          <div class="relative">
+            <%= form_with url: search_path, method: :get, data: { turbo_frame: "header-search-results" } do %>
+              <input type="text"
+                     name="q"
+                     placeholder="Search products..."
+                     class="input input-bordered input-sm w-full pr-8"
+                     aria-label="Search products"
+                     autocomplete="off"
+                     data-header-search-target="input"
+                     data-action="input->header-search#search focus->header-search#showResults blur->header-search#hideResultsDelayed">
+              <button type="submit" class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            <% end %>
+
+            <%# Search results dropdown %>
+            <div data-header-search-target="results"
+                 class="hidden absolute top-full left-0 right-0 mt-1 bg-base-100 border border-base-300 rounded-box shadow-lg max-h-96 overflow-y-auto z-50">
+              <%= turbo_frame_tag "header-search-results" %>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <%= render "shared/cart_counter" %>
 
       <% if authenticated? %>

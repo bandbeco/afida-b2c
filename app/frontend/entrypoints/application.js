@@ -36,6 +36,7 @@ const lazyControllers = {
   "variant-selector": () => import("../javascript/controllers/variant_selector_controller"),
   "compatible-lids": () => import("../javascript/controllers/compatible_lids_controller"),
   "faq-search": () => import("../javascript/controllers/faq_search_controller"),
+  "header-search": () => import("../javascript/controllers/header_search_controller"),
   "addon": () => import("../javascript/controllers/addon_controller"),
   "nested-form": () => import("../javascript/controllers/nested_form_controller"),
   "redirect-form": () => import("../javascript/controllers/redirect_form_controller"),
