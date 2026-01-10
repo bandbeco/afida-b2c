@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_09_233308) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -259,7 +259,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_09_233308) do
     t.bigint "product_id", null: false
     t.boolean "sample_eligible", default: false, null: false
     t.string "sample_sku"
-    t.tsvector "search_vector"
     t.string "sku", null: false
     t.string "slug", limit: 255, null: false
     t.integer "stock_quantity", default: 0
@@ -273,7 +272,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_09_233308) do
     t.index ["product_id", "sku"], name: "index_product_variants_on_product_id_and_sku", unique: true
     t.index ["product_id"], name: "index_product_variants_on_product_id"
     t.index ["sample_eligible"], name: "index_product_variants_on_sample_eligible"
-    t.index ["search_vector"], name: "index_product_variants_on_search_vector", using: :gin
     t.index ["slug"], name: "index_product_variants_on_slug", unique: true
   end
 
