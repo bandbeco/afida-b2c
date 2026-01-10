@@ -5,6 +5,7 @@ one:
   product: one
   name: Standard
   sku: MyString1
+  slug: standard-product-1
   price: 9.99
   length_in_mm: 1
   width_in_mm: 1
@@ -21,6 +22,7 @@ two:
   product: two
   name: Standard
   sku: MyString2
+  slug: standard-product-2
   price: 9.99
   length_in_mm: 1
   width_in_mm: 1
@@ -37,6 +39,7 @@ single_wall_8oz_white:
   product: single_wall_cups
   name: 8oz White
   sku: CUP-SW-8-WHT
+  slug: 8oz-white-single-wall-cups
   price: 26.00
   stock_quantity: 1000
   active: true
@@ -55,6 +58,7 @@ single_wall_12oz_white:
   product: single_wall_cups
   name: 12oz White
   sku: CUP-SW-12-WHT
+  slug: 12oz-white-single-wall-cups
   price: 28.00
   stock_quantity: 1000
   active: true
@@ -71,6 +75,7 @@ single_wall_8oz_black:
   product: single_wall_cups
   name: 8oz Black
   sku: CUP-SW-8-BLK
+  slug: 8oz-black-single-wall-cups
   price: 26.00
   stock_quantity: 500
   active: true
@@ -80,6 +85,7 @@ branded_template_variant:
   product: branded_double_wall_template
   name: Standard
   sku: BRANDED-TEMPLATE-001
+  slug: standard-double-wall-branded-cups
   price: 0.01
   stock_quantity: 999999
   active: true
@@ -88,6 +94,7 @@ acme_cups_variant:
   product: acme_branded_cups
   name: Standard
   sku: BRANDED-ACME-12DW-001
+  slug: standard-acme-coffee-12oz-double-wall-branded-cups
   price: 900.00
   stock_quantity: 5000
   active: true
@@ -96,6 +103,7 @@ paper_lid_80mm:
   product: paper_lids
   name: 80mm
   sku: PAPL80
+  slug: 80mm-paper-sip-lids-for-hot-cups
   price: 45.00
   pac_size: 1000
   stock_quantity: 10000
@@ -106,6 +114,7 @@ paper_lid_90mm:
   product: paper_lids
   name: 90mm
   sku: PAPL90
+  slug: 90mm-paper-sip-lids-for-hot-cups
   price: 48.00
   pac_size: 1000
   stock_quantity: 10000
@@ -116,6 +125,7 @@ recyclable_lid_black_62mm:
   product: recyclable_lids_black
   name: 4oz (62mm)
   sku: PLPC62B
+  slug: 4oz-62mm-recyclable-sip-lids-black
   price: 52.00
   pac_size: 1000
   stock_quantity: 5000
@@ -126,6 +136,7 @@ recyclable_lid_black_80mm:
   product: recyclable_lids_black
   name: 80mm
   sku: PLPC80B
+  slug: 80mm-recyclable-sip-lids-black
   price: 55.00
   pac_size: 1000
   stock_quantity: 8000
@@ -136,6 +147,7 @@ recyclable_lid_black_90mm:
   product: recyclable_lids_black
   name: 90mm
   sku: PLPC90B
+  slug: 90mm-recyclable-sip-lids-black
   price: 58.00
   pac_size: 1000
   stock_quantity: 8000
@@ -146,6 +158,7 @@ recyclable_lid_white_62mm:
   product: recyclable_lids_white
   name: 4oz (62mm)
   sku: PLPC62W
+  slug: 4oz-62mm-recyclable-sip-lids-white
   price: 52.00
   pac_size: 1000
   stock_quantity: 5000
@@ -156,6 +169,7 @@ recyclable_lid_white_80mm:
   product: recyclable_lids_white
   name: 80mm
   sku: PLPC80W
+  slug: 80mm-recyclable-sip-lids-white
   price: 55.00
   pac_size: 1000
   stock_quantity: 8000
@@ -166,6 +180,7 @@ recyclable_lid_white_90mm:
   product: recyclable_lids_white
   name: 90mm
   sku: PLPC90W
+  slug: 90mm-recyclable-sip-lids-white
   price: 58.00
   pac_size: 1000
   stock_quantity: 8000
@@ -176,6 +191,7 @@ branded_cup_8oz_variant_small:
   product: branded_cup_8oz
   name: Small Pack
   sku: CUP-BRAND-8-1000
+  slug: small-pack-branded-cup-8oz
   pac_size: 1000
   price: 120.00
   stock_quantity: 500
@@ -186,6 +202,7 @@ flat_lid_8oz_variant:
   product: flat_lid_8oz
   name: 8oz Pack
   sku: LID-FLAT-8-1000
+  slug: 8oz-pack-flat-lid-8oz
   pac_size: 1000
   price: 15.00
   stock_quantity: 500
@@ -196,6 +213,7 @@ domed_lid_8oz_variant:
   product: domed_lid_8oz
   name: 8oz Pack
   sku: LID-DOME-8-1000
+  slug: 8oz-pack-domed-lid-8oz
   pac_size: 1000
   price: 18.00
   stock_quantity: 500
@@ -206,6 +224,7 @@ sip_lid_8oz_variant:
   product: sip_lid_8oz
   name: Standard Pack
   sku: LID-SIP-8-1000
+  slug: standard-pack-sip-lid-8oz
   pac_size: 1000
   price: 20.00
   stock_quantity: 0
@@ -217,6 +236,7 @@ sample_cup_8oz:
   product: single_wall_cups
   name: 8oz Sample
   sku: SAMPLE-SW-8
+  slug: 8oz-sample-single-wall-cups
   price: 26.00
   stock_quantity: 100
   active: true
@@ -228,6 +248,7 @@ sample_cup_12oz:
   product: single_wall_cups
   name: 12oz Sample
   sku: SAMPLE-SW-12
+  slug: 12oz-sample-single-wall-cups
   price: 28.00
   stock_quantity: 100
   active: true
@@ -242,6 +263,7 @@ straw_6x140_white:
   product: paper_straws
   name: 6x140mm White
   sku: STRAW-6-WHT
+  slug: 6x140mm-white-paper-straws
   price: 8.00
   pac_size: 250
   stock_quantity: 1000
@@ -259,6 +281,7 @@ straw_6x140_kraft:
   product: paper_straws
   name: 6x140mm Kraft
   sku: STRAW-6-KFT
+  slug: 6x140mm-kraft-paper-straws
   price: 8.50
   stock_quantity: 1000
   active: true
@@ -268,6 +291,7 @@ straw_8x200_redwhite:
   product: paper_straws
   name: 8x200mm Red/White
   sku: STRAW-8-RW
+  slug: 8x200mm-red-white-paper-straws
   price: 10.00
   stock_quantity: 1000
   active: true
@@ -278,6 +302,7 @@ wooden_fork:
   product: wooden_cutlery
   name: Wooden Fork
   sku: CUT-WOOD-FORK
+  slug: wooden-fork-wooden-cutlery
   price: 15.00
   stock_quantity: 500
   active: true
@@ -287,6 +312,7 @@ wooden_knife:
   product: wooden_cutlery
   name: Wooden Knife
   sku: CUT-WOOD-KNIFE
+  slug: wooden-knife-wooden-cutlery
   price: 15.00
   stock_quantity: 500
   active: true
@@ -296,6 +322,7 @@ wooden_spoon:
   product: wooden_cutlery
   name: Wooden Spoon
   sku: CUT-WOOD-SPOON
+  slug: wooden-spoon-wooden-cutlery
   price: 15.00
   stock_quantity: 500
   active: true
@@ -305,6 +332,7 @@ bamboo_fork:
   product: wooden_cutlery
   name: Bamboo Fork
   sku: CUT-BAM-FORK
+  slug: bamboo-fork-wooden-cutlery
   price: 18.00
   stock_quantity: 500
   active: true
@@ -314,6 +342,7 @@ bamboo_knife:
   product: wooden_cutlery
   name: Bamboo Knife
   sku: CUT-BAM-KNIFE
+  slug: bamboo-knife-wooden-cutlery
   price: 18.00
   stock_quantity: 500
   active: true
@@ -323,6 +352,7 @@ bamboo_spoon:
   product: wooden_cutlery
   name: Bamboo Spoon
   sku: CUT-BAM-SPOON
+  slug: bamboo-spoon-wooden-cutlery
   price: 18.00
   stock_quantity: 500
   active: true
@@ -333,6 +363,7 @@ napkin_small_white:
   product: napkins
   name: Small White
   sku: NAP-SM-WHT
+  slug: small-white-paper-napkins
   price: 12.00
   stock_quantity: 1000
   active: true
@@ -342,6 +373,7 @@ napkin_small_natural:
   product: napkins
   name: Small Natural
   sku: NAP-SM-NAT
+  slug: small-natural-paper-napkins
   price: 12.00
   stock_quantity: 1000
   active: true
@@ -351,6 +383,7 @@ napkin_large_white:
   product: napkins
   name: Large White
   sku: NAP-LG-WHT
+  slug: large-white-paper-napkins
   price: 15.00
   stock_quantity: 1000
   active: true
@@ -360,6 +393,7 @@ napkin_large_natural:
   product: napkins
   name: Large Natural
   sku: NAP-LG-NAT
+  slug: large-natural-paper-napkins
   price: 15.00
   stock_quantity: 1000
   active: true
@@ -370,6 +404,7 @@ only_product_variant:
   product: only_product_in_category
   name: Standard
   sku: ONLY-001-STD
+  slug: standard-only-product-in-category
   price: 25.00
   stock_quantity: 100
   active: true

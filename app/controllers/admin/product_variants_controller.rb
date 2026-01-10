@@ -6,7 +6,8 @@ class Admin::ProductVariantsController < Admin::ApplicationController
 
   def update
     if @product_variant.update(product_variant_params)
-      redirect_to admin_product_variant_path(@product_variant), notice: "Product variant updated successfully"
+      # Use explicit ID for admin routes (to_param returns slug for public URLs)
+      redirect_to admin_product_variant_path(id: @product_variant.id), notice: "Product variant updated successfully"
     else
       render :edit
     end
@@ -33,7 +34,13 @@ class Admin::ProductVariantsController < Admin::ApplicationController
   private
 
   def set_product_variant
-    @product_variant = ProductVariant.find(params[:id])
+    # Admin routes use numeric ID, not slug
+    # Since to_param returns slug for public URLs, we need to handle both
+    @product_variant = if params[:id].to_s.match?(/\A\d+\z/)
+                         ProductVariant.find(params[:id])
+    else
+                         ProductVariant.find_by!(slug: params[:id])
+    end
   end
 
   def product_variant_params

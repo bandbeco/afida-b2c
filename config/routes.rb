@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   get "/branded-packaging", to: redirect(status: 301) { |_params, req| "/branding#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
   get "shop", to: "pages#shop"
+  get "search", to: "search#index"
   get "branding", to: "pages#branding"
   resources :samples, only: [ :index ] do
     collection do
@@ -43,6 +44,15 @@ Rails.application.routes.draw do
   # B2B Price List
   get "price-list", to: "price_list#index", as: :price_list
   get "price-list/export", to: "price_list#export", as: :price_list_export
+
+  # Product variant pages (individual SKU pages)
+  # Route placed before products resource to check variants first
+  # Variants have slugs like "8oz-white-single-wall-cups"
+  # Products have slugs like "single-wall-cups"
+  get "products/:slug", to: "product_variants#show", as: :product_variant, constraints: ->(req) {
+    # Only match if the slug is a valid product variant slug
+    ProductVariant.exists?(slug: req.params[:slug])
+  }
 
   resources :products, only: [ :index, :show ], param: :slug do
     member do

@@ -89,12 +89,62 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_equal product.name, variant.full_name
   end
 
-  test "in_stock? always returns true" do
-    # Currently stock tracking is not implemented
+  test "in_stock? returns true when stock_quantity is nil" do
+    @variant.stock_quantity = nil
     assert @variant.in_stock?
+  end
 
-    @variant.stock_quantity = 0
+  test "in_stock? returns true when stock_quantity is positive" do
+    @variant.stock_quantity = 10
     assert @variant.in_stock?
+  end
+
+  test "in_stock? returns false when stock_quantity is zero" do
+    @variant.stock_quantity = 0
+    assert_not @variant.in_stock?
+  end
+
+  # sibling_variants tests
+  test "sibling_variants returns other active variants from same product" do
+    variant1 = product_variants(:single_wall_8oz_white)
+    variant2 = product_variants(:single_wall_8oz_black)
+
+    siblings = variant1.sibling_variants
+    assert_includes siblings, variant2
+    assert_not_includes siblings, variant1
+  end
+
+  test "sibling_variants excludes inactive variants" do
+    variant1 = product_variants(:single_wall_8oz_white)
+    variant2 = product_variants(:single_wall_8oz_black)
+    variant2.update!(active: false)
+
+    siblings = variant1.sibling_variants
+    assert_not_includes siblings, variant2
+  end
+
+  test "sibling_variants respects limit parameter" do
+    variant = product_variants(:single_wall_8oz_white)
+    siblings = variant.sibling_variants(limit: 1)
+    assert_operator siblings.count, :<=, 1
+  end
+
+  test "sibling_variants returns empty for single-variant products" do
+    # Create a product with only one variant
+    product = Product.create!(
+      name: "Single Variant Product",
+      category: categories(:one),
+      active: true
+    )
+    variant = ProductVariant.create!(
+      product: product,
+      name: "Only Variant",
+      sku: "SINGLE-ONLY",
+      price: 10.0,
+      active: true
+    )
+
+    assert_empty variant.sibling_variants
   end
 
   test "variant_attributes returns hash of non-blank attributes" do
@@ -767,5 +817,338 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_difference "VariantOptionValue.count", -1 do
       variant.destroy
     end
+  end
+
+  # ==========================================================================
+  # Slug Generation Tests
+  # ==========================================================================
+
+  test "generates slug from name and product name" do
+    product = Product.unscoped.create!(
+      name: "Unique Test Mugs",
+      category: categories(:one),
+      sku: "TEST-SLUG-PROD"
+    )
+    variant = ProductVariant.new(
+      product: product,
+      name: "Large Blue",
+      sku: "TEST-SLUG-001",
+      price: 10.0
+    )
+
+    variant.valid? # Triggers before_validation callback
+
+    assert_equal "large-blue-unique-test-mugs", variant.slug
+  end
+
+  test "handles duplicate slugs with counter" do
+    product = Product.unscoped.create!(
+      name: "Test Product",
+      category: categories(:one),
+      sku: "TEST-DUP-PROD"
+    )
+
+    # Create first variant
+    variant1 = ProductVariant.create!(
+      product: product,
+      name: "Large",
+      sku: "TEST-DUP-001",
+      price: 10.0
+    )
+    assert_equal "large-test-product", variant1.slug
+
+    # Create second variant with same base slug
+    variant2 = ProductVariant.create!(
+      product: product,
+      name: "Large",
+      sku: "TEST-DUP-002",
+      price: 12.0
+    )
+    assert_equal "large-test-product-2", variant2.slug
+
+    # Create third variant with same base slug
+    variant3 = ProductVariant.create!(
+      product: product,
+      name: "Large",
+      sku: "TEST-DUP-003",
+      price: 14.0
+    )
+    assert_equal "large-test-product-3", variant3.slug
+  end
+
+  test "to_param returns slug" do
+    variant = product_variants(:one)
+    assert_equal variant.slug, variant.to_param
+  end
+
+  test "validates presence of slug" do
+    variant = ProductVariant.new(
+      product: @product,
+      name: "Test",
+      sku: "UNIQUE-SLUG-TEST",
+      price: 10.0,
+      slug: nil
+    )
+    # Run validation which should generate the slug
+    variant.valid?
+
+    # Slug should have been auto-generated
+    assert_not_nil variant.slug
+    assert variant.slug.present?
+  end
+
+  test "validates uniqueness of slug" do
+    existing_variant = product_variants(:one)
+
+    variant = ProductVariant.new(
+      product: @product,
+      name: "Test",
+      sku: "UNIQUE-SKU-123",
+      price: 10.0,
+      slug: existing_variant.slug
+    )
+
+    assert_not variant.valid?
+    assert_includes variant.errors[:slug], "has already been taken"
+  end
+
+  test "does not regenerate slug if already present" do
+    product = Product.unscoped.create!(
+      name: "Custom Product",
+      category: categories(:one),
+      sku: "TEST-NO-REGEN"
+    )
+    variant = ProductVariant.new(
+      product: product,
+      name: "My Variant",
+      sku: "TEST-NO-REGEN-001",
+      price: 10.0,
+      slug: "custom-slug-preserved"
+    )
+
+    variant.valid?
+
+    assert_equal "custom-slug-preserved", variant.slug
+  end
+
+  test "generates slug with special characters parameterized" do
+    product = Product.unscoped.create!(
+      name: "Eco-Friendly Cups (Large)",
+      category: categories(:one),
+      sku: "TEST-SPECIAL-PROD"
+    )
+    variant = ProductVariant.new(
+      product: product,
+      name: "16oz / Extra-Large",
+      sku: "TEST-SPECIAL-001",
+      price: 10.0
+    )
+
+    variant.valid?
+
+    # parameterize handles special chars, spaces, slashes, parentheses
+    assert_match(/\A[a-z0-9-]+\z/, variant.slug)
+    assert variant.slug.present?
+  end
+
+  # ==========================================================================
+  # Display Helpers Tests
+  # ==========================================================================
+
+  test "variant_meta_description returns truncated description" do
+    @variant.product.update!(description_standard: "This is a test description for the product that goes on and on.")
+    meta = @variant.variant_meta_description
+
+    assert meta.present?
+    assert meta.length <= 160
+  end
+
+  test "variant_meta_description returns fallback when no description" do
+    # Ensure product has no descriptions
+    @variant.product.update!(description_standard: nil, description_detailed: nil, description_short: nil)
+    meta = @variant.variant_meta_description
+
+    assert meta.present?
+    assert_includes meta, "Buy"
+    assert_includes meta, "Afida"
+  end
+
+  test "price_display includes pack info when pac_size set" do
+    @variant.update!(price: 36.05, pac_size: 1000)
+    display = @variant.price_display
+
+    assert_includes display, "£36.05"
+    assert_includes display, "pack"
+    assert_includes display, "1,000"
+  end
+
+  test "price_display shows simple price when no pac_size" do
+    @variant.update!(price: 10.00, pac_size: nil)
+    display = @variant.price_display
+
+    assert_includes display, "£10.00"
+    assert_not_includes display, "pack"
+  end
+
+  test "unit_price_display formats with 4 decimal places" do
+    @variant.update!(price: 36.00, pac_size: 1000)
+    display = @variant.unit_price_display
+
+    assert_includes display, "£0.0360"
+  end
+
+  # ==========================================================================
+  # Search Scope Tests
+  # ==========================================================================
+
+  test "search scope finds variants by name" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.joins(:product).search("8oz")
+
+    assert_includes results, variant
+  end
+
+  test "search scope finds variants by SKU" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.joins(:product).search(variant.sku)
+
+    assert_includes results, variant
+  end
+
+  test "search scope finds variants by product name" do
+    variant = product_variants(:single_wall_8oz_white)
+    product_name = variant.product.name
+
+    results = ProductVariant.joins(:product).search(product_name.split.first)
+
+    assert_includes results, variant
+  end
+
+  test "search scope returns all when query is blank" do
+    results = ProductVariant.search("")
+    assert_equal ProductVariant.count, results.count
+
+    results = ProductVariant.search(nil)
+    assert_equal ProductVariant.count, results.count
+  end
+
+  test "search scope truncates long queries" do
+    # Should not raise error with very long query
+    long_query = "a" * 200
+    results = ProductVariant.search(long_query)
+
+    assert_kind_of ActiveRecord::Relation, results
+  end
+
+  test "search_extended finds variants by product name" do
+    variant = product_variants(:single_wall_8oz_white)
+    product_name = variant.product.name
+
+    results = ProductVariant.search_extended(product_name.split.first)
+
+    assert_includes results, variant
+  end
+
+  test "search_extended finds variants by category name" do
+    variant = product_variants(:single_wall_8oz_white)
+    category_name = variant.product.category.name
+
+    results = ProductVariant.search_extended(category_name.split.first)
+
+    assert_includes results, variant
+  end
+
+  test "search_extended returns all when query is blank" do
+    results = ProductVariant.search_extended("")
+    assert_equal ProductVariant.count, results.count
+  end
+
+  # ==========================================================================
+  # Filter Scope Tests
+  # ==========================================================================
+
+  test "with_option finds variants by option name and value" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_option("size", "8oz")
+
+    assert_includes results, variant
+  end
+
+  test "with_option is case-insensitive for option name" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_option("SIZE", "8oz")
+
+    assert_includes results, variant
+  end
+
+  test "with_option returns all when option_name is blank" do
+    results = ProductVariant.with_option("", "8oz")
+    assert_equal ProductVariant.count, results.count
+
+    results = ProductVariant.with_option(nil, "8oz")
+    assert_equal ProductVariant.count, results.count
+  end
+
+  test "with_option returns all when value is blank" do
+    results = ProductVariant.with_option("size", "")
+    assert_equal ProductVariant.count, results.count
+
+    results = ProductVariant.with_option("size", nil)
+    assert_equal ProductVariant.count, results.count
+  end
+
+  test "with_option returns empty when no match" do
+    results = ProductVariant.with_option("size", "nonexistent")
+
+    assert_empty results
+  end
+
+  test "with_size convenience scope works" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_size("8oz")
+
+    assert_includes results, variant
+  end
+
+  test "with_colour convenience scope works" do
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_colour("White")
+
+    assert_includes results, variant
+  end
+
+  test "with_material convenience scope works" do
+    variant = product_variants(:wooden_fork)
+    results = ProductVariant.with_material("Birch")
+
+    assert_includes results, variant
+  end
+
+  test "filter scopes can be chained" do
+    # Find variants with both size and colour
+    variant = product_variants(:single_wall_8oz_white)
+    results = ProductVariant.with_size("8oz").with_colour("White")
+
+    assert_includes results, variant
+    # Should not include variants with different colour
+    black_variant = product_variants(:single_wall_8oz_black)
+    assert_not_includes results, black_variant
+  end
+
+  test "filter scopes can be combined with in_categories" do
+    variant = product_variants(:single_wall_8oz_white)
+    category = variant.product.category
+
+    results = ProductVariant.in_categories(category.slug).with_size("8oz")
+
+    assert_includes results, variant
+  end
+
+  test "filter scopes can be combined with search" do
+    variant = product_variants(:single_wall_8oz_white)
+
+    results = ProductVariant.joins(:product).search("8oz").with_colour("White")
+
+    assert_includes results, variant
   end
 end

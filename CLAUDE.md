@@ -772,6 +772,8 @@ After deploying SEO updates:
 - PostgreSQL (existing `orders`, `order_items`, `reorder_schedules` tables - no schema changes) (001-reorder-schedule-conversion)
 - Ruby 3.3.0+ / Rails 8.x + Rails ActiveRecord, PostgreSQL, Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (001-option-value-labels)
 - PostgreSQL 14+ (new `variant_option_values` join table) (001-option-value-labels)
+- Ruby 3.4.7, Rails 8.1.1 + Turbo-Rails, Stimulus-Rails, Vite Rails 3.0, Pagy (pagination) (001-variant-pages)
+- PostgreSQL 14+ (existing schema, adding `slug` to `product_variants`, `search_vector` tsvector column) (001-variant-pages)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+

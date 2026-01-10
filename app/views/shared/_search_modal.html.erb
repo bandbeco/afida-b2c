@@ -1,0 +1,70 @@
+<%# Search Modal - Full-screen search experience %>
+<%# Opens when user clicks search icon in navbar %>
+
+<div data-controller="search-modal">
+  <%# Modal container - hidden by default %>
+  <div data-search-modal-target="modal"
+       class="hidden fixed inset-0 z-50 items-start justify-center bg-black/50 backdrop-blur-sm pt-16 md:pt-24"
+       data-action="click->search-modal#closeOnOverlay">
+
+    <%# Modal content - clicks here should NOT close the modal %>
+    <div class="w-full max-w-4xl mx-4 bg-white rounded-2xl shadow-2xl max-h-[80vh] overflow-hidden flex flex-col"
+         data-search-modal-target="content"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Search products">
+
+      <%# Header with search input and close button %>
+      <div class="p-6 border-b border-gray-100">
+        <div class="flex items-center gap-4">
+          <%# Search input %>
+          <div class="flex-1 relative">
+            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input type="text"
+                   data-search-modal-target="input"
+                   data-action="input->search-modal#search"
+                   placeholder="Search for cups, napkins, straws..."
+                   class="w-full pl-12 pr-10 py-4 text-lg border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0 focus:outline-none"
+                   autocomplete="off"
+                   autocapitalize="off"
+                   spellcheck="false">
+            <%# Clear button (shown when input has value) %>
+            <button type="button"
+                    data-action="click->search-modal#clearSearch"
+                    class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden"
+                    aria-label="Clear search">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <%# Close button %>
+          <button type="button"
+                  data-action="click->search-modal#close"
+                  class="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition"
+                  aria-label="Close search">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <%# Scrollable content area %>
+      <div class="flex-1 overflow-y-auto p-6">
+        <%# Default content (chips + categories) %>
+        <div data-search-modal-target="defaultContent">
+          <%= render "shared/search_modal_default_content" %>
+        </div>
+
+        <%# Search results (loaded via Turbo Frame) %>
+        <%= turbo_frame_tag "search-modal-results",
+                            data: { search_modal_target: "results" },
+                            class: "hidden" %>
+      </div>
+    </div>
+  </div>
+</div>

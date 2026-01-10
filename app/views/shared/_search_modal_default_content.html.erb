@@ -1,0 +1,71 @@
+<%# Default content for search modal - shown before user starts typing %>
+<%# Includes quick search chips and featured category cards %>
+
+<%
+  # Hardcoded quick search terms
+  quick_terms = ["Cups", "Pizza boxes", "Napkins", "Straws", "Takeaway containers", "Ice cream"]
+
+  # Featured categories with representative products for images
+  featured_categories = Category.order(:position).limit(4).map do |category|
+    product = category.products.where(active: true, product_type: :standard)
+                      .left_joins(:lifestyle_photo_attachment)
+                      .order(Arel.sql("active_storage_attachments.id DESC NULLS LAST"))
+                      .first
+    { category: category, product: product }
+  end
+%>
+
+<%# Quick search chips %>
+<div class="mb-8">
+  <p class="text-sm font-medium text-gray-500 mb-3">Most searched</p>
+  <div class="flex flex-wrap gap-2">
+    <% quick_terms.each do |term| %>
+      <button type="button"
+              data-action="click->search-modal#quickSearch"
+              data-term="<%= term %>"
+              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm font-medium text-gray-700 transition">
+        <%= term %>
+      </button>
+    <% end %>
+  </div>
+</div>
+
+<%# Category cards %>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+  <% featured_categories.each do |item| %>
+    <% category = item[:category] %>
+    <% product = item[:product] %>
+    <%= link_to shop_path(categories: [category.slug]),
+                class: "group relative aspect-square rounded-xl overflow-hidden bg-gray-100",
+                data: { action: "click->search-modal#navigateToCategory", turbo_frame: "_top" } do %>
+      <%# Category image from product %>
+      <% if product&.lifestyle_photo&.attached? %>
+        <%= image_tag product.lifestyle_photo.variant(resize_to_fill: [400, 400]),
+                      class: "w-full h-full object-cover group-hover:scale-105 transition duration-300",
+                      alt: category.name,
+                      loading: "lazy" %>
+      <% elsif product&.product_photo&.attached? %>
+        <%= image_tag product.product_photo.variant(resize_to_fill: [400, 400]),
+                      class: "w-full h-full object-cover group-hover:scale-105 transition duration-300",
+                      alt: category.name,
+                      loading: "lazy" %>
+      <% else %>
+        <div class="w-full h-full flex items-center justify-center text-gray-400">
+          <svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          </svg>
+        </div>
+      <% end %>
+
+      <%# Category label %>
+      <div class="absolute bottom-0 left-0 right-0 p-3 bg-white/95">
+        <div class="flex items-center justify-between">
+          <span class="font-medium text-gray-900 text-sm">Shop <%= category.name.downcase %></span>
+          <svg class="w-4 h-4 text-gray-600 group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+</div>

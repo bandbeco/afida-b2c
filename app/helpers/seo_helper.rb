@@ -119,4 +119,42 @@ module SeoHelper
   def canonical_url(url = nil)
     tag.link rel: "canonical", href: url || request.original_url
   end
+
+  # Structured data for individual variant pages
+  # Uses variant-specific URL and details
+  def variant_structured_data(variant)
+    data = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": variant.full_name,
+      "description": variant.variant_meta_description,
+      "brand": {
+        "@type": "Brand",
+        "name": "Afida"
+      },
+      "sku": variant.sku,
+      "offers": {
+        "@type": "Offer",
+        "price": variant.price.to_s,
+        "priceCurrency": "GBP",
+        "availability": variant.in_stock? ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "url": product_variant_url(variant.slug)
+      }
+    }
+
+    # Add image if available (variant or product fallback)
+    if variant.primary_photo&.attached?
+      data[:image] = url_for(variant.primary_photo)
+    elsif variant.product.primary_photo&.attached?
+      data[:image] = url_for(variant.product.primary_photo)
+    end
+
+    # Add GTIN if present
+    data[:gtin] = variant.gtin if variant.gtin.present?
+
+    # Add category
+    data[:category] = variant.category.name if variant.category.present?
+
+    data.to_json
+  end
 end

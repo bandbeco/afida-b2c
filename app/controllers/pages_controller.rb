@@ -12,26 +12,42 @@ class PagesController < ApplicationController
   end
 
   def shop
-    @products = Product
-      .standard
-      .includes(:active_variants,
-                product_photo_attachment: :blob,
-                lifestyle_photo_attachment: :blob)
+    # Shop page now displays individual variants instead of products
+    @variants = ProductVariant
+      .active
+      .joins(:product)
+      .where(products: { active: true, product_type: :standard })
+      .includes(product: :category, product_photo_attachment: :blob)
 
-    @categories = Category.where(id: @products.pluck(:category_id).uniq).order(:position)
+    # Get categories with their variant counts
+    category_variant_counts = @variants
+      .joins(product: :category)
+      .group("categories.id")
+      .count
+
+    @categories = Category.where(id: category_variant_counts.keys).order(:position)
+    @category_variant_counts = category_variant_counts
 
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter
     if params[:q].present?
-      @products = @products.search(params[:q])
+      @variants = @variants.search_extended(params[:q])
     else
-      @products = @products.in_categories(params[:categories])
+      @variants = @variants.in_categories(params[:categories])
     end
 
-    # Apply sorting
-    @products = @products.sorted(params[:sort])
+    # Apply option filters (size, colour, material)
+    @variants = @variants.with_size(params[:size]) if params[:size].present?
+    @variants = @variants.with_colour(params[:colour]) if params[:colour].present?
+    @variants = @variants.with_material(params[:material]) if params[:material].present?
 
-    @pagy, @products = pagy(@products)
+    # Apply sorting
+    @variants = @variants.sorted(params[:sort])
+
+    # Get available filter values from remaining variants for dynamic filter options
+    @available_filters = build_available_filters(@variants)
+
+    @pagy, @variants = pagy(@variants)
   end
 
   def branding
@@ -97,6 +113,37 @@ class PagesController < ApplicationController
   end
 
   private
+
+  # Build hash of available filter values from current variant set
+  # Returns: { size: ["8oz", "12oz"], colour: ["White", "Black"], material: ["Paper", "Bamboo"] }
+  def build_available_filters(variants)
+    # Get all option values for the current variant set
+    variant_ids = variants.reorder(nil).pluck(:id)
+
+    return {} if variant_ids.empty?
+
+    # Query option values through the join table
+    option_data = VariantOptionValue
+      .joins(product_option_value: :product_option)
+      .where(product_variant_id: variant_ids)
+      .select("product_options.name as option_name, product_option_values.value, product_option_values.label")
+      .distinct
+
+    # Group by option name
+    filters = {}
+    option_data.each do |record|
+      option_name = record.option_name
+      filters[option_name] ||= []
+      filters[option_name] << { value: record.value, label: record.label.presence || record.value }
+    end
+
+    # Sort values within each filter and remove duplicates
+    filters.transform_values! do |values|
+      values.uniq { |v| v[:value] }.sort_by { |v| v[:label].downcase }
+    end
+
+    filters
+  end
 
   def client_logos
     [
