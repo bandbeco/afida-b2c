@@ -68,15 +68,15 @@ class ProductVariant < ApplicationRecord
     joins(product: :category).where(categories: { slug: slugs })
   }
 
-  # Basic search on variant name and SKU (for header dropdown)
-  # Fast ILIKE search without JOINs
+  # Basic search on variant name, SKU, and product name (for header dropdown)
+  # Requires .joins(:product) in the calling scope
   scope :search, ->(query) {
     return all if query.blank?
 
     truncated_query = query.to_s.truncate(100, omission: "")
     sanitized_query = sanitize_sql_like(truncated_query)
     where(
-      "product_variants.name ILIKE :q OR product_variants.sku ILIKE :q",
+      "product_variants.name ILIKE :q OR product_variants.sku ILIKE :q OR products.name ILIKE :q",
       q: "%#{sanitized_query}%"
     )
   }

@@ -1003,14 +1003,23 @@ class ProductVariantTest < ActiveSupport::TestCase
 
   test "search scope finds variants by name" do
     variant = product_variants(:single_wall_8oz_white)
-    results = ProductVariant.search("8oz")
+    results = ProductVariant.joins(:product).search("8oz")
 
     assert_includes results, variant
   end
 
   test "search scope finds variants by SKU" do
     variant = product_variants(:single_wall_8oz_white)
-    results = ProductVariant.search(variant.sku)
+    results = ProductVariant.joins(:product).search(variant.sku)
+
+    assert_includes results, variant
+  end
+
+  test "search scope finds variants by product name" do
+    variant = product_variants(:single_wall_8oz_white)
+    product_name = variant.product.name
+
+    results = ProductVariant.joins(:product).search(product_name.split.first)
 
     assert_includes results, variant
   end
@@ -1138,7 +1147,7 @@ class ProductVariantTest < ActiveSupport::TestCase
   test "filter scopes can be combined with search" do
     variant = product_variants(:single_wall_8oz_white)
 
-    results = ProductVariant.search("8oz").with_colour("White")
+    results = ProductVariant.joins(:product).search("8oz").with_colour("White")
 
     assert_includes results, variant
   end
