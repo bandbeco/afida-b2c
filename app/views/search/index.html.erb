@@ -1,0 +1,16 @@
+<%# Search results page - displays when navigating directly to /search %>
+<% content_for :title, "Search Results | Afida" %>
+
+<div class="container mx-auto px-4 py-8">
+  <h1 class="text-3xl font-bold mb-6">
+    <% if @query.present? %>
+      Search results for "<%= @query %>"
+    <% else %>
+      Search
+    <% end %>
+  </h1>
+
+  <%= turbo_frame_tag "search-results" do %>
+    <%= render "results" %>
+  <% end %>
+</div>

@@ -1,0 +1,38 @@
+<%# Search results partial - rendered in header dropdown and full search page %>
+<%# Variables: @variants (search results), @query (search term) %>
+
+<% if @query.blank? || @query.length < 2 %>
+  <div class="p-4 text-center text-gray-500">
+    Type at least 2 characters to search
+  </div>
+<% elsif @variants.empty? %>
+  <div class="p-4 text-center text-gray-500">
+    No results found for "<%= @query %>"
+  </div>
+<% else %>
+  <div class="divide-y divide-gray-100">
+    <% @variants.each do |variant| %>
+      <%= link_to product_variant_path(variant.slug),
+                  class: "variant-card flex items-center gap-3 p-3 hover:bg-base-200 transition",
+                  data: { turbo_frame: "_top" } do %>
+        <div class="w-12 h-12 flex-shrink-0 bg-white rounded overflow-hidden">
+          <%= product_photo_tag(variant.primary_photo,
+                                alt: variant.full_name,
+                                class: "w-full h-full object-contain",
+                                variant: { resize_and_pad: [48, 48, { background: [255, 255, 255] }] }) %>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-medium text-sm truncate"><%= variant.full_name %></div>
+          <div class="text-xs text-gray-500"><%= number_to_currency(variant.price) %></div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+
+  <%# View all link %>
+  <%= link_to shop_path(q: @query),
+              class: "block p-3 text-center text-sm text-primary hover:bg-base-200 border-t",
+              data: { turbo_frame: "_top" } do %>
+    View all results for "<%= @query %>"
+  <% end %>
+<% end %>
