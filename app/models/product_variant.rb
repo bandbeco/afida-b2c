@@ -58,6 +58,43 @@ class ProductVariant < ApplicationRecord
   scope :by_position, -> { order(:position, :name) }
   scope :sample_eligible, -> { where(sample_eligible: true) }
 
+  # Filtering and search scopes for shop page
+  scope :in_categories, ->(category_slugs) {
+    return all if category_slugs.blank?
+
+    slugs = Array(category_slugs).reject(&:blank?)
+    return all if slugs.empty?
+
+    joins(product: :category).where(categories: { slug: slugs })
+  }
+
+  scope :search, ->(query) {
+    return all if query.blank?
+
+    truncated_query = query.to_s.truncate(100, omission: "")
+    sanitized_query = sanitize_sql_like(truncated_query)
+    joins(:product).where(
+      "product_variants.name ILIKE :q OR products.name ILIKE :q OR product_variants.sku ILIKE :q",
+      q: "%#{sanitized_query}%"
+    )
+  }
+
+  scope :sorted, ->(sort_param) {
+    case sort_param
+    when "price_asc"
+      reorder(price: :asc, id: :asc)
+    when "price_desc"
+      reorder(price: :desc, id: :asc)
+    when "name_asc"
+      joins(:product).reorder(Arel.sql("LOWER(products.name) ASC, LOWER(product_variants.name) ASC"))
+    when "name_desc"
+      joins(:product).reorder(Arel.sql("LOWER(products.name) DESC, LOWER(product_variants.name) DESC"))
+    else
+      # Default: keep existing order or use position
+      all
+    end
+  }
+
   # Natural sort for variant names with numeric prefixes (e.g., 8oz, 12oz, 16oz)
   # Extracts leading digits and sorts numerically, with non-numeric names last
   # Safe: No user input interpolated - only uses static column references
@@ -131,12 +168,9 @@ class ProductVariant < ApplicationRecord
   end
 
   # Check if variant is in stock
-  # Currently always returns true (stock tracking not implemented)
-  # TODO: Implement proper stock tracking based on stock_quantity field
+  # Returns true if stock_quantity is nil (not tracked) or greater than 0
   def in_stock?
-    true
-    # TODO: Uncomment this when we have stock tracking
-    # stock_quantity > 0
+    stock_quantity.nil? || stock_quantity > 0
   end
 
   # Returns hash of all product attributes for this variant

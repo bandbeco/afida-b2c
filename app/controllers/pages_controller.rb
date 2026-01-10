@@ -12,26 +12,29 @@ class PagesController < ApplicationController
   end
 
   def shop
-    @products = Product
-      .standard
-      .includes(:active_variants,
-                product_photo_attachment: :blob,
-                lifestyle_photo_attachment: :blob)
+    # Shop page now displays individual variants instead of products
+    @variants = ProductVariant
+      .active
+      .joins(:product)
+      .where(products: { active: true, product_type: :standard })
+      .includes(product: :category, product_photo_attachment: :blob)
 
-    @categories = Category.where(id: @products.pluck(:category_id).uniq).order(:position)
+    # Get categories that have variants
+    category_ids = @variants.joins(product: :category).pluck("categories.id").uniq
+    @categories = Category.where(id: category_ids).order(:position)
 
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter
     if params[:q].present?
-      @products = @products.search(params[:q])
+      @variants = @variants.search(params[:q])
     else
-      @products = @products.in_categories(params[:categories])
+      @variants = @variants.in_categories(params[:categories])
     end
 
     # Apply sorting
-    @products = @products.sorted(params[:sort])
+    @variants = @variants.sorted(params[:sort])
 
-    @pagy, @products = pagy(@products)
+    @pagy, @variants = pagy(@variants)
   end
 
   def branding

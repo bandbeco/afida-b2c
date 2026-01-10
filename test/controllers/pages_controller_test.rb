@@ -1,36 +1,41 @@
 require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
-  test "shop page displays all products by default" do
+  test "shop page displays all variants by default" do
     get shop_path
 
     assert_response :success
     assert_select "h1", text: /Shop/
-    # Shop page only shows standard products (not customizable templates)
-    Product.standard.limit(5).each do |product|
-      assert_select "a[href=?]", product_path(product.slug)
-    end
+    # Shop page now shows individual variants instead of products
+    # Verify at least one variant link is present
+    variant = ProductVariant.active
+                            .joins(:product)
+                            .where(products: { active: true, product_type: :standard })
+                            .first
+    assert_select "a[href=?]", product_variant_path(variant.slug)
   end
 
   test "shop page filters by categories" do
     category = categories(:one)
     product = products(:one)
     product.update(category: category)
+    variant = product.active_variants.first
 
     get shop_path, params: { categories: [ category.slug ] }
 
     assert_response :success
-    assert_select "a[href=?]", product_path(product.slug)
+    assert_select "a[href=?]", product_variant_path(variant.slug)
   end
 
-  test "shop page searches products" do
+  test "shop page searches variants" do
     product = products(:one)
     product.update(name: "Pizza Box")
+    variant = product.active_variants.first
 
     get shop_path, params: { q: "pizza" }
 
     assert_response :success
-    assert_select "a[href=?]", product_path(product.slug)
+    assert_select "a[href=?]", product_variant_path(variant.slug)
   end
 
   test "shop page sorts products by price" do

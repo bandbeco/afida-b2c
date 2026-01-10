@@ -89,12 +89,19 @@ class ProductVariantTest < ActiveSupport::TestCase
     assert_equal product.name, variant.full_name
   end
 
-  test "in_stock? always returns true" do
-    # Currently stock tracking is not implemented
+  test "in_stock? returns true when stock_quantity is nil" do
+    @variant.stock_quantity = nil
     assert @variant.in_stock?
+  end
 
-    @variant.stock_quantity = 0
+  test "in_stock? returns true when stock_quantity is positive" do
+    @variant.stock_quantity = 10
     assert @variant.in_stock?
+  end
+
+  test "in_stock? returns false when stock_quantity is zero" do
+    @variant.stock_quantity = 0
+    assert_not @variant.in_stock?
   end
 
   test "variant_attributes returns hash of non-blank attributes" do
