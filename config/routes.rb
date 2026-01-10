@@ -22,6 +22,7 @@ Rails.application.routes.draw do
   get "/branded-packaging", to: redirect(status: 301) { |_params, req| "/branding#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
   get "shop", to: "pages#shop"
+  get "search", to: "search#index"
   get "branding", to: "pages#branding"
   resources :samples, only: [ :index ] do
     collection do
