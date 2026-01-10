@@ -43,4 +43,52 @@ class ProductVariantsControllerTest < ActionDispatch::IntegrationTest
     # The page should render successfully even with related variants
     # Detailed testing of the "See also" section will be in system tests
   end
+
+  # See Also section tests
+  test "show displays See Also section when sibling variants exist" do
+    variant = product_variants(:single_wall_8oz_white)
+    sibling = product_variants(:single_wall_8oz_black)
+
+    get product_variant_path(variant.slug)
+    assert_response :success
+
+    # See Also heading should be present
+    assert_select "h2", text: "See Also"
+    # Sibling variant should be linked
+    assert_select "a[href=?]", product_variant_path(sibling.slug)
+  end
+
+  test "show hides See Also section for single-variant products" do
+    # Create a product with only one active variant
+    product = Product.create!(
+      name: "Single Variant Product",
+      category: categories(:one),
+      active: true
+    )
+    only_variant = ProductVariant.create!(
+      product: product,
+      name: "Only Variant",
+      sku: "SINGLE-ONLY-TEST",
+      price: 10.0,
+      active: true
+    )
+
+    get product_variant_path(only_variant.slug)
+    assert_response :success
+
+    # See Also section should not be present
+    assert_select "h2", text: "See Also", count: 0
+  end
+
+  test "show excludes inactive variants from See Also section" do
+    variant = product_variants(:single_wall_8oz_white)
+    inactive_sibling = product_variants(:single_wall_8oz_black)
+    inactive_sibling.update!(active: false)
+
+    get product_variant_path(variant.slug)
+    assert_response :success
+
+    # Inactive variant should not be linked
+    assert_select "a[href=?]", product_variant_path(inactive_sibling.slug), count: 0
+  end
 end
