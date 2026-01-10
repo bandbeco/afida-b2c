@@ -16,10 +16,8 @@ class ProductVariantsController < ApplicationController
     @category = @product.category
 
     # Related variants from the same product (for "See also" section)
-    @related_variants = @product.active_variants
-                                .where.not(id: @variant.id)
+    @related_variants = @variant.sibling_variants(limit: 4)
                                 .includes(product_photo_attachment: :blob)
-                                .limit(4)
   rescue ActiveRecord::RecordNotFound
     render file: Rails.root.join("public", "404.html"), status: :not_found, layout: false
   end
