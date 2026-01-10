@@ -1,7 +1,8 @@
-# Controller for header search dropdown with typeahead results
+# Controller for search functionality
 #
-# Returns variant search results for the header search dropdown.
-# Results are rendered within a Turbo Frame for live updates.
+# Supports two modes:
+# - Header dropdown: Compact results (5 items) for quick navigation
+# - Modal: Expanded results (10 items) with total count for "view all"
 #
 class SearchController < ApplicationController
   allow_unauthenticated_access
@@ -9,28 +10,49 @@ class SearchController < ApplicationController
   # GET /search
   # Params:
   #   q - Search query (minimum 2 characters for results)
+  #   modal - If "true", returns modal-optimized results (10 items)
   # Returns:
   #   - Empty state if query < 2 chars
-  #   - Up to 5 variant results matching query
-  #   - Results rendered in Turbo Frame "search-results"
+  #   - Variant results matching query
+  #   - Results rendered in appropriate Turbo Frame
   def index
     @query = params[:q].to_s.strip
+    @modal = params[:modal] == "true"
 
     if @query.length < 2
       @variants = []
+      @total_count = 0
     else
-      @variants = ProductVariant
+      base_query = ProductVariant
         .active
         .joins(:product)
         .where(products: { active: true, product_type: :standard })
         .search(@query)
+
+      # Get total count for "view all" link
+      @total_count = base_query.count
+
+      # Modal shows more results than header dropdown
+      limit = @modal ? 10 : 5
+
+      @variants = base_query
         .includes(product: :category, product_photo_attachment: :blob)
-        .limit(5)
+        .limit(limit)
     end
 
     respond_to do |format|
-      format.html
+      format.html { render_appropriate_template }
       format.turbo_stream
+    end
+  end
+
+  private
+
+  def render_appropriate_template
+    if @modal
+      render :modal, layout: false
+    else
+      render :index
     end
   end
 end

@@ -1,4 +1,12 @@
 <%# Turbo Stream response for AJAX search updates %>
-<%= turbo_stream.update "header-search-results" do %>
-  <%= render "results" %>
+<% if @modal %>
+  <%# Modal search results %>
+  <%= turbo_stream.update "search-modal-results" do %>
+    <%= render "modal_results" %>
+  <% end %>
+<% else %>
+  <%# Header dropdown search results %>
+  <%= turbo_stream.update "header-search-results" do %>
+    <%= render "results" %>
+  <% end %>
 <% end %>

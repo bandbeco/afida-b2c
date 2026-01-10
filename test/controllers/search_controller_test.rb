@@ -72,4 +72,31 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     get search_url, params: { q: long_query }
     assert_response :success
   end
+
+  # Modal mode tests
+  test "modal mode returns up to 10 results" do
+    get search_url, params: { q: "cup", modal: "true" }
+    assert_response :success
+    # Modal mode should return more results (up to 10)
+    assert_select "a[href*='/products/']", maximum: 10
+  end
+
+  test "modal mode returns modal_results partial" do
+    get search_url, params: { q: "8oz", modal: "true" }
+    assert_response :success
+    # Modal results should have the results grid
+    assert_select ".grid"
+  end
+
+  test "modal turbo stream updates correct frame" do
+    get search_url, params: { q: "8oz", modal: "true" }, as: :turbo_stream
+    assert_response :success
+    assert_match(/search-modal-results/, response.body)
+  end
+
+  test "non-modal turbo stream updates header frame" do
+    get search_url, params: { q: "8oz" }, as: :turbo_stream
+    assert_response :success
+    assert_match(/header-search-results/, response.body)
+  end
 end
