@@ -31,8 +31,16 @@ class PagesController < ApplicationController
       @variants = @variants.in_categories(params[:categories])
     end
 
+    # Apply option filters (size, colour, material)
+    @variants = @variants.with_size(params[:size]) if params[:size].present?
+    @variants = @variants.with_colour(params[:colour]) if params[:colour].present?
+    @variants = @variants.with_material(params[:material]) if params[:material].present?
+
     # Apply sorting
     @variants = @variants.sorted(params[:sort])
+
+    # Get available filter values from remaining variants for dynamic filter options
+    @available_filters = build_available_filters(@variants)
 
     @pagy, @variants = pagy(@variants)
   end
@@ -100,6 +108,37 @@ class PagesController < ApplicationController
   end
 
   private
+
+  # Build hash of available filter values from current variant set
+  # Returns: { size: ["8oz", "12oz"], colour: ["White", "Black"], material: ["Paper", "Bamboo"] }
+  def build_available_filters(variants)
+    # Get all option values for the current variant set
+    variant_ids = variants.reorder(nil).pluck(:id)
+
+    return {} if variant_ids.empty?
+
+    # Query option values through the join table
+    option_data = VariantOptionValue
+      .joins(product_option_value: :product_option)
+      .where(product_variant_id: variant_ids)
+      .select("product_options.name as option_name, product_option_values.value, product_option_values.label")
+      .distinct
+
+    # Group by option name
+    filters = {}
+    option_data.each do |record|
+      option_name = record.option_name
+      filters[option_name] ||= []
+      filters[option_name] << { value: record.value, label: record.label.presence || record.value }
+    end
+
+    # Sort values within each filter and remove duplicates
+    filters.transform_values! do |values|
+      values.uniq { |v| v[:value] }.sort_by { |v| v[:label].downcase }
+    end
+
+    filters
+  end
 
   def client_logos
     [
