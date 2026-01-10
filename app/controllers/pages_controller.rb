@@ -19,9 +19,14 @@ class PagesController < ApplicationController
       .where(products: { active: true, product_type: :standard })
       .includes(product: :category, product_photo_attachment: :blob)
 
-    # Get categories that have variants
-    category_ids = @variants.joins(product: :category).pluck("categories.id").uniq
-    @categories = Category.where(id: category_ids).order(:position)
+    # Get categories with their variant counts
+    category_variant_counts = @variants
+      .joins(product: :category)
+      .group("categories.id")
+      .count
+
+    @categories = Category.where(id: category_variant_counts.keys).order(:position)
+    @category_variant_counts = category_variant_counts
 
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter

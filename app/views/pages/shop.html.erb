@@ -18,7 +18,7 @@
             <% @categories.each do |category| %>
               <label for="category_<%= category.slug %>" class="flex items-center gap-2 mb-2 cursor-pointer">
                 <%= check_box_tag 'categories[]', category.slug, (params[:categories] || []).include?(category.slug), id: "category_#{category.slug}", class: "checkbox checkbox-primary", aria: { label: "Filter by #{category.name}" }, data: { action: "change->form#submit" } %>
-                <span><%= category.name %> (<%= category.products_count %>)</span>
+                <span><%= category.name %> (<%= @category_variant_counts[category.id] || 0 %>)</span>
               </label>
             <% end %>
           </div>
