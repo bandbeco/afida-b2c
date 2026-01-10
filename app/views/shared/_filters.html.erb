@@ -1,0 +1,43 @@
+<%# Product filters partial for shop page %>
+<%# Expects @available_filters hash: { "size" => [{value:, label:}], "colour" => [...], ... } %>
+
+<% if @available_filters.present? %>
+  <% filter_config = [
+    { key: "size", label: "Size", param: :size },
+    { key: "colour", label: "Colour", param: :colour },
+    { key: "material", label: "Material", param: :material }
+  ] %>
+
+  <% filter_config.each do |filter| %>
+    <% values = @available_filters[filter[:key]] %>
+    <% next if values.blank? %>
+
+    <div>
+      <div class="font-semibold text-lg mb-3 pb-2 border-b"><%= filter[:label] %></div>
+
+      <%= select_tag filter[:param],
+            options_for_select(
+              [["All #{filter[:label].pluralize}", ""]] +
+              values.map { |v| [v[:label], v[:value]] },
+              params[filter[:param]]
+            ),
+            class: "select select-bordered select-sm w-full",
+            aria: { label: "Filter by #{filter[:label].downcase}" },
+            data: { action: "change->form#submit" }
+      %>
+    </div>
+  <% end %>
+
+  <%# Clear all filters link (only if any filter is active) %>
+  <% active_filters = [:size, :colour, :material, :categories].any? { |p| params[p].present? } %>
+  <% if active_filters %>
+    <div class="pt-2">
+      <%= link_to shop_path(q: params[:q], sort: params[:sort]), class: "link link-primary text-sm" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 inline-block mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Clear all filters
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
