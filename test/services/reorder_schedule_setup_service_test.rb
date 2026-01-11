@@ -106,7 +106,7 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
     assert result.schedule.reorder_schedule_items.count > 0
 
     schedule_item = result.schedule.reorder_schedule_items.first
-    assert_equal @order_item.product_variant_id, schedule_item.product_variant_id
+    assert_equal @order_item.product_id, schedule_item.product_id
     assert_equal @order_item.quantity, schedule_item.quantity
   end
 

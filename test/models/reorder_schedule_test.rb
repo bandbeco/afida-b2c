@@ -24,8 +24,8 @@ class ReorderScheduleTest < ActiveSupport::TestCase
     assert_respond_to @schedule, :reorder_schedule_items
   end
 
-  test "has many product_variants through reorder_schedule_items" do
-    assert_respond_to @schedule, :product_variants
+  test "has many products through reorder_schedule_items" do
+    assert_respond_to @schedule, :products
   end
 
   test "has many pending_orders" do
@@ -76,9 +76,9 @@ class ReorderScheduleTest < ActiveSupport::TestCase
 
   test "active schedule requires at least one item on update" do
     @schedule.save!
-    product_variant = product_variants(:one)
+    product_variant = products(:one)
     item = @schedule.reorder_schedule_items.create!(
-      product_variant: product_variant,
+      product: product_variant,
       quantity: 1,
       price: product_variant.price
     )

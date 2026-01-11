@@ -2,19 +2,19 @@
 
 one:
   cart: one
-  product_variant: one
+  product: one
   quantity: 2
   price: 10
 
 two:
   cart: two
-  product_variant: two
+  product: two
   quantity: 3
   price: 30
 
 branded_configuration:
   cart: three
-  product_variant: one
+  product: one
   quantity: 5000  # Actual quantity from configuration
   price: 0.18     # Unit price (so price * quantity = calculated_price)
   configuration:

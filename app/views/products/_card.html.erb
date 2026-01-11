@@ -24,7 +24,7 @@
   <% end %>
 
   <% show_quick_add = local_assigns.fetch(:show_quick_add, true) %>
-  <% if show_quick_add && product.product_type == "standard" && product.active_variants.any? %>
+  <% if show_quick_add && product.product_type == "standard" && product.active? %>
     <div class="card-actions p-4 pt-0">
       <%= link_to quick_add_product_path(product),
                   data: {

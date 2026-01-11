@@ -1,5 +1,5 @@
 <%= turbo_stream.update "cart" do %>
-  <%= render partial: "cart_items/index", locals: { cart_items: Current.cart.cart_items.includes(:product, product_variant: :product).order('products.name ASC, product_variants.name ASC') } %>
+  <%= render partial: "cart_items/index", locals: { cart_items: Current.cart.cart_items.includes(:product).order('products.name ASC') } %>
 <% end %>
 
 <%= turbo_stream.replace "cart_counter" do %>
@@ -21,6 +21,6 @@
 <%# GA4 E-commerce: remove_from_cart event %>
 <%= turbo_stream.append_all "head" do %>
   <script>
-    <%= ecommerce_remove_from_cart_event_for_variant(@variant, quantity: @removed_quantity, value: @removed_value) %>
+    <%= ecommerce_remove_from_cart_event_for_product(@product, quantity: @removed_quantity, value: @removed_value) %>
   </script>
 <% end %>

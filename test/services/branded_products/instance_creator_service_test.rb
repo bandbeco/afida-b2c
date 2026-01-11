@@ -9,17 +9,15 @@ class BrandedProducts::InstanceCreatorServiceTest < ActiveSupport::TestCase
 
   test "creates instance product from order item" do
     assert_difference "Product.count", 1 do
-      assert_difference "ProductVariant.count", 1 do
-        result = @service.create_instance_product(
-          name: "ACME Coffee 12oz Branded Cups",
-          sku: "BRANDED-ACME-12DW-002",
-          initial_stock: 5000,
-          reorder_price: 0.18
-        )
+      result = @service.create_instance_product(
+        name: "ACME Coffee 12oz Branded Cups",
+        sku: "BRANDED-ACME-12DW-002",
+        initial_stock: 5000,
+        reorder_price: 0.18
+      )
 
-        assert result.success?, "Expected success but got error: #{result.error}"
-        assert_instance_of Product, result.product
-      end
+      assert result.success?, "Expected success but got error: #{result.error}"
+      assert_instance_of Product, result.product
     end
   end
 
@@ -31,14 +29,15 @@ class BrandedProducts::InstanceCreatorServiceTest < ActiveSupport::TestCase
       reorder_price: 0.18
     )
 
+    assert result.success?, "Expected success but got error: #{result.error}"
     product = result.product
     assert_equal "customized_instance", product.product_type
     assert_equal @order.organization, product.organization
     assert_equal @order_item.product, product.parent_product
-    assert_equal @order_item.configuration, product.configuration_data
+    assert_equal @order_item.product.category, product.category
   end
 
-  test "creates variant with correct attributes" do
+  test "creates product with correct attributes" do
     result = @service.create_instance_product(
       name: "ACME Coffee 12oz Branded Cups",
       sku: "BRANDED-ACME-12DW-004",
@@ -46,10 +45,10 @@ class BrandedProducts::InstanceCreatorServiceTest < ActiveSupport::TestCase
       reorder_price: 0.18
     )
 
-    variant = result.product.active_variants.first
-    assert_equal "BRANDED-ACME-12DW-004", variant.sku
-    assert_equal 5000, variant.stock_quantity
-    assert_equal 0.18, variant.price
+    product = result.product
+    assert_equal "BRANDED-ACME-12DW-004", product.sku
+    assert_equal 5000, product.stock_quantity
+    assert_equal 0.18, product.price
   end
 
   test "copies design attachment to product" do

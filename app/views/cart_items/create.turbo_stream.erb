@@ -7,7 +7,7 @@
 <%= turbo_stream.append_all "head" do %>
   <script>
     <%= ecommerce_add_to_cart_event(
-          @cart_item.product_variant,
+          @cart_item.product,
           quantity: @cart_item.quantity,
           value: @cart_item.subtotal_amount
         ) %>

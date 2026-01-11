@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_10_215805) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -81,15 +81,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
     t.datetime "created_at", null: false
     t.boolean "is_sample", default: false, null: false
     t.decimal "price", precision: 10, scale: 2, null: false
-    t.bigint "product_variant_id", null: false
+    t.bigint "product_id", null: false
     t.integer "quantity", default: 1, null: false
     t.datetime "updated_at", null: false
     t.index ["cart_id", "price"], name: "index_cart_items_on_cart_id_and_price"
-    t.index ["cart_id", "product_variant_id"], name: "index_cart_items_on_cart_id_and_product_variant_id"
+    t.index ["cart_id", "product_id"], name: "index_cart_items_on_cart_id_and_product_id"
     t.index ["cart_id"], name: "index_cart_items_on_cart_id"
     t.index ["configuration"], name: "index_cart_items_on_configuration", using: :gin
     t.index ["is_sample"], name: "index_cart_items_on_is_sample"
-    t.index ["product_variant_id"], name: "index_cart_items_on_product_variant_id"
+    t.index ["product_id"], name: "index_cart_items_on_product_id"
   end
 
   create_table "carts", force: :cascade do |t|
@@ -122,17 +122,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
     t.bigint "order_id", null: false
     t.integer "pac_size"
     t.decimal "price", precision: 10, scale: 2, null: false
-    t.bigint "product_id"
+    t.bigint "product_id", null: false
     t.string "product_name", null: false
     t.string "product_sku", null: false
-    t.bigint "product_variant_id", null: false
     t.integer "quantity", null: false
     t.datetime "updated_at", null: false
     t.index ["configuration"], name: "index_order_items_on_configuration", using: :gin
     t.index ["is_sample"], name: "index_order_items_on_is_sample"
     t.index ["order_id"], name: "index_order_items_on_order_id"
     t.index ["product_id"], name: "index_order_items_on_product_id"
-    t.index ["product_variant_id"], name: "index_order_items_on_product_variant_id"
   end
 
   create_table "orders", force: :cascade do |t|
@@ -210,6 +208,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
     t.index ["product_id"], name: "index_product_compatible_lids_on_product_id"
   end
 
+  create_table "product_families", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.integer "sort_order", default: 0
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_product_families_on_slug", unique: true
+  end
+
   create_table "product_option_assignments", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "position", default: 0, null: false
@@ -243,38 +250,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
     t.index ["position"], name: "index_product_options_on_position"
   end
 
-  create_table "product_variants", force: :cascade do |t|
-    t.boolean "active", default: true
-    t.datetime "created_at", null: false
-    t.integer "depth_in_mm"
-    t.integer "diameter_in_mm"
-    t.string "gtin"
-    t.integer "height_in_mm"
-    t.integer "length_in_mm"
-    t.string "name", null: false
-    t.integer "pac_size"
-    t.integer "position", default: 0
-    t.decimal "price", precision: 10, scale: 2, null: false
-    t.jsonb "pricing_tiers"
-    t.bigint "product_id", null: false
-    t.boolean "sample_eligible", default: false, null: false
-    t.string "sample_sku"
-    t.string "sku", null: false
-    t.string "slug", limit: 255, null: false
-    t.integer "stock_quantity", default: 0
-    t.datetime "updated_at", null: false
-    t.integer "volume_in_ml"
-    t.integer "weight_in_g"
-    t.integer "width_in_mm"
-    t.index ["active"], name: "index_product_variants_on_active"
-    t.index ["gtin"], name: "index_product_variants_on_gtin", unique: true, where: "(gtin IS NOT NULL)"
-    t.index ["product_id", "position"], name: "index_product_variants_on_product_id_and_position"
-    t.index ["product_id", "sku"], name: "index_product_variants_on_product_id_and_sku", unique: true
-    t.index ["product_id"], name: "index_product_variants_on_product_id"
-    t.index ["sample_eligible"], name: "index_product_variants_on_sample_eligible"
-    t.index ["slug"], name: "index_product_variants_on_slug", unique: true
-  end
-
   create_table "products", force: :cascade do |t|
     t.boolean "active", default: true
     t.string "b2b_priority"
@@ -282,57 +257,60 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
     t.boolean "best_seller", default: false
     t.bigint "category_id"
     t.string "colour"
-    t.string "compatible_cup_sizes", default: [], array: true
-    t.jsonb "configuration_data", default: {}
     t.datetime "created_at", null: false
+    t.integer "depth_in_mm"
     t.text "description_detailed"
     t.text "description_short"
     t.text "description_standard"
+    t.integer "diameter_in_mm"
     t.boolean "featured", default: false
+    t.string "gtin"
+    t.integer "height_in_mm"
+    t.integer "length_in_mm"
     t.string "material"
-    t.string "meta_description"
+    t.text "meta_description"
     t.string "meta_title"
     t.string "name", null: false
     t.bigint "organization_id"
+    t.integer "pac_size"
     t.bigint "parent_product_id"
-    t.integer "position"
-    t.string "product_type", default: "standard", null: false
-    t.string "profit_margin"
-    t.boolean "sample_eligible", default: false
-    t.string "seasonal_type", default: "year_round"
-    t.string "short_description"
-    t.string "sku"
-    t.string "slug"
+    t.integer "position", default: 0
+    t.decimal "price", precision: 10, scale: 2, null: false
+    t.jsonb "pricing_tiers"
+    t.bigint "product_family_id"
+    t.string "product_type", default: "standard"
+    t.boolean "sample_eligible", default: false, null: false
+    t.string "sample_sku"
+    t.text "short_description"
+    t.string "sku", null: false
+    t.string "slug", limit: 255, null: false
+    t.integer "stock_quantity", default: 0
     t.datetime "updated_at", null: false
-    t.decimal "vat_rate", precision: 5, scale: 2, default: "20.0"
-    t.index ["active", "category_id"], name: "index_products_on_active_and_category_id"
+    t.decimal "vat_rate", precision: 6, scale: 4
+    t.integer "volume_in_ml"
+    t.integer "weight_in_g"
+    t.integer "width_in_mm"
     t.index ["active"], name: "index_products_on_active"
-    t.index ["base_sku"], name: "index_products_on_base_sku", unique: true
     t.index ["best_seller"], name: "index_products_on_best_seller"
-    t.index ["category_id", "position"], name: "index_products_on_category_id_and_position"
     t.index ["category_id"], name: "index_products_on_category_id"
-    t.index ["colour"], name: "index_products_on_colour"
     t.index ["featured"], name: "index_products_on_featured"
-    t.index ["name"], name: "index_products_on_name"
-    t.index ["organization_id", "product_type"], name: "index_products_on_organization_id_and_product_type"
+    t.index ["gtin"], name: "index_products_on_gtin", unique: true, where: "(gtin IS NOT NULL)"
     t.index ["organization_id"], name: "index_products_on_organization_id"
-    t.index ["parent_product_id"], name: "index_products_on_parent_product_id"
-    t.index ["position"], name: "index_products_on_position"
+    t.index ["product_family_id"], name: "index_products_on_product_family_id"
     t.index ["product_type"], name: "index_products_on_product_type"
-    t.index ["profit_margin"], name: "index_products_on_profit_margin"
-    t.index ["sku"], name: "index_products_on_sku", unique: true
-    t.index ["slug", "product_type"], name: "index_products_on_slug_and_product_type", unique: true
+    t.index ["sample_eligible"], name: "index_products_on_sample_eligible"
+    t.index ["slug"], name: "index_products_on_slug", unique: true
   end
 
   create_table "reorder_schedule_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.decimal "price", precision: 10, scale: 2, null: false
-    t.bigint "product_variant_id", null: false
+    t.bigint "product_id", null: false
     t.integer "quantity", null: false
     t.bigint "reorder_schedule_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["product_variant_id"], name: "index_reorder_schedule_items_on_product_variant_id"
-    t.index ["reorder_schedule_id", "product_variant_id"], name: "idx_schedule_items_unique", unique: true
+    t.index ["product_id"], name: "index_reorder_schedule_items_on_product_id"
+    t.index ["reorder_schedule_id", "product_id"], name: "idx_schedule_items_unique", unique: true
     t.index ["reorder_schedule_id"], name: "index_reorder_schedule_items_on_reorder_schedule_id"
   end
 
@@ -413,10 +391,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
   add_foreign_key "addresses", "users"
   add_foreign_key "branded_product_prices", "products"
   add_foreign_key "cart_items", "carts"
-  add_foreign_key "cart_items", "product_variants"
+  add_foreign_key "cart_items", "products"
   add_foreign_key "carts", "users"
   add_foreign_key "order_items", "orders"
-  add_foreign_key "order_items", "product_variants"
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "organizations"
   add_foreign_key "orders", "reorder_schedules"
@@ -429,16 +406,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_195051) do
   add_foreign_key "product_option_assignments", "product_options"
   add_foreign_key "product_option_assignments", "products"
   add_foreign_key "product_option_values", "product_options"
-  add_foreign_key "product_variants", "products"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "organizations"
-  add_foreign_key "products", "products", column: "parent_product_id"
-  add_foreign_key "reorder_schedule_items", "product_variants"
+  add_foreign_key "products", "product_families"
+  add_foreign_key "reorder_schedule_items", "products"
   add_foreign_key "reorder_schedule_items", "reorder_schedules"
   add_foreign_key "reorder_schedules", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "organizations"
   add_foreign_key "variant_option_values", "product_option_values"
   add_foreign_key "variant_option_values", "product_options"
-  add_foreign_key "variant_option_values", "product_variants"
+  add_foreign_key "variant_option_values", "products", column: "product_variant_id"
 end

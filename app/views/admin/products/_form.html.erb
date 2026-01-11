@@ -24,6 +24,9 @@
 
       <%= form.label :sample_eligible, class: "label text-base" %>
       <%= form.check_box :sample_eligible, class: "toggle toggle-primary toggle-lg" %>
+
+      <%= form.label :sample_sku, "Sample SKU", class: "label text-base" %>
+      <%= form.text_field :sample_sku, class: "input", placeholder: "Optional: custom SKU for samples" %>
     </div>
   </fieldset>
 
@@ -162,19 +165,7 @@
   <div class="divider my-8"></div>
 
   <%# Variants Section - Always Visible with Collapsible Variants %>
-  <fieldset class="fieldset">
-    <legend class="fieldset-legend text-2xl font-medium">Variants</legend>
-
-    <%= turbo_frame_tag "variants" do %>
-      <%= form.fields_for :variants do |variant_form| %>
-        <%= render "variant_fields", form: variant_form %>
-      <% end %>
-    <% end %>
-
-    <% unless form.object.new_record? %>
-      <%= link_to "Add Another Variant", new_variant_admin_product_path(form.object), class: "btn btn-secondary mt-4", data: { turbo_stream: true } %>
-    <% end %>
-  </fieldset>
+  <%# Variants section removed - Product is now the main sellable entity %>
 
   <div class="divider my-8"></div>
 

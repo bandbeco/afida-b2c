@@ -89,7 +89,7 @@ class PricingHelperTest < ActionView::TestCase
     order = orders(:one)
     order_item = OrderItem.new(
       order: order,
-      product_variant: product_variants(:one),
+      product: products(:one),
       product_name: "Test Product",
       product_sku: "TEST-SKU",
       price: 16.00,
@@ -107,9 +107,8 @@ class PricingHelperTest < ActionView::TestCase
 
   test "format_price_display with real CartItem" do
     cart = Cart.create
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "Test Variant",
       sku: "TEST-HELPER-VARIANT",
       price: 16.00,
@@ -119,7 +118,7 @@ class PricingHelperTest < ActionView::TestCase
 
     cart_item = CartItem.create!(
       cart: cart,
-      product_variant: variant,
+      product: variant,
       quantity: 500,
       price: variant.price
     )
@@ -197,7 +196,7 @@ class PricingHelperTest < ActionView::TestCase
     # Standard product: 30 packs of 500 = 15,000 units
     order_item = OrderItem.new(
       order: order,
-      product_variant: product_variants(:one),
+      product: products(:one),
       product_name: "Test Product",
       product_sku: "TEST-SKU",
       price: 16.00,
@@ -216,9 +215,8 @@ class PricingHelperTest < ActionView::TestCase
 
   test "format_quantity_display with real CartItem" do
     cart = Cart.create
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "Test Variant",
       sku: "TEST-QTY-HELPER-VARIANT",
       price: 16.00,
@@ -229,7 +227,7 @@ class PricingHelperTest < ActionView::TestCase
     # Standard product: 30 packs
     cart_item = CartItem.create!(
       cart: cart,
-      product_variant: variant,
+      product: variant,
       quantity: 30,  # 30 packs
       price: variant.price
     )

@@ -39,26 +39,23 @@
                 <dd class="font-semibold"><%= @product.configuration_data["type"].titleize %></dd>
               </div>
             <% end %>
-            <% if @product.active_variants.first %>
-              <div class="flex justify-between">
-                <dt class="text-gray-600">SKU:</dt>
-                <dd class="font-semibold"><%= @product.active_variants.first.sku %></dd>
-              </div>
-              <div class="flex justify-between">
-                <dt class="text-gray-600">Available Stock:</dt>
-                <dd class="font-semibold text-primary"><%= number_with_delimiter(@product.active_variants.first.stock_quantity) %> units</dd>
-              </div>
-            <% end %>
+            <div class="flex justify-between">
+              <dt class="text-gray-600">SKU:</dt>
+              <dd class="font-semibold"><%= @product.sku %></dd>
+            </div>
+            <div class="flex justify-between">
+              <dt class="text-gray-600">Available Stock:</dt>
+              <dd class="font-semibold text-primary"><%= number_with_delimiter(@product.stock_quantity.to_i) %> units</dd>
+            </div>
           </dl>
         </div>
       </div>
 
       <!-- Reorder Form -->
-      <% if @product.active_variants.first %>
-        <% variant = @product.active_variants.first %>
+      <% if @product.stock_quantity.to_i > 0 %>
         <%
           min_order = 500
-          available_stock = variant.stock_quantity
+          available_stock = @product.stock_quantity.to_i
           # Generate quantity options from 500 to available stock (or max 10000), in 500 increments
           max_qty = [available_stock, 10000].min
           quantity_options = (min_order..max_qty).step(500).to_a
@@ -66,7 +63,7 @@
           quantity_options.sort!
         %>
         <%= form_with url: cart_cart_items_path, method: :post, class: "space-y-4", local: false do |f| %>
-          <%= hidden_field_tag "cart_item[variant_sku]", variant.sku %>
+          <%= hidden_field_tag "cart_item[sku]", @product.sku %>
 
           <div class="form-control">
             <label class="label">
@@ -84,7 +81,7 @@
             <div class="card-body">
               <div class="flex justify-between text-lg">
                 <span class="font-semibold">Price per unit:</span>
-                <span class="text-primary font-bold">£<%= number_with_precision(variant.price, precision: 2) %></span>
+                <span class="text-primary font-bold">£<%= number_with_precision(@product.price, precision: 2) %></span>
               </div>
             </div>
           </div>

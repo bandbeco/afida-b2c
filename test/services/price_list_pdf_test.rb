@@ -4,11 +4,10 @@ require "test_helper"
 
 class PriceListPdfTest < ActiveSupport::TestCase
   def setup
-    @variants = ProductVariant.active
-                              .joins(:product)
-                              .where(products: { product_type: "standard", active: true })
-                              .includes(product: :category)
-                              .limit(10)
+    @variants = Product.active
+                       .where(product_type: "standard")
+                       .includes(:category)
+                       .limit(10)
     @filter_description = "All products"
   end
 

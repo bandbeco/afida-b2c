@@ -14,24 +14,22 @@
 # - purchase: Order completed
 #
 # Usage in views:
-#   <script><%= ecommerce_view_item_event(@product, @variant) %></script>
+#   <script><%= ecommerce_view_item_event(@product) %></script>
 #
 module AnalyticsHelper
   CURRENCY = "GBP"
 
-  # Formats a product variant as a GA4 item object
-  # @param variant [ProductVariant] The variant to format
+  # Formats a product as a GA4 item object
+  # @param product [Product] The product to format
   # @param quantity [Integer] Optional quantity (default: 1)
   # @return [Hash] GA4-compatible item hash
-  def ga4_item(variant, quantity: 1)
-    product = variant.product
-
+  def ga4_item(product, quantity: 1)
     {
-      item_id: variant.sku,
+      item_id: product.sku,
       item_name: product.name,
       item_category: product.category&.name,
-      item_variant: variant.name,
-      price: variant.price.to_f,
+      item_variant: product.options_display.presence,
+      price: product.price.to_f,
       quantity: quantity
     }.compact
   end
@@ -40,14 +38,13 @@ module AnalyticsHelper
   # @param cart_item [CartItem] The cart item to format
   # @return [Hash] GA4-compatible item hash
   def ga4_cart_item(cart_item)
-    variant = cart_item.product_variant
-    product = variant.product
+    product = cart_item.product
 
     {
-      item_id: variant.sku,
+      item_id: product.sku,
       item_name: product.name,
       item_category: product.category&.name,
-      item_variant: variant.name,
+      item_variant: product.options_display.presence,
       price: cart_item.unit_price.to_f,
       quantity: cart_item.quantity
     }.compact
@@ -61,7 +58,7 @@ module AnalyticsHelper
       item_id: order_item.product_sku,
       item_name: order_item.product_name,
       item_category: order_item.product&.category&.name,
-      item_variant: order_item.product_variant&.name,
+      item_variant: order_item.product&.options_display.presence,
       price: order_item.unit_price.to_f,
       quantity: order_item.quantity
     }.compact
@@ -69,17 +66,16 @@ module AnalyticsHelper
 
   # Generates JavaScript for view_item event (product detail page)
   # @param product [Product] The product being viewed
-  # @param variant [ProductVariant] The selected variant
   # @return [String] JavaScript dataLayer.push code
-  def ecommerce_view_item_event(product, variant)
+  def ecommerce_view_item_event(product)
     return "" unless gtm_enabled?
 
     event_data = {
       event: "view_item",
       ecommerce: {
         currency: CURRENCY,
-        value: variant.price.to_f,
-        items: [ ga4_item(variant) ]
+        value: product.price.to_f,
+        items: [ ga4_item(product) ]
       }
     }
 
@@ -87,11 +83,11 @@ module AnalyticsHelper
   end
 
   # Generates JavaScript for add_to_cart event
-  # @param variant [ProductVariant] The variant being added
+  # @param product [Product] The product being added
   # @param quantity [Integer] Quantity being added
   # @param value [Float] Total value being added
   # @return [String] JavaScript dataLayer.push code
-  def ecommerce_add_to_cart_event(variant, quantity:, value:)
+  def ecommerce_add_to_cart_event(product, quantity:, value:)
     return "" unless gtm_enabled?
 
     event_data = {
@@ -99,7 +95,7 @@ module AnalyticsHelper
       ecommerce: {
         currency: CURRENCY,
         value: value.to_f,
-        items: [ ga4_item(variant, quantity: quantity) ]
+        items: [ ga4_item(product, quantity: quantity) ]
       }
     }
 
@@ -124,13 +120,13 @@ module AnalyticsHelper
     ecommerce_push(event_data)
   end
 
-  # Generates JavaScript for remove_from_cart event using variant data
-  # Use when the cart item has been destroyed but you have variant info
-  # @param variant [ProductVariant] The variant being removed
+  # Generates JavaScript for remove_from_cart event using product data
+  # Use when the cart item has been destroyed but you have product info
+  # @param product [Product] The product being removed
   # @param quantity [Integer] Quantity being removed
   # @param value [Float] Total value being removed
   # @return [String] JavaScript dataLayer.push code
-  def ecommerce_remove_from_cart_event_for_variant(variant, quantity:, value:)
+  def ecommerce_remove_from_cart_event_for_product(product, quantity:, value:)
     return "" unless gtm_enabled?
 
     event_data = {
@@ -138,7 +134,7 @@ module AnalyticsHelper
       ecommerce: {
         currency: CURRENCY,
         value: value.to_f,
-        items: [ ga4_item(variant, quantity: quantity) ]
+        items: [ ga4_item(product, quantity: quantity) ]
       }
     }
 
@@ -151,7 +147,7 @@ module AnalyticsHelper
   def ecommerce_view_cart_event(cart)
     return "" unless gtm_enabled?
 
-    items = cart.cart_items.includes(product_variant: :product).map { |item| ga4_cart_item(item) }
+    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
 
     event_data = {
       event: "view_cart",
@@ -171,7 +167,7 @@ module AnalyticsHelper
   def ecommerce_begin_checkout_event(cart)
     return "" unless gtm_enabled?
 
-    items = cart.cart_items.includes(product_variant: :product).map { |item| ga4_cart_item(item) }
+    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
 
     event_data = {
       event: "begin_checkout",
@@ -191,7 +187,7 @@ module AnalyticsHelper
   def ecommerce_purchase_event(order)
     return "" unless gtm_enabled?
 
-    items = order.order_items.includes(:product, :product_variant).map { |item| ga4_order_item(item) }
+    items = order.order_items.includes(:product).map { |item| ga4_order_item(item) }
 
     event_data = {
       event: "purchase",
@@ -209,18 +205,18 @@ module AnalyticsHelper
   end
 
   # Returns raw item data for use in JavaScript (Stimulus controllers)
-  # @param variant [ProductVariant] The variant
+  # @param product [Product] The product
   # @param quantity [Integer] Optional quantity
   # @return [Hash] GA4-compatible item data
-  def ga4_item_json(variant, quantity: 1)
-    ga4_item(variant, quantity: quantity).to_json.html_safe
+  def ga4_item_json(product, quantity: 1)
+    ga4_item(product, quantity: quantity).to_json.html_safe
   end
 
   # Returns cart items as JSON array for Stimulus controller data attributes
   # @param cart [Cart] The cart
   # @return [String] JSON array of GA4-compatible items
   def ga4_cart_items_json(cart)
-    items = cart.cart_items.includes(product_variant: :product).map { |item| ga4_cart_item(item) }
+    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
     items.to_json.html_safe
   end
 

@@ -15,7 +15,7 @@ class PendingOrderTest < ActiveSupport::TestCase
       items_snapshot: {
         "items" => [
           {
-            "product_variant_id" => 1,
+            "product_id" => 1,
             "product_name" => "Kraft Napkins",
             "variant_name" => "Pack of 500",
             "quantity" => 2,
@@ -189,7 +189,7 @@ class PendingOrderTest < ActiveSupport::TestCase
 
   test "unavailable_items returns unavailable_items array from snapshot" do
     @pending_order.items_snapshot["unavailable_items"] = [
-      { "product_variant_id" => 999, "product_name" => "Discontinued Item" }
+      { "product_id" => 999, "product_name" => "Discontinued Item" }
     ]
     unavailable = @pending_order.unavailable_items
     assert_equal 1, unavailable.length

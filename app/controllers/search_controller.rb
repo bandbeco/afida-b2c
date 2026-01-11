@@ -13,20 +13,19 @@ class SearchController < ApplicationController
   #   modal - If "true", returns modal-optimized results (10 items)
   # Returns:
   #   - Empty state if query < 2 chars
-  #   - Variant results matching query
+  #   - Product results matching query
   #   - Results rendered in appropriate Turbo Frame
   def index
     @query = params[:q].to_s.strip
     @modal = params[:modal] == "true"
 
     if @query.length < 2
-      @variants = []
+      @products = []
       @total_count = 0
     else
-      base_query = ProductVariant
+      base_query = Product
         .active
-        .joins(:product)
-        .where(products: { active: true, product_type: :standard })
+        .catalog_products
         .search(@query)
 
       # Get total count for "view all" link
@@ -35,8 +34,8 @@ class SearchController < ApplicationController
       # Modal shows more results than header dropdown
       limit = @modal ? 10 : 5
 
-      @variants = base_query
-        .includes(product: :category, product_photo_attachment: :blob)
+      @products = base_query
+        .includes(:category, product_photo_attachment: :blob)
         .limit(limit)
     end
 

@@ -3,7 +3,7 @@ require "test_helper"
 class BrandedProductPriceTest < ActiveSupport::TestCase
   test "valid branded product price" do
     price = BrandedProductPrice.new(
-      product: products(:branded_double_wall_template),
+      product: products(:branded_template_variant),
       size: "8oz",
       quantity_tier: 3000,
       price_per_unit: 0.22,
@@ -24,7 +24,7 @@ class BrandedProductPriceTest < ActiveSupport::TestCase
 
   test "requires size" do
     price = BrandedProductPrice.new(
-      product: products(:branded_double_wall_template),
+      product: products(:branded_template_variant),
       quantity_tier: 1000,
       price_per_unit: 0.30
     )
@@ -34,7 +34,7 @@ class BrandedProductPriceTest < ActiveSupport::TestCase
 
   test "requires quantity_tier" do
     price = BrandedProductPrice.new(
-      product: products(:branded_double_wall_template),
+      product: products(:branded_template_variant),
       size: "8oz",
       price_per_unit: 0.30
     )
@@ -44,7 +44,7 @@ class BrandedProductPriceTest < ActiveSupport::TestCase
 
   test "requires price_per_unit" do
     price = BrandedProductPrice.new(
-      product: products(:branded_double_wall_template),
+      product: products(:branded_template_variant),
       size: "8oz",
       quantity_tier: 1000
     )
@@ -68,7 +68,7 @@ class BrandedProductPriceTest < ActiveSupport::TestCase
 
   test "unique combination of product, size, and quantity_tier" do
     duplicate = BrandedProductPrice.new(
-      product: products(:branded_double_wall_template),
+      product: products(:branded_template_variant),
       size: "8oz",
       quantity_tier: 1000,
       price_per_unit: 0.25
@@ -85,7 +85,7 @@ class BrandedProductPriceTest < ActiveSupport::TestCase
 
   test "find price for configuration" do
     price = BrandedProductPrice.find_for_configuration(
-      products(:branded_double_wall_template),
+      products(:branded_template_variant),
       "8oz",
       1000
     )
@@ -94,7 +94,7 @@ class BrandedProductPriceTest < ActiveSupport::TestCase
 
   test "find price returns nil for invalid configuration" do
     price = BrandedProductPrice.find_for_configuration(
-      products(:branded_double_wall_template),
+      products(:branded_template_variant),
       "99oz",
       1000
     )

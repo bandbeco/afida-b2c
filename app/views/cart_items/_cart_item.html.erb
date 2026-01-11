@@ -1,18 +1,17 @@
 <%= turbo_frame_tag cart_item do %>
   <%
-    # Branded products use different path and don't need URL params
-    # Standard products use variant option values to pre-select size/colour
+    # Branded products use different path
+    # Standard products link directly to their product page
     if cart_item.configured?
       product_url = branded_product_path(cart_item.product)
     else
-      url_params = cart_item.product_variant.url_params
-      product_url = product_path(cart_item.product, url_params)
+      product_url = product_path(cart_item.product)
     end
   %>
   <div class="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-4 items-center p-3 sm:p-4 border-b hover:bg-gray-50 text-center md:text-left">
     <div class="col-span-full md:col-span-2 flex flex-row items-center gap-3 md:space-x-4">
-      <%= link_to product_path(cart_item.product, url_params), "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
-        <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow bg-white object-contain") %>
+      <%= link_to product_url, "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
+        <%= product_photo_tag(cart_item.product.primary_photo, alt: cart_item.product.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow bg-white object-contain") %>
         <% if cart_item.sample? %>
           <%= render "shared/sample_badge", size: :md %>
         <% end %>
@@ -28,15 +27,15 @@
           </div>
         <% elsif cart_item.sample? %>
           <div class="text-xs text-gray-600">
-            <%= cart_item.product_variant.options_display %>
+            <%= cart_item.product.options_display %>
           </div>
         <% else %>
           <div class="text-xs text-gray-600">
-            <%= cart_item.product_variant.options_display %>
+            <%= cart_item.product.options_display %>
           </div>
         <% end %>
         <div class="text-gray-400 text-xs font-mono mt-1">
-          SKU: <%= cart_item.product_variant.sku %>
+          SKU: <%= cart_item.product.sku %>
         </div>
       </div>
     </div>
@@ -76,8 +75,8 @@
           <% end %>
         <% else %>
           <%
-            variant = cart_item.product_variant
-            pac_size = variant.pac_size || 1
+            product = cart_item.product
+            pac_size = product.pac_size || 1
             pack_options = (1..10).to_a
             [30, 40, 50, 60].each { |p| pack_options << p }
             pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
@@ -151,8 +150,8 @@
         <% end %>
       <% else %>
         <%
-          variant = cart_item.product_variant
-          pac_size = variant.pac_size || 1
+          product = cart_item.product
+          pac_size = product.pac_size || 1
           pack_options = (1..10).to_a
           [30, 40, 50, 60].each { |p| pack_options << p }
           pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)

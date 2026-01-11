@@ -11,7 +11,7 @@ class PendingOrderSnapshotBuilder
     available_items = []
     unavailable_items = []
 
-    @schedule.reorder_schedule_items.includes(product_variant: :product).each do |item|
+    @schedule.reorder_schedule_items.includes(:product).each do |item|
       if item_available?(item)
         available_items << build_item(item)
       else
@@ -23,19 +23,19 @@ class PendingOrderSnapshotBuilder
   end
 
   # Builds a snapshot from raw items array (used when editing pending orders)
-  # items: array of { product_variant_id:, quantity: }
+  # items: array of { product_id:, quantity: }
   def self.build_from_items(items)
     available_items = items.filter_map do |item|
-      variant = ProductVariant.find_by(id: item[:product_variant_id])
-      next unless variant&.active? && variant.product&.active?
+      product = Product.find_by(id: item[:product_id])
+      next unless product&.active?
 
-      current_price = variant.price
+      current_price = product.price
       quantity = item[:quantity].to_i
 
       {
-        "product_variant_id" => variant.id,
-        "product_name" => variant.product&.name || "Unknown Product",
-        "variant_name" => variant.display_name,
+        "product_id" => product.id,
+        "product_name" => product.name || "Unknown Product",
+        "variant_name" => product.display_name,
         "quantity" => quantity,
         "price" => format_amount(current_price),
         "line_total" => format_amount(current_price * quantity),
@@ -74,20 +74,19 @@ class PendingOrderSnapshotBuilder
   end
 
   def item_available?(item)
-    return false unless item.product_variant&.active?
-    return false unless item.product_variant&.product&.active?
+    return false unless item.product&.active?
 
     true
   end
 
   def build_item(item)
-    variant = item.product_variant
-    current_price = variant.price
+    product = item.product
+    current_price = product.price
 
     {
-      "product_variant_id" => variant.id,
-      "product_name" => variant.product&.name || "Unknown Product",
-      "variant_name" => variant.display_name,
+      "product_id" => product.id,
+      "product_name" => product.name || "Unknown Product",
+      "variant_name" => product.display_name,
       "quantity" => item.quantity,
       "price" => self.class.format_amount(current_price),
       "line_total" => self.class.format_amount(current_price * item.quantity),
@@ -96,22 +95,20 @@ class PendingOrderSnapshotBuilder
   end
 
   def build_unavailable_item(item)
-    variant = item.product_variant
+    product = item.product
 
-    reason = if variant.nil?
-               "Product variant no longer exists"
-    elsif !variant.active?
-               "Product variant is no longer available"
-    elsif !variant.product&.active?
+    reason = if product.nil?
+               "Product no longer exists"
+    elsif !product.active?
                "Product is no longer available"
     else
                "Product no longer available"
     end
 
     {
-      "product_variant_id" => variant&.id,
-      "product_name" => variant&.product&.name || "Unknown Product",
-      "variant_name" => variant&.name || "Unknown",
+      "product_id" => product&.id,
+      "product_name" => product&.name || "Unknown Product",
+      "variant_name" => product&.display_name || "Unknown",
       "reason" => reason
     }
   end

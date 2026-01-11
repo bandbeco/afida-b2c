@@ -9,7 +9,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Create a fresh cart with items for testing
     @cart = Cart.create!(user: @user)
     @cart_item = @cart.cart_items.create!(
-      product_variant: product_variants(:one),
+      product: products(:one),
       quantity: 2,
       price: 10.0
     )
@@ -216,12 +216,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     order = Order.last
     order_item = order.order_items.first
 
-    assert_equal @cart_item.product_variant, order_item.product_variant
-    assert_equal @cart_item.product_variant.display_name, order_item.product_name
-    assert_equal @cart_item.product_variant.sku, order_item.product_sku
+    assert_equal @cart_item.product, order_item.product
+    assert_equal @cart_item.product.display_name, order_item.product_name
+    assert_equal @cart_item.product.sku, order_item.product_sku
     assert_equal @cart_item.price, order_item.price  # OrderItem stores pack price for display
     assert_equal @cart_item.quantity, order_item.quantity
-    assert_equal @cart_item.product_variant.pac_size, order_item.pac_size  # OrderItem stores pac_size for pricing display
+    assert_equal @cart_item.product.pac_size, order_item.pac_size  # OrderItem stores pac_size for pricing display
   end
 
   test "success clears cart after creating order" do
@@ -473,8 +473,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     # Add item to cart
     @cart.cart_items.create!(
-      product: products(:single_wall_cups),
-      product_variant: product_variants(:single_wall_8oz_white),
+      product: products(:single_wall_8oz_white),
       quantity: 10,
       price: 10.0
     )
@@ -497,8 +496,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     # Add item to cart
     @cart.cart_items.create!(
-      product: products(:single_wall_cups),
-      product_variant: product_variants(:single_wall_8oz_white),
+      product: products(:single_wall_8oz_white),
       quantity: 10,
       price: 10.0
     )
@@ -522,7 +520,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     # Add configured item
     cart_item = @cart.cart_items.new(
-      product_variant: product_variants(:branded_template_variant),
+      product: products(:branded_template_variant),
       quantity: 1,
       configuration: { size: "12oz", quantity: 5000 },
       calculated_price: 1000.00,
@@ -555,9 +553,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   test "samples-only cart uses Sample Delivery shipping option" do
     # Create samples-only cart
     @cart.cart_items.destroy_all
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
     @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -585,9 +583,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   test "samples-only cart line items have zero unit_amount" do
     # Create samples-only cart
     @cart.cart_items.destroy_all
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
     @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -609,9 +607,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "mixed cart (samples + paid) uses standard shipping options" do
     # Add sample to existing cart (which already has paid items)
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
     @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true

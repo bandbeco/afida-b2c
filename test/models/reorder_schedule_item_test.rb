@@ -9,10 +9,10 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
       next_scheduled_date: 1.month.from_now.to_date,
       stripe_payment_method_id: "pm_test_123"
     )
-    @variant = product_variants(:one)
+    @variant = products(:one)
     @item = ReorderScheduleItem.new(
       reorder_schedule: @schedule,
-      product_variant: @variant,
+      product: @variant,
       quantity: 2,
       price: @variant.price
     )
@@ -27,14 +27,9 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     assert_equal @schedule, @item.reorder_schedule
   end
 
-  test "belongs to product_variant" do
-    assert_respond_to @item, :product_variant
-    assert_equal @variant, @item.product_variant
-  end
-
-  test "delegates product to product_variant" do
+  test "belongs to product" do
     assert_respond_to @item, :product
-    assert_equal @variant.product, @item.product
+    assert_equal @variant, @item.product
   end
 
   # ==========================================================================
@@ -51,10 +46,10 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     assert_includes @item.errors[:reorder_schedule], "must exist"
   end
 
-  test "invalid without product_variant" do
-    @item.product_variant = nil
+  test "invalid without product" do
+    @item.product = nil
     assert_not @item.valid?
-    assert_includes @item.errors[:product_variant], "must exist"
+    assert_includes @item.errors[:product], "must exist"
   end
 
   test "invalid without quantity" do
@@ -90,19 +85,19 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     assert @item.valid?
   end
 
-  test "enforces uniqueness of product_variant within schedule" do
+  test "enforces uniqueness of product within schedule" do
     @item.save!
     duplicate = ReorderScheduleItem.new(
       reorder_schedule: @schedule,
-      product_variant: @variant,
+      product: @variant,
       quantity: 3,
       price: @variant.price
     )
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:product_variant_id], "has already been taken"
+    assert_includes duplicate.errors[:product_id], "has already been taken"
   end
 
-  test "allows same product_variant in different schedules" do
+  test "allows same product in different schedules" do
     @item.save!
     other_schedule = ReorderSchedule.create!(
       user: @user,
@@ -112,7 +107,7 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     )
     other_item = ReorderScheduleItem.new(
       reorder_schedule: other_schedule,
-      product_variant: @variant,
+      product: @variant,
       quantity: 1,
       price: @variant.price
     )
@@ -123,23 +118,14 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
   # Availability
   # ==========================================================================
 
-  test "available? returns true when variant and product are active" do
+  test "available? returns true when product is active" do
     @variant.update!(active: true)
-    @variant.product.update!(active: true)
 
     assert @item.available?
   end
 
-  test "available? returns false when variant is inactive" do
-    @variant.update!(active: false)
-    @variant.product.update!(active: true)
-
-    assert_not @item.available?
-  end
-
   test "available? returns false when product is inactive" do
-    @variant.update!(active: true)
-    @variant.product.update!(active: false)
+    @variant.update!(active: false)
 
     assert_not @item.available?
   end
@@ -148,7 +134,7 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
   # Current Price
   # ==========================================================================
 
-  test "current_price returns product_variant current price" do
+  test "current_price returns product current price" do
     @variant.update!(price: 15.99)
 
     assert_equal 15.99, @item.current_price

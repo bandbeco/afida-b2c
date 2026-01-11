@@ -5,9 +5,9 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     # Create a category with sample-eligible variants
     @category = categories(:one)
 
-    # Create a sample-eligible variant
-    @sample_variant = ProductVariant.create!(
-      product: products(:one),
+    # Create a sample-eligible product
+    @sample_variant = Product.create!(
+      category: @category,
       name: "Sample Test Variant",
       sku: "SAMPLE-CONTROLLER-TEST-1",
       price: 10.0,

@@ -5,9 +5,7 @@
       <li><%= link_to @product.category.name, category_path(@product.category) %></li>
       <li><%= @product.name %></li>
     </ul>
-  <% end %>
-
-  <% if @category.present? %>
+  <% elsif @category.present? %>
     <ul>
       <li><%= link_to "All Products", shop_path %></li>
       <li><%= @category.name %></li>

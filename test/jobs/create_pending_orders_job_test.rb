@@ -6,7 +6,7 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
   setup do
     @schedule = reorder_schedules(:active_monthly)
     @user = @schedule.user
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
   end
 
   # ==========================================================================
@@ -127,7 +127,7 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
   test "builds items_snapshot with current prices" do
     # Get the first item from fixture
     item = @schedule.reorder_schedule_items.first
-    variant = item.product_variant
+    variant = item.product
 
     # Update the variant price to something different
     original_price = variant.price
@@ -139,7 +139,7 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
     items = pending_order.items
 
     assert items.any?, "Expected items in snapshot"
-    snapshot_item = items.find { |i| i["product_variant_id"] == variant.id }
+    snapshot_item = items.find { |i| i["product_id"] == variant.id }
     assert_equal "25.00", snapshot_item["price"] # Current price, not original
 
     # Restore
@@ -161,7 +161,7 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
     @schedule.reorder_schedule_items.where.not(id: @schedule.reorder_schedule_items.first.id).destroy_all
 
     item = @schedule.reorder_schedule_items.first
-    variant = item.product_variant
+    variant = item.product
     original_price = variant.price
     variant.update!(price: 10.00)
     item.update!(quantity: 2)
@@ -187,7 +187,7 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
 
   test "marks unavailable items in snapshot" do
     item = @schedule.reorder_schedule_items.first
-    variant = item.product_variant
+    variant = item.product
     original_active = variant.active
 
     # Make the product variant inactive
@@ -198,7 +198,7 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
     pending_order = @schedule.pending_orders.last
     unavailable = pending_order.unavailable_items
 
-    assert unavailable.any? { |u| u["product_variant_id"] == variant.id }
+    assert unavailable.any? { |u| u["product_id"] == variant.id }
 
     # Restore
     variant.update!(active: original_active)
@@ -207,11 +207,11 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
   test "handles schedule with all items unavailable" do
     # Make all variants inactive
     original_states = @schedule.reorder_schedule_items.map do |item|
-      [ item.product_variant, item.product_variant.active ]
+      [ item.product, item.product.active ]
     end
 
     @schedule.reorder_schedule_items.each do |item|
-      item.product_variant.update!(active: false)
+      item.product.update!(active: false)
     end
 
     # Should still create pending order but with empty available items

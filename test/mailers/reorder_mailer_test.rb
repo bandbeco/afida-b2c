@@ -3,7 +3,7 @@ require "test_helper"
 class ReorderMailerTest < ActionMailer::TestCase
   setup do
     @user = users(:one)
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
 
     @schedule = ReorderSchedule.create!(
       user: @user,
@@ -19,7 +19,7 @@ class ReorderMailerTest < ActionMailer::TestCase
       items_snapshot: {
         "items" => [
           {
-            "product_variant_id" => @product_variant.id,
+            "product_id" => @product_variant.id,
             "product_name" => "Single Wall Hot Cup",
             "variant_name" => "Pack of 500",
             "quantity" => 2,
@@ -131,7 +131,7 @@ class ReorderMailerTest < ActionMailer::TestCase
         "total" => "0.00",
         "unavailable_items" => [
           {
-            "product_variant_id" => 999,
+            "product_id" => 999,
             "product_name" => "Discontinued Cup",
             "variant_name" => "Large",
             "reason" => "Product no longer available"

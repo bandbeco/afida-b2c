@@ -1,64 +1,22 @@
-<%# Quick Add Form - Handles both single and multi-variant products %>
-
-<% variants_data ||= @variants_json || [] %>
-<% product_options ||= @product_options || [] %>
-<% option_labels ||= @option_labels || {} %>
+<%# Quick Add Form - Simple form for adding product to cart %>
 
 <%= form_with url: cart_cart_items_path,
               method: :post,
               class: "space-y-4",
               data: {
-                controller: "cart-drawer quick-add-form",
-                action: "turbo:submit-end->cart-drawer#open",
-                quick_add_form_variants_data_value: variants_data.to_json
+                controller: "cart-drawer",
+                action: "turbo:submit-end->cart-drawer#open"
               } do |f| %>
 
-  <%# Hidden field for variant SKU - will be updated by Stimulus when options change %>
-  <%# For multi-variant products, start empty to force user selection %>
-  <% initial_sku = (variants.count == 1) ? (variants.first&.sku || product.default_variant&.sku) : nil %>
-  <%= hidden_field_tag "cart_item[variant_sku]",
-                       initial_sku,
-                       data: { quick_add_form_target: "variantSku" } %>
-
-  <%# Option selectors - Same UI as product detail page %>
-  <% if variants.count > 1 && product_options.any? %>
-    <div class="space-y-3">
-      <% product_options.each do |option| %>
-        <%
-          # Get unique values for this option from all variants
-          option_values = variants.map { |v| v.option_values_hash[option.name] }.compact.uniq
-          # Sort by numeric value if present
-          option_values = option_values.sort_by { |v| v.scan(/\d+/).first.to_i }
-          # No pre-selection for multi-variant products - user must choose
-          target_name = option.name.downcase
-        %>
-        <div class="form-control">
-          <label class="label pb-2">
-            <span class="label-text font-semibold">Select <%= option.name.downcase %>:</span>
-          </label>
-          <div class="flex flex-wrap gap-2">
-            <% option_values.each do |value| %>
-              <button type="button"
-                      class="relative bg-white border-2 border-gray-300 text-black hover:border-primary rounded-lg px-4 py-2 cursor-pointer font-medium text-sm"
-                      data-quick-add-form-target="<%= target_name %>Button"
-                      data-option="<%= option.name %>"
-                      data-value="<%= value %>"
-                      data-action="click->quick-add-form#selectOption">
-                <%= option_labels.dig(option.name, value) || value %>
-              </button>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
+  <%# Hidden field for product SKU %>
+  <%= hidden_field_tag "cart_item[sku]", product.sku %>
 
   <%# Quantity selector - Show multiples of pack size %>
-  <% pac_size = (variants.first&.pac_size || product.default_variant&.pac_size || 1) %>
+  <% pac_size = product.pac_size || 1 %>
   <div class="form-control">
     <label class="label">
       <span class="label-text font-semibold">Select quantity:</span>
-      <span class="label-text-alt text-sm text-base-content/60" data-quick-add-form-target="packSizeDisplay">
+      <span class="label-text-alt text-sm text-base-content/60">
         Pack size: <%= number_with_delimiter(pac_size) %> units
       </span>
     </label>
@@ -68,29 +26,17 @@
                      total_units = num_packs * pac_size
                      ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
                    }, 1),
-                   class: "select select-bordered w-full",
-                   data: {
-                     quick_add_form_target: "quantitySelect",
-                     action: "change->quick-add-form#updatePrice"
-                   } %>
+                   class: "select select-bordered w-full" %>
   </div>
 
-  <%# Price display - Shows selected variant price (or placeholder for multi-variant) %>
-  <% is_multi_variant = variants.count > 1 %>
+  <%# Price display %>
   <div class="flex justify-between items-center py-3 px-4 bg-base-200 rounded-lg">
     <span class="font-medium">Price:</span>
-    <span class="font-semibold text-lg" data-quick-add-form-target="priceDisplay">
-      <% if is_multi_variant %>
-        Select size
-      <% else %>
-        <%= number_to_currency(variants.first&.price || product.default_variant&.price || 0) %>
-      <% end %>
+    <span class="font-semibold text-lg">
+      <%= number_to_currency(product.price) %>
     </span>
   </div>
 
-  <%# Submit button - disabled until variant selected for multi-variant products %>
-  <%= f.submit "Add to Cart",
-               class: "btn btn-primary w-full mt-4 #{is_multi_variant ? 'btn-disabled' : ''}",
-               disabled: is_multi_variant,
-               data: { quick_add_form_target: "submitButton" } %>
+  <%# Submit button %>
+  <%= f.submit "Add to Cart", class: "btn btn-primary w-full mt-4" %>
 <% end %>

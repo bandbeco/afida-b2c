@@ -1,9 +1,9 @@
 <%# Turbo Stream response for adding a sample to cart %>
 
-<%# Update the variant card to show "Added" state %>
-<%= turbo_stream.replace dom_id(@variant, :sample),
-      partial: "samples/variant_card",
-      locals: { variant: @variant, in_cart: true, at_limit: @at_limit } %>
+<%# Update the product card to show "Added" state %>
+<%= turbo_stream.replace dom_id(@product, :sample),
+      partial: "samples/product_card",
+      locals: { product: @product, in_cart: true, at_limit: @at_limit } %>
 
 <%# Update sample counter %>
 <%= turbo_stream.replace "sample_counter",
@@ -21,6 +21,6 @@
 <%# GA4 E-commerce: add_to_cart event for samples (value = 0) %>
 <%= turbo_stream.append_all "head" do %>
   <script>
-    <%= ecommerce_add_to_cart_event(@variant, quantity: 1, value: 0) %>
+    <%= ecommerce_add_to_cart_event(@product, quantity: 1, value: 0) %>
   </script>
 <% end %>

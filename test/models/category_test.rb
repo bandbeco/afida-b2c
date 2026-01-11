@@ -95,11 +95,13 @@ class CategoryTest < ActiveSupport::TestCase
     product1 = @category.products.create!(
       name: "Product 1",
       sku: "PROD1",
+      price: 10.0,
       active: true
     )
     product2 = @category.products.create!(
       name: "Product 2",
       sku: "PROD2",
+      price: 20.0,
       active: true
     )
 
@@ -112,6 +114,7 @@ class CategoryTest < ActiveSupport::TestCase
     product = @category.products.create!(
       name: "Test Product",
       sku: "TEST123",
+      price: 15.0,
       active: true
     )
 

@@ -1,7 +1,7 @@
 class ReorderSchedule < ApplicationRecord
   belongs_to :user
   has_many :reorder_schedule_items, dependent: :destroy
-  has_many :product_variants, through: :reorder_schedule_items
+  has_many :products, through: :reorder_schedule_items
   has_many :pending_orders, dependent: :destroy
   has_many :orders, dependent: :nullify
 

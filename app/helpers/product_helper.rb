@@ -7,27 +7,23 @@ module ProductHelper
     return [] if cup_product.blank?
 
     cup_product.compatible_lids
-               .includes(:active_variants)
                .with_attached_product_photo
   end
 
-  # Get matching lid variants for a specific cup variant
-  # Finds compatible lid products, then matches by size
-  # @param cup_variant [ProductVariant] The cup variant (e.g., "8oz/227ml White")
-  # @return [Array<ProductVariant>] Array of matching lid variants
-  def matching_lid_variants_for_cup_variant(cup_variant)
-    return [] if cup_variant.blank?
+  # Get matching lid products for a specific cup product by size
+  # Finds compatible lid products, then matches by size option
+  # @param cup_product [Product] The cup product (e.g., "8oz Single Wall Cup")
+  # @return [Array<Product>] Array of matching lid products
+  def matching_lids_for_cup_product(cup_product)
+    return [] if cup_product.blank?
 
-    cup_product = cup_variant.product
-    cup_size = extract_size_from_variant_name(cup_variant.name)
+    cup_size = cup_product.size_value
 
     return [] if cup_size.blank?
 
-    cup_product.compatible_lids.flat_map do |lid_product|
-      # Find lid variants with matching size
-      lid_product.active_variants.select do |lid_variant|
-        extract_size_from_variant_name(lid_variant.name) == cup_size
-      end
+    # Find compatible lids with matching size
+    cup_product.compatible_lids.select do |lid_product|
+      lid_product.size_value == cup_size
     end
   end
 
@@ -40,15 +36,14 @@ module ProductHelper
     # Find all products that list this cup size as compatible
     Product.where("? = ANY(compatible_cup_sizes)", cup_size)
            .where(product_type: "standard")
-           .includes(:active_variants)
+           .active
            .with_attached_product_photo
-           .select { |product| product.active_variants.any? }
   end
 
   private
 
-  # Extract size from variant name (e.g., "8oz" from "8oz/227ml White")
-  def extract_size_from_variant_name(name)
+  # Extract size from product name (e.g., "8oz" from "8oz/227ml White")
+  def extract_size_from_name(name)
     name.to_s.match(/(\d+oz)/i)&.[](1)
   end
 

@@ -507,9 +507,9 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     sign_in(@user)
     schedule = create_schedule_with_items_for(@user)
     # Add second item so we can delete one
-    product_variant_two = product_variants(:two)
+    product_variant_two = products(:two)
     schedule.reorder_schedule_items.create!(
-      product_variant: product_variant_two,
+      product: product_variant_two,
       quantity: 1,
       price: product_variant_two.price
     )
@@ -550,20 +550,20 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
   test "update adds new schedule item" do
     sign_in(@user)
     schedule = create_schedule_for(@user)
-    product_variant = product_variants(:one)
+    product_variant = products(:one)
 
     assert_difference "ReorderScheduleItem.count", 1 do
       patch reorder_schedule_url(schedule), params: {
         reorder_schedule: {
           reorder_schedule_items_attributes: {
-            "0" => { product_variant_id: product_variant.id, quantity: 5, price: product_variant.price }
+            "0" => { product_id: product_variant.id, quantity: 5, price: product_variant.price }
           }
         }
       }
     end
 
     new_item = schedule.reorder_schedule_items.last
-    assert_equal product_variant.id, new_item.product_variant_id
+    assert_equal product_variant.id, new_item.product_id
     assert_equal 5, new_item.quantity
   end
 
@@ -661,9 +661,9 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
 
   def create_schedule_with_items_for(user)
     schedule = create_schedule_for(user)
-    product_variant = product_variants(:one)
+    product_variant = products(:one)
     schedule.reorder_schedule_items.create!(
-      product_variant: product_variant,
+      product: product_variant,
       quantity: 2,
       price: product_variant.price
     )

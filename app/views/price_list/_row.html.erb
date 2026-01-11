@@ -1,23 +1,23 @@
-<tr class="hover" id="<%= dom_id(variant) %>">
+<tr class="hover" id="<%= dom_id(product) %>">
   <td>
-    <%= link_to product_path(variant.product, variant.url_params), class: "link link-hover", data: { turbo_frame: "_top" } do %>
-      <span><%= variant.product.name %></span>
-      <% if variant.options_display.present? %>
-        <div class="text-sm text-gray-500 font-normal"><%= variant.options_display %></div>
+    <%= link_to product_path(product), class: "link link-hover", data: { turbo_frame: "_top" } do %>
+      <span><%= product.name %></span>
+      <% if product.options_display.present? %>
+        <div class="text-sm text-gray-500 font-normal"><%= product.options_display %></div>
       <% end %>
     <% end %>
   </td>
-  <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= variant.sku %></td>
-  <td class="text-right hidden md:table-cell"><%= number_with_delimiter(variant.pac_size || 1) %></td>
-  <td class="text-right"><%= number_to_currency(variant.price) %></td>
+  <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= product.sku %></td>
+  <td class="text-right hidden md:table-cell"><%= number_with_delimiter(product.pac_size || 1) %></td>
+  <td class="text-right"><%= number_to_currency(product.price) %></td>
   <td class="text-right hidden lg:table-cell text-gray-500">
-    <%= number_to_currency(variant.unit_price, precision: 4) %>
+    <%= number_to_currency(product.unit_price, precision: 4) %>
   </td>
   <td class="text-center">
     <%= form_with url: cart_cart_items_path,
         method: :post,
         data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
-      <%= f.hidden_field :cart_item, value: variant.sku, name: "cart_item[variant_sku]" %>
+      <%= f.hidden_field :cart_item, value: product.sku, name: "cart_item[sku]" %>
       <%= f.select :quantity,
           options_for_select(price_list_quantity_options, 1),
           {},

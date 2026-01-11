@@ -2,7 +2,7 @@ class FeedsController < ApplicationController
   allow_unauthenticated_access
 
   def google_merchant
-    @products = Product.includes(:category, :active_variants).with_attached_product_photo
+    @products = Product.includes(:category).with_attached_product_photo
 
     feed_generator = GoogleMerchantFeedGenerator.new(@products)
 

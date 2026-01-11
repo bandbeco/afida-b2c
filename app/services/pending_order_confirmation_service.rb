@@ -107,23 +107,22 @@ class PendingOrderConfirmationService
   end
 
   def create_order_items!(order)
-    # Batch load all variants in one query to avoid N+1
-    variant_ids = @pending_order.items.map { |item| item["product_variant_id"] }
-    variants_by_id = ProductVariant.includes(:product).where(id: variant_ids).index_by(&:id)
+    # Batch load all products in one query to avoid N+1
+    product_ids = @pending_order.items.map { |item| item["product_id"] }
+    products_by_id = Product.where(id: product_ids).index_by(&:id)
 
     @pending_order.items.each do |item|
-      variant = variants_by_id[item["product_variant_id"]]
-      next unless variant # Skip if variant was deleted since snapshot
+      product = products_by_id[item["product_id"]]
+      next unless product # Skip if product was deleted since snapshot
 
       order.order_items.create!(
-        product: variant.product,
-        product_variant: variant,
+        product: product,
         product_name: item["product_name"],
-        product_sku: variant.sku,
+        product_sku: product.sku,
         price: item["price"].to_d,
         quantity: item["quantity"],
         line_total: item["line_total"].to_d,
-        pac_size: variant.pac_size
+        pac_size: product.pac_size
       )
     end
   end

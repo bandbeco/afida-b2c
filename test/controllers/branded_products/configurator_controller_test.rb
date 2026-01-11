@@ -3,7 +3,7 @@ require "test_helper"
 class BrandedProducts::ConfiguratorControllerTest < ActionDispatch::IntegrationTest
   test "calculate pricing returns success for valid configuration" do
     post branded_products_calculate_price_path, params: {
-      product_id: products(:branded_double_wall_template).id,
+      product_id: products(:branded_template_variant).id,
       size: "8oz",
       quantity: 1000
     }, as: :json
@@ -20,7 +20,7 @@ class BrandedProducts::ConfiguratorControllerTest < ActionDispatch::IntegrationT
 
   test "calculate pricing returns error for invalid size" do
     post branded_products_calculate_price_path, params: {
-      product_id: products(:branded_double_wall_template).id,
+      product_id: products(:branded_template_variant).id,
       size: "99oz",
       quantity: 1000
     }, as: :json
@@ -34,7 +34,7 @@ class BrandedProducts::ConfiguratorControllerTest < ActionDispatch::IntegrationT
 
   test "calculate pricing returns error for quantity below minimum" do
     post branded_products_calculate_price_path, params: {
-      product_id: products(:branded_double_wall_template).id,
+      product_id: products(:branded_template_variant).id,
       size: "8oz",
       quantity: 500
     }, as: :json
@@ -56,7 +56,7 @@ class BrandedProducts::ConfiguratorControllerTest < ActionDispatch::IntegrationT
   end
 
   test "available options returns sizes and quantities" do
-    get branded_products_available_options_path(product_id: products(:branded_double_wall_template).id), as: :json
+    get branded_products_available_options_path(product_id: products(:branded_template_variant).id), as: :json
 
     assert_response :success
     json = JSON.parse(response.body)

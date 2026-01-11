@@ -11,7 +11,6 @@ class AdminOrderPricingDisplayTest < ActionDispatch::IntegrationTest
     order_item = OrderItem.create!(
       order: @order,
       product: products(:one),
-      product_variant: product_variants(:one),
       product_name: "Paper Cups 500 Pack",
       product_sku: "CUP-500PK",
       price: 16.00,
@@ -36,7 +35,6 @@ class AdminOrderPricingDisplayTest < ActionDispatch::IntegrationTest
     order_item = OrderItem.create!(
       order: @order,
       product: products(:one),
-      product_variant: product_variants(:one),
       product_name: "Custom Branded Cup",
       product_sku: "BRAND-CUP-12OZ",
       price: 0.18,

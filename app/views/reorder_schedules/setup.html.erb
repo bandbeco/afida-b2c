@@ -88,9 +88,9 @@
              data-order-summary-toggle-target="content"
              data-testid="order-items-expanded">
           <div class="space-y-2 text-sm">
-            <% @order.order_items.includes(:product_variant).each do |item| %>
+            <% @order.order_items.includes(:product).each do |item| %>
               <div class="flex justify-between">
-                <span><%= item.product_variant.display_name %> x <%= item.quantity %></span>
+                <span><%= item.product.display_name %> x <%= item.quantity %></span>
                 <span><%= number_to_currency(item.line_total, unit: '£') %></span>
               </div>
             <% end %>
@@ -105,9 +105,9 @@
         <noscript>
           <div class="mt-4 pt-4 border-t border-base-300">
             <div class="space-y-2 text-sm">
-              <% @order.order_items.includes(:product_variant).each do |item| %>
+              <% @order.order_items.includes(:product).each do |item| %>
                 <div class="flex justify-between">
-                  <span><%= item.product_variant.display_name %> x <%= item.quantity %></span>
+                  <span><%= item.product.display_name %> x <%= item.quantity %></span>
                   <span><%= number_to_currency(item.line_total, unit: '£') %></span>
                 </div>
               <% end %>

@@ -1,0 +1,34 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# ProductFamily groups related products (e.g., same cup in different sizes)
+
+single_wall_cups:
+  name: Single-Wall Cups
+  slug: single-wall-cups
+
+branded_double_wall:
+  name: Double Wall Branded Cups
+  slug: double-wall-branded-cups
+
+paper_lids:
+  name: Paper Sip Lids for Hot Cups
+  slug: paper-sip-lids-for-hot-cups
+
+recyclable_lids_black:
+  name: Recyclable Sip Lids for Hot Cups - Black
+  slug: recyclable-sip-lids-black
+
+recyclable_lids_white:
+  name: Recyclable Sip Lids for Hot Cups - White
+  slug: recyclable-sip-lids-white
+
+paper_straws:
+  name: Paper Straws
+  slug: paper-straws
+
+wooden_cutlery:
+  name: Wooden Cutlery
+  slug: wooden-cutlery
+
+napkins:
+  name: Paper Napkins
+  slug: paper-napkins

@@ -24,13 +24,13 @@ wb.add_worksheet(name: "Price List") do |sheet|
   ], style: header_style
 
   # Data rows
-  @variants.each do |variant|
+  @products.each do |product|
     sheet.add_row [
-      variant.full_name,
-      variant.sku,
-      variant.pac_size || 1,
-      variant.price.to_f,
-      variant.unit_price.to_f
+      product.full_name,
+      product.sku,
+      product.pac_size || 1,
+      product.price.to_f,
+      product.unit_price.to_f
     ], style: [ nil, nil, nil, currency_style, unit_price_style ]
   end
 

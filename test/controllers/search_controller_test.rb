@@ -2,7 +2,7 @@ require "test_helper"
 
 class SearchControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @variant = product_variants(:single_wall_8oz_white)
+    @variant = products(:single_wall_8oz_white)
   end
 
   test "index returns success" do
@@ -13,13 +13,13 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   test "index returns empty results for short query" do
     get search_url, params: { q: "a" }
     assert_response :success
-    assert_select ".variant-card", count: 0
+    assert_select ".product-card", count: 0
   end
 
   test "index returns empty results for blank query" do
     get search_url, params: { q: "" }
     assert_response :success
-    assert_select ".variant-card", count: 0
+    assert_select ".product-card", count: 0
   end
 
   test "index limits results to 5" do
@@ -29,19 +29,19 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     # Count should be <= 5
-    assert_select ".variant-card", maximum: 5
+    assert_select ".product-card", maximum: 5
   end
 
   test "index finds variants by name" do
     get search_url, params: { q: "8oz" }
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(@variant.slug)
+    assert_select "a[href=?]", product_path(@variant.slug)
   end
 
   test "index finds variants by sku" do
     get search_url, params: { q: @variant.sku }
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(@variant.slug)
+    assert_select "a[href=?]", product_path(@variant.slug)
   end
 
   test "index is accessible without authentication" do

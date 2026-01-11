@@ -45,15 +45,6 @@ Rails.application.routes.draw do
   get "price-list", to: "price_list#index", as: :price_list
   get "price-list/export", to: "price_list#export", as: :price_list_export
 
-  # Product variant pages (individual SKU pages)
-  # Route placed before products resource to check variants first
-  # Variants have slugs like "8oz-white-single-wall-cups"
-  # Products have slugs like "single-wall-cups"
-  get "products/:slug", to: "product_variants#show", as: :product_variant, constraints: ->(req) {
-    # Only match if the slug is a valid product variant slug
-    ProductVariant.exists?(slug: req.params[:slug])
-  }
-
   resources :products, only: [ :index, :show ], param: :slug do
     member do
       get :quick_add
@@ -156,12 +147,6 @@ Rails.application.routes.draw do
         delete :remove_compatible_lid
         patch :set_default_compatible_lid
         patch :update_compatible_lids
-      end
-    end
-    resources :product_variants, only: [ :edit, :update ] do
-      member do
-        delete :product_photo, to: "product_variants#destroy_product_photo"
-        delete :lifestyle_photo, to: "product_variants#destroy_lifestyle_photo"
       end
     end
     resources :categories do

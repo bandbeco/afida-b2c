@@ -1,3 +1,7 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+# Products are the main sellable entities (formerly ProductVariant)
+
+# Basic test products
 one:
   name: "Product 1"
   sku: "BUBL-POP-11"
@@ -6,9 +10,12 @@ one:
   description_standard: "Standard description 1 with a bit more detail"
   description_detailed: "Detailed description 1 with comprehensive information about the product and its features"
   active: true
-  category: :one
+  category: one
   slug: "product-1"
   product_type: standard
+  price: 9.99
+  pac_size: 1
+  position: 1
 
 two:
   name: "Product 2"
@@ -18,9 +25,12 @@ two:
   description_standard: "Standard description 2 with a bit more detail"
   description_detailed: "Detailed description 2 with comprehensive information about the product and its features"
   active: true
-  category: :two
+  category: two
   slug: "product-2"
   product_type: standard
+  price: 9.99
+  pac_size: 1
+  position: 1
 
 inactive_product:
   name: "Inactive Product"
@@ -30,152 +40,559 @@ inactive_product:
   description_standard: "An inactive product used to test default scope filtering"
   description_detailed: "An inactive product with full details for testing the default scope behavior"
   active: false
-  category: :one
+  category: one
   slug: "inactive-product"
   product_type: standard
+  price: 9.99
 
-single_wall_cups:
-  name: Single-Wall Cups
-  slug: single-wall-cups
+# Single-Wall Cup products (belong to single_wall_cups family)
+single_wall_8oz_white:
+  product_family: single_wall_cups
   category: cups
+  name: 8oz White
+  sku: CUP-SW-8-WHT
+  slug: 8oz-white-single-wall-cups
+  description_short: "8oz white single-wall paper cups"
+  description_standard: "Eco-friendly 8oz white single-wall paper cups for hot beverages, compostable and recyclable"
+  description_detailed: "Our 8oz white single-wall paper cups are perfect for serving hot beverages. Made from sustainable materials, these cups are fully compostable in commercial facilities and meet EN 13432 certification standards."
+  price: 26.00
+  stock_quantity: 1000
   active: true
   position: 1
   product_type: standard
+  pricing_tiers:
+    - quantity: 1
+      price: "26.00"
+    - quantity: 3
+      price: "24.00"
+    - quantity: 5
+      price: "22.00"
+    - quantity: 10
+      price: "20.00"
 
-branded_double_wall_template:
-  name: Double Wall Branded Cups
-  slug: double-wall-branded-cups
-  category: branded
+single_wall_12oz_white:
+  product_family: single_wall_cups
+  category: cups
+  name: 12oz White
+  sku: CUP-SW-12-WHT
+  slug: 12oz-white-single-wall-cups
+  price: 28.00
+  stock_quantity: 1000
   active: true
-  position: 1
+  position: 2
+  product_type: standard
+  pricing_tiers:
+    - quantity: 1
+      price: "28.00"
+    - quantity: 3
+      price: "26.00"
+    - quantity: 5
+      price: "24.00"
+
+single_wall_8oz_black:
+  product_family: single_wall_cups
+  category: cups
+  name: 8oz Black
+  sku: CUP-SW-8-BLK
+  slug: 8oz-black-single-wall-cups
+  price: 26.00
+  stock_quantity: 500
+  active: true
+  position: 3
+  product_type: standard
+
+# Branded products
+branded_template_variant:
+  product_family: branded_double_wall
+  category: branded
+  name: Standard
+  sku: BRANDED-TEMPLATE-001
+  slug: standard-double-wall-branded-cups
+  price: 0.01
+  stock_quantity: 999999
+  active: true
   product_type: customizable_template
   description_short: "Custom branded double-wall cups"
   description_standard: "Custom branded double-wall cups for your business with high-quality printing"
   description_detailed: "Custom branded double-wall cups for your business with high-quality printing and eco-friendly materials"
 
-acme_branded_cups:
-  name: ACME Coffee 12oz Double Wall Branded Cups
-  slug: acme-coffee-12oz-double-wall-branded-cups
+acme_cups_variant:
   category: branded
+  name: ACME Coffee 12oz Double Wall Branded Cups
+  sku: BRANDED-ACME-12DW-001
+  slug: standard-acme-coffee-12oz-double-wall-branded-cups
+  price: 900.00
+  stock_quantity: 5000
   active: true
   product_type: customized_instance
-  parent_product: branded_double_wall_template
+  parent_product: branded_template_variant
   organization: acme
-  configuration_data:
-    size: "12oz"
-    type: "double_wall"
-    quantity_ordered: 5000
-    design_url: "https://example.com/designs/acme-logo.pdf"
 
-paper_lids:
-  name: Paper Sip Lids for Hot Cups
-  slug: paper-sip-lids-for-hot-cups
+# Paper lid products (belong to paper_lids family)
+paper_lid_80mm:
+  product_family: paper_lids
   category: hot_cups_extras
+  name: 80mm
+  sku: PAPL80
+  slug: 80mm-paper-sip-lids-for-hot-cups
+  price: 45.00
+  pac_size: 1000
+  stock_quantity: 10000
   active: true
   position: 1
   product_type: standard
-  compatible_cup_sizes: ["8oz", "12oz"]
 
-recyclable_lids_black:
-  name: Recyclable Sip Lids for Hot Cups - Black
-  slug: recyclable-sip-lids-black
+paper_lid_90mm:
+  product_family: paper_lids
   category: hot_cups_extras
+  name: 90mm
+  sku: PAPL90
+  slug: 90mm-paper-sip-lids-for-hot-cups
+  price: 48.00
+  pac_size: 1000
+  stock_quantity: 10000
   active: true
   position: 2
   product_type: standard
-  compatible_cup_sizes: ["8oz", "12oz"]
 
-recyclable_lids_white:
-  name: Recyclable Sip Lids for Hot Cups - White
-  slug: recyclable-sip-lids-white
+# Recyclable lid products - black (belong to recyclable_lids_black family)
+recyclable_lid_black_62mm:
+  product_family: recyclable_lids_black
   category: hot_cups_extras
+  name: 4oz (62mm)
+  sku: PLPC62B
+  slug: 4oz-62mm-recyclable-sip-lids-black
+  price: 52.00
+  pac_size: 1000
+  stock_quantity: 5000
+  active: true
+  position: 1
+  product_type: standard
+
+recyclable_lid_black_80mm:
+  product_family: recyclable_lids_black
+  category: hot_cups_extras
+  name: 80mm
+  sku: PLPC80B
+  slug: 80mm-recyclable-sip-lids-black
+  price: 55.00
+  pac_size: 1000
+  stock_quantity: 8000
+  active: true
+  position: 2
+  product_type: standard
+
+recyclable_lid_black_90mm:
+  product_family: recyclable_lids_black
+  category: hot_cups_extras
+  name: 90mm
+  sku: PLPC90B
+  slug: 90mm-recyclable-sip-lids-black
+  price: 58.00
+  pac_size: 1000
+  stock_quantity: 8000
   active: true
   position: 3
   product_type: standard
-  compatible_cup_sizes: ["8oz", "12oz"]
 
+# Recyclable lid products - white (belong to recyclable_lids_white family)
+recyclable_lid_white_62mm:
+  product_family: recyclable_lids_white
+  category: hot_cups_extras
+  name: 4oz (62mm)
+  sku: PLPC62W
+  slug: 4oz-62mm-recyclable-sip-lids-white
+  price: 52.00
+  pac_size: 1000
+  stock_quantity: 5000
+  active: true
+  position: 1
+  product_type: standard
+
+recyclable_lid_white_80mm:
+  product_family: recyclable_lids_white
+  category: hot_cups_extras
+  name: 80mm
+  sku: PLPC80W
+  slug: 80mm-recyclable-sip-lids-white
+  price: 55.00
+  pac_size: 1000
+  stock_quantity: 8000
+  active: true
+  position: 2
+  product_type: standard
+
+recyclable_lid_white_90mm:
+  product_family: recyclable_lids_white
+  category: hot_cups_extras
+  name: 90mm
+  sku: PLPC90W
+  slug: 90mm-recyclable-sip-lids-white
+  price: 58.00
+  pac_size: 1000
+  stock_quantity: 8000
+  active: true
+  position: 3
+  product_type: standard
+
+# Branded cup lid products (standalone, no family)
 branded_cup_8oz:
+  category: branded
   name: Branded Cup 8oz
   slug: branded-cup-8oz
   sku: CUP-BRAND-8
-  category: branded
   active: true
   product_type: standard
+  price: 120.00
+  pac_size: 1000
+  stock_quantity: 500
+  position: 1
   meta_title: Branded Cup 8oz
   meta_description: Customizable 8oz branded cup
 
 flat_lid_8oz:
+  category: hot_cups_extras
   name: Flat Lid - 8oz
   slug: flat-lid-8oz
   sku: LID-FLAT-8
-  category: hot_cups_extras
   active: true
   product_type: standard
-  short_description: Standard closure for 8oz cups
+  price: 15.00
+  pac_size: 1000
+  stock_quantity: 500
+  position: 1
+  description_short: Standard closure for 8oz cups
   meta_title: Flat Lid 8oz
   meta_description: Standard flat lid for 8oz cups
-  compatible_cup_sizes: ["8oz"]
 
 domed_lid_8oz:
+  category: hot_cups_extras
   name: Domed Lid - 8oz
   slug: domed-lid-8oz
   sku: LID-DOME-8
-  category: hot_cups_extras
   active: true
   product_type: standard
-  short_description: Extra room for toppings
+  price: 18.00
+  pac_size: 1000
+  stock_quantity: 500
+  position: 1
+  description_short: Extra room for toppings
   meta_title: Domed Lid 8oz
   meta_description: Domed lid with extra room for 8oz cups
-  compatible_cup_sizes: ["8oz"]
 
 sip_lid_8oz:
+  category: hot_cups_extras
   name: Sip Lid - 8oz
   slug: sip-lid-8oz
   sku: LID-SIP-8
-  category: hot_cups_extras
   active: true
   product_type: standard
-  short_description: Built-in drinking spout
+  price: 20.00
+  pac_size: 1000
+  stock_quantity: 0
+  position: 1
+  description_short: Built-in drinking spout
   meta_title: Sip Lid 8oz
   meta_description: Sip lid with built-in spout for 8oz cups
-  compatible_cup_sizes: ["8oz"]
 
+# Single product for category test
 only_product_in_category:
+  category: category_with_one_product
   name: Only Product In Category
   slug: only-product-in-category
-  sku: ONLY-001
-  category: category_with_one_product
+  sku: ONLY-001-STD
   active: true
   product_type: standard
+  price: 25.00
+  stock_quantity: 100
+  position: 1
   description_short: The only product in its category
 
-# Sparse matrix product - not all size+colour combinations exist
-# (e.g., Paper Straws where 8x200mm only comes in Red/White)
-paper_straws:
-  name: Paper Straws
-  slug: paper-straws
-  sku: STRAW-PAPER
+# Sample-eligible products
+sample_cup_8oz:
+  product_family: single_wall_cups
+  category: cups
+  name: 8oz Sample
+  sku: SAMPLE-SW-8
+  slug: 8oz-sample-single-wall-cups
+  price: 26.00
+  stock_quantity: 100
+  active: true
+  position: 10
+  product_type: standard
+  sample_eligible: true
+  sample_sku: SAMPLE-CUP-8OZ
+
+sample_cup_12oz:
+  product_family: single_wall_cups
+  category: cups
+  name: 12oz Sample
+  sku: SAMPLE-SW-12
+  slug: 12oz-sample-single-wall-cups
+  price: 28.00
+  stock_quantity: 100
+  active: true
+  position: 11
+  product_type: standard
+  sample_eligible: true
+
+# Paper straw products (belong to paper_straws family) - sparse matrix
+straw_6x140_white:
+  product_family: paper_straws
   category: straws
+  name: 6x140mm White
+  sku: STRAW-6-WHT
+  slug: 6x140mm-white-paper-straws
+  price: 8.00
+  pac_size: 250
+  stock_quantity: 1000
   active: true
+  position: 1
   product_type: standard
-  description_short: Eco-friendly paper straws
+  pricing_tiers:
+    - quantity: 1
+      price: "8.00"
+    - quantity: 5
+      price: "7.50"
+    - quantity: 10
+      price: "7.00"
 
-# Consolidated product with material option (wooden cutlery)
-wooden_cutlery:
-  name: Wooden Cutlery
-  slug: wooden-cutlery
-  sku: CUT-WOOD
+straw_6x140_kraft:
+  product_family: paper_straws
+  category: straws
+  name: 6x140mm Kraft
+  sku: STRAW-6-KFT
+  slug: 6x140mm-kraft-paper-straws
+  price: 8.50
+  stock_quantity: 1000
+  active: true
+  position: 2
+  product_type: standard
+
+straw_8x200_redwhite:
+  product_family: paper_straws
+  category: straws
+  name: 8x200mm Red/White
+  sku: STRAW-8-RW
+  slug: 8x200mm-red-white-paper-straws
+  price: 10.00
+  stock_quantity: 1000
+  active: true
+  position: 3
+  product_type: standard
+
+# Wooden cutlery products (belong to wooden_cutlery family)
+wooden_fork:
+  product_family: wooden_cutlery
   category: cutlery
+  name: Wooden Fork
+  sku: CUT-WOOD-FORK
+  slug: wooden-fork-wooden-cutlery
+  price: 15.00
+  stock_quantity: 500
   active: true
+  position: 1
   product_type: standard
-  description_short: Sustainable wooden cutlery
 
-# Full matrix product - all size+colour combinations exist
-napkins:
-  name: Paper Napkins
-  slug: paper-napkins
-  sku: NAP-PAPER
-  category: one
+wooden_knife:
+  product_family: wooden_cutlery
+  category: cutlery
+  name: Wooden Knife
+  sku: CUT-WOOD-KNIFE
+  slug: wooden-knife-wooden-cutlery
+  price: 15.00
+  stock_quantity: 500
   active: true
+  position: 2
   product_type: standard
-  description_short: Quality paper napkins
+
+wooden_spoon:
+  product_family: wooden_cutlery
+  category: cutlery
+  name: Wooden Spoon
+  sku: CUT-WOOD-SPOON
+  slug: wooden-spoon-wooden-cutlery
+  price: 15.00
+  stock_quantity: 500
+  active: true
+  position: 3
+  product_type: standard
+
+bamboo_fork:
+  product_family: wooden_cutlery
+  category: cutlery
+  name: Bamboo Fork
+  sku: CUT-BAM-FORK
+  slug: bamboo-fork-wooden-cutlery
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 4
+  product_type: standard
+
+bamboo_knife:
+  product_family: wooden_cutlery
+  category: cutlery
+  name: Bamboo Knife
+  sku: CUT-BAM-KNIFE
+  slug: bamboo-knife-wooden-cutlery
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 5
+  product_type: standard
+
+bamboo_spoon:
+  product_family: wooden_cutlery
+  category: cutlery
+  name: Bamboo Spoon
+  sku: CUT-BAM-SPOON
+  slug: bamboo-spoon-wooden-cutlery
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 6
+  product_type: standard
+
+# Napkin products - full matrix (belong to napkins family)
+napkin_small_white:
+  product_family: napkins
+  category: one
+  name: Small White
+  sku: NAP-SM-WHT
+  slug: small-white-paper-napkins
+  price: 12.00
+  stock_quantity: 1000
+  active: true
+  position: 1
+  product_type: standard
+
+napkin_small_natural:
+  product_family: napkins
+  category: one
+  name: Small Natural
+  sku: NAP-SM-NAT
+  slug: small-natural-paper-napkins
+  price: 12.00
+  stock_quantity: 1000
+  active: true
+  position: 2
+  product_type: standard
+
+napkin_large_white:
+  product_family: napkins
+  category: one
+  name: Large White
+  sku: NAP-LG-WHT
+  slug: large-white-paper-napkins
+  price: 15.00
+  stock_quantity: 1000
+  active: true
+  position: 3
+  product_type: standard
+
+napkin_large_natural:
+  product_family: napkins
+  category: one
+  name: Large Natural
+  sku: NAP-LG-NAT
+  slug: large-natural-paper-napkins
+  price: 15.00
+  stock_quantity: 1000
+  active: true
+  position: 4
+  product_type: standard
+
+# ==============================================================================
+# Legacy aliases - for test backward compatibility
+# These duplicate existing products under old ProductFamily-style names
+# Tests should eventually be updated to use actual product fixture names
+# ==============================================================================
+
+# YAML aliases don't work across fixtures, so we duplicate the data
+single_wall_cups:
+  product_family: single_wall_cups
+  category: cups
+  name: Single Wall Cups 8oz White (Legacy Alias)
+  sku: CUP-SW-8-WHT-ALIAS
+  slug: single-wall-cups
+  price: 26.00
+  stock_quantity: 1000
+  active: true
+  position: 100
+  product_type: standard
+  meta_title: Single-Wall Cups - Test
+  meta_description: Test meta description for single wall cups
+
+paper_straws:
+  product_family: paper_straws
+  category: straws
+  name: Paper Straws 6x140mm (Legacy Alias)
+  sku: STRAW-6-WHT-ALIAS
+  slug: paper-straws
+  price: 8.00
+  stock_quantity: 1000
+  active: true
+  position: 100
+  product_type: standard
+
+wooden_cutlery:
+  product_family: wooden_cutlery
+  category: cutlery
+  name: Wooden Cutlery Fork (Legacy Alias)
+  sku: CUT-WOOD-FORK-ALIAS
+  slug: wooden-cutlery
+  price: 15.00
+  stock_quantity: 500
+  active: true
+  position: 100
+  product_type: standard
+
+napkins:
+  product_family: napkins
+  category: one
+  name: Paper Napkins Small (Legacy Alias)
+  sku: NAP-SM-WHT-ALIAS
+  slug: napkins
+  price: 12.00
+  stock_quantity: 1000
+  active: true
+  position: 100
+  product_type: standard
+
+paper_lids:
+  product_family: paper_lids
+  category: hot_cups_extras
+  name: Paper Lids 80mm (Legacy Alias)
+  sku: PAPL80-ALIAS
+  slug: paper-lids
+  price: 45.00
+  pac_size: 1000
+  stock_quantity: 10000
+  active: true
+  position: 100
+  product_type: standard
+
+branded_double_wall_template:
+  product_family: branded_double_wall
+  category: branded
+  name: Branded Double Wall Template (Legacy Alias)
+  sku: BRANDED-TEMPLATE-ALIAS
+  slug: branded-double-wall-template
+  price: 0.01
+  stock_quantity: 999999
+  active: true
+  product_type: customizable_template
+  description_short: Custom branded double-wall cups (alias)
+
+acme_branded_cups:
+  category: branded
+  name: ACME Branded Cups (Legacy Alias)
+  sku: BRANDED-ACME-ALIAS
+  slug: acme-branded-cups
+  price: 900.00
+  stock_quantity: 5000
+  active: true
+  product_type: customized_instance
+  parent_product: branded_double_wall_template
+  organization: acme

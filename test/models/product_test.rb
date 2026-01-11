@@ -10,8 +10,8 @@ class ProductTest < ActiveSupport::TestCase
     @product_one = products(:one)
   end
 
-  test "default scope should return active products" do
-    active_products = Product.all
+  test "active scope should return only active products" do
+    active_products = Product.active
     assert active_products.include?(@product_one)
     assert_not active_products.include?(products(:inactive_product)) # Inactive product is excluded
   end
@@ -29,14 +29,14 @@ class ProductTest < ActiveSupport::TestCase
   end
 
   # Slug generation tests
-  test "should generate slug from sku and name on create if slug is blank" do
-    product = Product.new(name: "New Awesome Product", sku: "NAP123", category: @category)
+  test "should generate slug from name on create if slug is blank" do
+    product = Product.new(name: "New Awesome Product", sku: "NAP123", price: 10.00, category: @category)
     assert product.save
-    assert_equal "nap123-new-awesome-product", product.slug
+    assert_equal "new-awesome-product", product.slug
   end
 
   test "should use provided slug on create if slug is present" do
-    product = Product.new(name: "New Awesome Product with Slug", sku: "NAPWS456", category: @category, slug: "my-custom-slug")
+    product = Product.new(name: "New Awesome Product with Slug", sku: "NAPWS456", price: 10.00, category: @category, slug: "my-custom-slug")
     assert product.save
     assert_equal "my-custom-slug", product.slug
   end
@@ -52,25 +52,25 @@ class ProductTest < ActiveSupport::TestCase
 
   test "should regenerate slug on update if slug is manually cleared" do
     # Use a fresh product to avoid fixture state issues and ensure SKU is set for regeneration
-    product = Product.create!(name: "Initial Name", sku: "REGENSKU1", category: @category)
-    # product.slug is now "regensku1-initial-name"
+    product = Product.create!(name: "Initial Name", sku: "REGENSKU1", price: 10.00, category: @category)
+    # product.slug is now "initial-name" (generated from name, not sku + name)
 
     product.name = "Product For Slug Regeneration"
     product.sku = "REGENSKU2" # SKU might also change
     product.slug = "" # Manually clear the slug
     assert product.save
-    assert_equal "regensku2-product-for-slug-regeneration", product.slug
+    assert_equal "product-for-slug-regeneration", product.slug
   end
 
   test "should regenerate slug on update if slug is manually set to nil" do
-    product = Product.create!(name: "Initial Nil Name", sku: "NILSKU1", category: @category)
-    # product.slug is now "nilsku1-initial-nil-name"
+    product = Product.create!(name: "Initial Nil Name", sku: "NILSKU1", price: 10.00, category: @category)
+    # product.slug is now "initial-nil-name"
 
     product.name = "Product For Nil Slug Regeneration"
     product.sku = "NILSKU2"
     product.slug = nil # Manually clear the slug by setting to nil
     assert product.save
-    assert_equal "nilsku2-product-for-nil-slug-regeneration", product.slug
+    assert_equal "product-for-nil-slug-regeneration", product.slug
   end
 
   test "should save manually updated slug" do
@@ -129,16 +129,14 @@ class ProductTest < ActiveSupport::TestCase
     assert_includes product.errors[:organization_id], "can't be blank"
   end
 
-  test "customized_instance stores configuration_data" do
-    product = products(:acme_branded_cups)
-    assert_equal "12oz", product.configuration_data["size"]
-    assert_equal "double_wall", product.configuration_data["type"]
-    assert_equal 5000, product.configuration_data["quantity_ordered"]
-  end
+  # configuration_data column was removed during model restructure
+  # Customized instances now use parent_product relationship instead
 
   test "standard and template products dont require parent or organization" do
     product = Product.new(
       name: "Test",
+      sku: "TEST-STD-001",
+      price: 10.00,
       product_type: "standard",
       category: categories(:one)
     )
@@ -248,48 +246,24 @@ class ProductTest < ActiveSupport::TestCase
     assert_not product.has_photos?
   end
 
-  # Compatible cup sizes tests
-  test "compatible_cup_sizes can store array of sizes" do
-    product = products(:one)
-    product.compatible_cup_sizes = [ "8oz", "12oz", "16oz" ]
-    assert product.save
-
-    product.reload
-    assert_equal [ "8oz", "12oz", "16oz" ], product.compatible_cup_sizes
-  end
-
-  test "compatible_cup_sizes defaults to empty array" do
-    product = Product.new(
-      name: "Test Product",
-      category: categories(:one),
-      slug: "test-product-slug"
-    )
-    assert product.save
-
-    assert_equal [], product.compatible_cup_sizes
-  end
-
-  test "should have custom label fields" do
+  # Custom label fields tests
+  test "should have best_seller and b2b_priority fields" do
     product = products(:one)
 
-    product.profit_margin = "high"
     product.best_seller = true
-    product.seasonal_type = "year_round"
     product.b2b_priority = "high"
 
     assert product.save
-    assert_equal "high", product.profit_margin
     assert product.best_seller
-    assert_equal "year_round", product.seasonal_type
     assert_equal "high", product.b2b_priority
   end
 
-  test "should validate profit_margin values" do
+  test "should validate b2b_priority values" do
     product = products(:one)
-    product.profit_margin = "invalid"
+    product.b2b_priority = "invalid"
 
     assert_not product.valid?
-    assert_includes product.errors[:profit_margin], "is not included in the list"
+    assert_includes product.errors[:b2b_priority], "is not included in the list"
   end
 
   # Category filtering scope tests
@@ -312,7 +286,7 @@ class ProductTest < ActiveSupport::TestCase
     product1 = products(:one)
     product1.update(category: category1)
 
-    product2 = Product.create!(name: "Product 2", sku: "SKU2", category: category2)
+    product2 = Product.create!(name: "Product 2", sku: "SKU2", price: 10.00, category: category2)
 
     results = Product.in_categories([ category1.slug, category2.slug ])
 
@@ -389,56 +363,38 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal products.sort, products
   end
 
-  test "sorted by price_asc orders by minimum variant price" do
+  test "sorted by price_asc orders products by price ascending" do
     # Create two products with different prices
-    cheap = Product.create!(name: "Cheap Product", sku: "CHEAP", category: categories(:one))
-    expensive = Product.create!(name: "Expensive Product", sku: "EXPENSIVE", category: categories(:one))
-
-    ProductVariant.create!(product: cheap, name: "Small", sku: "CHEAP-1", price: 1.00, stock_quantity: 100, active: true)
-    ProductVariant.create!(product: expensive, name: "Large", sku: "EXP-1", price: 10.00, stock_quantity: 100, active: true)
+    cheap = Product.create!(name: "Cheap Product", sku: "CHEAP", price: 1.00, category: categories(:one))
+    expensive = Product.create!(name: "Expensive Product", sku: "EXPENSIVE", price: 10.00, category: categories(:one))
 
     results = Product.sorted("price_asc").to_a
 
     assert results.index(cheap) < results.index(expensive), "Cheap product should come before expensive"
   end
 
-  test "sorted by price_desc orders by minimum variant price descending" do
-    # Create products with different minimum prices
-    low_price = Product.create!(name: "Low Price Product", sku: "LOW", category: categories(:one))
-    mid_price = Product.create!(name: "Mid Price Product", sku: "MID", category: categories(:one))
-    high_price = Product.create!(name: "High Price Product", sku: "HIGH", category: categories(:one))
-
-    # Low price product: min = 5, max = 20
-    ProductVariant.create!(product: low_price, name: "Small", sku: "LOW-1", price: 5.00, stock_quantity: 100, active: true)
-    ProductVariant.create!(product: low_price, name: "Large", sku: "LOW-2", price: 20.00, stock_quantity: 100, active: true)
-
-    # Mid price product: min = 50, max = 100
-    ProductVariant.create!(product: mid_price, name: "Small", sku: "MID-1", price: 50.00, stock_quantity: 100, active: true)
-    ProductVariant.create!(product: mid_price, name: "Large", sku: "MID-2", price: 100.00, stock_quantity: 100, active: true)
-
-    # High price product: min = 150, max = 200
-    ProductVariant.create!(product: high_price, name: "Small", sku: "HIGH-1", price: 150.00, stock_quantity: 100, active: true)
-    ProductVariant.create!(product: high_price, name: "Large", sku: "HIGH-2", price: 200.00, stock_quantity: 100, active: true)
+  test "sorted by price_desc orders products by price descending" do
+    # Create products with different prices
+    low_price = Product.create!(name: "Low Price Product", sku: "LOW", price: 5.00, category: categories(:one))
+    mid_price = Product.create!(name: "Mid Price Product", sku: "MID", price: 50.00, category: categories(:one))
+    high_price = Product.create!(name: "High Price Product", sku: "HIGH", price: 150.00, category: categories(:one))
 
     results = Product.sorted("price_desc").to_a
 
-    # Should sort by MIN price descending: high_price (150) > mid_price (50) > low_price (5)
+    # Should sort by price descending: high_price (150) > mid_price (50) > low_price (5)
     assert results.index(high_price) < results.index(mid_price), "High price product should come before mid price"
     assert results.index(mid_price) < results.index(low_price), "Mid price product should come before low price"
   end
 
-  test "sorted by price places products without variants at end" do
-    # Create product without any variants
-    no_variants = Product.create!(name: "No Variants Product", sku: "NOVARS", category: categories(:one))
-    with_variants = Product.create!(name: "With Variants Product", sku: "WITHVARS", category: categories(:one))
-    ProductVariant.create!(product: with_variants, name: "Standard", sku: "WITHVARS-1", price: 10.00, stock_quantity: 100, active: true)
+  test "sorted returns all products when sort param is nil" do
+    product1 = Product.create!(name: "Product A", sku: "PROD-A", price: 10.00, category: categories(:one))
+    product2 = Product.create!(name: "Product B", sku: "PROD-B", price: 20.00, category: categories(:one))
 
-    results_asc = Product.sorted("price_asc").to_a
-    results_desc = Product.sorted("price_desc").to_a
+    results = Product.sorted(nil).to_a
 
-    # Products without variants should appear at end (NULLS LAST)
-    assert results_asc.index(with_variants) < results_asc.index(no_variants), "Product with variants should come before product without variants (asc)"
-    assert results_desc.index(with_variants) < results_desc.index(no_variants), "Product with variants should come before product without variants (desc)"
+    # Should return all products without specific ordering
+    assert_includes results, product1
+    assert_includes results, product2
   end
 
   # Description fallback method tests (T009-T016)
@@ -544,6 +500,7 @@ class ProductTest < ActiveSupport::TestCase
     customizable_product = Product.create!(
       name: "Branded Cup",
       sku: "BRANDED-1",
+      price: 0.01,
       category: categories(:one),
       product_type: "customizable_template"
     )
@@ -551,6 +508,7 @@ class ProductTest < ActiveSupport::TestCase
     customized_instance = Product.create!(
       name: "Acme Branded Cup",
       sku: "ACME-1",
+      price: 100.00,
       category: categories(:one),
       product_type: "customized_instance",
       parent_product: customizable_product,
@@ -568,6 +526,7 @@ class ProductTest < ActiveSupport::TestCase
     customizable = Product.create!(
       name: "Customizable Product",
       sku: "CUSTOM-1",
+      price: 0.01,
       category: categories(:one),
       product_type: "customizable_template"
     )
@@ -581,6 +540,7 @@ class ProductTest < ActiveSupport::TestCase
     template = Product.create!(
       name: "Template Product",
       sku: "TEMPLATE-1",
+      price: 0.01,
       category: categories(:one),
       product_type: "customizable_template"
     )
@@ -588,6 +548,7 @@ class ProductTest < ActiveSupport::TestCase
     instance = Product.create!(
       name: "Instance Product",
       sku: "INSTANCE-1",
+      price: 100.00,
       category: categories(:one),
       product_type: "customized_instance",
       parent_product: template,
@@ -666,17 +627,16 @@ class ProductTest < ActiveSupport::TestCase
     assert_includes options["colour"], "Black"
   end
 
-  test "available_options only includes options from active variants" do
+  test "available_options only includes options from active products" do
     product = products(:single_wall_cups)
 
-    # Deactivate one variant
-    variant = product_variants(:single_wall_8oz_black)
-    variant.update!(active: false)
+    # Deactivate one product in the family
+    sibling = products(:single_wall_8oz_black)
+    sibling.update!(active: false)
 
     options = product.available_options
 
-    # Black should still be present because 12oz White also exists
-    # But if there was a colour only on the deactivated variant, it would be excluded
+    # Options from remaining active products should still be present
     assert options["size"].size >= 1
   end
 
@@ -701,11 +661,11 @@ class ProductTest < ActiveSupport::TestCase
     assert variant.key?(:image_url)
   end
 
-  test "variants_for_selector only includes active variants" do
+  test "variants_for_selector only includes active products in family" do
     product = products(:single_wall_cups)
 
-    # Get active variant IDs from association
-    active_ids = product.active_variants.pluck(:id)
+    # Get active sibling IDs from family
+    active_ids = product.product_family.products.active.pluck(:id)
 
     # Get IDs from selector method
     selector_ids = product.variants_for_selector.map { |v| v[:id] }

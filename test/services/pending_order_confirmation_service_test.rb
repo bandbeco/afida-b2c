@@ -6,7 +6,7 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
   setup do
     @user = users(:one)
     @user.update!(stripe_customer_id: "cus_test_123")
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
 
     @schedule = ReorderSchedule.create!(
       user: @user,
@@ -22,7 +22,7 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
       items_snapshot: {
         "items" => [
           {
-            "product_variant_id" => @product_variant.id,
+            "product_id" => @product_variant.id,
             "product_name" => "Test Product",
             "variant_name" => "Pack of 500",
             "quantity" => 2,
@@ -78,7 +78,7 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
     order = Order.last
     order_item = order.order_items.first
 
-    assert_equal @product_variant.id, order_item.product_variant_id
+    assert_equal @product_variant.id, order_item.product_id
     assert_equal 2, order_item.quantity
     assert_equal 10.00, order_item.price
   end

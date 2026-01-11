@@ -1,20 +1,20 @@
 # Double Wall 8oz pricing
 dw_8oz_1000:
-  product: branded_double_wall_template
+  product: branded_template_variant
   size: 8oz
   quantity_tier: 1000
   price_per_unit: 0.30
   case_quantity: 500
 
 dw_8oz_2000:
-  product: branded_double_wall_template
+  product: branded_template_variant
   size: 8oz
   quantity_tier: 2000
   price_per_unit: 0.25
   case_quantity: 500
 
 dw_8oz_5000:
-  product: branded_double_wall_template
+  product: branded_template_variant
   size: 8oz
   quantity_tier: 5000
   price_per_unit: 0.18
@@ -22,14 +22,14 @@ dw_8oz_5000:
 
 # Double Wall 12oz pricing
 dw_12oz_1000:
-  product: branded_double_wall_template
+  product: branded_template_variant
   size: 12oz
   quantity_tier: 1000
   price_per_unit: 0.32
   case_quantity: 500
 
 dw_12oz_5000:
-  product: branded_double_wall_template
+  product: branded_template_variant
   size: 12oz
   quantity_tier: 5000
   price_per_unit: 0.20
@@ -37,7 +37,7 @@ dw_12oz_5000:
 
 # Double Wall 16oz pricing
 dw_16oz_1000:
-  product: branded_double_wall_template
+  product: branded_template_variant
   size: 16oz
   quantity_tier: 1000
   price_per_unit: 0.34

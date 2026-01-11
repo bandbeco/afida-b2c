@@ -33,7 +33,7 @@ class Admin::UrlRedirectsController < Admin::ApplicationController
 
       # Preload products with variants for sorting
       product_slugs = redirects_array.map(&:target_slug).compact.uniq
-      products_by_slug = Product.includes(:active_variants).where(slug: product_slugs).index_by(&:slug)
+      products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
 
       # Sort by product name, then by variant name
       redirects_array.sort_by do |redirect|
@@ -53,7 +53,7 @@ class Admin::UrlRedirectsController < Admin::ApplicationController
 
     # Preload products with variants to avoid N+1 queries in view
     product_slugs = @redirects.map(&:target_slug).compact.uniq
-    @products_by_slug = Product.includes(:active_variants).where(slug: product_slugs).index_by(&:slug)
+    @products_by_slug = Product.where(slug: product_slugs).index_by(&:slug)
   end
 
   # T062: Show action
@@ -117,8 +117,8 @@ class Admin::UrlRedirectsController < Admin::ApplicationController
     respond_to do |format|
       format.html { redirect_to admin_url_redirects_url, notice: message }
       format.turbo_stream do
-        # Preload product with variants for turbo stream rendering
-        @product = Product.includes(:active_variants).find_by(slug: @redirect.target_slug)
+        # Load product for turbo stream rendering
+        @product = Product.find_by(slug: @redirect.target_slug)
         flash.now[:notice] = message
       end
     end

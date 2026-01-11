@@ -29,20 +29,12 @@ class SitemapGeneratorService
                   lastmod: category.updated_at)
         end
 
-        # Products (consolidated pages)
-        Product.includes(:category).find_each do |product|
+        # Products (individual product pages)
+        Product.active.includes(:category).find_each do |product|
           add_url(xml, product_url(product),
                   priority: "0.7",
                   changefreq: "weekly",
                   lastmod: product.updated_at)
-        end
-
-        # Product Variants (individual SKU pages)
-        ProductVariant.active.includes(:product).find_each do |variant|
-          add_url(xml, product_variant_url(variant.slug),
-                  priority: "0.7",
-                  changefreq: "weekly",
-                  lastmod: variant.updated_at)
         end
       end
     end

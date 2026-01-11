@@ -182,7 +182,7 @@ class PendingOrdersController < ApplicationController
   end
 
   def pending_order_params
-    params.require(:pending_order).permit(items: [ :product_variant_id, :quantity ])
+    params.require(:pending_order).permit(items: [ :product_id, :quantity ])
   end
 
   def rebuild_snapshot(items)

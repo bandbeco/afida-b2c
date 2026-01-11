@@ -30,7 +30,7 @@ class OrdersController < ApplicationController
   end
 
   def index
-    @orders = Current.user.orders.recent.includes(order_items: { product_variant: :product })
+    @orders = Current.user.orders.recent.includes(order_items: :product)
   end
 
   def reorder
@@ -61,14 +61,14 @@ class OrdersController < ApplicationController
   end
 
   def set_order
-    @order = Order.includes(order_items: { product_variant: :product }).find(params[:id])
+    @order = Order.includes(order_items: :product).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to root_path, alert: "Order not found"
   end
 
   # For reorder action: only allow accessing current user's orders
   def set_user_order
-    @order = Current.user.orders.includes(order_items: { product_variant: :product }).find(params[:id])
+    @order = Current.user.orders.includes(order_items: :product).find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to orders_path, alert: "Order not found"
   end

@@ -5,8 +5,8 @@ class CartsController < ApplicationController
 
   def show
     @cart_items = Current.cart.cart_items
-      .includes(:product, product_variant: :product)
-      .order("products.name ASC, product_variants.name ASC")
+      .includes(:product)
+      .order("products.name ASC")
   end
 
   def destroy
@@ -19,10 +19,7 @@ class CartsController < ApplicationController
   def eager_load_cart
     # Eager load cart items with their associations to prevent N+1 queries
     Current.cart.cart_items.includes(
-      product_variant: [
-        :product_photo_attachment,
-        { product: :product_photo_attachment }
-      ]
+      product: :product_photo_attachment
     ).load if Current.cart
   end
 

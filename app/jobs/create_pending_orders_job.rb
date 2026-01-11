@@ -19,7 +19,7 @@ class CreatePendingOrdersJob < ApplicationJob
     ReorderSchedule
       .active
       .due_in_days(DAYS_BEFORE_DELIVERY)
-      .includes(reorder_schedule_items: { product_variant: :product })
+      .includes(reorder_schedule_items: :product)
   end
 
   def create_pending_order(schedule)

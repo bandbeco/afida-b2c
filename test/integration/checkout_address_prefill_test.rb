@@ -4,7 +4,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:one)
     @address = addresses(:office)
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
 
     # Track params passed to Stripe APIs using test-local state
     @captured_checkout_params = nil
@@ -14,7 +14,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     # Create a cart with items
     sign_in_as(@user)
     post cart_cart_items_path, params: {
-      cart_item: { product_variant_id: @product_variant.id, quantity: 1 }
+      cart_item: { product_id: @product_variant.id, quantity: 1 }
     }
   end
 
@@ -158,7 +158,7 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
     # Create a guest cart with items
     post cart_cart_items_path, params: {
-      cart_item: { product_variant_id: @product_variant.id, quantity: 1 }
+      cart_item: { product_id: @product_variant.id, quantity: 1 }
     }
 
     mock_session = stub(url: "https://checkout.stripe.com/test/sess_guest")

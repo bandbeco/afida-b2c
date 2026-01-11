@@ -22,7 +22,7 @@ class Organizations::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h1", "Your Branded Products"
-    assert_select "div.product-card", count: 1 # acme_branded_cups
+    assert_select "div.product-card", count: 2 # acme's customized products
   end
 
   test "does not show other organizations' products" do

@@ -4,7 +4,7 @@ class CheckoutsController < ApplicationController
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to cart_path, alert: "Too many checkout attempts. Please wait before trying again." }
 
   # Eager loading strategy for cart items used across checkout methods
-  CART_ITEM_INCLUDES = [ :product, :product_variant, { design_attachment: :blob } ].freeze
+  CART_ITEM_INCLUDES = [ :product, { design_attachment: :blob } ].freeze
 
   def create
     cart = Current.cart
@@ -13,31 +13,31 @@ class CheckoutsController < ApplicationController
     line_items = cart_items.map do |item|
       # For standard products with pack pricing: send packs as quantity
       # For branded/configured products: send units as quantity
-      variant_name = item.product_variant.name
+      product = item.product
 
       if item.sample?
         # Sample items: free, quantity 1
         quantity = 1
         unit_amount = 0
-        product_name = "#{item.product.name} - #{variant_name} (Sample)"
+        product_name = "#{product.name} (Sample)"
       elsif item.configured?
         # Unit-based pricing (branded products)
         quantity = 1
         unit_amount = (item.price.to_f * item.quantity * 100).round
         units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
-        product_name = "#{item.product.name} - #{item.configuration['size']} (#{units_formatted} units)"
-      elsif item.product_variant.pac_size.blank? || item.product_variant.pac_size.zero?
+        product_name = "#{product.name} - #{item.configuration['size']} (#{units_formatted} units)"
+      elsif product.pac_size.blank? || product.pac_size.zero?
         # Unit-based pricing (products without packs)
         quantity = item.quantity
         unit_amount = (item.price.to_f * 100).round
-        product_name = "#{item.product.name} - #{variant_name}"
+        product_name = product.name
       else
         # Pack-based pricing (standard products)
         packs_needed = item.quantity
         quantity = 1
         unit_amount = (item.price.to_f * packs_needed * 100).round
         packs_label = packs_needed == 1 ? "pack" : "packs"
-        product_name = "#{item.product.name} - #{variant_name} (#{packs_needed} #{packs_label})"
+        product_name = "#{product.name} (#{packs_needed} #{packs_label})"
       end
 
       {

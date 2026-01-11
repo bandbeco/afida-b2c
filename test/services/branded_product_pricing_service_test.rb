@@ -2,7 +2,7 @@ require "test_helper"
 
 class BrandedProductPricingServiceTest < ActiveSupport::TestCase
   setup do
-    @product = products(:branded_double_wall_template)
+    @product = products(:branded_template_variant)
     @service = BrandedProductPricingService.new(@product)
   end
 

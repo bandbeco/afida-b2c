@@ -1,5 +1,5 @@
 class GoogleMerchantFeedGenerator
-  def initialize(products = Product.includes(:category, :active_variants).with_attached_product_photo)
+  def initialize(products = Product.includes(:category, :product_family).with_attached_product_photo.active)
     @products = products
   end
 
@@ -12,7 +12,7 @@ class GoogleMerchantFeedGenerator
           xml.link Rails.application.routes.url_helpers.shop_url
 
           @products.each do |product|
-            generate_product_variants(xml, product)
+            generate_product_item(xml, product)
           end
         end
       end
@@ -23,91 +23,87 @@ class GoogleMerchantFeedGenerator
 
   private
 
-  def generate_product_variants(xml, product)
-    product.active_variants.each do |variant|
-      xml.item do
-        # Required fields
-        xml["g"].id variant.sku
-        xml["g"].title optimized_title(product, variant)
-        xml["g"].description optimized_description(product, variant)
-        xml["g"].link Rails.application.routes.url_helpers.product_url(product, variant_id: variant.id)
-        xml["g"].image_link variant_image_url(variant, product)
-        xml["g"].availability variant.in_stock? ? "in_stock" : "out_of_stock"
-        xml["g"].price "#{variant.price} GBP"
-        xml["g"].unit_pricing_measure "#{variant.pac_size}ct"
+  def generate_product_item(xml, product)
+    xml.item do
+      # Required fields
+      xml["g"].id product.sku
+      xml["g"].title optimized_title(product)
+      xml["g"].description optimized_description(product)
+      xml["g"].link Rails.application.routes.url_helpers.product_url(product)
+      xml["g"].image_link product_image_url(product)
+      xml["g"].availability product.in_stock? ? "in_stock" : "out_of_stock"
+      xml["g"].price "#{product.price} GBP"
+      xml["g"].unit_pricing_measure "#{product.pac_size}ct" if product.pac_size.present?
 
-        # Category
-        xml["g"].product_type product.category.name if product.category
+      # Category
+      xml["g"].product_type product.category.name if product.category
 
-        # Brand (you might want to add this to your product model)
-        xml["g"].brand "Afida"
+      # Brand
+      xml["g"].brand "Afida"
 
-        # Product identifiers
-        xml["g"].gtin variant.gtin if variant.gtin.present?
-        xml["g"].mpn variant.sku
+      # Product identifiers
+      xml["g"].gtin product.gtin if product.gtin.present?
+      xml["g"].mpn product.sku
 
-        # Condition
-        xml["g"].condition "new"
+      # Condition
+      xml["g"].condition "new"
 
-        # Variant attributes
-        if product.active_variants.count > 1
-          xml["g"].item_group_id generate_item_group_id(product)
+      # Item group for products in the same family
+      if product.product_family.present?
+        xml["g"].item_group_id generate_item_group_id(product)
 
-          # Add size if present
-          if variant.volume_in_ml.present?
-            xml["g"].size "#{variant.volume_in_ml}ml"
-          elsif variant.name.match(/(\d+["']|\d+\s*inch)/i)
-            xml["g"].size variant.name
-          elsif variant.pac_size.present?
-            xml["g"].size "Pack of #{variant.pac_size}"
-          end
+        # Add size if present
+        if product.volume_in_ml.present?
+          xml["g"].size "#{product.volume_in_ml}ml"
+        elsif product.size_value.present?
+          xml["g"].size product.size_value
+        elsif product.pac_size.present?
+          xml["g"].size "Pack of #{product.pac_size}"
         end
+      end
 
-        # Color stays with product, not variant
-        xml["g"].color product.colour if product.colour.present?
+      # Color
+      xml["g"].color product.colour_value if product.colour_value.present?
 
-        # Material
-        xml["g"].material product.material if product.material.present?
+      # Material
+      xml["g"].material product.material_value if product.material_value.present?
 
-        # Custom labels for bid optimization
-        xml["g"].custom_label_0 product.profit_margin if product.profit_margin.present?
-        xml["g"].custom_label_1 product.best_seller ? "yes" : "no"
-        xml["g"].custom_label_2 product.seasonal_type || "year_round"
-        xml["g"].custom_label_3 product.category.slug if product.category # category for grouping
-        xml["g"].custom_label_4 product.b2b_priority if product.b2b_priority.present?
+      # Custom labels for bid optimization
+      xml["g"].custom_label_1 product.best_seller ? "yes" : "no"
+      xml["g"].custom_label_3 product.category.slug if product.category # category for grouping
+      xml["g"].custom_label_4 product.b2b_priority if product.b2b_priority.present?
 
-        # Shipping (you'll need to configure this)
-        xml["g"].shipping do
-          xml["g"].country "GB"
-          xml["g"].service "Standard"
-          xml["g"].price "5.00 GBP"
-        end
+      # Shipping
+      xml["g"].shipping do
+        xml["g"].country "GB"
+        xml["g"].service "Standard"
+        xml["g"].price "5.00 GBP"
       end
     end
   end
 
-  def optimized_title(product, variant)
+  def optimized_title(product)
     parts = []
 
     # Brand (always first)
     parts << "Afida"
 
-    # Product type and name
+    # Product name
     parts << product.name
 
     # Size/volume
-    if variant.volume_in_ml.present?
-      parts << "#{variant.volume_in_ml}ml"
-    elsif variant.diameter_in_mm.present?
-      parts << "#{variant.diameter_in_mm}mm"
-    elsif variant.width_in_mm.present? && variant.height_in_mm.present?
-      parts << "#{variant.width_in_mm}x#{variant.height_in_mm}mm"
-    elsif variant.name != "Standard"
-      parts << variant.name
+    if product.volume_in_ml.present?
+      parts << "#{product.volume_in_ml}ml"
+    elsif product.diameter_in_mm.present?
+      parts << "#{product.diameter_in_mm}mm"
+    elsif product.width_in_mm.present? && product.height_in_mm.present?
+      parts << "#{product.width_in_mm}x#{product.height_in_mm}mm"
+    elsif product.size_value.present?
+      parts << product.size_value
     end
 
     # Material
-    parts << product.material if product.material.present?
+    parts << product.material_value if product.material_value.present?
 
     # Eco feature (compostable, biodegradable, etc)
     description_text = product.description_detailed_with_fallback
@@ -118,19 +114,19 @@ class GoogleMerchantFeedGenerator
     end
 
     # Pack size
-    parts << "#{variant.pac_size} Pack" if variant.pac_size.present?
+    parts << "#{product.pac_size} Pack" if product.pac_size.present?
 
     # Join and truncate to 150 chars
     title = parts.join(" ")
     title.length > 150 ? title[0..146] + "..." : title
   end
 
-  def optimized_description(product, variant)
+  def optimized_description(product)
     # First 160 chars are critical for ads
     intro = "Afida #{product.name} are perfect for eco-conscious cafes and catering businesses."
 
-    material_info = if product.material.present?
-      " Made from #{product.material},"
+    material_info = if product.material_value.present?
+      " Made from #{product.material_value},"
     else
       ""
     end
@@ -152,12 +148,18 @@ class GoogleMerchantFeedGenerator
   end
 
   def generate_item_group_id(product)
-    # Use base_sku if available, otherwise use product id
-    product.base_sku || "PROD-#{product.id}"
+    # Use product family slug or base_sku if available
+    if product.product_family.present?
+      "FAMILY-#{product.product_family.id}"
+    elsif product.base_sku.present?
+      product.base_sku
+    else
+      "PROD-#{product.id}"
+    end
   end
 
-  def variant_image_url(variant, product)
-    image = variant.product_photo.attached? ? variant.product_photo : product.product_photo
+  def product_image_url(product)
+    image = product.product_photo.attached? ? product.product_photo : product.lifestyle_photo
     return "" unless image&.attached?
 
     Rails.application.routes.url_helpers.url_for(image)

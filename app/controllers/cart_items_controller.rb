@@ -47,14 +47,14 @@ class CartItemsController < ApplicationController
 
   # DELETE /cart/cart_items/:id
   def destroy
-    @variant = @cart_item.product_variant
-    product_name = @variant.display_name
+    @product = @cart_item.product
+    product_name = @product.display_name
     # Capture data for GA4 tracking before destroying
     @removed_quantity = @cart_item.quantity
     @removed_value = @cart_item.subtotal_amount
     # Use the item's own state to determine if it's a sample (more reliable than referer/params)
     is_sample_removal = @cart_item.sample?
-    @category = @variant.product.category if is_sample_removal
+    @category = @product.category if is_sample_removal
     @cart_item.destroy
 
     respond_to do |format|
@@ -99,13 +99,6 @@ class CartItemsController < ApplicationController
                     status: :unprocessable_entity
     end
 
-    # For configured products, use the first variant as a placeholder
-    product_variant = product.active_variants.first
-    unless product_variant
-      return render json: { error: "Product has no available variants" },
-                    status: :unprocessable_entity
-    end
-
     # Calculate unit price and actual quantity from configuration
     unless params[:calculated_price].present?
       return render json: { error: "Calculated price is required" },
@@ -117,7 +110,7 @@ class CartItemsController < ApplicationController
     unit_price = total_price / quantity
 
     @cart_item = @cart.cart_items.build(
-      product_variant: product_variant,
+      product: product,
       quantity: quantity,  # Actual quantity from configuration
       price: unit_price,   # Unit price (so SUM(price * quantity) works)
       configuration: params[:configuration],
@@ -144,11 +137,11 @@ class CartItemsController < ApplicationController
   end
 
   def create_sample_cart_item
-    # Find variant ensuring it's active and sample-eligible
-    @variant = ProductVariant.active.sample_eligible.find_by(id: sample_params)
+    # Find product ensuring it's active and sample-eligible
+    @product = Product.active.sample_eligible.find_by(id: sample_params)
 
-    unless @variant
-      return respond_with_sample_error("This variant is not available as a sample")
+    unless @product
+      return respond_with_sample_error("This product is not available as a sample")
     end
 
     # Check sample limit
@@ -157,12 +150,12 @@ class CartItemsController < ApplicationController
     end
 
     # Check if sample already in cart (allow regular item to coexist)
-    if @cart.cart_items.samples.exists?(product_variant: @variant)
+    if @cart.cart_items.samples.exists?(product: @product)
       return respond_with_sample_error("This sample is already in your cart")
     end
 
     @cart_item = @cart.cart_items.build(
-      product_variant: @variant,
+      product: @product,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -171,7 +164,7 @@ class CartItemsController < ApplicationController
     if @cart_item.save
       @sample_count = @cart.sample_count
       @at_limit = @cart.at_sample_limit?
-      @category = @variant.product.category
+      @category = @product.category
       @category_selected_count = @cart.sample_count_for_category(@category)
 
       respond_to do |format|
@@ -185,7 +178,7 @@ class CartItemsController < ApplicationController
 
   def respond_with_sample_error(message)
     @error_message = message
-    @in_cart = @variant && @cart.cart_items.exists?(product_variant: @variant)
+    @in_cart = @product && @cart.cart_items.exists?(product: @product)
     @at_limit = @cart.at_sample_limit?
 
     respond_to do |format|
@@ -195,26 +188,26 @@ class CartItemsController < ApplicationController
   end
 
   def create_standard_cart_item
-    # Existing logic for standard products
-    product_variant = ProductVariant.find_by!(sku: cart_item_params[:variant_sku])
+    # Find product by SKU
+    product = Product.find_by!(sku: cart_item_params[:sku])
 
     # Wrap in transaction to ensure sample removal and item creation are atomic
     # If save fails, sample won't be lost
     ActiveRecord::Base.transaction do
-      # If sample exists for this variant, remove it (regular item replaces sample)
-      sample_items = @cart.cart_items.samples.where(product_variant: product_variant)
+      # If sample exists for this product, remove it (regular item replaces sample)
+      sample_items = @cart.cart_items.samples.where(product: product)
       @sample_replaced = sample_items.exists?
       sample_items.destroy_all
 
-      # Find existing non-sample cart item for this variant
-      @cart_item = @cart.cart_items.non_samples.find_by(product_variant: product_variant)
+      # Find existing non-sample cart item for this product
+      @cart_item = @cart.cart_items.non_samples.find_by(product: product)
 
       # If no regular item exists, create a new one
-      @cart_item ||= @cart.cart_items.build(product_variant: product_variant)
+      @cart_item ||= @cart.cart_items.build(product: product)
 
       if @cart_item.new_record?
         @cart_item.quantity = cart_item_params[:quantity].to_i || 1
-        @cart_item.price = product_variant.price
+        @cart_item.price = product.price
       else
         @cart_item.quantity += (cart_item_params[:quantity].to_i || 1)
       end
@@ -233,9 +226,9 @@ class CartItemsController < ApplicationController
       # Note: Modal clearing handled by quick_add_modal_controller.js on turbo:submit-end
       format.html do
         notice = if @sample_replaced
-          "#{product_variant.display_name} added to cart (sample removed)."
+          "#{product.display_name} added to cart (sample removed)."
         else
-          "#{product_variant.display_name} added to cart."
+          "#{product.display_name} added to cart."
         end
         redirect_to cart_path, notice: notice
       end
@@ -245,15 +238,15 @@ class CartItemsController < ApplicationController
     @sample_replaced = false
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_back fallback_location: product_path(product_variant.product), alert: "Could not add item to cart: #{@cart_item.errors.full_messages.join(', ')}" }
+      format.html { redirect_back fallback_location: product_path(product), alert: "Could not add item to cart: #{@cart_item.errors.full_messages.join(', ')}" }
     end
   end
 
   def cart_item_params
-    params.expect(cart_item: [ :variant_sku, :quantity ])
+    params.expect(cart_item: [ :sku, :quantity ])
   end
 
   def sample_params
-    params.expect(:product_variant_id)
+    params.expect(:product_id)
   end
 end

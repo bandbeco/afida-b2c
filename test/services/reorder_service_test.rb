@@ -11,16 +11,16 @@ class ReorderServiceTest < ActiveSupport::TestCase
     @cart = Cart.create!(user: @user)
 
     # Create some active product variants for testing
-    @active_variant = ProductVariant.create!(
-      product: products(:one),
+    @active_variant = Product.create!(
+      category: categories(:cups),
       name: "Reorder Test Active",
       sku: "REORDER-ACTIVE-1",
       price: 16.00,
       active: true
     )
 
-    @inactive_variant = ProductVariant.create!(
-      product: products(:one),
+    @inactive_variant = Product.create!(
+      category: categories(:cups),
       name: "Reorder Test Inactive",
       sku: "REORDER-INACTIVE-1",
       price: 16.00,
@@ -32,8 +32,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
   test "adds all available items from order to cart" do
     # Create order with available items
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -51,8 +50,8 @@ class ReorderServiceTest < ActiveSupport::TestCase
   end
 
   test "returns added_count for multiple items" do
-    variant2 = ProductVariant.create!(
-      product: products(:one),
+    variant2 = Product.create!(
+      category: categories(:cups),
       name: "Reorder Test Second",
       sku: "REORDER-SECOND-1",
       price: 20.00,
@@ -60,8 +59,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
     )
 
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -69,8 +67,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
       line_total: @active_variant.price
     )
     @order.order_items.create!(
-      product_variant: variant2,
-      product: variant2.product,
+      product: variant2,
       product_name: variant2.name,
       product_sku: variant2.sku,
       price: variant2.price,
@@ -88,8 +85,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
   # Partial success scenarios
   test "skips unavailable items and adds available ones" do
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -97,8 +93,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
       line_total: @active_variant.price
     )
     @order.order_items.create!(
-      product_variant: @inactive_variant,
-      product: @inactive_variant.product,
+      product: @inactive_variant,
       product_name: @inactive_variant.name,
       product_sku: @inactive_variant.sku,
       price: @inactive_variant.price,
@@ -117,8 +112,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
 
   test "skipped_items includes reason for unavailability" do
     @order.order_items.create!(
-      product_variant: @inactive_variant,
-      product: @inactive_variant.product,
+      product: @inactive_variant,
       product_name: @inactive_variant.name,
       product_sku: @inactive_variant.sku,
       price: @inactive_variant.price,
@@ -136,8 +130,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
   # Failure scenarios
   test "returns failure when all items are unavailable" do
     @order.order_items.create!(
-      product_variant: @inactive_variant,
-      product: @inactive_variant.product,
+      product: @inactive_variant,
       product_name: @inactive_variant.name,
       product_sku: @inactive_variant.sku,
       price: @inactive_variant.price,
@@ -166,14 +159,13 @@ class ReorderServiceTest < ActiveSupport::TestCase
   test "merges with existing cart items by updating quantity" do
     # Pre-existing item in cart
     @cart.cart_items.create!(
-      product_variant: @active_variant,
+      product: @active_variant,
       price: @active_variant.price,
       quantity: 1
     )
 
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -191,8 +183,8 @@ class ReorderServiceTest < ActiveSupport::TestCase
   end
 
   test "adds new items without affecting existing different items" do
-    other_variant = ProductVariant.create!(
-      product: products(:one),
+    other_variant = Product.create!(
+      category: categories(:cups),
       name: "Other Item",
       sku: "OTHER-ITEM-1",
       price: 12.00,
@@ -201,14 +193,13 @@ class ReorderServiceTest < ActiveSupport::TestCase
 
     # Pre-existing different item in cart
     @cart.cart_items.create!(
-      product_variant: other_variant,
+      product: other_variant,
       price: other_variant.price,
       quantity: 5
     )
 
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -221,32 +212,26 @@ class ReorderServiceTest < ActiveSupport::TestCase
     assert result.success?
     @cart.reload
     assert_equal 2, @cart.cart_items.count
-    assert_equal 5, @cart.cart_items.find_by(product_variant: other_variant).quantity
-    assert_equal 2, @cart.cart_items.find_by(product_variant: @active_variant).quantity
+    assert_equal 5, @cart.cart_items.find_by(product: other_variant).quantity
+    assert_equal 2, @cart.cart_items.find_by(product: @active_variant).quantity
   end
 
   # Edge cases
   test "handles inactive products gracefully" do
-    # Create order item where the product variant's product was deactivated
+    # Create an inactive product
     inactive_product = Product.create!(
       name: "Inactive Product for Reorder",
       slug: "inactive-product-reorder",
       category: categories(:one),
-      active: false
-    )
-    variant_with_inactive_product = ProductVariant.create!(
-      product: inactive_product,
-      name: "Variant of Inactive Product",
-      sku: "INACTIVE-PROD-VAR",
+      sku: "INACTIVE-PROD-SKU",
       price: 10.00,
-      active: true
+      active: false
     )
 
     @order.order_items.create!(
-      product_variant: variant_with_inactive_product,
       product: inactive_product,
       product_name: "Inactive Product",
-      product_sku: "INACTIVE-PROD-VAR",
+      product_sku: inactive_product.sku,
       price: 10.00,
       quantity: 1,
       line_total: 10.00
@@ -261,8 +246,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
   test "skips configured/branded items" do
     # Configured items have custom configurations and shouldn't be reordered
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -278,8 +262,8 @@ class ReorderServiceTest < ActiveSupport::TestCase
   end
 
   test "skips sample items from original order" do
-    sample_variant = ProductVariant.create!(
-      product: products(:one),
+    sample_variant = Product.create!(
+      category: categories(:cups),
       name: "Sample Product",
       sku: "SAMPLE-REORDER-1",
       price: 10.00,
@@ -288,8 +272,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
     )
 
     @order.order_items.create!(
-      product_variant: sample_variant,
-      product: sample_variant.product,
+      product: sample_variant,
       product_name: sample_variant.name,
       product_sku: sample_variant.sku,
       price: 0,  # Samples have 0 price
@@ -309,8 +292,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
   test "uses current variant price not historical order price" do
     # Price at order time was 16.00
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: 16.00,
@@ -330,8 +312,8 @@ class ReorderServiceTest < ActiveSupport::TestCase
 
   # Error handling
   test "handles cart item validation errors gracefully and continues with remaining items" do
-    second_variant = ProductVariant.create!(
-      product: products(:one),
+    second_variant = Product.create!(
+      category: categories(:cups),
       name: "Second Variant",
       sku: "SECOND-VARIANT-1",
       price: 15.00,
@@ -340,8 +322,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
 
     # First item: quantity exceeds max (30000) - will fail validation
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,
@@ -351,8 +332,7 @@ class ReorderServiceTest < ActiveSupport::TestCase
 
     # Second item: valid quantity - should succeed
     @order.order_items.create!(
-      product_variant: second_variant,
-      product: second_variant.product,
+      product: second_variant,
       product_name: second_variant.name,
       product_sku: second_variant.sku,
       price: second_variant.price,
@@ -374,14 +354,13 @@ class ReorderServiceTest < ActiveSupport::TestCase
 
     # Cart should have the valid item
     assert_equal 1, @cart.reload.cart_items.count
-    assert_equal second_variant, @cart.cart_items.first.product_variant
+    assert_equal second_variant, @cart.cart_items.first.product
   end
 
   # Result object interface
   test "result object has expected interface" do
     @order.order_items.create!(
-      product_variant: @active_variant,
-      product: @active_variant.product,
+      product: @active_variant,
       product_name: @active_variant.name,
       product_sku: @active_variant.sku,
       price: @active_variant.price,

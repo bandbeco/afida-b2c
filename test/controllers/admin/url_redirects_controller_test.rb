@@ -155,19 +155,14 @@ class Admin::UrlRedirectsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  # T059: Test default sorting (by product and variant)
+  # T059: Test default sorting (by product name)
   test "should sort by product name then variant name by default" do
-    # Create redirects with different products and variants
-    product_a = Product.create!(name: "AAA Product", slug: "aaa-product", category: categories(:one))
-    product_z = Product.create!(name: "ZZZ Product", slug: "zzz-product", category: categories(:one))
-
-    variant_a1 = product_a.variants.create!(name: "AAA Variant", sku: "AAA-V1", price: 10)
-    variant_a2 = product_a.variants.create!(name: "ZZZ Variant", sku: "AAA-V2", price: 10)
-    variant_z1 = product_z.variants.create!(name: "Variant", sku: "ZZZ-V1", price: 10)
+    # Create products (Products are now the main sellable entity)
+    product_a = Product.create!(name: "AAA Product", slug: "aaa-product", sku: "AAA-P1", price: 10, category: categories(:one))
+    product_z = Product.create!(name: "ZZZ Product", slug: "zzz-product", sku: "ZZZ-P1", price: 10, category: categories(:one))
 
     redirect1 = UrlRedirect.create!(source_path: "/product/test-1", target_slug: product_z.slug, variant_params: {})
-    redirect2 = UrlRedirect.create!(source_path: "/product/test-2", target_slug: product_a.slug, variant_params: variant_a2.option_values_hash)
-    redirect3 = UrlRedirect.create!(source_path: "/product/test-3", target_slug: product_a.slug, variant_params: variant_a1.option_values_hash)
+    redirect2 = UrlRedirect.create!(source_path: "/product/test-2", target_slug: product_a.slug, variant_params: {})
 
     get admin_url_redirects_url, headers: @headers
     assert_response :success

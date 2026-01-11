@@ -46,7 +46,7 @@ class Cart < ApplicationRecord
   # Uses Ruby-level calculation to leverage CartItem#subtotal_amount logic
   # Memoized to prevent repeated calculations within same request
   def subtotal_amount
-    @subtotal_amount ||= cart_items.includes(:product_variant).sum(&:subtotal_amount)
+    @subtotal_amount ||= cart_items.includes(:product).sum(&:subtotal_amount)
   end
 
   # Calculate VAT at UK rate (20%)
@@ -72,8 +72,8 @@ class Cart < ApplicationRecord
     @items_count = nil
     @line_items_count = nil
     @subtotal_amount = nil
-    @sample_variant_ids = nil
-    @regular_variant_ids = nil
+    @sample_product_ids = nil
+    @regular_product_ids = nil
     super
   end
 
@@ -90,19 +90,19 @@ class Cart < ApplicationRecord
     sample_items.count
   end
 
-  # Returns variant IDs of samples in cart (memoized to prevent N+1)
-  def sample_variant_ids
-    @sample_variant_ids ||= sample_items.pluck(:product_variant_id)
+  # Returns product IDs of samples in cart (memoized to prevent N+1)
+  def sample_product_ids
+    @sample_product_ids ||= sample_items.pluck(:product_id)
   end
 
-  # Returns variant IDs of regular (non-sample) items in cart (memoized)
-  def regular_variant_ids
-    @regular_variant_ids ||= cart_items.non_samples.pluck(:product_variant_id)
+  # Returns product IDs of regular (non-sample) items in cart (memoized)
+  def regular_product_ids
+    @regular_product_ids ||= cart_items.non_samples.pluck(:product_id)
   end
 
   # Returns count of samples in a specific category
   def sample_count_for_category(category)
-    sample_items.joins(product_variant: :product)
+    sample_items.joins(:product)
                 .where(products: { category_id: category.id })
                 .count
   end

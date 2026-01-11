@@ -3,11 +3,10 @@
 <%
   selected_count ||= 0
 
-  # Count sample-eligible variants in this category
-  sample_count_in_category = category.products.joins(:variants)
-    .where(active: true)
-    .where(product_variants: { sample_eligible: true, active: true })
-    .count("DISTINCT product_variants.id")
+  # Count sample-eligible products in this category
+  sample_count_in_category = category.products
+    .where(sample_eligible: true, active: true)
+    .count
 %>
 
 <div id="<%= dom_id(category, :sample_header) %>" class="flex items-center gap-4">

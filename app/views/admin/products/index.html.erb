@@ -22,7 +22,7 @@
     <thead>
       <tr>
         <th class="font-semibold">Name</th>
-        <th class="font-semibold">Variants</th>
+        <th class="font-semibold">SKU</th>
         <th class="font-semibold">Active</th>
         <th class="font-semibold">Featured</th>
         <th class="font-semibold">Sample</th>
@@ -36,11 +36,7 @@
             <%= link_to product.name, product_path(product), class: "link" %>
           </td>
           <td>
-            <ul>
-              <% product.variants.each do |variant| %>
-                <li><%= link_to variant.name, edit_admin_product_variant_path(variant), class: "link" %></li>
-              <% end %>
-            </ul>
+            <span class="font-mono text-sm"><%= product.sku %></span>
           </td>
           <td class="text-center"><%= product.active ? "✅" : "❌" %></td>
           <td class="text-center"><%= product.featured ? "✅" : "❌" %></td>

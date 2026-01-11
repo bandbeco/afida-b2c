@@ -2,7 +2,7 @@ require "test_helper"
 
 class CartsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
   end
 
   # GET /cart
@@ -62,8 +62,8 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     cart = Cart.find(session[:cart_id])
 
     # Add a standard product variant (not consolidated)
-    variant = product_variants(:single_wall_8oz_white)
-    cart.cart_items.create!(product_variant: variant, quantity: 1, price: variant.price)
+    variant = products(:single_wall_8oz_white)
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
 
     get cart_url
     assert_response :success
@@ -77,8 +77,8 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     cart = Cart.find(session[:cart_id])
 
     # Add a consolidated product variant (wooden cutlery with material option)
-    variant = product_variants(:wooden_fork)
-    cart.cart_items.create!(product_variant: variant, quantity: 1, price: variant.price)
+    variant = products(:wooden_fork)
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
 
     get cart_url
     assert_response :success
@@ -91,11 +91,11 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     cart = Cart.find(session[:cart_id])
 
     # Add two different consolidated product variants
-    birch_fork = product_variants(:wooden_fork)
-    bamboo_knife = product_variants(:bamboo_knife)
+    birch_fork = products(:wooden_fork)
+    bamboo_knife = products(:bamboo_knife)
 
-    cart.cart_items.create!(product_variant: birch_fork, quantity: 1, price: birch_fork.price)
-    cart.cart_items.create!(product_variant: bamboo_knife, quantity: 1, price: bamboo_knife.price)
+    cart.cart_items.create!(product: birch_fork, quantity: 1, price: birch_fork.price)
+    cart.cart_items.create!(product: bamboo_knife, quantity: 1, price: bamboo_knife.price)
 
     get cart_url
     assert_response :success

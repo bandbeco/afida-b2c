@@ -4,50 +4,47 @@ class PagesController < ApplicationController
   def home
     @featured_products = Product.featured
                                 .with_attached_product_photo
-                                .includes(:variants)
                                 .limit(8)
-    @featured_straw_product = Product.standard.find_by(slug: "bio-fibre-straws")
+    @featured_straw_product = Product.catalog_products.find_by(slug: "bio-fibre-straws")
     @categories = Category.with_attached_image.all
     @client_logos = client_logos
   end
 
   def shop
-    # Shop page now displays individual variants instead of products
-    @variants = ProductVariant
+    # Shop page displays products (previously variants)
+    @products = Product
       .active
-      .joins(:product)
-      .where(products: { active: true, product_type: :standard })
-      .includes(product: :category, product_photo_attachment: :blob)
+      .catalog_products
+      .includes(:category, product_photo_attachment: :blob)
 
-    # Get categories with their variant counts
-    category_variant_counts = @variants
-      .joins(product: :category)
-      .group("categories.id")
+    # Get categories with their product counts
+    category_product_counts = @products
+      .group(:category_id)
       .count
 
-    @categories = Category.where(id: category_variant_counts.keys).order(:position)
-    @category_variant_counts = category_variant_counts
+    @categories = Category.where(id: category_product_counts.keys).order(:position)
+    @category_product_counts = category_product_counts
 
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter
     if params[:q].present?
-      @variants = @variants.search_extended(params[:q])
+      @products = @products.search_extended(params[:q])
     else
-      @variants = @variants.in_categories(params[:categories])
+      @products = @products.in_categories(params[:categories])
     end
 
     # Apply option filters (size, colour, material)
-    @variants = @variants.with_size(params[:size]) if params[:size].present?
-    @variants = @variants.with_colour(params[:colour]) if params[:colour].present?
-    @variants = @variants.with_material(params[:material]) if params[:material].present?
+    @products = @products.with_size(params[:size]) if params[:size].present?
+    @products = @products.with_colour(params[:colour]) if params[:colour].present?
+    @products = @products.with_material(params[:material]) if params[:material].present?
 
     # Apply sorting
-    @variants = @variants.sorted(params[:sort])
+    @products = @products.sorted(params[:sort])
 
-    # Get available filter values from remaining variants for dynamic filter options
-    @available_filters = build_available_filters(@variants)
+    # Get available filter values from remaining products for dynamic filter options
+    @available_filters = build_available_filters(@products)
 
-    @pagy, @variants = pagy(@variants)
+    @pagy, @products = pagy(@products)
   end
 
   def branding
@@ -114,18 +111,19 @@ class PagesController < ApplicationController
 
   private
 
-  # Build hash of available filter values from current variant set
+  # Build hash of available filter values from current product set
   # Returns: { size: ["8oz", "12oz"], colour: ["White", "Black"], material: ["Paper", "Bamboo"] }
-  def build_available_filters(variants)
-    # Get all option values for the current variant set
-    variant_ids = variants.reorder(nil).pluck(:id)
+  def build_available_filters(products)
+    # Get all option values for the current product set
+    product_ids = products.reorder(nil).pluck(:id)
 
-    return {} if variant_ids.empty?
+    return {} if product_ids.empty?
 
     # Query option values through the join table
+    # Note: product_variant_id is a legacy column name that references products
     option_data = VariantOptionValue
       .joins(product_option_value: :product_option)
-      .where(product_variant_id: variant_ids)
+      .where(product_variant_id: product_ids)
       .select("product_options.name as option_name, product_option_values.value, product_option_values.label")
       .distinct
 

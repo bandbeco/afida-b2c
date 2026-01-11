@@ -15,11 +15,11 @@
 
   <% if Current.cart && Current.cart.cart_items.any? %>
     <div class="space-y-3 mb-4 flex-1 overflow-y-auto min-h-0 scrollbar-visible">
-      <% Current.cart.cart_items.includes(:product, product_variant: [:product_photo_attachment, :lifestyle_photo_attachment]).each do |cart_item| %>
-        <% if cart_item.product.present? && cart_item.product_variant.present? %>
+      <% Current.cart.cart_items.includes(product: [:product_photo_attachment, :lifestyle_photo_attachment]).each do |cart_item| %>
+        <% if cart_item.product.present? %>
           <div class="flex items-center space-x-3 p-3 bg-base-100 rounded-lg">
             <div class="relative flex-shrink-0">
-              <%= product_photo_tag(cart_item.product_variant.primary_photo, alt: cart_item.product_variant.display_name, class: "w-12 h-12 rounded bg-white object-contain") %>
+              <%= product_photo_tag(cart_item.product.primary_photo, alt: cart_item.product.display_name, class: "w-12 h-12 rounded bg-white object-contain") %>
               <% if cart_item.sample? %>
                 <%= render "shared/sample_badge", size: :sm %>
               <% end %>
@@ -31,7 +31,7 @@
                 <% if cart_item.configured? %>
                   Size: <%= cart_item.configuration["size"] %>
                 <% else %>
-                  <%= cart_item.product_variant.options_display %>
+                  <%= cart_item.product.options_display %>
                 <% end %>
               </p>
               <div class="flex justify-between items-center mt-1">

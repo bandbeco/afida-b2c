@@ -6,13 +6,13 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   setup do
     @user = users(:one)
     @product = products(:one)
-    @product_variant = product_variants(:one)
+    @product = products(:one)
     @schedule = reorder_schedules(:active_monthly)
     @schedule_item = reorder_schedule_items(:active_monthly_item_one)
 
     # Ensure product and variant are active with consistent test price
     @product.update!(active: true)
-    @product_variant.update!(active: true, price: 10.00)
+    @product.update!(active: true, price: 10.00)
 
     # Update schedule item to use consistent test price
     @schedule_item.update!(price: 10.00)
@@ -41,7 +41,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
 
     assert_equal 1, snapshot["items"].count
     item = snapshot["items"].first
-    assert_equal @product_variant.id, item["product_variant_id"]
+    assert_equal @product.id, item["product_id"]
     assert_equal @product.name, item["product_name"]
     assert_equal 2, item["quantity"]
     assert_equal true, item["available"]
@@ -78,7 +78,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
 
   test "build has free shipping for orders at or above threshold" do
     # Set price high enough to exceed threshold
-    @product_variant.update!(price: 60.00)
+    @product.update!(price: 60.00)
     @schedule_item.update!(price: 60.00)
 
     snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
@@ -99,7 +99,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   end
 
   test "build marks inactive variant as unavailable" do
-    @product_variant.update!(active: false)
+    @product.update!(active: false)
 
     snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
 
@@ -107,7 +107,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal 1, snapshot["unavailable_items"].count
 
     unavailable = snapshot["unavailable_items"].first
-    assert_equal @product_variant.id, unavailable["product_variant_id"]
+    assert_equal @product.id, unavailable["product_id"]
     assert_includes unavailable["reason"], "no longer available"
   end
 
@@ -121,14 +121,14 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal 1, snapshot["unavailable_items"].count
 
     unavailable = snapshot["unavailable_items"].first
-    assert_equal @product_variant.id, unavailable["product_variant_id"]
+    assert_equal @product.id, unavailable["product_id"]
     assert_includes unavailable["reason"], "no longer available"
   end
 
   test "build handles multiple items" do
     # Create second variant
-    second_variant = ProductVariant.create!(
-      product: @product,
+    second_variant = Product.create!(
+      category: categories(:cups),
       sku: "TEST-002",
       name: "Test Variant 2",
       price: 15.00,
@@ -137,7 +137,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
 
     ReorderScheduleItem.create!(
       reorder_schedule: @schedule,
-      product_variant: second_variant,
+      product: second_variant,
       quantity: 3,
       price: 15.00
     )
@@ -154,7 +154,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   # ==========================================================================
 
   test "build_from_items returns hash with required keys" do
-    items = [ { product_variant_id: @product_variant.id, quantity: 2 } ]
+    items = [ { product_id: @product.id, quantity: 2 } ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
@@ -167,20 +167,20 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   end
 
   test "build_from_items creates items from raw params" do
-    items = [ { product_variant_id: @product_variant.id, quantity: 3 } ]
+    items = [ { product_id: @product.id, quantity: 3 } ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
     assert_equal 1, snapshot["items"].count
     item = snapshot["items"].first
-    assert_equal @product_variant.id, item["product_variant_id"]
+    assert_equal @product.id, item["product_id"]
     assert_equal 3, item["quantity"]
     assert_equal "30.00", item["line_total"] # 10 * 3
   end
 
   test "build_from_items skips inactive variants" do
-    @product_variant.update!(active: false)
-    items = [ { product_variant_id: @product_variant.id, quantity: 2 } ]
+    @product.update!(active: false)
+    items = [ { product_id: @product.id, quantity: 2 } ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
@@ -190,7 +190,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
 
   test "build_from_items skips inactive products" do
     @product.update!(active: false)
-    items = [ { product_variant_id: @product_variant.id, quantity: 2 } ]
+    items = [ { product_id: @product.id, quantity: 2 } ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
@@ -198,7 +198,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   end
 
   test "build_from_items skips non-existent variants" do
-    items = [ { product_variant_id: 999999, quantity: 2 } ]
+    items = [ { product_id: 999999, quantity: 2 } ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
@@ -206,8 +206,8 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   end
 
   test "build_from_items handles multiple items" do
-    second_variant = ProductVariant.create!(
-      product: @product,
+    second_variant = Product.create!(
+      category: categories(:cups),
       sku: "TEST-003",
       name: "Test Variant 3",
       price: 25.00,
@@ -215,8 +215,8 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     )
 
     items = [
-      { product_variant_id: @product_variant.id, quantity: 2 },
-      { product_variant_id: second_variant.id, quantity: 1 }
+      { product_id: @product.id, quantity: 2 },
+      { product_id: second_variant.id, quantity: 1 }
     ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
@@ -227,7 +227,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
   end
 
   test "build_from_items converts quantity to integer" do
-    items = [ { product_variant_id: @product_variant.id, quantity: "5" } ]
+    items = [ { product_id: @product.id, quantity: "5" } ]
 
     snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
@@ -263,7 +263,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     schedule_snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
 
     # Build from raw items with same data
-    items = [ { product_variant_id: @product_variant.id, quantity: 2 } ]
+    items = [ { product_id: @product.id, quantity: 2 } ]
     items_snapshot = PendingOrderSnapshotBuilder.build_from_items(items)
 
     assert_equal schedule_snapshot["subtotal"], items_snapshot["subtotal"]

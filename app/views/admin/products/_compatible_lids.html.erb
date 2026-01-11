@@ -34,7 +34,7 @@
                 <div class="flex-1">
                   <div class="font-medium"><%= lid.name %></div>
                   <div class="text-sm text-base-content/60">
-                    <%= pluralize(lid.active_variants.count, 'variant') %>
+                    SKU: <%= lid.sku %>
                   </div>
                 </div>
                 <% if current_lid_ids.include?(lid.id) %>

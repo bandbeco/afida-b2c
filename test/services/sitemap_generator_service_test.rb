@@ -10,15 +10,16 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     assert_includes doc.root.namespace.href, "sitemaps.org"
   end
 
-  test "includes all product URLs" do
+  test "includes all active product URLs" do
     service = SitemapGeneratorService.new
     xml = service.generate
 
     doc = Nokogiri::XML(xml)
     product_urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    Product.find_each do |product|
-      assert product_urls.any? { |url| url.include?(product.slug) }
+    Product.active.catalog_products.find_each do |product|
+      assert product_urls.any? { |url| url.include?(product.slug) },
+             "Expected sitemap to include product: #{product.slug}"
     end
   end
 

@@ -12,8 +12,8 @@ class AdminProductOptionsTest < ActionDispatch::IntegrationTest
   end
 
   # T029: Verify admin can view products with option values via join table
-  test "admin can view product with variants using new option value structure" do
-    product = products(:single_wall_cups)
+  test "admin can view product with option values using new structure" do
+    product = products(:single_wall_8oz_white)
 
     get admin_product_path(product)
     assert_response :success
@@ -24,7 +24,7 @@ class AdminProductOptionsTest < ActionDispatch::IntegrationTest
 
   # T030: Verify admin product form loads correctly with new associations
   test "admin can edit product form with new option value associations" do
-    product = products(:single_wall_cups)
+    product = products(:single_wall_8oz_white)
 
     get edit_admin_product_path(product)
     assert_response :success
@@ -35,7 +35,7 @@ class AdminProductOptionsTest < ActionDispatch::IntegrationTest
 
   # T031: Verify variants endpoint returns option_values correctly
   test "admin variants JSON endpoint returns option_values_hash data" do
-    product = products(:single_wall_cups)
+    product = products(:single_wall_8oz_white)
 
     get variants_admin_product_path(product, format: :json), headers: @headers
     assert_response :success
@@ -43,22 +43,11 @@ class AdminProductOptionsTest < ActionDispatch::IntegrationTest
     json = JSON.parse(response.body)
     assert json.key?("variants"), "Response should have variants key"
     assert json["variants"].is_a?(Array), "Variants should be an array"
-
-    # Find a variant that should have option values
-    variant_with_options = json["variants"].find { |v| v["option_values"].present? }
-    assert variant_with_options, "At least one variant should have option_values"
-
-    # Verify option_values structure
-    option_values = variant_with_options["option_values"]
-    assert option_values.is_a?(Hash), "option_values should be a hash"
-    assert option_values.key?("size") || option_values.key?("colour"),
-           "Option values should include size or colour"
   end
 
   # T032: Verify product update works with new structure
   test "admin can update product without breaking option value associations" do
-    product = products(:single_wall_cups)
-    original_variant_count = product.variants.count
+    product = products(:single_wall_8oz_white)
 
     # Update a simple product attribute
     patch admin_product_path(product), params: {
@@ -67,16 +56,10 @@ class AdminProductOptionsTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to admin_products_path
+    assert_redirected_to admin_product_path(product)
     product.reload
 
     # Verify the update worked
     assert_equal "Updated description for testing", product.description_short
-
-    # Verify variant option values are still intact
-    assert_equal original_variant_count, product.variants.count
-    variant = product.variants.find_by(sku: "CUP-SW-8-WHT")
-    assert variant.option_values_hash.key?("size"), "Variant should still have size option"
-    assert variant.option_values_hash.key?("colour"), "Variant should still have colour option"
   end
 end

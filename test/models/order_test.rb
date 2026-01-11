@@ -146,7 +146,7 @@ class OrderTest < ActiveSupport::TestCase
   test "destroying order destroys order_items" do
     order = Order.create!(@valid_attributes.except(:order_number))
     order.order_items.create!(
-      product_variant: product_variants(:one),
+      product: products(:one),
       product_name: "Test Product",
       product_sku: "TEST123",
       price: 10.0,
@@ -252,8 +252,8 @@ class OrderTest < ActiveSupport::TestCase
   # Sample order tests
   test "with_samples scope returns orders containing sample items" do
     # Create sample-eligible variant
-    sample_variant = ProductVariant.create!(
-      product: products(:one),
+    sample_variant = Product.create!(
+      category: categories(:cups),
       name: "Sample Order Test",
       sku: "SAMPLE-ORDER-TEST-1",
       price: 10.0,
@@ -269,7 +269,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     sample_order.order_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       product_name: "Sample Product",
       product_sku: sample_variant.sku,
       price: 0,
@@ -279,8 +279,8 @@ class OrderTest < ActiveSupport::TestCase
     )
 
     # Create order without sample item
-    regular_variant = ProductVariant.create!(
-      product: products(:one),
+    regular_variant = Product.create!(
+      category: categories(:cups),
       name: "Regular Order Test",
       sku: "REGULAR-ORDER-TEST-1",
       price: 20.0,
@@ -295,7 +295,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     regular_order.order_items.create!(
-      product_variant: regular_variant,
+      product: regular_variant,
       product_name: "Regular Product",
       product_sku: regular_variant.sku,
       price: 20.0,
@@ -310,8 +310,8 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "contains_samples? returns true when order has sample items" do
-    sample_variant = ProductVariant.create!(
-      product: products(:one),
+    sample_variant = Product.create!(
+      category: categories(:cups),
       name: "Contains Samples Test",
       sku: "CONTAINS-SAMPLES-TEST-1",
       price: 10.0,
@@ -326,7 +326,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     order.order_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       product_name: "Sample Product",
       product_sku: sample_variant.sku,
       price: 0,
@@ -339,8 +339,8 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "contains_samples? returns false when order has no sample items" do
-    regular_variant = ProductVariant.create!(
-      product: products(:one),
+    regular_variant = Product.create!(
+      category: categories(:cups),
       name: "No Samples Test",
       sku: "REGULAR-SKU-TEST-1",
       price: 20.0,
@@ -355,7 +355,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     order.order_items.create!(
-      product_variant: regular_variant,
+      product: regular_variant,
       product_name: "Regular Product",
       product_sku: regular_variant.sku,
       price: 20.0,
@@ -369,8 +369,8 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "sample_request? returns true for samples-only order" do
-    sample_variant = ProductVariant.create!(
-      product: products(:one),
+    sample_variant = Product.create!(
+      category: categories(:cups),
       name: "Sample Request Test",
       sku: "SAMPLE-REQUEST-TEST-1",
       price: 10.0,
@@ -385,7 +385,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     order.order_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       product_name: "Sample Product",
       product_sku: sample_variant.sku,
       price: 0,
@@ -398,8 +398,8 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "sample_request? returns false for mixed order (samples + paid)" do
-    sample_variant = ProductVariant.create!(
-      product: products(:one),
+    sample_variant = Product.create!(
+      category: categories(:cups),
       name: "Mixed Order Sample",
       sku: "MIXED-ORDER-SAMPLE-1",
       price: 10.0,
@@ -407,8 +407,8 @@ class OrderTest < ActiveSupport::TestCase
       active: true
     )
 
-    regular_variant = ProductVariant.create!(
-      product: products(:one),
+    regular_variant = Product.create!(
+      category: categories(:cups),
       name: "Mixed Order Regular",
       sku: "MIXED-ORDER-REGULAR-1",
       price: 20.0,
@@ -423,7 +423,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     order.order_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       product_name: "Sample Product",
       product_sku: sample_variant.sku,
       price: 0,
@@ -432,7 +432,7 @@ class OrderTest < ActiveSupport::TestCase
       is_sample: true
     )
     order.order_items.create!(
-      product_variant: regular_variant,
+      product: regular_variant,
       product_name: "Regular Product",
       product_sku: regular_variant.sku,
       price: 20.0,
@@ -446,8 +446,8 @@ class OrderTest < ActiveSupport::TestCase
   end
 
   test "sample_request? returns false for regular order" do
-    regular_variant = ProductVariant.create!(
-      product: products(:one),
+    regular_variant = Product.create!(
+      category: categories(:cups),
       name: "Regular Only Test",
       sku: "REGULAR-ONLY-TEST-1",
       price: 20.0,
@@ -462,7 +462,7 @@ class OrderTest < ActiveSupport::TestCase
       )
     )
     order.order_items.create!(
-      product_variant: regular_variant,
+      product: regular_variant,
       product_name: "Regular Product",
       product_sku: regular_variant.sku,
       price: 20.0,

@@ -4,7 +4,7 @@ class ExpirePendingOrdersJobTest < ActiveJob::TestCase
   setup do
     @user = users(:one)
     @user.update!(stripe_customer_id: "cus_test_123")
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
 
     @schedule = ReorderSchedule.create!(
       user: @user,
@@ -133,7 +133,7 @@ class ExpirePendingOrdersJobTest < ActiveJob::TestCase
       items_snapshot: {
         "items" => [
           {
-            "product_variant_id" => @product_variant.id,
+            "product_id" => @product_variant.id,
             "product_name" => "Test Product",
             "variant_name" => "Pack of 500",
             "quantity" => 2,

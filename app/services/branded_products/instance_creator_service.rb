@@ -21,8 +21,7 @@ module BrandedProducts
       validate_params!(name, sku, initial_stock, reorder_price)
 
       ActiveRecord::Base.transaction do
-        product = create_product(name)
-        variant = create_variant(product, sku, initial_stock, reorder_price)
+        product = create_product(name, sku, initial_stock, reorder_price)
         copy_design_to_product(product)
         update_order_status
 
@@ -36,26 +35,18 @@ module BrandedProducts
 
     private
 
-    def create_product(name)
+    def create_product(name, sku, initial_stock, reorder_price)
       Product.create!(
         name: name,
+        sku: sku,
+        price: reorder_price,
+        stock_quantity: initial_stock,
         product_type: "customized_instance",
         organization: @order.organization,
         parent_product: @order_item.product,
         category: @order_item.product.category,
-        configuration_data: @order_item.configuration,
         active: true,
         description_short: "Custom branded product for #{@order.organization.name}"
-      )
-    end
-
-    def create_variant(product, sku, initial_stock, reorder_price)
-      product.variants.create!(
-        name: "Standard",
-        sku: sku,
-        price: reorder_price,
-        stock_quantity: initial_stock,
-        active: true
       )
     end
 

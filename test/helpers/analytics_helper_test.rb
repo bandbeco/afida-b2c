@@ -7,7 +7,6 @@ class AnalyticsHelperTest < ActionView::TestCase
 
   setup do
     @product = products(:one)
-    @variant = product_variants(:one)
     @cart = carts(:one)
     @cart_item = cart_items(:one)
     @order = orders(:one)
@@ -17,24 +16,23 @@ class AnalyticsHelperTest < ActionView::TestCase
   # GA4 Item formatting tests
 
   test "ga4_item returns properly formatted item hash" do
-    item = ga4_item(@variant)
+    item = ga4_item(@product)
 
-    assert_equal @variant.sku, item[:item_id]
+    assert_equal @product.sku, item[:item_id]
     assert_equal @product.name, item[:item_name]
-    assert_equal @variant.name, item[:item_variant]
-    assert_equal @variant.price.to_f, item[:price]
+    assert_equal @product.price.to_f, item[:price]
     assert_equal 1, item[:quantity]
   end
 
   test "ga4_item with custom quantity" do
-    item = ga4_item(@variant, quantity: 5)
+    item = ga4_item(@product, quantity: 5)
     assert_equal 5, item[:quantity]
   end
 
   test "ga4_cart_item returns properly formatted item hash from cart item" do
     item = ga4_cart_item(@cart_item)
 
-    assert_equal @cart_item.product_variant.sku, item[:item_id]
+    assert_equal @cart_item.product.sku, item[:item_id]
     assert_equal @cart_item.product.name, item[:item_name]
     assert_equal @cart_item.quantity, item[:quantity]
   end
@@ -53,8 +51,8 @@ class AnalyticsHelperTest < ActionView::TestCase
     # GTM is disabled in test environment by default
     Rails.application.config.x.gtm_container_id = nil
 
-    assert_equal "", ecommerce_view_item_event(@product, @variant)
-    assert_equal "", ecommerce_add_to_cart_event(@variant, quantity: 1, value: 10.0)
+    assert_equal "", ecommerce_view_item_event(@product)
+    assert_equal "", ecommerce_add_to_cart_event(@product, quantity: 1, value: 10.0)
     assert_equal "", ecommerce_view_cart_event(@cart)
     assert_equal "", ecommerce_begin_checkout_event(@cart)
     assert_equal "", ecommerce_purchase_event(@order)
@@ -65,12 +63,12 @@ class AnalyticsHelperTest < ActionView::TestCase
   test "ecommerce_view_item_event generates valid JavaScript when GTM enabled" do
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
 
-    result = ecommerce_view_item_event(@product, @variant)
+    result = ecommerce_view_item_event(@product)
 
     assert_includes result, "dataLayer.push({ ecommerce: null })"
     assert_includes result, '"event":"view_item"'
     assert_includes result, '"currency":"GBP"'
-    assert_includes result, @variant.sku
+    assert_includes result, @product.sku
 
     Rails.application.config.x.gtm_container_id = nil
   end
@@ -78,7 +76,7 @@ class AnalyticsHelperTest < ActionView::TestCase
   test "ecommerce_add_to_cart_event generates valid JavaScript when GTM enabled" do
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
 
-    result = ecommerce_add_to_cart_event(@variant, quantity: 3, value: 30.0)
+    result = ecommerce_add_to_cart_event(@product, quantity: 3, value: 30.0)
 
     assert_includes result, '"event":"add_to_cart"'
     assert_includes result, '"value":30.0'

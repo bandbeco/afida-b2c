@@ -3,7 +3,7 @@ require "test_helper"
 class CartItemsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @product = products(:one)
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
 
     # Ensure we have a cart
     get cart_url
@@ -15,7 +15,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("CartItem.count", 1) do
       post cart_cart_items_path, params: {
         cart_item: {
-          variant_sku: @product_variant.sku,
+          sku: @product_variant.sku,
           quantity: 2
         }
       }
@@ -29,7 +29,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     # Add item first time
     post cart_cart_items_path, params: {
       cart_item: {
-        variant_sku: @product_variant.sku,
+        sku: @product_variant.sku,
         quantity: 2
       }
     }
@@ -38,25 +38,25 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference("CartItem.count") do
       post cart_cart_items_path, params: {
         cart_item: {
-          variant_sku: @product_variant.sku,
+          sku: @product_variant.sku,
           quantity: 3
         }
       }
     end
 
-    cart_item = @cart.cart_items.find_by(product_variant: @product_variant)
+    cart_item = @cart.cart_items.find_by(product: @product_variant)
     assert_equal 5, cart_item.quantity # 2 + 3
   end
 
   test "should set price from product variant" do
     post cart_cart_items_path, params: {
       cart_item: {
-        variant_sku: @product_variant.sku,
+        sku: @product_variant.sku,
         quantity: 1
       }
     }
 
-    cart_item = @cart.cart_items.find_by(product_variant: @product_variant)
+    cart_item = @cart.cart_items.find_by(product: @product_variant)
     assert_equal @product_variant.price, cart_item.price
   end
 
@@ -66,7 +66,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
       assert_difference("Cart.count", 1) do
         sess.post cart_cart_items_path, params: {
           cart_item: {
-            variant_sku: @product_variant.sku,
+            sku: @product_variant.sku,
             quantity: 1
           }
         }
@@ -77,7 +77,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   # PATCH /cart/cart_items/:id (update)
   test "should update cart item quantity" do
     cart_item = @cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 2,
       price: @product_variant.price
     )
@@ -94,7 +94,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "should remove item when quantity set to zero" do
     cart_item = @cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 2,
       price: @product_variant.price
     )
@@ -111,7 +111,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "should remove item when quantity is negative" do
     cart_item = @cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 2,
       price: @product_variant.price
     )
@@ -135,7 +135,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   test "cannot update another user's cart item" do
     other_cart = Cart.create(user: users(:two))
     other_cart_item = other_cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 1,
       price: @product_variant.price
     )
@@ -155,7 +155,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   # DELETE /cart/cart_items/:id (destroy)
   test "should destroy cart item" do
     cart_item = @cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 2,
       price: @product_variant.price
     )
@@ -170,7 +170,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
   test "destroying cart item shows product name in notice" do
     cart_item = @cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 2,
       price: @product_variant.price
     )
@@ -190,7 +190,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   test "cannot destroy another user's cart item" do
     other_cart = Cart.create(user: users(:two))
     other_cart_item = other_cart.cart_items.create!(
-      product_variant: @product_variant,
+      product: @product_variant,
       quantity: 1,
       price: @product_variant.price
     )
@@ -208,7 +208,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     # Just verify the endpoint works - actual rate limit testing is slow
     post cart_cart_items_path, params: {
       cart_item: {
-        variant_sku: @product_variant.sku,
+        sku: @product_variant.sku,
         quantity: 1
       }
     }
@@ -221,7 +221,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("CartItem.count", 1) do
       post cart_cart_items_path, params: {
         cart_item: {
-          variant_sku: @product_variant.sku,
+          sku: @product_variant.sku,
           quantity: 1
         }
       }
@@ -235,7 +235,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_difference("CartItem.count", 1) do
       post cart_cart_items_path, params: {
         cart_item: {
-          variant_sku: @product_variant.sku,
+          sku: @product_variant.sku,
           quantity: 1
         }
       }
@@ -244,14 +244,14 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     # Item should belong to user's cart
     cart = Cart.find_by(user: user)
     assert_not_nil cart
-    assert cart.cart_items.exists?(product_variant: @product_variant)
+    assert cart.cart_items.exists?(product: @product_variant)
   end
 
   test "cart persists across requests for guest" do
     # Add item
     post cart_cart_items_path, params: {
       cart_item: {
-        variant_sku: @product_variant.sku,
+        sku: @product_variant.sku,
         quantity: 1
       }
     }
@@ -330,7 +330,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_difference "CartItem.count", 1 do
       post cart_cart_items_path, params: {
         cart_item: {
-          variant_sku: product_variants(:single_wall_8oz_white).sku,
+          sku: products(:single_wall_8oz_white).sku,
           quantity: 10
         }
       }
@@ -343,27 +343,27 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
   # Sample Cart Items Tests
   test "adds sample to cart with price zero" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     assert_difference "CartItem.count", 1 do
       post cart_cart_items_path, params: {
-        product_variant_id: sample_variant.id,
+        product_id: sample_variant.id,
         sample: true
       }
     end
 
     cart_item = CartItem.last
-    assert_equal sample_variant, cart_item.product_variant
+    assert_equal sample_variant, cart_item.product
     assert_equal 0, cart_item.price
     assert_equal 1, cart_item.quantity
   end
 
   test "rejects sample request for non-eligible variant" do
-    non_sample_variant = product_variants(:one)
+    non_sample_variant = products(:one)
 
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
-        product_variant_id: non_sample_variant.id,
+        product_id: non_sample_variant.id,
         sample: true
       }
     end
@@ -373,12 +373,12 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "rejects sample when at sample limit" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add 5 samples to reach limit
     Cart::SAMPLE_LIMIT.times do |i|
-      variant = ProductVariant.create!(
-        product: sample_variant.product,
+      variant = Product.create!(
+        category: sample_variant.category,
         name: "Sample Variant #{i}",
         sku: "SAMPLE-#{i}-#{SecureRandom.hex(4)}",
         price: 10.0,
@@ -386,12 +386,12 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
         active: true,
         sample_eligible: true
       )
-      @cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
+      @cart.cart_items.create!(product: variant, quantity: 1, price: 0, is_sample: true)
     end
 
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
-        product_variant_id: sample_variant.id,
+        product_id: sample_variant.id,
         sample: true
       }
     end
@@ -401,18 +401,18 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "rejects duplicate sample in cart" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add sample first time
     post cart_cart_items_path, params: {
-      product_variant_id: sample_variant.id,
+      product_id: sample_variant.id,
       sample: true
     }
 
     # Try to add same sample again
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
-        product_variant_id: sample_variant.id,
+        product_id: sample_variant.id,
         sample: true
       }
     end
@@ -424,7 +424,7 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   test "rejects sample request for non-existent variant" do
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
-        product_variant_id: 999999,
+        product_id: 999999,
         sample: true
       }
     end
@@ -434,12 +434,12 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "rejects sample request for inactive variant" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
     sample_variant.update!(active: false)
 
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
-        product_variant_id: sample_variant.id,
+        product_id: sample_variant.id,
         sample: true
       }
     end
@@ -449,9 +449,9 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "removes sample from cart" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
     cart_item = @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -464,11 +464,11 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
   # Tests for sample/regular item mutual exclusivity
   test "adding regular item removes sample of same variant" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # First add as sample
     @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -479,27 +479,27 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
         cart_item: {
-          variant_sku: sample_variant.sku,
+          sku: sample_variant.sku,
           quantity: 2
         }
       }
     end
 
     # Verify only regular item exists (sample was removed)
-    assert_equal 1, @cart.cart_items.where(product_variant: sample_variant).count
+    assert_equal 1, @cart.cart_items.where(product: sample_variant).count
     assert_equal 0, @cart.cart_items.samples.count
 
-    regular_item = @cart.cart_items.find_by(product_variant: sample_variant)
+    regular_item = @cart.cart_items.find_by(product: sample_variant)
     assert regular_item.price > 0, "Should be a regular item, not a sample"
     assert_equal 2, regular_item.quantity
   end
 
   test "rejects adding sample when regular item of same variant exists" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # First add as regular item
     @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 2,
       price: sample_variant.price,
       is_sample: false
@@ -508,23 +508,23 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     # Then try to add as sample - should be rejected
     assert_no_difference "CartItem.count" do
       post cart_cart_items_path, params: {
-        product_variant_id: sample_variant.id,
+        product_id: sample_variant.id,
         sample: true
       }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
     end
 
     # Verify only regular item exists
-    assert_equal 1, @cart.cart_items.where(product_variant: sample_variant).count
-    regular_item = @cart.cart_items.find_by(product_variant: sample_variant)
+    assert_equal 1, @cart.cart_items.where(product: sample_variant).count
+    regular_item = @cart.cart_items.find_by(product: sample_variant)
     assert regular_item.price > 0, "Should still be the regular item"
   end
 
   test "adding regular item when sample exists preserves quantity" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add sample first
     @cart.cart_items.create!(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -533,14 +533,14 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     # Add regular item with quantity 5
     post cart_cart_items_path, params: {
       cart_item: {
-        variant_sku: sample_variant.sku,
+        sku: sample_variant.sku,
         quantity: 5
       }
     }
 
     # Should have only the regular item with correct quantity
-    assert_equal 1, @cart.cart_items.where(product_variant: sample_variant).count
-    regular_item = @cart.cart_items.find_by(product_variant: sample_variant)
+    assert_equal 1, @cart.cart_items.where(product: sample_variant).count
+    regular_item = @cart.cart_items.find_by(product: sample_variant)
     assert_equal 5, regular_item.quantity
     assert regular_item.price > 0
   end

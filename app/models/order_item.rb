@@ -1,7 +1,6 @@
 class OrderItem < ApplicationRecord
   belongs_to :order
   belongs_to :product, optional: true
-  belongs_to :product_variant, optional: true
 
   has_one_attached :design
 
@@ -22,12 +21,11 @@ class OrderItem < ApplicationRecord
     order_item = new(
       order: order,
       product: cart_item.product,
-      product_variant: cart_item.product_variant,
-      product_name: cart_item.product_variant.display_name,
-      product_sku: cart_item.product_variant.sku,
+      product_name: cart_item.product.display_name,
+      product_sku: cart_item.product.sku,
       quantity: cart_item.quantity,
       price: cart_item.price,  # Store pack price (not unit price) for correct display
-      pac_size: cart_item.product_variant.pac_size,  # Capture pack size for pricing display
+      pac_size: cart_item.product.pac_size,  # Capture pack size for pricing display
       line_total: cart_item.line_total,
       configuration: cart_item.configuration,
       is_sample: cart_item.is_sample
@@ -49,7 +47,7 @@ class OrderItem < ApplicationRecord
   end
 
   def product_display_name
-    product_variant&.name || "Product Unavailable"
+    product&.name || "Product Unavailable"
   end
 
   def product_still_available?
@@ -78,7 +76,7 @@ class OrderItem < ApplicationRecord
 
   # Returns the unit price, calculated from historical order data (pac_size snapshot).
   # This preserves pricing at the time of order, unlike CartItem#unit_price which
-  # delegates to the current product_variant.unit_price for live pricing.
+  # delegates to the current product.unit_price for live pricing.
   # Uses .to_f for safety: ensures float division and returns Infinity instead of
   # crashing if pac_size is somehow 0 (which validation prevents but defensive coding allows).
   def unit_price
@@ -91,11 +89,11 @@ class OrderItem < ApplicationRecord
     self.line_total = subtotal if price.present? && quantity.present?
   end
 
-  # Samples (price = 0) are only allowed for sample-eligible variants
+  # Samples (price = 0) are only allowed for sample-eligible products
   def price_must_be_positive_unless_sample
-    return unless product_variant
+    return unless product
 
-    if price.to_f == 0 && !product_variant.sample_eligible?
+    if price.to_f == 0 && !product.sample_eligible?
       errors.add(:price, "must be greater than 0")
     end
   end

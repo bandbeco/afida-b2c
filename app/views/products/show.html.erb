@@ -1,9 +1,9 @@
 <%#
-  Unified Variant Selector Component
-  T015: Replaces both _standard_product and _consolidated_product partials
+  Product Show Page
+  Phase 1: One page per product (formerly variant)
 
-  Uses: variant_selector_controller.js
-  Data: @options (Hash), @variants_json (Array), @pac_size (Integer)
+  Uses: quantity-selector controller for simple quantity selection
+  Data: @product, @related_products
 %>
 
 <% content_for :title do %>
@@ -19,8 +19,8 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @product.name %>">
   <meta name="twitter:description" content="<%= @product.description_standard_with_fallback %>">
-  <% if @selected_variant&.primary_photo&.attached? %>
-    <meta name="twitter:image" content="<%= polymorphic_url(@selected_variant.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
+  <% if @product&.primary_photo&.attached? %>
+    <meta name="twitter:image" content="<%= polymorphic_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
   <% end %>
 
   <!-- Open Graph meta tags -->
@@ -29,16 +29,14 @@
   <meta property="og:description" content="<%= @product.description_standard_with_fallback %>">
   <meta property="og:url" content="<%= polymorphic_url(@product) %>">
   <meta property="og:site_name" content="Afida">
-  <% if @selected_variant&.primary_photo&.attached? %>
-    <meta property="og:image" itemprop="image" content="<%= polymorphic_url(@selected_variant.primary_photo.variant(resize_to_limit: [800, 600])) %>">
+  <% if @product&.primary_photo&.attached? %>
+    <meta property="og:image" itemprop="image" content="<%= polymorphic_url(@product.primary_photo.variant(resize_to_limit: [800, 600])) %>">
   <% end %>
-  <% if @selected_variant %>
-    <meta property="product:price:amount" content="<%= @selected_variant.price %>">
-    <meta property="product:price:currency" content="GBP">
-  <% end %>
+  <meta property="product:price:amount" content="<%= @product.price %>">
+  <meta property="product:price:currency" content="GBP">
 
   <script type="application/ld+json">
-    <%= raw product_structured_data(@product, @selected_variant) %>
+    <%= raw product_structured_data(@product) %>
   </script>
 
   <script type="application/ld+json">
@@ -51,7 +49,7 @@
 
   <%# GA4 E-commerce: view_item event %>
   <script>
-    <%= ecommerce_view_item_event(@product, @selected_variant) %>
+    <%= ecommerce_view_item_event(@product) %>
   </script>
 <% end %>
 
@@ -59,14 +57,7 @@
   <%= render "shared/breadcrumbs", product: @product %>
 <% end %>
 
-<div class="drawer drawer-end"
-     data-controller="variant-selector"
-     data-variant-selector-variants-value="<%= @variants_json.to_json %>"
-     data-variant-selector-options-value="<%= @options.to_json %>"
-     data-variant-selector-priority-value="<%= PRODUCT_OPTION_PRIORITY.to_json %>"
-     data-variant-selector-pac-size-value="<%= @pac_size %>"
-     data-variant-selector-min-price-value="<%= @min_price.to_f %>">
-
+<div class="drawer drawer-end">
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
 
   <div class="drawer-content">
@@ -77,19 +68,21 @@
         <%# Image Section %>
         <div class="lg:w-1/2 flex-shrink-0">
           <div class="bg-white rounded-lg overflow-hidden">
-            <%= product_photo_tag(@selected_variant&.primary_photo || @product.primary_photo,
+            <%= product_photo_tag(@product.primary_photo,
                                   alt: @product.name,
                                   class: "w-full h-auto object-contain",
                                   variant: { resize_and_pad: [800, 800, { background: [255, 255, 255] }] },
                                   fetchpriority: "high",
                                   width: 800,
-                                  height: 800,
-                                  data: { variant_selector_target: "imageDisplay" }) %>
+                                  height: 800) %>
           </div>
         </div>
 
         <%# Content Section %>
-        <div class="lg:w-1/2 text-center lg:text-left">
+        <div class="lg:w-1/2 text-center lg:text-left"
+             data-controller="quantity-selector"
+             data-quantity-selector-price-value="<%= @product.price.to_f %>"
+             data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>">
 
           <h1 class="text-2xl sm:text-3xl lg:text-4xl">
             <%= @product.name %>
@@ -97,18 +90,27 @@
 
           <%# Price Display %>
           <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mt-3">
-            <p class="" data-variant-selector-target="priceDisplay">
-              from <%= number_to_currency(@min_price) %> / pack
+            <p class="text-xl font-semibold">
+              <% if @product.pac_size && @product.pac_size > 1 %>
+                <%= number_to_currency(@product.price) %> / pack of <%= number_with_delimiter(@product.pac_size) %>
+              <% else %>
+                <%= number_to_currency(@product.price) %>
+              <% end %>
             </p>
           </div>
 
-          <%# Colour & SKU %>
-          <div class="flex items-center justify-center lg:justify-start gap-3 mt-2">
-            <% if @product.colour.present? %>
-              <span class="text-base-content/60 font-medium text-lg"><%= @product.colour %></span>
-            <% end %>
-            <span class="text-sm text-base-content/50 font-mono hidden" data-variant-selector-target="skuDisplay">
-              SKU: <span data-variant-selector-target="skuValue"><%= @selected_variant&.sku %></span>
+          <%# Options Display (for products with option values) %>
+          <% options_display = @product.options_display %>
+          <% if options_display.present? %>
+            <div class="flex items-center justify-center lg:justify-start gap-3 mt-2">
+              <span class="text-base-content/60 font-medium text-lg"><%= options_display %></span>
+            </div>
+          <% end %>
+
+          <%# SKU %>
+          <div class="mt-2">
+            <span class="text-sm text-base-content/50 font-mono">
+              SKU: <%= @product.sku %>
             </span>
           </div>
 
@@ -119,130 +121,58 @@
             </p>
           <% end %>
 
-          <%# === VARIANT SELECTOR ACCORDION === %>
-          <div class="mt-6 space-y-2">
-
-            <%# Option Steps - One per option type %>
-            <% @options.each_with_index do |(option_name, values), index| %>
-              <div class="collapse collapse-arrow bg-base-200 <%= index == 0 ? 'collapse-open' : '' %>"
-                   data-variant-selector-target="step"
-                   data-option-name="<%= option_name %>"
-                   data-step-index="<%= index %>"
-                   data-expanded="<%= index == 0 ? 'true' : 'false' %>">
-
-                <%# Collapse Header - accessible button role with keyboard support %>
-                <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
-                     id="step-<%= index %>-header"
-                     data-variant-selector-target="stepHeader"
-                     data-action="click->variant-selector#toggleStep keydown->variant-selector#handleStepKeydown"
-                     role="button"
-                     tabindex="0"
-                     aria-expanded="<%= index == 0 ? 'true' : 'false' %>"
-                     aria-controls="step-<%= index %>-content">
-
-                  <%# Step Number / Checkmark - grey when pending, Afida green when completed %>
-                  <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
-                        data-variant-selector-target="stepIndicator"
-                        aria-hidden="true">
-                    <%= index + 1 %>
-                  </span>
-
-                  <%# Title with inline selection value %>
-                  <span>Select <%= option_name.titleize.downcase %><span class="hidden" data-variant-selector-target="stepSelection"></span></span>
-                </div>
-
-                <%# Collapse Content %>
-                <div class="collapse-content"
-                     id="step-<%= index %>-content"
-                     data-variant-selector-target="stepContent"
-                     role="region"
-                     aria-labelledby="step-<%= index %>-header">
-                  <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="<%= option_name.titleize %> options">
-                    <% natural_sort_options(values).each do |opt| %>
-                      <button type="button"
-                              class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
-                              data-variant-selector-target="optionButton"
-                              data-option-name="<%= option_name %>"
-                              data-value="<%= opt[:value] %>"
-                              data-action="click->variant-selector#selectOption"
-                              aria-pressed="false">
-                        <%= opt[:label] %>
-                      </button>
-                    <% end %>
-                  </div>
-                </div>
+          <%# Quantity Selector %>
+          <div class="mt-6">
+            <label for="quantity" class="block text-lg font-medium mb-2">Quantity</label>
+            <div class="flex items-center justify-center lg:justify-start gap-4">
+              <div class="join">
+                <button type="button"
+                        class="join-item btn btn-outline"
+                        data-action="click->quantity-selector#decrement"
+                        aria-label="Decrease quantity">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                  </svg>
+                </button>
+                <input type="number"
+                       id="quantity"
+                       name="quantity"
+                       value="1"
+                       min="1"
+                       max="999"
+                       class="join-item input input-bordered w-20 text-center"
+                       data-quantity-selector-target="input"
+                       data-action="change->quantity-selector#updateTotal"
+                       aria-label="Quantity">
+                <button type="button"
+                        class="join-item btn btn-outline"
+                        data-action="click->quantity-selector#increment"
+                        aria-label="Increase quantity">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                  </svg>
+                </button>
               </div>
-            <% end %>
-
-            <%# Quantity Step %>
-            <div class="collapse collapse-arrow bg-base-200"
-                 data-variant-selector-target="quantityStep"
-                 data-step-index="<%= @options.size %>"
-                 data-expanded="false">
-
-              <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
-                   id="step-quantity-header"
-                   data-variant-selector-target="quantityStepHeader"
-                   data-action="click->variant-selector#toggleStep keydown->variant-selector#handleStepKeydown"
-                   role="button"
-                   tabindex="0"
-                   aria-expanded="false"
-                   aria-controls="step-quantity-content">
-
-                <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
-                      data-variant-selector-target="quantityStepIndicator"
-                      aria-hidden="true">
-                  <%= @options.size + 1 %>
+              <% if @product.pac_size && @product.pac_size > 1 %>
+                <span class="text-base-content/60" data-quantity-selector-target="unitsDisplay">
+                  (<%= number_with_delimiter(@product.pac_size) %> units)
                 </span>
-
-                <%# Title with inline selection value %>
-                <span>Select quantity<span class="hidden" data-variant-selector-target="quantityStepSelection"></span></span>
-              </div>
-
-              <div class="collapse-content"
-                   id="step-quantity-content"
-                   data-variant-selector-target="quantityContent"
-                   role="region"
-                   aria-labelledby="step-quantity-header">
-                <%# Content populated by JavaScript based on pricing_tiers or standard quantity cards %>
-              </div>
+              <% end %>
             </div>
-
           </div>
 
-          <%# Compatible Lids Section - Mini Carousel %>
-          <% if @product.name.downcase.include?('cup') && !@product.name.downcase.include?('lid') && @product.has_compatible_lids? %>
-            <div class="mt-6 hidden"
-                 data-controller="compatible-lids"
-                 data-compatible-lids-target="wrapper"
-                 data-compatible-lids-product-id-value="<%= @product.id %>"
-                 data-action="variant-selector:variant-changed@window->compatible-lids#onVariantChanged">
-
-              <div class="flex items-center justify-between mb-3">
-                <h3 class="text-sm">Add a matching lid</h3>
-                <div class="flex gap-1">
-                  <button type="button" class="btn btn-ghost btn-xs btn-circle" data-action="compatible-lids#scrollLeft" aria-label="Scroll left">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                  </button>
-                  <button type="button" class="btn btn-ghost btn-xs btn-circle" data-action="compatible-lids#scrollRight" aria-label="Scroll right">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Loading State -->
-              <div data-compatible-lids-target="loading" style="display: none;" class="text-center py-4">
-                <span class="loading loading-spinner loading-md"></span>
-                <p class="text-base-content/60 text-sm mt-2">Loading compatible lids...</p>
-              </div>
-
-              <!-- Lids Carousel Container -->
-              <div data-compatible-lids-target="container" class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-                <!-- Lids will be loaded here dynamically as compact cards -->
+          <%# See Also - Sibling Products in Family %>
+          <% siblings = @product.sibling_variants %>
+          <% if siblings.any? %>
+            <div class="mt-6">
+              <h3 class="text-lg font-medium mb-3">See Also</h3>
+              <div class="flex flex-wrap gap-2">
+                <% siblings.limit(6).each do |sibling| %>
+                  <%= link_to product_path(sibling),
+                              class: "btn btn-outline btn-sm" do %>
+                    <%= sibling.options_summary.presence || sibling.name %>
+                  <% end %>
+                <% end %>
               </div>
             </div>
           <% end %>
@@ -269,20 +199,26 @@
 
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 border-t border-base-200">
               <p class="text-base sm:text-lg">Total (excl. VAT)</p>
-              <p class="text-xl sm:text-2xl" data-variant-selector-target="totalDisplay">
-                --
+              <p class="text-xl sm:text-2xl" data-quantity-selector-target="totalDisplay">
+                <%= number_to_currency(@product.price) %>
               </p>
             </div>
           </div>
 
-          <%# Add to Cart Button %>
-          <button type="button"
-                  class="btn btn-primary btn-lg w-full mt-4"
-                  data-variant-selector-target="addButton"
-                  data-action="click->variant-selector#addToCart"
-                  disabled>
-            Add to Cart
-          </button>
+          <%# Add to Cart Form %>
+          <%= form_with url: cart_cart_items_path,
+                        method: :post,
+                        data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", turbo: true },
+                        class: "mt-4" do |f| %>
+            <%= hidden_field_tag "cart_item[sku]", @product.sku %>
+            <input type="hidden"
+                   name="cart_item[quantity]"
+                   data-quantity-selector-target="quantityInput"
+                   value="1" />
+            <button type="submit" class="btn btn-primary btn-lg w-full">
+              Add to Cart
+            </button>
+          <% end %>
 
           <p class="text-sm text-base-content/60 text-center mt-3 flex items-center justify-center gap-1.5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -290,18 +226,6 @@
             </svg>
             Free delivery over £100
           </p>
-
-          <%# Hidden Form for Cart Submission %>
-          <form data-variant-selector-target="form"
-                data-controller="cart-drawer"
-                data-action="turbo:submit-end->cart-drawer#open"
-                action="<%= cart_cart_items_path %>"
-                method="post"
-                data-remote="true">
-            <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
-            <input type="hidden" name="cart_item[variant_sku]" data-variant-selector-target="variantSkuInput" value="" />
-            <input type="hidden" name="cart_item[quantity]" data-variant-selector-target="quantityInput" value="1" />
-          </form>
 
         </div>
       </div>
@@ -312,6 +236,16 @@
           <div class="prose max-w-none">
             <h2>Product Details</h2>
             <p><%= @product.description_detailed_with_fallback %></p>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Related Products Section %>
+      <% if @related_products.any? %>
+        <div class="mt-12">
+          <h2 class="text-2xl mb-6">Related Products</h2>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <%= render partial: "products/card", collection: @related_products, as: :product %>
           </div>
         </div>
       <% end %>

@@ -7,7 +7,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = users(:one)
     @user.update!(stripe_customer_id: "cus_test_123")
-    @product_variant = product_variants(:one)
+    @product_variant = products(:one)
 
     @schedule = ReorderSchedule.create!(
       user: @user,
@@ -23,7 +23,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
       items_snapshot: {
         "items" => [
           {
-            "product_variant_id" => @product_variant.id,
+            "product_id" => @product_variant.id,
             "product_name" => "Test Product",
             "variant_name" => "Pack of 500",
             "quantity" => 2,
@@ -281,7 +281,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
       token: @edit_token,
       pending_order: {
         items: [
-          { product_variant_id: @product_variant.id, quantity: 5 }
+          { product_id: @product_variant.id, quantity: 5 }
         ]
       }
     }
@@ -298,7 +298,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
       token: @edit_token,
       pending_order: {
         items: [
-          { product_variant_id: @product_variant.id, quantity: 10 }
+          { product_id: @product_variant.id, quantity: 10 }
         ]
       }
     }
@@ -314,7 +314,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
       token: @edit_token,
       pending_order: {
         items: [
-          { product_variant_id: @product_variant.id, quantity: 0 }
+          { product_id: @product_variant.id, quantity: 0 }
         ]
       }
     }
@@ -327,8 +327,8 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
     @pending_order.update!(
       items_snapshot: {
         "items" => [
-          { "product_variant_id" => @product_variant.id, "quantity" => 2, "price" => "10.00", "available" => true },
-          { "product_variant_id" => product_variants(:two).id, "quantity" => 1, "price" => "15.00", "available" => true }
+          { "product_id" => @product_variant.id, "quantity" => 2, "price" => "10.00", "available" => true },
+          { "product_id" => products(:two).id, "quantity" => 1, "price" => "15.00", "available" => true }
         ],
         "subtotal" => "35.00",
         "vat" => "7.00",
@@ -341,7 +341,7 @@ class PendingOrdersControllerTest < ActionDispatch::IntegrationTest
       token: @edit_token,
       pending_order: {
         items: [
-          { product_variant_id: @product_variant.id, quantity: 2 }
+          { product_id: @product_variant.id, quantity: 2 }
         ]
       }
     }

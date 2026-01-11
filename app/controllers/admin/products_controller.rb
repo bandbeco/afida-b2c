@@ -4,7 +4,7 @@ module Admin
 
     # GET /products
     def index
-      @products = Product.includes(:variants).all
+      @products = Product.all
     end
 
     # GET /products/1
@@ -14,14 +14,11 @@ module Admin
     # GET /products/new
     def new
       @product = Product.new
-      @product.variants.build
     end
 
     # GET /products/1/edit
     def edit
-      # Eager load variant photos to prevent N+1 queries in form
-      @product.variants.includes(:product_photo_attachment, :lifestyle_photo_attachment).load
-      @product.variants.build if @product.variants.none?
+      # Product is the main entity now - just loading for editing
     end
 
     # POST /products
@@ -41,7 +38,7 @@ module Admin
     # PATCH/PUT /products/1
     def update
       if @product.update(product_params)
-        redirect_to admin_products_path, notice: "Product was successfully updated.", status: :see_other
+        redirect_to admin_product_path(@product), notice: "Product was successfully updated.", status: :see_other
       else
         render :edit, status: :unprocessable_entity
       end
@@ -196,30 +193,38 @@ module Admin
     end
 
     # GET /admin/products/:id/variants.json
+    # Returns the product and its siblings (products in same family)
     def variants
       respond_to do |format|
         format.json do
+          # With the new structure, "variants" are siblings in the same product family
+          all_products = if @product.product_family_id.present?
+            @product.product_family.products.active
+          else
+            Product.where(id: @product.id)
+          end
+
           render json: {
             product: {
               id: @product.id,
               name: @product.name,
               slug: @product.slug
             },
-            variants: @product.active_variants.map do |variant|
+            variants: all_products.map do |product|
               # Build display name with all option values
               display_parts = []
-              display_parts << variant.name
+              display_parts << product.name
 
               # Add color if present (using helper method)
-              if variant.colour_value.present?
-                display_parts << variant.colour_value
+              if product.respond_to?(:colour_value) && product.colour_value.present?
+                display_parts << product.colour_value
               end
 
               {
-                id: variant.id,
-                name: variant.name,
+                id: product.id,
+                name: product.name,
                 display_name: display_parts.join(" - "),
-                option_values: variant.option_values_hash
+                option_values: product.respond_to?(:option_values_hash) ? product.option_values_hash : {}
               }
             end
           }
@@ -239,12 +244,15 @@ module Admin
         :active,
         :featured,
         :sample_eligible,
+        :sample_sku,
         :name,
+        :sku,
         :description_short,
         :description_standard,
         :description_detailed,
         :colour,
         :category_id,
+        :product_family_id,
         :product_photo,
         :lifestyle_photo,
         :slug,
@@ -252,29 +260,16 @@ module Admin
         :meta_title,
         :meta_description,
         :meta_image,
-        variants_attributes: [
-          [
-            :id,
-            :_destroy,
-            :name,
-            :sku,
-            :pac_size,
-            :price,
-            :stock_quantity,
-            :active,
-            :position,
-            :product_photo,
-            :lifestyle_photo,
-            :length_in_mm,
-            :height_in_mm,
-            :width_in_mm,
-            :depth_in_mm,
-            :weight_in_g,
-            :volume_in_ml,
-            :diameter_in_mm
-          ]
-        ],
-        compatible_cup_sizes: []
+        :pac_size,
+        :price,
+        :stock_quantity,
+        :length_in_mm,
+        :height_in_mm,
+        :width_in_mm,
+        :depth_in_mm,
+        :weight_in_g,
+        :volume_in_ml,
+        :diameter_in_mm
       ])
     end
   end

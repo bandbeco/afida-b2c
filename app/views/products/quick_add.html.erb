@@ -3,13 +3,8 @@
     <div class="modal-box">
       <h3 id="quick-add-title" class="font-bold text-lg mb-4"><%= @product.name %></h3>
 
-      <%# Pass all necessary data to form for option selection %>
-      <%= render "quick_add_form",
-                 product: @product,
-                 variants: @variants,
-                 variants_data: @variants_json,
-                 product_options: @product_options,
-                 option_labels: @option_labels %>
+      <%# Simple form for adding product to cart %>
+      <%= render "quick_add_form", product: @product %>
 
       <div class="modal-action">
         <button type="button"

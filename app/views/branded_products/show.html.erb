@@ -17,7 +17,7 @@
         "@type": "Brand",
         "name": "Afida"
       },
-      "image": @product.variants.first&.product_photo&.attached? ? url_for(@product.variants.first.product_photo) : nil,
+      "image": @product.product_photo&.attached? ? url_for(@product.product_photo) : nil,
       "offers": {
         "@type": "AggregateOffer",
         "priceCurrency": "GBP",
@@ -48,10 +48,9 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Left: Product Images -->
     <div>
-      <% variant = @product.variants.first %>
-      <% if variant&.product_photo&.attached? %>
+      <% if @product.product_photo&.attached? %>
         <figure class="rounded-lg overflow-hidden shadow-lg">
-          <%= image_tag variant.product_photo.variant(resize_to_limit: [600, 600]), alt: @product.name, class: "w-full h-auto" %>
+          <%= image_tag @product.product_photo.variant(resize_to_limit: [600, 600]), alt: @product.name, class: "w-full h-auto" %>
         </figure>
       <% else %>
         <div class="w-full h-96 bg-gray-200 rounded-lg shadow-md flex items-center justify-center">

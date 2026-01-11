@@ -39,17 +39,17 @@
         <% @order.order_items.each do |item| %>
           <div class="p-6 flex items-center space-x-4">
             <div class="relative flex-shrink-0">
-              <%= product_photo_tag(item.product_variant&.primary_photo, alt: item.product_variant&.display_name || "Product", class: "h-16 w-16 rounded-lg") %>
+              <%= product_photo_tag(item.product&.primary_photo, alt: item.product&.display_name || "Product", class: "h-16 w-16 rounded-lg") %>
               <% if item.sample? %>
                 <%= render "shared/sample_badge", size: :sm %>
               <% end %>
             </div>
 
             <div class="flex-1">
-              <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product_variant.product.name, edit_admin_product_path(item.product_variant.product) %></h3>
-              <p class="text-sm text-gray-500">SKU: <%= item.product_variant.sku %></p>
+              <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product.name, edit_admin_product_path(item.product) %></h3>
+              <p class="text-sm text-gray-500">SKU: <%= item.product.sku %></p>
               <% if item.sample? %>
-                <p class="text-sm text-gray-500">Sample SKU: <%= item.product_variant.effective_sample_sku %></p>
+                <p class="text-sm text-gray-500">Sample SKU: <%= item.product.effective_sample_sku %></p>
               <% end %>
               <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
             </div>

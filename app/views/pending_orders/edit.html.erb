@@ -38,7 +38,7 @@
               </div>
 
               <div class="flex items-center space-x-2">
-                <input type="hidden" name="pending_order[items][<%= index %>][product_variant_id]" value="<%= item["product_variant_id"] %>">
+                <input type="hidden" name="pending_order[items][<%= index %>][product_id]" value="<%= item["product_id"] %>">
                 <label class="text-sm text-gray-600">Qty:</label>
                 <input type="number"
                        name="pending_order[items][<%= index %>][quantity]"

@@ -6,8 +6,8 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
   setup do
     @product = products(:one)
     @product_two = products(:two)
-    @variant = product_variants(:one)
-    @variant_two = product_variants(:two)
+    @variant = products(:one)
+    @variant_two = products(:two)
     @category = categories(:one)
     @category_two = categories(:two)
 
@@ -44,12 +44,12 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     assert_match @product.name, response.body
   end
 
-  test "index does not display customizable template products" do
+  test "index displays customizable template products in catalog" do
     branded = products(:branded_double_wall_template)
     get price_list_url
     assert_response :success
-    # Should NOT show customizable_template products
-    assert_no_match branded.name, response.body
+    # catalog_products scope includes customizable_template products
+    assert_match branded.name, response.body
   end
 
   test "index shows table with correct columns" do

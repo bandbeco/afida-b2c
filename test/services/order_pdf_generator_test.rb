@@ -113,7 +113,6 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     order_item = OrderItem.create!(
       order: @order,
       product: products(:one),
-      product_variant: product_variants(:one),
       product_name: "Test Pack Product",
       product_sku: "PACK-TEST",
       price: 16.00,
@@ -135,7 +134,6 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     order_item = OrderItem.create!(
       order: @order,
       product: products(:one),
-      product_variant: product_variants(:one),
       product_name: "Test Branded Product",
       product_sku: "BRAND-TEST",
       price: 0.18,

@@ -1,4 +1,4 @@
-<%# Individual variant card for sample selection - entire card is clickable %>
+<%# Individual product card for sample selection - entire card is clickable %>
 <%
   in_cart ||= false
   at_limit ||= false
@@ -7,21 +7,21 @@
   # Accept pre-computed values from parent, or compute from database
   # Pre-computed values avoid N+1 queries on initial page load
   unless defined?(is_sample_in_cart) && defined?(is_regular_in_cart)
-    cart_item = Current.cart&.cart_items&.samples&.find_by(product_variant: variant) if in_cart
+    cart_item = Current.cart&.cart_items&.samples&.find_by(product: product) if in_cart
     is_sample_in_cart = cart_item.present?
     is_regular_in_cart = in_cart && !is_sample_in_cart
   end
 
   # Find cart_item for remove button (only needed if sample is in cart)
-  cart_item ||= Current.cart&.cart_items&.samples&.find_by(product_variant: variant) if is_sample_in_cart
+  cart_item ||= Current.cart&.cart_items&.samples&.find_by(product: product) if is_sample_in_cart
 %>
 
-<%= turbo_frame_tag dom_id(variant, :sample), class: "block" do %>
+<%= turbo_frame_tag dom_id(product, :sample), class: "block" do %>
   <div class="card relative cursor-pointer <%= is_sample_in_cart ? 'bg-success/10 border-2 border-success' : 'bg-base-100 border-2 border-base-200' %> hover:shadow-lg transition-all [background-clip:padding-box] rounded-xl"
        data-controller="clickable-card"
        data-action="click->clickable-card#click keydown->clickable-card#keydown"
        role="article"
-       aria-label="<%= variant.display_name %> sample">
+       aria-label="<%= product.display_name %> sample">
     <!-- Selection Checkbox -->
     <div class="absolute top-2 right-2 z-10">
       <div class="w-6 h-6 rounded-full flex items-center justify-center <%= is_sample_in_cart ? 'bg-success text-success-content' : 'bg-base-200 border border-base-300' %>">
@@ -48,11 +48,10 @@
 
     <!-- Product Image -->
     <figure class="px-4 pt-4">
-      <% photo = variant.primary_photo || variant.product.primary_photo %>
-      <% if photo %>
-        <%= image_tag photo.variant(resize_and_pad: [200, 200, { background: [255, 255, 255] }]),
+      <% if product.primary_photo %>
+        <%= image_tag product.primary_photo.variant(resize_and_pad: [200, 200, { background: [255, 255, 255] }]),
                       class: "rounded-lg w-full h-32 object-contain bg-white #{is_sample_in_cart ? 'opacity-90' : ''}",
-                      alt: variant.display_name %>
+                      alt: product.display_name %>
       <% else %>
         <div class="w-full h-32 bg-base-200 rounded-lg flex items-center justify-center">
           <span class="text-4xl" role="img" aria-label="Product image placeholder">📦</span>
@@ -62,13 +61,13 @@
 
     <div class="card-body p-4">
       <!-- Product Name -->
-      <h3 class="font-medium text-sm line-clamp-2" title="<%= variant.display_name %>">
-        <%= variant.product.name %>
+      <h3 class="font-medium text-sm line-clamp-2" title="<%= product.display_name %>">
+        <%= product.name %>
       </h3>
 
-      <!-- Variant Info -->
+      <!-- Product Info -->
       <p class="text-xs text-base-content/70">
-        <%= variant.options_display %>
+        <%= product.options_display %>
       </p>
 
       <!-- Action Button -->
@@ -78,7 +77,7 @@
           <%= button_to cart_cart_item_path(cart_item),
                         method: :delete,
                         class: "btn btn-error btn-sm w-full gap-2",
-                        data: { turbo_frame: dom_id(variant, :sample), clickable_card_target: "button" } do %>
+                        data: { turbo_frame: dom_id(product, :sample), clickable_card_target: "button" } do %>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
             </svg>
@@ -93,8 +92,8 @@
           <%# Add sample button - always enabled, server validates limit %>
           <%= button_to cart_cart_items_path,
                         class: "btn btn-primary btn-outline btn-sm w-full",
-                        params: { product_variant_id: variant.id, sample: true },
-                        data: { turbo_frame: dom_id(variant, :sample), clickable_card_target: "button" } do %>
+                        params: { product_id: product.id, sample: true },
+                        data: { turbo_frame: dom_id(product, :sample), clickable_card_target: "button" } do %>
             Add Sample
           <% end %>
         <% end %>

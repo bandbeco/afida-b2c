@@ -1,7 +1,6 @@
 class CartItem < ApplicationRecord
   belongs_to :cart
-  belongs_to :product_variant
-  has_one :product, through: :product_variant
+  belongs_to :product
 
   has_one_attached :design
 
@@ -10,13 +9,13 @@ class CartItem < ApplicationRecord
   validate :price_must_be_positive_unless_sample
   validate :cart_sample_limit_not_exceeded, on: :create, if: :sample?
   validate :cannot_add_sample_when_regular_exists, on: :create, if: :sample?
-  # Prevent duplicate cart items for the same variant
+  # Prevent duplicate cart items for the same product
   # Configured products are excluded as they can have different configurations
-  validates_uniqueness_of :product_variant, scope: :cart_id, unless: :configured?
+  validates_uniqueness_of :product, scope: :cart_id, unless: :configured?
   validates :calculated_price, presence: true, if: :configured?
   validate :design_required_for_configured_products
 
-  before_validation :set_price_from_variant
+  before_validation :set_price_from_product
 
   # Scopes for filtering by item type
   scope :samples, -> { where(is_sample: true) }
@@ -29,14 +28,14 @@ class CartItem < ApplicationRecord
     price * quantity
   end
 
-  # Returns the current unit price from product_variant for standard products,
+  # Returns the current unit price from product for standard products,
   # or the configured price for branded products. This uses live pricing,
   # unlike OrderItem#unit_price which calculates from historical pac_size snapshot.
   def unit_price
     if configured?
       price
     else
-      product_variant.unit_price
+      product.unit_price
     end
   end
 
@@ -57,22 +56,22 @@ class CartItem < ApplicationRecord
   # Pack-priced: standard products with pac_size > 1
   # Unit-priced: branded/configured products OR pac_size nil/1
   def pack_priced?
-    !configured? && product_variant.pac_size.present? && product_variant.pac_size > 1
+    !configured? && product.pac_size.present? && product.pac_size > 1
   end
 
   def pack_price
     pack_priced? ? price : nil
   end
 
-  # Delegate to product_variant for consistent interface with OrderItem
+  # Delegate to product for consistent interface with OrderItem
   def pac_size
-    product_variant.pac_size
+    product.pac_size
   end
 
   private
 
-  def set_price_from_variant
-    self.price = product_variant.price if product_variant && price.blank?
+  def set_price_from_product
+    self.price = product.price if product && price.blank?
   end
 
   def design_required_for_configured_products
@@ -81,11 +80,11 @@ class CartItem < ApplicationRecord
     end
   end
 
-  # Samples (price = 0) are only allowed for sample-eligible variants
+  # Samples (price = 0) are only allowed for sample-eligible products
   def price_must_be_positive_unless_sample
-    return unless product_variant
+    return unless product
 
-    if price&.zero? && !product_variant.sample_eligible?
+    if price&.zero? && !product.sample_eligible?
       errors.add(:price, "must be greater than 0")
     end
   end
@@ -101,9 +100,9 @@ class CartItem < ApplicationRecord
 
   # Prevents adding a sample when the regular item is already in cart
   def cannot_add_sample_when_regular_exists
-    return unless cart && product_variant
+    return unless cart && product
 
-    if cart.cart_items.non_samples.exists?(product_variant: product_variant)
+    if cart.cart_items.non_samples.exists?(product: product)
       errors.add(:base, "You already have this product in your cart")
     end
   end

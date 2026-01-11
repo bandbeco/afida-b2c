@@ -18,7 +18,7 @@
             <% @categories.each do |category| %>
               <label for="category_<%= category.slug %>" class="flex items-center gap-2 mb-2 cursor-pointer">
                 <%= check_box_tag 'categories[]', category.slug, (params[:categories] || []).include?(category.slug), id: "category_#{category.slug}", class: "checkbox checkbox-primary", aria: { label: "Filter by #{category.name}" }, data: { action: "change->form#submit" } %>
-                <span><%= category.name %> (<%= @category_variant_counts[category.id] || 0 %>)</span>
+                <span><%= category.name %> (<%= @category_product_counts[category.id] || 0 %>)</span>
               </label>
             <% end %>
           </div>
@@ -61,11 +61,11 @@
           </div>
         </div>
 
-        <!-- Variant Grid (inside Turbo Frame) -->
+        <!-- Product Grid (inside Turbo Frame) -->
         <%= turbo_frame_tag "products", data: { turbo_action: "replace" } do %>
-          <% if @variants.any? %>
+          <% if @products.any? %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              <%= render partial: "products/variant_card", collection: @variants, as: :variant %>
+              <%= render partial: "products/card", collection: @products, as: :product %>
             </div>
 
             <!-- Pagination -->

@@ -1,41 +1,35 @@
 require "test_helper"
 
 class PagesControllerTest < ActionDispatch::IntegrationTest
-  test "shop page displays all variants by default" do
+  test "shop page displays all products by default" do
     get shop_path
 
     assert_response :success
     assert_select "h1", text: /Shop/
-    # Shop page now shows individual variants instead of products
-    # Verify at least one variant link is present
-    variant = ProductVariant.active
-                            .joins(:product)
-                            .where(products: { active: true, product_type: :standard })
-                            .first
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    # Verify at least one product link is present
+    product = Product.active.catalog_products.first
+    assert_select "a[href=?]", product_path(product.slug)
   end
 
   test "shop page filters by categories" do
     category = categories(:one)
     product = products(:one)
     product.update(category: category)
-    variant = product.active_variants.first
 
     get shop_path, params: { categories: [ category.slug ] }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(product.slug)
   end
 
-  test "shop page searches variants" do
+  test "shop page searches products" do
     product = products(:one)
     product.update(name: "Pizza Box")
-    variant = product.active_variants.first
 
     get shop_path, params: { q: "pizza" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(product.slug)
   end
 
   test "shop page sorts products by price" do
@@ -70,46 +64,46 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
   test "shop page filters by size" do
     # Use fixture variant with size option
-    variant = product_variants(:single_wall_8oz_white)
+    variant = products(:single_wall_8oz_white)
 
     get shop_path, params: { size: "8oz" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(variant.slug)
   end
 
   test "shop page filters by colour" do
     # Use fixture variant with colour option
-    variant = product_variants(:single_wall_8oz_white)
+    variant = products(:single_wall_8oz_white)
 
     get shop_path, params: { colour: "White" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(variant.slug)
   end
 
   test "shop page filters by material" do
     # Use fixture variant with material option
-    variant = product_variants(:wooden_fork)
+    variant = products(:wooden_fork)
 
     get shop_path, params: { material: "Birch" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(variant.slug)
   end
 
   test "shop page combines multiple filters" do
     # Use fixture variant with both size and colour options
-    variant = product_variants(:single_wall_8oz_white)
+    variant = products(:single_wall_8oz_white)
 
     get shop_path, params: { size: "8oz", colour: "White" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(variant.slug)
 
     # Should NOT include variant with different colour
-    black_variant = product_variants(:single_wall_8oz_black)
-    assert_select "a[href=?]", product_variant_path(black_variant.slug), count: 0
+    black_variant = products(:single_wall_8oz_black)
+    assert_select "a[href=?]", product_path(black_variant.slug), count: 0
   end
 
   test "shop page returns success with available_filters" do
@@ -120,23 +114,23 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "shop page filters can combine with category filter" do
-    variant = product_variants(:single_wall_8oz_white)
-    category = variant.product.category
+    product = products(:single_wall_8oz_white)
+    category = product.category
 
     get shop_path, params: { categories: [ category.slug ], size: "8oz" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(product.slug)
   end
 
   test "shop page filters can combine with search" do
-    variant = product_variants(:single_wall_8oz_white)
+    product = products(:single_wall_8oz_white)
 
     # Search by SKU which is guaranteed to match
-    get shop_path, params: { q: variant.sku, colour: "White" }
+    get shop_path, params: { q: product.sku, colour: "White" }
 
     assert_response :success
-    assert_select "a[href=?]", product_variant_path(variant.slug)
+    assert_select "a[href=?]", product_path(product.slug)
   end
 
   test "shop page handles empty filter results gracefully" do

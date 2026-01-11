@@ -5,7 +5,6 @@ module Organizations
     def index
       @products = Current.user.organization
                               .customized_products
-                              .includes(:active_variants)
                               .with_attached_product_photo
                               .order(created_at: :desc)
     end

@@ -42,7 +42,7 @@ class ProductCompatibleLidTest < ActiveSupport::TestCase
     # Create second default with another different lid - should unset first
     second = ProductCompatibleLid.create!(
       product: product,
-      compatible_lid: products(:recyclable_lids_black),
+      compatible_lid: products(:recyclable_lid_black_80mm),
       default: true,
       sort_order: 4
     )

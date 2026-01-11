@@ -8,7 +8,7 @@ class ReorderSchedulesHelperTest < ActionView::TestCase
     # Clear existing items and create just one
     order.order_items.destroy_all
     order.order_items.create!(
-      product_variant: product_variants(:one),
+      product: products(:one),
       product_name: "Test Product",
       product_sku: "TEST-SKU",
       price: 50.00,

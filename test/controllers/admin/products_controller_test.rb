@@ -83,4 +83,37 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Updated standard description text", @product.description_standard
     assert_equal "Updated detailed description with full information", @product.description_detailed
   end
+
+  test "edit form includes sample eligibility fields" do
+    get edit_admin_product_path(@product), headers: @headers
+
+    assert_response :success
+    assert_select "input[type=checkbox][name='product[sample_eligible]']"
+    assert_select "input[type=text][name='product[sample_sku]']"
+  end
+
+  test "should update sample eligibility" do
+    assert_not @product.sample_eligible, "Product should not be sample eligible initially"
+
+    patch admin_product_path(@product), params: {
+      product: { sample_eligible: true, sample_sku: "SAMPLE-TEST-123" }
+    }, headers: @headers
+
+    assert_redirected_to admin_product_path(@product)
+    @product.reload
+    assert @product.sample_eligible, "Product should be sample eligible after update"
+    assert_equal "SAMPLE-TEST-123", @product.sample_sku
+  end
+
+  test "should update sample eligibility without custom sample_sku" do
+    patch admin_product_path(@product), params: {
+      product: { sample_eligible: true, sample_sku: "" }
+    }, headers: @headers
+
+    assert_redirected_to admin_product_path(@product)
+    @product.reload
+    assert @product.sample_eligible
+    assert @product.sample_sku.blank?, "sample_sku should be blank"
+    assert_equal "SAMPLE-#{@product.sku}", @product.effective_sample_sku
+  end
 end

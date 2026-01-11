@@ -3,10 +3,10 @@ require "test_helper"
 class OrderItemTest < ActiveSupport::TestCase
   setup do
     @order = orders(:one)
-    @product_variant = product_variants(:one)
+    @product = products(:one)
     @valid_attributes = {
       order: @order,
-      product_variant: @product_variant,
+      product: @product,
       product_name: "Test Product",
       product_sku: "TEST-SKU",
       price: 10.99,
@@ -160,15 +160,15 @@ class OrderItemTest < ActiveSupport::TestCase
 
   test "product_display_name returns variant name when available" do
     order_item = order_items(:one)
-    assert_equal order_item.product_variant.name, order_item.product_display_name
+    assert_equal order_item.product.name, order_item.product_display_name
   end
 
   test "product_display_name returns fallback when variant is nil" do
-    # product_variant_id is NOT NULL in schema, so this test documents behavior
+    # product_id is NOT NULL in schema, so this test documents behavior
     # but cannot actually test nil variant due to database constraint
     order_item = order_items(:one)
     # Simulate nil by stubbing the association
-    order_item.define_singleton_method(:product_variant) { nil }
+    order_item.define_singleton_method(:product) { nil }
     assert_equal "Product Unavailable", order_item.product_display_name
   end
 
@@ -209,10 +209,10 @@ class OrderItemTest < ActiveSupport::TestCase
     assert_kind_of Product, order_item.product
   end
 
-  test "belongs to product_variant" do
+  test "belongs to product" do
     order_item = order_items(:one)
-    assert_respond_to order_item, :product_variant
-    assert_kind_of ProductVariant, order_item.product_variant
+    assert_respond_to order_item, :product
+    assert_kind_of Product, order_item.product
     # Note: Model says optional: true but schema has NOT NULL constraint
     # Schema constraint prevents actual nil values
   end
@@ -404,12 +404,12 @@ class OrderItemTest < ActiveSupport::TestCase
   test "unit_price uses captured pac_size not live variant value" do
     # Create an order item with pac_size captured at order time
     order = orders(:one)
-    variant = product_variants(:one)
+    variant = products(:one)
     original_pac_size = 500
 
     order_item = OrderItem.create!(
       order: order,
-      product_variant: variant,
+      product: variant,
       product_name: "Test Product",
       product_sku: "TEST-HISTORICAL",
       price: 16.00,

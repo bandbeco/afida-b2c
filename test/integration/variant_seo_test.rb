@@ -2,29 +2,29 @@ require "test_helper"
 
 class VariantSeoTest < ActionDispatch::IntegrationTest
   setup do
-    @variant = product_variants(:single_wall_8oz_white)
-    @variant2 = product_variants(:single_wall_8oz_black)
+    @variant = products(:single_wall_8oz_white)
+    @variant2 = products(:single_wall_8oz_black)
   end
 
   test "variant pages have unique titles" do
-    get product_variant_path(@variant.slug)
+    get product_path(@variant.slug)
     title1 = css_select("title").text
 
-    get product_variant_path(@variant2.slug)
+    get product_path(@variant2.slug)
     title2 = css_select("title").text
 
     assert_not_equal title1, title2, "Variant pages should have unique titles"
   end
 
   test "variant page title includes variant name" do
-    get product_variant_path(@variant.slug)
+    get product_path(@variant.slug)
     title = css_select("title").text
 
     assert_includes title.downcase, @variant.name.downcase
   end
 
   test "variant page has meta description" do
-    get product_variant_path(@variant.slug)
+    get product_path(@variant.slug)
 
     meta_desc = css_select("meta[name='description']").first
     assert meta_desc, "Variant page should have meta description"
@@ -32,7 +32,7 @@ class VariantSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "variant page has canonical URL" do
-    get product_variant_path(@variant.slug)
+    get product_path(@variant.slug)
 
     canonical = css_select("link[rel='canonical']").first
     assert canonical, "Variant page should have canonical URL"
@@ -40,7 +40,7 @@ class VariantSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "variant page has product structured data" do
-    get product_variant_path(@variant.slug)
+    get product_path(@variant.slug)
 
     # Find JSON-LD script tags
     json_ld_scripts = css_select("script[type='application/ld+json']")
@@ -61,7 +61,7 @@ class VariantSeoTest < ActionDispatch::IntegrationTest
   end
 
   test "variant page has breadcrumb structured data" do
-    get product_variant_path(@variant.slug)
+    get product_path(@variant.slug)
 
     json_ld_scripts = css_select("script[type='application/ld+json']")
 
@@ -78,23 +78,23 @@ class VariantSeoTest < ActionDispatch::IntegrationTest
     assert breadcrumb_data["itemListElement"].length >= 2, "Should have at least 2 breadcrumb items"
   end
 
-  test "sitemap includes all active variants" do
+  test "sitemap includes all active products" do
     get "/sitemap.xml"
     assert_response :success
 
     sitemap_content = response.body
 
-    # Check that active variants are included (sitemap uses /products/:slug format)
-    active_variants = ProductVariant.active.joins(:product).where(products: { active: true })
-    active_variants.limit(5).each do |variant|
-      # Sitemap includes variants under /products/ path
-      assert_includes sitemap_content, "/products/#{variant.slug}",
-        "Sitemap should include variant: #{variant.slug}"
+    # Check that active products are included (sitemap uses /products/:slug format)
+    active_products = Product.active
+    active_products.limit(5).each do |product|
+      # Sitemap includes products under /products/ path
+      assert_includes sitemap_content, "/products/#{product.slug}",
+        "Sitemap should include product: #{product.slug}"
     end
   end
 
   test "inactive variants excluded from sitemap" do
-    inactive_variant = product_variants(:two)
+    inactive_variant = products(:two)
     inactive_variant.update!(active: false)
 
     get "/sitemap.xml"

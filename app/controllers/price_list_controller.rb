@@ -4,19 +4,19 @@ class PriceListController < ApplicationController
   allow_unauthenticated_access
 
   def index
-    @variants = filtered_variants
+    @products = filtered_products
     @categories = Category.where.not(slug: "branded-products").order(:position)
   end
 
   def export
-    @variants = filtered_variants
+    @products = filtered_products
 
     respond_to do |format|
       format.xlsx do
         render xlsx: "export", filename: "#{export_filename}.xlsx"
       end
       format.pdf do
-        pdf = PriceListPdf.new(@variants, filter_description)
+        pdf = PriceListPdf.new(@products, filter_description)
         send_data pdf.render,
                   filename: "#{export_filename}.pdf",
                   type: "application/pdf",
@@ -27,32 +27,31 @@ class PriceListController < ApplicationController
 
   private
 
-  def base_variant_scope
-    ProductVariant.active
-                  .joins(:product)
-                  .where(products: { product_type: "standard", active: true })
+  def base_product_scope
+    Product.active
+           .catalog_products
   end
 
-  def filtered_variants
-    variants = base_variant_scope
-                 .includes(product: :category)
-                 .order("products.name ASC, product_variants.position ASC")
+  def filtered_products
+    products = base_product_scope
+                 .includes(:category)
+                 .order("products.name ASC, products.position ASC")
 
-    variants = variants.where(products: { category_id: category_ids }) if params[:category].present?
-    variants = search_variants(variants) if params[:q].present?
+    products = products.where(category_id: category_ids) if params[:category].present?
+    products = search_products(products) if params[:q].present?
 
-    variants
+    products
   end
 
   def category_ids
     Category.where(slug: params[:category]).pluck(:id)
   end
 
-  def search_variants(variants)
-    query = "%#{ProductVariant.sanitize_sql_like(params[:q])}%"
-    variants.where(
-      "products.name ILIKE ? OR product_variants.sku ILIKE ? OR product_variants.name ILIKE ?",
-      query, query, query
+  def search_products(products)
+    query = "%#{Product.sanitize_sql_like(params[:q])}%"
+    products.where(
+      "products.name ILIKE ? OR products.sku ILIKE ?",
+      query, query
     )
   end
 

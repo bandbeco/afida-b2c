@@ -8,7 +8,7 @@ class VariantOptionValueTest < ActiveSupport::TestCase
   # ==========================================================================
 
   setup do
-    @variant = product_variants(:single_wall_8oz_white)
+    @variant = products(:single_wall_8oz_white)
     @size_option = product_options(:size)
     @colour_option = product_options(:colour)
     @size_8oz = product_option_values(:size_8oz)
@@ -20,9 +20,9 @@ class VariantOptionValueTest < ActiveSupport::TestCase
   # Association Tests
   # ==========================================================================
 
-  test "belongs to product_variant" do
+  test "belongs to product" do
     vov = variant_option_values(:single_wall_8oz_white_size)
-    assert_equal @variant, vov.product_variant
+    assert_equal @variant, vov.product
   end
 
   test "belongs to product_option_value" do
@@ -39,18 +39,18 @@ class VariantOptionValueTest < ActiveSupport::TestCase
   # Validation Tests
   # ==========================================================================
 
-  test "requires product_variant" do
+  test "requires product" do
     vov = VariantOptionValue.new(
       product_option_value: @size_8oz,
       product_option: @size_option
     )
     assert_not vov.valid?
-    assert_includes vov.errors[:product_variant], "must exist"
+    assert_includes vov.errors[:product], "must exist"
   end
 
   test "requires product_option_value" do
     vov = VariantOptionValue.new(
-      product_variant: @variant,
+      product: @variant,
       product_option: @size_option
     )
     assert_not vov.valid?
@@ -62,15 +62,15 @@ class VariantOptionValueTest < ActiveSupport::TestCase
   # ==========================================================================
 
   test "auto-populates product_option_id from product_option_value on create" do
-    new_variant = ProductVariant.create!(
-      product: products(:one),
+    new_variant = Product.create!(
+      category: categories(:cups),
       name: "Test Variant",
       sku: "TEST-VOV-001",
       price: 10.00
     )
 
     vov = VariantOptionValue.new(
-      product_variant: new_variant,
+      product: new_variant,
       product_option_value: @size_12oz
     )
 
@@ -87,7 +87,7 @@ class VariantOptionValueTest < ActiveSupport::TestCase
   test "prevents duplicate option value assignments to same variant" do
     # Try to assign 8oz size again to a variant that already has it
     duplicate = VariantOptionValue.new(
-      product_variant: @variant,
+      product: @variant,
       product_option_value: @size_8oz,
       product_option: @size_option
     )
@@ -96,19 +96,19 @@ class VariantOptionValueTest < ActiveSupport::TestCase
   end
 
   test "allows same option value on different variants" do
-    other_variant = product_variants(:single_wall_12oz_white)
+    other_variant = products(:single_wall_12oz_white)
 
     # 8oz size should be assignable to another variant
     # (Though 12oz already has a size, let's use a fresh variant)
-    new_variant = ProductVariant.create!(
-      product: products(:one),
+    new_variant = Product.create!(
+      category: categories(:cups),
       name: "Another Variant",
       sku: "TEST-VOV-002",
       price: 12.00
     )
 
     vov = VariantOptionValue.new(
-      product_variant: new_variant,
+      product: new_variant,
       product_option_value: @size_8oz,
       product_option: @size_option
     )
@@ -120,7 +120,7 @@ class VariantOptionValueTest < ActiveSupport::TestCase
     # single_wall_8oz_white already has size=8oz
     # Try to add size=12oz - should fail (one size per variant)
     conflicting = VariantOptionValue.new(
-      product_variant: @variant,
+      product: @variant,
       product_option_value: @size_12oz,
       product_option: @size_option
     )
@@ -135,8 +135,8 @@ class VariantOptionValueTest < ActiveSupport::TestCase
     size_vov = variant_option_values(:single_wall_8oz_white_size)
     colour_vov = variant_option_values(:single_wall_8oz_white_colour)
 
-    assert_equal @variant, size_vov.product_variant
-    assert_equal @variant, colour_vov.product_variant
+    assert_equal @variant, size_vov.product
+    assert_equal @variant, colour_vov.product
     assert_not_equal size_vov.product_option, colour_vov.product_option
   end
 end

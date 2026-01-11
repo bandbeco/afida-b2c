@@ -12,20 +12,20 @@
       </tr>
     </thead>
     <tbody>
-      <% variants.each do |variant| %>
-        <%= render "row", variant: variant %>
+      <% products.each do |product| %>
+        <%= render "row", product: product %>
       <% end %>
     </tbody>
   </table>
 </div>
 
-<% if variants.empty? %>
+<% if products.empty? %>
   <div class="text-center py-12">
     <p class="text-gray-500">No products found matching your filters.</p>
     <%= link_to "Clear filters", price_list_path, class: "btn btn-outline btn-sm mt-4" %>
   </div>
 <% else %>
   <p class="text-sm text-gray-500 mt-4">
-    Showing <%= pluralize(variants.count, "product") %>
+    Showing <%= pluralize(products.count, "product") %>
   </p>
 <% end %>

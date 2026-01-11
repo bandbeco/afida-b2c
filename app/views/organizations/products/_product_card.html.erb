@@ -21,34 +21,31 @@
     <div class="space-y-2 text-sm">
       <div class="flex justify-between">
         <span class="text-gray-600">SKU:</span>
-        <span><%= product.active_variants.first&.sku || "N/A" %></span>
+        <span><%= product.sku || "N/A" %></span>
       </div>
 
-      <% if product.configuration_data["size"].present? %>
+      <% if product.size_value.present? %>
         <div class="flex justify-between">
           <span class="text-gray-600">Size:</span>
-          <span><%= product.configuration_data["size"] %></span>
+          <span><%= product.size_value %></span>
         </div>
       <% end %>
 
-      <% if product.active_variants.first %>
-        <% variant = product.active_variants.first %>
-        <div class="flex justify-between">
-          <span class="text-gray-600">Price:</span>
-          <span>£<%= number_with_precision(variant.price, precision: 2) %>/unit</span>
-        </div>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Price:</span>
+        <span>£<%= number_with_precision(product.price, precision: 2) %>/unit</span>
+      </div>
 
-        <div class="flex justify-between">
-          <span class="text-gray-600">Stock:</span>
-          <% if variant.stock_quantity > 1000 %>
-            <span class="badge badge-success"><%= number_with_delimiter(variant.stock_quantity) %> in stock</span>
-          <% elsif variant.stock_quantity > 0 && variant.stock_quantity <= 1000 %>
-            <span class="badge badge-warning">Low stock (<%= number_with_delimiter(variant.stock_quantity) %>)</span>
-          <% else %>
-            <span class="badge badge-error">Out of stock</span>
-          <% end %>
-        </div>
-      <% end %>
+      <div class="flex justify-between">
+        <span class="text-gray-600">Stock:</span>
+        <% if product.stock_quantity.to_i > 1000 %>
+          <span class="badge badge-success"><%= number_with_delimiter(product.stock_quantity) %> in stock</span>
+        <% elsif product.stock_quantity.to_i > 0 && product.stock_quantity.to_i <= 1000 %>
+          <span class="badge badge-warning">Low stock (<%= number_with_delimiter(product.stock_quantity) %>)</span>
+        <% else %>
+          <span class="badge badge-error">Out of stock</span>
+        <% end %>
+      </div>
     </div>
 
     <div class="card-actions justify-end mt-4">

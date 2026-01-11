@@ -3,73 +3,73 @@ require "test_helper"
 class CartItemTest < ActiveSupport::TestCase
   setup do
     @cart = Cart.create
-    @product_variant = product_variants(:one)
+    @product = products(:one)
   end
 
   # Validation tests
   test "should not be valid without a cart" do
-    cart_item = CartItem.new(product_variant: @product_variant)
+    cart_item = CartItem.new(product: @product)
     assert_not cart_item.valid?
     assert_includes cart_item.errors[:cart], "must exist"
   end
 
-  test "should not be valid without a product_variant" do
+  test "should not be valid without a product" do
     cart_item = CartItem.new(cart: @cart)
     assert_not cart_item.valid?
-    assert_includes cart_item.errors[:product_variant], "must exist"
+    assert_includes cart_item.errors[:product], "must exist"
   end
 
   test "validates quantity is present" do
-    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: nil)
+    cart_item = CartItem.new(cart: @cart, product: @product, quantity: nil)
     assert_not cart_item.valid?
     assert_includes cart_item.errors[:quantity], "can't be blank"
   end
 
   test "validates quantity is greater than zero" do
-    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 0)
+    cart_item = CartItem.new(cart: @cart, product: @product, quantity: 0)
     assert_not cart_item.valid?
     assert_includes cart_item.errors[:quantity], "must be greater than 0"
   end
 
   test "validates price is greater than zero for non-sample-eligible variant" do
-    # @product_variant is not sample-eligible, so price=0 should be invalid
-    assert_not @product_variant.sample_eligible?, "Test requires non-sample-eligible variant"
-    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 1, price: 0)
+    # @product is not sample-eligible, so price=0 should be invalid
+    assert_not @product.sample_eligible?, "Test requires non-sample-eligible variant"
+    cart_item = CartItem.new(cart: @cart, product: @product, quantity: 1, price: 0)
     assert_not cart_item.valid?
     assert_includes cart_item.errors[:price], "must be greater than 0"
   end
 
   test "allows price of zero for sample-eligible variant" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
     assert sample_variant.sample_eligible?, "Test requires sample-eligible variant"
 
-    cart_item = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: 0)
+    cart_item = CartItem.new(cart: @cart, product: sample_variant, quantity: 1, price: 0)
     assert cart_item.valid?, "Sample with price=0 should be valid: #{cart_item.errors.full_messages}"
   end
 
-  test "validates uniqueness of product_variant per cart" do
-    cart_item = CartItem.new(cart: carts(:one), product_variant: product_variants(:one), quantity: 1, price: 10)
+  test "validates uniqueness of product per cart" do
+    cart_item = CartItem.new(cart: carts(:one), product: products(:one), quantity: 1, price: 10)
     assert_not cart_item.valid?
-    assert_includes cart_item.errors[:product_variant], "has already been taken"
+    assert_includes cart_item.errors[:product], "has already been taken"
   end
 
-  test "allows same product_variant in different carts" do
+  test "allows same product in different carts" do
     cart1 = Cart.create
     cart2 = Cart.create
 
-    cart_item1 = CartItem.create(cart: cart1, product_variant: @product_variant, quantity: 1, price: 10)
-    cart_item2 = CartItem.new(cart: cart2, product_variant: @product_variant, quantity: 1, price: 10)
+    cart_item1 = CartItem.create(cart: cart1, product: @product, quantity: 1, price: 10)
+    cart_item2 = CartItem.new(cart: cart2, product: @product, quantity: 1, price: 10)
 
     assert cart_item2.valid?
   end
 
   test "prevents adding sample when regular item exists in cart" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add as regular item first
     CartItem.create!(
       cart: @cart,
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 2,
       price: sample_variant.price,
       is_sample: false
@@ -78,7 +78,7 @@ class CartItemTest < ActiveSupport::TestCase
     # Try to add as sample - should be rejected
     sample_item = CartItem.new(
       cart: @cart,
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -89,24 +89,24 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "prevents duplicate of same variant in same cart" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add first item
-    CartItem.create!(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price)
+    CartItem.create!(cart: @cart, product: sample_variant, quantity: 1, price: sample_variant.price)
 
     # Try to add duplicate - should fail uniqueness validation
-    duplicate = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price)
+    duplicate = CartItem.new(cart: @cart, product: sample_variant, quantity: 1, price: sample_variant.price)
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:product_variant], "has already been taken"
+    assert_includes duplicate.errors[:product], "has already been taken"
   end
 
   test "enforces sample limit at model level" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Fill cart to sample limit
     Cart::SAMPLE_LIMIT.times do |i|
-      variant = ProductVariant.create!(
-        product: sample_variant.product,
+      variant = Product.create!(
+        category: categories(:cups),
         name: "Sample Variant #{i}",
         sku: "SAMPLE-LIMIT-#{i}-#{SecureRandom.hex(4)}",
         price: 10.0,
@@ -114,14 +114,14 @@ class CartItemTest < ActiveSupport::TestCase
         active: true,
         sample_eligible: true
       )
-      @cart.cart_items.create!(product_variant: variant, quantity: 1, price: 0, is_sample: true)
+      @cart.cart_items.create!(product: variant, quantity: 1, price: 0, is_sample: true)
     end
 
     assert @cart.at_sample_limit?, "Cart should be at sample limit"
 
     # Try to add one more sample - should fail validation
     extra_sample = @cart.cart_items.build(
-      product_variant: sample_variant,
+      product: sample_variant,
       quantity: 1,
       price: 0,
       is_sample: true
@@ -132,11 +132,11 @@ class CartItemTest < ActiveSupport::TestCase
 
   # Sample scope tests
   test "samples scope returns only is_sample=true items" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add sample and regular items (different variants)
-    @cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
-    @cart.cart_items.create!(product_variant: @product_variant, quantity: 1, price: @product_variant.price, is_sample: false)
+    @cart.cart_items.create!(product: sample_variant, quantity: 1, price: 0, is_sample: true)
+    @cart.cart_items.create!(product: @product, quantity: 1, price: @product.price, is_sample: false)
 
     samples = @cart.cart_items.samples
     assert_equal 1, samples.count
@@ -144,11 +144,11 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "non_samples scope excludes is_sample=true items" do
-    sample_variant = product_variants(:sample_cup_8oz)
+    sample_variant = products(:sample_cup_8oz)
 
     # Add sample and regular items (different variants)
-    @cart.cart_items.create!(product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
-    @cart.cart_items.create!(product_variant: @product_variant, quantity: 1, price: @product_variant.price, is_sample: false)
+    @cart.cart_items.create!(product: sample_variant, quantity: 1, price: 0, is_sample: true)
+    @cart.cart_items.create!(product: @product, quantity: 1, price: @product.price, is_sample: false)
 
     non_samples = @cart.cart_items.non_samples
     assert_equal 1, non_samples.count
@@ -156,34 +156,34 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "sample? returns true when is_sample is true" do
-    sample_variant = product_variants(:sample_cup_8oz)
-    cart_item = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: 0, is_sample: true)
+    sample_variant = products(:sample_cup_8oz)
+    cart_item = CartItem.new(cart: @cart, product: sample_variant, quantity: 1, price: 0, is_sample: true)
 
     assert cart_item.sample?
   end
 
   test "sample? returns false when is_sample is false" do
-    sample_variant = product_variants(:sample_cup_8oz)
-    cart_item = CartItem.new(cart: @cart, product_variant: sample_variant, quantity: 1, price: sample_variant.price, is_sample: false)
+    sample_variant = products(:sample_cup_8oz)
+    cart_item = CartItem.new(cart: @cart, product: sample_variant, quantity: 1, price: sample_variant.price, is_sample: false)
 
     assert_not cart_item.sample?
   end
 
   test "sample? returns false when is_sample defaults to false" do
     # Test default behavior: is_sample defaults to false
-    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 1, price: @product_variant.price)
+    cart_item = CartItem.new(cart: @cart, product: @product, quantity: 1, price: @product.price)
 
     assert_not cart_item.sample?
   end
 
   # Method tests
   test "subtotal_amount calculates price times quantity" do
-    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 3, price: 10.50)
+    cart_item = CartItem.new(cart: @cart, product: @product, quantity: 3, price: 10.50)
     assert_equal 31.50, cart_item.subtotal_amount
   end
 
   test "subtotal_amount handles different quantities" do
-    cart_item = CartItem.new(cart: @cart, product_variant: @product_variant, quantity: 1, price: 5.99)
+    cart_item = CartItem.new(cart: @cart, product: @product, quantity: 1, price: 5.99)
     assert_equal 5.99, cart_item.subtotal_amount
   end
 
@@ -192,14 +192,14 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   # Callback tests
-  test "automatically sets price from product_variant if blank" do
-    cart_item = CartItem.create(cart: @cart, product_variant: @product_variant, quantity: 1)
-    assert_equal @product_variant.price, cart_item.price
+  test "automatically sets price from product if blank" do
+    cart_item = CartItem.create(cart: @cart, product: @product, quantity: 1)
+    assert_equal @product.price, cart_item.price
   end
 
   test "does not override manually set price" do
     custom_price = 99.99
-    cart_item = CartItem.create(cart: @cart, product_variant: @product_variant, quantity: 1, price: custom_price)
+    cart_item = CartItem.create(cart: @cart, product: @product, quantity: 1, price: custom_price)
     assert_equal custom_price, cart_item.price
   end
 
@@ -210,13 +210,13 @@ class CartItemTest < ActiveSupport::TestCase
     assert_kind_of Cart, cart_item.cart
   end
 
-  test "belongs to product_variant" do
+  test "belongs to product" do
     cart_item = cart_items(:one)
-    assert_respond_to cart_item, :product_variant
-    assert_kind_of ProductVariant, cart_item.product_variant
+    assert_respond_to cart_item, :product
+    assert_kind_of Product, cart_item.product
   end
 
-  test "has one product through product_variant" do
+  test "has one product through product" do
     cart_item = cart_items(:one)
     assert_respond_to cart_item, :product
     assert_kind_of Product, cart_item.product
@@ -252,13 +252,13 @@ class CartItemTest < ActiveSupport::TestCase
     cart_item = cart_items(:one)
     # For standard products, unit_price delegates to product_variant.unit_price
     # which divides by pac_size if present, or returns price if not
-    assert_equal cart_item.product_variant.unit_price, cart_item.unit_price
+    assert_equal cart_item.product.unit_price, cart_item.unit_price
   end
 
   test "configured cart item validates calculated_price presence" do
     cart_item = CartItem.new(
       cart: carts(:one),
-      product_variant: product_variants(:one),
+      product: products(:one),
       quantity: 1,
       configuration: { size: "8oz", quantity: 1000 },
       calculated_price: nil
@@ -278,9 +278,8 @@ class CartItemTest < ActiveSupport::TestCase
   # subtotal = price * quantity
 
   test "subtotal_amount for standard product with pack pricing" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "1000 pack",
       sku: "TEST-PACK-1000",
       price: 100.00,  # £100 per pack
@@ -291,7 +290,7 @@ class CartItemTest < ActiveSupport::TestCase
     # User orders 2 packs (2000 units)
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 2,  # 2 packs
       price: variant.price  # pack price
     )
@@ -302,9 +301,8 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "subtotal_amount for standard product with exact pack quantity" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "500 pack",
       sku: "TEST-PACK-500",
       price: 50.00,  # £50 per pack
@@ -315,7 +313,7 @@ class CartItemTest < ActiveSupport::TestCase
     # User orders 2 packs (1000 units)
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 2,  # 2 packs
       price: variant.price  # pack price
     )
@@ -326,9 +324,8 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "subtotal_amount for standard product with single pack" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "100 pack",
       sku: "TEST-PACK-100",
       price: 10.00,  # £10 per pack
@@ -339,7 +336,7 @@ class CartItemTest < ActiveSupport::TestCase
     # User orders 1 pack
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 1,  # 1 pack
       price: variant.price  # pack price
     )
@@ -351,9 +348,8 @@ class CartItemTest < ActiveSupport::TestCase
 
   # Pack pricing display tests for pricing display consolidation
   test "pack_priced? returns true for standard product with pac_size > 1" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "500 pack",
       sku: "TEST-PACK-PRICED-500",
       price: 15.99,
@@ -363,7 +359,7 @@ class CartItemTest < ActiveSupport::TestCase
 
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 500,
       price: variant.price
     )
@@ -377,9 +373,8 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "pack_priced? returns false when pac_size is nil" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "No pack size",
       sku: "TEST-NO-PAC-SIZE",
       price: 15.99,
@@ -389,7 +384,7 @@ class CartItemTest < ActiveSupport::TestCase
 
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 1,
       price: variant.price
     )
@@ -398,9 +393,8 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "pack_priced? returns false when pac_size is 1" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "Single unit",
       sku: "TEST-SINGLE-UNIT",
       price: 15.99,
@@ -410,7 +404,7 @@ class CartItemTest < ActiveSupport::TestCase
 
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 1,
       price: variant.price
     )
@@ -419,9 +413,8 @@ class CartItemTest < ActiveSupport::TestCase
   end
 
   test "pack_price returns price for pack-priced items" do
-    product = products(:one)
-    variant = ProductVariant.create!(
-      product: product,
+    variant = Product.create!(
+      category: categories(:cups),
       name: "500 pack for pack_price test",
       sku: "TEST-PACK-PRICE-500",
       price: 15.99,
@@ -431,7 +424,7 @@ class CartItemTest < ActiveSupport::TestCase
 
     cart_item = CartItem.create!(
       cart: @cart,
-      product_variant: variant,
+      product: variant,
       quantity: 500,
       price: variant.price
     )

@@ -7,7 +7,7 @@ class ReorderSchedulesController < ApplicationController
   # GET /reorder_schedules
   def index
     @schedules = Current.user.reorder_schedules.includes(
-      reorder_schedule_items: { product_variant: { product_photo_attachment: :blob, product: { product_photo_attachment: :blob } } }
+      reorder_schedule_items: { product: { product_photo_attachment: :blob } }
     )
   end
 
@@ -148,7 +148,7 @@ class ReorderSchedulesController < ApplicationController
   def schedule_update_params
     params.require(:reorder_schedule).permit(
       :frequency,
-      reorder_schedule_items_attributes: [ :id, :product_variant_id, :quantity, :price, :_destroy ]
+      reorder_schedule_items_attributes: [ :id, :product_id, :quantity, :price, :_destroy ]
     )
   end
 

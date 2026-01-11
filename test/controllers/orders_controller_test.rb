@@ -200,16 +200,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     sign_in @user_one
 
     # Create an order item that can be reordered
-    active_variant = ProductVariant.create!(
-      product: products(:one),
+    active_variant = Product.create!(
+      category: categories(:one),
       name: "Reorderable Product",
       sku: "REORDER-CTRL-1",
       price: 16.00,
       active: true
     )
     @order_one.order_items.create!(
-      product_variant: active_variant,
-      product: active_variant.product,
+      product: active_variant,
       product_name: active_variant.name,
       product_sku: active_variant.sku,
       price: active_variant.price,
@@ -230,16 +229,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     # Clear fixture items for accurate count test
     @order_one.order_items.destroy_all
 
-    active_variant = ProductVariant.create!(
-      product: products(:one),
+    active_variant = Product.create!(
+      category: categories(:one),
       name: "Reorderable Success",
       sku: "REORDER-SUCCESS-1",
       price: 16.00,
       active: true
     )
     @order_one.order_items.create!(
-      product_variant: active_variant,
-      product: active_variant.product,
+      product: active_variant,
       product_name: active_variant.name,
       product_sku: active_variant.sku,
       price: active_variant.price,
@@ -256,15 +254,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   test "reorder shows partial success with unavailable items" do
     sign_in @user_one
 
-    active_variant = ProductVariant.create!(
-      product: products(:one),
+    active_variant = Product.create!(
+      category: categories(:one),
       name: "Active Variant",
       sku: "REORDER-ACTIVE-CTRL-1",
       price: 16.00,
       active: true
     )
-    inactive_variant = ProductVariant.create!(
-      product: products(:one),
+    inactive_variant = Product.create!(
+      category: categories(:one),
       name: "Inactive Variant",
       sku: "REORDER-INACTIVE-CTRL-1",
       price: 16.00,
@@ -272,8 +270,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     )
 
     @order_one.order_items.create!(
-      product_variant: active_variant,
-      product: active_variant.product,
+      product: active_variant,
       product_name: active_variant.name,
       product_sku: active_variant.sku,
       price: active_variant.price,
@@ -281,8 +278,7 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
       line_total: active_variant.price
     )
     @order_one.order_items.create!(
-      product_variant: inactive_variant,
-      product: inactive_variant.product,
+      product: inactive_variant,
       product_name: inactive_variant.name,
       product_sku: inactive_variant.sku,
       price: inactive_variant.price,
@@ -302,16 +298,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     # Clear existing items and add only inactive ones
     @order_one.order_items.destroy_all
 
-    inactive_variant = ProductVariant.create!(
-      product: products(:one),
+    inactive_variant = Product.create!(
+      category: categories(:one),
       name: "All Inactive",
       sku: "REORDER-ALLINACTIVE-1",
       price: 16.00,
       active: false
     )
     @order_one.order_items.create!(
-      product_variant: inactive_variant,
-      product: inactive_variant.product,
+      product: inactive_variant,
       product_name: inactive_variant.name,
       product_sku: inactive_variant.sku,
       price: inactive_variant.price,
@@ -338,16 +333,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     # Clear fixture items for accurate count test
     @order_one.order_items.destroy_all
 
-    active_variant = ProductVariant.create!(
-      product: products(:one),
+    active_variant = Product.create!(
+      category: categories(:one),
       name: "Add To Cart Test",
       sku: "REORDER-CART-1",
       price: 16.00,
       active: true
     )
     @order_one.order_items.create!(
-      product_variant: active_variant,
-      product: active_variant.product,
+      product: active_variant,
       product_name: active_variant.name,
       product_sku: active_variant.sku,
       price: active_variant.price,
@@ -365,8 +359,8 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     # Verify item was actually added to a cart (user's session cart)
     # Note: The app uses session-based cart assignment, so we verify
     # by checking a cart exists with the reordered variant
-    cart_with_item = CartItem.find_by(product_variant: active_variant)&.cart
+    cart_with_item = CartItem.find_by(product: active_variant)&.cart
     assert_not_nil cart_with_item, "Reordered item should exist in a cart"
-    assert_equal 3, cart_with_item.cart_items.find_by(product_variant: active_variant).quantity
+    assert_equal 3, cart_with_item.cart_items.find_by(product: active_variant).quantity
   end
 end

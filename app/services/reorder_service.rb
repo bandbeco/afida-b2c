@@ -25,8 +25,8 @@ class ReorderService
     @cart = cart
     @added_count = 0
     @skipped_items = []
-    # Preload cart items indexed by variant ID to avoid N+1 queries
-    @existing_cart_items = @cart.cart_items.index_by(&:product_variant_id)
+    # Preload cart items indexed by product ID to avoid N+1 queries
+    @existing_cart_items = @cart.cart_items.index_by(&:product_id)
   end
 
   def call
@@ -51,31 +51,30 @@ class ReorderService
   def can_reorder?(item)
     return false if item.sample?
     return false if item.configured?
-    return false unless item.product_variant.present?
-    return false unless item.product_variant.active?
-    return false unless item.product_variant.product&.active?
+    return false unless item.product.present?
+    return false unless item.product.active?
 
     true
   end
 
   def add_to_cart(item)
-    variant = item.product_variant
-    existing_cart_item = @existing_cart_items[variant.id]
+    product = item.product
+    existing_cart_item = @existing_cart_items[product.id]
 
     if existing_cart_item
       existing_cart_item.update!(quantity: existing_cart_item.quantity + item.quantity)
     else
       new_item = @cart.cart_items.create!(
-        product_variant: variant,
-        price: variant.price,
+        product: product,
+        price: product.price,
         quantity: item.quantity
       )
-      @existing_cart_items[variant.id] = new_item
+      @existing_cart_items[product.id] = new_item
     end
 
     @added_count += 1
   rescue ActiveRecord::RecordInvalid => e
-    @skipped_items << { name: variant.display_name, reason: "Could not add to cart: #{e.message}" }
+    @skipped_items << { name: product.display_name, reason: "Could not add to cart: #{e.message}" }
   end
 
   def skip_item(item)
@@ -88,9 +87,8 @@ class ReorderService
   def skip_reason(item)
     return "This was a sample item" if item.sample?
     return "This was a configured/branded item" if item.configured?
-    return "Product no longer exists" if item.product_variant.blank?
-    return "Product is no longer available" unless item.product_variant.active?
-    return "Product is no longer available" unless item.product_variant.product&.active?
+    return "Product no longer exists" if item.product.blank?
+    return "Product is no longer available" unless item.product.active?
 
     "Unknown reason"
   end

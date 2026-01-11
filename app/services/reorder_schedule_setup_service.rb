@@ -79,8 +79,10 @@ class ReorderScheduleSetupService
       )
 
       order.order_items.each do |item|
+        next unless item.product.present? # Skip items without a product
+
         schedule.reorder_schedule_items.create!(
-          product_variant: item.product_variant,
+          product: item.product,
           quantity: item.quantity,
           price: item.price
         )

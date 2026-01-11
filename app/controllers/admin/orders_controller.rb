@@ -2,11 +2,11 @@ class Admin::OrdersController < Admin::ApplicationController
   layout "admin"
 
   def index
-    @orders = filter_by_sample_status(Order.includes(order_items: :product_variant).recent)
+    @orders = filter_by_sample_status(Order.includes(order_items: :product).recent)
   end
 
   def show
-    @order = Order.includes(order_items: :product_variant).find(params[:id])
+    @order = Order.includes(order_items: :product).find(params[:id])
   end
 
   private
