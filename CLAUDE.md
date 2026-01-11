@@ -95,7 +95,7 @@ rails c                 # Shorthand
   - 27 controllers total, key ones include:
   - `cart_drawer_controller.js` - Shopping cart drawer
   - `carousel_controller.js` - Swiper.js carousel integration
-  - `product_options_controller.js` - Product variant selection
+  - `product_options_controller.js` - Product option selection
   - `quick_add_modal_controller.js` - Quick add to cart modal
   - `branded_configurator_controller.js` - Branded product configuration
   - `sample_counter_controller.js` - Sample selection tracking
@@ -121,10 +121,13 @@ Controllers will NOT work if they are not registered. The lazy loading system au
 ### Backend Architecture
 
 **Models**:
-- `Product` - Has variants, belongs to category, uses slugs for URLs
+- `Product` - Main sellable entity, belongs to category, uses slugs for URLs
+  - Has SKU, price, stock, pac_size, dimensions, photos
   - Default scope filters active products and orders by sort_order
-  - `ProductVariant` - Price and inventory tracking (SKU, stock, price)
+  - Optionally belongs to `ProductFamily` for grouping related products
   - `ProductCompatibleLid` - Join table for cup/lid compatibility
+- `ProductFamily` - Optional grouping mechanism for related products (e.g., "Single Wall Cups" family containing 8oz, 12oz, 16oz products)
+  - Products in same family shown in "See Also" section
 - `Category` - Organizes products
 - `Cart` / `CartItem` - Shopping cart (supports both guest and user carts)
   - VAT calculation at 20% (UK)
@@ -134,7 +137,7 @@ Controllers will NOT work if they are not registered. The lazy loading system au
   - Captures shipping details from Stripe Checkout
 - `User` / `Session` - Authentication (Rails 8 built-in authentication with bcrypt)
 - `Address` - User saved delivery addresses (multiple per user, one default)
-- `ReorderSchedule` / `ReorderScheduleItem` - Scheduled automatic reorders
+- `ReorderSchedule` / `ReorderScheduleItem` - Scheduled automatic reorders (items reference Product)
 - `PendingOrder` - Orders awaiting customer confirmation before charging
 - `Organization` - B2B customer organizations
 - `Current` - ActiveSupport::CurrentAttributes for request-scoped state (user, session, cart)
@@ -163,7 +166,8 @@ Controllers will NOT work if they are not registered. The lazy loading system au
 
 **Key Patterns**:
 - Uses slugs for SEO-friendly URLs (`Product#to_param` returns slug)
-- Products have variants for different sizes/options
+- Products are the main sellable entity (not variants)
+- Related products grouped via optional `ProductFamily` association
 - Authentication uses Rails 8 built-in patterns with `allow_unauthenticated_access` macro
 - Guest carts tracked by cookie, merged on user login
 - VAT calculated on checkout (20% UK rate)
@@ -229,10 +233,12 @@ rails credentials:edit
 - ALWAYS read and understand relevant files before proposing edits. Do not speculate about code you have not inspected.
 
 ### Working with Products
+- `Product` is the main sellable entity with SKU, price, stock, and photos
 - Products require a category and generate slugs automatically from name/SKU/colour
-- Always work with `product.active_variants` not `product.variants` (filters inactive)
-- Use `product.default_variant` for single variant products
-- Price range calculated from all active variants
+- Products can optionally belong to a `ProductFamily` for grouping
+- Use `product.sibling_variants` to get related products in the same family
+- Use `product.catalog_products` scope for public-facing product listings
+- Price, stock, and pac_size are direct attributes on Product (no variants)
 
 ### Working with Product Descriptions
 
@@ -271,7 +277,7 @@ product.description_detailed_with_fallback # Returns detailed (no fallback neede
 
 ### Working with Product Photos
 
-Products and variants support two photo types:
+Products support two photo types:
 - **Product Photo** (`:product_photo`) - Close-up product shot
 - **Lifestyle Photo** (`:lifestyle_photo`) - Staged in real-life context
 
@@ -314,9 +320,9 @@ Lid compatibility matches cup products with compatible lid products using a **jo
 compatible_lids_for_cup_product(cup_product)
 # Returns: Array of lid Product objects
 
-# Get matching lid variants for a specific cup variant
-matching_lid_variants_for_cup_variant(cup_variant)
-# Returns: Array of lid ProductVariant objects with matching size
+# Get matching lids for a specific cup product by size
+matching_lids_for_cup_product(cup_product, size)
+# Returns: Array of lid Product objects with matching size
 ```
 
 **Configurator Integration**:
@@ -328,7 +334,7 @@ matching_lid_variants_for_cup_variant(cup_variant)
 **Architecture**:
 - **Two-level matching**:
   1. Product level: Material type (hot cup → hot lid, cold cup → cold lid)
-  2. Variant level: Size matching (8oz cup → 8oz lid)
+  2. Size matching: Filter by size option value (8oz cup → 8oz lid)
 - **Cup-centric**: Cups define their compatible lids (not vice versa)
 - **Flexible**: Easy to add new lids or change compatibility
 - **Sortable & Defaultable**: Control display order and recommended option
@@ -430,16 +436,16 @@ Visit `/pattern-demo` in development to see all variants and usage examples.
 Free product samples allow customers to try products before buying. Samples are available at `/samples`.
 
 **Data Model**:
-- `ProductVariant#sample_eligible` - Boolean flag marking variants available as samples
-- `ProductVariant#sample_sku` - Optional custom SKU for sample fulfillment (defaults to `SAMPLE-{sku}`)
+- `Product#sample_eligible` - Boolean flag marking products available as samples
+- `Product#sample_sku` - Optional custom SKU for sample fulfillment (defaults to `SAMPLE-{sku}`)
 - Samples are stored as `CartItem` records with `price = 0`
-- **Mutual Exclusivity**: Same variant CANNOT exist as both sample and regular item in cart
+- **Mutual Exclusivity**: Same product CANNOT exist as both sample and regular item in cart
 
 **Limits & Validation**:
 - Maximum 5 samples per cart (`Cart::SAMPLE_LIMIT`)
 - `CartItem` validates sample eligibility and limit at database level (race-condition safe)
-- Only sample-eligible variants can have price=0
-- Uniqueness validated on `(cart_id, product_variant_id)` - one entry per variant
+- Only sample-eligible products can have price=0
+- Uniqueness validated on `(cart_id, product_id)` - one entry per product
 
 **Sample vs Regular Item Replacement**:
 When adding items, the system enforces mutual exclusivity with asymmetric behavior:
@@ -462,7 +468,7 @@ cart.at_sample_limit?                  # True if 5+ samples
 - Order tracks `samples_only?` for fulfillment
 
 **Admin Setup**:
-1. Edit a product variant in admin
+1. Edit a product in admin
 2. Check "Sample eligible" checkbox
 3. Optionally set custom `sample_sku` for fulfillment tracking
 
@@ -478,7 +484,7 @@ Customers can set up automatic recurring orders that are charged on a schedule.
   - `next_scheduled_date` - When the next order will be created
   - `stripe_payment_method_id` - Saved card for off-session charging
   - `card_brand`, `card_last4` - Display info for the saved card
-- `ReorderScheduleItem` - Items in the schedule (product_variant + quantity)
+- `ReorderScheduleItem` - Items in the schedule (product + quantity)
 - `PendingOrder` - Created 3 days before charge date for customer review
   - `items_snapshot` - JSONB capturing prices at creation time
   - `status` - Enum: `pending`, `confirmed`, `expired`
@@ -570,7 +576,7 @@ format_quantity_display(item)  # "2 packs (1,000 units)" or "5,000 units"
 **Historical Data Preservation**:
 - `OrderItem` captures `pac_size` at order time
 - This ensures order history displays correctly even if product pac_size changes later
-- Always use `order_item.pac_size`, never `order_item.product_variant.pac_size`
+- Always use `order_item.pac_size`, never `order_item.product.pac_size`
 
 **Form Submissions**:
 - Standard product forms submit pack count (not unit count)
@@ -585,7 +591,7 @@ format_quantity_display(item)  # "2 packs (1,000 units)" or "5,000 units"
 
 ### Admin Area
 - Namespaced under `/admin`
-- Manage products and variants
+- Manage products and product families
 - View and manage orders
 - Add authentication checks before deploying to production
 
@@ -650,7 +656,7 @@ Comprehensive SEO implementation with structured data, sitemaps, canonical URLs,
 
 ```ruby
 # Product structured data with Schema.org Product markup
-product_structured_data(product, variant)
+product_structured_data(product)
 
 # Organization structured data (Afida company info)
 organization_structured_data
@@ -773,7 +779,7 @@ After deploying SEO updates:
 - Ruby 3.3.0+ / Rails 8.x + Rails ActiveRecord, PostgreSQL, Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (001-option-value-labels)
 - PostgreSQL 14+ (new `variant_option_values` join table) (001-option-value-labels)
 - Ruby 3.4.7, Rails 8.1.1 + Turbo-Rails, Stimulus-Rails, Vite Rails 3.0, Pagy (pagination) (001-variant-pages)
-- PostgreSQL 14+ (existing schema, adding `slug` to `product_variants`, `search_vector` tsvector column) (001-variant-pages)
+- PostgreSQL 14+ (model restructure: ProductVariant → Product, Product → ProductFamily) (001-variant-pages)
 
 ## Recent Changes
 - 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+
