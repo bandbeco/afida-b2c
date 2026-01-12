@@ -162,7 +162,6 @@ rails db:reset                # Drop, create, migrate, seed
 Products can optionally be grouped into families:
 - **ProductFamily** - Groups related products (e.g., "Single Wall Cups" containing 8oz, 12oz, 16oz)
 - **Products in same family** share an `item_group_id` for Google Shopping
-- **Related products** shown in "See Also" section on product pages
 
 ## Product Configuration System
 
@@ -269,7 +268,6 @@ Products use slugs for SEO-friendly URLs via `to_param` override.
 ```ruby
 Product.all              # Only active products (default scope)
 Product.featured         # Featured products
-product.siblings         # Related products in same family
 ```
 
 ## Admin

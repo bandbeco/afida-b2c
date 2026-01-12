@@ -240,21 +240,6 @@ class Product < ApplicationRecord
     ActionController::Base.helpers.number_to_currency(unit_price, precision: 4)
   end
 
-  # Returns price range for products in the same family
-  # For standalone products, returns just the price
-  def price_range
-    if product_family.present?
-      prices = product_family.products.active.pluck(:price)
-      return nil if prices.empty?
-
-      min = prices.min
-      max = prices.max
-      min == max ? min : [ min, max ]
-    else
-      price
-    end
-  end
-
   # ==========================================================================
   # Stock Methods
   # ==========================================================================

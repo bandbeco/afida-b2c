@@ -127,7 +127,6 @@ Controllers will NOT work if they are not registered. The lazy loading system au
   - Optionally belongs to `ProductFamily` for grouping related products
   - `ProductCompatibleLid` - Join table for cup/lid compatibility
 - `ProductFamily` - Optional grouping mechanism for related products (e.g., "Single Wall Cups" family containing 8oz, 12oz, 16oz products)
-  - Products in same family shown in "See Also" section
 - `Category` - Organizes products
 - `Cart` / `CartItem` - Shopping cart (supports both guest and user carts)
   - VAT calculation at 20% (UK)
@@ -236,7 +235,6 @@ rails credentials:edit
 - `Product` is the main sellable entity with SKU, price, stock, and photos
 - Products require a category and generate slugs automatically from name/SKU/colour
 - Products can optionally belong to a `ProductFamily` for grouping
-- Use `product.siblings` to get related products in the same family
 - Use `product.catalog_products` scope for public-facing product listings
 - Price, stock, and pac_size are direct attributes on Product (no variants)
 

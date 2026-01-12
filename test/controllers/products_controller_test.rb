@@ -117,19 +117,15 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  # Sibling Products ("See Also") Tests
-  # Products in the same family show sibling links for easy navigation
+  # Product Family Tests
+  # Products in the same family render successfully
 
-  test "show renders sibling products for product in a family" do
+  test "show renders product in a family successfully" do
     product = products(:single_wall_8oz_white)
 
     get product_url(product.slug)
 
     assert_response :success
-    # Check for See Also section if product has siblings
-    if product.siblings.any?
-      assert_match "See Also", response.body
-    end
   end
 
   test "show renders product page successfully for all product types" do

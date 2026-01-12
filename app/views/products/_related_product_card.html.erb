@@ -16,12 +16,7 @@
       <%= product.generated_title %>
     </h3>
     <p class="text-sm text-base-content/60 mt-2">
-      <% price = product.price_range %>
-      <% if price.is_a?(Array) %>
-        from <%= number_to_currency(price.first) %>
-      <% elsif price %>
-        <%= number_to_currency(price) %>
-      <% end %>
+      <%= number_to_currency(product.price) %> / pack of <%= number_with_delimiter(product.pac_size) %>
     </p>
   </div>
 <% end %>
