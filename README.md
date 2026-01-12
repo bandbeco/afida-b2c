@@ -1,10 +1,10 @@
 # Afida E-Commerce Shop
 
-A modern Rails 8 e-commerce application for selling eco-friendly catering supplies with product variants, Stripe payments, scheduled reorders, and Google Shopping integration.
+A modern Rails 8 e-commerce application for selling eco-friendly catering supplies with Stripe payments, scheduled reorders, and Google Shopping integration.
 
 ## Features
 
-- **Product Management** with variants (size, volume, pack size)
+- **Product Management** with optional ProductFamily grouping for related products
 - **Shopping Cart** with VAT calculation (UK 20%)
 - **Stripe Checkout** integration with shipping options
 - **User Authentication** using Rails 8 built-in auth
@@ -127,9 +127,9 @@ RAILS_MAX_THREADS=5
 
 ### Schema Overview
 
-**Products & Variants**:
-- `products` - Base products with name, description, category
-- `product_variants` - SKUs with price, stock for each product option
+**Products**:
+- `products` - Main sellable entity with SKU, price, stock, photos
+- `product_families` - Optional grouping for related products (e.g., cups of different sizes)
 - `categories` - Product categories
 - `product_compatible_lids` - Cup/lid compatibility relationships
 
@@ -157,20 +157,19 @@ rails db:seed                 # Seed database
 rails db:reset                # Drop, create, migrate, seed
 ```
 
-### Product Variants
+### Product Families
 
-Products use a variant system where:
-- **Colors** = separate products (different item_group_id)
-- **Sizes/volumes** = variants of same product (same item_group_id)
-
-See [docs/variant_migration_guide.md](docs/variant_migration_guide.md) for migration details.
+Products can optionally be grouped into families:
+- **ProductFamily** - Groups related products (e.g., "Single Wall Cups" containing 8oz, 12oz, 16oz)
+- **Products in same family** share an `item_group_id` for Google Shopping
+- **Related products** shown in "See Also" section on product pages
 
 ## Product Configuration System
 
 This application supports two types of products:
 
 ### Standard Products
-Products with configurable options (size, color, material) that generate variants automatically.
+Products with SKU, price, stock, and pac_size (units per pack). Each product is a sellable entity.
 
 ### Customizable/Branded Products
 B2B custom packaging with:
@@ -196,7 +195,7 @@ Customers can set up automatic recurring orders:
 ### Free Samples
 
 Customers can request up to 5 free product samples:
-- Sample-eligible variants marked in admin
+- Sample-eligible products marked in admin
 - Samples-only orders have special £7.50 shipping
 - Mixed orders include samples for free
 
@@ -220,7 +219,7 @@ rails test test/models/       # Run model tests only
 ### Test Coverage
 
 Key areas tested:
-- Product and variant associations
+- Product and ProductFamily associations
 - Cart calculations (VAT, totals)
 - Order creation from cart
 - User authentication
@@ -270,7 +269,7 @@ Products use slugs for SEO-friendly URLs via `to_param` override.
 ```ruby
 Product.all              # Only active products (default scope)
 Product.featured         # Featured products
-product.active_variants  # Only active variants
+product.siblings         # Related products in same family
 ```
 
 ## Admin
@@ -278,10 +277,10 @@ product.active_variants  # Only active variants
 Access admin at: http://localhost:3000/admin
 
 **Features**:
-- Product management (CRUD with variants)
+- Product management (CRUD)
+- Category management
 - Order management (view, update status)
 - Branded order management (design approval workflow)
-- URL redirect management
 
 **TODO**: Add admin authentication before production deployment!
 
@@ -318,8 +317,8 @@ Setup guide: [docs/google_merchant_setup.md](docs/google_merchant_setup.md)
 
 ### Feed Structure
 
-- Each variant has unique SKU as `id`
-- Variants share `item_group_id` (based on product base_sku)
+- Each product has unique SKU as `id`
+- Products in same family share `item_group_id`
 - Includes: title, price, availability, link, image
 
 ## Deployment
@@ -351,7 +350,6 @@ rails assets:precompile  # If using Sprockets for any assets
 - [docs/prd.md](docs/prd.md) - Product Requirements Document
 - [docs/tasks.md](docs/tasks.md) - Development task list
 - [docs/google_merchant_setup.md](docs/google_merchant_setup.md) - Google Shopping setup
-- [docs/variant_migration_guide.md](docs/variant_migration_guide.md) - Variant system migration
 - [docs/BRANDED_PRODUCTS.md](docs/BRANDED_PRODUCTS.md) - Branded products system documentation
 
 ## Troubleshooting
@@ -384,8 +382,8 @@ bin/dev
 - Check webhook endpoint is publicly accessible
 - Test with Stripe CLI: `stripe listen --forward-to localhost:3000/webhooks/stripe`
 
-**Missing variant images**:
-Products inherit from parent product. Ensure product has attached image.
+**Missing product images**:
+Ensure products have attached product_photo or lifestyle_photo.
 
 ## Contributing
 

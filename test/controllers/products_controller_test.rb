@@ -127,7 +127,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     # Check for See Also section if product has siblings
-    if product.sibling_variants.any?
+    if product.siblings.any?
       assert_match "See Also", response.body
     end
   end

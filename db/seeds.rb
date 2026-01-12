@@ -47,10 +47,7 @@ branded_category = Category.find_or_create_by!(
 )
 puts "  Created/Updated category: Branded Products (branded-products)"
 
-# Load product options first (required for products with options)
-load Rails.root.join('db', 'seeds', 'product_options.rb')
-
-# Load products from consolidated CSV (replaces YAML-based seeding)
+# Load products from consolidated CSV
 load Rails.root.join('db', 'seeds', 'products_from_csv.rb')
 
 # Load branded product pricing seed (must run before lid_compatibility)
@@ -78,30 +75,23 @@ puts "  Marked #{Product.where(featured: true).count} products as featured"
 puts "Seeding completed!"
 puts "Categories created: #{Category.count}"
 puts "Products created: #{Product.count}"
-puts "Product variants created: #{ProductVariant.count}" if defined?(ProductVariant)
-puts "Product options created: #{ProductOption.count}" if defined?(ProductOption)
-puts "Product option values created: #{ProductOptionValue.count}" if defined?(ProductOptionValue)
+puts "Product families created: #{ProductFamily.count}" if defined?(ProductFamily)
 puts "Branded product prices created: #{BrandedProductPrice.count}" if defined?(BrandedProductPrice)
 puts "Lid compatibility relationships: #{ProductCompatibleLid.count}" if defined?(ProductCompatibleLid)
 puts "Products with photos: #{Product.joins(:product_photo_attachment).distinct.count}"
-puts "Variants with photos: #{ProductVariant.joins(:product_photo_attachment).distinct.count}" if defined?(ProductVariant)
 
-# Report variants without photos
-if defined?(ProductVariant)
-  variants_without_photos = ProductVariant
-    .active
-    .joins(:product)
-    .where.not(id: ProductVariant.joins(:product_photo_attachment).select(:id))
-    .where.not(sku: ProductVariant.where("sku LIKE 'P-%'").select(:sku))
-    .where(products: { product_type: [ nil, 'standard' ] })
-    .includes(:product)
-    .order('products.name', 'product_variants.sku')
+# Report products without photos
+products_without_photos = Product
+  .active
+  .where.not(id: Product.joins(:product_photo_attachment).select(:id))
+  .where.not("sku LIKE 'P-%'")
+  .where(product_type: [ nil, "standard" ])
+  .order(:name, :sku)
 
-  if variants_without_photos.any?
-    puts ""
-    puts "Variants without photos (#{variants_without_photos.count}):"
-    variants_without_photos.each do |variant|
-      puts "  - #{variant.product.name}: #{variant.sku}"
-    end
+if products_without_photos.any?
+  puts ""
+  puts "Products without photos (#{products_without_photos.count}):"
+  products_without_photos.each do |product|
+    puts "  - #{product.name}: #{product.sku}"
   end
 end

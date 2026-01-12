@@ -236,7 +236,7 @@ rails credentials:edit
 - `Product` is the main sellable entity with SKU, price, stock, and photos
 - Products require a category and generate slugs automatically from name/SKU/colour
 - Products can optionally belong to a `ProductFamily` for grouping
-- Use `product.sibling_variants` to get related products in the same family
+- Use `product.siblings` to get related products in the same family
 - Use `product.catalog_products` scope for public-facing product listings
 - Price, stock, and pac_size are direct attributes on Product (no variants)
 
@@ -754,31 +754,26 @@ After deploying SEO updates:
 - Categories: `meta_title`, `meta_description` (required)
 
 ## Active Technologies
-- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+ (001-legacy-url-redirects)
-- PostgreSQL 14+ (primary database with `legacy_redirects` table using JSONB for variant parameters) (001-legacy-url-redirects)
-- PostgreSQL 14+ (existing `products`, `categories`, `product_variants` tables) (003-shop-page-filters-search)
-- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionView, ActiveSupport), Vite Rails, Stimulus, TailwindCSS 4, DaisyUI (004-product-descriptions)
-- PostgreSQL 14+ (existing products table, new columns: description_short, description_standard, description_detailed) (004-product-descriptions)
-- Ruby 3.3.0+ / Rails 8.x + Vite Rails, Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (005-quick-add-to-cart)
-- PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items` tables) (005-quick-add-to-cart)
-- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionView), Hotwire (Turbo Frames + Stimulus), TailwindCSS 4, DaisyUI, Stripe Checkout (011-variant-samples)
-- PostgreSQL 14+ (existing `products`, `product_variants`, `carts`, `cart_items`, `orders`, `order_items` tables) (011-variant-samples)
-- Ruby 3.3.0+ / Rails 8.x + Vite Rails, TailwindCSS 4, DaisyUI, Hotwire (Turbo + Stimulus) (013-homepage-branding)
-- N/A (no data changes - view-only feature) (013-homepage-branding)
-- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (001-sign-up-accounts)
-- PostgreSQL 14+ (existing `users`, `orders`, `order_items` tables) (001-sign-up-accounts)
-- Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionController, ActionView), Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI, Stripe Ruby SDK (001-user-address-storage)
-- PostgreSQL 14+ (new `addresses` table) (001-user-address-storage)
-- Ruby 3.3.0+ / Rails 8.x + Rails 8, Hotwire (Turbo + Stimulus), Stripe Ruby SDK, TailwindCSS 4, DaisyUI (014-scheduled-reorder)
-- PostgreSQL 14+ (3 new tables: `reorder_schedules`, `reorder_schedule_items`, `pending_orders`) (014-scheduled-reorder)
-- Ruby 3.3.0+ / Rails 8.x, JavaScript ES6+ (Stimulus) + Rails 8 (ActiveRecord, ActionView), Vite Rails, Stimulus, TailwindCSS 4, DaisyUI (015-variant-selector)
-- PostgreSQL 14+ (existing `products`, `product_variants` tables; new `pricing_tiers` JSONB column) (015-variant-selector)
-- Ruby 3.3.0+ / Rails 8.x + Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (001-reorder-schedule-conversion)
-- PostgreSQL (existing `orders`, `order_items`, `reorder_schedules` tables - no schema changes) (001-reorder-schedule-conversion)
-- Ruby 3.3.0+ / Rails 8.x + Rails ActiveRecord, PostgreSQL, Hotwire (Turbo + Stimulus), TailwindCSS 4, DaisyUI (001-option-value-labels)
-- PostgreSQL 14+ (new `variant_option_values` join table) (001-option-value-labels)
-- Ruby 3.4.7, Rails 8.1.1 + Turbo-Rails, Stimulus-Rails, Vite Rails 3.0, Pagy (pagination) (001-variant-pages)
-- PostgreSQL 14+ (model restructure: ProductVariant → Product, Product → ProductFamily) (001-variant-pages)
+
+**Core Stack**:
+- Ruby 3.4.7 / Rails 8.1.1
+- PostgreSQL 14+
+- Vite Rails 3.0
+- TailwindCSS 4 + DaisyUI
+- Hotwire (Turbo + Stimulus)
+- Stripe Ruby SDK
+
+**Database Tables**:
+- `products` - Main sellable entity (SKU, price, stock, photos)
+- `product_families` - Optional grouping for related products
+- `categories` - Product organization
+- `carts`, `cart_items` - Shopping cart
+- `orders`, `order_items` - Completed purchases
+- `users`, `sessions`, `addresses` - Authentication and user data
+- `reorder_schedules`, `reorder_schedule_items`, `pending_orders` - Scheduled reorders
+- `product_compatible_lids` - Cup/lid compatibility
 
 ## Recent Changes
-- 001-legacy-url-redirects: Added Ruby 3.3.0+ / Rails 8.x + Rails 8 (ActiveRecord, ActionDispatch), Rack middleware, PostgreSQL 14+
+- Model restructure: ProductVariant → Product, Product → ProductFamily
+- Removed admin URL redirects UI (routing-level redirects still work via middleware)
+- Simplified admin to product-only management
