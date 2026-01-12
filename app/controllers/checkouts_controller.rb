@@ -19,25 +19,25 @@ class CheckoutsController < ApplicationController
         # Sample items: free, quantity 1
         quantity = 1
         unit_amount = 0
-        product_name = "#{product.name} (Sample)"
+        product_name = "#{product.generated_title} (Sample)"
       elsif item.configured?
         # Unit-based pricing (branded products)
         quantity = 1
         unit_amount = (item.price.to_f * item.quantity * 100).round
         units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
-        product_name = "#{product.name} - #{item.configuration['size']} (#{units_formatted} units)"
+        product_name = "#{product.generated_title} - #{item.configuration['size']} (#{units_formatted} units)"
       elsif product.pac_size.blank? || product.pac_size.zero?
         # Unit-based pricing (products without packs)
         quantity = item.quantity
         unit_amount = (item.price.to_f * 100).round
-        product_name = product.name
+        product_name = product.generated_title
       else
         # Pack-based pricing (standard products)
         packs_needed = item.quantity
         quantity = 1
         unit_amount = (item.price.to_f * packs_needed * 100).round
         packs_label = packs_needed == 1 ? "pack" : "packs"
-        product_name = "#{product.name} (#{packs_needed} #{packs_label})"
+        product_name = "#{product.generated_title} (#{packs_needed} #{packs_label})"
       end
 
       {
