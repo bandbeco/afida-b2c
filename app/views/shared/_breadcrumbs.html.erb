@@ -3,7 +3,7 @@
     <ul>
       <li><%= link_to "All Products", shop_path %></li>
       <li><%= link_to @product.category.name, category_path(@product.category) %></li>
-      <li><%= @product.name %></li>
+      <li><%= @product.generated_title %></li>
     </ul>
   <% elsif @category.present? %>
     <ul>

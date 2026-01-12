@@ -22,17 +22,10 @@ products_updated = 0
 slugs_seen = {}
 
 # Helper to generate SEO-friendly slug from product attributes
-# Format: {type}-{style}-{name}-{size}-{colour}-{material}
+# Format: {name}-{size}-{colour}-{material}
+# Deduplicates identical values (e.g., colour="Kraft", material="Kraft" -> single "kraft")
 def generate_seo_slug(row)
   parts = []
-
-  # Type (e.g., "Cocktail", "Double Wall", "Dinner")
-  type = row['type_label'].presence || row['type_value'].presence
-  parts << type if type.present?
-
-  # Style (e.g., "8-fold", "2-ply")
-  style = row['style_label'].presence || row['style_value'].presence
-  parts << style if style.present?
 
   # Product name (e.g., "Cocktail Napkins", "Hot Cups")
   parts << row['product_name']
@@ -49,8 +42,8 @@ def generate_seo_slug(row)
   material = row['material_label'].presence || row['material_value'].presence
   parts << material if material.present?
 
-  # Join and parameterize
-  parts.map(&:to_s).map(&:strip).reject(&:blank?).join(' ').parameterize
+  # Join, deduplicate (case-insensitive), and parameterize
+  parts.map(&:to_s).map(&:strip).reject(&:blank?).uniq(&:downcase).join(' ').parameterize
 end
 
 CSV.foreach(csv_path, headers: true) do |row|
@@ -110,7 +103,8 @@ CSV.foreach(csv_path, headers: true) do |row|
     description_detailed: row['description_detailed'],
     # Product attributes
     material: row['material_label'].presence || row['material_value'],
-    colour: row['colour_label'].presence || row['colour_value']
+    colour: row['colour_label'].presence || row['colour_value'],
+    size: row['size_label'].presence || row['size_value']
   )
 
   product.save!

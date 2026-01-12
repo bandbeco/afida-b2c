@@ -1,7 +1,7 @@
 <tr class="hover" id="<%= dom_id(product) %>">
   <td>
     <%= link_to product_path(product), class: "link link-hover", data: { turbo_frame: "_top" } do %>
-      <span><%= product.name %></span>
+      <span><%= product.generated_title %></span>
     <% end %>
   </td>
   <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= product.sku %></td>

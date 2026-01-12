@@ -48,11 +48,7 @@ class PriceListController < ApplicationController
   end
 
   def search_products(products)
-    query = "%#{Product.sanitize_sql_like(params[:q])}%"
-    products.where(
-      "products.name ILIKE ? OR products.sku ILIKE ?",
-      query, query
-    )
+    products.search(params[:q])
   end
 
   def export_filename

@@ -82,13 +82,16 @@ class Product < ApplicationRecord
     joins(:category).where(categories: { slug: slugs })
   }
 
-  # Search on product name and SKU
+  # Search on product name, SKU, and attributes (size, colour, material)
   scope :search, ->(query) {
     return all if query.blank?
 
     truncated_query = query.to_s.truncate(100, omission: "")
     sanitized_query = sanitize_sql_like(truncated_query)
-    where("products.name ILIKE :q OR products.sku ILIKE :q", q: "%#{sanitized_query}%")
+    where(
+      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q",
+      q: "%#{sanitized_query}%"
+    )
   }
 
   # Extended search including category names
@@ -98,7 +101,7 @@ class Product < ApplicationRecord
     truncated_query = query.to_s.truncate(100, omission: "")
     sanitized_query = sanitize_sql_like(truncated_query)
     joins(:category).where(
-      "products.name ILIKE :q OR products.sku ILIKE :q OR categories.name ILIKE :q",
+      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q OR categories.name ILIKE :q",
       q: "%#{sanitized_query}%"
     )
   }
@@ -195,6 +198,15 @@ class Product < ApplicationRecord
   # Full product name - same as display_name
   def full_name
     display_name
+  end
+
+  # Generated title from product attributes
+  # Combines size, colour, material, and name into a descriptive title
+  # Example: "8oz White Paper Coffee Cups"
+  # Deduplicates when colour and material are identical (e.g., "Kraft Kraft" -> "Kraft")
+  def generated_title
+    parts = [ size, colour, material, name ].compact_blank.uniq(&:downcase)
+    parts.join(" ")
   end
 
   # Returns other products in the same family
