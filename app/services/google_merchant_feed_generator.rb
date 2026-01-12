@@ -144,11 +144,9 @@ class GoogleMerchantFeedGenerator
   end
 
   def generate_item_group_id(product)
-    # Use product family slug or base_sku if available
+    # Use product family ID if available, otherwise product ID
     if product.product_family.present?
       "FAMILY-#{product.product_family.id}"
-    elsif product.base_sku.present?
-      product.base_sku
     else
       "PROD-#{product.id}"
     end

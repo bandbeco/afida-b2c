@@ -5,7 +5,6 @@
 one:
   name: "Product 1"
   sku: "BUBL-POP-11"
-  base_sku: "BUBL-POP-11"
   description_short: "Short description 1"
   description_standard: "Standard description 1 with a bit more detail"
   description_detailed: "Detailed description 1 with comprehensive information about the product and its features"
@@ -20,7 +19,6 @@ one:
 two:
   name: "Product 2"
   sku: "BUBL-POP-12"
-  base_sku: "BUBL-POP-12"
   description_short: "Short description 2"
   description_standard: "Standard description 2 with a bit more detail"
   description_detailed: "Detailed description 2 with comprehensive information about the product and its features"
@@ -35,7 +33,6 @@ two:
 inactive_product:
   name: "Inactive Product"
   sku: "INACTIVE-001"
-  base_sku: "INACTIVE-001"
   description_short: "An inactive product for testing"
   description_standard: "An inactive product used to test default scope filtering"
   description_detailed: "An inactive product with full details for testing the default scope behavior"
