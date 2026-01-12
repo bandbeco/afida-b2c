@@ -20,6 +20,11 @@
     <%= yield :head %>
     <%= canonical_url %>
 
+    <%# Organization structured data for Google Rich Results %>
+    <script type="application/ld+json">
+      <%= raw organization_structured_data %>
+    </script>
+
     <%= vite_client_tag if Rails.env.development? %>
     <%= vite_javascript_tag "application" %>
     <%= vite_stylesheet_tag "application" %>
