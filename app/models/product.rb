@@ -2,7 +2,7 @@
 #
 # Products are the primary sellable entity. Each product has its own SKU, price,
 # and stock level. Products can optionally belong to a ProductFamily for grouping
-# related variants (e.g., different sizes of the same cup).
+# related products (e.g., different sizes of the same cup).
 #
 # Key relationships:
 # - belongs_to :product_family (optional) - For grouping related products
@@ -203,8 +203,6 @@ class Product < ApplicationRecord
     product_family.products.active.where.not(id: id).limit(limit)
   end
 
-  alias_method :sibling_variants, :siblings
-
   # ==========================================================================
   # Pricing Methods
   # ==========================================================================
@@ -283,18 +281,6 @@ class Product < ApplicationRecord
   # Alias for backward compatibility
   def description
     description_standard_with_fallback
-  end
-
-  # ==========================================================================
-  # SEO Methods
-  # ==========================================================================
-
-  def variant_meta_description
-    if description.present?
-      description.truncate(160)
-    else
-      "Buy #{full_name} from Afida. Eco-friendly catering supplies at competitive prices."
-    end
   end
 
   # ==========================================================================
