@@ -90,7 +90,7 @@
 
           <%# Price Display %>
           <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mt-3">
-            <p class="text-xl font-semibold">
+            <p class="text-xl">
               <% if @product.pac_size && @product.pac_size > 1 %>
                 <%= number_to_currency(@product.price) %> / pack of <%= number_with_delimiter(@product.pac_size) %>
               <% else %>

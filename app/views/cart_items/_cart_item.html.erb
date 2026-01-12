@@ -10,14 +10,14 @@
   %>
   <div class="grid grid-cols-1 md:grid-cols-6 gap-2 md:gap-4 items-center p-3 sm:p-4 border-b hover:bg-gray-50 text-center md:text-left">
     <div class="col-span-full md:col-span-2 flex flex-row items-center gap-3 md:space-x-4">
-      <%= link_to product_url, "aria-label": "View #{cart_item.product.name} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
-        <%= product_photo_tag(cart_item.product.primary_photo, alt: cart_item.product.display_name, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow bg-white object-contain") %>
+      <%= link_to product_url, "aria-label": "View #{cart_item.product.generated_title} details", data: { turbo: false }, class: "relative flex-shrink-0" do %>
+        <%= product_photo_tag(cart_item.product.primary_photo, alt: cart_item.product.generated_title, class: "w-16 h-16 sm:w-20 sm:h-20 rounded-md shadow bg-white object-contain") %>
         <% if cart_item.sample? %>
           <%= render "shared/sample_badge", size: :md %>
         <% end %>
       <% end %>
       <div class="min-w-0 text-left">
-        <%= link_to cart_item.product.name, product_url, class: "sm:text-base text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
+        <%= link_to cart_item.product.generated_title, product_url, class: "sm:text-base text-gray-800 hover:text-primary-500 line-clamp-2", data: { turbo: false } %>
         <% if cart_item.configured? %>
           <div class="text-xs text-gray-600">
             Size: <%= cart_item.configuration["size"] %>

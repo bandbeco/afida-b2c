@@ -10,7 +10,7 @@
         <% image_source = product.product_photo %>
         <% if image_source&.attached? %>
           <figure class="rounded-lg overflow-hidden shadow-lg">
-            <%= image_tag image_source.variant(resize_to_limit: [600, 600]), alt: product.name, class: "w-full h-auto" %>
+            <%= image_tag image_source.variant(resize_to_limit: [600, 600]), alt: product.generated_title, class: "w-full h-auto" %>
           </figure>
         <% else %>
           <div class="w-full h-96 bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
@@ -22,7 +22,7 @@
       <!-- Right: Configuration Panel -->
       <div class="space-y-6">
         <div>
-          <h2 class="text-2xl font-bold"><%= product.name %></h2>
+          <h2 class="text-2xl font-bold"><%= product.generated_title %></h2>
           <p class="text-base text-gray-600 mt-2"><%= product.description_standard_with_fallback %></p>
         </div>
 

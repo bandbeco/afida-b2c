@@ -1,5 +1,5 @@
 <% content_for :title do %>
-  <%= @product.meta_title.presence || "#{@product.name} | #{@product.category.name} | Afida" %>
+  <%= @product.meta_title.presence || "#{@product.generated_title} | #{@product.category.name} | Afida" %>
 <% end %>
 
 <% content_for :meta_description do %>
@@ -11,7 +11,7 @@
     <%= raw({
       "@context": "https://schema.org/",
       "@type": "Product",
-      "name": @product.name,
+      "name": @product.generated_title,
       "description": @product.description_standard_with_fallback,
       "brand": {
         "@type": "Brand",
@@ -31,7 +31,7 @@
     <%= raw breadcrumb_structured_data([
       { name: "Home", url: root_url },
       { name: @product.category.name, url: category_url(@product.category) },
-      { name: @product.name, url: branded_product_url(@product) }
+      { name: @product.generated_title, url: branded_product_url(@product) }
     ]) %>
   </script>
 <% end %>
@@ -50,7 +50,7 @@
     <div>
       <% if @product.product_photo&.attached? %>
         <figure class="rounded-lg overflow-hidden shadow-lg">
-          <%= image_tag @product.product_photo.variant(resize_to_limit: [600, 600]), alt: @product.name, class: "w-full h-auto" %>
+          <%= image_tag @product.product_photo.variant(resize_to_limit: [600, 600]), alt: @product.generated_title, class: "w-full h-auto" %>
         </figure>
       <% else %>
         <div class="w-full h-96 bg-gray-200 rounded-lg shadow-md flex items-center justify-center">
@@ -62,7 +62,7 @@
     <!-- Right: Configuration Panel -->
     <div class="space-y-6">
       <div>
-        <h1 class="text-3xl"><%= @product.name %></h1>
+        <h1 class="text-3xl"><%= @product.generated_title %></h1>
         <p class="text-lg text-gray-600 mt-2"><%= @product.description_standard_with_fallback %></p>
       </div>
 

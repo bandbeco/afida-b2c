@@ -45,7 +45,7 @@
         <% @order.order_items.each do |item| %>
           <div class="p-6 flex items-center space-x-4">
             <div class="relative flex-shrink-0">
-              <%= product_photo_tag(item.product&.primary_photo, alt: item.product&.display_name || "Product", class: "h-16 w-16 rounded-lg bg-white object-contain") %>
+              <%= product_photo_tag(item.product&.primary_photo, alt: item.product&.generated_title || "Product", class: "h-16 w-16 rounded-lg bg-white object-contain") %>
               <% if item.sample? %>
                 <%= render "shared/sample_badge", size: :sm %>
               <% end %>
@@ -57,7 +57,7 @@
                 <p class="text-sm text-gray-500">Custom branded with your design</p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% else %>
-                <h3 class="text-gray-900"><%= link_to item.product.display_name, product_path(item.product) %></h3>
+                <h3 class="text-gray-900"><%= link_to item.product.generated_title, product_path(item.product) %></h3>
                 <p class="text-sm text-gray-500">SKU: <%= item.product.sku %></p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% end %>

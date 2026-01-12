@@ -1,7 +1,7 @@
 <turbo-frame id="quick-add-modal">
   <div class="modal modal-open" role="dialog" aria-modal="true" aria-labelledby="quick-add-title">
     <div class="modal-box">
-      <h3 id="quick-add-title" class="font-bold text-lg mb-4"><%= @product.name %></h3>
+      <h3 id="quick-add-title" class="font-bold text-lg mb-4"><%= @product.generated_title %></h3>
 
       <%# Simple form for adding product to cart %>
       <%= render "quick_add_form", product: @product %>

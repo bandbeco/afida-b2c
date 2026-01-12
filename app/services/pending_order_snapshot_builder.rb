@@ -34,8 +34,8 @@ class PendingOrderSnapshotBuilder
 
       {
         "product_id" => product.id,
-        "product_name" => product.name || "Unknown Product",
-        "variant_name" => product.display_name,
+        "product_name" => product.generated_title || "Unknown Product",
+        "variant_name" => product.generated_title,
         "quantity" => quantity,
         "price" => format_amount(current_price),
         "line_total" => format_amount(current_price * quantity),
@@ -85,8 +85,8 @@ class PendingOrderSnapshotBuilder
 
     {
       "product_id" => product.id,
-      "product_name" => product.name || "Unknown Product",
-      "variant_name" => product.display_name,
+      "product_name" => product.generated_title || "Unknown Product",
+      "variant_name" => product.generated_title,
       "quantity" => item.quantity,
       "price" => self.class.format_amount(current_price),
       "line_total" => self.class.format_amount(current_price * item.quantity),
@@ -107,8 +107,8 @@ class PendingOrderSnapshotBuilder
 
     {
       "product_id" => product&.id,
-      "product_name" => product&.name || "Unknown Product",
-      "variant_name" => product&.display_name || "Unknown",
+      "product_name" => product&.generated_title || "Unknown Product",
+      "variant_name" => product&.generated_title || "Unknown",
       "reason" => reason
     }
   end

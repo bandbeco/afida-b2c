@@ -4,20 +4,20 @@ require "test_helper"
 
 class PriceListPdfTest < ActiveSupport::TestCase
   def setup
-    @variants = Product.active
+    @products = Product.active
                        .where(product_type: "standard")
                        .includes(:category)
                        .limit(10)
     @filter_description = "All products"
   end
 
-  test "initializes with valid variants and filter description" do
-    pdf = PriceListPdf.new(@variants, @filter_description)
+  test "initializes with valid products and filter description" do
+    pdf = PriceListPdf.new(@products, @filter_description)
     assert_not_nil pdf
   end
 
   test "generates pdf successfully" do
-    pdf = PriceListPdf.new(@variants, @filter_description)
+    pdf = PriceListPdf.new(@products, @filter_description)
     pdf_data = pdf.render
 
     assert_not_nil pdf_data
@@ -26,14 +26,14 @@ class PriceListPdfTest < ActiveSupport::TestCase
   end
 
   test "pdf starts with valid PDF header" do
-    pdf = PriceListPdf.new(@variants, @filter_description)
+    pdf = PriceListPdf.new(@products, @filter_description)
     pdf_data = pdf.render
 
     # PDF files start with %PDF-
     assert pdf_data.start_with?("%PDF-"), "PDF should start with %PDF- header"
   end
 
-  test "generates pdf with empty variants" do
+  test "generates pdf with empty products" do
     pdf = PriceListPdf.new([], @filter_description)
     pdf_data = pdf.render
 
@@ -42,7 +42,7 @@ class PriceListPdfTest < ActiveSupport::TestCase
   end
 
   test "generates pdf with filtered description" do
-    pdf = PriceListPdf.new(@variants, "Filtered by: Cups & Lids")
+    pdf = PriceListPdf.new(@products, "Filtered by: Cups & Lids")
     pdf_data = pdf.render
 
     assert_not_nil pdf_data
@@ -55,7 +55,7 @@ class PriceListPdfTest < ActiveSupport::TestCase
   end
 
   test "pdf file size is reasonable" do
-    pdf = PriceListPdf.new(@variants, @filter_description)
+    pdf = PriceListPdf.new(@products, @filter_description)
     pdf_data = pdf.render
 
     file_size_kb = pdf_data.bytesize / 1024.0

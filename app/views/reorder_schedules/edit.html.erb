@@ -36,7 +36,7 @@
             <%= f.fields_for :reorder_schedule_items do |item_form| %>
               <div class="flex items-center gap-4 p-4 bg-base-200/50 rounded-lg">
                 <div class="flex-1">
-                  <p class="font-medium"><%= item_form.object.product.display_name %></p>
+                  <p class="font-medium"><%= item_form.object.product.generated_title %></p>
                   <p class="text-sm text-base-content/70"><%= number_to_currency(item_form.object.price, unit: '£') %> each</p>
                 </div>
                 <div class="flex items-center gap-2">

@@ -24,13 +24,13 @@ class PriceListPdf < Prawn::Document
   VALUE_PROPOSITIONS = "Free UK delivery over £100 • Low MOQs • 48-hour delivery"
   CONTACT_INFO = "afida.com  •  hello@afida.com  •  0203 302 7719"
 
-  def initialize(variants, filter_description)
+  def initialize(products, filter_description)
     super(
       page_size: "A4",
       page_layout: :landscape,
       margin: [ PAGE_MARGIN_TOP, PAGE_MARGIN_RIGHT, PAGE_MARGIN_BOTTOM, PAGE_MARGIN_LEFT ]
     )
-    @variants = variants
+    @products = products
     @filter_description = filter_description
 
     generate
@@ -70,19 +70,19 @@ class PriceListPdf < Prawn::Document
   end
 
   def price_table
-    return if @variants.empty?
+    return if @products.empty?
 
     table_data = [
       [ "Product", "SKU", "Pack Size", "Price/Pack", "Price/Unit" ]
     ]
 
-    @variants.each do |variant|
+    @products.each do |product|
       table_data << [
-        variant.full_name,
-        variant.sku,
-        number_with_delimiter(variant.pac_size || 1),
-        number_to_currency(variant.price),
-        number_to_currency(variant.unit_price, precision: 4)
+        product.generated_title,
+        product.sku,
+        number_with_delimiter(product.pac_size || 1),
+        number_to_currency(product.price),
+        number_to_currency(product.unit_price, precision: 4)
       ]
     end
 

@@ -26,7 +26,7 @@ wb.add_worksheet(name: "Price List") do |sheet|
   # Data rows
   @products.each do |product|
     sheet.add_row [
-      product.full_name,
+      product.generated_title,
       product.sku,
       product.pac_size || 1,
       product.price.to_f,

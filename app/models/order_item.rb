@@ -21,7 +21,7 @@ class OrderItem < ApplicationRecord
     order_item = new(
       order: order,
       product: cart_item.product,
-      product_name: cart_item.product.display_name,
+      product_name: cart_item.product.generated_title,
       product_sku: cart_item.product.sku,
       quantity: cart_item.quantity,
       price: cart_item.price,  # Store pack price (not unit price) for correct display

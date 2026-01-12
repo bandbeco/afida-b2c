@@ -90,7 +90,7 @@
           <div class="space-y-2 text-sm">
             <% @order.order_items.includes(:product).each do |item| %>
               <div class="flex justify-between">
-                <span><%= item.product.display_name %> x <%= item.quantity %></span>
+                <span><%= item.product.generated_title %> x <%= item.quantity %></span>
                 <span><%= number_to_currency(item.line_total, unit: '£') %></span>
               </div>
             <% end %>
@@ -107,7 +107,7 @@
             <div class="space-y-2 text-sm">
               <% @order.order_items.includes(:product).each do |item| %>
                 <div class="flex justify-between">
-                  <span><%= item.product.display_name %> x <%= item.quantity %></span>
+                  <span><%= item.product.generated_title %> x <%= item.quantity %></span>
                   <span><%= number_to_currency(item.line_total, unit: '£') %></span>
                 </div>
               <% end %>
