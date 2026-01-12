@@ -39,7 +39,6 @@ const lazyControllers = {
   "search-modal": () => import("../javascript/controllers/search_modal_controller"),
   "addon": () => import("../javascript/controllers/addon_controller"),
   "nested-form": () => import("../javascript/controllers/nested_form_controller"),
-  "redirect-form": () => import("../javascript/controllers/redirect_form_controller"),
   "character-counter": () => import("../javascript/controllers/character_counter_controller"),
   "quick-add-modal": () => import("../javascript/controllers/quick_add_modal_controller"),
   "quick-add-form": () => import("../javascript/controllers/quick_add_form_controller"),

@@ -1,6 +1,6 @@
 module Admin
   class ProductsController < Admin::ApplicationController
-    before_action :set_product, only: %i[ show edit update destroy new_variant destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids variants ]
+    before_action :set_product, only: %i[ show edit update destroy destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids ]
 
     # GET /products
     def index
@@ -30,9 +30,6 @@ module Admin
       else
         render :new, status: :unprocessable_entity
       end
-    end
-
-    def new_variant
     end
 
     # PATCH/PUT /products/1
@@ -190,36 +187,6 @@ module Admin
       end
 
       redirect_to edit_admin_product_path(@product), notice: "Updated compatible lids"
-    end
-
-    # GET /admin/products/:id/variants.json
-    # Returns the product and its siblings (products in same family)
-    def variants
-      respond_to do |format|
-        format.json do
-          # With the new structure, "variants" are siblings in the same product family
-          all_products = if @product.product_family_id.present?
-            @product.product_family.products.active
-          else
-            Product.where(id: @product.id)
-          end
-
-          render json: {
-            product: {
-              id: @product.id,
-              name: @product.name,
-              slug: @product.slug
-            },
-            variants: all_products.map do |product|
-              {
-                id: product.id,
-                name: product.name,
-                display_name: product.name
-              }
-            end
-          }
-        end
-      end
     end
 
     private

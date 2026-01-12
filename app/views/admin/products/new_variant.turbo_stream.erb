@@ -1,5 +1,0 @@
-<%= turbo_stream.append "variants" do %>
-  <%= fields_for "product[variants_attributes][#{Time.now.to_f.to_s.gsub('.', '')}]", @product.variants.build do |variant_form| %>
-    <%= render "admin/products/variant_fields", form: variant_form, index: @product.variants.size + 1 %>
-  <% end %>
-<% end %>

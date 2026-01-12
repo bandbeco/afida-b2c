@@ -11,7 +11,6 @@ class PagesController < ApplicationController
   end
 
   def shop
-    # Shop page displays products (previously variants)
     @products = Product
       .active
       .catalog_products

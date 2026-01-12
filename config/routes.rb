@@ -137,8 +137,6 @@ Rails.application.routes.draw do
         get :order
       end
       member do
-        get :new_variant
-        get :variants
         patch :move_higher
         patch :move_lower
         delete :product_photo, to: "products#destroy_product_photo"
@@ -163,12 +161,6 @@ Rails.application.routes.draw do
       member do
         patch :update_status
         post :create_instance_product
-      end
-    end
-    resources :url_redirects, path: "url-redirects" do
-      member do
-        patch :toggle
-        get :test
       end
     end
   end
