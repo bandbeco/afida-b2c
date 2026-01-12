@@ -93,7 +93,7 @@ CSV.foreach(csv_path, headers: true) do |row|
     pac_size: row['pac_size']&.to_i || 1,
     stock_quantity: 10000,
     active: row['active']&.downcase == 'true',
-    sample_eligible: row['sample_eligible']&.downcase == 'true',
+    sample_eligible: row['sample_eligible'].nil? || row['sample_eligible']&.downcase == 'true',
     product_type: 'standard',
     # SEO and descriptions
     meta_title: row['meta_title'],
