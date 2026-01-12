@@ -15,7 +15,7 @@ cups:
 
 branded:
   name: "Branded Products"
-  slug: "branded"
+  slug: "branded-products"
   position: 4
 
 hot_cups_extras:

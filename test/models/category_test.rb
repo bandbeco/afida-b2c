@@ -83,6 +83,23 @@ class CategoryTest < ActiveSupport::TestCase
     assert_equal "eco-products", category.to_param
   end
 
+  # Scope tests
+  test "browsable scope excludes branded products category" do
+    branded = categories(:branded)
+    browsable = Category.browsable
+
+    assert_not_includes browsable, branded
+  end
+
+  test "browsable scope includes non-branded categories" do
+    cups = categories(:cups)
+    straws = categories(:straws)
+    browsable = Category.browsable
+
+    assert_includes browsable, cups
+    assert_includes browsable, straws
+  end
+
   # Association tests
   test "has many products" do
     assert_respond_to @category, :products

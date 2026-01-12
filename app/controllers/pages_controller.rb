@@ -6,7 +6,7 @@ class PagesController < ApplicationController
                                 .with_attached_product_photo
                                 .limit(8)
     @featured_straw_product = Product.catalog_products.find_by(slug: "bio-fibre-straws")
-    @categories = Category.with_attached_image.all
+    @categories = Category.browsable.with_attached_image
     @client_logos = client_logos
   end
 
@@ -21,7 +21,7 @@ class PagesController < ApplicationController
       .group(:category_id)
       .count
 
-    @categories = Category.where(id: category_product_counts.keys).order(:position)
+    @categories = Category.browsable.where(id: category_product_counts.keys).order(:position)
     @category_product_counts = category_product_counts
 
     # Search and category filter are mutually exclusive
