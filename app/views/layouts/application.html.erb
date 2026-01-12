@@ -5,7 +5,7 @@
     <%= render "layouts/google_tag_manager" %>
 
     <%# Block search engine indexing on staging domains %>
-    <% if request.host.include?("kiyuro.com") %>
+    <% if request.host.include?("staging.afida.com") %>
       <meta name="robots" content="noindex, nofollow">
     <% end %>
 

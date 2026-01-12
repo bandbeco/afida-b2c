@@ -12,7 +12,8 @@ class RobotsController < ApplicationController
   private
 
   # Staging domains that should not be indexed by search engines
-  STAGING_DOMAINS = %w[kiyuro.com].freeze
+  # Add any staging/preview domains here to block search engine indexing
+  STAGING_DOMAINS = %w[].freeze
 
   def robots_txt_content
     # Block all crawling on staging domains
