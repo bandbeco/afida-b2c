@@ -21,9 +21,8 @@ Rails.application.routes.draw do
   get "/category/hot-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/hot-cup-extras", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/napkins", to: redirect(status: 301) { |_params, req| "/categories/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  # Single-product categories: redirect directly to product (avoids redirect chain)
-  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/products/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/straws", to: redirect(status: 301) { |_params, req| "/products/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/straws", to: redirect(status: 301) { |_params, req| "/categories/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/takeaway-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/takeaway-extras#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/all-products", to: redirect(status: 301) { |_params, req| "/shop#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
