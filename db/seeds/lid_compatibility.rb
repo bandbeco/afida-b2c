@@ -7,26 +7,25 @@ puts "Cleared existing compatibility data"
 
 # Define hot cup product names (paper-based hot beverage cups)
 hot_cup_names = [
-  "Takeaway Coffee Cups",
+  "Single Wall Coffee Cups",
   "Double Wall Coffee Cups",
-  "Ripple Cups"
+  "Ripple Wall Coffee Cups"
 ]
 
 # Define hot lid product names
 hot_lid_names = [
-  "Compostable Coffee Cup Lids",
-  "Sip Lids"
+  "Coffee Cup Sip Lids"
 ]
 
 # Define cold cup product names (plastic/clear cups)
 cold_cup_names = [
-  "Clear Plastic Cups"
+  "Smoothie Cups"
 ]
 
 # Define cold lid product names
 cold_lid_names = [
-  "Dome Lids",
-  "Flat Lids"
+  "Smoothie Dome Lids",
+  "Smoothie Flat Lids"
 ]
 
 # Populate hot cup → hot lid relationships
