@@ -234,7 +234,6 @@ module Admin
         :active,
         :featured,
         :sample_eligible,
-        :sample_sku,
         :name,
         :sku,
         :description_short,

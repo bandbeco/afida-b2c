@@ -101,8 +101,8 @@ class Admin::OrdersControllerTest < ActionDispatch::IntegrationTest
     get admin_order_path(@sample_only_order), headers: @headers
 
     assert_response :success
-    # The fixture has sample_sku: SAMPLE-CUP-8OZ
-    assert_select "p", text: /SAMPLE-CUP-8OZ/
+    # effective_sample_sku is computed as SAMPLE-{sku}
+    assert_select "p", text: /SAMPLE-SAMPLE-SW-8/
   end
 
   test "show distinguishes sample items from paid items in mixed orders" do

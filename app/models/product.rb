@@ -258,7 +258,7 @@ class Product < ApplicationRecord
   # ==========================================================================
 
   def effective_sample_sku
-    sample_sku.presence || "SAMPLE-#{sku}"
+    "SAMPLE-#{sku}"
   end
 
   # ==========================================================================

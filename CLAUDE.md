@@ -437,7 +437,7 @@ Free product samples allow customers to try products before buying. Samples are 
 
 **Data Model**:
 - `Product#sample_eligible` - Boolean flag marking products available as samples
-- `Product#sample_sku` - Optional custom SKU for sample fulfillment (defaults to `SAMPLE-{sku}`)
+- `Product#effective_sample_sku` - Computed as `SAMPLE-{sku}` for sample fulfillment
 - Samples are stored as `CartItem` records with `price = 0`
 - **Mutual Exclusivity**: Same product CANNOT exist as both sample and regular item in cart
 
@@ -470,7 +470,6 @@ cart.at_sample_limit?                  # True if 5+ samples
 **Admin Setup**:
 1. Edit a product in admin
 2. Check "Sample eligible" checkbox
-3. Optionally set custom `sample_sku` for fulfillment tracking
 
 ### Scheduled Reorders
 

@@ -318,7 +318,6 @@ sample_cup_8oz:
   position: 10
   product_type: standard
   sample_eligible: true
-  sample_sku: SAMPLE-CUP-8OZ
 
 sample_cup_12oz:
   product_family: single_wall_cups
