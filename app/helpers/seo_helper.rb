@@ -54,6 +54,17 @@ module SeoHelper
     data[:sku] = product.sku if product.sku.present?
     data[:gtin] = product.gtin if product.gtin.present?
 
+    # Add aggregate rating from Google Business Profile if configured
+    if gbp_configured?
+      data[:aggregateRating] = {
+        "@type": "AggregateRating",
+        "ratingValue": gbp_rating_data[:rating],
+        "reviewCount": gbp_rating_data[:review_count],
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    end
+
     data.to_json
   end
 
