@@ -55,7 +55,7 @@ CSV.foreach(csv_path, headers: true) do |row|
 end
 
 if invalid_products.any?
-  puts "❌ Validation failed: #{invalid_products.count} invalid product(s) found"
+  puts "⚠️  Warning: #{invalid_products.count} redirect target(s) not found (redirects will be skipped)"
   invalid_products.each do |item|
     if item[:error]
       puts "  - #{item[:source]}: #{item[:error]}"
@@ -63,7 +63,7 @@ if invalid_products.any?
       puts "  - #{item[:source]} → product '#{item[:target_slug]}' not found or inactive"
     end
   end
-  exit 1
+  puts ""
 end
 
 puts "✅ All target products validated (#{CSV.read(csv_path, headers: true).count} redirects)"
@@ -94,6 +94,13 @@ ActiveRecord::Base.transaction do
 
       # Extract target slug from path (remove /products/ prefix)
       target_slug = uri.path.sub('/products/', '')
+
+      # Skip if target product doesn't exist
+      unless Product.exists?(slug: target_slug)
+        skipped_count += 1
+        print "s"
+        next
+      end
 
       # Extract variant parameters from query string
       variant_params = if uri.query

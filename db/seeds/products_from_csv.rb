@@ -1,4 +1,7 @@
-# Seed products from final consolidated CSV with BrandYour categories
+# Seed products from consolidated CSV
+# Each CSV row becomes a Product (the main sellable entity)
+# Products with the same name are grouped under a ProductFamily
+
 require 'csv'
 
 puts 'Loading products from CSV...'
@@ -10,190 +13,121 @@ unless File.exist?(csv_path)
   return
 end
 
-# Get existing options
-size_option = ProductOption.find_by(name: 'size')
-color_option = ProductOption.find_by(name: 'colour')
-material_option = ProductOption.find_by(name: 'material')
-type_option = ProductOption.find_by(name: 'type')
+# Track product families by name for grouping
+product_families = {}
 
-# Group CSV rows by product
-products_data = {}
+# Track products created and slugs for uniqueness validation
+products_created = 0
+products_updated = 0
+slugs_seen = {}
+
+# Helper to generate SEO-friendly slug from product attributes
+# Format: {type}-{style}-{name}-{size}-{colour}-{material}
+def generate_seo_slug(row)
+  parts = []
+
+  # Type (e.g., "Cocktail", "Double Wall", "Dinner")
+  type = row['type_label'].presence || row['type_value'].presence
+  parts << type if type.present?
+
+  # Style (e.g., "8-fold", "2-ply")
+  style = row['style_label'].presence || row['style_value'].presence
+  parts << style if style.present?
+
+  # Product name (e.g., "Cocktail Napkins", "Hot Cups")
+  parts << row['product_name']
+
+  # Size (e.g., "40x40cm", "12oz")
+  size = row['size_label'].presence || row['size_value'].presence
+  parts << size if size.present?
+
+  # Colour (e.g., "Black", "White")
+  colour = row['colour_label'].presence || row['colour_value'].presence
+  parts << colour if colour.present?
+
+  # Material (e.g., "Airlaid", "Paper") - helps differentiate similar products
+  material = row['material_label'].presence || row['material_value'].presence
+  parts << material if material.present?
+
+  # Join and parameterize
+  parts.map(&:to_s).map(&:strip).reject(&:blank?).join(' ').parameterize
+end
 
 CSV.foreach(csv_path, headers: true) do |row|
-  product_name = row['product']
+  product_family_name = row['product_family']
+  product_name = row['product_name']
   category_slug = row['category_slug']
 
-  key = "#{product_name}|#{category_slug}"
+  category = Category.find_by(slug: category_slug)
+  unless category
+    puts "  ⚠ Skipping #{row['sku']} - category '#{category_slug}' not found"
+    next
+  end
 
-  products_data[key] ||= {
+  # Generate SEO-friendly slug from attributes
+  slug = generate_seo_slug(row)
+
+  # Validate slug uniqueness - fail if duplicate
+  if slugs_seen[slug]
+    raise "Duplicate slug '#{slug}' generated for SKU #{row['sku']} (conflicts with SKU #{slugs_seen[slug]})"
+  end
+  slugs_seen[slug] = row['sku']
+
+  # Create or find ProductFamily for grouping products with the same family name
+  family_key = "#{product_family_name}|#{category_slug}"
+  unless product_families[family_key]
+    family_slug = product_family_name.to_s.parameterize
+    family = ProductFamily.find_or_create_by!(slug: family_slug) do |f|
+      f.name = product_family_name
+    end
+    product_families[family_key] = family
+  end
+  product_family = product_families[family_key]
+
+  # Parse price - remove currency symbol and commas
+  price = row['price']&.gsub('£', '')&.gsub(',', '')&.to_f || 0
+
+  # Create or update product by SKU (unique identifier)
+  product = Product.find_or_initialize_by(sku: row['sku'])
+  is_new = product.new_record?
+
+  product.assign_attributes(
     name: product_name,
-    category_slug: category_slug,
-    slug: row['slug'],
-    material: row['material'],
+    slug: slug,
+    category: category,
+    product_family: product_family,
+    price: price,
+    pac_size: row['pac_size']&.to_i || 1,
+    stock_quantity: 10000,
+    active: row['active']&.downcase == 'true',
+    sample_eligible: row['sample_eligible']&.downcase == 'true',
+    product_type: 'standard',
+    # SEO and descriptions
     meta_title: row['meta_title'],
     meta_description: row['meta_description'],
     description_short: row['description_short'],
     description_standard: row['description_standard'],
     description_detailed: row['description_detailed'],
-    material: row['material'],
-    variants: []
-  }
+    # Product attributes
+    material: row['material_label'].presence || row['material_value'],
+    colour: row['colour_label'].presence || row['colour_value']
+  )
 
-  products_data[key][:variants] << {
-    type: row['type_value'],
-    type_label: row['type_label'],
-    size: row['size_value'],
-    size_label: row['size_label'],
-    colour: row['colour_value'],
-    colour_label: row['colour_label'],
-    material: row['material_value'],
-    material_label: row['material_label'],
-    sku: row['sku'],
-    price: row['price']&.gsub('£', '')&.gsub(',', '')&.to_f || 0,
-    pac_size: row['pac_size']&.to_i || 1,
-    sample_eligible: row['sample_eligible']&.downcase == 'true',
-    active: row['active']&.downcase == 'true'
-  }
-end
-
-puts "Found #{products_data.length} unique products"
-
-# Create products and variants
-products_data.each do |key, data|
-  category = Category.find_by(slug: data[:category_slug])
-
-  unless category
-    puts "  ⚠ Skipping #{data[:name]} - category '#{data[:category_slug]}' not found"
-    next
-  end
-
-  # Create or update product
-  product = Product.find_or_initialize_by(slug: data[:slug])
-  product.name = data[:name]
-  product.category = category
-  product.meta_title = data[:meta_title]
-  product.meta_description = data[:meta_description]
-  product.description_short = data[:description_short]
-  product.description_standard = data[:description_standard]
-  product.description_detailed = data[:description_detailed]
-  product.material = data[:material]
-  product.active = true
-  product.product_type = 'standard'
   product.save!
 
-  # Determine which options to assign
-  types = data[:variants].map { |v| v[:type] }.compact.uniq
-  sizes = data[:variants].map { |v| v[:size] }.compact.uniq
-  colours = data[:variants].map { |v| v[:colour] }.compact.uniq
-  materials = data[:variants].map { |v| v[:material] }.compact.uniq
-
-  has_type_variants = types.length > 1
-  has_size_variants = sizes.length > 1
-  has_color_variants = colours.length > 1
-  has_material_variants = materials.length > 1
-
-  # Assign Size option if product has multiple sizes
-  if has_size_variants && size_option
-    product.option_assignments.find_or_create_by!(product_option: size_option) do |a|
-      a.position = 1
-    end
+  if is_new
+    products_created += 1
+  else
+    products_updated += 1
   end
-
-  # Assign Color option if product has multiple colors
-  if has_color_variants && color_option
-    product.option_assignments.find_or_create_by!(product_option: color_option) do |a|
-      a.position = 2
-    end
-  end
-
-  # Assign Material option if product has multiple materials
-  if has_material_variants && material_option
-    product.option_assignments.find_or_create_by!(product_option: material_option) do |a|
-      a.position = 3
-    end
-  end
-
-  # Assign Type option if product has multiple types
-  if has_type_variants && type_option
-    product.option_assignments.find_or_create_by!(product_option: type_option) do |a|
-      a.position = 4
-    end
-  end
-
-  # Create variants
-  data[:variants].each do |variant_data|
-    # Build option values hash for name generation (includes labels from CSV)
-    option_values_hash = {}
-    if variant_data[:type].present?
-      option_values_hash['type'] = { value: variant_data[:type], label: variant_data[:type_label] }
-    end
-    if variant_data[:size].present?
-      option_values_hash['size'] = { value: variant_data[:size], label: variant_data[:size_label] }
-    end
-    if variant_data[:colour].present?
-      option_values_hash['colour'] = { value: variant_data[:colour], label: variant_data[:colour_label] }
-    end
-    if variant_data[:material].present?
-      option_values_hash['material'] = { value: variant_data[:material], label: variant_data[:material_label] }
-    end
-
-    # Create variant name from options that actually vary
-    # Only include option if product has multiple values for that option
-    variant_name_parts = []
-    variant_name_parts << variant_data[:type] if has_type_variants && variant_data[:type].present?
-    variant_name_parts << variant_data[:material] if has_material_variants && variant_data[:material].present?
-    variant_name_parts << variant_data[:size] if has_size_variants && variant_data[:size].present?
-    variant_name_parts << variant_data[:colour] if has_color_variants && variant_data[:colour].present?
-    variant_name = variant_name_parts.join(' ')
-    variant_name = 'Standard' if variant_name.blank?
-
-    variant = product.variants.find_or_initialize_by(sku: variant_data[:sku])
-    variant.name = variant_name
-    variant.price = variant_data[:price]
-    variant.pac_size = variant_data[:pac_size]
-    variant.stock_quantity = 10000
-    variant.active = variant_data[:active]
-    variant.sample_eligible = true  # All variants are sample eligible
-    variant.save!
-
-    # Create variant_option_values join records (new normalized structure)
-    # Link variant to ProductOptionValue records via join table
-    option_values_hash.each do |option_name, option_data|
-      next if option_data.blank? || option_data[:value].blank?
-
-      # Find the ProductOption (size, colour, material, type)
-      product_option = ProductOption.find_by(name: option_name)
-      next unless product_option
-
-      # Find or create the ProductOptionValue with label from CSV
-      product_option_value = product_option.values.find_or_initialize_by(value: option_data[:value])
-      # Set/update the label if provided in CSV
-      if option_data[:label].present?
-        product_option_value.label = option_data[:label]
-      end
-      product_option_value.save!
-
-      # Create the join record (skip if exists)
-      variant.variant_option_values.find_or_create_by!(
-        product_option_value: product_option_value,
-        product_option: product_option
-      )
-    end
-  end
-
-  # Set product active if it has any active variants
-  active_variant_count = product.variants.where(active: true).count
-  product.update!(active: active_variant_count > 0)
 
   status = product.active ? '✓' : '○'
-  puts "  #{status} #{product.name} (#{active_variant_count}/#{product.variants.count} active variants)"
+  puts "  #{status} #{product.name} (#{product.sku})"
 end
 
 puts ''
 puts 'Products seeded successfully!'
+puts "  Products created: #{products_created}"
+puts "  Products updated: #{products_updated}"
 puts "  Total products: #{Product.standard.count}"
-puts "  Total variants: #{ProductVariant.count}"
-puts "  Products with Size option: #{ProductOptionAssignment.where(product_option: size_option).count}"
-puts "  Products with Colour option: #{ProductOptionAssignment.where(product_option: color_option).count}"
-puts "  Products with Material option: #{ProductOptionAssignment.where(product_option: material_option).count}"
-puts "  Products with Type option: #{ProductOptionAssignment.where(product_option: type_option).count}"
+puts "  Product families: #{ProductFamily.count}"

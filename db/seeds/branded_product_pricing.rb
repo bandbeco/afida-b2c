@@ -86,20 +86,15 @@ templates.each do |template_data|
   # Create the product (match on slug AND product_type to allow same slug as standard products)
   product = Product.find_or_create_by!(slug: template_data[:slug], product_type: "customizable_template") do |p|
     p.name = template_data[:name]
+    p.sku = template_data[:sku]
+    p.price = 0.01 # Placeholder - actual price calculated from pricing tiers
     p.category = branded_category
     p.description_short = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
     p.description_standard = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
     p.description_detailed = "Custom branded #{template_data[:name].downcase} with your design. Minimum order: #{template_data[:min_qty].to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units. Perfect for your business."
     p.active = true
     p.position = template_data[:sort]
-  end
-
-  # Create placeholder variant (required by cart system)
-  product.variants.find_or_create_by!(sku: template_data[:sku]) do |v|
-    v.name = 'Placeholder'
-    v.price = 0.01
-    v.stock_quantity = 0
-    v.active = true
+    p.stock_quantity = 0
   end
 
   # Create pricing tiers if defined
