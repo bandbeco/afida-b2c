@@ -52,11 +52,11 @@ class ProductHelperTest < ActionView::TestCase
 
     # Need to ensure size values match
     # The cup product has name "8oz White" and lid has "Flat Lid - 8oz"
-    # matching_lids_for_cup_product uses size_value method to compare
+    # matching_lids_for_cup_product extracts size from product names
 
     lids = matching_lids_for_cup_product(@cup_product)
 
-    # Result depends on whether size_value matches
+    # Result depends on whether extracted sizes match
     assert_kind_of Array, lids
   end
 

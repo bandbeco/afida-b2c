@@ -211,20 +211,10 @@ module Admin
               slug: @product.slug
             },
             variants: all_products.map do |product|
-              # Build display name with all option values
-              display_parts = []
-              display_parts << product.name
-
-              # Add color if present (using helper method)
-              if product.respond_to?(:colour_value) && product.colour_value.present?
-                display_parts << product.colour_value
-              end
-
               {
                 id: product.id,
                 name: product.name,
-                display_name: display_parts.join(" - "),
-                option_values: product.respond_to?(:option_values_hash) ? product.option_values_hash : {}
+                display_name: product.name
               }
             end
           }

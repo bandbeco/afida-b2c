@@ -55,7 +55,6 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert first_variant["id"]
     assert first_variant["name"]
     assert first_variant["display_name"]
-    assert first_variant["option_values"].is_a?(Hash)
   end
 
   test "variants endpoint requires authentication" do

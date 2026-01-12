@@ -28,7 +28,6 @@ module AnalyticsHelper
       item_id: product.sku,
       item_name: product.name,
       item_category: product.category&.name,
-      item_variant: product.options_display.presence,
       price: product.price.to_f,
       quantity: quantity
     }.compact
@@ -44,7 +43,6 @@ module AnalyticsHelper
       item_id: product.sku,
       item_name: product.name,
       item_category: product.category&.name,
-      item_variant: product.options_display.presence,
       price: cart_item.unit_price.to_f,
       quantity: cart_item.quantity
     }.compact
@@ -58,7 +56,6 @@ module AnalyticsHelper
       item_id: order_item.product_sku,
       item_name: order_item.product_name,
       item_category: order_item.product&.category&.name,
-      item_variant: order_item.product&.options_display.presence,
       price: order_item.unit_price.to_f,
       quantity: order_item.quantity
     }.compact

@@ -33,15 +33,14 @@ class PagesController < ApplicationController
       @products = @products.in_categories(params[:categories])
     end
 
-    # Apply option filters (size, colour, material)
-    @products = @products.with_size(params[:size]) if params[:size].present?
-    @products = @products.with_colour(params[:colour]) if params[:colour].present?
-    @products = @products.with_material(params[:material]) if params[:material].present?
+    # Apply attribute filters (direct column filters)
+    @products = @products.with_colour(params[:colour])
+    @products = @products.with_material(params[:material])
 
     # Apply sorting
     @products = @products.sorted(params[:sort])
 
-    # Get available filter values from remaining products for dynamic filter options
+    # Build available filter values from current product set
     @available_filters = build_available_filters(@products)
 
     @pagy, @products = pagy(@products)
@@ -112,33 +111,21 @@ class PagesController < ApplicationController
   private
 
   # Build hash of available filter values from current product set
-  # Returns: { size: ["8oz", "12oz"], colour: ["White", "Black"], material: ["Paper", "Bamboo"] }
+  # Queries direct Product columns (colour, material)
+  # Returns: { "colour" => ["White", "Black"], "material" => ["Paper", "Bamboo"] }
   def build_available_filters(products)
-    # Get all option values for the current product set
     product_ids = products.reorder(nil).pluck(:id)
-
     return {} if product_ids.empty?
 
-    # Query option values through the join table
-    # Note: product_variant_id is a legacy column name that references products
-    option_data = VariantOptionValue
-      .joins(product_option_value: :product_option)
-      .where(product_variant_id: product_ids)
-      .select("product_options.name as option_name, product_option_values.value, product_option_values.label")
-      .distinct
-
-    # Group by option name
     filters = {}
-    option_data.each do |record|
-      option_name = record.option_name
-      filters[option_name] ||= []
-      filters[option_name] << { value: record.value, label: record.label.presence || record.value }
-    end
 
-    # Sort values within each filter and remove duplicates
-    filters.transform_values! do |values|
-      values.uniq { |v| v[:value] }.sort_by { |v| v[:label].downcase }
-    end
+    # Get distinct colour values
+    colours = Product.where(id: product_ids).where.not(colour: [ nil, "" ]).distinct.pluck(:colour).sort
+    filters["colour"] = colours.map { |c| { value: c, label: c } } if colours.any?
+
+    # Get distinct material values
+    materials = Product.where(id: product_ids).where.not(material: [ nil, "" ]).distinct.pluck(:material).sort
+    filters["material"] = materials.map { |m| { value: m, label: m } } if materials.any?
 
     filters
   end

@@ -11,19 +11,19 @@ module ProductHelper
   end
 
   # Get matching lid products for a specific cup product by size
-  # Finds compatible lid products, then matches by size option
+  # Finds compatible lid products, then matches by size extracted from name
   # @param cup_product [Product] The cup product (e.g., "8oz Single Wall Cup")
   # @return [Array<Product>] Array of matching lid products
   def matching_lids_for_cup_product(cup_product)
     return [] if cup_product.blank?
 
-    cup_size = cup_product.size_value
+    cup_size = extract_size_from_name(cup_product.name)
 
     return [] if cup_size.blank?
 
     # Find compatible lids with matching size
     cup_product.compatible_lids.select do |lid_product|
-      lid_product.size_value == cup_size
+      extract_size_from_name(lid_product.name) == cup_size
     end
   end
 

@@ -38,14 +38,6 @@ class Product < ApplicationRecord
   has_many :product_compatible_lids, dependent: :destroy
   has_many :compatible_lids, through: :product_compatible_lids, source: :compatible_lid
 
-  # Option value associations (join table for normalized option data)
-  has_many :variant_option_values, dependent: :destroy, foreign_key: :product_variant_id
-  has_many :option_values, through: :variant_option_values, source: :product_option_value
-
-  # Option assignments (links product to its applicable option types)
-  has_many :option_assignments, class_name: "ProductOptionAssignment", dependent: :destroy
-  has_many :options, through: :option_assignments, source: :product_option
-
   # Branded product pricing tiers
   has_many :branded_product_prices, dependent: :destroy
 
@@ -111,19 +103,9 @@ class Product < ApplicationRecord
     )
   }
 
-  # Filter by option value
-  scope :with_option, ->(option_name, value) {
-    return all if option_name.blank? || value.blank?
-
-    where(id: joins(variant_option_values: { product_option_value: :product_option })
-      .where(product_options: { name: option_name.to_s.downcase })
-      .where(product_option_values: { value: value })
-      .select(:id))
-  }
-
-  scope :with_size, ->(size) { with_option("size", size) }
-  scope :with_colour, ->(colour) { with_option("colour", colour) }
-  scope :with_material, ->(material) { with_option("material", material) }
+  # Attribute-based filtering scopes (direct column filters)
+  scope :with_colour, ->(colour) { colour.present? ? where(colour: colour) : all }
+  scope :with_material, ->(material) { material.present? ? where(material: material) : all }
 
   scope :sorted, ->(sort_param) {
     case sort_param
@@ -280,73 +262,6 @@ class Product < ApplicationRecord
   end
 
   # ==========================================================================
-  # Option Values Methods
-  # ==========================================================================
-
-  def option_values_hash
-    @option_values_hash ||= variant_option_values
-      .includes(product_option_value: :product_option)
-      .each_with_object({}) do |vov, hash|
-        option_name = vov.product_option.name
-        hash[option_name] = vov.product_option_value.value
-      end
-  end
-
-  def option_labels_hash
-    @option_labels_hash ||= variant_option_values
-      .includes(product_option_value: :product_option)
-      .each_with_object({}) do |vov, hash|
-        option_name = vov.product_option.name
-        pov = vov.product_option_value
-        hash[option_name] = pov.label.presence || pov.value
-      end
-  end
-
-  def options_summary
-    labels = option_labels_hash
-    return "" if labels.empty?
-
-    priority_order = PRODUCT_OPTION_PRIORITY + %w[color]
-    parts = priority_order.filter_map { |key| labels[key] }
-    remaining = labels.except(*priority_order).values
-    parts.concat(remaining) if remaining.any?
-
-    parts.join(", ")
-  end
-
-  def option_value_for(option_name)
-    option_values_hash[option_name]
-  end
-
-  def options_display
-    hash = option_values_hash
-    return "" if hash.empty?
-
-    priority_with_color_fallback = PRODUCT_OPTION_PRIORITY + %w[color]
-    parts = priority_with_color_fallback.filter_map { |key| hash[key]&.titleize }
-    parts.any? ? parts.join(" / ") : hash.values.map(&:titleize).join(" / ")
-  end
-
-  def size_value
-    option_values_hash["size"]
-  end
-
-  def colour_value
-    option_values_hash["colour"]
-  end
-
-  def material_value
-    option_values_hash["material"]
-  end
-
-  def url_params
-    hash = option_values_hash
-    return {} if hash.empty?
-
-    hash.transform_keys(&:to_sym).transform_values { |v| v.to_s.downcase }
-  end
-
-  # ==========================================================================
   # Description Methods
   # ==========================================================================
 
@@ -396,46 +311,6 @@ class Product < ApplicationRecord
       volume_in_ml: volume_in_ml.to_s,
       diameter_in_mm: diameter_in_mm.to_s
     }.reject { |_, value| value.blank? }
-  end
-
-  # ==========================================================================
-  # Family-related Methods (for ProductFamily grouping)
-  # ==========================================================================
-
-  # Returns available options across all products in the family
-  def available_options
-    return {} unless product_family.present?
-
-    option_counts = Hash.new { |h, k| h[k] = Set.new }
-
-    product_family.products.active.each do |product|
-      product.option_values_hash.each do |key, value|
-        option_counts[key] << value
-      end
-    end
-
-    option_counts
-      .select { |_, values| values.size > 1 }
-      .sort_by { |key, _| PRODUCT_OPTION_PRIORITY.index(key) || 999 }
-      .to_h
-      .transform_values(&:to_a)
-  end
-
-  # Returns products in family formatted for variant selector JS
-  def variants_for_selector(products = nil)
-    return [] unless product_family.present?
-
-    (products || product_family.products.active).map do |p|
-      {
-        id: p.id,
-        sku: p.sku,
-        price: p.price.to_f,
-        pac_size: p.pac_size,
-        option_values: p.option_values_hash,
-        pricing_tiers: p.pricing_tiers,
-        image_url: nil
-      }
-    end
   end
 
   private

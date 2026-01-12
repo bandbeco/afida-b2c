@@ -6,15 +6,12 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
   setup do
     @product = products(:one)
     @product_two = products(:two)
-    @variant = products(:one)
-    @variant_two = products(:two)
     @category = categories(:one)
     @category_two = categories(:two)
 
-    # Set up variants with pac_size for price list tests
-    # Option values are now handled via join table (variant_option_values fixture)
-    @variant.update!(pac_size: 100)
-    @variant_two.update!(pac_size: 50)
+    # Set up products with pac_size for price list tests
+    @product.update!(pac_size: 100)
+    @product_two.update!(pac_size: 50)
   end
 
   # =============================================================================
@@ -106,9 +103,9 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "searches by SKU" do
-    get price_list_url(q: @variant.sku)
+    get price_list_url(q: @product.sku)
     assert_response :success
-    assert_match @variant.sku, response.body
+    assert_match @product.sku, response.body
   end
 
   test "search is case insensitive" do
@@ -131,7 +128,7 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     get price_list_url(category: @category.slug, q: @product.name)
     assert_response :success
     # Only products matching both filters should appear
-    assert_match @variant.sku, response.body
+    assert_match @product.sku, response.body
   end
 
   # =============================================================================

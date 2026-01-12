@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_10_215805) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_12_092318) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -217,39 +217,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_215805) do
     t.index ["slug"], name: "index_product_families_on_slug", unique: true
   end
 
-  create_table "product_option_assignments", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "position", default: 0, null: false
-    t.bigint "product_id", null: false
-    t.bigint "product_option_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["product_id", "product_option_id"], name: "index_product_option_assignments_uniqueness", unique: true
-    t.index ["product_id"], name: "index_product_option_assignments_on_product_id"
-    t.index ["product_option_id"], name: "index_product_option_assignments_on_product_option_id"
-  end
-
-  create_table "product_option_values", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "label"
-    t.integer "position", default: 0, null: false
-    t.bigint "product_option_id", null: false
-    t.datetime "updated_at", null: false
-    t.string "value", null: false
-    t.index ["position"], name: "index_product_option_values_on_position"
-    t.index ["product_option_id", "value"], name: "index_product_option_values_on_product_option_id_and_value", unique: true
-    t.index ["product_option_id"], name: "index_product_option_values_on_product_option_id"
-  end
-
-  create_table "product_options", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "display_type", null: false
-    t.string "name", null: false
-    t.integer "position", default: 0, null: false
-    t.boolean "required", default: true, null: false
-    t.datetime "updated_at", null: false
-    t.index ["position"], name: "index_product_options_on_position"
-  end
-
   create_table "products", force: :cascade do |t|
     t.boolean "active", default: true
     t.string "b2b_priority"
@@ -373,19 +340,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_215805) do
     t.index ["stripe_customer_id"], name: "index_users_on_stripe_customer_id", unique: true
   end
 
-  create_table "variant_option_values", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "product_option_id", null: false
-    t.bigint "product_option_value_id", null: false
-    t.bigint "product_variant_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["product_option_id"], name: "index_variant_option_values_on_product_option_id"
-    t.index ["product_option_value_id"], name: "index_variant_option_values_on_product_option_value_id"
-    t.index ["product_variant_id", "product_option_id"], name: "idx_variant_one_value_per_option", unique: true
-    t.index ["product_variant_id", "product_option_value_id"], name: "idx_variant_option_values_unique", unique: true
-    t.index ["product_variant_id"], name: "index_variant_option_values_on_product_variant_id"
-  end
-
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "addresses", "users"
@@ -403,9 +357,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_215805) do
   add_foreign_key "pending_orders", "reorder_schedules"
   add_foreign_key "product_compatible_lids", "products"
   add_foreign_key "product_compatible_lids", "products", column: "compatible_lid_id"
-  add_foreign_key "product_option_assignments", "product_options"
-  add_foreign_key "product_option_assignments", "products"
-  add_foreign_key "product_option_values", "product_options"
   add_foreign_key "products", "categories"
   add_foreign_key "products", "organizations"
   add_foreign_key "products", "product_families"
@@ -414,7 +365,4 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_10_215805) do
   add_foreign_key "reorder_schedules", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "users", "organizations"
-  add_foreign_key "variant_option_values", "product_option_values"
-  add_foreign_key "variant_option_values", "product_options"
-  add_foreign_key "variant_option_values", "products", column: "product_variant_id"
 end

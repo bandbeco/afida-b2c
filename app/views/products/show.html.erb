@@ -99,13 +99,6 @@
             </p>
           </div>
 
-          <%# Options Display (for products with option values) %>
-          <% options_display = @product.options_display %>
-          <% if options_display.present? %>
-            <div class="flex items-center justify-center lg:justify-start gap-3 mt-2">
-              <span class="text-base-content/60 font-medium text-lg"><%= options_display %></span>
-            </div>
-          <% end %>
 
           <%# SKU %>
           <div class="mt-2">
@@ -170,7 +163,7 @@
                 <% siblings.limit(6).each do |sibling| %>
                   <%= link_to product_path(sibling),
                               class: "btn btn-outline btn-sm" do %>
-                    <%= sibling.options_summary.presence || sibling.name %>
+                    <%= sibling.name %>
                   <% end %>
                 <% end %>
               </div>

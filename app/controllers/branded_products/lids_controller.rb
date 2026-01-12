@@ -19,9 +19,9 @@ module BrandedProducts
                                        .active
 
       # Filter lid products matching the cup size
-      # Use the product's size_value method (from option values) or extract from name
+      # Extract size from product name (e.g., "8oz" from "8oz/227ml White")
       matching_lids = compatible_lid_products.select do |lid_product|
-        lid_size = lid_product.size_value || extract_size_from_name(lid_product.name)
+        lid_size = extract_size_from_name(lid_product.name)
         lid_size == cup_size
       end
 

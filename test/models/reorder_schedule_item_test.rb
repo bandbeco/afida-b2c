@@ -9,12 +9,12 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
       next_scheduled_date: 1.month.from_now.to_date,
       stripe_payment_method_id: "pm_test_123"
     )
-    @variant = products(:one)
+    @product = products(:one)
     @item = ReorderScheduleItem.new(
       reorder_schedule: @schedule,
-      product: @variant,
+      product: @product,
       quantity: 2,
-      price: @variant.price
+      price: @product.price
     )
   end
 
@@ -29,7 +29,7 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
 
   test "belongs to product" do
     assert_respond_to @item, :product
-    assert_equal @variant, @item.product
+    assert_equal @product, @item.product
   end
 
   # ==========================================================================
@@ -89,9 +89,9 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     @item.save!
     duplicate = ReorderScheduleItem.new(
       reorder_schedule: @schedule,
-      product: @variant,
+      product: @product,
       quantity: 3,
-      price: @variant.price
+      price: @product.price
     )
     assert_not duplicate.valid?
     assert_includes duplicate.errors[:product_id], "has already been taken"
@@ -107,9 +107,9 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     )
     other_item = ReorderScheduleItem.new(
       reorder_schedule: other_schedule,
-      product: @variant,
+      product: @product,
       quantity: 1,
-      price: @variant.price
+      price: @product.price
     )
     assert other_item.valid?
   end
@@ -119,13 +119,13 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
   # ==========================================================================
 
   test "available? returns true when product is active" do
-    @variant.update!(active: true)
+    @product.update!(active: true)
 
     assert @item.available?
   end
 
   test "available? returns false when product is inactive" do
-    @variant.update!(active: false)
+    @product.update!(active: false)
 
     assert_not @item.available?
   end
@@ -135,7 +135,7 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
   # ==========================================================================
 
   test "current_price returns product current price" do
-    @variant.update!(price: 15.99)
+    @product.update!(price: 15.99)
 
     assert_equal 15.99, @item.current_price
   end
@@ -144,7 +144,7 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     @item.save!
     original_price = @item.current_price
 
-    @variant.update!(price: original_price + 5.00)
+    @product.update!(price: original_price + 5.00)
 
     assert_equal original_price + 5.00, @item.current_price
     assert_equal original_price, @item.price # stored price unchanged

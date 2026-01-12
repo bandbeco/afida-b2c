@@ -55,18 +55,16 @@ class GoogleMerchantFeedGenerator
         # Add size if present
         if product.volume_in_ml.present?
           xml["g"].size "#{product.volume_in_ml}ml"
-        elsif product.size_value.present?
-          xml["g"].size product.size_value
         elsif product.pac_size.present?
           xml["g"].size "Pack of #{product.pac_size}"
         end
       end
 
       # Color
-      xml["g"].color product.colour_value if product.colour_value.present?
+      xml["g"].color product.colour if product.colour.present?
 
       # Material
-      xml["g"].material product.material_value if product.material_value.present?
+      xml["g"].material product.material if product.material.present?
 
       # Custom labels for bid optimization
       xml["g"].custom_label_1 product.best_seller ? "yes" : "no"
@@ -98,12 +96,10 @@ class GoogleMerchantFeedGenerator
       parts << "#{product.diameter_in_mm}mm"
     elsif product.width_in_mm.present? && product.height_in_mm.present?
       parts << "#{product.width_in_mm}x#{product.height_in_mm}mm"
-    elsif product.size_value.present?
-      parts << product.size_value
     end
 
     # Material
-    parts << product.material_value if product.material_value.present?
+    parts << product.material if product.material.present?
 
     # Eco feature (compostable, biodegradable, etc)
     description_text = product.description_detailed_with_fallback
@@ -125,8 +121,8 @@ class GoogleMerchantFeedGenerator
     # First 160 chars are critical for ads
     intro = "Afida #{product.name} are perfect for eco-conscious cafes and catering businesses."
 
-    material_info = if product.material_value.present?
-      " Made from #{product.material_value},"
+    material_info = if product.material.present?
+      " Made from #{product.material},"
     else
       ""
     end

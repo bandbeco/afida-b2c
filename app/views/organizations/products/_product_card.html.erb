@@ -24,10 +24,10 @@
         <span><%= product.sku || "N/A" %></span>
       </div>
 
-      <% if product.size_value.present? %>
+      <% if product.volume_in_ml.present? %>
         <div class="flex justify-between">
           <span class="text-gray-600">Size:</span>
-          <span><%= product.size_value %></span>
+          <span><%= product.volume_in_ml %>ml</span>
         </div>
       <% end %>
 

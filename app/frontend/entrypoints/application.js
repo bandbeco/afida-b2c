@@ -32,7 +32,6 @@ const lazyControllers = {
   "carousel": () => import("../javascript/controllers/carousel_controller"),
   "branded-configurator": () => import("../javascript/controllers/branded_configurator_controller"),
   "product-card-hover": () => import("../javascript/controllers/product_card_hover_controller"),
-  "product-options": () => import("../javascript/controllers/product_options_controller"),
   "quantity-selector": () => import("../javascript/controllers/quantity_selector_controller"),
   "compatible-lids": () => import("../javascript/controllers/compatible_lids_controller"),
   "faq-search": () => import("../javascript/controllers/faq_search_controller"),
