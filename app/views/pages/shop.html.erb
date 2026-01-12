@@ -68,14 +68,6 @@
               <%= render partial: "products/card", collection: @products, as: :product %>
             </div>
 
-            <!-- Pagination -->
-            <% if @pagy.pages > 1 %>
-              <div class="flex justify-center">
-                <nav class="join" aria-label="Pagination">
-                  <%== @pagy.series_nav(classes: 'join-item btn btn-sm') %>
-                </nav>
-              </div>
-            <% end %>
           <% else %>
             <div class="text-center py-12">
               <p class="text-xl text-gray-600 mb-4">No products found.</p>

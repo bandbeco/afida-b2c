@@ -42,7 +42,7 @@ class PagesController < ApplicationController
     # Build available filter values from current product set
     @available_filters = build_available_filters(@products)
 
-    @pagy, @products = pagy(@products)
+    @products = @products.to_a
   end
 
   def branding
