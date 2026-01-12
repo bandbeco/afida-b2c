@@ -3,7 +3,7 @@ module SeoHelper
     data = {
       "@context": "https://schema.org/",
       "@type": "Product",
-      "name": product.full_name,
+      "name": product.generated_title,
       "description": product.description_standard_with_fallback,
       "brand": {
         "@type": "Brand",
