@@ -4,7 +4,7 @@
 <div class="container mx-auto px-4 py-8 max-w-6xl">
   <!-- Header -->
   <div class="text-center mb-12">
-    <h1 class="text-4xl font-bold text-gray-900 mb-4">Frequently Asked Questions (FAQs)</h1>
+    <h1 class="text-gray-900 mb-4">Frequently Asked Questions (FAQs)</h1>
     <p class="text-lg text-gray-600">Find answers to common questions about our packaging products and services</p>
   </div>
 
@@ -32,7 +32,7 @@
     <aside class="md:w-1/4">
       <div class="md:sticky md:top-4">
         <nav class="p-6 bg-base-200 rounded-lg">
-          <h2 class="text-lg font-semibold mb-4">Table of Contents</h2>
+          <h2 class="text-gray-900 mb-4">Table of Contents</h2>
           <ul class="space-y-2">
             <% @categories.each do |category| %>
               <li>
@@ -46,7 +46,7 @@
 
         <!-- Contact Info (sidebar) -->
         <div class="hidden md:block mt-6 p-6 bg-base-200 rounded-lg">
-          <p class="font-semibold text-gray-900 mb-2">Need help?</p>
+          <p class="text-gray-900 mb-2">Need help?</p>
           <p class="text-sm text-gray-600 mb-3">We're here to assist you</p>
           <a href="mailto:info@afida.com" class="block text-sm link mb-1">info@afida.com</a>
           <a href="tel:02033027719" class="block text-sm link">0203 302 7719</a>
@@ -59,7 +59,7 @@
       <% if @search_results %>
         <!-- Search Results -->
         <div class="mb-8">
-          <h2 class="text-2xl font-semibold mb-4">
+          <h2 class="text-gray-900 mb-4">
             Search Results for "<%= @search_query %>"
             <span class="text-sm text-gray-500">(<%= @search_results.size %> <%= "result".pluralize(@search_results.size) %>)</span>
           </h2>
@@ -90,7 +90,7 @@
       <!-- FAQ Questions by Category -->
       <% @categories.each do |category| %>
         <section class="mb-10 scroll-mt-4" id="<%= category["id"] %>">
-          <h2 class="text-2xl font-bold text-gray-900 mb-4"><%= category["title"] %></h2>
+          <h2 class="text-gray-900 mb-4"><%= category["title"] %></h2>
 
           <!-- Questions Accordion -->
           <div class="join join-vertical w-full">
@@ -111,7 +111,7 @@
 
       <!-- Contact CTA (mobile only, shown at bottom) -->
       <div class="md:hidden mt-12 text-center p-6 bg-base-200 rounded-lg">
-        <p class="text-lg font-semibold text-gray-900 mb-2">Still have questions?</p>
+        <p class="text-gray-900 mb-2">Still have questions?</p>
         <p class="text-gray-600">Contact us at <a href="mailto:info@afida.com" class="link">info@afida.com</a> or call <a href="tel:02033027719" class="link">0203 302 7719</a></p>
       </div>
     </main>
