@@ -1,12 +1,14 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl">Orders</h1>
+<div class="py-4 sm:py-8">
+  <%# Header %>
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Orders</h1>
   </div>
 
-  <div class="flex gap-4 mb-4">
+  <%# Filter %>
+  <div class="mb-4">
     <%= form_with url: admin_orders_path, method: :get, class: "flex items-center gap-2" do %>
-      <label for="sample_status" class="text-sm">Filter by:</label>
-      <select name="sample_status" id="sample_status" class="select select-bordered select-sm" onchange="this.form.submit()">
+      <label for="sample_status" class="text-sm whitespace-nowrap">Filter:</label>
+      <select name="sample_status" id="sample_status" class="select select-bordered select-sm w-full sm:w-auto" onchange="this.form.submit()">
         <option value="all" <%= "selected" if params[:sample_status].blank? || params[:sample_status] == "all" %>>All Orders</option>
         <option value="samples_only" <%= "selected" if params[:sample_status] == "samples_only" %>>Samples Only</option>
         <option value="contains_samples" <%= "selected" if params[:sample_status] == "contains_samples" %>>Contains Samples</option>
@@ -15,25 +17,27 @@
     <% end %>
   </div>
 
-  <div class="overflow-x-auto">
-    <table class="table table-zebra">
+  <%# Desktop Table View %>
+  <div class="hidden md:block overflow-x-auto">
+    <table class="table table-zebra w-full">
       <thead>
         <tr>
-          <th class="text-lg font-medium">Order ID</th>
-          <th class="text-lg font-medium">Customer</th>
-          <th class="text-lg font-medium">Total</th>
-          <th class="text-lg font-medium">Status</th>
-          <th class="text-lg font-medium">Type</th>
-          <th class="text-lg font-medium">Date</th>
+          <th>Order</th>
+          <th>Customer</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Type</th>
+          <th>Date</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         <% @orders.each do |order| %>
           <tr>
-            <td><%= link_to order.display_number, admin_order_path(order) %></td>
-            <td><%= order.email %></td>
-            <td><%= number_to_currency(order.total_amount) %></td>
-            <td><%= order.status %></td>
+            <td class="font-medium"><%= order.display_number %></td>
+            <td class="max-w-[200px] truncate"><%= order.email %></td>
+            <td class="font-medium"><%= number_to_currency(order.total_amount) %></td>
+            <td><span class="badge badge-ghost badge-sm"><%= order.status %></span></td>
             <td>
               <% if order.sample_request? %>
                 <span class="badge badge-primary badge-sm">Samples Only</span>
@@ -41,10 +45,58 @@
                 <span class="badge badge-secondary badge-sm">Contains Samples</span>
               <% end %>
             </td>
-            <td><%= order.created_at.strftime("%B %d, %Y at %H:%M") %></td>
+            <td class="text-sm text-base-content/70"><%= order.created_at.strftime("%b %d, %Y") %></td>
+            <td>
+              <%= link_to admin_order_path(order), class: "btn btn-sm btn-primary btn-square", title: "View order" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              <% end %>
+            </td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+
+  <%# Mobile Card View %>
+  <div class="md:hidden space-y-3">
+    <% @orders.each do |order| %>
+      <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4">
+          <div class="flex justify-between items-start gap-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <p class="font-medium"><%= order.display_number %></p>
+                <span class="badge badge-ghost badge-sm"><%= order.status %></span>
+              </div>
+              <p class="text-sm text-base-content/70 truncate"><%= order.email %></p>
+            </div>
+            <%= link_to admin_order_path(order), class: "btn btn-sm btn-primary btn-square shrink-0" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            <% end %>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm">
+            <span class="font-medium"><%= number_to_currency(order.total_amount) %></span>
+            <span class="text-base-content/60"><%= order.created_at.strftime("%b %d, %Y") %></span>
+            <% if order.sample_request? %>
+              <span class="badge badge-primary badge-sm">Samples Only</span>
+            <% elsif order.contains_samples? %>
+              <span class="badge badge-secondary badge-sm">Contains Samples</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @orders.empty? %>
+    <div class="text-center py-8 text-base-content/70">
+      <p>No orders found.</p>
+    </div>
+  <% end %>
 </div>

@@ -1,129 +1,158 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="max-w-4xl mx-auto">
+<div class="py-4 sm:py-8">
+  <%# Header with back button %>
+  <div class="flex items-center gap-2 mb-6">
+    <%= link_to admin_orders_path, class: "btn btn-ghost btn-sm btn-square" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+    <h1>Order <%= @order.display_number %></h1>
+  </div>
 
-    <!-- Order Details -->
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
-      <div class="px-6 py-4 bg-gray-50 border-b">
-        <h2 class="text-xl font-semibold text-gray-900">Order Details</h2>
-      </div>
+  <div class="max-w-4xl space-y-4 sm:space-y-6">
+    <%# Order Details %>
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+      <div class="card-body p-4 sm:p-6">
+        <h2 class="card-title text-lg mb-4">Order Details</h2>
 
-      <div class="p-6">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
           <div>
-            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Order Number</h3>
-            <p class="mt-1 text-lg font-semibold text-gray-900"><%= @order.display_number %></p>
+            <p class="text-xs text-base-content/60 uppercase tracking-wide">Order Number</p>
+            <p class="font-semibold"><%= @order.display_number %></p>
           </div>
 
           <div>
-            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Order Date</h3>
-            <p class="mt-1 text-lg text-gray-900"><%= @order.created_at.strftime("%B %d, %Y") %></p>
+            <p class="text-xs text-base-content/60 uppercase tracking-wide">Date</p>
+            <p><%= @order.created_at.strftime("%b %d, %Y") %></p>
           </div>
 
           <div>
-            <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">Status</h3>
-            <span class="mt-1 inline-flex px-3 py-1 text-sm font-medium rounded-full bg-green-100 text-green-800">
-              <%= @order.status.humanize %>
-            </span>
+            <p class="text-xs text-base-content/60 uppercase tracking-wide">Status</p>
+            <span class="badge badge-success badge-sm mt-1"><%= @order.status.humanize %></span>
           </div>
         </div>
       </div>
     </div>
 
-    <!-- Order Items -->
-    <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
-      <div class="px-6 py-4 bg-gray-50 border-b">
-        <h2 class="text-xl font-semibold text-gray-900">Items Ordered</h2>
-      </div>
+    <%# Order Items %>
+    <div class="card bg-base-100 shadow-sm border border-base-200">
+      <div class="card-body p-4 sm:p-6">
+        <h2 class="card-title text-lg mb-4">Items Ordered</h2>
 
-      <div class="divide-y divide-gray-200">
-        <% @order.order_items.each do |item| %>
-          <div class="p-6 flex items-center space-x-4">
-            <div class="relative flex-shrink-0">
-              <%= product_photo_tag(item.product&.primary_photo, alt: item.product&.display_name || "Product", class: "h-16 w-16 rounded-lg") %>
-              <% if item.sample? %>
-                <%= render "shared/sample_badge", size: :sm %>
-              <% end %>
+        <div class="divide-y divide-base-200 -mx-4 sm:-mx-6">
+          <% @order.order_items.each do |item| %>
+            <%# Desktop item layout %>
+            <div class="hidden sm:flex p-4 sm:px-6 items-center gap-4">
+              <div class="relative shrink-0">
+                <%= product_photo_tag(item.product&.primary_photo, alt: item.product&.display_name || "Product", class: "h-16 w-16 rounded-lg object-cover") %>
+                <% if item.sample? %>
+                  <%= render "shared/sample_badge", size: :sm %>
+                <% end %>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <h3 class="font-medium"><%= link_to item.product.name, edit_admin_product_path(item.product), class: "hover:text-primary", data: { turbo_frame: "_top" } %></h3>
+                <p class="text-sm text-base-content/60">SKU: <%= item.product.sku %></p>
+                <% if item.sample? %>
+                  <p class="text-sm text-base-content/60">Sample SKU: <%= item.product.effective_sample_sku %></p>
+                <% end %>
+                <p class="text-sm text-base-content/60">Qty: <%= format_quantity_display(item) %></p>
+              </div>
+
+              <div class="text-right shrink-0">
+                <% if item.sample? %>
+                  <p class="font-medium text-primary">Free</p>
+                  <p class="text-sm text-base-content/60">Sample</p>
+                <% else %>
+                  <p class="font-medium">£<%= number_with_precision(item.line_total, precision: 2) %></p>
+                  <p class="text-sm text-base-content/60"><%= format_price_display(item) %></p>
+                <% end %>
+              </div>
             </div>
 
-            <div class="flex-1">
-              <h3 class="text-lg font-medium text-gray-900"><%= link_to item.product.name, edit_admin_product_path(item.product) %></h3>
-              <p class="text-sm text-gray-500">SKU: <%= item.product.sku %></p>
-              <% if item.sample? %>
-                <p class="text-sm text-gray-500">Sample SKU: <%= item.product.effective_sample_sku %></p>
-              <% end %>
-              <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
-            </div>
+            <%# Mobile item layout %>
+            <div class="sm:hidden p-4">
+              <div class="flex gap-3">
+                <div class="relative shrink-0">
+                  <%= product_photo_tag(item.product&.primary_photo, alt: item.product&.display_name || "Product", class: "h-14 w-14 rounded-lg object-cover") %>
+                  <% if item.sample? %>
+                    <%= render "shared/sample_badge", size: :sm %>
+                  <% end %>
+                </div>
 
-            <div class="text-right">
-              <% if item.sample? %>
-                <p class="text-lg font-medium text-primary">Free</p>
-                <p class="text-sm text-gray-500">Sample</p>
-              <% else %>
-                <p class="text-lg font-medium text-gray-900">£<%= number_with_precision(item.line_total, precision: 2) %></p>
-                <p class="text-sm text-gray-500"><%= format_price_display(item) %></p>
-              <% end %>
+                <div class="flex-1 min-w-0">
+                  <h3 class="font-medium text-sm line-clamp-2"><%= link_to item.product.name, edit_admin_product_path(item.product), class: "hover:text-primary", data: { turbo_frame: "_top" } %></h3>
+                  <p class="text-xs text-base-content/60 mt-1">SKU: <%= item.product.sku %></p>
+                  <div class="flex justify-between items-end mt-2">
+                    <p class="text-xs text-base-content/60">Qty: <%= format_quantity_display(item) %></p>
+                    <% if item.sample? %>
+                      <span class="text-sm font-medium text-primary">Free</span>
+                    <% else %>
+                      <span class="text-sm font-medium">£<%= number_with_precision(item.line_total, precision: 2) %></span>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
     </div>
 
-    <!-- Order Summary and Shipping -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <%# Order Summary and Shipping - stack on mobile %>
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+      <%# Order Summary %>
+      <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h2 class="card-title text-lg mb-4">Order Summary</h2>
 
-      <!-- Order Summary -->
-      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">Order Summary</h2>
-        </div>
+          <div class="space-y-3">
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/70">Subtotal</span>
+              <span>£<%= number_with_precision(@order.subtotal_amount, precision: 2) %></span>
+            </div>
 
-        <div class="p-6 space-y-4">
-          <div class="flex justify-between">
-            <span class="text-gray-600">Subtotal</span>
-            <span class="text-gray-900">£<%= number_with_precision(@order.subtotal_amount, precision: 2) %></span>
-          </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/70">VAT (20%)</span>
+              <span>£<%= number_with_precision(@order.vat_amount, precision: 2) %></span>
+            </div>
 
-          <div class="flex justify-between">
-            <span class="text-gray-600">VAT (20%)</span>
-            <span class="text-gray-900">£<%= number_with_precision(@order.vat_amount, precision: 2) %></span>
-          </div>
+            <div class="flex justify-between text-sm">
+              <span class="text-base-content/70">Shipping</span>
+              <span>£<%= number_with_precision(@order.shipping_amount, precision: 2) %></span>
+            </div>
 
-          <div class="flex justify-between">
-            <span class="text-gray-600">Shipping</span>
-            <span class="text-gray-900">£<%= number_with_precision(@order.shipping_amount, precision: 2) %></span>
-          </div>
+            <div class="divider my-2"></div>
 
-          <div class="border-t pt-4">
             <div class="flex justify-between">
-              <span class="text-lg font-semibold text-gray-900">Total</span>
-              <span class="text-lg font-bold text-gray-900">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
+              <span class="font-semibold">Total</span>
+              <span class="font-bold">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Shipping Information -->
-      <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b">
-          <h2 class="text-xl font-semibold text-gray-900">Shipping Address</h2>
-        </div>
+      <%# Shipping Information %>
+      <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4 sm:p-6">
+          <h2 class="card-title text-lg mb-4">Shipping Address</h2>
 
-        <div class="p-6">
-          <div class="text-gray-900">
+          <div class="text-sm">
             <p class="font-medium"><%= @order.shipping_name %></p>
-            <p><%= @order.shipping_address_line1 %></p>
+            <p class="text-base-content/80"><%= @order.shipping_address_line1 %></p>
             <% if @order.shipping_address_line2.present? %>
-              <p><%= @order.shipping_address_line2 %></p>
+              <p class="text-base-content/80"><%= @order.shipping_address_line2 %></p>
             <% end %>
-            <p><%= @order.shipping_city %>, <%= @order.shipping_postal_code %></p>
-            <p><%= @order.shipping_country %></p>
+            <p class="text-base-content/80"><%= @order.shipping_city %>, <%= @order.shipping_postal_code %></p>
+            <p class="text-base-content/80"><%= @order.shipping_country %></p>
           </div>
 
-          <div class="mt-4 pt-4 border-t">
-            <p class="text-sm text-gray-600">
-              <strong>Email:</strong> <%= @order.email %>
-            </p>
-          </div>
+          <div class="divider my-2"></div>
+
+          <p class="text-sm">
+            <span class="text-base-content/60">Email:</span>
+            <span class="break-all"><%= @order.email %></span>
+          </p>
         </div>
       </div>
     </div>

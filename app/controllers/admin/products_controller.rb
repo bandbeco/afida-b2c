@@ -4,7 +4,25 @@ module Admin
 
     # GET /products
     def index
-      @products = Product.all
+      @products = Product.unscoped
+
+      # Search
+      if params[:search].present?
+        search_term = "%#{params[:search]}%"
+        @products = @products.where(
+          "name ILIKE :term OR sku ILIKE :term OR colour ILIKE :term OR material ILIKE :term OR size ILIKE :term",
+          term: search_term
+        )
+      end
+
+      # Sorting
+      sort_column = %w[name sku active featured sample_eligible].include?(params[:sort]) ? params[:sort] : "name"
+      sort_direction = %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
+
+      @products = @products.order("#{sort_column} #{sort_direction}")
+
+      @sort_column = sort_column
+      @sort_direction = sort_direction
     end
 
     # GET /products/1
@@ -35,7 +53,7 @@ module Admin
     # PATCH/PUT /products/1
     def update
       if @product.update(product_params)
-        redirect_to admin_product_path(@product), notice: "Product was successfully updated.", status: :see_other
+        redirect_to admin_products_path, notice: "Product was successfully updated.", status: :see_other
       else
         render :edit, status: :unprocessable_entity
       end
@@ -202,11 +220,13 @@ module Admin
         :featured,
         :sample_eligible,
         :name,
+        :size,
+        :colour,
+        :material,
         :sku,
         :description_short,
         :description_standard,
         :description_detailed,
-        :colour,
         :category_id,
         :product_family_id,
         :product_photo,

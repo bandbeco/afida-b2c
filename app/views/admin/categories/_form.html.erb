@@ -1,66 +1,105 @@
-<%= form_with(model: [:admin, category], local: true, class: "space-y-6") do |form| %>
+<%= form_with(model: [:admin, category], local: true, class: "space-y-4 sm:space-y-6 max-w-2xl") do |form| %>
   <% if category.errors.any? %>
     <div class="alert alert-error">
-      <h2 class="font-bold"><%= pluralize(category.errors.count, "error") %> prohibited this category from being saved:</h2>
-      <ul class="list-disc list-inside">
-        <% category.errors.full_messages.each do |message| %>
-          <li><%= message %></li>
-        <% end %>
-      </ul>
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(category.errors.count, "error") %> prohibited this category from being saved:</h3>
+        <ul class="list-disc list-inside text-sm mt-1">
+          <% category.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
     </div>
   <% end %>
 
-  <div class="form-control">
-    <%= form.label :name, class: "label" %>
-    <%= form.text_field :name, class: "input input-bordered w-full", placeholder: "e.g. Drinks" %>
-  </div>
+  <%# Basic Info %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Basic Information</h2>
 
-  <div class="form-control">
-    <%= form.label :slug, class: "label" %>
-    <%= form.text_field :slug, class: "input input-bordered w-full", placeholder: "e.g. drinks" %>
-    <label class="label">
-      <span class="label-text-alt">URL-friendly identifier (lowercase, use hyphens)</span>
-    </label>
-  </div>
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :name, class: "label" do %>
+            <span class="label-text font-medium">Name</span>
+          <% end %>
+          <%= form.text_field :name, class: "input input-bordered w-full", placeholder: "e.g. Drinks" %>
+        </div>
 
-  <div class="form-control">
-    <%= form.label :description, class: "label" %>
-    <%= form.text_area :description, class: "textarea textarea-bordered w-full", rows: 3, placeholder: "Brief description of the category" %>
-  </div>
+        <div class="form-control">
+          <%= form.label :slug, class: "label" do %>
+            <span class="label-text font-medium">Slug</span>
+          <% end %>
+          <%= form.text_field :slug, class: "input input-bordered w-full", placeholder: "e.g. drinks" %>
+          <label class="label">
+            <span class="label-text-alt">URL-friendly identifier (lowercase, use hyphens)</span>
+          </label>
+        </div>
 
-  <div class="form-control">
-    <%= form.label :meta_title, "SEO Meta Title", class: "label" %>
-    <%= form.text_field :meta_title, class: "input input-bordered w-full", placeholder: "e.g. Drinks Packaging - Cups & Straws | Afida" %>
-    <label class="label">
-      <span class="label-text-alt">Shown in search engine results (50-60 characters)</span>
-    </label>
-  </div>
-
-  <div class="form-control">
-    <%= form.label :meta_description, "SEO Meta Description", class: "label" %>
-    <%= form.text_area :meta_description, class: "textarea textarea-bordered w-full", rows: 2, placeholder: "Brief description for search engines" %>
-    <label class="label">
-      <span class="label-text-alt">Shown in search engine results (150-160 characters)</span>
-    </label>
-  </div>
-
-  <div class="form-control">
-    <%= form.label :image, "Category Image", class: "label" %>
-
-    <% if category.image.attached? %>
-      <div class="mb-4">
-        <%= image_tag category.image, class: "w-64 h-64 object-cover rounded-lg shadow-md" %>
-        <p class="text-sm text-gray-600 mt-2">Current image</p>
+        <div class="form-control">
+          <%= form.label :description, class: "label" do %>
+            <span class="label-text font-medium">Description</span>
+          <% end %>
+          <%= form.text_area :description, class: "textarea textarea-bordered w-full", rows: 3, placeholder: "Brief description of the category" %>
+        </div>
       </div>
-    <% end %>
-
-    <%= form.file_field :image, class: "file-input file-input-bordered w-full", accept: "image/*" %>
-    <label class="label">
-      <span class="label-text-alt">Upload a new image (JPG, PNG, WebP recommended)</span>
-    </label>
+    </div>
   </div>
 
-  <div class="flex gap-4">
+  <%# SEO %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">SEO</h2>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :meta_title, class: "label" do %>
+            <span class="label-text font-medium">Meta Title</span>
+          <% end %>
+          <%= form.text_field :meta_title, class: "input input-bordered w-full", placeholder: "e.g. Drinks Packaging - Cups & Straws | Afida" %>
+          <label class="label">
+            <span class="label-text-alt">50-60 characters recommended</span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <%= form.label :meta_description, class: "label" do %>
+            <span class="label-text font-medium">Meta Description</span>
+          <% end %>
+          <%= form.text_area :meta_description, class: "textarea textarea-bordered w-full", rows: 2, placeholder: "Brief description for search engines" %>
+          <label class="label">
+            <span class="label-text-alt">150-160 characters recommended</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Image %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Category Image</h2>
+
+      <% if category.image.attached? %>
+        <div class="mb-4">
+          <%= image_tag category.image, class: "w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg shadow-md" %>
+          <p class="text-sm text-base-content/60 mt-2">Current image</p>
+        </div>
+      <% end %>
+
+      <div class="form-control">
+        <%= form.file_field :image, class: "file-input file-input-bordered w-full", accept: "image/*" %>
+        <label class="label">
+          <span class="label-text-alt">JPG, PNG, or WebP recommended</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <%# Actions %>
+  <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
     <%= form.submit class: "btn btn-primary" %>
     <%= link_to "Cancel", admin_categories_path, class: "btn btn-ghost" %>
   </div>

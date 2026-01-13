@@ -1,53 +1,160 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">Products</h1>
+<div class="py-4 sm:py-8">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Products</h1>
     <div class="flex gap-2">
-      <%= link_to order_admin_products_path, class: "btn" do %>
+      <%= link_to order_admin_products_path, class: "btn btn-sm sm:btn-md" do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
         </svg>
-        Reorder Products
+        <span class="hidden sm:inline">Reorder</span>
       <% end %>
-      <%= link_to new_admin_product_path, class: "btn btn-primary" do %>
+      <%= link_to new_admin_product_path, class: "btn btn-sm sm:btn-md btn-primary" do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        New Product
+        <span class="hidden sm:inline">New Product</span>
       <% end %>
     </div>
   </div>
 
-  <div class="overflow-x-auto">
-  <table class="table table-zebra w-full">
-    <thead>
-      <tr>
-        <th class="font-semibold">Name</th>
-        <th class="font-semibold">SKU</th>
-        <th class="font-semibold">Active</th>
-        <th class="font-semibold">Featured</th>
-        <th class="font-semibold">Sample</th>
-        <th class="font-semibold">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% @products.each do |product| %>
-        <tr>
-          <td>
-            <%= link_to product.name, product_path(product), class: "link" %>
-          </td>
-          <td>
-            <span class="font-mono text-sm"><%= product.sku %></span>
-          </td>
-          <td class="text-center"><%= product.active ? "✅" : "❌" %></td>
-          <td class="text-center"><%= product.featured ? "✅" : "❌" %></td>
-          <td class="text-center"><%= product.sample_eligible ? "✅" : "❌" %></td>
-          <td class="flex gap-2">
-            <%= link_to "Edit", edit_admin_product_path(product), class: "btn btn-sm btn-primary" %>
-            <%= button_to "Delete", admin_product_path(product), method: :delete, class: "btn btn-sm btn-error", form: { data: { turbo_confirm: "Are you sure?" } } %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+  <%# Search Box %>
+  <div class="mb-4">
+    <%= form_with url: admin_products_path, method: :get, data: { turbo_frame: "products", turbo_action: "advance", controller: "debounced-submit clearable-input" } do |f| %>
+      <div class="relative">
+        <%= f.text_field :search,
+                         value: params[:search],
+                         placeholder: "Search products...",
+                         class: "input input-bordered w-full pr-10",
+                         data: { action: "input->debounced-submit#submit input->clearable-input#toggle", clearable_input_target: "input" } %>
+        <button type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 z-10 text-base-content/40 hover:text-base-content transition-colors <%= params[:search].blank? ? 'hidden' : '' %>"
+                data-clearable-input-target="button"
+                data-action="clearable-input#clear">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+    <% end %>
   </div>
+
+  <%= turbo_frame_tag "products" do %>
+    <% if params[:search].present? %>
+      <p class="text-sm text-base-content/70 mb-4">
+        Found <%= @products.count %> product<%= @products.count == 1 ? '' : 's' %> matching "<%= params[:search] %>"
+      </p>
+    <% end %>
+
+    <%# Desktop Table View %>
+    <div class="hidden md:block overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th><%= sort_link("Title", "name") %></th>
+            <th><%= sort_link("SKU", "sku") %></th>
+            <th class="text-center"><%= sort_link("Active", "active") %></th>
+            <th class="text-center"><%= sort_link("Featured", "featured") %></th>
+            <th class="text-center"><%= sort_link("Samples", "sample_eligible") %></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @products.each do |product| %>
+            <tr>
+              <td>
+                <%= product.generated_title %>
+              </td>
+              <td>
+                <span class="font-mono text-sm"><%= product.sku %></span>
+              </td>
+              <td class="text-center"><%= product.active ? "✅" : "❌" %></td>
+              <td class="text-center"><%= product.featured ? "✅" : "❌" %></td>
+              <td class="text-center"><%= product.sample_eligible ? "✅" : "❌" %></td>
+              <td>
+                <div class="flex gap-1">
+                  <%# View on storefront %>
+                  <% if product.active? %>
+                    <%= link_to product_path(product), class: "btn btn-sm btn-ghost btn-square", title: "View on storefront", target: "_blank" do %>
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    <% end %>
+                  <% else %>
+                    <span class="btn btn-sm btn-ghost btn-square btn-disabled opacity-30 cursor-not-allowed" title="Product is inactive">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </span>
+                  <% end %>
+                  <%# Edit %>
+                  <%= link_to edit_admin_product_path(product), class: "btn btn-sm btn-primary btn-square", title: "Edit product", data: { turbo_frame: "_top" } do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Mobile Card View %>
+    <div class="md:hidden space-y-3">
+      <% @products.each do |product| %>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+          <div class="card-body p-4">
+            <div class="flex justify-between items-start gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-sm line-clamp-2"><%= product.generated_title %></p>
+                <p class="font-mono text-xs text-base-content/70 mt-1"><%= product.sku %></p>
+              </div>
+              <div class="flex gap-1 shrink-0">
+                <% if product.active? %>
+                  <%= link_to product_path(product), class: "btn btn-sm btn-ghost btn-square", target: "_blank" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  <% end %>
+                <% else %>
+                  <span class="btn btn-sm btn-ghost btn-square btn-disabled opacity-30 cursor-not-allowed">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </span>
+                <% end %>
+                <%= link_to edit_admin_product_path(product), class: "btn btn-sm btn-primary btn-square", data: { turbo_frame: "_top" } do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                <% end %>
+              </div>
+            </div>
+            <div class="flex gap-3 mt-2 text-xs">
+              <span class="flex items-center gap-1">
+                <%= product.active ? "✅" : "❌" %> Active
+              </span>
+              <span class="flex items-center gap-1">
+                <%= product.featured ? "✅" : "❌" %> Featured
+              </span>
+              <span class="flex items-center gap-1">
+                <%= product.sample_eligible ? "✅" : "❌" %> Sample
+              </span>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @products.empty? %>
+      <div class="text-center py-8 text-base-content/70">
+        <p>No products found.</p>
+      </div>
+    <% end %>
+  <% end %>
 </div>

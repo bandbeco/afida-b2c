@@ -1,122 +1,139 @@
-<div class="container mx-auto px-4 py-8">
-  <%= link_to "← Back to Orders", admin_branded_orders_path, class: "btn btn-ghost mb-4" %>
-
-  <div class="mb-8">
-    <h1 class="text-3xl font-bold">Order #<%= @order.id %></h1>
-    <div class="text-lg text-gray-600">
-      <%= @order.organization&.name || "Individual Customer" %> •
-      <%= @order.created_at.strftime("%B %d, %Y at %I:%M %p") %>
+<div class="py-4 sm:py-8">
+  <%# Header with back button %>
+  <div class="flex items-center gap-2 mb-4 sm:mb-6">
+    <%= link_to admin_branded_orders_path, class: "btn btn-ghost btn-sm btn-square" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+      </svg>
+    <% end %>
+    <div>
+      <h1>Order #<%= @order.id %></h1>
+      <p class="text-sm text-base-content/70">
+        <%= @order.organization&.name || "Individual Customer" %> •
+        <%= @order.created_at.strftime("%b %d, %Y") %>
+      </p>
     </div>
   </div>
 
-  <!-- Fulfillment Status Timeline -->
-  <div class="card bg-base-200 mb-8">
-    <div class="card-body">
-      <h2 class="card-title">Fulfillment Status</h2>
+  <div class="max-w-4xl space-y-4 sm:space-y-6">
+    <%# Fulfillment Status Timeline %>
+    <div class="card bg-base-200 shadow-sm">
+      <div class="card-body p-4 sm:p-6">
+        <h2 class="card-title text-lg mb-4">Fulfillment Status</h2>
 
-      <ul class="steps steps-vertical lg:steps-horizontal w-full">
-        <li class="step <%= 'step-primary' if @order.branded_order_status.present? %>">
-          Design Pending
-        </li>
-        <li class="step <%= 'step-primary' if @order.branded_order_status_design_approved? || @order.branded_order_status_in_production? %>">
-          Design Approved
-        </li>
-        <li class="step <%= 'step-primary' if @order.branded_order_status_in_production? %>">
-          In Production
-        </li>
-        <li class="step <%= 'step-primary' if @order.branded_order_status_production_complete? %>">
-          Production Complete
-        </li>
-        <li class="step <%= 'step-primary' if @order.branded_order_status_stock_received? %>">
-          Stock Received
-        </li>
-        <li class="step <%= 'step-primary' if @order.branded_order_status_instance_created? %>">
-          Customer Product Created
-        </li>
-      </ul>
+        <%# Steps - vertical on mobile, horizontal on desktop %>
+        <ul class="steps steps-vertical lg:steps-horizontal w-full text-xs sm:text-sm">
+          <li class="step <%= 'step-primary' if @order.branded_order_status.present? %>">
+            <span class="hidden sm:inline">Design Pending</span>
+            <span class="sm:hidden">Pending</span>
+          </li>
+          <li class="step <%= 'step-primary' if @order.branded_order_status_design_approved? || @order.branded_order_status_in_production? %>">
+            <span class="hidden sm:inline">Design Approved</span>
+            <span class="sm:hidden">Approved</span>
+          </li>
+          <li class="step <%= 'step-primary' if @order.branded_order_status_in_production? %>">
+            <span class="hidden sm:inline">In Production</span>
+            <span class="sm:hidden">Production</span>
+          </li>
+          <li class="step <%= 'step-primary' if @order.branded_order_status_production_complete? %>">
+            <span class="hidden sm:inline">Production Complete</span>
+            <span class="sm:hidden">Complete</span>
+          </li>
+          <li class="step <%= 'step-primary' if @order.branded_order_status_stock_received? %>">
+            <span class="hidden sm:inline">Stock Received</span>
+            <span class="sm:hidden">Received</span>
+          </li>
+          <li class="step <%= 'step-primary' if @order.branded_order_status_instance_created? %>">
+            <span class="hidden sm:inline">Product Created</span>
+            <span class="sm:hidden">Created</span>
+          </li>
+        </ul>
 
-      <!-- Status Update Form -->
-      <%= form_with url: update_status_admin_branded_order_path(@order), method: :patch, class: "mt-6" do |f| %>
-        <div class="flex gap-2">
-          <%= f.select :status,
-                      options_for_select(
-                        Order.branded_order_statuses.keys.map { |k| [k.humanize, k] },
-                        @order.branded_order_status
-                      ),
-                      {},
-                      class: "select select-bordered flex-1" %>
-          <%= f.submit "Update Status", class: "btn btn-primary" %>
+        <%# Status Update Form %>
+        <%= form_with url: update_status_admin_branded_order_path(@order), method: :patch, class: "mt-4 sm:mt-6" do |f| %>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <%= f.select :status,
+                        options_for_select(
+                          Order.branded_order_statuses.keys.map { |k| [k.humanize, k] },
+                          @order.branded_order_status
+                        ),
+                        {},
+                        class: "select select-bordered select-sm sm:select-md flex-1" %>
+            <%= f.submit "Update Status", class: "btn btn-primary btn-sm sm:btn-md" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Configured Order Items %>
+    <div class="space-y-4">
+      <% @configured_items.each do |item| %>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+          <div class="card-body p-4 sm:p-6">
+            <h3 class="card-title text-base sm:text-lg"><%= item.product.name %></h3>
+
+            <%# Configuration and Pricing - stack on mobile %>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+              <%# Configuration %>
+              <div>
+                <h4 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">Configuration</h4>
+                <dl class="space-y-1 text-sm">
+                  <% item.configuration.each do |key, value| %>
+                    <div class="flex justify-between sm:justify-start sm:gap-2">
+                      <dt class="text-base-content/60"><%= key.titleize %>:</dt>
+                      <dd class="font-medium"><%= value %></dd>
+                    </div>
+                  <% end %>
+                </dl>
+              </div>
+
+              <%# Pricing %>
+              <div>
+                <h4 class="text-sm font-semibold text-base-content/70 uppercase tracking-wide mb-2">Pricing</h4>
+                <dl class="space-y-1 text-sm">
+                  <div class="flex justify-between sm:justify-start sm:gap-2">
+                    <dt class="text-base-content/60">Unit Price:</dt>
+                    <dd class="font-medium">£<%= number_with_precision(item.unit_price, precision: 4) %></dd>
+                  </div>
+                  <div class="flex justify-between sm:justify-start sm:gap-2">
+                    <dt class="text-base-content/60">Quantity:</dt>
+                    <dd class="font-medium"><%= number_with_delimiter(item.quantity) %></dd>
+                  </div>
+                  <div class="flex justify-between sm:justify-start sm:gap-2">
+                    <dt class="text-base-content/60">Total:</dt>
+                    <dd class="font-bold">£<%= number_with_precision(item.line_total, precision: 2) %></dd>
+                  </div>
+                </dl>
+              </div>
+            </div>
+
+            <%# Design Download %>
+            <% if item.design.attached? %>
+              <div class="mt-4">
+                <%= link_to rails_blob_path(item.design, disposition: "attachment"), class: "btn btn-sm btn-outline gap-2" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Download Design
+                <% end %>
+              </div>
+            <% end %>
+
+            <%# Instance Product Creation Form %>
+            <% unless @order.branded_order_status_instance_created? %>
+              <div class="divider my-4"></div>
+              <%= render "instance_product_form", order: @order, order_item: item %>
+            <% else %>
+              <div class="alert alert-success mt-4 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span>Customer product has been created</span>
+              </div>
+            <% end %>
+          </div>
         </div>
       <% end %>
     </div>
-  </div>
-
-  <!-- Configured Order Items -->
-  <div class="space-y-6">
-    <% @configured_items.each do |item| %>
-      <div class="card bg-base-100 border border-base-300">
-        <div class="card-body">
-          <div class="flex justify-between items-start">
-            <div class="flex-1">
-              <h3 class="card-title"><%= item.product.name %></h3>
-
-              <!-- Configuration Details -->
-              <div class="grid grid-cols-2 gap-4 mt-4">
-                <div>
-                  <h4 class="font-semibold mb-2">Configuration</h4>
-                  <dl class="space-y-1">
-                    <% item.configuration.each do |key, value| %>
-                      <div class="flex gap-2">
-                        <dt class="text-gray-600"><%= key.titleize %>:</dt>
-                        <dd class="font-semibold"><%= value %></dd>
-                      </div>
-                    <% end %>
-                  </dl>
-                </div>
-
-                <div>
-                  <h4 class="font-semibold mb-2">Pricing</h4>
-                  <dl class="space-y-1">
-                    <div class="flex gap-2">
-                      <dt class="text-gray-600">Unit Price:</dt>
-                      <dd class="font-semibold">£<%= number_with_precision(item.unit_price, precision: 4) %></dd>
-                    </div>
-                    <div class="flex gap-2">
-                      <dt class="text-gray-600">Quantity:</dt>
-                      <dd class="font-semibold"><%= number_with_delimiter(item.quantity) %></dd>
-                    </div>
-                    <div class="flex gap-2">
-                      <dt class="text-gray-600">Total:</dt>
-                      <dd class="font-semibold">£<%= number_with_precision(item.line_total, precision: 2) %></dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
-
-              <!-- Design Download -->
-              <% if item.design.attached? %>
-                <div class="mt-4">
-                  <%= link_to "Download Design", rails_blob_path(item.design, disposition: "attachment"),
-                             class: "btn btn-sm btn-outline" %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-
-          <!-- Instance Product Creation Form -->
-          <% unless @order.branded_order_status_instance_created? %>
-            <div class="divider"></div>
-            <%= render "instance_product_form", order: @order, order_item: item %>
-          <% else %>
-            <div class="alert alert-success mt-4">
-              <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              <span>Customer product has been created</span>
-            </div>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
   </div>
 </div>

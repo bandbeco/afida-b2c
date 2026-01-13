@@ -1,32 +1,33 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">Categories</h1>
+<div class="py-4 sm:py-8">
+  <%# Header %>
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Categories</h1>
     <div class="flex gap-2">
-      <%= link_to order_admin_categories_path, class: "btn" do %>
+      <%= link_to order_admin_categories_path, class: "btn btn-sm sm:btn-md" do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M3 7.5 7.5 3m0 0L12 7.5M7.5 3v13.5m13.5 0L16.5 21m0 0L12 16.5m4.5 4.5V7.5" />
         </svg>
-        Reorder Categories
+        <span class="hidden sm:inline">Reorder</span>
       <% end %>
-      <%= link_to new_admin_category_path, class: "btn btn-primary" do %>
+      <%= link_to new_admin_category_path, class: "btn btn-sm sm:btn-md btn-primary" do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
           <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
-        New Category
+        <span class="hidden sm:inline">New Category</span>
       <% end %>
     </div>
   </div>
 
-  <div class="overflow-x-auto">
+  <%# Desktop Table View %>
+  <div class="hidden md:block overflow-x-auto">
     <table class="table table-zebra w-full">
       <thead>
         <tr>
           <th>Image</th>
           <th>Name</th>
           <th>Slug</th>
-          <th>Description</th>
           <th>Products</th>
-          <th>Actions</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -34,21 +35,28 @@
           <tr>
             <td>
               <% if category.image.attached? %>
-                <%= image_tag category.image, class: "w-16 h-16 object-cover rounded", alt: category.name %>
+                <%= image_tag category.image, class: "w-12 h-12 object-cover rounded", alt: category.name %>
               <% else %>
-                <div class="w-16 h-16 bg-gradient-to-br from-primary/20 to-secondary/20 rounded flex items-center justify-center">
-                  <span class="text-xl font-bold text-primary/30"><%= category.name[0] %></span>
+                <div class="w-12 h-12 bg-gradient-to-br from-primary/20 to-secondary/20 rounded flex items-center justify-center">
+                  <span class="text-lg font-bold text-primary/30"><%= category.name[0] %></span>
                 </div>
               <% end %>
             </td>
             <td class="font-medium"><%= category.name %></td>
             <td><code class="text-sm"><%= category.slug %></code></td>
-            <td class="max-w-xs truncate"><%= category.description %></td>
-            <td><%= category.products_count %> products</td>
+            <td><%= category.products_count %></td>
             <td>
-              <div class="flex gap-2">
-                <%= link_to "Edit", edit_admin_category_path(category), class: "btn btn-sm btn-primary" %>
-                <%= button_to "Delete", admin_category_path(category), method: :delete, class: "btn btn-sm btn-error", form: { data: { turbo_confirm: "Are you sure? This will affect #{category.products_count} products." } } %>
+              <div class="flex gap-1">
+                <%= link_to edit_admin_category_path(category), class: "btn btn-sm btn-primary btn-square", title: "Edit category" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                <% end %>
+                <%= button_to admin_category_path(category), method: :delete, class: "btn btn-sm btn-error btn-square", title: "Delete category", form: { data: { turbo_confirm: "Are you sure? This will affect #{category.products_count} products." } } do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                <% end %>
               </div>
             </td>
           </tr>
@@ -56,4 +64,52 @@
       </tbody>
     </table>
   </div>
+
+  <%# Mobile Card View %>
+  <div class="md:hidden space-y-3">
+    <% @categories.each do |category| %>
+      <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4">
+          <div class="flex gap-3">
+            <%# Image %>
+            <% if category.image.attached? %>
+              <%= image_tag category.image, class: "w-14 h-14 object-cover rounded shrink-0", alt: category.name %>
+            <% else %>
+              <div class="w-14 h-14 bg-gradient-to-br from-primary/20 to-secondary/20 rounded flex items-center justify-center shrink-0">
+                <span class="text-xl font-bold text-primary/30"><%= category.name[0] %></span>
+              </div>
+            <% end %>
+
+            <%# Content %>
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-start gap-2">
+                <div>
+                  <p class="font-medium"><%= category.name %></p>
+                  <p class="text-xs text-base-content/60"><%= category.products_count %> products</p>
+                </div>
+                <div class="flex gap-1 shrink-0">
+                  <%= link_to edit_admin_category_path(category), class: "btn btn-sm btn-primary btn-square" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  <% end %>
+                  <%= button_to admin_category_path(category), method: :delete, class: "btn btn-sm btn-error btn-square", form: { data: { turbo_confirm: "Are you sure? This will affect #{category.products_count} products." } } do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @categories.empty? %>
+    <div class="text-center py-8 text-base-content/70">
+      <p>No categories found.</p>
+    </div>
+  <% end %>
 </div>

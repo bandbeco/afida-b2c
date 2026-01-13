@@ -11,6 +11,67 @@
     </div>
   <% end %>
 
+  <%# Title Builder Section - Shows how fields combine into generated_title %>
+  <fieldset class="fieldset mt-8" data-controller="title-preview">
+    <legend class="fieldset-legend text-2xl font-medium">Title Builder</legend>
+
+    <div class="grid grid-cols-2 gap-4 py-4">
+      <div>
+        <%= form.label :size, class: "label text-base" %>
+        <%= form.text_field :size,
+                            class: "input w-full",
+                            placeholder: "e.g. 12oz, 200mm, A4",
+                            data: {
+                              title_preview_target: "size",
+                              action: "input->title-preview#update"
+                            } %>
+      </div>
+
+      <div>
+        <%= form.label :colour, class: "label text-base" %>
+        <%= form.text_field :colour,
+                            class: "input w-full",
+                            placeholder: "e.g. White, Kraft, Black",
+                            data: {
+                              title_preview_target: "colour",
+                              action: "input->title-preview#update"
+                            } %>
+      </div>
+
+      <div>
+        <%= form.label :material, class: "label text-base" %>
+        <%= form.text_field :material,
+                            class: "input w-full",
+                            placeholder: "e.g. Paper, Bamboo, PLA",
+                            data: {
+                              title_preview_target: "material",
+                              action: "input->title-preview#update"
+                            } %>
+      </div>
+
+      <div>
+        <%= form.label :name, "Name (required)", class: "label text-base" %>
+        <%= form.text_field :name,
+                            class: "input w-full",
+                            required: true,
+                            placeholder: "e.g. Single Wall Cup, Straws",
+                            data: {
+                              title_preview_target: "name",
+                              action: "input->title-preview#update"
+                            } %>
+      </div>
+    </div>
+
+    <div class="bg-base-200 border border-base-300 rounded-lg p-4 mt-2">
+      <div class="text-sm text-base-content/70 mb-1">Generated Title</div>
+      <div class="text-lg font-medium" data-title-preview-target="preview">
+        <%= product.generated_title.presence || "Enter product details above" %>
+      </div>
+    </div>
+  </fieldset>
+
+  <div class="divider my-8"></div>
+
   <%# Status Section - Always Visible %>
   <fieldset class="fieldset mt-8">
     <legend class="fieldset-legend text-2xl font-medium">Status</legend>
@@ -34,9 +95,6 @@
     <legend class="fieldset-legend text-2xl font-medium">Details</legend>
 
     <div class="grid grid-cols-2 gap-y-4 py-4">
-      <%= form.label :name, "Name (required)", class: "label text-base" %>
-      <%= form.text_field :name, class: "input", required: true %>
-
       <%= form.label :category, class: "label text-base" %>
       <%= form.select :category_id, Category.all.map { |category| [category.name, category.id] }, {}, class: "select select-bordered" %>
 

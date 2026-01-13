@@ -1,52 +1,99 @@
-<div class="container mx-auto px-4 py-8">
-  <div class="flex justify-between items-center mb-6">
-    <h1 class="text-3xl font-bold">Branded Product Orders</h1>
+<div class="py-4 sm:py-8">
+  <%# Header %>
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Branded Orders</h1>
   </div>
 
-  <div class="overflow-x-auto">
+  <%# Desktop Table View %>
+  <div class="hidden md:block overflow-x-auto">
     <table class="table table-zebra w-full">
       <thead>
         <tr>
-          <th>Order #</th>
+          <th>Order</th>
           <th>Organization</th>
           <th>Date</th>
           <th>Total</th>
           <th>Status</th>
           <th>Fulfillment</th>
-          <th>Actions</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         <% @orders.each do |order| %>
           <tr>
-            <td>
-              <%= link_to "##{order.id}", admin_branded_order_path(order), class: "link link-primary" %>
-            </td>
+            <td class="font-medium">#<%= order.id %></td>
             <td><%= order.organization&.name || "N/A" %></td>
-            <td><%= order.created_at.strftime("%Y-%m-%d") %></td>
-            <td class="font-semibold">£<%= number_with_precision(order.total_amount, precision: 2) %></td>
+            <td class="text-sm text-base-content/70"><%= order.created_at.strftime("%b %d, %Y") %></td>
+            <td class="font-medium">£<%= number_with_precision(order.total_amount, precision: 2) %></td>
             <td>
-              <span class="badge badge-<%= order.status == 'completed' ? 'success' : 'warning' %>">
+              <span class="badge badge-<%= order.status == 'completed' ? 'success' : 'warning' %> badge-sm">
                 <%= order.status.titleize %>
               </span>
             </td>
             <td>
               <% if order.branded_order_status %>
-                <span class="badge badge-info">
+                <span class="badge badge-info badge-sm">
                   <%= order.branded_order_status.humanize %>
                 </span>
               <% else %>
-                <span class="badge badge-ghost">Pending</span>
+                <span class="badge badge-ghost badge-sm">Pending</span>
               <% end %>
             </td>
             <td>
-              <%= link_to "View", admin_branded_order_path(order), class: "btn btn-sm btn-primary" %>
+              <%= link_to admin_branded_order_path(order), class: "btn btn-sm btn-primary btn-square", title: "View order" do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              <% end %>
             </td>
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
+
+  <%# Mobile Card View %>
+  <div class="md:hidden space-y-3">
+    <% @orders.each do |order| %>
+      <div class="card bg-base-100 shadow-sm border border-base-200">
+        <div class="card-body p-4">
+          <div class="flex justify-between items-start gap-2">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2 mb-1">
+                <p class="font-medium">#<%= order.id %></p>
+                <span class="badge badge-<%= order.status == 'completed' ? 'success' : 'warning' %> badge-sm">
+                  <%= order.status.titleize %>
+                </span>
+              </div>
+              <p class="text-sm text-base-content/70"><%= order.organization&.name || "Individual" %></p>
+            </div>
+            <%= link_to admin_branded_order_path(order), class: "btn btn-sm btn-primary btn-square shrink-0" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            <% end %>
+          </div>
+          <div class="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm">
+            <span class="font-medium">£<%= number_with_precision(order.total_amount, precision: 2) %></span>
+            <span class="text-base-content/60"><%= order.created_at.strftime("%b %d, %Y") %></span>
+            <% if order.branded_order_status %>
+              <span class="badge badge-info badge-sm"><%= order.branded_order_status.humanize %></span>
+            <% else %>
+              <span class="badge badge-ghost badge-sm">Pending</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @orders.empty? %>
+    <div class="text-center py-8 text-base-content/70">
+      <p>No branded orders found.</p>
+    </div>
+  <% end %>
 
   <%= paginate @orders if defined?(Kaminari) %>
 </div>

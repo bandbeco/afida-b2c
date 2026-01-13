@@ -26,6 +26,12 @@ application.register("auto-dismiss", AutoDismissController)
 import ClickableCardController from "../javascript/controllers/clickable_card_controller"
 application.register("clickable-card", ClickableCardController)
 
+import DebouncedSubmitController from "../javascript/controllers/debounced_submit_controller"
+application.register("debounced-submit", DebouncedSubmitController)
+
+import ClearableInputController from "../javascript/controllers/clearable_input_controller"
+application.register("clearable-input", ClearableInputController)
+
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
   "analytics": () => import("../javascript/controllers/analytics_controller"),
@@ -49,7 +55,8 @@ const lazyControllers = {
   "account-dropdown": () => import("../javascript/controllers/account_dropdown_controller"),
   "password-visibility": () => import("../javascript/controllers/password_visibility_controller"),
   "save-address-prompt": () => import("../javascript/controllers/save_address_prompt_controller"),
-  "order-summary-toggle": () => import("../javascript/controllers/order_summary_toggle_controller")
+  "order-summary-toggle": () => import("../javascript/controllers/order_summary_toggle_controller"),
+  "title-preview": () => import("../javascript/controllers/title_preview_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM
