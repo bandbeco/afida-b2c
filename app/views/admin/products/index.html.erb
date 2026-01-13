@@ -52,9 +52,11 @@
           <tr>
             <th><%= sort_link("Title", "name") %></th>
             <th><%= sort_link("SKU", "sku") %></th>
-            <th class="text-center"><%= sort_link("Active", "active") %></th>
-            <th class="text-center"><%= sort_link("Featured", "featured") %></th>
-            <th class="text-center"><%= sort_link("Samples", "sample_eligible") %></th>
+            <th><%= sort_link("Price", "price") %></th>
+            <th><%= sort_link("Pack Size", "pac_size") %></th>
+            <th><%= sort_link("Active", "active") %></th>
+            <th><%= sort_link("Featured", "featured") %></th>
+            <th><%= sort_link("Samples", "sample_eligible") %></th>
             <th></th>
           </tr>
         </thead>
@@ -67,9 +69,13 @@
               <td>
                 <span class="font-mono text-sm"><%= product.sku %></span>
               </td>
-              <td class="text-center"><%= product.active ? "✅" : "❌" %></td>
-              <td class="text-center"><%= product.featured ? "✅" : "❌" %></td>
-              <td class="text-center"><%= product.sample_eligible ? "✅" : "❌" %></td>
+              <td>
+                <%= number_to_currency(product.price, unit: "£") %>
+              </td>
+              <td><%= number_with_delimiter(product.pac_size) %></td>
+              <td><%= product.active ? "✅" : "❌" %></td>
+              <td><%= product.featured ? "✅" : "❌" %></td>
+              <td><%= product.sample_eligible ? "✅" : "❌" %></td>
               <td>
                 <div class="flex gap-1">
                   <%# View on storefront %>
@@ -110,7 +116,10 @@
             <div class="flex justify-between items-start gap-2">
               <div class="flex-1 min-w-0">
                 <p class="font-medium text-sm line-clamp-2"><%= product.generated_title %></p>
-                <p class="font-mono text-xs text-base-content/70 mt-1"><%= product.sku %></p>
+                <div class="flex items-center gap-2 mt-1">
+                  <span class="font-mono text-xs text-base-content/70"><%= product.sku %></span>
+                  <span class="text-xs font-medium"><%= number_to_currency(product.price, unit: "£") %></span>
+                </div>
               </div>
               <div class="flex gap-1 shrink-0">
                 <% if product.active? %>

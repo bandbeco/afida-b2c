@@ -16,7 +16,7 @@ module Admin
       end
 
       # Sorting
-      sort_column = %w[name sku active featured sample_eligible].include?(params[:sort]) ? params[:sort] : "name"
+      sort_column = %w[name sku active featured sample_eligible price pac_size].include?(params[:sort]) ? params[:sort] : "name"
       sort_direction = %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
 
       @products = @products.order("#{sort_column} #{sort_direction}")
