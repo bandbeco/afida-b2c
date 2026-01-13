@@ -20,8 +20,23 @@
     <%= yield :head %>
     <%= canonical_url %>
 
-    <%# Default Open Graph image - pages can override via content_for :og_image %>
-    <meta property="og:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero.webp") %>">
+    <%# Default Open Graph tags - pages can override via content_for :head %>
+    <% unless content_for?(:og_tags_custom) %>
+      <meta property="og:type" content="website">
+      <meta property="og:title" content="<%= content_for(:title) %>">
+      <meta property="og:description" content="<%= content_for(:meta_description) %>">
+      <meta property="og:url" content="<%= request.original_url.split('?').first %>">
+      <meta property="og:site_name" content="Afida">
+      <meta property="og:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero.webp") %>">
+    <% end %>
+
+    <%# Default Twitter Card tags %>
+    <% unless content_for?(:twitter_tags_custom) %>
+      <meta name="twitter:card" content="summary_large_image">
+      <meta name="twitter:title" content="<%= content_for(:title) %>">
+      <meta name="twitter:description" content="<%= content_for(:meta_description) %>">
+      <meta name="twitter:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero.webp") %>">
+    <% end %>
 
     <%# Organization structured data for Google Rich Results %>
     <script type="application/ld+json">

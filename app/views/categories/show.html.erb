@@ -14,14 +14,17 @@
   <% content_for :og_image, url_for(@category.image) %>
 <% end %>
 
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
 <% content_for :head do %>
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= @category.meta_title %> | Afida">
   <meta property="og:description" content="<%= @category.meta_description %>">
   <meta property="og:url" content="<%= category_url(@category) %>">
   <meta property="og:site_name" content="Afida">
+  <meta property="og:image" content="<%= @category.image.attached? ? url_for(@category.image) : vite_asset_url("images/hero.webp") %>">
 
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @category.meta_title %>">
   <meta name="twitter:description" content="<%= @category.meta_description %>">
 

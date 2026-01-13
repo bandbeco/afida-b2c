@@ -4,6 +4,8 @@
 
 <% content_for :og_image, vite_asset_url('images/branding.webp') %>
 
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
 <% content_for :head do %>
   <!-- Open Graph -->
   <meta property="og:type" content="website">
@@ -11,6 +13,7 @@
   <meta property="og:description" content="Design your own custom branded double wall coffee cups. No setup fees, UK production, delivered in 20 business days.">
   <meta property="og:url" content="<%= branding_url %>">
   <meta property="og:site_name" content="Afida">
+  <meta property="og:image" content="<%= vite_asset_url('images/branding.webp') %>">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">

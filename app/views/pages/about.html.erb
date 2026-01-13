@@ -4,18 +4,21 @@
 
 <% content_for :og_image, vite_asset_url('images/branding.webp') %>
 
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
 <% content_for :head do %>
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="About Us - Our Story | Afida">
-  <meta property="og:description" content="From a living room startup to supplying The Ritz and Marriott. Discover how Afida became the UK's trusted source for sustainable catering supplies.">
+  <meta property="og:title" content="<%= content_for(:title) %>">
+  <meta property="og:description" content="<%= content_for(:meta_description) %>">
   <meta property="og:url" content="<%= about_url %>">
   <meta property="og:site_name" content="Afida">
+  <meta property="og:image" content="<%= vite_asset_url('images/branding.webp') %>">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="About Us - Our Story | Afida">
-  <meta name="twitter:description" content="From a living room startup to supplying The Ritz and Marriott. Discover how Afida became the UK's trusted source for sustainable catering supplies.">
+  <meta name="twitter:title" content="<%= content_for(:title) %>">
+  <meta name="twitter:description" content="<%= content_for(:meta_description) %>">
   <meta name="twitter:image" content="<%= vite_asset_url('images/branding.webp') %>">
 
   <!-- Structured Data: Organization -->
