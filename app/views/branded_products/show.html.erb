@@ -7,6 +7,12 @@
 <% end %>
 
 <% content_for :head do %>
+  <%
+    # Calculate price range for structured data
+    prices = @product.branded_product_prices
+    low_price = prices.minimum(:price_per_unit)
+    high_price = prices.maximum(:price_per_unit)
+  %>
   <script type="application/ld+json">
     <%= raw({
       "@context": "https://schema.org/",
@@ -21,6 +27,8 @@
       "offers": {
         "@type": "AggregateOffer",
         "priceCurrency": "GBP",
+        "lowPrice": low_price&.to_f,
+        "highPrice": high_price&.to_f,
         "availability": "https://schema.org/InStock",
         "url": branded_product_url(@product)
       }
