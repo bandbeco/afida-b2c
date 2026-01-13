@@ -25,7 +25,7 @@
       <meta property="og:type" content="website">
       <meta property="og:title" content="<%= content_for(:title) %>">
       <meta property="og:description" content="<%= content_for(:meta_description) %>">
-      <meta property="og:url" content="<%= request.original_url.split('?').first %>">
+      <meta property="og:url" content="<%= request.original_url %>">
       <meta property="og:site_name" content="Afida">
       <meta property="og:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero.webp") %>">
     <% end %>
