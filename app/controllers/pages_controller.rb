@@ -71,6 +71,9 @@ class PagesController < ApplicationController
   def accessibility_statement
   end
 
+  def return_policy
+  end
+
   def pattern_demo
   end
 
