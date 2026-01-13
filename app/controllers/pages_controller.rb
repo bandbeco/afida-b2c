@@ -74,6 +74,9 @@ class PagesController < ApplicationController
   def return_policy
   end
 
+  def delivery_returns
+  end
+
   def pattern_demo
   end
 

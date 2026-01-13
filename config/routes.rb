@@ -45,6 +45,7 @@ Rails.application.routes.draw do
   get "cookies-policy", to: "pages#cookies_policy"
   get "accessibility-statement", to: "pages#accessibility_statement"
   get "return-policy", to: "pages#return_policy"
+  get "delivery-returns", to: "pages#delivery_returns"
   get "pattern-demo", to: "pages#pattern_demo" if Rails.env.development?
   get "sentry-test", to: "pages#sentry_test" if Rails.env.development?
 
