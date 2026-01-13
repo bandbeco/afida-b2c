@@ -1,6 +1,6 @@
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+<div class="flex flex-wrap justify-center gap-4 md:gap-6">
   <% @categories.each do |category| %>
-    <%= link_to category_path(category), class: "group relative block aspect-square overflow-hidden border-2 border-black rounded-2xl shadow-xl" do %>
+    <%= link_to category_path(category), class: "group relative block aspect-square overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(25%-1.125rem)]" do %>
       <!-- Background Image/Color -->
       <div class="absolute inset-0 bottom-12 bg-[#f4fbf8]">
         <% if category.image.attached? %>
