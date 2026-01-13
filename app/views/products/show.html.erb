@@ -222,7 +222,7 @@
         <div class="mt-12 space-y-8">
           <div class="prose max-w-none">
             <h2>Product Details</h2>
-            <p><%= @product.description_detailed_with_fallback %></p>
+            <%= render_product_description(@product.description_detailed_with_fallback) %>
           </div>
         </div>
       <% end %>
