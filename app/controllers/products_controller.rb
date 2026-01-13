@@ -20,10 +20,16 @@ class ProductsController < ApplicationController
     @in_modal = params[:modal] == "true"
 
     @product = Product.active
-                      .includes(:category, :product_family)
+                      .includes(:category, :product_family, :compatible_lids)
                       .find_by!(slug: params[:slug])
 
     @category = @product.category
+
+    # Compatible products (e.g., lids for cups)
+    @compatible_products = @product.compatible_lids
+                                   .active
+                                   .includes(product_photo_attachment: :blob)
+                                   .limit(4)
 
     # Related products from the same family (for "See Also" section)
     @related_products = @product.siblings(limit: 4)

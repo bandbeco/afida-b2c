@@ -79,6 +79,34 @@
   </div>
 </div>
 
+<%# Related Categories Section - "You Might Also Need" %>
+<% related_cats = related_categories_for(@category) %>
+<% if related_cats.any? %>
+  <div class="mt-12 py-8 border-t border-base-300">
+    <h2 class="text-2xl mb-2">You Might Also Need</h2>
+    <p class="text-base-content/70 mb-6">Complete your order with these complementary products.</p>
+
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+      <% related_cats.each do |related_category| %>
+        <%= link_to category_path(related_category), class: "card bg-base-100 border border-base-300 hover:border-primary hover:shadow-md transition-all" do %>
+          <div class="card-body flex-row items-center gap-4 p-4">
+            <% if category_icon_path(related_category).present? %>
+              <%= vite_image_tag category_icon_path(related_category), class: 'w-12 h-12 object-contain', alt: "#{related_category.name} icon" %>
+            <% end %>
+            <div>
+              <h3 class="card-title text-base"><%= related_category.name %></h3>
+              <p class="text-sm text-base-content/60"><%= pluralize(related_category.products_count, "product") %></p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-auto text-base-content/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
   </div>
 
   <div class="drawer-side">

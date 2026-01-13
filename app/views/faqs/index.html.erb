@@ -76,7 +76,7 @@
                   <div class="card-body">
                     <div class="badge badge-primary badge-sm mb-2"><%= result[:category_title] %></div>
                     <h3 class="card-title text-lg"><%= result[:question] %></h3>
-                    <p class="text-gray-600"><%= result[:answer] %></p>
+                    <p class="text-gray-600"><%= render_faq_answer(result[:answer]) %></p>
                   </div>
                 </div>
               <% end %>
@@ -101,7 +101,7 @@
                   <%= q["question"] %>
                 </div>
                 <div class="collapse-content">
-                  <p class="text-gray-600 leading-relaxed pt-2"><%= q["answer"] %></p>
+                  <p class="text-gray-600 leading-relaxed pt-2"><%= render_faq_answer(q["answer"]) %></p>
                 </div>
               </div>
             <% end %>

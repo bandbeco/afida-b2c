@@ -4,29 +4,29 @@ categories:
     questions:
       - id: types-of-products
         question: "What types of packaging products do you offer?"
-        answer: "We supply a wide range of packaging solutions including unbranded (plain) stock items and fully branded products with custom printing and artwork. Whether you need simple stock boxes or packaging that carries your logo and brand identity, we've got you covered."
+        answer: "We supply a wide range of packaging solutions including unbranded (plain) stock items and fully branded products with custom printing and artwork. Whether you need simple stock boxes or packaging that carries your logo and brand identity, we've got you covered. [Browse our full product range](/shop) or explore [custom branding options](/branding)."
       - id: unbranded-meaning
         question: "What does \"unbranded\" mean?"
-        answer: "\"Unbranded\" refers to products that come without any custom printing, logo or design — simply ready for use as-is or for you to brand yourself later. These are a cost‑effective option when you don't need custom printing."
+        answer: "\"Unbranded\" refers to products that come without any custom printing, logo or design — simply ready for use as-is or for you to brand yourself later. These are a cost‑effective option when you don't need custom printing. [Shop unbranded products](/shop)."
       - id: branded-meaning
         question: "What does \"branded\" mean?"
-        answer: "\"Branded\" products are customised with your company's logo, colours, design and artwork. We handle the printing or finishing so your packaging aligns with your brand identity and looks professional."
+        answer: "\"Branded\" products are customised with your company's logo, colours, design and artwork. We handle the printing or finishing so your packaging aligns with your brand identity and looks professional. [Learn more about our branding services](/branding)."
       - id: materials
         question: "What materials do you use for your packaging?"
-        answer: "We offer packaging in a variety of materials depending on the product application — for example kraft board, food‑safe card, corrugated board, tubes and cylinders, and sustainable materials where appropriate. (Materials selection may vary by product.)"
+        answer: "We offer packaging in a variety of materials depending on the product application — for example kraft board, food‑safe card, corrugated board, tubes and cylinders, and sustainable materials where appropriate. [Browse our cups & lids](/categories/cups-lids) or [takeaway containers](/categories/takeaway-containers) to see available materials."
 
   - id: custom-printing
     title: "Custom Printing & Branding"
     questions:
       - id: moq
         question: "What is the minimum order quantity (MOQ) for branded items?"
-        answer: "For branded products, a minimum order quantity (MOQ) typically applies. This allows the cost of tooling, printing setup and finishing to be spread across the batch. If you are unsure, please contact us with the specific product and size you are interested in for the MOQ details."
+        answer: "For branded products, a minimum order quantity (MOQ) typically applies. This allows the cost of tooling, printing setup and finishing to be spread across the batch. [Contact us](/contact) with the specific product and size you are interested in for MOQ details, or [start designing your branded products](/branding)."
       - id: own-artwork
         question: "Can I use my own artwork and logo?"
-        answer: "Yes — we welcome your artwork and logo files. We'll provide specifications for print‑ready files (format, colour mode, bleed, resolution etc.). Our team can also help review your files and advise if any changes are needed for print quality."
+        answer: "Yes — we welcome your artwork and logo files. We'll provide specifications for print‑ready files (format, colour mode, bleed, resolution etc.). Our team can also help review your files and advise if any changes are needed for print quality. [Get started with branding](/branding)."
       - id: branding-time
         question: "How long does branding take?"
-        answer: "The lead time for branded items depends on several factors: quantity, material, print method, current workload and shipping. Once artwork is approved and order confirmed, we'll provide a clear timeline. For stock unbranded items the dispatch is typically faster."
+        answer: "The lead time for branded items depends on several factors: quantity, material, print method, current workload and shipping. Once artwork is approved and order confirmed, we'll provide a clear timeline. For stock unbranded items the dispatch is typically faster — [shop our ready-to-ship products](/shop)."
       - id: artwork-changes
         question: "What if I change my mind about the artwork after approval?"
         answer: "Changes to artwork after approval may incur additional cost or delay. We recommend reviewing proofs carefully before approving to avoid unexpected costs or time lags."
@@ -36,49 +36,49 @@ categories:
     questions:
       - id: place-order
         question: "How do I place an order?"
-        answer: "You can place an order via our website or by contacting our sales team directly - sales@afida.com. For branded items, we'll send a formal quote and request your artwork prior to production."
+        answer: "You can place an order via our website or by contacting our sales team directly at sales@afida.com. [Start shopping](/shop) or for branded items, [request a quote](/branding)."
       - id: delivery-cost-time
         question: "How much does delivery cost and how long will it take?"
-        answer: "Delivery cost depends on order size, weight, destination and service selected. We offer standard shipping and expedited options. Once your order is confirmed (and for branded items once production begins), we'll provide an estimated dispatch date."
+        answer: "Delivery cost depends on order size, weight, destination and service selected. We offer standard shipping and expedited options. See our [delivery & returns policy](/delivery) for full details."
       - id: international-shipping
         question: "Can you ship internationally?"
-        answer: "Yes — we can ship to anywhere. For international orders, higher delivery costs, customs duties, taxes and longer transit times may apply."
+        answer: "Yes — we can ship to anywhere. For international orders, higher delivery costs, customs duties, taxes and longer transit times may apply. [Contact us](/contact) for international shipping quotes."
       - id: small-quantity
         question: "What if I only need a small quantity?"
-        answer: "If you require small quantities, unbranded stock products are usually a better fit because they are kept as inventory and can be shipped quickly. Branded products may have higher minimums due to setup costs."
+        answer: "If you require small quantities, unbranded stock products are usually a better fit because they are kept as inventory and can be shipped quickly. [Shop our ready-to-ship products](/shop). Branded products may have higher minimums due to setup costs."
 
   - id: returns-quality
     title: "Returns, Refunds & Quality"
     questions:
       - id: returns-policy
         question: "What is your returns policy?"
-        answer: "For unbranded stock items, you may cancel or return within 14 days subject to them being unused and in resalable condition. For branded items (customised), returns are generally not accepted unless there is a manufacturing defect, because they cannot be resold. Please check each product's terms before ordering."
+        answer: "For unbranded stock items, you may cancel or return within 14 days subject to them being unused and in resalable condition. For branded items (customised), returns are generally not accepted unless there is a manufacturing defect, because they cannot be resold. See our full [delivery & returns policy](/delivery)."
       - id: faulty-branding
         question: "What if the branding is incorrect or printing is faulty?"
-        answer: "In the unlikely event of a printing or manufacturing defect, please contact us immediately with photos and details. We will assess the issue and offer a rectification: replacement, credit or refund, depending on the situation."
+        answer: "In the unlikely event of a printing or manufacturing defect, please [contact us](/contact) immediately with photos and details. We will assess the issue and offer a rectification: replacement, credit or refund, depending on the situation."
       - id: food-safe
         question: "Are your products food‑safe / compliant with regulations?"
-        answer: "Yes — for packaging intended for food contact, we ensure that materials and manufacturing comply with relevant UK/EU regulations. If you have specific regulatory requirements (e.g., for export or special use), please advise before placing your order."
+        answer: "Yes — for packaging intended for food contact, we ensure that materials and manufacturing comply with relevant UK/EU regulations. Browse our [food-safe cups & lids](/categories/cups-lids) or [takeaway containers](/categories/takeaway-containers). If you have specific regulatory requirements, [contact us](/contact) before placing your order."
 
   - id: sustainability
     title: "Sustainability & Materials"
     questions:
       - id: eco-friendly
         question: "Do you offer eco‑friendly or sustainable packaging options?"
-        answer: "Yes — we recognise the importance of sustainability. We provide options made from recycled or renewable materials, and some items are designed to be compostable or recyclable. We can advise on the best options for your business's environmental goals."
+        answer: "Yes — we recognise the importance of sustainability. We provide options made from recycled or renewable materials, and some items are designed to be compostable or recyclable. [Browse our eco-friendly cups](/categories/cups-lids) or [paper straws](/categories/straws). [Contact us](/contact) for advice on the best options for your business's environmental goals."
       - id: disposal
         question: "How should I dispose of the packaging?"
-        answer: "Disposal instructions depend on the material type and local waste‑handling infrastructure. We provide guidance on whether the item is recyclable, compostable or should go to general waste. If you're unsure, please contact us and we'll help."
+        answer: "Disposal instructions depend on the material type and local waste‑handling infrastructure. We provide guidance on whether the item is recyclable, compostable or should go to general waste. If you're unsure, [contact us](/contact) and we'll help."
 
   - id: custom-projects
     title: "Custom & Bespoke Projects"
     questions:
       - id: bespoke-solution
         question: "Can I create a completely bespoke packaging solution?"
-        answer: "Absolutely — we can work with you to design a custom shape, size or material. Bespoke projects may require a higher minimum order and longer lead times, but allow full flexibility to meet your brand's needs."
+        answer: "Absolutely — we can work with you to design a custom shape, size or material. Bespoke projects may require a higher minimum order and longer lead times, but allow full flexibility to meet your brand's needs. [Start your branding project](/branding) or [contact us](/contact) to discuss your requirements."
       - id: bespoke-costs
         question: "What extra costs might there be for bespoke work?"
-        answer: "Extra costs may include tooling (if new moulds or dies are required), print setup, proofs, special finishing (spot UV, embossing, metallic ink) and longer production lead times. We will quote all costs clearly before you commit."
+        answer: "Extra costs may include tooling (if new moulds or dies are required), print setup, proofs, special finishing (spot UV, embossing, metallic ink) and longer production lead times. We will quote all costs clearly before you commit. [Get a branding quote](/branding)."
 
   - id: payments-orders
     title: "Payments & Orders"
@@ -123,17 +123,17 @@ categories:
     questions:
       - id: sample-cost
         question: "How much does the sample pack cost?"
-        answer: "Our sample packs are free; you only need to cover the delivery cost."
+        answer: "Our sample packs are free; you only need to cover the delivery cost. [Order your free samples](/samples) today."
       - id: sample-arrival
         question: "When will my sample pack arrive?"
-        answer: "Your sample pack will arrive within 2–3 business days from the date of your order. Once it has been shipped, you will receive a tracking code."
+        answer: "Your sample pack will arrive within 2–3 business days from the date of your order. Once it has been shipped, you will receive a tracking code. [Request samples now](/samples)."
 
   - id: contact-support
     title: "Contact & Support"
     questions:
       - id: further-questions
         question: "Who do I contact if I have further questions?"
-        answer: "You can email our Customer Support team at info@afida.com, or call us on 0203 302 7719. We aim to respond to all enquiries within 48 hours."
+        answer: "You can email our Customer Support team at info@afida.com, or call us on 0203 302 7719. We aim to respond to all enquiries within 48 hours. [Visit our contact page](/contact) for more ways to reach us."
       - id: product-advice
         question: "I'm unsure which product or material to choose. Can you help?"
-        answer: "Yes — we're happy to advise on material suitability, print finishes, durability, regulatory compliance and lead‑times. Just get in touch with your requirements and we'll guide you through the options."
+        answer: "Yes — we're happy to advise on material suitability, print finishes, durability, regulatory compliance and lead‑times. [Browse our full product range](/shop), [request free samples](/samples), or [contact us](/contact) with your requirements and we'll guide you through the options."

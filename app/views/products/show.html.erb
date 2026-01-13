@@ -227,6 +227,33 @@
         </div>
       <% end %>
 
+      <%# Compatible Products Section (for cups with compatible lids) %>
+      <% if @compatible_products.present? && @compatible_products.any? %>
+        <div class="mt-12">
+          <h2 class="text-2xl mb-2">Compatible Lids</h2>
+          <p class="text-base-content/70 mb-6">These lids fit perfectly with your <%= @product.size %> cups.</p>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <%= render partial: "products/card", collection: @compatible_products, as: :product %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Shop More in Category Section %>
+      <div class="mt-12 p-6 bg-base-200 rounded-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-xl mb-1">Explore More <%= @category.name %></h2>
+            <p class="text-base-content/70">Browse our full range of <%= @category.name.downcase %>.</p>
+          </div>
+          <%= link_to category_path(@category), class: "btn btn-outline" do %>
+            View All <%= @category.name %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          <% end %>
+        </div>
+      </div>
+
       <%# Related Products Section %>
       <% if @related_products.any? %>
         <div class="mt-12">

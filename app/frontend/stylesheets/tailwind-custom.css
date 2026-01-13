@@ -63,4 +63,17 @@
 .btn:disabled:hover {
   background-color: #d1d5db;
   border-color: #d1d5db;
+}
+
+/* Accessible inline text links (WCAG AA compliant contrast)
+   Use for links within body text, FAQs, descriptions, etc.
+   Keeps Afida green for buttons/CTAs where it works better */
+.link-inline {
+  color: #374151; /* gray-700 - 4.5:1 contrast on white */
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link-inline:hover {
+  color: #111827; /* gray-900 */
 } 

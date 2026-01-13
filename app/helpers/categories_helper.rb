@@ -14,6 +14,31 @@ module CategoriesHelper
 
   DEFAULT_CATEGORY_ICON = "images/graphics/box.svg".freeze
 
+  # Related category mappings for "You might also need" sections
+  # Maps category slugs to arrays of related category slugs
+  # Used to improve internal linking and cross-selling
+  RELATED_CATEGORIES = {
+    "cups-and-lids" => %w[napkins straws takeaway-extras],
+    "ice-cream-cups" => %w[takeaway-extras napkins],
+    "napkins" => %w[cups-and-lids takeaway-containers straws],
+    "pizza-boxes" => %w[napkins takeaway-extras],
+    "straws" => %w[cups-and-lids napkins],
+    "takeaway-containers" => %w[napkins takeaway-extras cups-and-lids],
+    "takeaway-extras" => %w[takeaway-containers cups-and-lids napkins]
+  }.freeze
+
+  # Returns related categories for cross-linking
+  # @param category [Category] The current category
+  # @return [Array<Category>] Array of related Category objects
+  def related_categories_for(category)
+    return [] unless category
+
+    related_slugs = RELATED_CATEGORIES[category.slug] || []
+    return [] if related_slugs.empty?
+
+    Category.where(slug: related_slugs).order(:position)
+  end
+
   # Returns the Vite asset path for a category's icon
   #
   # @param category [Category, String] Category object or slug string
