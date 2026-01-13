@@ -6,7 +6,7 @@ Rails.application.routes.draw do
   constraints(host: /^www\./i) do
     get "(*path)", to: redirect(status: 301) { |params, req|
       "https://afida.com/#{params[:path]}#{req.query_string.present? ? "?#{req.query_string}" : ""}"
-    }
+    }, format: false
   end
 
   root "pages#home"

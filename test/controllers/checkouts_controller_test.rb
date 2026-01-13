@@ -550,7 +550,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # SAMPLES-ONLY CHECKOUT TESTS
   # ============================================================================
 
-  test "samples-only cart uses Sample Delivery shipping option" do
+  test "samples-only cart uses Standard Shipping option" do
     # Create samples-only cart
     @cart.cart_items.destroy_all
     sample_variant = products(:sample_cup_8oz)
@@ -573,11 +573,11 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_response :see_other
     assert_not_nil captured_params
 
-    # Should have single Sample Delivery shipping option
+    # Should have single Standard Shipping option (same as orders < £100)
     assert_equal 1, captured_params[:shipping_options].length
     shipping_option = captured_params[:shipping_options].first
-    assert_equal "Sample Delivery", shipping_option[:shipping_rate_data][:display_name]
-    assert_equal 750, shipping_option[:shipping_rate_data][:fixed_amount][:amount]
+    assert_equal "Standard Shipping", shipping_option[:shipping_rate_data][:display_name]
+    assert_equal Shipping::STANDARD_COST, shipping_option[:shipping_rate_data][:fixed_amount][:amount]
   end
 
   test "samples-only cart line items have zero unit_amount" do

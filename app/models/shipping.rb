@@ -3,16 +3,11 @@
 # Amounts are in pence/cents (GBP)
 # To change shipping costs, update the values below and restart the server
 
-module Shipping
-  # Standard shipping option
+class Shipping
+  # Standard shipping option (used for orders < £100 and samples-only orders)
   STANDARD_COST = ENV.fetch("STANDARD_SHIPPING_COST", "699").to_i  # £6.99
   STANDARD_MIN_DAYS = 2
   STANDARD_MAX_DAYS = 3
-
-  # Sample delivery option (for samples-only orders)
-  SAMPLE_COST = ENV.fetch("SAMPLE_SHIPPING_COST", "750").to_i  # £7.50
-  SAMPLE_MIN_DAYS = 3
-  SAMPLE_MAX_DAYS = 5
 
   # Allowed shipping countries (ISO 3166-1 alpha-2 codes)
   ALLOWED_COUNTRIES = %w[GB].freeze
@@ -25,7 +20,7 @@ module Shipping
 
   # Get shipping options based on cart subtotal (excluding VAT)
   # - Orders >= £100: Free shipping only
-  # - Orders < £100: Standard shipping (£5) only
+  # - Orders < £100: Standard shipping only
   def self.shipping_options_for_subtotal(subtotal)
     if subtotal >= FREE_SHIPPING_THRESHOLD
       [ free_shipping_option ]
@@ -68,19 +63,19 @@ module Shipping
     }
   end
 
-  # Shipping option for samples-only orders
+  # Shipping option for samples-only orders (same cost as standard)
   def self.sample_only_shipping_option
     {
       shipping_rate_data: {
         type: "fixed_amount",
         fixed_amount: {
-          amount: SAMPLE_COST,
+          amount: STANDARD_COST,
           currency: CURRENCY
         },
-        display_name: "Sample Delivery",
+        display_name: "Standard Shipping",
         delivery_estimate: {
-          minimum: { unit: "business_day", value: SAMPLE_MIN_DAYS },
-          maximum: { unit: "business_day", value: SAMPLE_MAX_DAYS }
+          minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
+          maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }
         }
       }
     }
