@@ -238,6 +238,20 @@ module StripeTestHelper
     intent
   end
 
+  # Build a mock Stripe webhook event
+  def build_stripe_webhook_event(type:, data_object:)
+    stub(
+      type: type,
+      data: stub(object: data_object)
+    )
+  end
+
+  # Stub Stripe::Webhook.construct_event for webhook testing
+  def stub_stripe_webhook_construct_event(event)
+    Stripe::Webhook.stubs(:construct_event).returns(event)
+    event
+  end
+
   # Common Stripe errors for testing error handling
   module StripeErrors
     def self.card_declined
