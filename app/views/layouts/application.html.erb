@@ -20,6 +20,9 @@
     <%= yield :head %>
     <%= canonical_url %>
 
+    <%# Default Open Graph image - pages can override via content_for :og_image %>
+    <meta property="og:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero.webp") %>">
+
     <%# Organization structured data for Google Rich Results %>
     <script type="application/ld+json">
       <%= raw organization_structured_data %>

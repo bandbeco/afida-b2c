@@ -14,6 +14,10 @@
 <%= @product.meta_description.presence || @product.description_standard_with_fallback %>
 <% end %>
 
+<% if @product&.primary_photo&.attached? %>
+  <% content_for :og_image, polymorphic_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>
+<% end %>
+
 <% content_for :head do %>
   <!-- Twitter Card meta tags -->
   <meta name="twitter:card" content="summary_large_image">
@@ -29,9 +33,6 @@
   <meta property="og:description" content="<%= @product.description_standard_with_fallback %>">
   <meta property="og:url" content="<%= polymorphic_url(@product) %>">
   <meta property="og:site_name" content="Afida">
-  <% if @product&.primary_photo&.attached? %>
-    <meta property="og:image" itemprop="image" content="<%= polymorphic_url(@product.primary_photo.variant(resize_to_limit: [800, 600])) %>">
-  <% end %>
   <meta property="product:price:amount" content="<%= @product.price %>">
   <meta property="product:price:currency" content="GBP">
 

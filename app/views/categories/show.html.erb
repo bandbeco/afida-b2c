@@ -10,15 +10,16 @@
 <%= @category.meta_description %>
 <% end %>
 
+<% if @category.image.attached? %>
+  <% content_for :og_image, url_for(@category.image) %>
+<% end %>
+
 <% content_for :head do %>
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= @category.meta_title %> | Afida">
   <meta property="og:description" content="<%= @category.meta_description %>">
   <meta property="og:url" content="<%= category_url(@category) %>">
   <meta property="og:site_name" content="Afida">
-  <% if @category.image.attached? %>
-    <meta property="og:image" content="<%= url_for(@category.image) %>">
-  <% end %>
 
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="<%= @category.meta_title %>">
