@@ -176,6 +176,75 @@ namespace :seo do
     puts "=" * 60
   end
 
+  desc "Import unique product descriptions per variant from product_descriptions_update.csv (by SKU)"
+  task import_variant_descriptions: :environment do
+    csv_file = Rails.root.join("lib", "data", "product_descriptions_update.csv")
+
+    unless File.exist?(csv_file)
+      puts "Error: CSV file not found at #{csv_file}"
+      exit 1
+    end
+
+    puts "Importing variant-specific descriptions from #{csv_file}..."
+    puts "=" * 60
+
+    stats = { updated: 0, not_found: 0, unchanged: 0, errors: [] }
+
+    CSV.foreach(csv_file, headers: true) do |row|
+      sku = row["sku"]&.strip
+      next if sku.blank?
+
+      begin
+        product = Product.find_by(sku: sku)
+
+        if product.nil?
+          stats[:not_found] += 1
+          puts "  Not found: #{sku}"
+          next
+        end
+
+        changes = []
+
+        if row["description_short"].present? && product.description_short != row["description_short"]
+          product.description_short = row["description_short"]
+          changes << "short"
+        end
+
+        if row["description_standard"].present? && product.description_standard != row["description_standard"]
+          product.description_standard = row["description_standard"]
+          changes << "standard"
+        end
+
+        if row["description_detailed"].present? && product.description_detailed != row["description_detailed"]
+          product.description_detailed = row["description_detailed"]
+          changes << "detailed"
+        end
+
+        if changes.any?
+          product.save!
+          stats[:updated] += 1
+          puts "  Updated: #{sku} (#{changes.join(', ')})"
+        else
+          stats[:unchanged] += 1
+        end
+
+      rescue => e
+        error_msg = "#{sku}: #{e.message}"
+        stats[:errors] << error_msg
+        puts "  ERROR: #{error_msg}"
+      end
+    end
+
+    puts "\n" + "=" * 60
+    puts "Import completed!"
+    puts "  Updated: #{stats[:updated]}"
+    puts "  Unchanged: #{stats[:unchanged]}"
+    puts "  Not found: #{stats[:not_found]}"
+    puts "  Errors: #{stats[:errors].count}"
+    stats[:errors].each { |e| puts "    - #{e}" } if stats[:errors].any?
+    puts "=" * 60
+  end
+
   desc "Generate SEO report for all products and categories"
   task report: :environment do
     puts "=" * 60
