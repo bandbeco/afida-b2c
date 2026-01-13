@@ -75,7 +75,21 @@ class GoogleMerchantFeedGenerator
       xml["g"].shipping do
         xml["g"].country "GB"
         xml["g"].service "Standard"
-        xml["g"].price "5.00 GBP"
+        xml["g"].price "6.99 GBP"
+      end
+
+      # Handling time: same day if ordered before 2pm, otherwise next day
+      xml["g"].send("handling_time") do
+        xml["g"].min_value 0
+        xml["g"].max_value 1
+        xml["g"].unit "business_day"
+      end
+
+      # Transit time: DPD next working day
+      xml["g"].send("transit_time") do
+        xml["g"].min_value 1
+        xml["g"].max_value 1
+        xml["g"].unit "business_day"
       end
     end
   end

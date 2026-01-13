@@ -6,8 +6,8 @@
 class Shipping
   # Standard shipping option (used for orders < £100 and samples-only orders)
   STANDARD_COST = ENV.fetch("STANDARD_SHIPPING_COST", "699").to_i  # £6.99
-  STANDARD_MIN_DAYS = 2
-  STANDARD_MAX_DAYS = 3
+  STANDARD_MIN_DAYS = 1
+  STANDARD_MAX_DAYS = 1
 
   # Allowed shipping countries (ISO 3166-1 alpha-2 codes)
   ALLOWED_COUNTRIES = %w[GB].freeze
