@@ -23,16 +23,22 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "includes all category URLs" do
+  test "includes all category URLs except branded-products" do
     service = SitemapGeneratorService.new
     xml = service.generate
 
     doc = Nokogiri::XML(xml)
     category_urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    Category.find_each do |category|
-      assert category_urls.any? { |url| url.include?(category.slug) }
+    # branded-products category is excluded because it redirects
+    Category.where.not(slug: "branded-products").find_each do |category|
+      assert category_urls.any? { |url| url.include?(category.slug) },
+             "Expected sitemap to include category: #{category.slug}"
     end
+
+    # Verify branded-products is NOT in the sitemap
+    refute category_urls.any? { |url| url.include?("branded-products") },
+           "Expected sitemap NOT to include branded-products (it redirects)"
   end
 
   test "includes static pages" do

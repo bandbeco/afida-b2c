@@ -2,7 +2,11 @@
   <% if @product.present? %>
     <ul>
       <li><%= link_to "All Products", shop_path %></li>
-      <li><%= link_to @product.category.name, category_path(@product.category) %></li>
+      <% if @product.category.slug == "branded-products" %>
+        <li><%= link_to "Custom Branded Packaging", branded_products_path %></li>
+      <% else %>
+        <li><%= link_to @product.category.name, category_path(@product.category) %></li>
+      <% end %>
       <li><%= @product.generated_title %></li>
     </ul>
   <% elsif @category.present? %>

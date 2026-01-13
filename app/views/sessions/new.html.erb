@@ -1,4 +1,8 @@
+<% content_for :title, "Sign In | Afida" %>
+<% content_for :meta_description, "Sign in to your Afida account to view order history, reorder favourites, and manage scheduled deliveries." %>
+
 <div class="flex justify-center items-center pt-6">
+  <h1 class="sr-only">Sign In to Afida</h1>
   <%= form_with url: session_path, html: { class: "fieldset bg-base-100 border-base-300 rounded-box w-full max-w-sm border p-6 shadow-xl" } do |form| %>
     <legend class="text-2xl text-center mb-6">Sign In</legend>
 

@@ -1,3 +1,9 @@
+<% content_for :title, "Custom Branded Packaging | Afida" %>
+<% content_for :meta_description, "Create custom branded packaging with your logo. Coffee cups, food containers, and more. Minimum 5,000 units. UK manufacturing and fast delivery." %>
+
+<h1 class="text-4xl py-4 mb-2">Custom Branded Packaging</h1>
+<p class="text-base-content/70 mb-6">Add your logo to our eco-friendly packaging. Perfect for cafes, restaurants, and food businesses looking to strengthen their brand.</p>
+
 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-6">
   <%= render partial: "branded_product", collection: @products, as: :product %>
 </div>

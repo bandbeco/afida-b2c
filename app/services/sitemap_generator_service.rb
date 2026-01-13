@@ -21,8 +21,8 @@ class SitemapGeneratorService
         add_url(xml, terms_conditions_url, priority: "0.3", changefreq: "yearly")
         add_url(xml, privacy_policy_url, priority: "0.3", changefreq: "yearly")
 
-        # Categories
-        Category.find_each do |category|
+        # Categories (exclude branded-products which redirects)
+        Category.where.not(slug: "branded-products").find_each do |category|
           add_url(xml, category_url(category),
                   priority: "0.8",
                   changefreq: "weekly",
