@@ -21,6 +21,7 @@ published_post:
   published_at: <%= 3.days.ago %>
   meta_title: "Complete Guide to Eco-Friendly Packaging | Afida"
   meta_description: "Learn everything about sustainable packaging options for catering businesses."
+  blog_category: guides
 
 draft_post:
   title: "Upcoming Product Announcements"
@@ -59,6 +60,7 @@ second_published_post:
   published_at: <%= 1.day.ago %>
   meta_title: null
   meta_description: null
+  blog_category: guides
 
 post_without_excerpt:
   title: "Understanding Compostable Materials"
@@ -76,3 +78,4 @@ post_without_excerpt:
   published_at: <%= 2.days.ago %>
   meta_title: null
   meta_description: null
+  blog_category: news

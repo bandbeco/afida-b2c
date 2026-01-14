@@ -10,8 +10,15 @@
 # - Simple published/draft status with automatic published_at timestamp
 # - SEO fields with fallback to title/excerpt
 # - Cover image for visual appeal on index pages
+# - Optional category for content organization
 #
 class BlogPost < ApplicationRecord
+  # ==========================================================================
+  # Associations
+  # ==========================================================================
+
+  belongs_to :blog_category, optional: true
+
   # ==========================================================================
   # Attachments
   # ==========================================================================

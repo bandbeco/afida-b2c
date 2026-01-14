@@ -172,6 +172,7 @@ Rails.application.routes.draw do
     end
     resources :orders, only: [ :index, :show ]
     resources :blog_posts
+    resources :blog_categories, except: [ :show ]
     resources :branded_orders, path: "branded-orders", only: [ :index, :show ] do
       member do
         patch :update_status

@@ -56,12 +56,25 @@
   <fieldset class="fieldset mt-8">
     <legend class="fieldset-legend text-2xl font-medium">Publishing</legend>
 
-    <div class="py-4">
-      <label class="label cursor-pointer justify-start gap-4">
-        <%= form.check_box :published, class: "checkbox checkbox-primary" %>
-        <span class="label-text text-base">Published</span>
-      </label>
-      <p class="text-sm text-gray-500 ml-10">When checked, this post will be visible on the public blog.</p>
+    <div class="py-4 space-y-4">
+      <div>
+        <%= form.label :blog_category_id, "Category", class: "label text-base" %>
+        <%= form.collection_select :blog_category_id,
+                                   BlogCategory.order(:name),
+                                   :id,
+                                   :name,
+                                   { include_blank: "No category" },
+                                   { class: "select select-bordered w-full max-w-xs" } %>
+        <p class="text-sm text-gray-500 mt-1">Categorize this post for better organization.</p>
+      </div>
+
+      <div>
+        <label class="label cursor-pointer justify-start gap-4">
+          <%= form.check_box :published, class: "checkbox checkbox-primary" %>
+          <span class="label-text text-base">Published</span>
+        </label>
+        <p class="text-sm text-gray-500 ml-10">When checked, this post will be visible on the public blog.</p>
+      </div>
     </div>
   </fieldset>
 

@@ -1,0 +1,30 @@
+<%= form_with(model: [:admin, blog_category], local: true, data: { turbo: false }) do |form| %>
+  <% if blog_category.errors.any? %>
+    <div class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+      <h2><%= pluralize(blog_category.errors.count, "error") %> prohibited this category from being saved:</h2>
+      <ul class="list-disc ml-6">
+        <% blog_category.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="space-y-4 max-w-md">
+    <div>
+      <%= form.label :name, class: "label text-base" %>
+      <%= form.text_field :name, class: "input w-full", required: true, placeholder: "e.g. Customer Stories" %>
+    </div>
+
+    <div>
+      <%= form.label :slug, "URL Slug (auto-generated if blank)", class: "label text-base" %>
+      <%= form.text_field :slug, class: "input w-full font-mono", placeholder: "leave-blank-for-auto" %>
+      <p class="text-sm text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens.</p>
+    </div>
+  </div>
+
+  <div class="mt-8 flex gap-4">
+    <%= form.submit blog_category.persisted? ? "Update Category" : "Create Category", class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_blog_categories_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>

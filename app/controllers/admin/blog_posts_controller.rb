@@ -68,7 +68,8 @@ module Admin
         :published,
         :meta_title,
         :meta_description,
-        :cover_image
+        :cover_image,
+        :blog_category_id
       )
     end
   end

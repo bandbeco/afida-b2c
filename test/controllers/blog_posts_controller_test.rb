@@ -44,12 +44,12 @@ class BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @published_post.excerpt
   end
 
-  test "index displays published dates" do
+  test "index displays category badges when present" do
     get blog_posts_url
 
     assert_response :success
-    # Check that date is displayed in some readable format
-    assert_match(/#{@published_post.published_at.strftime("%B")}/, response.body)
+    # Posts with categories should display category name
+    assert_includes response.body, @published_post.blog_category.name
   end
 
   test "index links to individual posts" do
