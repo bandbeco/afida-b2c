@@ -54,6 +54,7 @@ Rails.application.routes.draw do
 
   # Blog
   resources :blog_posts, only: [ :index, :show ], path: "blog", param: :slug
+  get "blog/categories/:slug", to: "blog_categories#show", as: :blog_category
 
   # B2B Price List
   get "price-list", to: "price_list#index", as: :price_list
@@ -171,8 +172,12 @@ Rails.application.routes.draw do
       end
     end
     resources :orders, only: [ :index, :show ]
-    resources :blog_posts
-    resources :blog_categories, except: [ :show ]
+
+    # Blog management at /admin/blog/posts and /admin/blog/categories
+    scope :blog do
+      resources :posts, controller: "blog_posts", as: :blog_posts
+      resources :categories, controller: "blog_categories", except: [ :show ], as: :blog_categories
+    end
     resources :branded_orders, path: "branded-orders", only: [ :index, :show ] do
       member do
         patch :update_status
