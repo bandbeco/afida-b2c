@@ -1,12 +1,9 @@
 <%# Default content for search modal - shown before user starts typing %>
-<%# Includes quick search chips and featured category cards %>
+<%# Includes quick search chips and branded products promo banner %>
 
 <%
   # Hardcoded quick search terms
   quick_terms = ["Cups", "Pizza boxes", "Napkins", "Straws", "Takeaway containers", "Ice cream"]
-
-  # Featured categories for quick navigation
-  featured_categories = Category.order(:position).limit(4)
 %>
 
 <%# Quick search chips %>
@@ -24,26 +21,32 @@
   </div>
 </div>
 
-<%# Category cards %>
-<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-  <% featured_categories.each do |category| %>
-    <%= link_to shop_path(categories: [category.slug]),
-                class: "group relative aspect-square rounded-xl overflow-hidden bg-gray-100",
-                data: { action: "click->search-modal#navigateToCategory", turbo_frame: "_top" } do %>
-      <%# Category SVG illustration %>
-      <div class="w-full h-full flex items-center justify-center p-6">
-        <%= category_icon_tag(category, class: "w-full h-full object-contain group-hover:scale-105 transition duration-300") %>
-      </div>
+<%# Branded products promo banner %>
+<%= link_to branded_products_path,
+            class: "group block rounded-xl overflow-hidden bg-gray-900 hover:bg-gray-800 transition",
+            data: { turbo_frame: "_top" } do %>
+  <div class="flex items-center gap-6 p-6">
+    <%# Image %>
+    <div class="hidden sm:block flex-shrink-0 w-32 h-32 rounded-lg overflow-hidden bg-gray-800">
+      <%= vite_image_tag "images/branding/DSC_6736.webp",
+                         class: "w-full h-full object-cover",
+                         alt: "Branded coffee cups",
+                         loading: "lazy" %>
+    </div>
 
-      <%# Category label %>
-      <div class="absolute bottom-0 left-0 right-0 p-3 bg-white/95">
-        <div class="flex items-center justify-between">
-          <span class="font-medium text-gray-900 text-sm">Shop <%= category.name.downcase %></span>
-          <svg class="w-4 h-4 text-gray-600 group-hover:translate-x-1 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </div>
-      </div>
-    <% end %>
-  <% end %>
-</div>
+    <%# Content %>
+    <div class="flex-1">
+      <p class="text-sm text-gray-400 mb-1">Custom branding</p>
+      <h3 class="text-xl font-semibold text-white mb-2">Add your logo to our products</h3>
+      <p class="text-gray-300 text-sm mb-4">
+        Branded cups, boxes & packaging with volume discounts up to 70% off.
+      </p>
+      <span class="inline-flex items-center gap-2 text-white font-medium group-hover:gap-3 transition-all">
+        Explore branded products
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </span>
+    </div>
+  </div>
+<% end %>
