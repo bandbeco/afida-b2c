@@ -159,9 +159,113 @@ namespace :branded_products do
     end
   end
 
-  desc "Import branded products and pricing data"
+  desc "Import branded products and pricing data from CSV"
   task import: :environment do
-    puts "Importing branded products..."
-    load Rails.root.join("db/seeds/branded_product_pricing.rb")
+    require "csv"
+
+    puts "Importing branded products from CSV..."
+
+    csv_path = Rails.root.join("lib/data/branded-cups.csv")
+    unless File.exist?(csv_path)
+      puts "ERROR: CSV file not found at #{csv_path}"
+      exit 1
+    end
+
+    # Find branded category
+    branded_category = Category.find_by(slug: "branded-products")
+    unless branded_category
+      puts "ERROR: Branded Products category not found"
+      puts "💡 Create a category with slug 'branded-products' first"
+      exit 1
+    end
+
+    # Parse CSV (normalized format: one row per price point)
+    csv = CSV.read(csv_path, headers: true)
+
+    # Group by product name
+    products_data = csv.group_by { |row| row["name"] }
+
+    total_products = 0
+    total_pricing = 0
+
+    products_data.each do |name, rows|
+      slug = name.parameterize
+      sku = rows.first["sku"]
+      case_qty = rows.first["pack_size"].to_i
+      min_qty = rows.map { |r| r["quantity"].to_i }.min
+
+      # Find or create product
+      product = Product.find_or_create_by!(
+        slug: slug,
+        product_type: "customizable_template"
+      ) do |p|
+        p.name = name
+        p.sku = sku
+        p.price = 0.01
+        p.category = branded_category
+        p.description_short = "Custom branded #{name.downcase} with your design. Minimum order: #{min_qty.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
+        p.description_standard = "Custom branded #{name.downcase} with your design. Minimum order: #{min_qty.to_s.reverse.gsub(/(\d{3})(?=\d)/, '\\1,').reverse} units"
+        p.description_detailed = "Custom branded #{name.downcase} with your design. Perfect for cafes, restaurants, and businesses looking to make an impression."
+        p.active = true
+        p.stock_quantity = 0
+      end
+
+      total_products += 1
+
+      # Attach product photo if available
+      photos_dir = Rails.root.join("lib/data/branded/photos", slug)
+      if photos_dir.exist?
+        main_photo = photos_dir.join("main.webp")
+        if main_photo.exist? && !product.product_photo.attached?
+          product.product_photo.attach(
+            io: File.open(main_photo),
+            filename: "#{slug}-main.webp",
+            content_type: "image/webp"
+          )
+          puts "    📷 Attached product photo"
+        end
+
+        lifestyle_photo = photos_dir.join("lifestyle.webp")
+        if lifestyle_photo.exist? && !product.lifestyle_photo.attached?
+          product.lifestyle_photo.attach(
+            io: File.open(lifestyle_photo),
+            filename: "#{slug}-lifestyle.webp",
+            content_type: "image/webp"
+          )
+          puts "    📷 Attached lifestyle photo"
+        end
+      end
+
+      # Create pricing from each row
+      sizes = Set.new
+      rows.each do |row|
+        size = row["size"]
+        quantity = row["quantity"].to_i
+        price = row["price_per_unit"].to_f
+
+        sizes << size
+
+        product.branded_product_prices.find_or_create_by!(
+          size: size,
+          quantity_tier: quantity
+        ) do |bp|
+          bp.price_per_unit = price
+          bp.case_quantity = case_qty
+        end
+        total_pricing += 1
+      end
+
+      puts "  ✓ #{name}: #{sizes.size} sizes, #{rows.size} pricing tiers (case qty: #{case_qty})"
+    end
+
+    puts ""
+    puts "Branded product import complete!"
+    puts "  Total products: #{total_products}"
+    puts "  Total pricing entries: #{total_pricing}"
+
+    # Populate lid compatibility
+    puts ""
+    puts "Populating lid compatibility..."
+    Rake::Task["lid_compatibility:populate"].invoke
   end
 end
