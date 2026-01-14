@@ -42,3 +42,10 @@ dw_16oz_1000:
   quantity_tier: 1000
   price_per_unit: 0.34
   case_quantity: 500
+
+dw_16oz_5000:
+  product: branded_template_variant
+  size: 16oz
+  quantity_tier: 5000
+  price_per_unit: 0.2175
+  case_quantity: 500

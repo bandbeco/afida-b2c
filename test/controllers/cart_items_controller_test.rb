@@ -305,6 +305,33 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Item removed from cart.", flash[:notice]
   end
 
+  test "updating configured cart item preserves full price precision" do
+    branded_product = products(:branded_template_variant)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    # Start with 16oz at 1000 units (0.34/unit)
+    cart_item = @cart.cart_items.build(
+      product: branded_product,
+      quantity: 1000,
+      price: 0.34,
+      calculated_price: 340.00,
+      configuration: { "size" => "16oz", "quantity" => 1000 }
+    )
+    cart_item.design.attach(design_file)
+    cart_item.save!
+
+    # Update to 5000 units which has 4 decimal place price (0.2175/unit)
+    patch cart_cart_item_path(cart_item), params: {
+      cart_item: { quantity: 5000 }
+    }
+
+    cart_item.reload
+    assert_equal 5000, cart_item.quantity
+    # Price should preserve all 4 decimal places, not round to 0.22
+    assert_equal BigDecimal("0.2175"), cart_item.price
+    assert_equal BigDecimal("1087.50"), cart_item.calculated_price  # 5000 * 0.2175
+  end
+
   # DELETE /cart/cart_items/:id (destroy)
   test "should destroy cart item" do
     cart_item = @cart.cart_items.create!(
