@@ -1,0 +1,92 @@
+<%= form_with(model: [:admin, blog_post], local: true, data: { turbo: false }) do |form| %>
+  <% if blog_post.errors.any? %>
+    <div class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
+      <h2><%= pluralize(blog_post.errors.count, "error") %> prohibited this blog post from being saved:</h2>
+      <ul class="list-disc ml-6">
+        <% blog_post.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Main Content Section %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl font-medium">Content</legend>
+
+    <div class="py-4 space-y-4">
+      <div>
+        <%= form.label :title, class: "label text-base" %>
+        <%= form.text_field :title, class: "input w-full", required: true, placeholder: "Enter post title..." %>
+      </div>
+
+      <div>
+        <%= form.label :slug, "URL Slug (auto-generated if blank)", class: "label text-base" %>
+        <%= form.text_field :slug, class: "input w-full font-mono", placeholder: "leave-blank-for-auto" %>
+        <p class="text-sm text-gray-500 mt-1">Only lowercase letters, numbers, and hyphens. Example: my-first-blog-post</p>
+      </div>
+
+      <div>
+        <%= form.label :body, "Body (Markdown)", class: "label text-base" %>
+        <%= form.text_area :body, class: "textarea w-full h-64 font-mono", required: true, placeholder: "Write your post content using Markdown..." %>
+        <p class="text-sm text-gray-500 mt-1">Supports Markdown: # headings, **bold**, *italic*, - lists, ```code blocks```, tables, and links.</p>
+      </div>
+
+      <div>
+        <%= form.label :excerpt, "Excerpt (optional)", class: "label text-base" %>
+        <%= form.text_area :excerpt, class: "textarea w-full h-20", placeholder: "Brief summary shown on blog index page..." %>
+        <p class="text-sm text-gray-500 mt-1">If blank, the first 160 characters of the body will be used.</p>
+      </div>
+
+      <div>
+        <%= form.label :cover_image, "Cover Image (optional)", class: "label text-base" %>
+        <% if blog_post.cover_image.attached? %>
+          <div class="mb-3">
+            <%= image_tag blog_post.cover_image.variant(resize_to_limit: [400, 200]), class: "rounded-lg" %>
+            <p class="text-sm text-gray-500 mt-1">Current cover image</p>
+          </div>
+        <% end %>
+        <%= form.file_field :cover_image, accept: "image/*", class: "file-input file-input-bordered w-full" %>
+        <p class="text-sm text-gray-500 mt-1">Recommended size: 1200×630px for optimal display on blog index and social sharing.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# Publishing Section %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl font-medium">Publishing</legend>
+
+    <div class="py-4">
+      <label class="label cursor-pointer justify-start gap-4">
+        <%= form.check_box :published, class: "checkbox checkbox-primary" %>
+        <span class="label-text text-base">Published</span>
+      </label>
+      <p class="text-sm text-gray-500 ml-10">When checked, this post will be visible on the public blog.</p>
+    </div>
+  </fieldset>
+
+  <%# SEO Section %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl font-medium">SEO & Sharing</legend>
+
+    <div class="py-4 space-y-4">
+      <div>
+        <%= form.label :meta_title, "Meta Title (optional)", class: "label text-base" %>
+        <%= form.text_field :meta_title, class: "input w-full", placeholder: "Custom title for search engines..." %>
+        <p class="text-sm text-gray-500 mt-1">If blank, the post title will be used.</p>
+      </div>
+
+      <div>
+        <%= form.label :meta_description, "Meta Description (optional)", class: "label text-base" %>
+        <%= form.text_area :meta_description, class: "textarea w-full h-20", placeholder: "Brief description for search engine results..." %>
+        <p class="text-sm text-gray-500 mt-1">If blank, the excerpt will be used. Recommended: 150-160 characters.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# Actions %>
+  <div class="mt-8 flex gap-4">
+    <%= form.submit blog_post.persisted? ? "Update Post" : "Create Post", class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_blog_posts_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>

@@ -139,6 +139,38 @@ module SeoHelper
     data.to_json
   end
 
+  # Structured data for blog posts using Schema.org Article type
+  def blog_post_structured_data(blog_post)
+    data = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": blog_post.title,
+      "description": blog_post.meta_description_with_fallback,
+      "datePublished": blog_post.published_at.iso8601,
+      "dateModified": blog_post.updated_at.iso8601,
+      "author": {
+        "@type": "Organization",
+        "name": "Afida"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Afida",
+        "url": root_url
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": blog_post_url(blog_post)
+      }
+    }
+
+    # Add cover image if available (important for rich snippets)
+    if blog_post.cover_image.attached?
+      data[:image] = url_for(blog_post.cover_image)
+    end
+
+    data.to_json
+  end
+
   def breadcrumb_structured_data(items)
     {
       "@context": "https://schema.org",

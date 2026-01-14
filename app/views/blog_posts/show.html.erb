@@ -1,0 +1,83 @@
+<% content_for :title, @blog_post.meta_title_with_fallback %>
+<% content_for :meta_description, @blog_post.meta_description_with_fallback %>
+
+<% content_for :head do %>
+  <%= canonical_url(blog_post_url(@blog_post)) %>
+
+  <%# Open Graph Tags for Social Sharing %>
+  <meta property="og:title" content="<%= @blog_post.meta_title_with_fallback %>">
+  <meta property="og:description" content="<%= @blog_post.meta_description_with_fallback %>">
+  <meta property="og:url" content="<%= blog_post_url(@blog_post) %>">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Afida">
+  <meta property="article:published_time" content="<%= @blog_post.published_at.iso8601 %>">
+  <% if @blog_post.cover_image.attached? %>
+  <meta property="og:image" content="<%= url_for(@blog_post.cover_image) %>">
+  <% end %>
+
+  <%# Twitter Card Tags %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= @blog_post.meta_title_with_fallback %>">
+  <meta name="twitter:description" content="<%= @blog_post.meta_description_with_fallback %>">
+  <% if @blog_post.cover_image.attached? %>
+  <meta name="twitter:image" content="<%= url_for(@blog_post.cover_image) %>">
+  <% end %>
+
+  <%# Article Structured Data %>
+  <script type="application/ld+json">
+    <%= raw blog_post_structured_data(@blog_post) %>
+  </script>
+
+  <%# Breadcrumb Structured Data %>
+  <script type="application/ld+json">
+    <%= raw breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: "Blog", url: blog_posts_url },
+      { name: @blog_post.title, url: blog_post_url(@blog_post) }
+    ]) %>
+  </script>
+<% end %>
+
+<div class="container mx-auto px-4 py-12 max-w-3xl">
+  <!-- Article Header -->
+  <header class="mb-8">
+    <%# Category Badge - styled like the screenshot %>
+    <div class="mb-6">
+      <%= link_to "Blog", blog_posts_path, class: "inline-block px-4 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors" %>
+    </div>
+
+    <%# Title - large and bold like the screenshot %>
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+      <%= @blog_post.title %>
+    </h1>
+  </header>
+
+  <%# Cover Image - full width with rounded corners %>
+  <% if @blog_post.cover_image.attached? %>
+    <figure class="mb-10">
+      <%= image_tag @blog_post.cover_image.variant(resize_to_limit: [1200, 800]),
+                    alt: @blog_post.title,
+                    class: "w-full rounded-lg" %>
+    </figure>
+  <% end %>
+
+  <!-- Article Content -->
+  <article class="prose prose-lg max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-headings:text-gray-900 prose-a:text-primary hover:prose-a:text-primary-focus">
+    <%= render_markdown(@blog_post.body) %>
+  </article>
+
+  <!-- Article Footer -->
+  <footer class="mt-16 pt-8 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <time datetime="<%= @blog_post.published_at.iso8601 %>" class="text-sm text-gray-500">
+        Published <%= @blog_post.published_at.strftime("%B %d, %Y") %>
+      </time>
+      <%= link_to blog_posts_path, class: "inline-flex items-center text-sm font-medium text-gray-600 hover:text-primary transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        All posts
+      <% end %>
+    </div>
+  </footer>
+</div>

@@ -29,9 +29,9 @@ Rails application structure at repository root:
 
 **Purpose**: Add Redcarpet gem and create database migration
 
-- [ ] T001 Add redcarpet gem to Gemfile and run bundle install
-- [ ] T002 Generate migration for blog_posts table in db/migrate/
-- [ ] T003 Run migration with `rails db:migrate`
+- [x] T001 Add redcarpet gem to Gemfile and run bundle install
+- [x] T002 Generate migration for blog_posts table in db/migrate/
+- [x] T003 Run migration with `rails db:migrate`
 
 ---
 
@@ -41,13 +41,13 @@ Rails application structure at repository root:
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create test fixtures in test/fixtures/blog_posts.yml (published_post, draft_post, second_published_post)
-- [ ] T005 [P] Write model tests (failing) in test/models/blog_post_test.rb
-- [ ] T006 [P] Write helper tests (failing) in test/helpers/markdown_helper_test.rb
-- [ ] T007 Implement BlogPost model in app/models/blog_post.rb (validations, callbacks, scopes, methods)
-- [ ] T008 Implement MarkdownHelper in app/helpers/markdown_helper.rb (render_markdown method)
-- [ ] T009 Verify model and helper tests pass with `rails test test/models/blog_post_test.rb test/helpers/markdown_helper_test.rb`
-- [ ] T010 Add blog routes to config/routes.rb (public and admin)
+- [x] T004 Create test fixtures in test/fixtures/blog_posts.yml (published_post, draft_post, second_published_post)
+- [x] T005 [P] Write model tests (failing) in test/models/blog_post_test.rb
+- [x] T006 [P] Write helper tests (failing) in test/helpers/markdown_helper_test.rb
+- [x] T007 Implement BlogPost model in app/models/blog_post.rb (validations, callbacks, scopes, methods)
+- [x] T008 Implement MarkdownHelper in app/helpers/markdown_helper.rb (render_markdown method)
+- [x] T009 Verify model and helper tests pass with `rails test test/models/blog_post_test.rb test/helpers/markdown_helper_test.rb`
+- [x] T010 Add blog routes to config/routes.rb (public and admin)
 
 **Checkpoint**: Foundation ready - BlogPost model works, Markdown renders, routes exist
 
@@ -63,15 +63,15 @@ Rails application structure at repository root:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T011 [P] [US1] Write controller tests (failing) for BlogPostsController#index in test/controllers/blog_posts_controller_test.rb
-- [ ] T012 [P] [US1] Write controller tests (failing) for BlogPostsController#show in test/controllers/blog_posts_controller_test.rb
+- [x] T011 [P] [US1] Write controller tests (failing) for BlogPostsController#index in test/controllers/blog_posts_controller_test.rb
+- [x] T012 [P] [US1] Write controller tests (failing) for BlogPostsController#show in test/controllers/blog_posts_controller_test.rb
 
 ### Implementation for User Story 1
 
-- [ ] T013 [US1] Implement BlogPostsController with index and show actions in app/controllers/blog_posts_controller.rb
-- [ ] T014 [P] [US1] Create blog listing view in app/views/blog_posts/index.html.erb (cards with title, excerpt, date)
-- [ ] T015 [P] [US1] Create single post view in app/views/blog_posts/show.html.erb (rendered Markdown, meta tags)
-- [ ] T016 [US1] Verify public controller tests pass with `rails test test/controllers/blog_posts_controller_test.rb`
+- [x] T013 [US1] Implement BlogPostsController with index and show actions in app/controllers/blog_posts_controller.rb
+- [x] T014 [P] [US1] Create blog listing view in app/views/blog_posts/index.html.erb (cards with title, excerpt, date)
+- [x] T015 [P] [US1] Create single post view in app/views/blog_posts/show.html.erb (rendered Markdown, meta tags)
+- [x] T016 [US1] Verify public controller tests pass with `rails test test/controllers/blog_posts_controller_test.rb`
 
 **Checkpoint**: Visitors can view published posts at `/blog` and `/blog/:slug`
 
@@ -87,16 +87,16 @@ Rails application structure at repository root:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T017 [P] [US2] Write controller tests (failing) for Admin::BlogPostsController#index in test/controllers/admin/blog_posts_controller_test.rb
-- [ ] T018 [P] [US2] Write controller tests (failing) for Admin::BlogPostsController#new and #create in test/controllers/admin/blog_posts_controller_test.rb
+- [x] T017 [P] [US2] Write controller tests (failing) for Admin::BlogPostsController#index in test/controllers/admin/blog_posts_controller_test.rb
+- [x] T018 [P] [US2] Write controller tests (failing) for Admin::BlogPostsController#new and #create in test/controllers/admin/blog_posts_controller_test.rb
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Create Admin::BlogPostsController with index, new, create actions in app/controllers/admin/blog_posts_controller.rb
-- [ ] T020 [P] [US2] Create admin listing view in app/views/admin/blog_posts/index.html.erb (table with status badges)
-- [ ] T021 [P] [US2] Create admin form partial in app/views/admin/blog_posts/_form.html.erb (title, body, excerpt, published, SEO fields)
-- [ ] T022 [P] [US2] Create new post view in app/views/admin/blog_posts/new.html.erb (wraps form)
-- [ ] T023 [US2] Verify admin create tests pass with `rails test test/controllers/admin/blog_posts_controller_test.rb`
+- [x] T019 [US2] Create Admin::BlogPostsController with index, new, create actions in app/controllers/admin/blog_posts_controller.rb
+- [x] T020 [P] [US2] Create admin listing view in app/views/admin/blog_posts/index.html.erb (table with status badges)
+- [x] T021 [P] [US2] Create admin form partial in app/views/admin/blog_posts/_form.html.erb (title, body, excerpt, published, SEO fields)
+- [x] T022 [P] [US2] Create new post view in app/views/admin/blog_posts/new.html.erb (wraps form)
+- [x] T023 [US2] Verify admin create tests pass with `rails test test/controllers/admin/blog_posts_controller_test.rb`
 
 **Checkpoint**: Admins can create new posts, posts appear in admin listing and public blog (if published)
 
@@ -112,13 +112,13 @@ Rails application structure at repository root:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T024 [P] [US3] Write controller tests (failing) for Admin::BlogPostsController#edit and #update in test/controllers/admin/blog_posts_controller_test.rb
+- [x] T024 [P] [US3] Write controller tests (failing) for Admin::BlogPostsController#edit and #update in test/controllers/admin/blog_posts_controller_test.rb
 
 ### Implementation for User Story 3
 
-- [ ] T025 [US3] Add edit and update actions to Admin::BlogPostsController in app/controllers/admin/blog_posts_controller.rb
-- [ ] T026 [US3] Create edit post view in app/views/admin/blog_posts/edit.html.erb (wraps form)
-- [ ] T027 [US3] Verify admin edit tests pass with `rails test test/controllers/admin/blog_posts_controller_test.rb`
+- [x] T025 [US3] Add edit and update actions to Admin::BlogPostsController in app/controllers/admin/blog_posts_controller.rb
+- [x] T026 [US3] Create edit post view in app/views/admin/blog_posts/edit.html.erb (wraps form)
+- [x] T027 [US3] Verify admin edit tests pass with `rails test test/controllers/admin/blog_posts_controller_test.rb`
 
 **Checkpoint**: Admins can edit posts, changes reflect on public blog
 
@@ -134,13 +134,13 @@ Rails application structure at repository root:
 
 > **NOTE: Write these tests FIRST, ensure they FAIL before implementation**
 
-- [ ] T028 [P] [US4] Write controller tests (failing) for Admin::BlogPostsController#destroy in test/controllers/admin/blog_posts_controller_test.rb
+- [x] T028 [P] [US4] Write controller tests (failing) for Admin::BlogPostsController#destroy in test/controllers/admin/blog_posts_controller_test.rb
 
 ### Implementation for User Story 4
 
-- [ ] T029 [US4] Add destroy action to Admin::BlogPostsController in app/controllers/admin/blog_posts_controller.rb
-- [ ] T030 [US4] Add delete button/confirmation to admin listing in app/views/admin/blog_posts/index.html.erb
-- [ ] T031 [US4] Verify admin destroy tests pass with `rails test test/controllers/admin/blog_posts_controller_test.rb`
+- [x] T029 [US4] Add destroy action to Admin::BlogPostsController in app/controllers/admin/blog_posts_controller.rb
+- [x] T030 [US4] Add delete button/confirmation to admin listing in app/views/admin/blog_posts/index.html.erb
+- [x] T031 [US4] Verify admin destroy tests pass with `rails test test/controllers/admin/blog_posts_controller_test.rb`
 
 **Checkpoint**: All admin CRUD operations work, full blog lifecycle complete
 
@@ -150,12 +150,12 @@ Rails application structure at repository root:
 
 **Purpose**: SEO compliance, code quality, and final validation
 
-- [ ] T032 [P] Add blog posts to sitemap in app/services/sitemap_generator_service.rb
-- [ ] T033 [P] Add canonical URL and meta tags to blog show view in app/views/blog_posts/show.html.erb
-- [ ] T034 Run RuboCop and fix any violations with `rubocop`
-- [ ] T035 Run Brakeman security check with `brakeman`
-- [ ] T036 Run full test suite with `rails test`
-- [ ] T037 Manual verification per quickstart.md checklist
+- [x] T032 [P] Add blog posts to sitemap in app/services/sitemap_generator_service.rb
+- [x] T033 [P] Add canonical URL and meta tags to blog show view in app/views/blog_posts/show.html.erb
+- [x] T034 Run RuboCop and fix any violations with `rubocop`
+- [x] T035 Run Brakeman security check with `brakeman`
+- [x] T036 Run full test suite with `rails test`
+- [x] T037 Manual verification per quickstart.md checklist
 
 ---
 

@@ -36,6 +36,15 @@ class SitemapGeneratorService
                   changefreq: "weekly",
                   lastmod: product.updated_at)
         end
+
+        # Blog posts (published only)
+        add_url(xml, blog_posts_url, priority: "0.7", changefreq: "weekly")
+        BlogPost.published.find_each do |post|
+          add_url(xml, blog_post_url(post),
+                  priority: "0.6",
+                  changefreq: "monthly",
+                  lastmod: post.updated_at)
+        end
       end
     end
 

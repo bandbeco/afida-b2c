@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_14_115424) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_14_154905) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,6 +60,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_14_115424) do
     t.index ["user_id", "line1", "postcode"], name: "index_addresses_on_user_line1_postcode"
     t.index ["user_id"], name: "index_addresses_on_user_id"
     t.index ["user_id"], name: "index_addresses_on_user_id_where_default", unique: true, where: "(\"default\" = true)"
+  end
+
+  create_table "blog_posts", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.text "excerpt"
+    t.text "meta_description"
+    t.string "meta_title"
+    t.boolean "published", default: false, null: false
+    t.datetime "published_at"
+    t.string "slug", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["published"], name: "index_blog_posts_on_published"
+    t.index ["published_at"], name: "index_blog_posts_on_published_at"
+    t.index ["slug"], name: "index_blog_posts_on_slug", unique: true
   end
 
   create_table "branded_product_prices", force: :cascade do |t|

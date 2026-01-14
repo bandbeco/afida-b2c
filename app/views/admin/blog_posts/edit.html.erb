@@ -1,0 +1,20 @@
+<div class="py-4 sm:py-8">
+  <div class="flex items-center gap-4 mb-6">
+    <%= link_to admin_blog_posts_path, class: "btn btn-ghost btn-sm" do %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18" />
+      </svg>
+    <% end %>
+    <h1>Edit Blog Post</h1>
+    <% if @blog_post.published? %>
+      <%= link_to blog_post_path(@blog_post), class: "btn btn-ghost btn-sm ml-auto", target: "_blank" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+        </svg>
+        View Post
+      <% end %>
+    <% end %>
+  </div>
+
+  <%= render "form", blog_post: @blog_post %>
+</div>
