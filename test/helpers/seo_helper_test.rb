@@ -1,4 +1,5 @@
 require "test_helper"
+require "ostruct"
 
 class SeoHelperTest < ActionView::TestCase
   # GBP helper tests
@@ -153,5 +154,50 @@ class SeoHelperTest < ActionView::TestCase
     data = JSON.parse(json)
 
     refute data.key?("gtin")
+  end
+
+  # Canonical URL tests
+  test "canonical_url strips query parameters by default" do
+    # Simulate a request with query params
+    mock_request = OpenStruct.new(
+      protocol: "https://",
+      host_with_port: "afida.com",
+      path: "/shop",
+      original_url: "https://afida.com/shop?categories[]=cups&sort=price_asc"
+    )
+
+    # Stub the request method in the helper context
+    self.define_singleton_method(:request) { mock_request }
+
+    result = canonical_url
+    assert_includes result, 'href="https://afida.com/shop"'
+    refute_includes result, "categories"
+    refute_includes result, "sort"
+  end
+
+  test "canonical_url uses provided URL when given" do
+    mock_request = OpenStruct.new(
+      protocol: "https://",
+      host_with_port: "afida.com",
+      path: "/shop",
+      original_url: "https://afida.com/shop?q=test"
+    )
+    self.define_singleton_method(:request) { mock_request }
+
+    result = canonical_url("https://afida.com/custom-path")
+    assert_includes result, 'href="https://afida.com/custom-path"'
+  end
+
+  test "canonical_url generates proper link tag" do
+    mock_request = OpenStruct.new(
+      protocol: "https://",
+      host_with_port: "afida.com",
+      path: "/products/widget"
+    )
+    self.define_singleton_method(:request) { mock_request }
+
+    result = canonical_url
+    assert_includes result, 'rel="canonical"'
+    assert_includes result, "<link"
   end
 end

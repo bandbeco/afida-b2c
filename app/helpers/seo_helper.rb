@@ -155,6 +155,10 @@ module SeoHelper
   end
 
   def canonical_url(url = nil)
-    tag.link rel: "canonical", href: url || request.original_url
+    # Strip query parameters by default to avoid duplicate content issues
+    # Google penalizes pages where the canonical includes tracking params,
+    # filters, or sort options that don't change the core content
+    clean_url = url || "#{request.protocol}#{request.host_with_port}#{request.path}"
+    tag.link rel: "canonical", href: clean_url
   end
 end
