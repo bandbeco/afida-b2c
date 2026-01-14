@@ -44,58 +44,21 @@
     <div class="col-span-full grid grid-cols-3 gap-2 items-center md:hidden">
       <div class="text-left text-gray-700">
         <div class="text-xs text-gray-500">Price</div>
-        <% if cart_item.sample? %>
-          <span class="font-medium">Free</span>
-        <% else %>
-          <%= format_price_display(cart_item) %>
-        <% end %>
+        <span id="cart_item_<%= cart_item.id %>_price_mobile">
+          <% if cart_item.sample? %>
+            <span class="font-medium">Free</span>
+          <% else %>
+            <%= format_price_display(cart_item) %>
+          <% end %>
+        </span>
       </div>
 
       <div class="text-center">
         <div class="text-xs text-gray-500 mb-1">Qty</div>
         <% if cart_item.sample? %>
           <span class="text-gray-600">1 unit</span>
-        <% elsif cart_item.configured? %>
-          <%
-            current_qty = cart_item.quantity
-            quantity_options = [1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000]
-            quantity_options << current_qty unless quantity_options.include?(current_qty)
-            quantity_options.sort!
-          %>
-          <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
-            <%= form.label :quantity, "Quantity:", class: "sr-only" %>
-            <%= form.select :quantity,
-                            options_for_select(
-                              quantity_options.map { |q| ["#{number_with_delimiter(q)} units", q] },
-                              current_qty
-                            ),
-                            {},
-                            class: "select select-xs select-bordered w-full",
-                            onchange: "this.form.requestSubmit(); this.blur()" %>
-          <% end %>
         <% else %>
-          <%
-            product = cart_item.product
-            pac_size = product.pac_size || 1
-            pack_options = (1..10).to_a
-            [30, 40, 50, 60].each { |p| pack_options << p }
-            pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
-            pack_options.sort!.uniq!
-          %>
-          <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
-            <%= form.label :quantity, "Quantity:", class: "sr-only" %>
-            <%= form.select :quantity,
-                            options_for_select(
-                              pack_options.map { |num_packs|
-                                total_units = num_packs * pac_size
-                                ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
-                              },
-                              cart_item.quantity
-                            ),
-                            {},
-                            class: "select select-xs select-bordered w-full",
-                            onchange: "this.form.requestSubmit(); this.blur()" %>
-          <% end %>
+          <%= render "cart_items/quantity_selector", cart_item: cart_item, size: :xs %>
         <% end %>
       </div>
 
@@ -120,57 +83,20 @@
 
     <%# Desktop: separate columns for price/qty/total/delete %>
     <div class="hidden md:block text-center text-gray-700">
-      <% if cart_item.sample? %>
-        <span class="font-medium">Free</span>
-      <% else %>
-        <%= format_price_display(cart_item) %>
-      <% end %>
+      <span id="cart_item_<%= cart_item.id %>_price">
+        <% if cart_item.sample? %>
+          <span class="font-medium">Free</span>
+        <% else %>
+          <%= format_price_display(cart_item) %>
+        <% end %>
+      </span>
     </div>
 
     <div class="hidden md:block text-center">
       <% if cart_item.sample? %>
         <span class="text-gray-600">1 unit</span>
-      <% elsif cart_item.configured? %>
-        <%
-          current_qty = cart_item.quantity
-          quantity_options = [1000, 2000, 3000, 5000, 7500, 10000, 15000, 20000, 30000]
-          quantity_options << current_qty unless quantity_options.include?(current_qty)
-          quantity_options.sort!
-        %>
-        <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
-          <%= form.label :quantity, "Quantity:", class: "sr-only" %>
-          <%= form.select :quantity,
-                          options_for_select(
-                            quantity_options.map { |q| ["#{number_with_delimiter(q)} units", q] },
-                            current_qty
-                          ),
-                          {},
-                          class: "select select-sm select-bordered",
-                          onchange: "this.form.requestSubmit(); this.blur()" %>
-        <% end %>
       <% else %>
-        <%
-          product = cart_item.product
-          pac_size = product.pac_size || 1
-          pack_options = (1..10).to_a
-          [30, 40, 50, 60].each { |p| pack_options << p }
-          pack_options << cart_item.quantity unless pack_options.include?(cart_item.quantity)
-          pack_options.sort!.uniq!
-        %>
-        <%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
-          <%= form.label :quantity, "Quantity:", class: "sr-only" %>
-          <%= form.select :quantity,
-                          options_for_select(
-                            pack_options.map { |num_packs|
-                              total_units = num_packs * pac_size
-                              ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
-                            },
-                            cart_item.quantity
-                          ),
-                          {},
-                          class: "select select-sm select-bordered",
-                          onchange: "this.form.requestSubmit(); this.blur()" %>
-        <% end %>
+        <%= render "cart_items/quantity_selector", cart_item: cart_item, size: :sm %>
       <% end %>
     </div>
 

@@ -31,6 +31,9 @@ class CartItemsController < ApplicationController
         format.turbo_stream
         format.html { redirect_to cart_path, notice: "Item removed from cart." }
       end
+    elsif @cart_item.configured?
+      # Configured (branded) products need tiered pricing recalculation
+      update_configured_cart_item(new_quantity)
     elsif @cart_item.update(quantity: new_quantity)
       @cart_item.reload
       respond_to do |format|
@@ -89,6 +92,36 @@ class CartItemsController < ApplicationController
     @cart_item = @cart.cart_items.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to cart_path, alert: "Cart item not found."
+  end
+
+  # Updates a configured (branded) cart item with recalculated tiered pricing
+  def update_configured_cart_item(new_quantity)
+    size = @cart_item.configuration["size"]
+    pricing_service = BrandedProductPricingService.new(@cart_item.product)
+    result = pricing_service.calculate(size: size, quantity: new_quantity)
+
+    if result.success?
+      # Update quantity, unit price, calculated total, and configuration in sync
+      updated_configuration = @cart_item.configuration.merge("quantity" => new_quantity)
+
+      @cart_item.update!(
+        quantity: new_quantity,
+        price: result.price_per_unit,
+        calculated_price: result.total_price,
+        configuration: updated_configuration
+      )
+      @cart_item.reload
+
+      respond_to do |format|
+        format.turbo_stream
+        format.html { redirect_to cart_path, notice: "Cart updated." }
+      end
+    else
+      respond_to do |format|
+        format.turbo_stream { render turbo_stream: turbo_stream.replace("cart_counter", partial: "shared/cart_counter") }
+        format.html { redirect_to cart_path, alert: "Could not update cart: #{result.error}" }
+      end
+    end
   end
 
   def create_configured_cart_item

@@ -14,10 +14,21 @@ two:
 
 branded_configuration:
   cart: three
-  product: one
+  product: branded_template_variant
   quantity: 5000  # Actual quantity from configuration
-  price: 0.18     # Unit price (so price * quantity = calculated_price)
+  price: 0.20     # Unit price for 12oz at 5000 tier (from branded_product_prices fixture)
   configuration:
     size: "12oz"
-    quantity: "5000"
-  calculated_price: 900.00
+    quantity: 5000
+  calculated_price: 1000.00  # 5000 * 0.20
+
+# Another branded item for testing tier changes (8oz at 1000 tier)
+branded_small_order:
+  cart: one
+  product: branded_template_variant
+  quantity: 1000
+  price: 0.30     # Unit price for 8oz at 1000 tier (base tier)
+  configuration:
+    size: "8oz"
+    quantity: 1000
+  calculated_price: 300.00  # 1000 * 0.30

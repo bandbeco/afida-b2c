@@ -5,9 +5,23 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     @product = products(:one)
     @product_variant = products(:one)
 
-    # Ensure we have a cart
-    get cart_url
-    @cart = Cart.find(session[:cart_id])
+    # Create a fresh cart for testing
+    @cart = Cart.create!
+
+    # Make a request that will use this cart
+    # We need to get the cart into the session. The easiest way is to add
+    # something to it, which will create the session association.
+    post cart_cart_items_path, params: {
+      cart_item: {
+        sku: products(:single_wall_8oz_white).sku,
+        quantity: 1
+      }
+    }
+
+    # Now grab the cart that was just used (the one with the item we just added)
+    @cart = CartItem.last.cart
+    # Clean up the test item we used to establish the session
+    @cart.cart_items.destroy_all
   end
 
   # POST /cart/cart_items (create)
@@ -150,6 +164,145 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     # Original quantity should be unchanged
     other_cart_item.reload
     assert_equal 1, other_cart_item.quantity
+  end
+
+  # =============================================================================
+  # Tests for updating configured (branded) cart items with tiered pricing
+  # =============================================================================
+
+  test "updating configured cart item recalculates tiered pricing" do
+    branded_product = products(:branded_template_variant)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    # Create a configured cart item at 8oz, 1000 units (base tier: £0.30/unit)
+    cart_item = @cart.cart_items.build(
+      product: branded_product,
+      quantity: 1000,
+      price: 0.30,
+      calculated_price: 300.00,
+      configuration: { "size" => "8oz", "quantity" => 1000 }
+    )
+    cart_item.design.attach(design_file)
+    cart_item.save!
+
+    # Update to 5000 units - should trigger tier change to £0.18/unit
+    patch cart_cart_item_path(cart_item), params: {
+      cart_item: { quantity: 5000 }
+    }
+
+    assert_redirected_to cart_path
+    assert_equal "Cart updated.", flash[:notice]
+
+    cart_item.reload
+    assert_equal 5000, cart_item.quantity
+    assert_equal 0.18, cart_item.price.to_f  # New tier price
+    assert_equal 900.00, cart_item.calculated_price.to_f  # 5000 * 0.18
+    assert_equal 5000, cart_item.configuration["quantity"]  # Config synced
+  end
+
+  test "updating configured cart item to lower tier increases unit price" do
+    branded_product = products(:branded_template_variant)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    # Start at 5000 units (£0.18/unit tier)
+    cart_item = @cart.cart_items.build(
+      product: branded_product,
+      quantity: 5000,
+      price: 0.18,
+      calculated_price: 900.00,
+      configuration: { "size" => "8oz", "quantity" => 5000 }
+    )
+    cart_item.design.attach(design_file)
+    cart_item.save!
+
+    # Update to 2000 units - should change to £0.25/unit tier
+    patch cart_cart_item_path(cart_item), params: {
+      cart_item: { quantity: 2000 }
+    }
+
+    assert_redirected_to cart_path
+
+    cart_item.reload
+    assert_equal 2000, cart_item.quantity
+    assert_equal 0.25, cart_item.price.to_f  # Lower quantity = higher price
+    assert_equal 500.00, cart_item.calculated_price.to_f  # 2000 * 0.25
+  end
+
+  test "updating configured cart item syncs configuration quantity" do
+    branded_product = products(:branded_template_variant)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    cart_item = @cart.cart_items.build(
+      product: branded_product,
+      quantity: 1000,
+      price: 0.30,
+      calculated_price: 300.00,
+      configuration: { "size" => "8oz", "quantity" => 1000 }
+    )
+    cart_item.design.attach(design_file)
+    cart_item.save!
+
+    patch cart_cart_item_path(cart_item), params: {
+      cart_item: { quantity: 2000 }
+    }
+
+    cart_item.reload
+    # Both quantity and configuration["quantity"] should be updated
+    assert_equal 2000, cart_item.quantity
+    assert_equal 2000, cart_item.configuration["quantity"]
+    # Size should remain unchanged
+    assert_equal "8oz", cart_item.configuration["size"]
+  end
+
+  test "updating configured cart item preserves design attachment" do
+    sign_in_as users(:consumer)
+
+    branded_product = products(:branded_template_variant)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    # Create cart item with design attachment
+    cart_item = @cart.cart_items.build(
+      product: branded_product,
+      quantity: 1000,
+      price: 0.30,
+      calculated_price: 300.00,
+      configuration: { "size" => "8oz", "quantity" => 1000 }
+    )
+    cart_item.design.attach(design_file)
+    cart_item.save!
+    assert cart_item.design.attached?
+
+    # Update quantity
+    patch cart_cart_item_path(cart_item), params: {
+      cart_item: { quantity: 5000 }
+    }
+
+    cart_item.reload
+    assert cart_item.design.attached?, "Design should still be attached after quantity update"
+  end
+
+  test "removing configured cart item by setting quantity to zero works" do
+    branded_product = products(:branded_template_variant)
+    design_file = fixture_file_upload("test_design.pdf", "application/pdf")
+
+    cart_item = @cart.cart_items.build(
+      product: branded_product,
+      quantity: 1000,
+      price: 0.30,
+      calculated_price: 300.00,
+      configuration: { "size" => "8oz", "quantity" => 1000 }
+    )
+    cart_item.design.attach(design_file)
+    cart_item.save!
+
+    assert_difference("CartItem.count", -1) do
+      patch cart_cart_item_path(cart_item), params: {
+        cart_item: { quantity: 0 }
+      }
+    end
+
+    assert_redirected_to cart_path
+    assert_equal "Item removed from cart.", flash[:notice]
   end
 
   # DELETE /cart/cart_items/:id (destroy)

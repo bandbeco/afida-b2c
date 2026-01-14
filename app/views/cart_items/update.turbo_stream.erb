@@ -1,6 +1,20 @@
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
 
+<%# Update unit price display (for branded products where price changes with quantity) %>
+<%= turbo_stream.update "cart_item_#{@cart_item.id}_price" do %>
+  <%= format_price_display(@cart_item) %>
+<% end %>
+
+<%= turbo_stream.update "cart_item_#{@cart_item.id}_price_mobile" do %>
+  <%= format_price_display(@cart_item) %>
+<% end %>
+
+<%# Update line totals %>
 <%= turbo_stream.update "cart_item_#{@cart_item.id}_total" do %>
+  <%= number_to_currency(@cart_item.line_total) %>
+<% end %>
+
+<%= turbo_stream.update "cart_item_#{@cart_item.id}_total_mobile" do %>
   <%= number_to_currency(@cart_item.line_total) %>
 <% end %>
 

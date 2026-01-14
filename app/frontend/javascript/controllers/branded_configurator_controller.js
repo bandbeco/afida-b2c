@@ -444,6 +444,7 @@ export default class extends Controller {
           if (savingsTarget && savingsPercent > 0) {
             savingsTarget.textContent = `save ${savingsPercent}%`
             savingsTarget.classList.remove('invisible')
+            savingsTarget.classList.add('text-success', 'text-sm', 'font-medium')
           }
         }
       })

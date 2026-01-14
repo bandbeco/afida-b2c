@@ -1,0 +1,22 @@
+<%#
+  Quantity selector dropdown for cart items.
+  Handles both standard products (pack-based) and branded products (unit-based with tiered pricing).
+
+  Local variables:
+    - cart_item: The CartItem to render the selector for
+    - size: :xs or :sm (default :sm for desktop, :xs for mobile)
+%>
+<% size ||= :sm %>
+<% size_class = size == :xs ? "select-xs" : "select-sm" %>
+
+<%= form_with(model: cart_item, url: cart_cart_item_path(cart_item), method: :patch, local: false) do |form| %>
+  <%= form.label :quantity, "Quantity:", class: "sr-only" %>
+  <%= form.select :quantity,
+                  options_for_select(
+                    quantity_options_for_cart_item(cart_item),
+                    cart_item.quantity
+                  ),
+                  {},
+                  class: "select #{size_class} select-bordered w-full",
+                  onchange: "this.form.requestSubmit(); this.blur()" %>
+<% end %>
