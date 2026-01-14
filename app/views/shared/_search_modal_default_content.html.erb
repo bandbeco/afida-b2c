@@ -40,13 +40,13 @@
                 data: { action: "click->search-modal#navigateToCategory", turbo_frame: "_top" } do %>
       <%# Category image from product %>
       <% if product&.lifestyle_photo&.attached? %>
-        <%= image_tag product.lifestyle_photo.variant(resize_to_fill: [400, 400]),
-                      class: "w-full h-full object-cover group-hover:scale-105 transition duration-300",
+        <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [400, 400, { background: [249, 250, 251] }]),
+                      class: "w-full h-full object-contain group-hover:scale-105 transition duration-300",
                       alt: category.name,
                       loading: "lazy" %>
       <% elsif product&.product_photo&.attached? %>
-        <%= image_tag product.product_photo.variant(resize_to_fill: [400, 400]),
-                      class: "w-full h-full object-cover group-hover:scale-105 transition duration-300",
+        <%= image_tag product.product_photo.variant(resize_and_pad: [400, 400, { background: [249, 250, 251] }]),
+                      class: "w-full h-full object-contain group-hover:scale-105 transition duration-300",
                       alt: category.name,
                       loading: "lazy" %>
       <% else %>
