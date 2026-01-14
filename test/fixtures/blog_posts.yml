@@ -1,0 +1,81 @@
+# Test fixtures for BlogPost model
+# Reference using: blog_posts(:published_post), blog_posts(:draft_post), etc.
+
+published_post:
+  title: "Eco-Friendly Packaging Guide"
+  slug: "eco-friendly-packaging-guide"
+  body: |
+    # Introduction
+
+    This comprehensive guide covers everything you need to know about eco-friendly packaging for your business.
+
+    ## Why Choose Sustainable Packaging?
+
+    - Reduces environmental impact
+    - Appeals to environmentally conscious customers
+    - Often more cost-effective in the long run
+
+    Visit [our shop](/shop) to see our range of sustainable products.
+  excerpt: "A comprehensive guide to eco-friendly packaging options for your business."
+  published: true
+  published_at: <%= 3.days.ago %>
+  meta_title: "Complete Guide to Eco-Friendly Packaging | Afida"
+  meta_description: "Learn everything about sustainable packaging options for catering businesses."
+  blog_category: guides
+
+draft_post:
+  title: "Upcoming Product Announcements"
+  slug: "upcoming-product-announcements"
+  body: |
+    # Coming Soon
+
+    We're excited to announce some new additions to our product range.
+
+    Stay tuned for more details!
+  excerpt: "Exciting new products coming to Afida."
+  published: false
+  published_at: null
+  meta_title: null
+  meta_description: null
+
+second_published_post:
+  title: "How to Choose the Right Coffee Cup Size"
+  slug: "choose-right-coffee-cup-size"
+  body: |
+    # Coffee Cup Size Guide
+
+    Choosing the right cup size for your café can significantly impact customer satisfaction.
+
+    ## Common Sizes
+
+    - **8oz**: Perfect for espresso and small cappuccinos
+    - **12oz**: Standard latte size
+    - **16oz**: Large drinks and iced beverages
+
+    ## Material Considerations
+
+    Single wall vs double wall cups offer different benefits.
+  excerpt: "A practical guide to selecting the perfect coffee cup sizes for your business."
+  published: true
+  published_at: <%= 1.day.ago %>
+  meta_title: null
+  meta_description: null
+  blog_category: guides
+
+post_without_excerpt:
+  title: "Understanding Compostable Materials"
+  slug: "understanding-compostable-materials"
+  body: |
+    # What Makes Packaging Compostable?
+
+    Compostable materials break down naturally within a specific timeframe. This article explains the science behind it.
+
+    ## Key Properties
+
+    Materials must meet certain standards to be certified compostable.
+  excerpt: null
+  published: true
+  published_at: <%= 2.days.ago %>
+  meta_title: null
+  meta_description: null
+  blog_category: news

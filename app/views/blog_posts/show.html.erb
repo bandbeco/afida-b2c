@@ -1,0 +1,140 @@
+<% content_for :title, @blog_post.meta_title_with_fallback %>
+<% content_for :meta_description, @blog_post.meta_description_with_fallback %>
+
+<% content_for :head do %>
+  <%= canonical_url(blog_post_url(@blog_post)) %>
+
+  <%# Open Graph Tags for Social Sharing %>
+  <meta property="og:title" content="<%= @blog_post.meta_title_with_fallback %>">
+  <meta property="og:description" content="<%= @blog_post.meta_description_with_fallback %>">
+  <meta property="og:url" content="<%= blog_post_url(@blog_post) %>">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Afida">
+  <meta property="article:published_time" content="<%= @blog_post.published_at.iso8601 %>">
+  <% if @blog_post.cover_image.attached? %>
+  <meta property="og:image" content="<%= url_for(@blog_post.cover_image) %>">
+  <% end %>
+
+  <%# Twitter Card Tags %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= @blog_post.meta_title_with_fallback %>">
+  <meta name="twitter:description" content="<%= @blog_post.meta_description_with_fallback %>">
+  <% if @blog_post.cover_image.attached? %>
+  <meta name="twitter:image" content="<%= url_for(@blog_post.cover_image) %>">
+  <% end %>
+
+  <%# Article Structured Data %>
+  <script type="application/ld+json">
+    <%= raw blog_post_structured_data(@blog_post) %>
+  </script>
+
+  <%# Breadcrumb Structured Data %>
+  <script type="application/ld+json">
+    <%= raw breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: "Blog", url: blog_posts_url },
+      { name: @blog_post.title, url: blog_post_url(@blog_post) }
+    ]) %>
+  </script>
+<% end %>
+
+<div class="container mx-auto px-4 py-12 max-w-3xl">
+  <!-- Article Header -->
+  <header class="mb-8">
+    <%# Category Badge - shows category if present, otherwise "Blog" %>
+    <div class="mb-6">
+      <% if @blog_post.blog_category %>
+        <span class="inline-block px-4 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-full">
+          <%= @blog_post.blog_category.name %>
+        </span>
+      <% else %>
+        <%= link_to "Blog", blog_posts_path, class: "inline-block px-4 py-1.5 text-sm font-medium text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors" %>
+      <% end %>
+    </div>
+
+    <%# Title - large and bold like the screenshot %>
+    <h1 class="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight mb-6">
+      <%= @blog_post.title %>
+    </h1>
+  </header>
+
+  <%# Cover Image - full width with rounded corners %>
+  <% if @blog_post.cover_image.attached? %>
+    <figure class="mb-10">
+      <%= image_tag @blog_post.cover_image.variant(resize_to_limit: [1200, 800]),
+                    alt: @blog_post.title,
+                    class: "w-full rounded-lg" %>
+    </figure>
+  <% end %>
+
+  <!-- Article Content -->
+  <article class="prose prose-lg max-w-none prose-p:text-gray-700 prose-p:leading-relaxed prose-headings:text-gray-900 prose-a:text-primary hover:prose-a:text-primary-focus">
+    <%= render_markdown(@blog_post.body) %>
+  </article>
+
+  <!-- Article Footer -->
+  <footer class="mt-16 pt-8 border-t border-gray-200">
+    <div class="flex items-center justify-between">
+      <time datetime="<%= @blog_post.published_at.iso8601 %>" class="text-sm text-gray-500">
+        Published <%= @blog_post.published_at.strftime("%B %d, %Y") %>
+      </time>
+      <%= link_to blog_posts_path, class: "inline-flex items-center text-sm font-medium text-gray-600 hover:text-primary transition-colors" do %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        All posts
+      <% end %>
+    </div>
+  </footer>
+</div>
+
+<%# Related Posts Section %>
+<% if @related_posts.any? %>
+  <section class="bg-gray-50 py-16 mt-8">
+    <div class="container mx-auto px-4 max-w-6xl">
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-8">All posts</h2>
+
+      <div class="grid gap-8 md:grid-cols-3">
+        <% @related_posts.each do |post| %>
+          <article class="group">
+            <%= link_to blog_post_path(post), class: "block" do %>
+              <%# Cover Image %>
+              <div class="aspect-[4/3] mb-4 overflow-hidden rounded-lg bg-gray-100">
+                <% if post.cover_image.attached? %>
+                  <%= image_tag post.cover_image.variant(resize_to_fill: [600, 450]),
+                                alt: post.title,
+                                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+                <% else %>
+                  <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200">
+                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                    </svg>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# Category Badge %>
+              <% if post.blog_category %>
+                <div class="mb-3">
+                  <span class="inline-block px-3 py-1 text-sm font-medium text-gray-700 border border-gray-300 rounded-full">
+                    <%= post.blog_category.name %>
+                  </span>
+                </div>
+              <% end %>
+
+              <%# Content %>
+              <div>
+                <h3 class="text-lg font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors line-clamp-2">
+                  <%= post.title %>
+                </h3>
+                <p class="text-gray-600 text-sm line-clamp-3">
+                  <%= post.excerpt_with_fallback %>
+                </p>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+      </div>
+    </div>
+  </section>
+<% end %>

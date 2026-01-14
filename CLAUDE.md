@@ -752,6 +752,8 @@ After deploying SEO updates:
 - Categories: `meta_title`, `meta_description` (required)
 
 ## Active Technologies
+- Ruby 3.4.7 / Rails 8.1.1 + Redcarpet (Markdown rendering), existing TailwindCSS 4 + DaisyUI stack (001-blog-foundation)
+- PostgreSQL (primary database, consistent with existing models) (001-blog-foundation)
 
 **Core Stack**:
 - Ruby 3.4.7 / Rails 8.1.1

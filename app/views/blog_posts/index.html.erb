@@ -1,0 +1,52 @@
+<% content_for :title, "Blog | Afida" %>
+<% content_for :meta_description, "Read the latest news, guides, and insights about eco-friendly catering supplies from Afida." %>
+
+<% content_for :head do %>
+  <%= canonical_url(blog_posts_url) %>
+
+  <%# Open Graph Tags for Social Sharing %>
+  <meta property="og:title" content="Blog | Afida">
+  <meta property="og:description" content="Read the latest news, guides, and insights about eco-friendly catering supplies from Afida.">
+  <meta property="og:url" content="<%= blog_posts_url %>">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Afida">
+
+  <%# Twitter Card Tags %>
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Blog | Afida">
+  <meta name="twitter:description" content="Read the latest news, guides, and insights about eco-friendly catering supplies from Afida.">
+
+  <%# Breadcrumb Structured Data %>
+  <script type="application/ld+json">
+    <%= raw breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: "Blog", url: blog_posts_url }
+    ]) %>
+  </script>
+<% end %>
+
+<div class="container mx-auto px-4 py-12 max-w-6xl">
+  <!-- Header -->
+  <div class="text-center mb-16">
+    <h1 class="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Blog</h1>
+    <p class="text-lg text-gray-600 max-w-2xl mx-auto">News, guides, and insights about eco-friendly catering supplies</p>
+  </div>
+
+  <!-- Blog Posts Grid -->
+  <% if @blog_posts.any? %>
+    <div class="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+      <% @blog_posts.each do |post| %>
+        <%= render "blog_posts/post_card", post: post %>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="text-center py-16">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
+        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+        </svg>
+      </div>
+      <p class="text-gray-600">No blog posts yet. Check back soon!</p>
+    </div>
+  <% end %>
+</div>

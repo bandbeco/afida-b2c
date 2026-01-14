@@ -52,6 +52,10 @@ Rails.application.routes.draw do
   # FAQ page
   get "faqs", to: "faqs#index"
 
+  # Blog
+  resources :blog_posts, only: [ :index, :show ], path: "blog", param: :slug
+  get "blog/categories/:slug", to: "blog_categories#show", as: :blog_category
+
   # B2B Price List
   get "price-list", to: "price_list#index", as: :price_list
   get "price-list/export", to: "price_list#export", as: :price_list_export
@@ -168,6 +172,12 @@ Rails.application.routes.draw do
       end
     end
     resources :orders, only: [ :index, :show ]
+
+    # Blog management at /admin/blog/posts and /admin/blog/categories
+    scope :blog do
+      resources :posts, controller: "blog_posts", as: :blog_posts
+      resources :categories, controller: "blog_categories", except: [ :show ], as: :blog_categories
+    end
     resources :branded_orders, path: "branded-orders", only: [ :index, :show ] do
       member do
         patch :update_status

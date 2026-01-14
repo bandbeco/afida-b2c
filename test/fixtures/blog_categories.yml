@@ -1,0 +1,18 @@
+# Blog category fixtures for testing
+#
+# These categories mirror typical blog organization:
+# - Customer Stories: Case studies and testimonials
+# - Guides: How-to content and best practices
+# - News: Company updates and industry news
+
+customer_stories:
+  name: Customer Stories
+  slug: customer-stories
+
+guides:
+  name: Guides
+  slug: guides
+
+news:
+  name: News
+  slug: news
