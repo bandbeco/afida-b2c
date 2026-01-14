@@ -182,7 +182,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
   # ==========================================================================
 
   test "edit renders form with existing data" do
-    get edit_admin_blog_post_url(@published_post), headers: @headers
+    get edit_admin_blog_post_url(id: @published_post.id), headers: @headers
 
     assert_response :success
     assert_select "form"
@@ -191,7 +191,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
 
   test "edit requires admin authentication" do
     delete session_url, headers: @headers
-    get edit_admin_blog_post_url(@published_post), headers: @headers
+    get edit_admin_blog_post_url(id: @published_post.id), headers: @headers
     assert_redirected_to new_session_path
   end
 
@@ -200,7 +200,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
   # ==========================================================================
 
   test "update saves changes" do
-    patch admin_blog_post_url(@draft_post), params: {
+    patch admin_blog_post_url(id: @draft_post.id), params: {
       blog_post: { title: "Updated Title" }
     }, headers: @headers
 
@@ -210,7 +210,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update can change slug" do
-    patch admin_blog_post_url(@draft_post), params: {
+    patch admin_blog_post_url(id: @draft_post.id), params: {
       blog_post: { slug: "new-custom-slug" }
     }, headers: @headers
 
@@ -219,7 +219,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update with invalid data re-renders form" do
-    patch admin_blog_post_url(@draft_post), params: {
+    patch admin_blog_post_url(id: @draft_post.id), params: {
       blog_post: { title: "" }
     }, headers: @headers
 
@@ -230,7 +230,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_not @draft_post.published?
     assert_nil @draft_post.published_at
 
-    patch admin_blog_post_url(@draft_post), params: {
+    patch admin_blog_post_url(id: @draft_post.id), params: {
       blog_post: { published: true }
     }, headers: @headers
 
@@ -241,7 +241,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
 
   test "update requires admin authentication" do
     delete session_url, headers: @headers
-    patch admin_blog_post_url(@draft_post), params: {
+    patch admin_blog_post_url(id: @draft_post.id), params: {
       blog_post: { title: "Hacked" }
     }, headers: @headers
     assert_redirected_to new_session_path
@@ -253,7 +253,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
 
   test "destroy deletes the post" do
     assert_difference("BlogPost.count", -1) do
-      delete admin_blog_post_url(@draft_post), headers: @headers
+      delete admin_blog_post_url(id: @draft_post.id), headers: @headers
     end
 
     assert_redirected_to admin_blog_posts_url
@@ -262,7 +262,7 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
   test "destroy requires admin authentication" do
     delete session_url, headers: @headers
     assert_no_difference("BlogPost.count") do
-      delete admin_blog_post_url(@draft_post), headers: @headers
+      delete admin_blog_post_url(id: @draft_post.id), headers: @headers
     end
     assert_redirected_to new_session_path
   end

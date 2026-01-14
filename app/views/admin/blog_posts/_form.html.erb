@@ -1,4 +1,4 @@
-<%= form_with(model: [:admin, blog_post], local: true, data: { turbo: false }) do |form| %>
+<%= form_with(model: [:admin, blog_post], url: blog_post.persisted? ? admin_blog_post_path(id: blog_post.id) : admin_blog_posts_path, local: true, data: { turbo: false }) do |form| %>
   <% if blog_post.errors.any? %>
     <div class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
       <h2><%= pluralize(blog_post.errors.count, "error") %> prohibited this blog post from being saved:</h2>

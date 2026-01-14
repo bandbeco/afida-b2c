@@ -12,6 +12,8 @@ class BlogPostsController < ApplicationController
   # GET /blog
   def index
     @blog_posts = BlogPost.published.recent
+                          .includes(:blog_category)
+                          .with_attached_cover_image
   end
 
   # GET /blog/:slug
@@ -21,6 +23,7 @@ class BlogPostsController < ApplicationController
     # First try to get posts from the same category
     if @blog_post.blog_category_id.present?
       @related_posts = BlogPost.published
+                               .with_attached_cover_image
                                .where(blog_category_id: @blog_post.blog_category_id)
                                .where.not(id: @blog_post.id)
                                .order("RANDOM()")
@@ -33,6 +36,7 @@ class BlogPostsController < ApplicationController
     if @related_posts.size < 3
       existing_ids = @related_posts.pluck(:id) << @blog_post.id
       additional = BlogPost.published
+                           .with_attached_cover_image
                            .where.not(id: existing_ids)
                            .order("RANDOM()")
                            .limit(3 - @related_posts.size)

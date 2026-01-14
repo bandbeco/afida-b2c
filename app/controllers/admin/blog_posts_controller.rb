@@ -12,6 +12,8 @@ module Admin
     # GET /admin/blog_posts
     def index
       @blog_posts = BlogPost.order(created_at: :desc)
+                            .includes(:blog_category)
+                            .with_attached_cover_image
     end
 
     # GET /admin/blog_posts/:id
@@ -56,7 +58,7 @@ module Admin
     private
 
     def set_blog_post
-      @blog_post = BlogPost.find_by!(slug: params[:id])
+      @blog_post = BlogPost.find(params[:id])
     end
 
     def blog_post_params
