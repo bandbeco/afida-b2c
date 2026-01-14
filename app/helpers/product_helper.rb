@@ -11,19 +11,19 @@ module ProductHelper
   end
 
   # Get matching lid products for a specific cup product by size
-  # Finds compatible lid products, then matches by size extracted from name
+  # Finds compatible lid products, then matches by size extracted from product
   # @param cup_product [Product] The cup product (e.g., "8oz Single Wall Cup")
   # @return [Array<Product>] Array of matching lid products
   def matching_lids_for_cup_product(cup_product)
     return [] if cup_product.blank?
 
-    cup_size = extract_size_from_name(cup_product.name)
+    cup_size = extract_size_from_product(cup_product)
 
     return [] if cup_size.blank?
 
     # Find compatible lids with matching size
     cup_product.compatible_lids.select do |lid_product|
-      extract_size_from_name(lid_product.name) == cup_size
+      extract_size_from_product(lid_product) == cup_size
     end
   end
 
@@ -41,6 +41,19 @@ module ProductHelper
   end
 
   private
+
+  # Extract size from product (checks size field first, then name)
+  # Examples: "8oz" from size="8oz / 227ml" or name="8oz White Cup"
+  def extract_size_from_product(product)
+    # First try the size field (most reliable)
+    if product.respond_to?(:size) && product.size.present?
+      match = product.size.to_s.match(/(\d+oz)/i)
+      return match[1] if match
+    end
+
+    # Fall back to name extraction
+    extract_size_from_name(product.respond_to?(:name) ? product.name : product.to_s)
+  end
 
   # Extract size from product name (e.g., "8oz" from "8oz/227ml White")
   def extract_size_from_name(name)

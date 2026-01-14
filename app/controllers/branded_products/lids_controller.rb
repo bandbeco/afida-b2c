@@ -19,9 +19,9 @@ module BrandedProducts
                                        .active
 
       # Filter lid products matching the cup size
-      # Extract size from product name (e.g., "8oz" from "8oz/227ml White")
+      # Extract size from product size field (e.g., "8oz" from "8oz / 227ml")
       matching_lids = compatible_lid_products.select do |lid_product|
-        lid_size = extract_size_from_name(lid_product.name)
+        lid_size = extract_size_from_product(lid_product)
         lid_size == cup_size
       end
 
@@ -34,6 +34,8 @@ module BrandedProducts
           variant_id: lid_product.id,  # Product IS the variant now
           variant_name: lid_product.name,
           name: lid_product.name,
+          material: lid_product.material,
+          size: lid_product.size,
           image_url: lid_product.product_photo.attached? ? url_for(lid_product.product_photo.variant(resize_to_limit: [ 200, 200 ])) : nil,
           price: lid_product.price || 0,
           pac_size: lid_product.pac_size || 1000,
