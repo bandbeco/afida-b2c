@@ -299,17 +299,17 @@ export default class extends Controller {
     const content = document.createElement('div')
     content.className = 'flex-1 min-w-0'
 
+    // Material and size as the main identifier
     const title = document.createElement('h3')
     title.className = 'text-base sm:text-lg mb-1 leading-tight'
-    title.textContent = lid.name
+    const titleParts = []
+    if (lid.material) titleParts.push(lid.material)
+    if (lid.size) titleParts.push(lid.size)
+    title.textContent = titleParts.length > 0 ? `${titleParts.join(' · ')} compatible` : lid.name
 
     const price = document.createElement('div')
     price.className = 'text-sm sm:text-base text-gray-900'
-    price.textContent = `£${parseFloat(lid.price).toFixed(2)}`
-
-    const packSize = document.createElement('div')
-    packSize.className = 'text-xs sm:text-sm text-gray-500'
-    packSize.textContent = `Pack of ${lid.pac_size.toLocaleString()}`
+    price.textContent = `£${parseFloat(lid.price).toFixed(2)} / pack of ${lid.pac_size.toLocaleString()}`
 
     // Actions - stacked vertically
     const actions = document.createElement('div')
@@ -339,7 +339,6 @@ export default class extends Controller {
 
     content.appendChild(title)
     content.appendChild(price)
-    content.appendChild(packSize)
     content.appendChild(actions)
 
     wrapper.appendChild(imageContainer)
@@ -607,7 +606,7 @@ export default class extends Controller {
         },
         body: JSON.stringify({
           cart_item: {
-            variant_sku: sku,
+            sku: sku,
             quantity: quantity
           }
         })
