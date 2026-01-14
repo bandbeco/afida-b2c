@@ -1,70 +1,69 @@
 # Seed lid compatibility relationships between cups and lids
+# Uses ProductFamily associations for robust matching
 puts "Populating lid compatibility data..."
 
 # Clear existing data
 ProductCompatibleLid.destroy_all
 puts "Cleared existing compatibility data"
 
-# Define hot cup product names (paper-based hot beverage cups)
-hot_cup_names = [
-  "Single Wall Coffee Cups",
-  "Double Wall Coffee Cups",
-  "Ripple Wall Coffee Cups"
-]
+# Define compatibility mappings using ProductFamily names
+# Each cup family maps to one or more lid families
+COMPATIBILITY_MAPPINGS = [
+  {
+    cup_family: "Coffee Cups",
+    lid_family: "Coffee Cup Lids",
+    description: "Hot paper cups → sip lids"
+  },
+  {
+    cup_family: "Smoothie Cups",
+    lid_family: "Smoothie Lids",
+    description: "Cold plastic cups → dome/flat lids"
+  }
+].freeze
 
-# Define hot lid product names
-hot_lid_names = [
-  "Coffee Cup Sip Lids"
-]
+COMPATIBILITY_MAPPINGS.each do |mapping|
+  puts "\n" + "=" * 60
+  puts "Processing: #{mapping[:description]}"
+  puts "=" * 60
 
-# Define cold cup product names (plastic/clear cups)
-cold_cup_names = [
-  "Smoothie Cups"
-]
+  cup_family = ProductFamily.find_by(name: mapping[:cup_family])
+  lid_family = ProductFamily.find_by(name: mapping[:lid_family])
 
-# Define cold lid product names
-cold_lid_names = [
-  "Smoothie Dome Lids",
-  "Smoothie Flat Lids"
-]
-
-# Populate hot cup → hot lid relationships
-# Include both standard and branded (customizable_template) products
-hot_cups = Product.where(name: hot_cup_names)
-hot_lids = Product.where(name: hot_lid_names, product_type: [ nil, 'standard' ])
-
-hot_cups.each do |cup|
-  type_label = cup.product_type == 'customizable_template' ? ' (branded)' : ''
-  puts "\nProcessing cup: #{cup.name}#{type_label}"
-
-  hot_lids.each_with_index do |lid, index|
-    compatibility = ProductCompatibleLid.create!(
-      product: cup,
-      compatible_lid: lid,
-      sort_order: index,
-      default: index == 0 # First lid is default
-    )
-    puts "  ✓ Added compatible lid: #{lid.name} (default: #{compatibility.default})"
+  if cup_family.nil?
+    puts "  ⚠ Cup family '#{mapping[:cup_family]}' not found, skipping..."
+    next
   end
-end
 
-# Populate cold cup → cold lid relationships
-# Include both standard and branded (customizable_template) products
-cold_cups = Product.where(name: cold_cup_names)
-cold_lids = Product.where(name: cold_lid_names, product_type: [ nil, 'standard' ])
+  if lid_family.nil?
+    puts "  ⚠ Lid family '#{mapping[:lid_family]}' not found, skipping..."
+    next
+  end
 
-cold_cups.each do |cup|
-  type_label = cup.product_type == 'customizable_template' ? ' (branded)' : ''
-  puts "\nProcessing cup: #{cup.name}#{type_label}"
+  # Get all cup products in this family (both standard and branded)
+  cups = Product.unscoped.where(product_family: cup_family)
 
-  cold_lids.each_with_index do |lid, index|
-    compatibility = ProductCompatibleLid.create!(
-      product: cup,
-      compatible_lid: lid,
-      sort_order: index,
-      default: index == 0 # First lid is default
-    )
-    puts "  ✓ Added compatible lid: #{lid.name} (default: #{compatibility.default})"
+  # Get all lid products in this family (standard only - lids aren't branded)
+  lids = Product.unscoped
+                .where(product_family: lid_family)
+                .where(product_type: [ nil, "standard" ])
+                .order(:name, :sku)
+
+  puts "  Found #{cups.count} cups and #{lids.count} lids"
+
+  cups.each do |cup|
+    type_label = cup.product_type == "customizable_template" ? " (branded)" : ""
+    puts "\n  Cup: #{cup.name} [#{cup.sku}]#{type_label}"
+
+    lids.each_with_index do |lid, index|
+      compatibility = ProductCompatibleLid.create!(
+        product: cup,
+        compatible_lid: lid,
+        sort_order: index,
+        default: index == 0
+      )
+      default_marker = compatibility.default ? " [DEFAULT]" : ""
+      puts "    ✓ #{lid.name} [#{lid.sku}]#{default_marker}"
+    end
   end
 end
 
