@@ -25,29 +25,50 @@
     </p>
   </div>
 
-  <%# Results grid %>
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+  <%# Results list - horizontal stacked rows for better differentiation %>
+  <div class="space-y-2">
     <% @products.each do |product| %>
       <%= link_to product_path(product),
-                  class: "group block bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition overflow-hidden",
+                  class: "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition",
                   data: { turbo_frame: "_top" } do %>
-        <%# Product image %>
-        <div class="aspect-square bg-gray-50 overflow-hidden">
+        <%# Product thumbnail %>
+        <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
           <%= product_photo_tag(product.primary_photo,
                                 alt: product.full_name,
-                                class: "w-full h-full object-contain group-hover:scale-105 transition duration-300",
-                                variant: { resize_and_pad: [200, 200, { background: [255, 255, 255] }] },
+                                class: "w-full h-full object-contain",
+                                variant: { resize_and_pad: [80, 80, { background: [255, 255, 255] }] },
                                 loading: "lazy") %>
         </div>
 
-        <%# Product info %>
-        <div class="p-3">
-          <h3 class="font-medium text-sm text-gray-900 line-clamp-2 group-hover:text-primary transition">
-            <%= product.full_name %>
+        <%# Product info - two lines %>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-gray-900 truncate">
+            <%= search_display_title(product) %>
+            <% if product.customizable_template? %>
+              <span class="badge badge-warning badge-sm ml-1">Brandable</span>
+            <% end %>
           </h3>
-          <p class="text-primary font-semibold mt-1">
-            <%= number_to_currency(product.price) %>
+          <p class="text-sm text-gray-500 truncate">
+            <%= search_display_subtitle(product) %><% if product.pac_size.to_i > 1 %> · Pack of <%= number_with_delimiter(product.pac_size) %><% end %>
           </p>
+        </div>
+
+        <%# Price - right aligned %>
+        <div class="flex-shrink-0 text-right">
+          <% if product.customizable_template? %>
+            <% discount = max_volume_discount_percentage(product) %>
+            <span class="">
+              <% if discount %>
+                Volume discount: save up to <%= discount %>%
+              <% else %>
+                Volume pricing
+              <% end %>
+            </span>
+          <% else %>
+            <p class="text-gray-700">
+              <%= number_to_currency(product.price) %>
+            </p>
+          <% end %>
         </div>
       <% end %>
     <% end %>

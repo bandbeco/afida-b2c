@@ -21,4 +21,45 @@ module ProductsHelper
       %(<a href="#{link}" class="link-inline">#{content}</a>)
     end
   end
+
+  # Primary text for search results - emphasizes differentiating attributes only
+  # For family products: size - colour (e.g., "8oz / 280ml - Blue")
+  # For standalone: product name
+  def search_display_title(product)
+    if product.product_family.present?
+      [ product.size, product.colour ].compact_blank.join(" - ").presence || product.name
+    else
+      product.name
+    end
+  end
+
+  # Secondary text for search results - provides context
+  # For family products: material + product name (e.g., "Paper Ice Cream Cups")
+  # For standalone: category name
+  def search_display_subtitle(product)
+    if product.product_family.present?
+      [ product.material, product.name ].compact_blank.join(" ")
+    else
+      product.category&.name
+    end
+  end
+
+  # Calculate the maximum volume discount percentage for branded products
+  # Compares first tier (base price) to last tier within each size, returns the max
+  def max_volume_discount_percentage(product)
+    prices_by_size = product.branded_product_prices.order(:quantity_tier).group_by(&:size)
+    return nil if prices_by_size.empty?
+
+    max_discount = prices_by_size.map do |_size, prices|
+      next 0 if prices.size < 2
+
+      base_price = prices.first.price_per_unit
+      best_price = prices.last.price_per_unit
+      next 0 if base_price.zero?
+
+      ((base_price - best_price) / base_price * 100).round
+    end.max
+
+    max_discount.positive? ? max_discount : nil
+  end
 end
