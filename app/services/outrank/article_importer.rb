@@ -51,11 +51,13 @@ module Outrank
     def create_blog_post
       slug = generate_unique_slug(@article_data["slug"])
 
+      # NOTE: Content is stored as-is. XSS protection happens at RENDER TIME
+      # in article_helper.rb, not here. See that file for the sanitization pipeline.
       BlogPost.create!(
         outrank_id: @article_data["id"],
         title: @article_data["title"],
         slug: slug,
-        body: sanitize_content(@article_data["content_markdown"]),
+        body: @article_data["content_markdown"].to_s,
         excerpt: extract_excerpt(@article_data["content_markdown"]),
         meta_title: @article_data["title"],
         meta_description: @article_data["meta_description"],
@@ -112,26 +114,6 @@ module Outrank
       # Strip markdown formatting and truncate
       plain_text = first_para.gsub(/[#*_\[\]()>`]/, "").strip
       plain_text.truncate(EXCERPT_MAX_LENGTH)
-    end
-
-    # Stores content as-is. The content may be Markdown or HTML from Outrank.
-    #
-    # XSS PROTECTION NOTE:
-    # We do NOT sanitize here because the content is Markdown (despite containing
-    # some HTML). Sanitizing Markdown as HTML is ineffective - Markdown like
-    # [Click me](javascript:alert('xss')) bypasses HTML sanitizers.
-    #
-    # Instead, XSS protection happens at RENDER TIME in article_helper.rb:
-    # 1. Redcarpet's filter_html:true strips raw HTML from Markdown source
-    # 2. Rails sanitize() strips dangerous protocols (javascript:, data:) from hrefs
-    # 3. Only safe tags/attributes are whitelisted in the sanitize call
-    #
-    # This is the correct approach for Markdown content - sanitize the rendered
-    # HTML output, not the Markdown source.
-    def sanitize_content(content)
-      return "" if content.blank?
-
-      content
     end
 
     # Generates a unique slug by appending -2, -3, etc. if collision detected.
