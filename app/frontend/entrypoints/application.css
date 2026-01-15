@@ -3,6 +3,7 @@
 @import "../stylesheets/application.tailwind.css";
 @plugin "daisyui";
 @import "../stylesheets/custom-styles.css";
+@import "../stylesheets/blog-prose.css";
 @import "../stylesheets/patterns.css";
 @import "../stylesheets/components/quick_add_modal.css";
 @import "../stylesheets/confirm_dialog.css";

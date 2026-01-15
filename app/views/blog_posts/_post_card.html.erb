@@ -18,7 +18,7 @@
     <%# Category Badge (optional - can be hidden on category pages) %>
     <% if local_assigns[:show_category] != false && post.blog_category %>
       <div class="mb-3">
-        <span class="inline-block px-3 py-1 text-sm font-medium text-gray-700 border border-gray-300 rounded-full">
+        <span class="inline-block px-3 py-1 text-sm text-gray-700 border border-gray-300 rounded-full">
           <%= post.blog_category.name %>
         </span>
       </div>
@@ -26,7 +26,7 @@
 
     <%# Content %>
     <div>
-      <h2 class="text-xl font-bold text-gray-900 mb-3 group-hover:text-primary transition-colors">
+      <h2 class="text-xl text-gray-900 mb-3 group-hover:text-primary transition-colors">
         <%= post.title %>
       </h2>
       <p class="text-gray-600 line-clamp-3">
