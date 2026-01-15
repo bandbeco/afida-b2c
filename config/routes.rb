@@ -27,6 +27,10 @@ Rails.application.routes.draw do
   get "/category/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/takeaway-extras#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/all-products", to: redirect(status: 301) { |_params, req| "/shop#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
+  # Catch-all for unknown /category/* paths (prevents URI::InvalidURIError from www redirect)
+  # Must come after specific category redirects above
+  get "/category/*path", to: redirect(status: 301) { "/shop" }
+
   # Legacy page redirects (preserves query params for UTM tracking)
   get "/branded-packaging", to: redirect(status: 301) { |_params, req| "/branding#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
