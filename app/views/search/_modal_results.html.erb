@@ -28,7 +28,7 @@
   <%# Results list - horizontal stacked rows for better differentiation %>
   <div class="space-y-2">
     <% @products.each do |product| %>
-      <%= link_to product_path(product),
+      <%= link_to search_result_path(product),
                   class: "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition",
                   data: { turbo_frame: "_top" } do %>
         <%# Product thumbnail %>

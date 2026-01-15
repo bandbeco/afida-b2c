@@ -12,7 +12,7 @@
 <% else %>
   <div class="divide-y divide-gray-100">
     <% @products.each do |product| %>
-      <%= link_to product_path(product),
+      <%= link_to search_result_path(product),
                   class: "product-card flex items-center gap-3 p-3 hover:bg-base-200 transition",
                   data: { turbo_frame: "_top" } do %>
         <div class="w-12 h-12 flex-shrink-0 bg-white rounded overflow-hidden">

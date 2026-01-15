@@ -12,4 +12,15 @@ module ApplicationHelper
 
     icon_mapping[category.slug]
   end
+
+  # Returns the appropriate path for a product based on its type.
+  # Branded products (customizable_template) link to /branded-products/:slug
+  # Standard products link to /products/:slug
+  def search_result_path(product)
+    if product.customizable_template?
+      branded_product_path(product)
+    else
+      product_path(product)
+    end
+  end
 end
