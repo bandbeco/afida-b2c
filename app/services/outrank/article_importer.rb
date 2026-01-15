@@ -114,24 +114,24 @@ module Outrank
       plain_text.truncate(EXCERPT_MAX_LENGTH)
     end
 
+    # Stores content as-is. The content may be Markdown or HTML from Outrank.
+    #
+    # XSS PROTECTION NOTE:
+    # We do NOT sanitize here because the content is Markdown (despite containing
+    # some HTML). Sanitizing Markdown as HTML is ineffective - Markdown like
+    # [Click me](javascript:alert('xss')) bypasses HTML sanitizers.
+    #
+    # Instead, XSS protection happens at RENDER TIME in article_helper.rb:
+    # 1. Redcarpet's filter_html:true strips raw HTML from Markdown source
+    # 2. Rails sanitize() strips dangerous protocols (javascript:, data:) from hrefs
+    # 3. Only safe tags/attributes are whitelisted in the sanitize call
+    #
+    # This is the correct approach for Markdown content - sanitize the rendered
+    # HTML output, not the Markdown source.
     def sanitize_content(content)
       return "" if content.blank?
 
-      # Use Loofah directly to strip dangerous tags AND their contents.
-      # Rails.html_sanitizer.sanitize only removes tags, leaving content visible.
-      # Loofah's :prune scrubber removes both tag and content for unsafe elements.
-      doc = Loofah.fragment(content)
-
-      # First, completely remove dangerous elements and their contents
-      doc.scrub!(:prune)
-
-      # Then apply whitelist to keep only safe formatting elements
-      # Note: img/src excluded to prevent javascript: and data: URI XSS attacks
-      ActionController::Base.helpers.sanitize(
-        doc.to_s,
-        tags: %w[h1 h2 h3 h4 h5 h6 p a em strong ul ol li blockquote code pre br hr],
-        attributes: %w[href alt title class]
-      )
+      content
     end
 
     # Generates a unique slug by appending -2, -3, etc. if collision detected.

@@ -201,58 +201,29 @@ module Outrank
       assert_includes post.body, "*italic*"
     end
 
-    test "sanitizes dangerous content from markdown" do
-      article_data = valid_article_data.merge(
-        "content_markdown" => "<script>alert('xss')</script># Title\n\n<iframe src='evil.com'></iframe>Safe content"
-      )
+    # NOTE: Content sanitization happens at RENDER TIME in article_helper.rb,
+    # not at import time. This is the correct approach for Markdown content.
+    # See article_helper_test.rb for XSS protection tests.
 
+    test "stores content as-is for render-time sanitization" do
+      markdown_with_html = "<script>alert('xss')</script># Title\n\nSafe content"
+
+      article_data = valid_article_data.merge("content_markdown" => markdown_with_html)
       Outrank::ArticleImporter.new(article_data).call
-      post = BlogPost.last
 
-      assert_not_includes post.body, "<script>"
-      assert_not_includes post.body, "alert"
-      assert_not_includes post.body, "<iframe"
-      assert_includes post.body, "# Title"
-      assert_includes post.body, "Safe content"
+      post = BlogPost.last
+      # Content is stored as-is - sanitization happens when rendered via article_helper
+      assert_equal markdown_with_html, post.body
     end
 
-    test "strips img tags to prevent javascript URI XSS" do
-      article_data = valid_article_data.merge(
-        "content_markdown" => "<img src=\"javascript:alert('xss')\" alt=\"XSS\">Safe content"
-      )
+    test "handles nil content gracefully" do
+      article_data = valid_article_data.merge("content_markdown" => nil)
 
-      Outrank::ArticleImporter.new(article_data).call
-      post = BlogPost.last
-
-      assert_not_includes post.body, "<img"
-      assert_not_includes post.body, "javascript:"
-      assert_includes post.body, "Safe content"
-    end
-
-    test "strips img tags to prevent data URI XSS" do
-      article_data = valid_article_data.merge(
-        "content_markdown" => "<img src=\"data:text/html,<script>alert(1)</script>\">Safe content"
-      )
-
-      Outrank::ArticleImporter.new(article_data).call
-      post = BlogPost.last
-
-      assert_not_includes post.body, "<img"
-      assert_not_includes post.body, "data:"
-      assert_includes post.body, "Safe content"
-    end
-
-    test "preserves safe HTML elements in markdown" do
-      article_data = valid_article_data.merge(
-        "content_markdown" => "# Title\n\n<strong>Bold</strong> and <em>italic</em>\n\n<a href='/shop'>Link</a>"
-      )
-
-      Outrank::ArticleImporter.new(article_data).call
-      post = BlogPost.last
-
-      assert_includes post.body, "<strong>Bold</strong>"
-      assert_includes post.body, "<em>italic</em>"
-      assert_includes post.body, "<a href=\"/shop\">Link</a>"
+      # Articles without content should fail validation (body is required)
+      # The importer should handle this gracefully without crashing
+      assert_raises(ActiveRecord::RecordInvalid) do
+        Outrank::ArticleImporter.new(article_data).call
+      end
     end
 
     # ==========================================================================
