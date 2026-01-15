@@ -29,7 +29,7 @@ class PriceListController < ApplicationController
 
   def base_product_scope
     Product.active
-           .catalog_products
+           .standard
   end
 
   def filtered_products

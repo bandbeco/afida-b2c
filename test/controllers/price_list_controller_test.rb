@@ -41,12 +41,12 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     assert_match @product.name, response.body
   end
 
-  test "index displays customizable template products in catalog" do
+  test "index excludes branded products" do
     branded = products(:branded_double_wall_template)
     get price_list_url
     assert_response :success
-    # catalog_products scope includes customizable_template products
-    assert_match branded.name, response.body
+    # Price list should only show standard products, not branded templates
+    assert_no_match Regexp.new(Regexp.escape(branded.name)), response.body
   end
 
   test "index shows table with correct columns" do
