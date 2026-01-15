@@ -35,10 +35,12 @@ module Outrank
     private
 
     def create_blog_post
+      slug = generate_unique_slug(@article_data["slug"])
+
       BlogPost.create!(
         outrank_id: @article_data["id"],
         title: @article_data["title"],
-        slug: ensure_unique_slug(@article_data["slug"]),
+        slug: slug,
         body: sanitize_content(@article_data["content_markdown"]),
         excerpt: extract_excerpt(@article_data["content_markdown"]),
         meta_title: @article_data["title"],
@@ -47,6 +49,14 @@ module Outrank
         published: false,
         published_at: nil
       )
+    rescue ActiveRecord::RecordNotUnique => e
+      # Race condition: another request created a post with our slug between check and create.
+      # Retry with incremented counter. The retry will find a new unique slug.
+      raise e if @slug_retry_count.to_i >= 5  # Prevent infinite retries
+
+      @slug_retry_count = @slug_retry_count.to_i + 1
+      Rails.logger.info "[Outrank] Slug collision detected, retrying (attempt #{@slug_retry_count})"
+      retry
     end
 
     def enqueue_cover_image_download(blog_post)
@@ -95,16 +105,18 @@ module Outrank
       doc.scrub!(:prune)
 
       # Then apply whitelist to keep only safe formatting elements
+      # Note: img/src excluded to prevent javascript: and data: URI XSS attacks
       ActionController::Base.helpers.sanitize(
         doc.to_s,
-        tags: %w[h1 h2 h3 h4 h5 h6 p a em strong ul ol li blockquote code pre img br hr],
-        attributes: %w[href src alt title class]
+        tags: %w[h1 h2 h3 h4 h5 h6 p a em strong ul ol li blockquote code pre br hr],
+        attributes: %w[href alt title class]
       )
     end
 
-    # Ensures slug is unique by appending -2, -3, etc. if collision detected.
+    # Generates a unique slug by appending -2, -3, etc. if collision detected.
     # Handles edge case where Outrank might send different articles with same slug.
-    def ensure_unique_slug(base_slug)
+    # Note: This is a best-effort check; create_blog_post handles race conditions via retry.
+    def generate_unique_slug(base_slug)
       return base_slug unless BlogPost.exists?(slug: base_slug)
 
       counter = 2
