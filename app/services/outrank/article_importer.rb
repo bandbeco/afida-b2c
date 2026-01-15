@@ -26,7 +26,7 @@ module Outrank
       end
 
       blog_post = create_blog_post
-      download_cover_image(blog_post)
+      enqueue_cover_image_download(blog_post)
       Rails.logger.info "[Outrank] Created blog post #{blog_post.id} from article: #{outrank_id}"
 
       { status: :created, outrank_id: outrank_id, blog_post_id: blog_post.id }
@@ -38,7 +38,7 @@ module Outrank
       BlogPost.create!(
         outrank_id: @article_data["id"],
         title: @article_data["title"],
-        slug: @article_data["slug"],
+        slug: ensure_unique_slug(@article_data["slug"]),
         body: sanitize_content(@article_data["content_markdown"]),
         excerpt: extract_excerpt(@article_data["content_markdown"]),
         meta_title: @article_data["title"],
@@ -49,11 +49,12 @@ module Outrank
       )
     end
 
-    def download_cover_image(blog_post)
+    def enqueue_cover_image_download(blog_post)
       image_url = @article_data["image_url"]
       return if image_url.blank?
 
-      ImageDownloader.new(blog_post, image_url).call
+      # Download asynchronously to avoid blocking webhook response
+      DownloadCoverImageJob.perform_later(blog_post.id, image_url)
     end
 
     def find_or_create_category
@@ -85,22 +86,36 @@ module Outrank
     def sanitize_content(content)
       return "" if content.blank?
 
-      # First, completely strip dangerous tags and their contents
-      # Rails.html_sanitizer doesn't strip content inside script/style, so we do it manually
-      safe_content = content.dup
-      safe_content.gsub!(/<script\b[^>]*>.*?<\/script>/mi, "")
-      safe_content.gsub!(/<style\b[^>]*>.*?<\/style>/mi, "")
-      safe_content.gsub!(/<iframe\b[^>]*>.*?<\/iframe>/mi, "")
-      safe_content.gsub!(/<iframe\b[^>]*\/>/mi, "")
-      safe_content.gsub!(/<object\b[^>]*>.*?<\/object>/mi, "")
-      safe_content.gsub!(/<embed\b[^>]*\/?>/mi, "")
+      # Use Loofah directly to strip dangerous tags AND their contents.
+      # Rails.html_sanitizer.sanitize only removes tags, leaving content visible.
+      # Loofah's :prune scrubber removes both tag and content for unsafe elements.
+      doc = Loofah.fragment(content)
 
-      # Then sanitize remaining HTML, keeping safe formatting tags
+      # First, completely remove dangerous elements and their contents
+      doc.scrub!(:prune)
+
+      # Then apply whitelist to keep only safe formatting elements
       ActionController::Base.helpers.sanitize(
-        safe_content,
+        doc.to_s,
         tags: %w[h1 h2 h3 h4 h5 h6 p a em strong ul ol li blockquote code pre img br hr],
         attributes: %w[href src alt title class]
       )
+    end
+
+    # Ensures slug is unique by appending -2, -3, etc. if collision detected.
+    # Handles edge case where Outrank might send different articles with same slug.
+    def ensure_unique_slug(base_slug)
+      return base_slug unless BlogPost.exists?(slug: base_slug)
+
+      counter = 2
+      loop do
+        candidate = "#{base_slug}-#{counter}"
+        return candidate unless BlogPost.exists?(slug: candidate)
+
+        counter += 1
+        # Safety limit to prevent infinite loop (extremely unlikely scenario)
+        raise "Could not generate unique slug after 100 attempts" if counter > 100
+      end
     end
   end
 end

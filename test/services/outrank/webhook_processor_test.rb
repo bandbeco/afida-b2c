@@ -59,15 +59,12 @@ module Outrank
     end
 
     test "continues processing when one article fails" do
-      # Create an existing post to trigger validation error on duplicate slug
-      existing = blog_posts(:published_post)
-
       payload = {
         "event_type" => "publish_articles",
         "data" => {
           "articles" => [
             article_data("good-1", "Good Article", "good-article-one"),
-            article_data("bad-slug", "Bad Article", existing.slug), # Will fail due to duplicate slug
+            { "id" => "bad-article", "title" => "", "slug" => "bad-slug", "content_markdown" => "" }, # Missing required title/body
             article_data("good-2", "Another Good", "good-article-two")
           ]
         }
@@ -82,13 +79,11 @@ module Outrank
     end
 
     test "returns error status for failed articles" do
-      existing = blog_posts(:published_post)
-
       payload = {
         "event_type" => "publish_articles",
         "data" => {
           "articles" => [
-            article_data("fail-article", "Fail", existing.slug)
+            { "id" => "fail-article", "title" => "", "slug" => "fail-slug", "content_markdown" => "" }
           ]
         }
       }
@@ -98,7 +93,29 @@ module Outrank
       assert_equal "partial", result[:status]
       assert_equal 1, result[:results].length
       assert_equal "error", result[:results].first[:status]
-      assert_includes result[:results].first[:message], "Slug"
+      assert_includes result[:results].first[:message], "Title"
+    end
+
+    test "generates unique slug when collision occurs" do
+      existing = blog_posts(:published_post)
+
+      payload = {
+        "event_type" => "publish_articles",
+        "data" => {
+          "articles" => [
+            article_data("new-article-with-dup-slug", "New Article", existing.slug)
+          ]
+        }
+      }
+
+      # Should succeed with -2 suffix
+      assert_difference "BlogPost.count", 1 do
+        result = Outrank::WebhookProcessor.new(payload).call
+        assert_equal "success", result[:status]
+      end
+
+      new_post = BlogPost.find_by(outrank_id: "new-article-with-dup-slug")
+      assert_equal "#{existing.slug}-2", new_post.slug
     end
 
     # ==========================================================================

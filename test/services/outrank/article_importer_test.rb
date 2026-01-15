@@ -5,6 +5,7 @@ require "webmock/minitest"
 
 module Outrank
   class ArticleImporterTest < ActiveSupport::TestCase
+    include ActiveJob::TestHelper
     # ==========================================================================
     # T2.1: Creates BlogPost from valid payload
     # ==========================================================================
@@ -135,6 +136,17 @@ module Outrank
       assert post.excerpt.end_with?("...")
     end
 
+    test "handles content with only headings gracefully" do
+      article_data = valid_article_data.merge(
+        "content_markdown" => "# Title\n\n## Subtitle\n\n### Section"
+      )
+
+      Outrank::ArticleImporter.new(article_data).call
+
+      post = BlogPost.last
+      assert_nil post.excerpt
+    end
+
     # ==========================================================================
     # Result object
     # ==========================================================================
@@ -218,10 +230,26 @@ module Outrank
     end
 
     # ==========================================================================
-    # T5.5: Image download integration
+    # T5.5: Image download integration (now async via background job)
     # ==========================================================================
 
-    test "downloads cover image when image_url provided" do
+    test "enqueues cover image download job when image_url provided" do
+      article_data = valid_article_data.merge("image_url" => "https://cdn.outrank.so/cover.jpg")
+
+      assert_enqueued_with(job: Outrank::DownloadCoverImageJob) do
+        Outrank::ArticleImporter.new(article_data).call
+      end
+    end
+
+    test "does not enqueue job when image_url blank" do
+      article_data = valid_article_data.merge("image_url" => "")
+
+      assert_no_enqueued_jobs(only: Outrank::DownloadCoverImageJob) do
+        Outrank::ArticleImporter.new(article_data).call
+      end
+    end
+
+    test "downloads cover image when job is performed" do
       image_url = "https://cdn.outrank.so/cover.jpg"
       image_content = file_fixture("test_image.jpg").read
 
@@ -229,7 +257,11 @@ module Outrank
         .to_return(body: image_content, headers: { "Content-Type" => "image/jpeg" })
 
       article_data = valid_article_data.merge("image_url" => image_url)
-      Outrank::ArticleImporter.new(article_data).call
+
+      # Create article and perform the enqueued job
+      perform_enqueued_jobs do
+        Outrank::ArticleImporter.new(article_data).call
+      end
 
       post = BlogPost.last
       assert post.cover_image.attached?
@@ -243,11 +275,50 @@ module Outrank
       article_data = valid_article_data.merge("image_url" => image_url)
 
       assert_difference "BlogPost.count", 1 do
-        Outrank::ArticleImporter.new(article_data).call
+        perform_enqueued_jobs do
+          Outrank::ArticleImporter.new(article_data).call
+        end
       end
 
       post = BlogPost.last
       assert_not post.cover_image.attached?
+    end
+
+    # ==========================================================================
+    # Slug collision handling
+    # ==========================================================================
+
+    test "generates unique slug when collision detected" do
+      # Create existing post with same slug
+      existing = blog_posts(:outrank_imported)
+      existing.update!(slug: "collision-test")
+
+      article_data = valid_article_data.merge("slug" => "collision-test")
+      Outrank::ArticleImporter.new(article_data).call
+
+      post = BlogPost.last
+      assert_equal "collision-test-2", post.slug
+    end
+
+    test "increments suffix for multiple collisions" do
+      # Create existing posts with slug and slug-2
+      existing = blog_posts(:outrank_imported)
+      existing.update!(slug: "multi-collision")
+
+      # Create first collision
+      article_data1 = valid_article_data.merge("slug" => "multi-collision")
+      Outrank::ArticleImporter.new(article_data1).call
+
+      # Create second collision
+      article_data2 = valid_article_data.merge("slug" => "multi-collision")
+      Outrank::ArticleImporter.new(article_data2).call
+
+      posts = BlogPost.where("slug LIKE ?", "multi-collision%").order(:id)
+      slugs = posts.pluck(:slug)
+
+      assert_includes slugs, "multi-collision"
+      assert_includes slugs, "multi-collision-2"
+      assert_includes slugs, "multi-collision-3"
     end
 
     private

@@ -54,7 +54,9 @@ module Outrank
         return false
       end
 
-      attach_image(body, response.content_type.mime_type)
+      # Handle missing Content-Type header gracefully
+      content_type = response.content_type&.mime_type || "application/octet-stream"
+      attach_image(body, content_type)
       true
     end
 

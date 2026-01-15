@@ -135,5 +135,26 @@ module Outrank
 
       assert_not @post.cover_image.attached?
     end
+
+    # ==========================================================================
+    # Content-Type header handling
+    # ==========================================================================
+
+    test "handles missing Content-Type header gracefully" do
+      image_url = "https://example.com/no-content-type.jpg"
+      image_content = file_fixture("test_image.jpg").read
+
+      stub_request(:get, image_url)
+        .to_return(body: image_content, headers: {})
+
+      assert_nothing_raised do
+        result = Outrank::ImageDownloader.new(@post, image_url).call
+        assert_equal true, result
+      end
+
+      # Image should still be attached even without Content-Type header
+      # Active Storage will infer the actual type from file content
+      assert @post.cover_image.attached?
+    end
   end
 end
