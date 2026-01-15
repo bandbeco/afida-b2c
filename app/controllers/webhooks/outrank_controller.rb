@@ -8,9 +8,19 @@ module Webhooks
   #
   # POST /webhooks/outrank
   #
+  # Security layers:
+  #   1. Rate limiting: 100 requests per hour per IP
+  #   2. Bearer token authentication (required)
+  #
   class OutrankController < ApplicationController
     allow_unauthenticated_access
     skip_before_action :verify_authenticity_token
+
+    # Rate limit: 100 requests per hour per IP address
+    rate_limit to: 100, within: 1.hour,
+               by: -> { request.remote_ip },
+               with: -> { render_rate_limited }
+
     before_action :verify_access_token
 
     def create
@@ -44,6 +54,13 @@ module Webhooks
         error: "Unauthorized",
         message: "Invalid or missing access token"
       }, status: :unauthorized
+    end
+
+    def render_rate_limited
+      render json: {
+        error: "Too Many Requests",
+        message: "Rate limit exceeded. Please try again later."
+      }, status: :too_many_requests
     end
 
     def webhook_params

@@ -11,9 +11,23 @@ module Outrank
   #   # => { status: :created, outrank_id: "abc123", blog_post_id: 42 }
   #   # => { status: :skipped, outrank_id: "abc123", reason: "duplicate" }
   #
+  # Options:
+  #   category_cache: Hash of { name => BlogCategory } to avoid N+1 queries in batch
+  #
   class ArticleImporter
-    def initialize(article_data)
+    # Maximum excerpt length for SEO-friendly summaries
+    EXCERPT_MAX_LENGTH = 160
+
+    # Maximum attempts to generate a unique slug before giving up
+    MAX_SLUG_ATTEMPTS = 100
+
+    # Maximum retries for race condition on slug uniqueness constraint
+    MAX_SLUG_RETRIES = 5
+
+    def initialize(article_data, category_cache: {}, image_downloads: nil)
       @article_data = article_data
+      @category_cache = category_cache
+      @image_downloads = image_downloads  # nil means use individual jobs
     end
 
     def call
@@ -52,7 +66,7 @@ module Outrank
     rescue ActiveRecord::RecordNotUnique => e
       # Race condition: another request created a post with our slug between check and create.
       # Retry with incremented counter. The retry will find a new unique slug.
-      raise e if @slug_retry_count.to_i >= 5  # Prevent infinite retries
+      raise e if @slug_retry_count.to_i >= MAX_SLUG_RETRIES
 
       @slug_retry_count = @slug_retry_count.to_i + 1
       Rails.logger.info "[Outrank] Slug collision detected, retrying (attempt #{@slug_retry_count})"
@@ -63,8 +77,13 @@ module Outrank
       image_url = @article_data["image_url"]
       return if image_url.blank?
 
-      # Download asynchronously to avoid blocking webhook response
-      DownloadCoverImageJob.perform_later(blog_post.id, image_url)
+      # If batch collection provided, add to it for batch processing
+      # Otherwise, enqueue individual job (for single-article imports)
+      if @image_downloads
+        @image_downloads << { blog_post_id: blog_post.id, image_url: image_url }
+      else
+        DownloadCoverImageJob.perform_later(blog_post.id, image_url)
+      end
     end
 
     def find_or_create_category
@@ -74,7 +93,9 @@ module Outrank
       category_name = tags.first
       return nil if category_name.blank?
 
-      BlogCategory.find_or_create_by!(name: category_name) do |cat|
+      # Use cached category if available (avoids N+1 in batch processing)
+      # Otherwise, find or create (for single-article imports or new categories)
+      @category_cache[category_name] || BlogCategory.find_or_create_by!(name: category_name) do |cat|
         cat.slug = category_name.parameterize
       end
     end
@@ -90,7 +111,7 @@ module Outrank
 
       # Strip markdown formatting and truncate
       plain_text = first_para.gsub(/[#*_\[\]()>`]/, "").strip
-      plain_text.truncate(160)
+      plain_text.truncate(EXCERPT_MAX_LENGTH)
     end
 
     def sanitize_content(content)
@@ -126,7 +147,7 @@ module Outrank
 
         counter += 1
         # Safety limit to prevent infinite loop (extremely unlikely scenario)
-        raise "Could not generate unique slug after 100 attempts" if counter > 100
+        raise "Could not generate unique slug after #{MAX_SLUG_ATTEMPTS} attempts" if counter > MAX_SLUG_ATTEMPTS
       end
     end
   end

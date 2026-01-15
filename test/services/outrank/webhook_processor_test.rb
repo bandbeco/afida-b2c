@@ -145,6 +145,36 @@ module Outrank
       end
     end
 
+    # ==========================================================================
+    # Category preloading (N+1 prevention)
+    # ==========================================================================
+
+    test "preloads categories to avoid N+1 queries" do
+      # Create existing category
+      existing_category = blog_categories(:guides)
+
+      payload = {
+        "event_type" => "publish_articles",
+        "data" => {
+          "articles" => [
+            article_data("art-1", "Article 1", "article-1").merge("tags" => [ existing_category.name ]),
+            article_data("art-2", "Article 2", "article-2").merge("tags" => [ existing_category.name ]),
+            article_data("art-3", "Article 3", "article-3").merge("tags" => [ existing_category.name ])
+          ]
+        }
+      }
+
+      # All 3 articles should use the same preloaded category
+      assert_no_difference "BlogCategory.count" do
+        Outrank::WebhookProcessor.new(payload).call
+      end
+
+      # Verify all posts got the same category
+      posts = BlogPost.where(outrank_id: %w[art-1 art-2 art-3])
+      assert_equal 3, posts.count
+      assert posts.all? { |p| p.blog_category == existing_category }
+    end
+
     private
 
     def article_data(id, title, slug)
