@@ -23,22 +23,26 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "includes all category URLs except branded-products" do
+  test "includes all category URLs except branded-products category" do
     service = SitemapGeneratorService.new
     xml = service.generate
 
     doc = Nokogiri::XML(xml)
-    category_urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
+    all_urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
     # branded-products category is excluded because it redirects
     Category.where.not(slug: "branded-products").find_each do |category|
-      assert category_urls.any? { |url| url.include?(category.slug) },
+      assert all_urls.any? { |url| url.include?("/categories/#{category.slug}") },
              "Expected sitemap to include category: #{category.slug}"
     end
 
-    # Verify branded-products is NOT in the sitemap
-    refute category_urls.any? { |url| url.include?("branded-products") },
-           "Expected sitemap NOT to include branded-products (it redirects)"
+    # Verify /categories/branded-products is NOT in the sitemap (it redirects)
+    refute all_urls.any? { |url| url.include?("/categories/branded-products") },
+           "Expected sitemap NOT to include /categories/branded-products category (it redirects)"
+
+    # But /branded-products index page SHOULD be in the sitemap
+    assert all_urls.any? { |url| url.end_with?("/branded-products") },
+           "Expected sitemap to include /branded-products index page"
   end
 
   test "includes static pages" do
@@ -48,7 +52,7 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     doc = Nokogiri::XML(xml)
     urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    %w[about contact shop terms privacy faqs].each do |page|
+    %w[about contact shop terms privacy faqs branding samples delivery-returns accessibility-statement price-list].each do |page|
       assert urls.any? { |url| url.include?(page) }, "Missing #{page} in sitemap"
     end
   end

@@ -1,3 +1,6 @@
+<%# Helper to generate proper client name from logo filename %>
+<% client_name_for = ->(logo) { logo.split('.').first.tr('-', ' ').titleize } %>
+
 <section aria-label="Our clients">
   <div class="container mx-auto px-4 bg-white py-8">
     <div class="relative">
@@ -7,12 +10,12 @@
       <div class="flex overflow-hidden group">
         <div class="logo-conveyor flex items-center whitespace-nowrap">
           <% @client_logos.each do |logo| %>
-            <%= vite_image_tag "images/logos/#{logo}", alt: "#{logo.split('.').first.titleize} logo", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
+            <%= vite_image_tag "images/logos/#{logo}", alt: "#{client_name_for.call(logo)} - Afida client", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
           <% end %>
 
-          <!-- Duplicate for infinite scroll effect -->
+          <!-- Duplicate for infinite scroll effect - decorative only -->
           <% @client_logos.each do |logo| %>
-            <%= vite_image_tag "images/logos/#{logo}", alt: "", "aria-hidden": "true", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
+            <%= vite_image_tag "images/logos/#{logo}", alt: "#{client_name_for.call(logo)}", role: "presentation", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
           <% end %>
         </div>
       </div>

@@ -1,5 +1,8 @@
 <% content_for :title, "Reset Password | Afida" %>
-<% content_for :meta_description, "Reset your Afida account password. Enter your email to receive password reset instructions." %>
+<% content_for :meta_description, "Reset your Afida account password securely. Enter your email address to receive password reset instructions and regain access to your account." %>
+<% content_for :head do %>
+  <meta name="robots" content="noindex, nofollow">
+<% end %>
 
 <div class="mx-auto md:w-2/3 w-full">
   <% if alert = flash[:alert] %>

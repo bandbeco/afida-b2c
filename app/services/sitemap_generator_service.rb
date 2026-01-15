@@ -20,6 +20,12 @@ class SitemapGeneratorService
         add_url(xml, faqs_url, priority: "0.6", changefreq: "weekly")
         add_url(xml, terms_conditions_url, priority: "0.3", changefreq: "yearly")
         add_url(xml, privacy_policy_url, priority: "0.3", changefreq: "yearly")
+        add_url(xml, branding_url, priority: "0.8", changefreq: "weekly")
+        add_url(xml, branded_products_url, priority: "0.8", changefreq: "weekly")
+        add_url(xml, samples_url, priority: "0.7", changefreq: "monthly")
+        add_url(xml, delivery_returns_url, priority: "0.5", changefreq: "monthly")
+        add_url(xml, accessibility_statement_url, priority: "0.3", changefreq: "yearly")
+        add_url(xml, price_list_url, priority: "0.6", changefreq: "weekly")
 
         # Categories (exclude branded-products which redirects)
         Category.where.not(slug: "branded-products").find_each do |category|
@@ -32,6 +38,14 @@ class SitemapGeneratorService
         # Products (individual product pages)
         Product.active.includes(:category).find_each do |product|
           add_url(xml, product_url(product),
+                  priority: "0.7",
+                  changefreq: "weekly",
+                  lastmod: product.updated_at)
+        end
+
+        # Branded products (custom branding configurator pages)
+        Product.branded.find_each do |product|
+          add_url(xml, branded_product_url(product.slug),
                   priority: "0.7",
                   changefreq: "weekly",
                   lastmod: product.updated_at)

@@ -13,7 +13,7 @@ categories:
         answer: "\"Branded\" products are customised with your company's logo, colours, design and artwork. We handle the printing or finishing so your packaging aligns with your brand identity and looks professional. [Learn more about our branding services](/branding)."
       - id: materials
         question: "What materials do you use for your packaging?"
-        answer: "We offer packaging in a variety of materials depending on the product application — for example kraft board, food‑safe card, corrugated board, tubes and cylinders, and sustainable materials where appropriate. [Browse our cups & lids](/categories/cups-lids) or [takeaway containers](/categories/takeaway-containers) to see available materials."
+        answer: "We offer packaging in a variety of materials depending on the product application — for example kraft board, food‑safe card, corrugated board, tubes and cylinders, and sustainable materials where appropriate. [Browse our cups & lids](/categories/cups-and-lids) or [takeaway containers](/categories/takeaway-containers) to see available materials."
 
   - id: custom-printing
     title: "Custom Printing & Branding"
@@ -58,14 +58,14 @@ categories:
         answer: "In the unlikely event of a printing or manufacturing defect, please [contact us](/contact) immediately with photos and details. We will assess the issue and offer a rectification: replacement, credit or refund, depending on the situation."
       - id: food-safe
         question: "Are your products food‑safe / compliant with regulations?"
-        answer: "Yes — for packaging intended for food contact, we ensure that materials and manufacturing comply with relevant UK/EU regulations. Browse our [food-safe cups & lids](/categories/cups-lids) or [takeaway containers](/categories/takeaway-containers). If you have specific regulatory requirements, [contact us](/contact) before placing your order."
+        answer: "Yes — for packaging intended for food contact, we ensure that materials and manufacturing comply with relevant UK/EU regulations. Browse our [food-safe cups & lids](/categories/cups-and-lids) or [takeaway containers](/categories/takeaway-containers). If you have specific regulatory requirements, [contact us](/contact) before placing your order."
 
   - id: sustainability
     title: "Sustainability & Materials"
     questions:
       - id: eco-friendly
         question: "Do you offer eco‑friendly or sustainable packaging options?"
-        answer: "Yes — we recognise the importance of sustainability. We provide options made from recycled or renewable materials, and some items are designed to be compostable or recyclable. [Browse our eco-friendly cups](/categories/cups-lids) or [paper straws](/categories/straws). [Contact us](/contact) for advice on the best options for your business's environmental goals."
+        answer: "Yes — we recognise the importance of sustainability. We provide options made from recycled or renewable materials, and some items are designed to be compostable or recyclable. [Browse our eco-friendly cups](/categories/cups-and-lids) or [paper straws](/categories/straws). [Contact us](/contact) for advice on the best options for your business's environmental goals."
       - id: disposal
         question: "How should I dispose of the packaging?"
         answer: "Disposal instructions depend on the material type and local waste‑handling infrastructure. We provide guidance on whether the item is recyclable, compostable or should go to general waste. If you're unsure, [contact us](/contact) and we'll help."
