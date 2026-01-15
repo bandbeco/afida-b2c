@@ -44,9 +44,13 @@ module ArticleHelper
   def render_markdown(markdown_text)
     return "" if markdown_text.blank?
 
-    # Use safe renderer that filters HTML
+    # Step 1: Pre-process to strip dangerous HTML tags AND their content
+    # Loofah's :prune scrubber removes script/style/iframe and their contents
+    clean_markdown = strip_dangerous_html(markdown_text)
+
+    # Step 2: Use safe renderer that escapes any remaining raw HTML
     renderer = Redcarpet::Render::HTML.new(
-      filter_html: true,  # CRITICAL: Filter raw HTML to prevent XSS
+      filter_html: true,  # Escape remaining HTML entities
       hard_wrap: true,
       link_attributes: { target: "_blank", rel: "noopener noreferrer" }
     )
@@ -60,7 +64,22 @@ module ArticleHelper
       superscript: true
     )
 
-    # Sanitize output as additional XSS protection layer
-    sanitize(markdown.render(markdown_text), tags: %w[p br strong em ul ol li h1 h2 h3 h4 h5 h6 a blockquote code pre table thead tbody tr th td], attributes: %w[href target rel])
+    # Step 3: Sanitize rendered output to strip dangerous protocols (javascript:, data:)
+    # and enforce whitelist of safe tags/attributes
+    sanitize(
+      markdown.render(clean_markdown),
+      tags: %w[p br strong em ul ol li h1 h2 h3 h4 h5 h6 a blockquote code pre table thead tbody tr th td],
+      attributes: %w[href target rel]
+    )
+  end
+
+  private
+
+  # Strip dangerous HTML elements AND their contents from text.
+  # Used to pre-process markdown before rendering.
+  def strip_dangerous_html(text)
+    doc = Loofah.fragment(text)
+    doc.scrub!(:prune)  # Removes script, style, iframe, etc. with contents
+    doc.to_s
   end
 end

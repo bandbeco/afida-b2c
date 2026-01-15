@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_14_162144) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_14_234935) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -77,12 +77,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_14_162144) do
     t.text "excerpt"
     t.text "meta_description"
     t.string "meta_title"
+    t.string "outrank_id"
     t.boolean "published", default: false, null: false
     t.datetime "published_at"
     t.string "slug", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["blog_category_id"], name: "index_blog_posts_on_blog_category_id"
+    t.index ["outrank_id"], name: "index_blog_posts_on_outrank_id", unique: true
     t.index ["published"], name: "index_blog_posts_on_published"
     t.index ["published_at"], name: "index_blog_posts_on_published_at"
     t.index ["slug"], name: "index_blog_posts_on_slug", unique: true
