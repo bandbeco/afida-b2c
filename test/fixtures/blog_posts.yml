@@ -79,3 +79,26 @@ post_without_excerpt:
   meta_title: null
   meta_description: null
   blog_category: news
+
+# Fixtures for Outrank webhook integration testing
+outrank_imported:
+  title: "Imported from Outrank"
+  slug: "imported-from-outrank"
+  body: |
+    # Content from Outrank
+
+    This article was imported via the Outrank webhook integration.
+  excerpt: "Content imported from Outrank SEO platform."
+  published: false
+  outrank_id: "outrank-test-123"
+  blog_category: guides
+
+duplicate_outrank:
+  title: "Duplicate Test Article"
+  slug: "duplicate-test-article"
+  body: |
+    # Duplicate Handling Test
+
+    This tests duplicate article handling via outrank_id.
+  published: false
+  outrank_id: "outrank-duplicate-456"

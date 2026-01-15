@@ -130,9 +130,10 @@ Rails.application.routes.draw do
     end
   end
 
-  # Stripe webhooks
+  # Webhooks (Stripe, Outrank, etc.)
   namespace :webhooks do
     post :stripe, to: "stripe#create"
+    post :outrank, to: "outrank#create"
   end
 
   namespace :branded_products do
