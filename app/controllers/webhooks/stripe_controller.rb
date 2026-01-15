@@ -67,14 +67,26 @@ module Webhooks
       # Get user if client_reference_id was set
       user = User.find_by(id: full_session.client_reference_id)
 
-      # Calculate amounts from line items
-      line_items = full_session.line_items.data
-      subtotal = line_items.sum { |item| item.amount_total } / 100.0
+      # Try to get cart from metadata (added to checkout session for webhook fallback)
+      cart_id = full_session.metadata&.cart_id
+      cart = Cart.find_by(id: cart_id) if cart_id.present?
 
-      # Get shipping and tax amounts
+      # Calculate amounts - prefer cart data if available, fall back to Stripe line items
+      if cart&.cart_items&.any?
+        subtotal = cart.subtotal_amount
+        vat_amount = cart.vat_amount
+      else
+        # Fallback: Calculate from Stripe line items
+        line_items = full_session.line_items.data
+        # Stripe line item amount_total includes tax, so we need to subtract it
+        tax_amount_from_stripe = full_session.total_details&.amount_tax.to_i / 100.0
+        subtotal = (line_items.sum { |item| item.amount_total } / 100.0) - tax_amount_from_stripe
+        vat_amount = tax_amount_from_stripe
+      end
+
+      # Get shipping amount from Stripe
       shipping_amount = full_session.shipping_cost&.amount_total.to_i / 100.0
-      tax_amount = full_session.total_details&.amount_tax.to_i / 100.0
-      total_amount = full_session.amount_total / 100.0
+      total_amount = subtotal + vat_amount + shipping_amount
 
       order = Order.create!(
         user: user,
@@ -83,8 +95,8 @@ module Webhooks
         email: full_session.customer_details&.email,
         stripe_session_id: full_session.id,
         status: "paid",
-        subtotal_amount: subtotal - tax_amount, # Stripe includes tax in line item amounts
-        vat_amount: tax_amount,
+        subtotal_amount: subtotal,
+        vat_amount: vat_amount,
         shipping_amount: shipping_amount,
         total_amount: total_amount,
         shipping_name: shipping[:name],
@@ -95,10 +107,26 @@ module Webhooks
         shipping_country: shipping[:country]
       )
 
-      # Note: We cannot recreate OrderItems from Stripe line items alone
-      # as we don't have the original cart data. The order total is accurate,
-      # but line item details would need manual reconciliation.
-      Rails.logger.warn("[Stripe Webhook] Order #{order.id} created without line items - manual review needed")
+      # Create order items from cart if available
+      if cart&.cart_items&.any?
+        # Set branded order status if cart contains configured items
+        if cart.cart_items.any?(&:configured?)
+          order.update!(branded_order_status: "design_pending")
+        end
+
+        # Create order items from cart items
+        cart.cart_items.includes(:product, design_attachment: :blob).each do |cart_item|
+          OrderItem.create_from_cart_item(cart_item, order).save!
+        end
+
+        # Clear the cart after successful order creation
+        cart.cart_items.destroy_all
+
+        Rails.logger.info("[Stripe Webhook] Order #{order.id} created with #{order.order_items.count} items from cart")
+      else
+        # No cart available - order items cannot be created
+        Rails.logger.warn("[Stripe Webhook] Order #{order.id} created without line items - cart not found (cart_id: #{cart_id.inspect})")
+      end
 
       # Send confirmation email
       OrderMailer.with(order: order).confirmation_email.deliver_later

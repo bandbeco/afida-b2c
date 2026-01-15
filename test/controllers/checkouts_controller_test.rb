@@ -51,6 +51,22 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "payment", captured_params[:mode]
   end
 
+  test "create includes cart_id in metadata for webhook fallback" do
+    # Capture the params passed to Stripe
+    captured_params = nil
+    session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(session)
+
+    post checkout_path
+
+    assert_not_nil captured_params
+    assert_not_nil captured_params[:metadata]
+    assert_equal @cart.id.to_s, captured_params[:metadata][:cart_id]
+  end
+
   test "create includes customer email for authenticated users" do
     Current.stubs(:user).returns(@user)
 

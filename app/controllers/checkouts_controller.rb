@@ -74,7 +74,10 @@ class CheckoutsController < ApplicationController
         },
         shipping_options: shipping_options,
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: cancel_checkout_url
+        cancel_url: cancel_checkout_url,
+        metadata: {
+          cart_id: cart.id.to_s
+        }
       }
 
       if Current.user

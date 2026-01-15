@@ -78,6 +78,19 @@ module StripeTestHelper
       setup_intent = stub(id: "seti_test_#{SecureRandom.hex(12)}", payment_method: payment_method)
     end
 
+    # Build total_details for tax information
+    tax_amount = overrides[:amount_tax] || 0
+    total_details = stub(
+      amount_tax: tax_amount
+    )
+
+    # Build line_items response (for webhook expansion)
+    line_items_data = overrides[:line_items_data] || []
+    line_items = stub(data: line_items_data)
+
+    # Calculate amount_total
+    amount_total = overrides[:amount_total] || ((overrides[:subtotal] || 0) + tax_amount + shipping_amount)
+
     # Build the full hash representation (used by controller's to_hash call)
     session_hash = {
       id: session_id,
@@ -102,6 +115,12 @@ module StripeTestHelper
       metadata: overrides[:metadata] || {}
     }
 
+    # Build metadata stub for method access
+    metadata_hash = overrides[:metadata] || {}
+    metadata_stub = stub(
+      cart_id: metadata_hash[:cart_id]
+    )
+
     stub(
       id: session_id,
       url: "https://checkout.stripe.com/test/#{session_id}",
@@ -109,10 +128,12 @@ module StripeTestHelper
       customer_details: customer_details,
       collected_information: collected_information,
       shipping_cost: shipping_cost,
+      total_details: total_details,
+      amount_total: amount_total,
       client_reference_id: overrides[:client_reference_id],
-      line_items: overrides[:line_items] || [],
+      line_items: line_items,
       setup_intent: setup_intent,
-      metadata: overrides[:metadata] || {},
+      metadata: metadata_stub,
       to_hash: session_hash
     )
   end
