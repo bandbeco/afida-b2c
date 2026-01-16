@@ -15,6 +15,7 @@ one:
   price: 9.99
   pac_size: 1
   position: 1
+  sample_eligible: false  # Explicitly non-sample-eligible for validation tests
 
 two:
   name: "Product 2"

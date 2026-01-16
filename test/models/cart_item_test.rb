@@ -226,14 +226,15 @@ class CartItemTest < ActiveSupport::TestCase
   test "cart item can store configuration for customizable products" do
     cart_item = cart_items(:branded_configuration)
     assert_equal "12oz", cart_item.configuration["size"]
-    assert_equal "5000", cart_item.configuration["quantity"]  # Changed: stored as string from params
+    assert_equal 5000, cart_item.configuration["quantity"]  # Stored as integer in YAML fixture
   end
 
   test "cart item with configuration uses calculated_price" do
     cart_item = cart_items(:branded_configuration)
-    assert_equal 900.00, cart_item.calculated_price
-    # With new approach: line_total = price * quantity = 0.18 * 5000 = 900
-    assert_equal 900.00, cart_item.line_total
+    # Fixture: price: 0.20, quantity: 5000, calculated_price: 1000.00
+    assert_equal 1000.00, cart_item.calculated_price
+    # line_total = price * quantity = 0.20 * 5000 = 1000
+    assert_equal 1000.00, cart_item.line_total
   end
 
   test "cart item without configuration uses variant price" do
@@ -244,8 +245,8 @@ class CartItemTest < ActiveSupport::TestCase
 
   test "cart item unit price for configured product" do
     cart_item = cart_items(:branded_configuration)
-    # With new approach: unit_price = price (already stored as unit price)
-    assert_equal 0.18, cart_item.unit_price
+    # Fixture: price: 0.20 (unit price for 12oz at 5000 tier)
+    assert_equal 0.20, cart_item.unit_price
   end
 
   test "cart item unit price for standard product" do
