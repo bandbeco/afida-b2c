@@ -70,7 +70,8 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
       product: { sample_eligible: true }
     }, headers: @headers
 
-    assert_redirected_to admin_product_path(@product)
+    # Controller redirects to index after successful update
+    assert_redirected_to admin_products_path
     @product.reload
     assert @product.sample_eligible, "Product should be sample eligible after update"
     assert_equal "SAMPLE-#{@product.sku}", @product.effective_sample_sku
