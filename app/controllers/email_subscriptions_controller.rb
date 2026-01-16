@@ -15,8 +15,8 @@ class EmailSubscriptionsController < ApplicationController
       return
     end
 
-    # Check if email already subscribed
-    if EmailSubscription.exists?(email: @email)
+    # Check if email has already claimed the discount
+    if EmailSubscription.discount_already_claimed?(@email)
       render_already_claimed
       return
     end
@@ -27,11 +27,11 @@ class EmailSubscriptionsController < ApplicationController
       return
     end
 
-    # Create subscription with discount claimed
-    @subscription = EmailSubscription.new(
-      email: @email,
+    # Find existing subscription (newsletter-only) or build new one
+    @subscription = EmailSubscription.find_or_initialize_by(email: @email)
+    @subscription.assign_attributes(
       discount_claimed_at: Time.current,
-      source: "cart_discount"
+      source: @subscription.new_record? ? "cart_discount" : @subscription.source
     )
 
     if @subscription.save

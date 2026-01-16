@@ -89,8 +89,8 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
   # T032: Already Claimed Response Tests (US4)
   # =============================================================================
 
-  test "already subscribed email returns already claimed response" do
-    # Uses fixture: email_subscriptions(:claimed_discount)
+  test "already claimed email returns already claimed response" do
+    # Uses fixture: email_subscriptions(:claimed_discount) has discount_claimed_at set
     post email_subscriptions_path,
          params: { email: "claimed@example.com" },
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
@@ -98,6 +98,30 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "discount-already-claimed"
     assert_nil session[:discount_code]
+  end
+
+  # =============================================================================
+  # Newsletter-only Subscriber Tests
+  # =============================================================================
+
+  test "newsletter-only subscriber can claim discount" do
+    # Uses fixture: email_subscriptions(:subscribed_only) has discount_claimed_at: nil
+    subscription = email_subscriptions(:subscribed_only)
+
+    assert_no_difference "EmailSubscription.count" do
+      post email_subscriptions_path,
+           params: { email: subscription.email },
+           headers: { "Accept" => "text/vnd.turbo-stream.html" }
+    end
+
+    assert_response :success
+    assert_includes response.body, 'turbo-stream action="replace" target="discount-signup"'
+    assert_equal "WELCOME5", session[:discount_code]
+
+    # Verify discount_claimed_at was set on existing record
+    subscription.reload
+    assert_not_nil subscription.discount_claimed_at
+    assert_equal "footer", subscription.source  # Preserves original source
   end
 
   # =============================================================================

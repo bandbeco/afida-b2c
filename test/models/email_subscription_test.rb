@@ -81,9 +81,14 @@ class EmailSubscriptionTest < ActiveSupport::TestCase
     assert EmailSubscription.eligible_for_discount?("brand-new@example.com")
   end
 
-  test "eligible_for_discount? returns false for email already subscribed" do
-    # Uses fixture: email_subscriptions(:claimed_discount) has email "claimed@example.com"
+  test "eligible_for_discount? returns false for email that already claimed discount" do
+    # Uses fixture: email_subscriptions(:claimed_discount) has discount_claimed_at set
     assert_not EmailSubscription.eligible_for_discount?("claimed@example.com")
+  end
+
+  test "eligible_for_discount? returns true for newsletter-only subscriber" do
+    # Uses fixture: email_subscriptions(:subscribed_only) has discount_claimed_at: nil
+    assert EmailSubscription.eligible_for_discount?("subscribed@example.com")
   end
 
   test "eligible_for_discount? returns false for email with previous orders" do
@@ -103,5 +108,25 @@ class EmailSubscriptionTest < ActiveSupport::TestCase
   test "eligible_for_discount? handles blank email" do
     assert_not EmailSubscription.eligible_for_discount?("")
     assert_not EmailSubscription.eligible_for_discount?("   ")
+  end
+
+  # =============================================================================
+  # T007b: discount_already_claimed? Tests
+  # =============================================================================
+
+  test "discount_already_claimed? returns true for email with discount_claimed_at set" do
+    assert EmailSubscription.discount_already_claimed?("claimed@example.com")
+  end
+
+  test "discount_already_claimed? returns false for newsletter-only subscriber" do
+    assert_not EmailSubscription.discount_already_claimed?("subscribed@example.com")
+  end
+
+  test "discount_already_claimed? returns false for unknown email" do
+    assert_not EmailSubscription.discount_already_claimed?("unknown@example.com")
+  end
+
+  test "discount_already_claimed? is case-insensitive" do
+    assert EmailSubscription.discount_already_claimed?("CLAIMED@EXAMPLE.COM")
   end
 end
