@@ -36,7 +36,7 @@ class EmailSubscriptionsController < ApplicationController
 
     if @subscription.save
       # Store discount code in session (only if not already present)
-      session[:discount_code] ||= "WELCOME5"
+      session[:discount_code] ||= welcome_discount_code
       render_success
     else
       render_validation_error
@@ -52,6 +52,10 @@ class EmailSubscriptionsController < ApplicationController
 
   def valid_email_format?(email)
     email.match?(URI::MailTo::EMAIL_REGEXP)
+  end
+
+  def welcome_discount_code
+    Rails.application.credentials.dig(:stripe, :welcome_coupon) || "WELCOME5"
   end
 
   def render_success
