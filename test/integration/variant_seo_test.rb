@@ -57,7 +57,8 @@ class VariantSeoTest < ActionDispatch::IntegrationTest
     end
 
     assert product_data, "Should have Product structured data"
-    assert_equal @variant.full_name, product_data["name"]
+    # Uses generated_title (size + colour + name), not full_name (product_family + name)
+    assert_equal @variant.generated_title, product_data["name"]
   end
 
   test "variant page has breadcrumb structured data" do

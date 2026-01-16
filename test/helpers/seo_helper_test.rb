@@ -91,7 +91,8 @@ class SeoHelperTest < ActionView::TestCase
 
     assert_equal "https://schema.org/", data["@context"]
     assert_equal "Product", data["@type"]
-    assert_equal product.full_name, data["name"]
+    # Uses generated_title (size + colour + name), not full_name (product_family + name)
+    assert_equal product.generated_title, data["name"]
     assert_equal "Afida", data["brand"]["name"]
     assert_includes json, "offers"
   end
@@ -127,7 +128,8 @@ class SeoHelperTest < ActionView::TestCase
 
     assert_equal "https://schema.org/", data["@context"]
     assert_equal "Product", data["@type"]
-    assert_equal product.full_name, data["name"]
+    # Uses generated_title (size + colour + name), not full_name (product_family + name)
+    assert_equal product.generated_title, data["name"]
     assert_equal product.sku, data["sku"]
     assert_equal "Afida", data["brand"]["name"]
     assert data["offers"].present?
