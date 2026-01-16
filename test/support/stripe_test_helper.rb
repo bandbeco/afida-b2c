@@ -259,6 +259,13 @@ module StripeTestHelper
     intent
   end
 
+  # Stub Stripe::Refund.create
+  def stub_stripe_refund_create(refund_overrides = {})
+    refund = build_stripe_refund(refund_overrides)
+    Stripe::Refund.stubs(:create).returns(refund)
+    refund
+  end
+
   # Build a mock Stripe webhook event
   def build_stripe_webhook_event(type:, data_object:)
     stub(

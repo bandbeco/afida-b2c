@@ -3,6 +3,8 @@ require "ostruct"
 
 class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
   include ActionMailer::TestHelper
+  include StripeTestHelper
+
   setup do
     @user = users(:one)
     @user.update!(stripe_customer_id: "cus_test_123")
@@ -249,6 +251,8 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
 
   test "confirm! fails when user has no delivery address" do
     mock_successful_payment
+    # Stub refund API call - payment succeeded but order creation fails, so refund is triggered
+    stub_stripe_refund_create
 
     # Remove all addresses from user
     @user.addresses.destroy_all
