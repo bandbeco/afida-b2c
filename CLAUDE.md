@@ -211,9 +211,16 @@ Development uses single PostgreSQL database: `shop_development`
 - Mailgun API credentials
 - AWS S3 credentials (for Active Storage in production)
 
+**Multi-environment credentials** (Rails 6+):
+- `config/credentials/development.yml.enc` - Development credentials (test Stripe keys)
+- `config/credentials.yml.enc` - Production/fallback credentials (live Stripe keys)
+
+Rails automatically loads the correct file based on `Rails.env`. The encryption keys (`.key` files) are gitignored and must be shared securely with team members.
+
 Edit credentials:
 ```bash
-rails credentials:edit
+rails credentials:edit                         # Production/default credentials
+rails credentials:edit --environment development  # Development credentials
 ```
 
 ## Important File Locations
@@ -223,7 +230,7 @@ rails credentials:edit
 - Vite entrypoints: `app/frontend/entrypoints/`
 - Stimulus controllers: `app/frontend/javascript/controllers/`
 - View components: `app/views/`
-- Credentials: `config/credentials.yml.enc` (use `rails credentials:edit`)
+- Credentials: `config/credentials.yml.enc` (production), `config/credentials/development.yml.enc` (development)
 
 ## Development Tips
 
