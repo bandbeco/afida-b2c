@@ -57,6 +57,36 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "excludes branded product templates from /products/ URLs" do
+    service = SitemapGeneratorService.new
+    xml = service.generate
+
+    doc = Nokogiri::XML(xml)
+    product_urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
+                      .select { |url| url.include?("/products/") }
+
+    # Branded templates (customizable_template) should NOT appear in /products/ path
+    Product.branded.find_each do |branded_product|
+      refute product_urls.any? { |url| url.include?("/products/#{branded_product.slug}") },
+             "Branded product template #{branded_product.slug} should NOT be in /products/ URLs"
+    end
+  end
+
+  test "includes branded product templates in /branded-products/ URLs" do
+    service = SitemapGeneratorService.new
+    xml = service.generate
+
+    doc = Nokogiri::XML(xml)
+    branded_urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
+                      .select { |url| url.include?("/branded-products/") }
+
+    # All branded templates should appear in /branded-products/ path
+    Product.branded.find_each do |branded_product|
+      assert branded_urls.any? { |url| url.include?("/branded-products/#{branded_product.slug}") },
+             "Branded product template #{branded_product.slug} should be in /branded-products/ URLs"
+    end
+  end
+
   test "sets priority and changefreq correctly" do
     service = SitemapGeneratorService.new
     xml = service.generate

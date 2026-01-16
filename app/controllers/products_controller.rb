@@ -23,6 +23,11 @@ class ProductsController < ApplicationController
                       .includes(:category, :product_family, :compatible_lids)
                       .find_by!(slug: params[:slug])
 
+    # Redirect branded product templates to /branded-products/:slug
+    if @product.customizable_template?
+      return redirect_to branded_product_path(@product.slug), status: :moved_permanently
+    end
+
     @category = @product.category
 
     # Compatible products (e.g., lids for cups)

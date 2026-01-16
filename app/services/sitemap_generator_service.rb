@@ -35,8 +35,8 @@ class SitemapGeneratorService
                   lastmod: category.updated_at)
         end
 
-        # Products (individual product pages)
-        Product.active.includes(:category).find_each do |product|
+        # Products (individual product pages, excluding branded templates)
+        Product.active.standard.includes(:category).find_each do |product|
           add_url(xml, product_url(product),
                   priority: "0.7",
                   changefreq: "weekly",

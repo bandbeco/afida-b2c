@@ -4,6 +4,9 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @product = products(:one)
     @category = categories(:one)
+
+    # Set host to avoid www redirect in routes
+    host! "example.com"
   end
 
   # GET /products (index)
@@ -210,6 +213,26 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Price should be visible on page
     assert_match(/£/, response.body) # Should show GBP currency
+  end
+
+  # Branded Product Redirect Tests
+  test "show redirects branded templates to /branded-products/ with 301" do
+    branded_template = products(:branded_template_variant)
+    assert branded_template.customizable_template?, "Fixture should be a customizable_template"
+
+    get product_url(branded_template.slug)
+
+    assert_response :moved_permanently
+    assert_redirected_to branded_product_path(branded_template.slug)
+  end
+
+  test "show does not redirect standard products" do
+    standard_product = products(:one)
+    standard_product.update!(product_type: "standard")
+
+    get product_url(standard_product.slug)
+
+    assert_response :success
   end
 
   private
