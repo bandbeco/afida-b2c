@@ -80,6 +80,11 @@ class CheckoutsController < ApplicationController
         }
       }
 
+      # Apply discount coupon if present in session
+      if session[:discount_code].present?
+        session_params[:discounts] = [ { coupon: session[:discount_code] } ]
+      end
+
       if Current.user
         session_params[:client_reference_id] = Current.user.id
 
@@ -162,6 +167,9 @@ class CheckoutsController < ApplicationController
 
       # Store in session for immediate access (proves ownership for guest checkout)
       session[:recent_order_id] = order.id
+
+      # Clear discount code after successful order (one-time use)
+      session.delete(:discount_code)
 
       # Redirect to confirmation page with signed token
       redirect_to confirmation_order_path(order, token: order.signed_access_token),

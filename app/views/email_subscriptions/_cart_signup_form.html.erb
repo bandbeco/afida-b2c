@@ -1,0 +1,30 @@
+<div id="discount-signup" class="bg-base-200 rounded-lg p-4 mb-6">
+  <div class="flex items-center gap-2 mb-2">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-primary" viewBox="0 0 20 20" fill="currentColor">
+      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+    </svg>
+    <h3 class="font-semibold text-base-content">Get 5% off your first order</h3>
+  </div>
+  <p class="text-sm text-base-content/70 mb-3">Sign up for news and exclusive offers</p>
+
+  <%= form_with url: email_subscriptions_path, method: :post, data: { turbo: true, controller: "discount-signup", action: "submit->discount-signup#submit" } do |f| %>
+    <div class="flex gap-2">
+      <input
+        type="email"
+        name="email"
+        placeholder="Enter your email"
+        required
+        class="input input-bordered flex-1 <%= 'input-error' if local_assigns[:error] %>"
+        data-discount-signup-target="email"
+      >
+      <button type="submit" class="btn btn-primary" data-discount-signup-target="submit">
+        <span data-discount-signup-target="buttonText">Get 5% off</span>
+        <span class="loading loading-spinner loading-sm hidden" data-discount-signup-target="spinner"></span>
+      </button>
+    </div>
+    <% if local_assigns[:error] %>
+      <p class="text-error text-sm mt-1"><%= error %></p>
+    <% end %>
+  <% end %>
+</div>

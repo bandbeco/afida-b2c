@@ -57,7 +57,8 @@ const lazyControllers = {
   "save-address-prompt": () => import("../javascript/controllers/save_address_prompt_controller"),
   "order-summary-toggle": () => import("../javascript/controllers/order_summary_toggle_controller"),
   "title-preview": () => import("../javascript/controllers/title_preview_controller"),
-  "delivery-countdown": () => import("../javascript/controllers/delivery_countdown_controller")
+  "delivery-countdown": () => import("../javascript/controllers/delivery_countdown_controller"),
+  "discount-signup": () => import("../javascript/controllers/discount_signup_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM
