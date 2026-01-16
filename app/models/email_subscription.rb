@@ -14,7 +14,11 @@ class EmailSubscription < ApplicationRecord
   # - Email has already claimed a discount (discount_claimed_at is set)
   # - Email has previous orders (exists in orders table)
   #
-  # Note: Newsletter-only subscribers (discount_claimed_at: nil) ARE eligible.
+  # IMPORTANT: Newsletter-only subscribers (discount_claimed_at: nil) ARE eligible.
+  # This allows the "upgrade" flow where someone signs up for the newsletter first,
+  # then later claims the discount when they're ready to purchase. The controller
+  # uses find_or_initialize_by to update the existing record rather than creating
+  # a duplicate (which the unique index on email would reject anyway).
   #
   # @param email [String] the email address to check
   # @return [Boolean] true if eligible for discount
