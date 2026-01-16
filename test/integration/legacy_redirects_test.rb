@@ -26,16 +26,16 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_equal 301, response.status
   end
 
-  # Single-product categories redirect directly to product (avoids redirect chain)
-  test "redirects legacy pizza-boxes to product" do
+  # Category redirects - redirect to category pages (matching /category/napkins pattern)
+  test "redirects legacy pizza-boxes to category" do
     get "/category/pizza-boxes"
-    assert_redirected_to "/products/pizza-boxes"
+    assert_redirected_to "/categories/pizza-boxes"
     assert_equal 301, response.status
   end
 
-  test "redirects legacy straws to product" do
+  test "redirects legacy straws to category" do
     get "/category/straws"
-    assert_redirected_to "/products/straws"
+    assert_redirected_to "/categories/straws"
     assert_equal 301, response.status
   end
 
