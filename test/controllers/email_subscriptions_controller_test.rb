@@ -69,6 +69,22 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "WELCOME5", session[:discount_code]
   end
 
+  test "logged-in user submitting email with previous orders gets not eligible response" do
+    # User is logged in, but submits an email that has previous orders
+    # (the eligibility check is by email in orders table, not user association)
+    user = users(:user_without_orders)
+    sign_in_as(user)
+
+    # Submit email that exists in orders fixture (user1@example.com)
+    post email_subscriptions_path,
+         params: { email: "user1@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_includes response.body, "discount-not-eligible"
+    assert_nil session[:discount_code]
+  end
+
   # =============================================================================
   # T032: Already Claimed Response Tests (US4)
   # =============================================================================

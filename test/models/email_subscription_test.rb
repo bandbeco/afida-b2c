@@ -46,6 +46,34 @@ class EmailSubscriptionTest < ActiveSupport::TestCase
   end
 
   # =============================================================================
+  # T039-T040: Marketing Metadata Tests (US5)
+  # =============================================================================
+
+  test "discount_claimed_at can be set on creation" do
+    claimed_time = Time.current
+    subscription = EmailSubscription.create!(
+      email: "marketing@example.com",
+      discount_claimed_at: claimed_time
+    )
+    assert_in_delta claimed_time, subscription.discount_claimed_at, 1.second
+  end
+
+  test "discount_claimed_at is nil by default" do
+    subscription = EmailSubscription.create!(email: "newsletter@example.com")
+    assert_nil subscription.discount_claimed_at
+  end
+
+  test "subscription without discount has nil discount_claimed_at" do
+    # Simulates a newsletter signup (not discount claim)
+    subscription = EmailSubscription.create!(
+      email: "news-only@example.com",
+      source: "footer"
+    )
+    assert_nil subscription.discount_claimed_at
+    assert_equal "footer", subscription.source
+  end
+
+  # =============================================================================
   # T007: Eligibility Tests
   # =============================================================================
 
