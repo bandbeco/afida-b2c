@@ -37,3 +37,8 @@ consumer:
   password_digest: <%= password_digest %>
   organization:
   role:
+
+# User specifically for testing discount eligibility - has no orders
+user_without_orders:
+  email_address: noorders@example.com
+  password_digest: <%= password_digest %>

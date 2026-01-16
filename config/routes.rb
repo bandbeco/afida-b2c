@@ -82,6 +82,8 @@ Rails.application.routes.draw do
     resources :cart_items, only: [ :create, :update, :destroy ], path_names: { edit: "" }
   end
 
+  resources :email_subscriptions, only: [ :create ]
+
   resource :checkout, only: [ :show, :create ] do
     get :success, on: :collection
     get :cancel, on: :collection

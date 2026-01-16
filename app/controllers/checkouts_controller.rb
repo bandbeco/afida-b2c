@@ -80,6 +80,20 @@ class CheckoutsController < ApplicationController
         }
       }
 
+      # Apply discount coupon if present in session
+      # We'll validate the coupon separately and skip it if invalid rather than failing checkout
+      if session[:discount_code].present?
+        begin
+          Stripe::Coupon.retrieve(session[:discount_code])
+          session_params[:discounts] = [ { coupon: session[:discount_code] } ]
+        rescue Stripe::InvalidRequestError => e
+          # Coupon doesn't exist or is invalid - log and continue without discount
+          Rails.logger.warn("Invalid discount coupon '#{session[:discount_code]}': #{e.message}")
+          session.delete(:discount_code)
+          flash[:alert] = "Your discount code could not be applied. Please continue with your order."
+        end
+      end
+
       if Current.user
         session_params[:client_reference_id] = Current.user.id
 
@@ -162,6 +176,9 @@ class CheckoutsController < ApplicationController
 
       # Store in session for immediate access (proves ownership for guest checkout)
       session[:recent_order_id] = order.id
+
+      # Clear discount code after successful order (one-time use)
+      session.delete(:discount_code)
 
       # Redirect to confirmation page with signed token
       redirect_to confirmation_order_path(order, token: order.signed_access_token),

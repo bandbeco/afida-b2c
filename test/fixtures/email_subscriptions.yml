@@ -1,0 +1,18 @@
+# Email subscription fixtures for testing discount eligibility
+#
+# Usage: email_subscriptions(:claimed_discount)
+#        email_subscriptions(:subscribed_only)
+
+claimed_discount:
+  email: "claimed@example.com"
+  discount_claimed_at: <%= 1.day.ago %>
+  source: "cart_discount"
+  created_at: <%= 1.day.ago %>
+  updated_at: <%= 1.day.ago %>
+
+subscribed_only:
+  email: "subscribed@example.com"
+  discount_claimed_at: null
+  source: "footer"
+  created_at: <%= 2.days.ago %>
+  updated_at: <%= 2.days.ago %>

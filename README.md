@@ -84,6 +84,10 @@ bin/vite dev
 
 Visit: http://localhost:3000
 
+## Contributor Guide
+
+New contributors should read [`AGENTS.md`](AGENTS.md) for repository-specific workflows covering structure, coding style, testing, and pull-request expectations.
+
 ## Configuration
 
 ### Required Credentials
