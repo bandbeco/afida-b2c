@@ -12,7 +12,7 @@ class SamplesController < ApplicationController
   def index
     @categories = Category
       .joins(:products)
-      .where(products: { sample_eligible: true, active: true })
+      .where(products: { sample_eligible: true, active: true, product_type: "standard" })
       .distinct
       .order(:position)
 
@@ -33,6 +33,7 @@ class SamplesController < ApplicationController
     @category = Category.find_by!(slug: params[:category_slug])
 
     @products = Product
+      .standard
       .sample_eligible
       .where(category: @category, active: true)
       .with_attached_product_photo
