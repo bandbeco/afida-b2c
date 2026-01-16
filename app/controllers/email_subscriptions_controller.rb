@@ -46,7 +46,8 @@ class EmailSubscriptionsController < ApplicationController
   private
 
   def email_param
-    params[:email]
+    # Try direct param first, then nested under email_subscription
+    params[:email] || params.dig(:email_subscription, :email)
   end
 
   def valid_email_format?(email)
