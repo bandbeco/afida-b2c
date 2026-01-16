@@ -110,6 +110,7 @@ class Admin::OrdersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     # Should show SAMPLE overlay only on sample items (1 sample, 1 paid)
-    assert_select "span.bg-primary", text: /SAMPLE/, count: 1
+    # Note: count is 2 because there's both desktop and mobile layouts for the sample item
+    assert_select "span.bg-primary", text: /SAMPLE/, count: 2
   end
 end
