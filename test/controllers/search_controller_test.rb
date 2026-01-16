@@ -84,8 +84,8 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   test "modal mode returns modal_results partial" do
     get search_url, params: { q: "8oz", modal: "true" }
     assert_response :success
-    # Modal results should have the results grid
-    assert_select ".grid"
+    # Modal results use space-y-2 list layout for stacked rows
+    assert_select ".space-y-2"
   end
 
   test "modal turbo stream updates correct frame" do
