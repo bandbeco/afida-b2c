@@ -2,8 +2,9 @@ Rails.application.routes.draw do
   # =============================================================================
   # WWW to non-WWW redirect (301 Permanent)
   # Ensures all traffic uses canonical afida.com domain for SEO
+  # Only matches www.afida.com to avoid interfering with test hosts
   # =============================================================================
-  constraints(host: /^www\./i) do
+  constraints(host: "www.afida.com") do
     get "(*path)", to: redirect(status: 301) { |params, req|
       "https://afida.com/#{params[:path]}#{req.query_string.present? ? "?#{req.query_string}" : ""}"
     }, format: false
