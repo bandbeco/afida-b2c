@@ -756,6 +756,8 @@ After deploying SEO updates:
 - PostgreSQL (primary database, consistent with existing models) (001-blog-foundation)
 - Ruby 3.4.7 / Rails 8.1.1 + Active Storage (images), Rails credentials (token storage) (017-outrank-webhook)
 - PostgreSQL (existing BlogPost, BlogCategory models) (017-outrank-webhook)
+- Ruby 3.4.7 / Rails 8.1.1 + Hotwire (Turbo + Stimulus), Stripe Ruby SDK (001-email-signup-discount)
+- PostgreSQL (new `email_subscriptions` table) (001-email-signup-discount)
 
 **Core Stack**:
 - Ruby 3.4.7 / Rails 8.1.1
