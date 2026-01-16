@@ -118,6 +118,13 @@ class CheckoutsController < ApplicationController
         end
       end
 
+      # Emit checkout.started event for funnel tracking
+      Rails.event.notify("checkout.started",
+        cart_id: cart.id,
+        item_count: cart.cart_items.count,
+        subtotal: cart.subtotal_amount
+      )
+
       session = Stripe::Checkout::Session.create(session_params)
 
       redirect_to session.url, allow_other_host: true, status: :see_other
@@ -168,6 +175,23 @@ class CheckoutsController < ApplicationController
       customer_details = stripe_session.customer_details
       order = create_order_from_stripe_session(stripe_session, cart)
 
+      # Emit checkout.completed event
+      Rails.event.notify("checkout.completed",
+        order_id: order.id,
+        total: order.total_amount.to_f,
+        payment_method: stripe_session.payment_method_types&.first || "card"
+      )
+
+      # Emit order.placed event
+      Rails.event.notify("order.placed",
+        order_id: order.id,
+        email: order.email,
+        total: order.total_amount.to_f,
+        item_count: order.order_items.count,
+        has_discount: session[:discount_code].present?,
+        source: "checkout"
+      )
+
       # Clear the cart after successful order creation
       cart.cart_items.destroy_all
 
@@ -176,6 +200,15 @@ class CheckoutsController < ApplicationController
 
       # Store in session for immediate access (proves ownership for guest checkout)
       session[:recent_order_id] = order.id
+
+      # Emit discount claimed event if order used a discount code
+      if session[:discount_code].present?
+        Rails.event.notify("email_signup.discount_claimed",
+          email: order.email,
+          order_id: order.id,
+          discount_code: session[:discount_code]
+        )
+      end
 
       # Clear discount code after successful order (one-time use)
       session.delete(:discount_code)

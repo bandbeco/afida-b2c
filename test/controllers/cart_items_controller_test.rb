@@ -725,6 +725,48 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert regular_item.price > 0
   end
 
+  # =============================================================================
+  # STRUCTURED EVENT EMISSION TESTS (US3: Cart Events)
+  # =============================================================================
+
+  test "emits cart.item_added event when adding standard product" do
+    product = products(:one)
+
+    assert_event_reported("cart.item_added") do
+      post cart_cart_items_path, params: { cart_item: { sku: product.sku, quantity: 2 } }
+    end
+  end
+
+  test "emits cart.item_added event when adding sample" do
+    product = products(:sample_cup_8oz)
+
+    assert_event_reported("cart.item_added") do
+      post cart_cart_items_path, params: { sample: true, product_id: product.id }
+    end
+  end
+
+  test "emits cart.item_removed event when destroying item" do
+    # Add an item first
+    product = products(:one)
+    post cart_cart_items_path, params: { cart_item: { sku: product.sku, quantity: 1 } }
+    cart_item = @cart.reload.cart_items.last
+
+    assert_event_reported("cart.item_removed") do
+      delete cart_cart_item_path(cart_item)
+    end
+  end
+
+  test "emits cart.item_removed when quantity set to zero" do
+    # Add an item first
+    product = products(:one)
+    post cart_cart_items_path, params: { cart_item: { sku: product.sku, quantity: 1 } }
+    cart_item = @cart.reload.cart_items.last
+
+    assert_event_reported("cart.item_removed") do
+      patch cart_cart_item_path(cart_item), params: { cart_item: { quantity: 0 } }
+    end
+  end
+
   private
 
   def sign_in_as(user)

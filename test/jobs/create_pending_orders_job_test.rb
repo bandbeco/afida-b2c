@@ -276,4 +276,14 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
       CreatePendingOrdersJob.perform_now
     end
   end
+
+  # ==========================================================================
+  # STRUCTURED EVENT EMISSION TESTS (US4: Scheduled Reorders)
+  # ==========================================================================
+
+  test "emits pending_order.created event when pending order is created" do
+    assert_event_reported("pending_order.created") do
+      CreatePendingOrdersJob.perform_now
+    end
+  end
 end

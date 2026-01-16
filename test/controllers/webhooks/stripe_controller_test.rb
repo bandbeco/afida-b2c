@@ -168,4 +168,79 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
   end
+
+  # ============================================================================
+  # STRUCTURED EVENT EMISSION TESTS (User Story 1: Debug Silent Failures)
+  # ============================================================================
+
+  test "emits webhook.received event when webhook arrives" do
+    session = build_stripe_session(id: "sess_event_test", payment_status: "paid")
+    event = build_stripe_webhook_event(
+      type: "checkout.session.completed",
+      id: "evt_test_123",
+      data_object: session
+    )
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_event_reported("webhook.received",
+      payload: {
+        event_type: "checkout.session.completed",
+        stripe_event_id: "evt_test_123"
+      }
+    ) do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+  end
+
+  test "emits webhook.processed event after successful handling" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_processed_test",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }
+    )
+    event = build_stripe_webhook_event(
+      type: "checkout.session.completed",
+      id: "evt_processed_123",
+      data_object: session
+    )
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_event_reported("webhook.processed") do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+  end
+
+  test "emits webhook.failed event when processing fails" do
+    session = build_stripe_session(
+      id: "sess_failing_test",
+      payment_status: "paid",
+      metadata: { cart_id: "999999" }
+    )
+    event = build_stripe_webhook_event(
+      type: "checkout.session.completed",
+      id: "evt_failing_123",
+      data_object: session
+    )
+    stub_stripe_webhook_construct_event(event)
+
+    # Make the retrieve call raise an error
+    Stripe::Checkout::Session.stubs(:retrieve).raises(StandardError.new("Test error"))
+
+    assert_event_reported("webhook.failed") do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    # Should still return OK (to prevent Stripe retries)
+    assert_response :ok
+  end
 end

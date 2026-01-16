@@ -125,6 +125,7 @@ module StripeTestHelper
       id: session_id,
       url: "https://checkout.stripe.com/test/#{session_id}",
       payment_status: overrides[:payment_status] || "paid",
+      payment_method_types: overrides[:payment_method_types] || [ "card" ],
       customer_details: customer_details,
       collected_information: collected_information,
       shipping_cost: shipping_cost,
@@ -267,8 +268,9 @@ module StripeTestHelper
   end
 
   # Build a mock Stripe webhook event
-  def build_stripe_webhook_event(type:, data_object:)
+  def build_stripe_webhook_event(type:, data_object:, id: nil)
     stub(
+      id: id || "evt_test_#{SecureRandom.hex(8)}",
       type: type,
       data: stub(object: data_object)
     )

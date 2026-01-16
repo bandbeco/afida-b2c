@@ -147,6 +147,34 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  # =============================================================================
+  # STRUCTURED EVENT EMISSION TESTS (US2: Email Signup Funnel)
+  # =============================================================================
+
+  test "emits email_signup.completed event on successful signup" do
+    assert_event_reported("email_signup.completed") do
+      post email_subscriptions_path, params: { email: "events-test@example.com" }
+    end
+  end
+
+  test "does not emit email_signup.completed when email already claimed" do
+    assert_no_event_reported("email_signup.completed") do
+      post email_subscriptions_path, params: { email: "claimed@example.com" }
+    end
+  end
+
+  test "does not emit email_signup.completed when email has previous orders" do
+    assert_no_event_reported("email_signup.completed") do
+      post email_subscriptions_path, params: { email: "user1@example.com" }
+    end
+  end
+
+  test "does not emit email_signup.completed for invalid email" do
+    assert_no_event_reported("email_signup.completed") do
+      post email_subscriptions_path, params: { email: "not-an-email" }
+    end
+  end
+
   private
 
   def sign_in_as(user)

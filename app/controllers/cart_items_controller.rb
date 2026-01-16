@@ -25,6 +25,12 @@ class CartItemsController < ApplicationController
   def update
     new_quantity = cart_item_params[:quantity].to_i
     if new_quantity <= 0
+      # Emit cart event before removing
+      Rails.event.notify("cart.item_removed",
+        product_id: @cart_item.product.id,
+        product_sku: @cart_item.product.sku
+      )
+
       # If quantity is zero or less, remove the item instead
       @cart_item.destroy
       respond_to do |format|
@@ -58,6 +64,13 @@ class CartItemsController < ApplicationController
     # Use the item's own state to determine if it's a sample (more reliable than referer/params)
     is_sample_removal = @cart_item.sample?
     @category = @product.category if is_sample_removal
+
+    # Emit cart event before destroying
+    Rails.event.notify("cart.item_removed",
+      product_id: @product.id,
+      product_sku: @product.sku
+    )
+
     @cart_item.destroy
 
     respond_to do |format|
@@ -200,6 +213,14 @@ class CartItemsController < ApplicationController
       @category = @product.category
       @category_selected_count = @cart.sample_count_for_category(@category)
 
+      # Emit cart event for sample addition
+      Rails.event.notify("cart.item_added",
+        product_id: @product.id,
+        product_sku: @product.sku,
+        quantity: 1,
+        is_sample: true
+      )
+
       respond_to do |format|
         format.turbo_stream { render :create_sample }
         format.html { redirect_to samples_path, notice: "Sample added to cart" }
@@ -248,6 +269,14 @@ class CartItemsController < ApplicationController
       # Use save! to raise on failure and trigger rollback
       @cart_item.save!
     end
+
+    # Emit cart event for standard product addition
+    Rails.event.notify("cart.item_added",
+      product_id: product.id,
+      product_sku: product.sku,
+      quantity: @cart_item.quantity,
+      is_sample: false
+    )
 
     # Transaction succeeded
     respond_to do |format|

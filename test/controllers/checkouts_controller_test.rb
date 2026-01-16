@@ -681,4 +681,98 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   def sign_in_as(user)
     post session_url, params: { email_address: user.email_address, password: "password" }
   end
+
+  # ============================================================================
+  # STRUCTURED EVENT EMISSION TESTS (User Story 1: Debug Silent Failures)
+  # ============================================================================
+
+  test "emits checkout.started event when checkout begins" do
+    stub_stripe_session_create
+
+    assert_event_reported("checkout.started",
+      payload: {
+        cart_id: @cart.id,
+        item_count: @cart.cart_items.count,
+        subtotal: @cart.subtotal_amount
+      }
+    ) do
+      post checkout_path
+    end
+
+    assert_response :see_other
+  end
+
+  test "emits checkout.completed event on successful payment verification" do
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      payment_status: "paid"
+    )
+
+    assert_event_reported("checkout.completed") do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    assert_response :redirect
+  end
+
+  test "emits order.placed event when order is created from checkout" do
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      payment_status: "paid"
+    )
+
+    assert_event_reported("order.placed") do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    assert_response :redirect
+  end
+
+  test "does not emit checkout events on payment failure" do
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      payment_status: "unpaid"
+    )
+
+    assert_no_event_reported("checkout.completed") do
+      assert_no_event_reported("order.placed") do
+        get success_checkout_path, params: { session_id: session.id }
+      end
+    end
+
+    assert_redirected_to cart_path
+  end
+
+  test "emits email_signup.discount_claimed event when order placed with discount" do
+    # Set discount code in session
+    post email_subscriptions_path, params: { email: "discount-test@example.com" }
+    assert_equal "WELCOME5", session[:discount_code]
+
+    # Stub Stripe to return a valid coupon
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME5"))
+
+    session = stub_stripe_session_retrieve(
+      customer_email: "discount-test@example.com",
+      payment_status: "paid"
+    )
+
+    assert_event_reported("email_signup.discount_claimed") do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    assert_response :redirect
+  end
+
+  test "does not emit email_signup.discount_claimed event when order placed without discount" do
+    session = stub_stripe_session_retrieve(
+      customer_email: "no-discount@example.com",
+      payment_status: "paid"
+    )
+
+    assert_no_event_reported("email_signup.discount_claimed") do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    assert_response :redirect
+  end
 end

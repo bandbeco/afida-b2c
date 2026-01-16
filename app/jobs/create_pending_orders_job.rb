@@ -30,6 +30,13 @@ class CreatePendingOrdersJob < ApplicationJob
       items_snapshot: snapshot
     )
 
+    # Emit event for pending order creation
+    Rails.event.notify("pending_order.created",
+      pending_order_id: pending_order.id,
+      schedule_id: schedule.id,
+      total: pending_order.total_amount.to_f
+    )
+
     send_reminder_email(pending_order)
   rescue ActiveRecord::RecordNotUnique
     # Already created by another worker - skip silently
