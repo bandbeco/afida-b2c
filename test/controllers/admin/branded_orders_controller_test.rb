@@ -19,7 +19,7 @@ class Admin::BrandedOrdersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     # Should show orders containing configured cart items
-    assert_match /Branded Product Orders/, response.body
+    assert_match /Branded Orders/, response.body
   end
 
   test "show displays order with configuration details" do
