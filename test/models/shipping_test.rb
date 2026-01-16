@@ -43,8 +43,8 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal 699, option[:shipping_rate_data][:fixed_amount][:amount]
     assert_equal "gbp", option[:shipping_rate_data][:fixed_amount][:currency]
     assert_equal "Standard Shipping", option[:shipping_rate_data][:display_name]
-    assert_equal 2, option[:shipping_rate_data][:delivery_estimate][:minimum][:value]
-    assert_equal 3, option[:shipping_rate_data][:delivery_estimate][:maximum][:value]
+    assert_equal Shipping::STANDARD_MIN_DAYS, option[:shipping_rate_data][:delivery_estimate][:minimum][:value]
+    assert_equal Shipping::STANDARD_MAX_DAYS, option[:shipping_rate_data][:delivery_estimate][:maximum][:value]
   end
 
   test "free_shipping_option returns correct structure" do
