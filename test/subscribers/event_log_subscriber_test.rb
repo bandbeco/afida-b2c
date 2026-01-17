@@ -7,7 +7,7 @@ class EventLogSubscriberTest < ActiveSupport::TestCase
     @subscriber = EventLogSubscriber.new
   end
 
-  test "formats event as JSON with all required fields" do
+  test "formats business event as JSON with all required fields" do
     event = {
       name: "order.placed",
       payload: { order_id: 123, email: "test@example.com" },
@@ -35,32 +35,65 @@ class EventLogSubscriberTest < ActiveSupport::TestCase
     @subscriber.emit(event)
   end
 
-  test "handles minimal event with only name and payload" do
-    event = {
-      name: "test.minimal",
-      payload: { data: "value" },
-      context: {},
-      tags: {},
-      timestamp: 1738964843208679035,
-      source_location: nil
-    }
+  test "logs all supported business event prefixes" do
+    # All business event prefixes should be logged
+    supported_events = %w[
+      cart.item_added
+      checkout.started
+      email_signup.completed
+      order.placed
+      payment.succeeded
+      pending_order.created
+      reorder.scheduled
+      webhook.received
+    ]
 
-    Rails.logger.expects(:info).with do |logged_json|
-      parsed = JSON.parse(logged_json)
+    supported_events.each do |event_name|
+      event = {
+        name: event_name,
+        payload: { test: true },
+        context: {},
+        tags: {},
+        timestamp: 1738964843208679035,
+        source_location: nil
+      }
 
-      assert_equal "test.minimal", parsed["event"]
-      assert_equal({ "data" => "value" }, parsed["payload"])
-      assert_nil parsed["source_location"]
+      Rails.logger.expects(:info).once
 
-      true
+      @subscriber.emit(event)
     end
-
-    @subscriber.emit(event)
   end
 
-  test "handles empty payload" do
+  test "ignores Rails framework events" do
+    # Rails framework events should be filtered out
+    framework_events = %w[
+      action_controller.request_started
+      action_controller.request_completed
+      action_view.render_partial
+      action_view.render_template
+      action_view.render_collection
+      active_storage.service_url
+    ]
+
+    framework_events.each do |event_name|
+      event = {
+        name: event_name,
+        payload: { some: "data" },
+        context: {},
+        tags: {},
+        timestamp: 1738964843208679035,
+        source_location: nil
+      }
+
+      Rails.logger.expects(:info).never
+
+      @subscriber.emit(event)
+    end
+  end
+
+  test "handles empty payload for business events" do
     event = {
-      name: "test.empty",
+      name: "checkout.started",
       payload: {},
       context: {},
       tags: {},
@@ -71,7 +104,7 @@ class EventLogSubscriberTest < ActiveSupport::TestCase
     Rails.logger.expects(:info).with do |logged_json|
       parsed = JSON.parse(logged_json)
 
-      assert_equal "test.empty", parsed["event"]
+      assert_equal "checkout.started", parsed["event"]
       assert_equal({}, parsed["payload"])
 
       true

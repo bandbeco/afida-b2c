@@ -14,11 +14,20 @@
 source_token = Rails.application.credentials.dig(:logtail, :source_token)
 
 if source_token.present?
-  # Configure Logtail with the source token
-  # The logtail-rails gem automatically integrates with Rails.logger
-  Logtail.configure do |config|
-    config.api_key = source_token
-  end
+  # Collapse HTTP events into a single log line per request.
+  # Instead of two verbose events (http_request_received + http_response_sent)
+  # with full headers, this produces one clean line:
+  #   "GET /products sent 200 OK in 45ms"
+  # Keeps useful HTTP metrics without header noise.
+  Logtail::Integrations::Rack::HTTPEvents.collapse_into_single_event = true
+
+  # Filter sensitive HTTP headers from logs
+  Logtail::Integrations::Rack::HTTPEvents.http_header_filters = %w[
+    authorization
+    cookie
+    set-cookie
+    x-csrf-token
+  ]
 
   # Create the Logtail logger and set it as the Rails logger
   # This ensures all logs (including our structured events) go to Logtail
