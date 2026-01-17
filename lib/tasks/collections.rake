@@ -289,7 +289,7 @@ namespace :collections do
       puts "○ Exists: #{restaurant_sample.name} (#{restaurant_sample.products.count} products)"
     end
 
-    # 13. Ice Cream & Dessert Sample Pack
+    # 13. Ice Cream & Dessert Sample Pack (mirrors Sweet Treats collection)
     ice_cream_sample = Collection.find_or_initialize_by(slug: "ice-cream-dessert-sample-pack")
     ice_cream_sample.assign_attributes(
       name: "Ice Cream & Dessert Sample Pack",
@@ -312,6 +312,78 @@ namespace :collections do
       puts "✓ Created: #{ice_cream_sample.name} with #{ice_cream_sample.products.count} products"
     else
       puts "○ Exists: #{ice_cream_sample.name} (#{ice_cream_sample.products.count} products)"
+    end
+
+    # 14. Bakery Sample Pack (mirrors Bakeries collection)
+    bakery_sample = Collection.find_or_initialize_by(slug: "bakery-sample-pack")
+    bakery_sample.assign_attributes(
+      name: "Bakery Sample Pack",
+      description: "Essential packaging for bakeries and pastry shops. Includes coffee cups for your morning rush and bags for takeaway treats.",
+      featured: false,
+      sample_pack: true
+    )
+    if bakery_sample.new_record? || bakery_sample.products.empty?
+      bakery_sample.save!
+      bakery_sample.collection_items.destroy_all
+      bakery_sample_ids = [
+        Product.find_by(sku: "8-DWC-W")&.id,  # 8oz Double Wall Coffee Cup (White)
+        Product.find_by(sku: "8BL-PC")&.id,   # 8oz Bagasse Sip Lid
+        Product.find_by(sku: "SKTB")&.id,     # Small Kraft Flat Handle Bag
+        Product.find_by(sku: "AIRCNWH")&.id   # White Premium Airlaid Cocktail Napkins
+      ].compact
+      bakery_sample_products = Product.active.catalog_products.sample_eligible.where(id: bakery_sample_ids)
+      bakery_sample_products.each { |p| bakery_sample.collection_items.find_or_create_by!(product: p) }
+      puts "✓ Created: #{bakery_sample.name} with #{bakery_sample.products.count} products"
+    else
+      puts "○ Exists: #{bakery_sample.name} (#{bakery_sample.products.count} products)"
+    end
+
+    # 15. Takeaway Sample Pack (mirrors Takeaway collection)
+    takeaway_sample = Collection.find_or_initialize_by(slug: "takeaway-sample-pack")
+    takeaway_sample.assign_attributes(
+      name: "Takeaway Sample Pack",
+      description: "Complete takeaway packaging essentials. Test our pizza boxes, food containers, and bags before ordering in bulk.",
+      featured: false,
+      sample_pack: true
+    )
+    if takeaway_sample.new_record? || takeaway_sample.products.empty?
+      takeaway_sample.save!
+      takeaway_sample.collection_items.destroy_all
+      takeaway_sample_ids = [
+        Product.find_by(sku: "9PIZBKR")&.id,  # 9 inch Kraft Pizza Box
+        Product.find_by(sku: "NO1KDV")&.id,   # No.1 Kraft Takeaway Box
+        Product.find_by(sku: "5MLREC")&.id,   # 500ml Rectangular Kraft Bowl
+        Product.find_by(sku: "WFKPNK")&.id    # Wooden Cutlery Kit
+      ].compact
+      takeaway_sample_products = Product.active.catalog_products.sample_eligible.where(id: takeaway_sample_ids)
+      takeaway_sample_products.each { |p| takeaway_sample.collection_items.find_or_create_by!(product: p) }
+      puts "✓ Created: #{takeaway_sample.name} with #{takeaway_sample.products.count} products"
+    else
+      puts "○ Exists: #{takeaway_sample.name} (#{takeaway_sample.products.count} products)"
+    end
+
+    # 16. Smoothie & Juice Bar Sample Pack (mirrors Smoothie & Juice Bars collection)
+    smoothie_sample = Collection.find_or_initialize_by(slug: "smoothie-juice-bar-sample-pack")
+    smoothie_sample.assign_attributes(
+      name: "Smoothie & Juice Bar Sample Pack",
+      description: "Crystal-clear cups, lids, and eco-friendly straws for smoothies and juices. Perfect for juice bars and health food outlets.",
+      featured: false,
+      sample_pack: true
+    )
+    if smoothie_sample.new_record? || smoothie_sample.products.empty?
+      smoothie_sample.save!
+      smoothie_sample.collection_items.destroy_all
+      smoothie_sample_ids = [
+        Product.find_by(sku: "16RPTRC")&.id,  # 16oz Clear Smoothie Cup
+        Product.find_by(sku: "20RPTDL")&.id,  # 16-20oz Dome Lid
+        Product.find_by(sku: "BB-PULP-JUM")&.id, # 8mm Jumbo Bamboo Straw (for smoothies)
+        Product.find_by(sku: "BB-PULP-20")&.id   # 6mm Bamboo Straw (for juices)
+      ].compact
+      smoothie_sample_products = Product.active.catalog_products.sample_eligible.where(id: smoothie_sample_ids)
+      smoothie_sample_products.each { |p| smoothie_sample.collection_items.find_or_create_by!(product: p) }
+      puts "✓ Created: #{smoothie_sample.name} with #{smoothie_sample.products.count} products"
+    else
+      puts "○ Exists: #{smoothie_sample.name} (#{smoothie_sample.products.count} products)"
     end
 
     # =========================================================================
