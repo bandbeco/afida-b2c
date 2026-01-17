@@ -1,0 +1,31 @@
+<%# Collection card for index page %>
+<%= link_to collection_path(collection), class: "card bg-base-100 shadow-sm hover:shadow-md transition h-full flex flex-col" do %>
+  <% if collection.image.attached? %>
+    <figure class="aspect-video bg-white overflow-hidden">
+      <%= image_tag collection.image.variant(resize_to_fill: [400, 225]),
+                    alt: collection.name,
+                    class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
+                    loading: "lazy" %>
+    </figure>
+  <% else %>
+    <figure class="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    </figure>
+  <% end %>
+
+  <div class="card-body p-4 flex flex-col flex-1">
+    <h2><%= collection.name %></h2>
+
+    <% if collection.description.present? %>
+      <p class="text-sm text-base-content/70 line-clamp-2 flex-1">
+        <%= truncate(collection.description, length: 100) %>
+      </p>
+    <% end %>
+
+    <div class="mt-2 badge badge-outline">
+      <%= collection.products.count %> products
+    </div>
+  </div>
+<% end %>
