@@ -125,7 +125,7 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
 
   test "includes sample pack pages" do
     # Create a test sample pack if none exist
-    sample_pack = Collection.find_or_create_by!(slug: "test-sample-pack") do |c|
+    sample_pack = Collection.find_or_create_by!(slug: "test-pack") do |c|
       c.name = "Test Sample Pack"
       c.sample_pack = true
     end
@@ -136,9 +136,9 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     doc = Nokogiri::XML(xml)
     urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    # Sample pack pages use /samples/pack/:slug route
+    # Sample pack pages use /samples/:slug route (clean URLs)
     Collection.where(sample_pack: true).find_each do |pack|
-      assert urls.any? { |url| url.include?("/samples/pack/#{pack.slug}") },
+      assert urls.any? { |url| url.include?("/samples/#{pack.slug}") },
              "Expected sitemap to include sample pack: #{pack.slug}"
     end
 

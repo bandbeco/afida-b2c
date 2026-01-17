@@ -40,9 +40,9 @@ Rails.application.routes.draw do
   get "branding", to: "pages#branding"
   resources :samples, only: [ :index ] do
     collection do
-      get ":category_slug", action: :category, as: :category
-      get "pack/:slug", action: :pack, as: :pack
+      get "category/:category_slug", action: :category, as: :category
       post "add_pack", action: :add_pack
+      get ":slug", action: :pack, as: :pack  # Must be last (catch-all pattern)
     end
   end
   get "about", to: "pages#about"
