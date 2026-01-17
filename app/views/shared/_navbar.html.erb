@@ -7,6 +7,7 @@
         </div>
         <ul tabindex="0" class="menu dropdown-content bg-base-100 rounded-box z-50 mt-3 w-52 p-4 shadow flex flex-col gap-3">
           <li class="text-lg"><%= link_to "Shop All", shop_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(shop_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
+          <li class="text-lg"><%= link_to "Collections", collections_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{request.path.start_with?('/collections') ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg"><%= link_to "Cups & Lids", category_path('cups-and-lids'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('cups-and-lids')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg"><%= link_to "Ice Cream Cups", category_path('ice-cream-cups'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('ice-cream-cups')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
           <li class="text-lg"><%= link_to "Napkins", category_path('napkins'), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path('napkins')) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
@@ -26,6 +27,7 @@
     <div class="navbar-center hidden lg:flex">
       <ul class="flex gap-6 px-1">
         <li class="text-lg"><%= link_to "Shop All", shop_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(shop_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
+        <li class="text-lg"><%= link_to "Collections", collections_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{request.path.start_with?('/collections') ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
         <li class="text-lg"><%= link_to "Branding", branding_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(branding_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
         <li class="text-lg"><%= link_to "Price List", price_list_path, class: "hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(price_list_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
       </ul>
