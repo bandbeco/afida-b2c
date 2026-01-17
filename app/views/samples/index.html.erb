@@ -78,7 +78,7 @@
   <!-- Curated Sample Packs -->
   <% if @sample_packs.any? %>
     <div class="container mx-auto px-4 py-12 border-b border-base-200">
-      <h2 class="text-2xl mb-2">Curated Sample Packs</h2>
+      <h2 class="text-xl">Curated Sample Packs</h2>
       <p class="text-base-content/70 mb-6">Get started quickly with our hand-picked selections for your business type.</p>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -100,15 +100,10 @@
             <% end %>
 
             <div class="card-body p-4">
-              <h3 class="card-title text-lg"><%= pack.name %></h3>
+              <h3><%= pack.name %></h3>
               <% if pack.description.present? %>
                 <p class="text-sm text-base-content/70 line-clamp-2"><%= pack.description %></p>
               <% end %>
-              <div class="mt-2">
-                <span class="badge badge-secondary badge-outline">
-                  <%= pack.sample_eligible_products.count %> samples
-                </span>
-              </div>
             </div>
           <% end %>
         <% end %>
