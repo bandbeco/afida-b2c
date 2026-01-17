@@ -1,0 +1,35 @@
+# Collection items linking products to collections
+# See app/models/collection_item.rb for model details
+
+# Coffee Shop Essentials collection items
+coffee_shop_cup_1:
+  collection: coffee_shop_essentials
+  product: single_wall_8oz_white
+  position: 1
+
+coffee_shop_cup_2:
+  collection: coffee_shop_essentials
+  product: single_wall_12oz_white
+  position: 2
+
+coffee_shop_product_3:
+  collection: coffee_shop_essentials
+  product: one
+  position: 3
+
+# Restaurant Supplies collection items
+restaurant_product_1:
+  collection: restaurant_supplies
+  product: two
+  position: 1
+
+# Coffee Shop Sample Pack items (sample-eligible products)
+sample_pack_item_1:
+  collection: coffee_shop_sample_pack
+  product: sample_cup_8oz
+  position: 1
+
+sample_pack_item_2:
+  collection: coffee_shop_sample_pack
+  product: sample_cup_12oz
+  position: 2
