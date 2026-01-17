@@ -1,0 +1,64 @@
+<div class="py-4 sm:py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1>Order Collections</h1>
+    <%= link_to "Back to Collections", admin_collections_path, class: "btn btn-ghost" %>
+  </div>
+
+  <%= turbo_frame_tag "collections_list" do %>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th class="w-24">Position</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th class="w-32">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @collections.each do |collection| %>
+            <tr>
+              <td><%= collection.position %></td>
+              <td><%= collection.name %></td>
+              <td>
+                <div class="flex flex-wrap gap-1">
+                  <% if collection.featured? %>
+                    <span class="badge badge-primary badge-sm">Featured</span>
+                  <% end %>
+                  <% if collection.sample_pack? %>
+                    <span class="badge badge-secondary badge-sm">Sample Pack</span>
+                  <% end %>
+                  <% if !collection.featured? && !collection.sample_pack? %>
+                    <span class="badge badge-ghost badge-sm">Regular</span>
+                  <% end %>
+                </div>
+              </td>
+              <td>
+                <div class="flex gap-2">
+                  <%= button_to move_higher_admin_collection_path(collection),
+                      method: :patch,
+                      class: "btn btn-sm btn-ghost",
+                      disabled: collection.first?,
+                      form: { data: { turbo_frame: "collections_list" } } do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                    </svg>
+                  <% end %>
+                  <%= button_to move_lower_admin_collection_path(collection),
+                      method: :patch,
+                      class: "btn btn-sm btn-ghost",
+                      disabled: collection.last?,
+                      form: { data: { turbo_frame: "collections_list" } } do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>
