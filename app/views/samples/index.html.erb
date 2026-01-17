@@ -84,26 +84,26 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <% @sample_packs.each do |pack| %>
           <%= link_to pack_samples_path(pack.slug), class: "card bg-base-100 shadow-sm hover:shadow-md transition" do %>
-            <% if pack.image.attached? %>
-              <figure class="aspect-video overflow-hidden">
-                <%= image_tag pack.image.variant(resize_to_fill: [400, 225]),
-                              alt: pack.name,
-                              class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
-                              loading: "lazy" %>
-              </figure>
-            <% else %>
-              <figure class="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </figure>
-            <% end %>
+            <div class="relative">
+              <% if pack.image.attached? %>
+                <figure class="aspect-video overflow-hidden">
+                  <%= image_tag pack.image.variant(resize_to_fill: [400, 225]),
+                                alt: pack.name,
+                                class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
+                                loading: "lazy" %>
+                </figure>
+              <% else %>
+                <figure class="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                  </svg>
+                </figure>
+              <% end %>
+              <span class="badge bg-white text-black border-0 badge-sm absolute top-2 right-2">Sample Pack</span>
+            </div>
 
             <div class="card-body p-4">
-              <div class="flex items-center gap-2 mb-1">
-                <h3><%= pack.name %></h3>
-                <span class="badge badge-neutral badge-sm">Sample Pack</span>
-              </div>
+              <h3><%= pack.name %></h3>
               <% if pack.description.present? %>
                 <p class="text-sm text-base-content/70 line-clamp-3"><%= pack.description %></p>
               <% end %>
