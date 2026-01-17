@@ -41,6 +41,8 @@ Rails.application.routes.draw do
   resources :samples, only: [ :index ] do
     collection do
       get ":category_slug", action: :category, as: :category
+      get "pack/:slug", action: :pack, as: :pack
+      post "add_pack", action: :add_pack
     end
   end
   get "about", to: "pages#about"
@@ -71,6 +73,7 @@ Rails.application.routes.draw do
     end
   end
   resources :categories, only: [ :show ]
+  resources :collections, only: [ :index, :show ], param: :slug
   resources :branded_products, only: [ :index, :show ], path: "branded-products", param: :slug
 
   resource :session, path: "signin", path_names: { new: "" }
@@ -171,6 +174,15 @@ Rails.application.routes.draw do
       end
     end
     resources :categories do
+      collection do
+        get :order
+      end
+      member do
+        patch :move_higher
+        patch :move_lower
+      end
+    end
+    resources :collections do
       collection do
         get :order
       end
