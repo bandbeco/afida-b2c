@@ -12,8 +12,11 @@
 #   context.request_id:abc-123
 
 # Support both ENV vars (Kamal) and credentials (local dev)
-source_token = ENV.fetch("LOGTAIL_SOURCE_TOKEN")
-ingesting_host = ENV.fetch("LOGTAIL_INGESTING_HOST")
+# Use ENV[] instead of fetch to allow build-time asset precompilation without these vars
+source_token = ENV["LOGTAIL_SOURCE_TOKEN"]
+ingesting_host = ENV["LOGTAIL_INGESTING_HOST"]
+
+return unless source_token.present? && ingesting_host.present?
 
 # Collapse HTTP events into a single log line per request.
 # Instead of two verbose events (http_request_received + http_response_sent)
