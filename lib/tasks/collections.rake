@@ -244,7 +244,7 @@ namespace :collections do
     # 11. Coffee Shop Sample Pack
     coffee_sample = Collection.find_or_initialize_by(slug: "coffee-shop")
     coffee_sample.assign_attributes(
-      name: "Coffee Shop Sample Pack",
+      name: "Coffee Shop",
       description: "Try our most popular coffee shop products. Includes a selection of cup sizes, matching lids, and accessories.",
       featured: false,
       sample_pack: true
@@ -269,7 +269,7 @@ namespace :collections do
     # 12. Restaurant Sample Pack
     restaurant_sample = Collection.find_or_initialize_by(slug: "restaurant")
     restaurant_sample.assign_attributes(
-      name: "Restaurant Sample Pack",
+      name: "Restaurant",
       description: "Sample our takeaway containers and packaging. Test sizes and quality before ordering in bulk.",
       featured: false,
       sample_pack: true
@@ -293,7 +293,7 @@ namespace :collections do
     # 13. Ice Cream & Dessert Sample Pack (mirrors Sweet Treats collection)
     ice_cream_sample = Collection.find_or_initialize_by(slug: "ice-cream")
     ice_cream_sample.assign_attributes(
-      name: "Ice Cream & Dessert Sample Pack",
+      name: "Ice Cream Parlour",
       description: "Try our colourful ice cream cups and eco-friendly wooden spoons. Perfect for gelato shops, dessert bars, and frozen yogurt outlets.",
       featured: false,
       sample_pack: true
@@ -318,7 +318,7 @@ namespace :collections do
     # 14. Bakery Sample Pack (mirrors Bakeries collection)
     bakery_sample = Collection.find_or_initialize_by(slug: "bakery")
     bakery_sample.assign_attributes(
-      name: "Bakery Sample Pack",
+      name: "Bakery",
       description: "Essential packaging for bakeries and pastry shops. Includes coffee cups for your morning rush and bags for takeaway treats.",
       featured: false,
       sample_pack: true
@@ -342,7 +342,7 @@ namespace :collections do
     # 15. Takeaway Sample Pack (mirrors Takeaway collection)
     takeaway_sample = Collection.find_or_initialize_by(slug: "takeaway", sample_pack: true)
     takeaway_sample.assign_attributes(
-      name: "Takeaway Sample Pack",
+      name: "Takeaway",
       description: "Complete takeaway packaging essentials. Test our pizza boxes, food containers, and bags before ordering in bulk.",
       featured: false,
       sample_pack: true
@@ -366,7 +366,7 @@ namespace :collections do
     # 16. Smoothie & Juice Bar Sample Pack (mirrors Smoothie & Juice Bars collection)
     smoothie_sample = Collection.find_or_initialize_by(slug: "smoothie-bar")
     smoothie_sample.assign_attributes(
-      name: "Smoothie & Juice Bar Sample Pack",
+      name: "Smoothie & Juice Bar",
       description: "Crystal-clear cups, lids, and eco-friendly straws for smoothies and juices. Perfect for juice bars and health food outlets.",
       featured: false,
       sample_pack: true
