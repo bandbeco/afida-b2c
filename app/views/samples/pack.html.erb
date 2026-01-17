@@ -1,0 +1,119 @@
+<% content_for :title, "#{@sample_pack.name} | Free Samples | Afida" %>
+<% content_for :meta_description, @sample_pack.description.presence || "Request free samples from our #{@sample_pack.name}. Try before you buy with Afida's curated sample selections." %>
+
+<% content_for :breadcrumbs do %>
+  <nav aria-label="Breadcrumb" class="text-sm breadcrumbs">
+    <ul>
+      <li><%= link_to "Home", root_path %></li>
+      <li><%= link_to "Samples", samples_path %></li>
+      <li><%= @sample_pack.name %></li>
+    </ul>
+  </nav>
+<% end %>
+
+<div class="drawer drawer-end">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
+  <div class="drawer-content">
+
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-4xl mb-4"><%= @sample_pack.name %></h1>
+
+      <% if @sample_pack.description.present? %>
+        <p class="text-lg text-base-content/70 max-w-2xl mb-6">
+          <%= @sample_pack.description %>
+        </p>
+      <% end %>
+
+      <!-- Add All Button -->
+      <% remaining_slots = Cart::SAMPLE_LIMIT - @sample_count %>
+      <% products_to_add = @products.reject { |p| @sample_product_ids.include?(p.id) } %>
+
+      <div class="bg-base-200 rounded-lg p-6 mb-8">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 class="text-xl font-medium mb-1">Add All Samples</h2>
+            <p class="text-base-content/70">
+              <% if products_to_add.any? %>
+                Add <%= products_to_add.size %> samples to your cart with one click.
+                <% if remaining_slots < products_to_add.size %>
+                  <span class="text-warning">(Only <%= remaining_slots %> slots remaining)</span>
+                <% end %>
+              <% else %>
+                All items from this pack are already in your cart.
+              <% end %>
+            </p>
+          </div>
+
+          <%= button_to add_pack_samples_path(slug: @sample_pack.slug),
+                        method: :post,
+                        class: "btn btn-primary btn-lg",
+                        disabled: products_to_add.empty? do %>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            Add All to Cart
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sample Counter -->
+    <div class="sticky top-0 z-10 bg-base-100 py-4 mb-4 border-b border-base-200"
+         data-controller="sample-counter"
+         data-sample-counter-limit-value="<%= Cart::SAMPLE_LIMIT %>"
+         data-sample-counter-count-value="<%= @sample_count %>">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="font-medium" data-sample-counter-target="text">
+            <%= @sample_count %> of <%= Cart::SAMPLE_LIMIT %> samples selected
+          </span>
+        </div>
+        <% if @sample_count > 0 %>
+          <%= link_to cart_path, class: "btn btn-primary btn-sm" do %>
+            View Cart
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Products Grid -->
+    <% if @products.any? %>
+      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <% @products.each do |product| %>
+          <%= render "samples/product_card", product: product,
+                     sample_count: @sample_count,
+                     sample_product_ids: @sample_product_ids,
+                     regular_product_ids: [] %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="text-center py-16">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+        </svg>
+        <h2 class="text-xl font-medium mb-2">No sample-eligible products</h2>
+        <p class="text-base-content/70 mb-4">This sample pack doesn't have any available samples at the moment.</p>
+        <%= link_to "Browse All Samples", samples_path, class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <!-- Individual Selection Note -->
+    <% if @products.any? %>
+      <div class="mt-8 text-center text-base-content/60">
+        <p>Prefer to choose individually? Click on any product above to add it as a sample.</p>
+      </div>
+    <% end %>
+
+  </div>
+
+  <div class="drawer-side">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="bg-base-200 text-base-content h-full w-80 p-4 flex flex-col">
+      <%= render "shared/drawer_cart_content" %>
+    </div>
+  </div>
+</div>

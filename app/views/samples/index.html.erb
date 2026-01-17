@@ -42,7 +42,7 @@
 
   <!-- Header -->
   <div class="container mx-auto px-4 text-center">
-    <h1 class="text-4xl mb-4 py-6">Request Free Samples</h1>
+    <h1 class="text-4xl mb-4 pt-6">Request Free Samples</h1>
   </div>
   <div class="bg-base-200 py-8">
     <div class="max-w-3xl mx-auto container px-4 text-center">
@@ -75,8 +75,54 @@
   <!-- Sample Counter (sticky) -->
   <%= render "samples/sample_counter", sample_count: @sample_count %>
 
+  <!-- Curated Sample Packs -->
+  <% if @sample_packs.any? %>
+    <div class="container mx-auto px-4 py-12 border-b border-base-200">
+      <h2 class="text-2xl mb-2">Curated Sample Packs</h2>
+      <p class="text-base-content/70 mb-6">Get started quickly with our hand-picked selections for your business type.</p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <% @sample_packs.each do |pack| %>
+          <%= link_to pack_samples_path(pack.slug), class: "card bg-base-100 shadow-sm hover:shadow-md transition" do %>
+            <% if pack.image.attached? %>
+              <figure class="aspect-video overflow-hidden">
+                <%= image_tag pack.image.variant(resize_to_fill: [400, 225]),
+                              alt: pack.name,
+                              class: "w-full h-full object-cover hover:scale-105 transition-transform duration-300",
+                              loading: "lazy" %>
+              </figure>
+            <% else %>
+              <figure class="aspect-video bg-gradient-to-br from-primary/10 to-secondary/10 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-base-content/30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </figure>
+            <% end %>
+
+            <div class="card-body p-4">
+              <h3 class="card-title text-lg"><%= pack.name %></h3>
+              <% if pack.description.present? %>
+                <p class="text-sm text-base-content/70 line-clamp-2"><%= pack.description %></p>
+              <% end %>
+              <div class="mt-2">
+                <span class="badge badge-secondary badge-outline">
+                  <%= pack.sample_eligible_products.count %> samples
+                </span>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Categories Grid -->
   <div class="container mx-auto px-4 py-12">
+    <% if @sample_packs.any? %>
+      <h2 class="text-2xl mb-2">Browse by Category</h2>
+      <p class="text-base-content/70 mb-6">Or choose individual samples from our product categories.</p>
+    <% end %>
+
     <% if @categories.any? %>
       <div class="space-y-6">
         <% @categories.each do |category| %>
