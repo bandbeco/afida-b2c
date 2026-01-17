@@ -26,6 +26,12 @@ module Webhooks
         return
       end
 
+      # Emit webhook.received event for tracing
+      Rails.event.notify("webhook.received",
+        event_type: event.type,
+        stripe_event_id: event.id
+      )
+
       handle_event(event)
       head :ok
     end
@@ -35,13 +41,14 @@ module Webhooks
     def handle_event(event)
       case event.type
       when "checkout.session.completed"
-        handle_checkout_completed(event.data.object)
+        handle_checkout_completed(event)
       else
         Rails.logger.info("[Stripe Webhook] Unhandled event type: #{event.type}")
       end
     end
 
-    def handle_checkout_completed(session)
+    def handle_checkout_completed(event)
+      session = event.data.object
       return unless session.payment_status == "paid"
 
       # Check if order already exists (created by success redirect)
@@ -132,9 +139,24 @@ module Webhooks
       OrderMailer.with(order: order).confirmation_email.deliver_later
 
       Rails.logger.info("[Stripe Webhook] Order #{order.id} created successfully")
+
+      # Emit webhook.processed event for successful handling
+      Rails.event.notify("webhook.processed",
+        event_type: event.type,
+        stripe_event_id: event.id,
+        order_id: order.id
+      )
     rescue => e
       Rails.logger.error("[Stripe Webhook] Error creating order: #{e.message}")
       Rails.logger.error(e.backtrace.first(10).join("\n"))
+
+      # Emit webhook.failed event for debugging
+      Rails.event.notify("webhook.failed",
+        event_type: event.type,
+        stripe_event_id: event.id,
+        error: e.message
+      )
+
       # Don't re-raise - we still return 200 to prevent Stripe retries
       # The error is logged for manual investigation
     end

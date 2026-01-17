@@ -765,6 +765,8 @@ After deploying SEO updates:
 - PostgreSQL (existing BlogPost, BlogCategory models) (017-outrank-webhook)
 - Ruby 3.4.7 / Rails 8.1.1 + Hotwire (Turbo + Stimulus), Stripe Ruby SDK (001-email-signup-discount)
 - PostgreSQL (new `email_subscriptions` table) (001-email-signup-discount)
+- Ruby 3.4.7 / Rails 8.1.1 + Rails 8.1 (provides `Rails.event` API), logtail-rails gem (structured log transport) (018-structured-events)
+- N/A (events are logged, not persisted to database) (018-structured-events)
 
 **Core Stack**:
 - Ruby 3.4.7 / Rails 8.1.1

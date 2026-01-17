@@ -34,11 +34,20 @@ class PendingOrderConfirmationService
       @schedule.advance_schedule!
       send_confirmation_email(order)
 
+      # Emit event for successful reorder confirmation
+      Rails.event.notify("reorder.confirmed",
+        order_id: order.id,
+        schedule_id: @schedule.id,
+        total: order.total_amount.to_f
+      )
+
       success_result(order)
     end
   rescue Stripe::CardError => e
+    emit_charge_failed_event(e.message)
     error_result(e.message)
   rescue Stripe::StripeError => e
+    emit_charge_failed_event(e.message)
     error_result("Payment failed: #{e.message}")
   rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotFound => e
     # Payment succeeded but order creation failed - refund the charge
@@ -148,6 +157,14 @@ class PendingOrderConfirmationService
 
   def send_confirmation_email(order)
     OrderMailer.with(order: order).confirmation_email.deliver_later
+  end
+
+  def emit_charge_failed_event(error_message)
+    Rails.event.notify("reorder.charge_failed",
+      schedule_id: @schedule.id,
+      email: @user.email_address,
+      error: error_message
+    )
   end
 
   def success_result(order)

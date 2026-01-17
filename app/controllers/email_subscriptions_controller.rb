@@ -37,6 +37,15 @@ class EmailSubscriptionsController < ApplicationController
     if @subscription.save
       # Store discount code in session (only if not already present)
       session[:discount_code] ||= welcome_discount_code
+
+      # Emit event for tracking email signup funnel
+      Rails.event.notify("email_signup.completed",
+        email: @email,
+        source: @subscription.source,
+        discount_eligible: true,
+        new_subscription: @subscription.previously_new_record?
+      )
+
       render_success
     else
       render_validation_error

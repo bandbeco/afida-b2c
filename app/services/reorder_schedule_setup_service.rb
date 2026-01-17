@@ -45,6 +45,13 @@ class ReorderScheduleSetupService
       order: order
     )
 
+    # Emit event for reorder schedule creation
+    Rails.event.notify("reorder.scheduled",
+      schedule_id: schedule.id,
+      frequency: schedule.frequency,
+      item_count: schedule.reorder_schedule_items.count
+    )
+
     Result.new(success?: true, schedule: schedule)
   rescue Stripe::StripeError => e
     Result.new(success?: false, error: e.message)

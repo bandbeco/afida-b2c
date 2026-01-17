@@ -102,3 +102,6 @@ gem "redcarpet", "~> 3.6"
 gem "http", "~> 5.3"
 
 gem "webmock", "~> 3.26", group: :test
+
+# Structured logging to Logtail (Better Stack)
+gem "logtail-rails", "~> 0.2"

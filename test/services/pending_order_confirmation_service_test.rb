@@ -264,6 +264,44 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
     assert_includes result.error, "address"
   end
 
+  # ==========================================================================
+  # STRUCTURED EVENT EMISSION TESTS (US4: Scheduled Reorders)
+  # ==========================================================================
+
+  test "emits reorder.confirmed event on successful confirmation" do
+    mock_successful_payment
+
+    service = PendingOrderConfirmationService.new(@pending_order)
+
+    assert_event_reported("reorder.confirmed") do
+      service.confirm!
+    end
+  end
+
+  test "emits reorder.charge_failed event on payment failure" do
+    Stripe::PaymentIntent.stubs(:create).raises(
+      Stripe::CardError.new("Your card was declined", "card_declined", code: "card_declined")
+    )
+
+    service = PendingOrderConfirmationService.new(@pending_order)
+
+    assert_event_reported("reorder.charge_failed") do
+      service.confirm!
+    end
+  end
+
+  test "does not emit reorder.confirmed event on payment failure" do
+    Stripe::PaymentIntent.stubs(:create).raises(
+      Stripe::CardError.new("Your card was declined", "card_declined", code: "card_declined")
+    )
+
+    service = PendingOrderConfirmationService.new(@pending_order)
+
+    assert_no_event_reported("reorder.confirmed") do
+      service.confirm!
+    end
+  end
+
   private
 
   def mock_successful_payment

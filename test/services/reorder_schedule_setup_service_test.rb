@@ -180,4 +180,26 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
       assert_equal Date.current + 3.months, next_date
     end
   end
+
+  # ==========================================================================
+  # STRUCTURED EVENT EMISSION TESTS (US4: Scheduled Reorders)
+  # ==========================================================================
+
+  test "emits reorder.scheduled event when schedule is created" do
+    service = ReorderScheduleSetupService.new(user: @user)
+
+    card = OpenStruct.new(brand: "visa", last4: "4242")
+    payment_method = OpenStruct.new(id: "pm_test_456", card: card)
+    setup_intent = OpenStruct.new(payment_method: payment_method)
+    session = OpenStruct.new(
+      id: "cs_test_session",
+      setup_intent: setup_intent,
+      metadata: { "order_id" => @order.id.to_s, "user_id" => @user.id.to_s, "frequency" => "every_month" }
+    )
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_event_reported("reorder.scheduled") do
+      service.complete_setup(session_id: "cs_test_session", frequency: "every_month")
+    end
+  end
 end
