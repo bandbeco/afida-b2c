@@ -59,6 +59,23 @@ class SitemapGeneratorService
                   changefreq: "monthly",
                   lastmod: post.updated_at)
         end
+
+        # Collections (product collections, not sample packs)
+        add_url(xml, collections_url, priority: "0.7", changefreq: "weekly")
+        Collection.where(sample_pack: false).find_each do |collection|
+          add_url(xml, collection_url(collection.slug),
+                  priority: "0.7",
+                  changefreq: "weekly",
+                  lastmod: collection.updated_at)
+        end
+
+        # Sample packs (curated sample collections)
+        Collection.where(sample_pack: true).find_each do |pack|
+          add_url(xml, pack_samples_url(pack.slug),
+                  priority: "0.6",
+                  changefreq: "monthly",
+                  lastmod: pack.updated_at)
+        end
       end
     end
 

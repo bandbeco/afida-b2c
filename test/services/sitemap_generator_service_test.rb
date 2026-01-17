@@ -98,4 +98,54 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     assert_includes priorities, "1.0", "Should have at least one URL with priority 1.0"
     assert_includes priorities, "0.8", "Should have category URLs with priority 0.8"
   end
+
+  test "includes collections index and individual collection pages" do
+    # Create a test collection if none exist
+    collection = Collection.find_or_create_by!(slug: "test-collection") do |c|
+      c.name = "Test Collection"
+      c.sample_pack = false
+    end
+
+    service = SitemapGeneratorService.new
+    xml = service.generate
+
+    doc = Nokogiri::XML(xml)
+    urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
+
+    # Collections index page
+    assert urls.any? { |url| url.end_with?("/collections") },
+           "Expected sitemap to include /collections index page"
+
+    # Individual collection pages (non-sample packs)
+    Collection.where(sample_pack: false).find_each do |col|
+      assert urls.any? { |url| url.include?("/collections/#{col.slug}") },
+             "Expected sitemap to include collection: #{col.slug}"
+    end
+  end
+
+  test "includes sample pack pages" do
+    # Create a test sample pack if none exist
+    sample_pack = Collection.find_or_create_by!(slug: "test-sample-pack") do |c|
+      c.name = "Test Sample Pack"
+      c.sample_pack = true
+    end
+
+    service = SitemapGeneratorService.new
+    xml = service.generate
+
+    doc = Nokogiri::XML(xml)
+    urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
+
+    # Sample pack pages use /samples/pack/:slug route
+    Collection.where(sample_pack: true).find_each do |pack|
+      assert urls.any? { |url| url.include?("/samples/pack/#{pack.slug}") },
+             "Expected sitemap to include sample pack: #{pack.slug}"
+    end
+
+    # Sample packs should NOT appear in /collections/ URLs
+    Collection.where(sample_pack: true).find_each do |pack|
+      refute urls.any? { |url| url.include?("/collections/#{pack.slug}") },
+             "Sample pack #{pack.slug} should NOT be in /collections/ URLs"
+    end
+  end
 end
