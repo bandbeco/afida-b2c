@@ -26,7 +26,7 @@ class Collection < ApplicationRecord
   has_one_attached :image
 
   validates :name, presence: true
-  validates :slug, presence: true, uniqueness: true
+  validates :slug, presence: true, uniqueness: { scope: :sample_pack }
 
   scope :featured, -> { where(featured: true) }
   scope :sample_packs, -> { where(sample_pack: true) }

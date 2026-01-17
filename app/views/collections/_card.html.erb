@@ -19,8 +19,8 @@
     <h2><%= collection.name %></h2>
 
     <% if collection.description.present? %>
-      <p class="text-sm text-base-content/70 line-clamp-2 flex-1">
-        <%= truncate(collection.description, length: 100) %>
+      <p class="text-sm text-base-content/70 flex-1">
+        <%= collection.description %>
       </p>
     <% end %>
 

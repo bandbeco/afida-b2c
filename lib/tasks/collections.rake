@@ -340,7 +340,7 @@ namespace :collections do
     end
 
     # 15. Takeaway Sample Pack (mirrors Takeaway collection)
-    takeaway_sample = Collection.find_or_initialize_by(slug: "takeaway-essentials")
+    takeaway_sample = Collection.find_or_initialize_by(slug: "takeaway", sample_pack: true)
     takeaway_sample.assign_attributes(
       name: "Takeaway Sample Pack",
       description: "Complete takeaway packaging essentials. Test our pizza boxes, food containers, and bags before ordering in bulk.",

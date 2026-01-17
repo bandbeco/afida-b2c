@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_17_120621) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_17_211847) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -168,7 +168,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_120621) do
     t.index ["featured"], name: "index_collections_on_featured"
     t.index ["position"], name: "index_collections_on_position"
     t.index ["sample_pack"], name: "index_collections_on_sample_pack"
-    t.index ["slug"], name: "index_collections_on_slug", unique: true
+    t.index ["slug", "sample_pack"], name: "index_collections_on_slug_and_sample_pack", unique: true
   end
 
   create_table "email_subscriptions", force: :cascade do |t|
