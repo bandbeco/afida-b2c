@@ -5,12 +5,14 @@ import { Controller } from "@hotwired/stimulus"
  *
  * Handles:
  * - Show/hide on mouse enter/leave with delay to prevent flickering
+ * - Slide-down/slide-up animation with backdrop overlay
  * - Image preview that changes when hovering over menu items
  * - Keyboard accessibility (Escape to close)
  *
  * Usage:
  *   <div data-controller="mega-menu">
  *     <button data-mega-menu-target="trigger">Collections</button>
+ *     <div data-mega-menu-target="backdrop"></div>
  *     <div data-mega-menu-target="panel">
  *       <a data-mega-menu-target="item" data-image-url="/path/to/image.jpg">Coffee Shops</a>
  *       <img data-mega-menu-target="preview" />
@@ -18,7 +20,7 @@ import { Controller } from "@hotwired/stimulus"
  *   </div>
  */
 export default class extends Controller {
-  static targets = ["trigger", "panel", "item", "preview"]
+  static targets = ["trigger", "panel", "backdrop", "item", "preview"]
   static values = {
     defaultImage: String
   }
@@ -26,6 +28,7 @@ export default class extends Controller {
   connect() {
     this.hideTimeout = null
     this.showTimeout = null
+    this.isOpen = false
 
     // Set default image on connect
     if (this.hasPreviewTarget && this.defaultImageValue) {
@@ -46,8 +49,22 @@ export default class extends Controller {
   showPanel() {
     this.clearTimeouts()
     this.showTimeout = setTimeout(() => {
-      this.panelTarget.classList.remove("hidden", "opacity-0")
-      this.panelTarget.classList.add("opacity-100")
+      this.isOpen = true
+
+      // Show backdrop
+      if (this.hasBackdropTarget) {
+        this.backdropTarget.classList.remove("hidden")
+        // Force reflow before adding opacity
+        this.backdropTarget.offsetHeight
+        this.backdropTarget.classList.add("opacity-100")
+      }
+
+      // Show panel with slide-down effect
+      this.panelTarget.classList.remove("hidden")
+      // Force reflow before adding animation classes
+      this.panelTarget.offsetHeight
+      this.panelTarget.classList.remove("opacity-0", "-translate-y-2")
+      this.panelTarget.classList.add("opacity-100", "translate-y-0")
     }, 50) // Small delay to prevent accidental triggers
   }
 
@@ -55,13 +72,26 @@ export default class extends Controller {
   hidePanel() {
     this.clearTimeouts()
     this.hideTimeout = setTimeout(() => {
-      this.panelTarget.classList.add("opacity-0")
+      this.isOpen = false
+
+      // Hide backdrop
+      if (this.hasBackdropTarget) {
+        this.backdropTarget.classList.remove("opacity-100")
+      }
+
+      // Hide panel with slide-up effect
+      this.panelTarget.classList.remove("opacity-100", "translate-y-0")
+      this.panelTarget.classList.add("opacity-0", "-translate-y-2")
+
       // Wait for transition to complete before hiding
       setTimeout(() => {
-        if (this.panelTarget.classList.contains("opacity-0")) {
+        if (!this.isOpen) {
           this.panelTarget.classList.add("hidden")
+          if (this.hasBackdropTarget) {
+            this.backdropTarget.classList.add("hidden")
+          }
         }
-      }, 150)
+      }, 200)
     }, 100) // Delay allows moving mouse from trigger to panel
   }
 
@@ -86,7 +116,7 @@ export default class extends Controller {
   }
 
   handleKeydown(event) {
-    if (event.key === "Escape" && !this.panelTarget.classList.contains("hidden")) {
+    if (event.key === "Escape" && this.isOpen) {
       this.hidePanel()
     }
   }
