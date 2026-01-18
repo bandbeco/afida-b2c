@@ -59,11 +59,11 @@ export default class extends Controller {
         this.backdropTarget.classList.add("opacity-100")
       }
 
-      // Show panel with slide-down effect
+      // Show panel with slide-down + fade-in effect
       this.panelTarget.classList.remove("hidden")
       // Force reflow before adding animation classes
       this.panelTarget.offsetHeight
-      this.panelTarget.classList.remove("opacity-0", "-translate-y-2")
+      this.panelTarget.classList.remove("opacity-0", "-translate-y-3")
       this.panelTarget.classList.add("opacity-100", "translate-y-0")
     }, 50) // Small delay to prevent accidental triggers
   }
@@ -79,9 +79,9 @@ export default class extends Controller {
         this.backdropTarget.classList.remove("opacity-100")
       }
 
-      // Hide panel with slide-up effect
+      // Hide panel with slide-up + fade-out effect
       this.panelTarget.classList.remove("opacity-100", "translate-y-0")
-      this.panelTarget.classList.add("opacity-0", "-translate-y-2")
+      this.panelTarget.classList.add("opacity-0", "-translate-y-3")
 
       // Wait for transition to complete before hiding
       setTimeout(() => {
