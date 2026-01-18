@@ -88,19 +88,28 @@ class SamplesController < ApplicationController
     added_count = 0
     skipped_count = 0
 
+    # Pre-fetch existing product IDs to avoid N+1 queries
+    existing_product_ids = cart.cart_items.pluck(:product_id).to_set
+
     products.each do |product|
       # Skip if already in cart (as sample or regular item)
-      next if cart.cart_items.exists?(product: product)
-
-      # Check sample limit
-      if cart.at_sample_limit?
-        skipped_count += products.length - added_count
-        break
-      end
+      next if existing_product_ids.include?(product.id)
 
       # Add as sample (price = 0, is_sample = true)
-      cart.cart_items.create!(product: product, quantity: 1, price: 0, is_sample: true)
-      added_count += 1
+      # Let database validation handle race conditions on sample limit
+      begin
+        cart.cart_items.create!(product: product, quantity: 1, price: 0, is_sample: true)
+        added_count += 1
+        existing_product_ids << product.id
+      rescue ActiveRecord::RecordInvalid => e
+        # Handle sample limit or other validation errors
+        if e.record.errors[:base].any? { |msg| msg.include?("sample") || msg.include?("limit") }
+          skipped_count = products.length - added_count - skipped_count
+          break
+        else
+          raise
+        end
+      end
     end
 
     if skipped_count > 0
