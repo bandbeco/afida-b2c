@@ -1,4 +1,4 @@
-<%= form_with(model: [:admin, collection], local: true, class: "space-y-4 sm:space-y-6 max-w-2xl") do |form| %>
+<%= form_with(model: [:admin, collection], url: collection.persisted? ? admin_collection_path(id: collection.id) : admin_collections_path, local: true, class: "space-y-4 sm:space-y-6 max-w-2xl") do |form| %>
   <% if collection.errors.any? %>
     <div class="alert alert-error">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
