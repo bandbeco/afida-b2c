@@ -25,12 +25,13 @@ namespace :collections do
     # =========================================================================
 
     # 1. Coffee Shops
+    # Target keywords: takeaway coffee cups (1,100/mo), paper coffee cups (700/mo), disposable coffee cups (1,500/mo), coffee shop supplies (250/mo)
     coffee_shop = Collection.find_or_initialize_by(slug: "coffee-shops")
     coffee_shop.assign_attributes(
       name: "Coffee Shops",
       description: "Everything you need to serve hot drinks - from single and double wall cups to matching lids, stirrers, and carriers. Perfect for cafés, coffee shops, and mobile coffee vendors.",
-      meta_title: "Coffee Shop Supplies | Eco-Friendly Cups & Lids | Afida",
-      meta_description: "Complete range of eco-friendly coffee shop supplies including paper cups, sip lids, wooden stirrers, and cup carriers. Sustainable options for your café.",
+      meta_title: "Takeaway Coffee Cups | Paper Cups & Lids for Coffee Shops | Afida",
+      meta_description: "Disposable coffee cups, paper cups, and lids for coffee shops. Eco-friendly takeaway cups in 8oz, 12oz, and 16oz sizes. Free samples available.",
       featured: true,
       sample_pack: false
     )
@@ -46,12 +47,13 @@ namespace :collections do
     end
 
     # 2. Bakeries
+    # Target keywords: bakery packaging (200/mo), pastry packaging (80/mo)
     bakery = Collection.find_or_initialize_by(slug: "bakeries")
     bakery.assign_attributes(
       name: "Bakeries",
       description: "Packaging essentials for bakeries and pastry shops. From coffee cups for your morning rush to bags for takeaway treats.",
-      meta_title: "Bakery Supplies | Eco-Friendly Packaging | Afida",
-      meta_description: "Eco-friendly bakery packaging including paper cups, takeaway bags, and napkins. Sustainable solutions for bakeries and pastry shops.",
+      meta_title: "Bakery Packaging | Paper Bags, Napkins & Supplies | Afida",
+      meta_description: "Eco-friendly bakery packaging including paper bags, napkins, and coffee cups. Sustainable supplies for bakeries, patisseries, and cake shops. Free samples.",
       featured: true,
       sample_pack: false
     )
@@ -67,12 +69,13 @@ namespace :collections do
     end
 
     # 3. Sweet Treats (Desserts/Ice Cream)
+    # Target keywords: dessert packaging (100/mo), ice cream cups wholesale (20/mo)
     sweet_treats = Collection.find_or_initialize_by(slug: "sweet-treats")
     sweet_treats.assign_attributes(
       name: "Sweet Treats",
       description: "Colourful cups and accessories for serving frozen treats and desserts. Eye-catching designs that customers love.",
-      meta_title: "Ice Cream & Dessert Supplies | Afida",
-      meta_description: "Eco-friendly ice cream cups, wooden spoons, and dessert packaging. Perfect for gelato shops, ice cream parlours, and dessert bars.",
+      meta_title: "Ice Cream Cups & Dessert Packaging | Sweet Treat Supplies | Afida",
+      meta_description: "Eco-friendly ice cream cups, wooden spoons, and dessert packaging. Perfect for ice cream parlours, gelato shops, and dessert vendors. Free samples.",
       featured: true,
       sample_pack: false
     )
@@ -89,12 +92,13 @@ namespace :collections do
     end
 
     # 4. Restaurants
+    # Target keywords: restaurant packaging (40/mo), deliveroo packaging (250/mo - branded, use in description)
     restaurant = Collection.find_or_initialize_by(slug: "restaurants")
     restaurant.assign_attributes(
       name: "Restaurants",
       description: "Professional takeaway packaging for restaurants. Containers, napkins, and accessories to keep food fresh and presentable.",
-      meta_title: "Restaurant Takeaway Supplies | Eco-Friendly Packaging | Afida",
-      meta_description: "Eco-friendly takeaway containers, napkins, and packaging for restaurants. Sustainable solutions for food service.",
+      meta_title: "Restaurant Packaging | Takeaway Containers & Delivery Supplies | Afida",
+      meta_description: "Eco-friendly restaurant packaging for dine-in and delivery. Takeaway containers, napkins, and bags perfect for Deliveroo, Uber Eats, and Just Eat partners.",
       featured: true,
       sample_pack: false
     )
@@ -110,12 +114,13 @@ namespace :collections do
     end
 
     # 5. Takeaway
+    # Target keywords: biodegradable takeaway containers (150/mo), takeaway containers wholesale (150/mo), noodle boxes (150/mo), pizza boxes wholesale (100/mo)
     takeaway = Collection.find_or_initialize_by(slug: "takeaway")
     takeaway.assign_attributes(
       name: "Takeaway",
       description: "Complete takeaway packaging solutions. From pizza boxes and food containers to bags and cutlery - everything for delivery and collection orders.",
-      meta_title: "Takeaway Packaging | Boxes, Bags & Containers | Afida",
-      meta_description: "Eco-friendly takeaway packaging including pizza boxes, food containers, kraft bags, and disposable cutlery. Sustainable solutions for takeaway businesses.",
+      meta_title: "Takeaway Containers | Biodegradable Boxes & Packaging | Afida",
+      meta_description: "Biodegradable takeaway containers, pizza boxes, and noodle boxes for restaurants and takeaways. Eco-friendly food packaging wholesale. Free UK delivery.",
       featured: true,
       sample_pack: false
     )
@@ -132,13 +137,14 @@ namespace :collections do
       puts "○ Exists: #{takeaway.name} (#{takeaway.products.count} products)"
     end
 
-    # 6. Smoothie & Juice Bars (NEW - requested by user)
+    # 6. Smoothie & Juice Bars
+    # Target keywords: smoothie cups (450/mo), milkshake cups (350/mo), cold cups wholesale (80/mo)
     smoothie = Collection.find_or_initialize_by(slug: "smoothie-juice-bars")
     smoothie.assign_attributes(
       name: "Smoothie & Juice Bars",
       description: "Crystal-clear cups, dome and flat lids, and eco-friendly straws for smoothies, juices, and cold drinks. Perfect for juice bars, smoothie shops, and health food outlets.",
-      meta_title: "Smoothie & Juice Bar Supplies | Clear Cups & Straws | Afida",
-      meta_description: "Eco-friendly smoothie cups, dome lids, flat lids, and paper straws. Complete range for juice bars and smoothie shops.",
+      meta_title: "Smoothie Cups & Milkshake Cups | Juice Bar Supplies | Afida",
+      meta_description: "Clear smoothie cups and milkshake cups with dome lids. Eco-friendly cold cups and paper straws for juice bars, smoothie shops, and cafés. Free samples.",
       featured: true,
       sample_pack: false
     )
@@ -154,12 +160,13 @@ namespace :collections do
     end
 
     # 7. Health + Fitness
+    # Target keywords: limited direct keywords - cross-link to smoothie cups opportunity
     health = Collection.find_or_initialize_by(slug: "health-fitness")
     health.assign_attributes(
       name: "Health + Fitness",
       description: "Clear cups and lids perfect for protein shakes, smoothies, and healthy drinks. Ideal for gyms, health clubs, and wellness centres.",
-      meta_title: "Health & Fitness Supplies | Clear Cups & Lids | Afida",
-      meta_description: "Eco-friendly clear cups and lids for gyms, health clubs, and fitness centres. Perfect for protein shakes and healthy drinks.",
+      meta_title: "Gym & Health Club Supplies | Clear Cups & Smoothie Cups | Afida",
+      meta_description: "Eco-friendly clear cups and lids for gyms, health clubs, and fitness centres. Perfect for protein shakes, smoothies, and juice bars. Free samples available.",
       featured: true,
       sample_pack: false
     )
@@ -175,12 +182,13 @@ namespace :collections do
     end
 
     # 8. Pubs + Bars
+    # Target keywords: pub supplies (300/mo), cocktail bar supplies (40/mo), paper straws wholesale (50/mo)
     pubs = Collection.find_or_initialize_by(slug: "pubs-bars")
     pubs.assign_attributes(
       name: "Pubs + Bars",
       description: "Essential supplies for pubs, bars, and nightlife venues. Napkins, straws, and accessories for a great customer experience.",
-      meta_title: "Pub & Bar Supplies | Napkins & Straws | Afida",
-      meta_description: "Eco-friendly napkins, straws, and accessories for pubs and bars. Sustainable supplies for the hospitality industry.",
+      meta_title: "Pub Supplies | Napkins, Straws & Bar Accessories | Afida",
+      meta_description: "Eco-friendly pub supplies including paper straws, cocktail napkins, and bar accessories. Sustainable supplies for pubs, bars, and beer gardens.",
       featured: true,
       sample_pack: false
     )
@@ -196,12 +204,13 @@ namespace :collections do
     end
 
     # 9. Hotels
+    # Target keywords: hotel supplies (~50/mo) - limited keyword opportunity in this vertical
     hotels = Collection.find_or_initialize_by(slug: "hotels")
     hotels.assign_attributes(
       name: "Hotels",
       description: "Premium supplies for hotel restaurants, room service, and conference facilities. Professional quality for discerning guests.",
-      meta_title: "Hotel Supplies | Premium Catering Packaging | Afida",
-      meta_description: "Eco-friendly hotel supplies including coffee cups, napkins, and takeaway packaging. Premium quality for hospitality professionals.",
+      meta_title: "Hotel Supplies | Coffee Cups, Napkins & Catering Packaging | Afida",
+      meta_description: "Premium eco-friendly hotel supplies including paper coffee cups, napkins, and room service packaging. Sustainable catering supplies for hotels and B&Bs.",
       featured: true,
       sample_pack: false
     )
@@ -216,13 +225,14 @@ namespace :collections do
       puts "○ Exists: #{hotels.name} (#{hotels.products.count} products)"
     end
 
-    # 10. Eco Essentials (keeping as requested)
+    # 10. Eco Essentials
+    # Target keywords: eco friendly packaging (1,500/mo), compostable cups (350/mo), compostable packaging (400/mo), biodegradable straws (150/mo)
     eco = Collection.find_or_initialize_by(slug: "eco-essentials")
     eco.assign_attributes(
       name: "Eco Essentials",
       description: "Our most sustainable products - made from bamboo, bagasse, and other renewable materials. The greenest choice for environmentally conscious businesses.",
-      meta_title: "Most Sustainable Products | Eco Essentials | Afida",
-      meta_description: "Our greenest products made from bamboo, bagasse, and compostable materials. The most sustainable choice for your business.",
+      meta_title: "Eco Friendly Packaging | Compostable Cups & Biodegradable Supplies | Afida",
+      meta_description: "Compostable cups, biodegradable straws, and eco friendly packaging made from bamboo and bagasse. Sustainable food service supplies for UK businesses.",
       featured: true,
       sample_pack: false
     )
@@ -242,10 +252,13 @@ namespace :collections do
     # Using short slugs for clean URLs: /samples/coffee-shop, /samples/bakery, etc.
 
     # 11. Coffee Shop Sample Pack
+    # Target keywords: free samples (high intent), coffee cups samples, try before you buy
     coffee_sample = Collection.find_or_initialize_by(slug: "coffee-shop")
     coffee_sample.assign_attributes(
       name: "Coffee Shop",
       description: "Try our most popular coffee shop products. Includes a selection of cup sizes, matching lids, and accessories.",
+      meta_title: "Free Coffee Shop Sample Pack | Try Before You Buy | Afida",
+      meta_description: "Order free samples of our paper coffee cups, lids, and accessories. Try single wall, double wall, and ripple cups before you buy. UK delivery.",
       featured: false,
       sample_pack: true
     )
@@ -267,10 +280,13 @@ namespace :collections do
     end
 
     # 12. Restaurant Sample Pack
+    # Target keywords: takeaway packaging samples, restaurant packaging samples
     restaurant_sample = Collection.find_or_initialize_by(slug: "restaurant")
     restaurant_sample.assign_attributes(
       name: "Restaurant",
       description: "Sample our takeaway containers and packaging. Test sizes and quality before ordering in bulk.",
+      meta_title: "Free Restaurant Sample Pack | Takeaway Packaging Samples | Afida",
+      meta_description: "Order free samples of takeaway containers and restaurant packaging. Test quality and sizes before ordering in bulk. Free UK delivery.",
       featured: false,
       sample_pack: true
     )
@@ -291,10 +307,13 @@ namespace :collections do
     end
 
     # 13. Ice Cream & Dessert Sample Pack (mirrors Sweet Treats collection)
+    # Target keywords: ice cream cup samples, dessert packaging samples
     ice_cream_sample = Collection.find_or_initialize_by(slug: "ice-cream")
     ice_cream_sample.assign_attributes(
       name: "Ice Cream Parlour",
       description: "Try our colourful ice cream cups and eco-friendly wooden spoons. Perfect for gelato shops, dessert bars, and frozen yogurt outlets.",
+      meta_title: "Free Ice Cream Parlour Sample Pack | Cups & Spoons | Afida",
+      meta_description: "Order free samples of ice cream cups and wooden spoons. Test sizes and colours before ordering in bulk. Perfect for gelato shops and dessert bars.",
       featured: false,
       sample_pack: true
     )
@@ -316,10 +335,13 @@ namespace :collections do
     end
 
     # 14. Bakery Sample Pack (mirrors Bakeries collection)
+    # Target keywords: bakery packaging samples, eco-friendly bakery supplies
     bakery_sample = Collection.find_or_initialize_by(slug: "bakery")
     bakery_sample.assign_attributes(
       name: "Bakery",
       description: "Essential packaging for bakeries and pastry shops. Includes coffee cups for your morning rush and bags for takeaway treats.",
+      meta_title: "Free Bakery Sample Pack | Eco-Friendly Packaging Samples | Afida",
+      meta_description: "Order free samples of bakery packaging including paper bags, napkins, and coffee cups. Test quality before ordering in bulk. Free UK delivery.",
       featured: false,
       sample_pack: true
     )
@@ -340,10 +362,13 @@ namespace :collections do
     end
 
     # 15. Takeaway Sample Pack (mirrors Takeaway collection)
+    # Target keywords: takeaway container samples, pizza box samples, food packaging samples
     takeaway_sample = Collection.find_or_initialize_by(slug: "takeaway", sample_pack: true)
     takeaway_sample.assign_attributes(
       name: "Takeaway",
       description: "Complete takeaway packaging essentials. Test our pizza boxes, food containers, and bags before ordering in bulk.",
+      meta_title: "Free Takeaway Sample Pack | Containers & Packaging Samples | Afida",
+      meta_description: "Order free samples of takeaway containers, pizza boxes, and food packaging. Test quality and sizes before ordering in bulk. Free UK delivery.",
       featured: false,
       sample_pack: true
     )
@@ -364,10 +389,13 @@ namespace :collections do
     end
 
     # 16. Smoothie & Juice Bar Sample Pack (mirrors Smoothie & Juice Bars collection)
+    # Target keywords: smoothie cup samples, juice bar packaging samples
     smoothie_sample = Collection.find_or_initialize_by(slug: "smoothie-bar")
     smoothie_sample.assign_attributes(
       name: "Smoothie & Juice Bar",
       description: "Crystal-clear cups, lids, and eco-friendly straws for smoothies and juices. Perfect for juice bars and health food outlets.",
+      meta_title: "Free Smoothie Bar Sample Pack | Cups, Lids & Straws | Afida",
+      meta_description: "Order free samples of smoothie cups, dome lids, and paper straws. Test quality and sizes before ordering in bulk. Free UK delivery.",
       featured: false,
       sample_pack: true
     )
