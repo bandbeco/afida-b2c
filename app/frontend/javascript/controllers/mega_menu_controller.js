@@ -91,7 +91,7 @@ export default class extends Controller {
             this.backdropTarget.classList.add("hidden")
           }
         }
-      }, 200)
+      }, 300)
     }, 100) // Delay allows moving mouse from trigger to panel
   }
 
