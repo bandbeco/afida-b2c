@@ -9,22 +9,24 @@
      data-controller="mega-menu"
      data-mega-menu-default-image-value="<%= default_collection&.image&.attached? ? url_for(default_collection.image.variant(resize_to_fill: [400, 400])) : '' %>">
 
-  <%# Trigger - the nav link %>
-  <button type="button"
-          class="text-lg hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors flex items-center gap-1 <%= request.path.start_with?('/collections') ? 'underline decoration-secondary decoration-2 underline-offset-8' : '' %>"
-          data-mega-menu-target="trigger"
-          data-action="mouseenter->mega-menu#showPanel mouseleave->mega-menu#hidePanel">
+  <%# Trigger - the nav link (clickable, with mega-menu on hover) %>
+  <%= link_to collections_path,
+              class: "cursor-pointer hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors flex items-center gap-1 #{request.path.start_with?('/collections') ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}",
+              data: {
+                mega_menu_target: "trigger",
+                action: "mouseenter->mega-menu#showPanel mouseleave->mega-menu#hidePanel"
+              } do %>
     Collections
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
     </svg>
-  </button>
+  <% end %>
 
   <%# Backdrop overlay - dims the rest of the page (starts below main navbar) %>
   <div class="hidden opacity-0 fixed inset-x-0 bottom-0 bg-black/30 z-40 transition-opacity duration-300"
        data-mega-menu-target="backdrop"
        data-action="click->mega-menu#hidePanel"
-       style="top: 104px;">
+       style="top: 64px;">
   </div>
 
   <%# Dropdown panel with slide-down animation %>
