@@ -87,7 +87,7 @@ module Admin
     def collection_params
       params.expect(collection: [
         :name, :slug, :description, :meta_title, :meta_description,
-        :featured, :sample_pack, :image, :position, product_ids: []
+        :featured, :sample_pack, :image, product_ids: []
       ])
     end
 

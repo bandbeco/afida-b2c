@@ -103,8 +103,8 @@ class SamplesController < ApplicationController
         existing_product_ids << product.id
       rescue ActiveRecord::RecordInvalid => e
         # Handle sample limit or other validation errors
-        if e.record.errors[:base].any? { |msg| msg.include?("sample") || msg.include?("limit") }
-          skipped_count = products.length - added_count - skipped_count
+        if e.record.errors[:base].any? { |msg| msg.match?(/sample|limit/i) }
+          skipped_count = products.length - added_count
           break
         else
           raise

@@ -12,7 +12,7 @@ class CollectionsController < ApplicationController
     @collection = Collection.regular.find_by!(slug: params[:slug])
 
     @products = @collection.visible_products
-                           .includes(:category, product_photo_attachment: :blob)
+                           .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
                            .order("collection_items.position ASC")
   end
 end
