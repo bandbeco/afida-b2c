@@ -28,7 +28,7 @@
           "name": "Is there a cost for samples?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The samples themselves are completely free. You only need to cover the delivery cost of £7.50. If you add samples to a regular order, they ship free with your purchase."
+            "text": "The samples themselves are completely free. You only need to cover the delivery cost of #{number_to_currency(Shipping::STANDARD_COST)}. If you add samples to a regular order, they ship free with your purchase."
           }
         }
       ]
@@ -41,8 +41,8 @@
   <div id="flash-messages" class="container mx-auto px-4"></div>
 
   <!-- Header -->
-  <div class="container mx-auto px-4 text-center">
-    <h1 class="text-4xl mb-4 pt-6">Request Free Samples</h1>
+  <div class="container mx-auto px-4">
+    <h1>Request Free Samples</h1>
   </div>
   <div class="bg-base-200 py-8">
     <div class="max-w-3xl mx-auto container px-4 text-center">
