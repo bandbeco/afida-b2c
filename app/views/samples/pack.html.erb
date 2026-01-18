@@ -17,45 +17,27 @@
 
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-4xl mb-4"><%= @sample_pack.name %></h1>
+      <% products_to_add = @products.reject { |p| @sample_product_ids.include?(p.id) } %>
+
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+        <h1 class="text-4xl"><%= @sample_pack.name %></h1>
+
+        <%= button_to add_pack_samples_path(slug: @sample_pack.slug),
+                      method: :post,
+                      class: "btn btn-primary",
+                      disabled: products_to_add.empty? do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Add All <%= @sample_pack.name %> Samples
+        <% end %>
+      </div>
 
       <% if @sample_pack.description.present? %>
-        <p class="text-lg text-base-content/70 max-w-2xl mb-6">
+        <p class="text-lg text-base-content/70 max-w-2xl">
           <%= @sample_pack.description %>
         </p>
       <% end %>
-
-      <!-- Add All Button -->
-      <% remaining_slots = Cart::SAMPLE_LIMIT - @sample_count %>
-      <% products_to_add = @products.reject { |p| @sample_product_ids.include?(p.id) } %>
-
-      <div class="bg-base-200 rounded-lg p-6 mb-8">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h2 class="text-xl font-medium mb-1">Add All Samples</h2>
-            <p class="text-base-content/70">
-              <% if products_to_add.any? %>
-                Add <%= products_to_add.size %> samples to your cart with one click.
-                <% if remaining_slots < products_to_add.size %>
-                  <span class="text-warning">(Only <%= remaining_slots %> slots remaining)</span>
-                <% end %>
-              <% else %>
-                All items from this pack are already in your cart.
-              <% end %>
-            </p>
-          </div>
-
-          <%= button_to add_pack_samples_path(slug: @sample_pack.slug),
-                        method: :post,
-                        class: "btn btn-primary btn-lg",
-                        disabled: products_to_add.empty? do %>
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            Add All to Cart
-          <% end %>
-        </div>
-      </div>
     </div>
 
     <!-- Sample Counter -->
