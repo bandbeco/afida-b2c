@@ -1,0 +1,166 @@
+<%= form_with(model: [:admin, collection], local: true, class: "space-y-4 sm:space-y-6 max-w-2xl") do |form| %>
+  <% if collection.errors.any? %>
+    <div class="alert alert-error">
+      <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <div>
+        <h3 class="font-bold"><%= pluralize(collection.errors.count, "error") %> prohibited this collection from being saved:</h3>
+        <ul class="list-disc list-inside text-sm mt-1">
+          <% collection.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Basic Info %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Basic Information</h2>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :name, class: "label" do %>
+            <span class="label-text font-medium">Name</span>
+          <% end %>
+          <%= form.text_field :name, class: "input input-bordered w-full", placeholder: "e.g. Coffee Shop Essentials" %>
+        </div>
+
+        <div class="form-control">
+          <%= form.label :slug, class: "label" do %>
+            <span class="label-text font-medium">Slug</span>
+          <% end %>
+          <%= form.text_field :slug, class: "input input-bordered w-full", placeholder: "e.g. coffee-shop-essentials" %>
+          <label class="label">
+            <span class="label-text-alt">URL-friendly identifier (lowercase, use hyphens). Leave blank to auto-generate.</span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <%= form.label :description, class: "label" do %>
+            <span class="label-text font-medium">Description</span>
+          <% end %>
+          <%= form.text_area :description, class: "textarea textarea-bordered w-full", rows: 3, placeholder: "Brief description of the collection" %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Collection Type %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Collection Type</h2>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <%= form.check_box :featured, class: "checkbox checkbox-primary" %>
+            <div>
+              <span class="label-text font-medium">Featured Collection</span>
+              <p class="text-sm text-base-content/60">Show on homepage and collection highlights</p>
+            </div>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <label class="label cursor-pointer justify-start gap-4">
+            <%= form.check_box :sample_pack, class: "checkbox checkbox-primary" %>
+            <div>
+              <span class="label-text font-medium">Sample Pack</span>
+              <p class="text-sm text-base-content/60">Show on samples page with "Add All to Cart" functionality</p>
+            </div>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# SEO %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">SEO</h2>
+
+      <div class="space-y-4">
+        <div class="form-control">
+          <%= form.label :meta_title, class: "label" do %>
+            <span class="label-text font-medium">Meta Title</span>
+          <% end %>
+          <%= form.text_field :meta_title, class: "input input-bordered w-full", placeholder: "e.g. Coffee Shop Supplies | Afida" %>
+          <label class="label">
+            <span class="label-text-alt">50-60 characters recommended</span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <%= form.label :meta_description, class: "label" do %>
+            <span class="label-text font-medium">Meta Description</span>
+          <% end %>
+          <%= form.text_area :meta_description, class: "textarea textarea-bordered w-full", rows: 2, placeholder: "Brief description for search engines" %>
+          <label class="label">
+            <span class="label-text-alt">150-160 characters recommended</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%# Image %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Collection Image</h2>
+
+      <% if collection.image.attached? %>
+        <div class="mb-4">
+          <%= image_tag collection.image, class: "w-32 h-32 sm:w-48 sm:h-48 object-cover rounded-lg shadow-md" %>
+          <p class="text-sm text-base-content/60 mt-2">Current image</p>
+        </div>
+      <% end %>
+
+      <div class="form-control">
+        <%= form.file_field :image, class: "file-input file-input-bordered w-full", accept: "image/*" %>
+        <label class="label">
+          <span class="label-text-alt">JPG, PNG, or WebP recommended</span>
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <%# Products %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Products in Collection</h2>
+      <p class="text-sm text-base-content/60 mb-4">Select products to include in this collection. Products can belong to multiple collections.</p>
+
+      <div class="max-h-96 overflow-y-auto border border-base-200 rounded-lg p-2">
+        <% @products.group_by(&:category).each do |category, products| %>
+          <div class="mb-4">
+            <h3 class="font-medium text-sm text-base-content/70 mb-2 sticky top-0 bg-base-100 py-1"><%= category.name %></h3>
+            <div class="space-y-1 pl-2">
+              <% products.each do |product| %>
+                <label class="flex items-center gap-2 cursor-pointer hover:bg-base-200 rounded px-2 py-1">
+                  <%= check_box_tag "collection[product_ids][]",
+                                    product.id,
+                                    collection.products.include?(product),
+                                    id: "product_#{product.id}",
+                                    class: "checkbox checkbox-sm checkbox-primary" %>
+                  <span class="text-sm"><%= product.generated_title %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Hidden field to ensure empty array is submitted when no products selected %>
+      <%= hidden_field_tag "collection[product_ids][]", "" %>
+    </div>
+  </div>
+
+  <%# Actions %>
+  <div class="flex flex-col sm:flex-row gap-2 sm:gap-4">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_collections_path, class: "btn btn-ghost" %>
+  </div>
+<% end %>

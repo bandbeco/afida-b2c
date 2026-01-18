@@ -1,0 +1,39 @@
+# Collections for testing audience-based product groupings
+# See app/models/collection.rb for model details
+
+# Featured regular collection (visible on /collections)
+coffee_shop_essentials:
+  name: "Coffee Shop Essentials"
+  slug: "coffee-shop-essentials"
+  description: "Everything your coffee shop needs - cups, lids, stirrers, and more"
+  meta_title: "Coffee Shop Supplies | Eco-Friendly Essentials"
+  meta_description: "Complete range of eco-friendly supplies for coffee shops including cups, lids, and accessories"
+  featured: true
+  sample_pack: false
+  position: 1
+
+# Non-featured regular collection
+restaurant_supplies:
+  name: "Restaurant Supplies"
+  slug: "restaurant-supplies"
+  description: "Professional catering supplies for restaurants"
+  featured: false
+  sample_pack: false
+  position: 2
+
+# Sample pack collection (visible on /samples instead of /collections)
+coffee_shop_sample_pack:
+  name: "Coffee Shop Sample Pack"
+  slug: "coffee-shop-sample-pack"
+  description: "Try our most popular coffee shop products"
+  featured: false
+  sample_pack: true
+  position: 1
+
+# Empty collection for edge case testing
+empty_collection:
+  name: "Empty Collection"
+  slug: "empty-collection"
+  featured: true
+  sample_pack: false
+  position: 3

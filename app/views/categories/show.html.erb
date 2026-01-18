@@ -60,7 +60,7 @@
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
 
-<h1 class="text-4xl py-4 mb-2 flex items-center gap-3">
+<h1 class="text-4xl mb-4 flex items-center gap-3">
   <% if category_icon_path(@category).present? %>
     <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 object-contain', alt: "#{@category.name} icon" %>
   <% end %>

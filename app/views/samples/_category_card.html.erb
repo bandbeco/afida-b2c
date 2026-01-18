@@ -4,7 +4,7 @@
 <div class="card bg-base-100 shadow-lg"
      id="<%= dom_id(category, :sample_card) %>"
      data-controller="category-expand"
-     data-category-expand-url-value="<%= category_samples_path(category.slug) %>"
+     data-category-expand-url-value="<%= category_samples_path(category_slug: category.slug) %>"
      data-category-expand-category-id-value="<%= category.id %>">
 
   <!-- Category Header (clickable) -->

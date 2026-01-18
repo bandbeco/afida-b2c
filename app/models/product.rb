@@ -7,6 +7,8 @@
 # Key relationships:
 # - belongs_to :product_family (optional) - For grouping related products
 # - belongs_to :category - Product must be in a category
+# - has_many :collection_items - Membership in collections
+# - has_many :collections - Collections this product belongs to
 # - has_many :cart_items - Items in shopping carts
 # - has_many :order_items - Items in completed orders
 # - has_one_attached :product_photo - Main product photo
@@ -40,6 +42,10 @@ class Product < ApplicationRecord
 
   # Branded product pricing tiers
   has_many :branded_product_prices, dependent: :destroy
+
+  # Collections (audience-based groupings)
+  has_many :collection_items, dependent: :destroy
+  has_many :collections, through: :collection_items
 
   has_one_attached :product_photo
   has_one_attached :lifestyle_photo
