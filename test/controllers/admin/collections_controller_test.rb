@@ -108,7 +108,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
   # ==========================================================================
 
   test "should get edit" do
-    get edit_admin_collection_path(@collection), headers: @headers
+    get edit_admin_collection_path(@collection.id), headers: @headers
     assert_response :success
     assert_match /Edit Collection/, response.body
     assert_match @collection.name, response.body
@@ -119,7 +119,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
   # ==========================================================================
 
   test "should update collection" do
-    patch admin_collection_path(@collection), headers: @headers, params: {
+    patch admin_collection_path(@collection.id), headers: @headers, params: {
       collection: {
         name: "Updated Collection Name",
         description: "Updated description"
@@ -136,7 +136,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update with invalid data re-renders form" do
-    patch admin_collection_path(@collection), headers: @headers, params: {
+    patch admin_collection_path(@collection.id), headers: @headers, params: {
       collection: { name: "" }
     }
 
@@ -151,7 +151,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
     collection_to_delete = collections(:empty_collection)
 
     assert_difference("Collection.count", -1) do
-      delete admin_collection_path(collection_to_delete), headers: @headers
+      delete admin_collection_path(collection_to_delete.id), headers: @headers
     end
 
     assert_redirected_to admin_collections_path
@@ -178,7 +178,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
     collection = Collection.regular.by_position.last
     original_position = collection.position
 
-    patch move_higher_admin_collection_path(collection), headers: @headers
+    patch move_higher_admin_collection_path(collection.id), headers: @headers
 
     collection.reload
     assert_operator collection.position, :<, original_position
@@ -192,7 +192,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
     collection = Collection.regular.by_position.first
     original_position = collection.position
 
-    patch move_lower_admin_collection_path(collection), headers: @headers
+    patch move_lower_admin_collection_path(collection.id), headers: @headers
 
     collection.reload
     assert_operator collection.position, :>, original_position
@@ -210,7 +210,7 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
     empty_collection = collections(:empty_collection)
     assert_equal 0, empty_collection.products.count
 
-    patch admin_collection_path(empty_collection), headers: @headers, params: {
+    patch admin_collection_path(empty_collection.id), headers: @headers, params: {
       collection: {
         name: empty_collection.name,
         product_ids: [ product1.id, product2.id ]

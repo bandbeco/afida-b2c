@@ -9,7 +9,7 @@ class CollectionsController < ApplicationController
   end
 
   def show
-    @collection = Collection.find_by!(slug: params[:slug])
+    @collection = Collection.regular.find_by!(slug: params[:slug])
 
     @products = @collection.visible_products
                            .includes(:category, product_photo_attachment: :blob)

@@ -81,7 +81,7 @@ module Admin
     private
 
     def set_collection
-      @collection = Collection.find_by!(slug: params[:id])
+      @collection = Collection.find(params[:id])
     end
 
     def collection_params

@@ -29,7 +29,7 @@
             </td>
             <td>
               <div class="flex gap-2">
-                <%= button_to move_higher_admin_collection_path(collection),
+                <%= button_to move_higher_admin_collection_path(collection.id),
                     method: :patch,
                     class: "btn btn-sm btn-ghost",
                     disabled: collection.first?,
@@ -38,7 +38,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
                   </svg>
                 <% end %>
-                <%= button_to move_lower_admin_collection_path(collection),
+                <%= button_to move_lower_admin_collection_path(collection.id),
                     method: :patch,
                     class: "btn btn-sm btn-ghost",
                     disabled: collection.last?,
