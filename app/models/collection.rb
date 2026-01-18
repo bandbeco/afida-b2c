@@ -39,9 +39,9 @@ class Collection < ApplicationRecord
     slug
   end
 
-  # Returns products that are active and visible in catalog
+  # Returns products that are active and visible in catalog (standard products only)
   def visible_products
-    products.active.catalog_products
+    products.active.standard
   end
 
   # Returns sample-eligible products (for sample packs)
