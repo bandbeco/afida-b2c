@@ -20,11 +20,11 @@
     </svg>
   </button>
 
-  <%# Backdrop overlay - dims the rest of the page %>
-  <div class="hidden opacity-0 fixed inset-0 bg-black/30 z-40 transition-opacity duration-300"
+  <%# Backdrop overlay - dims the rest of the page (starts below navbar) %>
+  <div class="hidden opacity-0 fixed inset-x-0 bottom-0 bg-black/30 z-40 transition-opacity duration-300"
        data-mega-menu-target="backdrop"
        data-action="click->mega-menu#hidePanel"
-       style="top: 4rem;">
+       style="top: 56px;">
   </div>
 
   <%# Dropdown panel with slide-down animation %>
