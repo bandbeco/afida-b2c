@@ -30,7 +30,7 @@
       <nav class="flex flex-col gap-2 min-w-[200px]" aria-label="Collections">
         <% collections.each do |collection| %>
           <%= link_to collection_path(collection),
-                      class: "text-xl font-medium hover:text-primary transition-colors py-1",
+                      class: "text-2xl hover:text-primary transition-colors py-1",
                       data: {
                         mega_menu_target: "item",
                         action: "mouseenter->mega-menu#updatePreview mouseleave->mega-menu#resetPreview",
@@ -38,11 +38,6 @@
                       } do %>
             <%= collection.name %>
           <% end %>
-        <% end %>
-
-        <%# View all link %>
-        <%= link_to collections_path, class: "text-sm text-base-content/60 hover:text-primary mt-4 pt-4 border-t border-base-200" do %>
-          View all collections &rarr;
         <% end %>
       </nav>
 
