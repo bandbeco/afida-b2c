@@ -136,18 +136,6 @@ class PagesController < ApplicationController
   end
 
   def client_logos
-    [
-      "ballie-ballerson.webp",
-      "edwardian-hotels.svg",
-      "hawksmoor.webp",
-      "hurlingham.webp",
-      "la-gelateria.webp",
-      "mandarin-oriental.svg",
-      "marriott.svg",
-      "pixel-bar.webp",
-      "royal-lancaster.svg",
-      "the-grove.webp",
-      "vincenzos.svg"
-    ]
+    helpers.client_logos
   end
 end

@@ -1,4 +1,23 @@
 module ApplicationHelper
+  # Client logos used for trust badges across the site
+  CLIENT_LOGOS = [
+    "ballie-ballerson.webp",
+    "edwardian-hotels.svg",
+    "hawksmoor.webp",
+    "hurlingham.webp",
+    "la-gelateria.webp",
+    "mandarin-oriental.svg",
+    "marriott.svg",
+    "pixel-bar.webp",
+    "royal-lancaster.svg",
+    "the-grove.webp",
+    "vincenzos.svg"
+  ].freeze
+
+  def client_logos
+    CLIENT_LOGOS
+  end
+
   def category_icon_path(category)
     icon_mapping = {
       "cups-and-lids" => "images/graphics/cold-cups.svg",

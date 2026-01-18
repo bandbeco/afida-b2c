@@ -11,36 +11,114 @@
   </nav>
 <% end %>
 
+<% products_to_add = @products.reject { |p| @sample_product_ids.include?(p.id) } %>
+
 <div class="drawer drawer-end">
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
 
-    <!-- Header -->
-    <div class="mb-8">
-      <% products_to_add = @products.reject { |p| @sample_product_ids.include?(p.id) } %>
+    <%# ==================== HERO SECTION ==================== %>
+    <section class="bg-gradient-to-br from-primary/5 to-secondary/5 -mx-5 px-5 py-12 mb-8 rounded-xl">
+      <div class="max-w-4xl mx-auto text-center">
+        <h1 class="text-4xl md:text-5xl mb-4">
+          Try Our <%= @sample_pack.name %> — <span class="text-primary">Free</span>
+        </h1>
 
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
-        <h1 class="text-4xl"><%= @sample_pack.name %></h1>
+        <% if @sample_pack.description.present? %>
+          <p class="text-lg text-base-content/70 max-w-2xl mx-auto mb-6">
+            <%= @sample_pack.description %>
+          </p>
+        <% else %>
+          <p class="text-lg text-base-content/70 max-w-2xl mx-auto mb-6">
+            Get up to <%= sample_limit %> free samples delivered for just £7.50. Test the quality before you commit to bulk orders.
+          </p>
+        <% end %>
 
+        <%# Primary CTA %>
         <%= button_to add_pack_samples_path(slug: @sample_pack.slug),
                       method: :post,
-                      class: "btn btn-primary",
+                      class: "btn btn-primary btn-lg shadow-lg shadow-primary/20 mb-8",
                       disabled: products_to_add.empty? do %>
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          Add All <%= @sample_pack.name %> Samples
+          Request Free Samples
         <% end %>
+
+        <%# Trust badges %>
+        <div class="flex flex-col items-center gap-3">
+          <div class="flex items-center gap-2">
+            <div class="flex -space-x-2">
+              <% client_logos.reject { |logo| logo == "the-grove.webp" }.first(6).each do |logo| %>
+                <div class="w-8 h-8 rounded-full bg-white border-2 border-white shadow-sm overflow-hidden">
+                  <%= vite_image_tag "images/logos/#{logo}", alt: "", class: "w-full h-full object-contain", loading: "lazy" %>
+                </div>
+              <% end %>
+            </div>
+            <span class="text-sm text-base-content/70">Trusted by 500+ UK businesses</span>
+          </div>
+        </div>
       </div>
+    </section>
 
-      <% if @sample_pack.description.present? %>
-        <p class="text-lg text-base-content/70 max-w-2xl">
-          <%= @sample_pack.description %>
+    <%# ==================== HOW IT WORKS ==================== %>
+    <section class="bg-base-200 -mx-5 px-5 py-8 mb-8 rounded-xl">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-center text-xl mb-6">How It Works</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="text-center">
+            <div class="text-5xl mb-3 text-secondary font-light">1</div>
+            <h3 class="font-medium mb-2">Browse & Select</h3>
+            <p class="text-sm text-base-content/70">
+              Choose up to <%= sample_limit %> samples from this curated pack.
+            </p>
+          </div>
+          <div class="text-center">
+            <div class="text-5xl mb-3 text-secondary font-light">2</div>
+            <h3 class="font-medium mb-2">Checkout</h3>
+            <p class="text-sm text-base-content/70">
+              Samples are free — just cover £7.50 delivery.
+            </p>
+          </div>
+          <div class="text-center">
+            <div class="text-5xl mb-3 text-secondary font-light">3</div>
+            <h3 class="font-medium mb-2">Test & Decide</h3>
+            <p class="text-sm text-base-content/70">
+              Try before you buy. Love them? Order in bulk.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <%# ==================== WHAT'S INCLUDED ==================== %>
+    <% if @products.any? %>
+      <section class="mb-8">
+        <h2 class="text-xl mb-4">What's Included in This Pack</h2>
+        <p class="text-base-content/70 mb-6">
+          This sample pack includes <%= @products.count %> carefully selected products. Add them all at once, or pick the ones you want to try.
         </p>
-      <% end %>
-    </div>
 
-    <!-- Sample Counter -->
+        <%# Visual summary of included products %>
+        <div class="flex flex-wrap gap-2 mb-6">
+          <% @products.first(8).each do |product| %>
+            <div class="flex items-center gap-2 bg-base-200 rounded-full px-3 py-1.5">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="text-sm"><%= truncate(product.name, length: 30) %></span>
+            </div>
+          <% end %>
+          <% if @products.count > 8 %>
+            <div class="flex items-center gap-2 bg-base-200 rounded-full px-3 py-1.5">
+              <span class="text-sm text-base-content/70">+ <%= @products.count - 8 %> more</span>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <%# ==================== SAMPLE COUNTER (STICKY) ==================== %>
     <div class="sticky top-0 z-10 bg-base-100 py-4 mb-4 border-b border-base-200"
          data-controller="sample-counter"
          data-sample-counter-limit-value="<%= Cart::SAMPLE_LIMIT %>"
@@ -51,27 +129,41 @@
             <%= @sample_count %> of <%= Cart::SAMPLE_LIMIT %> samples selected
           </span>
         </div>
-        <% if @sample_count > 0 %>
-          <%= link_to cart_path, class: "btn btn-primary btn-sm" do %>
-            View Cart
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-            </svg>
+        <div class="flex gap-2">
+          <% if @sample_count > 0 %>
+            <%= link_to cart_path, class: "btn btn-primary btn-sm" do %>
+              View Cart
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
       </div>
     </div>
 
-    <!-- Products Grid -->
+    <%# ==================== PRODUCTS GRID ==================== %>
     <% if @products.any? %>
-      <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <% @products.each do |product| %>
-          <%= render "samples/product_card", product: product,
-                     sample_count: @sample_count,
-                     sample_product_ids: @sample_product_ids,
-                     regular_product_ids: [] %>
-        <% end %>
-      </div>
+      <section class="mb-12">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl">Select Your Samples</h2>
+          <%= button_to add_pack_samples_path(slug: @sample_pack.slug),
+                        method: :post,
+                        class: "btn btn-outline btn-sm",
+                        disabled: products_to_add.empty? do %>
+            Add All to Cart
+          <% end %>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <% @products.each do |product| %>
+            <%= render "samples/product_card", product: product,
+                       sample_count: @sample_count,
+                       sample_product_ids: @sample_product_ids,
+                       regular_product_ids: [] %>
+          <% end %>
+        </div>
+      </section>
     <% else %>
       <div class="text-center py-16">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -83,11 +175,27 @@
       </div>
     <% end %>
 
-    <!-- Individual Selection Note -->
+    <%# ==================== FINAL CTA ==================== %>
     <% if @products.any? %>
-      <div class="mt-8 text-center text-base-content/60">
-        <p>Prefer to choose individually? Click on any product above to add it as a sample.</p>
-      </div>
+      <section class="bg-gradient-to-br from-primary/10 to-secondary/10 -mx-5 px-5 py-12 rounded-xl text-center">
+        <h2 class="text-2xl mb-3">Ready to Try Before You Buy?</h2>
+        <p class="text-base-content/70 mb-6 max-w-lg mx-auto">
+          Get your free samples delivered for just £7.50. No commitment, no pressure — just quality products you can test yourself.
+        </p>
+        <%= button_to add_pack_samples_path(slug: @sample_pack.slug),
+                      method: :post,
+                      class: "btn btn-primary btn-lg",
+                      disabled: products_to_add.empty? do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+          </svg>
+          Request Your Free Samples
+        <% end %>
+
+        <p class="text-sm text-base-content/50 mt-4">
+          Or <%= link_to "pick individual samples", "#", class: "underline", onclick: "window.scrollTo({top: 0, behavior: 'smooth'}); return false;" %> from the list above.
+        </p>
+      </section>
     <% end %>
 
   </div>
