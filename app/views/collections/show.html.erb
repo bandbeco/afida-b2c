@@ -23,6 +23,7 @@
 <% content_for :og_tags_custom, true %>
 <% content_for :twitter_tags_custom, true %>
 <% content_for :head do %>
+  <%= canonical_url(collection_url(@collection)) %>
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= collection_meta_title(@collection) %>">
   <meta property="og:description" content="<%= collection_meta_description(@collection) %>">

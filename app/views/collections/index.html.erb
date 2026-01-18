@@ -6,6 +6,10 @@ Collections | Afida
 Browse our curated collections of eco-friendly catering supplies, organised by business type and use case.
 <% end %>
 
+<% content_for :head do %>
+  <%= canonical_url(collections_url) %>
+<% end %>
+
 <% content_for :breadcrumbs do %>
   <nav aria-label="Breadcrumb" class="text-sm breadcrumbs">
     <ul>
