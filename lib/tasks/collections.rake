@@ -68,27 +68,27 @@ namespace :collections do
       puts "○ Exists: #{bakery.name} (#{bakery.products.count} products)"
     end
 
-    # 3. Sweet Treats (Desserts/Ice Cream)
-    # Target keywords: dessert packaging (100/mo), ice cream cups wholesale (20/mo)
-    sweet_treats = Collection.find_or_initialize_by(slug: "sweet-treats")
-    sweet_treats.assign_attributes(
-      name: "Sweet Treats",
+    # 3. Ice Cream Parlours (Desserts/Frozen Treats)
+    # Target keywords: ice cream cups wholesale (20/mo), dessert packaging (100/mo), gelato supplies
+    ice_cream_parlours = Collection.find_or_initialize_by(slug: "ice-cream-parlours")
+    ice_cream_parlours.assign_attributes(
+      name: "Ice Cream Parlours",
       description: "Colourful cups and accessories for serving frozen treats and desserts. Eye-catching designs that customers love.",
-      meta_title: "Ice Cream Cups & Dessert Packaging | Sweet Treat Supplies | Afida",
+      meta_title: "Ice Cream Cups & Supplies | Gelato Shop Packaging | Afida",
       meta_description: "Eco-friendly ice cream cups, wooden spoons, and dessert packaging. Perfect for ice cream parlours, gelato shops, and dessert vendors. Free samples.",
       featured: true,
       sample_pack: false
     )
-    if sweet_treats.new_record? || sweet_treats.products.empty?
-      sweet_treats.save!
-      sweet_treats.collection_items.destroy_all
+    if ice_cream_parlours.new_record? || ice_cream_parlours.products.empty?
+      ice_cream_parlours.save!
+      ice_cream_parlours.collection_items.destroy_all
       # Ice cream cups, wooden spoons, napkins
-      sweet_products = find_products("Ice Cream", "Wooden Spoon")
+      ice_cream_products = find_products("Ice Cream", "Wooden Spoon")
       napkins = find_products("Cocktail Napkin")
-      (sweet_products + napkins).uniq.each { |p| sweet_treats.collection_items.find_or_create_by!(product: p) }
-      puts "✓ Created: #{sweet_treats.name} with #{sweet_treats.products.count} products"
+      (ice_cream_products + napkins).uniq.each { |p| ice_cream_parlours.collection_items.find_or_create_by!(product: p) }
+      puts "✓ Created: #{ice_cream_parlours.name} with #{ice_cream_parlours.products.count} products"
     else
-      puts "○ Exists: #{sweet_treats.name} (#{sweet_treats.products.count} products)"
+      puts "○ Exists: #{ice_cream_parlours.name} (#{ice_cream_parlours.products.count} products)"
     end
 
     # 4. Restaurants
@@ -159,29 +159,7 @@ namespace :collections do
       puts "○ Exists: #{smoothie.name} (#{smoothie.products.count} products)"
     end
 
-    # 7. Health + Fitness
-    # Target keywords: limited direct keywords - cross-link to smoothie cups opportunity
-    health = Collection.find_or_initialize_by(slug: "health-fitness")
-    health.assign_attributes(
-      name: "Health + Fitness",
-      description: "Clear cups and lids perfect for protein shakes, smoothies, and healthy drinks. Ideal for gyms, health clubs, and wellness centres.",
-      meta_title: "Gym & Health Club Supplies | Clear Cups & Smoothie Cups | Afida",
-      meta_description: "Eco-friendly clear cups and lids for gyms, health clubs, and fitness centres. Perfect for protein shakes, smoothies, and juice bars. Free samples available.",
-      featured: true,
-      sample_pack: false
-    )
-    if health.new_record? || health.products.empty?
-      health.save!
-      health.collection_items.destroy_all
-      # Clear/smoothie cups, lids, straws, napkins
-      health_products = find_products("Smoothie Cup", "Smoothie Dome Lid", "Smoothie Flat Lid", "Straw", "Napkin")
-      health_products.each { |p| health.collection_items.find_or_create_by!(product: p) }
-      puts "✓ Created: #{health.name} with #{health.products.count} products"
-    else
-      puts "○ Exists: #{health.name} (#{health.products.count} products)"
-    end
-
-    # 8. Pubs + Bars
+    # 7. Pubs & Bars
     # Target keywords: pub supplies (300/mo), cocktail bar supplies (40/mo), paper straws wholesale (50/mo)
     pubs = Collection.find_or_initialize_by(slug: "pubs-bars")
     pubs.assign_attributes(
@@ -203,7 +181,7 @@ namespace :collections do
       puts "○ Exists: #{pubs.name} (#{pubs.products.count} products)"
     end
 
-    # 9. Hotels
+    # 8. Hotels
     # Target keywords: hotel supplies (~50/mo) - limited keyword opportunity in this vertical
     hotels = Collection.find_or_initialize_by(slug: "hotels")
     hotels.assign_attributes(
@@ -225,7 +203,7 @@ namespace :collections do
       puts "○ Exists: #{hotels.name} (#{hotels.products.count} products)"
     end
 
-    # 10. Eco Essentials
+    # 9. Eco Essentials
     # Target keywords: eco friendly packaging (1,500/mo), compostable cups (350/mo), compostable packaging (400/mo), biodegradable straws (150/mo)
     eco = Collection.find_or_initialize_by(slug: "eco-essentials")
     eco.assign_attributes(
@@ -251,7 +229,7 @@ namespace :collections do
     # =========================================================================
     # Using short slugs for clean URLs: /samples/coffee-shop, /samples/bakery, etc.
 
-    # 11. Coffee Shop Sample Pack
+    # 10. Coffee Shop Sample Pack
     # Target keywords: free samples (high intent), coffee cups samples, try before you buy
     coffee_sample = Collection.find_or_initialize_by(slug: "coffee-shop")
     coffee_sample.assign_attributes(
@@ -279,7 +257,7 @@ namespace :collections do
       puts "○ Exists: #{coffee_sample.name} (#{coffee_sample.products.count} products)"
     end
 
-    # 12. Restaurant Sample Pack
+    # 11. Restaurant Sample Pack
     # Target keywords: takeaway packaging samples, restaurant packaging samples
     restaurant_sample = Collection.find_or_initialize_by(slug: "restaurant")
     restaurant_sample.assign_attributes(
@@ -306,7 +284,7 @@ namespace :collections do
       puts "○ Exists: #{restaurant_sample.name} (#{restaurant_sample.products.count} products)"
     end
 
-    # 13. Ice Cream & Dessert Sample Pack (mirrors Sweet Treats collection)
+    # 12. Ice Cream Parlour Sample Pack
     # Target keywords: ice cream cup samples, dessert packaging samples
     ice_cream_sample = Collection.find_or_initialize_by(slug: "ice-cream")
     ice_cream_sample.assign_attributes(
@@ -334,7 +312,7 @@ namespace :collections do
       puts "○ Exists: #{ice_cream_sample.name} (#{ice_cream_sample.products.count} products)"
     end
 
-    # 14. Bakery Sample Pack (mirrors Bakeries collection)
+    # 13. Bakery Sample Pack
     # Target keywords: bakery packaging samples, eco-friendly bakery supplies
     bakery_sample = Collection.find_or_initialize_by(slug: "bakery")
     bakery_sample.assign_attributes(
@@ -361,7 +339,7 @@ namespace :collections do
       puts "○ Exists: #{bakery_sample.name} (#{bakery_sample.products.count} products)"
     end
 
-    # 15. Takeaway Sample Pack (mirrors Takeaway collection)
+    # 14. Takeaway Sample Pack
     # Target keywords: takeaway container samples, pizza box samples, food packaging samples
     takeaway_sample = Collection.find_or_initialize_by(slug: "takeaway", sample_pack: true)
     takeaway_sample.assign_attributes(
@@ -388,7 +366,7 @@ namespace :collections do
       puts "○ Exists: #{takeaway_sample.name} (#{takeaway_sample.products.count} products)"
     end
 
-    # 16. Smoothie & Juice Bar Sample Pack (mirrors Smoothie & Juice Bars collection)
+    # 15. Smoothie Bar Sample Pack
     # Target keywords: smoothie cup samples, juice bar packaging samples
     smoothie_sample = Collection.find_or_initialize_by(slug: "smoothie-bar")
     smoothie_sample.assign_attributes(
