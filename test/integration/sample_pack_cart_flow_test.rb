@@ -11,27 +11,26 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
   # Full user journey: Browse samples → View pack → Add to cart → View cart
   # ==========================================================================
 
-  test "guest user can browse sample packs, add pack to cart, and view cart" do
+  test "guest user can browse sample packs, request pack, and view cart" do
     # Step 1: Visit samples index
     get samples_path
     assert_response :success
     assert_match @sample_pack.name, response.body
 
-    # Step 2: Click through to sample pack page
-    get pack_samples_path(@sample_pack.slug)
+    # Step 2: Click through to sample pack landing page
+    get sample_pack_path(@sample_pack.slug)
     assert_response :success
     assert_match @sample_pack.name, response.body
-    assert_match @sample_pack.description, response.body
 
     # Verify sample products are displayed
     assert_match @sample_product_1.name, response.body
     assert_match @sample_product_2.name, response.body
 
-    # Verify "Add All" button is present
-    assert_match(/Add All to Cart/i, response.body)
+    # Verify "Order Your Free Samples" CTA is present
+    assert_match(/Order.*Free.*Samples/i, response.body)
 
-    # Step 3: Add all samples to cart
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
+    # Step 3: Request the sample pack
+    post request_pack_sample_pack_path(@sample_pack.slug)
     assert_redirected_to cart_path
 
     # Step 4: Follow redirect to cart and verify items
@@ -39,7 +38,7 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     # Verify flash message shows samples were added
-    assert_match(/\d+ samples/i, flash[:notice])
+    assert_match(/samples/i, flash[:notice])
 
     # Verify products appear in cart
     assert_match @sample_product_1.name, response.body
@@ -49,15 +48,15 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
     assert_match(/£0\.00/, response.body)
   end
 
-  test "authenticated user can add sample pack to cart" do
+  test "authenticated user can request sample pack" do
     user = users(:one)
     sign_in_as(user)
 
-    # Visit sample pack and add to cart
-    get pack_samples_path(@sample_pack.slug)
+    # Visit sample pack landing page and request it
+    get sample_pack_path(@sample_pack.slug)
     assert_response :success
 
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
+    post request_pack_sample_pack_path(@sample_pack.slug)
     assert_redirected_to cart_path
 
     follow_redirect!
@@ -72,7 +71,7 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
   test "sample pack items are added with correct attributes" do
     get samples_path  # Initialize session
 
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
+    post request_pack_sample_pack_path(@sample_pack.slug)
     assert_redirected_to cart_path
 
     # Get the cart that was created
@@ -81,7 +80,8 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
 
     # Verify cart items
     sample_items = cart.cart_items.where(is_sample: true)
-    assert_equal @sample_pack.sample_eligible_products.count, sample_items.count
+    expected_count = [ @sample_pack.sample_eligible_products.count, Cart::SAMPLE_LIMIT ].min
+    assert_equal expected_count, sample_items.count
 
     sample_items.each do |item|
       assert item.is_sample, "Item should be marked as sample"
@@ -94,7 +94,7 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
   test "cart correctly identifies samples-only state" do
     get samples_path
 
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
+    post request_pack_sample_pack_path(@sample_pack.slug)
     follow_redirect!
 
     cart = Cart.order(created_at: :desc).first
@@ -103,51 +103,36 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
-  # Sample limit enforcement
+  # Fixed pack behavior (clears existing samples)
   # ==========================================================================
 
-  test "sample limit is enforced when adding pack" do
+  test "requesting pack clears existing samples" do
     get samples_path
 
-    # First, add some individual samples to approach the limit
-    # The limit is Cart::SAMPLE_LIMIT (5)
-    product = products(:sample_cup_8oz)
+    # Add pack first time
+    post request_pack_sample_pack_path(@sample_pack.slug)
+    assert_redirected_to cart_path
 
-    # Add 4 samples manually first
-    4.times do |i|
-      # Create different sample products if needed, or use the same one
-      # For this test, we'll add a regular sample first
-    end
+    cart = Cart.order(created_at: :desc).first
+    initial_sample_count = cart.cart_items.samples.count
 
-    # Add pack - should only add up to the limit
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
+    # Request pack again - should clear and re-add
+    post request_pack_sample_pack_path(@sample_pack.slug)
+    follow_redirect!
+
+    cart.reload
+    # Count should be the same (cleared and re-added)
+    assert_equal initial_sample_count, cart.cart_items.samples.count
+  end
+
+  test "sample limit is enforced" do
+    get samples_path
+
+    post request_pack_sample_pack_path(@sample_pack.slug)
     assert_redirected_to cart_path
 
     cart = Cart.order(created_at: :desc).first
     assert cart.sample_count <= Cart::SAMPLE_LIMIT, "Sample count should not exceed limit"
-  end
-
-  # ==========================================================================
-  # Duplicate prevention
-  # ==========================================================================
-
-  test "adding same pack twice does not duplicate items" do
-    get samples_path
-
-    # Add pack first time
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
-    assert_redirected_to cart_path
-
-    cart = Cart.order(created_at: :desc).first
-    initial_item_count = cart.cart_items.count
-
-    # Add pack second time
-    post add_pack_samples_path, params: { slug: @sample_pack.slug }
-    follow_redirect!
-
-    cart.reload
-    assert_equal initial_item_count, cart.cart_items.count, "Items should not be duplicated"
-    assert_match(/already in your cart/i, flash[:notice])
   end
 
   # ==========================================================================
@@ -156,14 +141,14 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
 
   test "returns 404 for non-existent sample pack" do
     get samples_path
-    post add_pack_samples_path, params: { slug: "non-existent-pack" }
+    post request_pack_sample_pack_path("non-existent-pack")
     assert_response :not_found
   end
 
-  test "returns 404 when trying to add regular collection as sample pack" do
+  test "returns 404 when trying to request regular collection as sample pack" do
     regular_collection = collections(:coffee_shop_essentials)
     get samples_path
-    post add_pack_samples_path, params: { slug: regular_collection.slug }
+    post request_pack_sample_pack_path(regular_collection.slug)
     assert_response :not_found
   end
 
@@ -171,15 +156,15 @@ class SamplePackCartFlowTest < ActionDispatch::IntegrationTest
   # URL routing verification
   # ==========================================================================
 
-  test "sample pack is accessible at /samples/:slug" do
-    get "/samples/#{@sample_pack.slug}"
+  test "sample pack landing page is accessible at /sample-packs/:slug" do
+    get "/sample-packs/#{@sample_pack.slug}"
     assert_response :success
     assert_match @sample_pack.name, response.body
   end
 
   test "sample pack URL differs from collection URL" do
-    # Sample packs use /samples/:slug
-    get "/samples/#{@sample_pack.slug}"
+    # Sample packs use /sample-packs/:slug
+    get "/sample-packs/#{@sample_pack.slug}"
     assert_response :success
 
     # Regular collections use /collections/:slug

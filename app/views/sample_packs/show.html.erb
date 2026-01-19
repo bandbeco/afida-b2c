@@ -1,0 +1,202 @@
+<% content_for :title, "#{@sample_pack.name} | Free Sample Pack | Afida" %>
+<% content_for :meta_description, @sample_pack.description.presence || "Request your free #{@sample_pack.name} sample pack. #{@products.count} curated products delivered for just #{number_to_currency(Shipping::STANDARD_COST / 100.0)}. Try before you buy with Afida." %>
+
+<div class="min-h-screen">
+  <%# ==================== HERO SECTION ==================== %>
+  <section aria-label="Sample pack hero">
+    <div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-[#f4fbf8] overflow-hidden">
+      <div class="container mx-auto px-4 py-12 lg:py-16">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+          <%# Left column - Content %>
+          <div class="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
+            <span class="badge badge-neutral bg-white text-black border-black border-1 badge-lg mb-4"><%= @sample_pack.name %> Free Sample Pack</span>
+
+            <h1>
+              <span>Looking for packaging for your <%= @sample_pack.name.downcase %>?</span><br>
+              <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00a86b] to-[#79ebc0]">Try before you buy. On us.</span>
+            </h1>
+
+            <% if @sample_pack.description.present? %>
+              <p class="text-lg text-neutral-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                <%= @sample_pack.description %>
+              </p>
+            <% else %>
+              <p class="text-lg text-neutral-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                Get <%= @products.count %> hand-picked products delivered to your door. Test the quality before you commit to bulk orders.
+              </p>
+            <% end %>
+
+            <%# Value props %>
+            <div class="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-6 mb-8">
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-neutral-700">Samples are free</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-neutral-700">Just <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> delivery</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <span class="text-sm text-neutral-700">No commitment</span>
+              </div>
+            </div>
+
+            <%# CTA %>
+            <div class="flex justify-center lg:justify-start mb-8">
+              <div class="flex flex-col items-center gap-2">
+                <%= button_to request_pack_sample_pack_path(slug: @sample_pack.slug),
+                              method: :post,
+                              class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Order Your Free Samples
+                <% end %>
+                <p class="text-sm text-neutral-500">Samples free, just pay <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> shipping</p>
+              </div>
+            </div>
+
+            <%# Trust signals %>
+            <div class="flex flex-col items-center lg:items-start gap-1.5 text-sm text-neutral-600">
+              <div class="flex items-center gap-2">
+                <div class="flex -space-x-2">
+                  <% client_logos.reject { |logo| logo == "the-grove.webp" }.first(8).each do |logo| %>
+                    <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white">
+                      <%= vite_image_tag "images/logos/#{logo}", alt: "", class: "w-full h-full object-contain" %>
+                    </div>
+                  <% end %>
+                </div>
+                <span>Trusted by 500+ UK businesses</span>
+              </div>
+            </div>
+          </div>
+
+          <%# Right column - Image %>
+          <div class="flex justify-center lg:justify-end">
+            <% if @sample_pack.image.attached? %>
+              <%= image_tag @sample_pack.image.variant(resize_to_fill: [800, 450]),
+                            alt: @sample_pack.name,
+                            class: "w-full max-w-xl lg:max-w-2xl h-auto drop-shadow-2xl rounded-2xl",
+                            loading: "eager" %>
+            <% else %>
+              <div class="w-full max-w-md lg:max-w-lg aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-base-content/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ==================== WHAT'S INCLUDED ==================== %>
+  <section class="py-16 bg-base-100">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="text-2xl md:text-3xl text-center mb-4">What's In Your Pack</h2>
+        <p class="text-center text-base-content/70 mb-10 max-w-xl mx-auto">
+          <%= @products.count %> carefully selected products to help you find the perfect fit for your business.
+        </p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
+          <% @products.each do |product| %>
+            <div class="card bg-base-200 shadow-sm">
+              <figure class="aspect-square bg-white">
+                <% if product.product_photo.attached? %>
+                  <%= image_tag product.product_photo.variant(resize_to_fill: [200, 200]),
+                                alt: product.name,
+                                class: "w-full h-full object-contain p-3",
+                                loading: "lazy" %>
+                <% else %>
+                  <div class="w-full h-full flex items-center justify-center text-base-content/20">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                <% end %>
+              </figure>
+              <div class="card-body p-3">
+                <h3><%= product.name %></h3>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ==================== HOW IT WORKS ==================== %>
+  <section class="py-16 bg-base-200">
+    <div class="container mx-auto px-4">
+      <div class="max-w-3xl mx-auto">
+        <h2 class="text-2xl md:text-3xl text-center mb-10">How It Works</h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mx-auto mb-4">
+              <span class="text-2xl">1</span>
+            </div>
+            <h3 class="mb-2">Request Your Pack</h3>
+            <p class="text-sm text-base-content/70">
+              Click the button and we'll add all <%= @products.count %> samples to your cart.
+            </p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mx-auto mb-4">
+              <span class="text-2xl">2</span>
+            </div>
+            <h3 class="mb-2">Pay <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> Delivery</h3>
+            <p class="text-sm text-base-content/70">
+              Samples are completely free. You only cover the shipping cost.
+            </p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mx-auto mb-4">
+              <span class="text-2xl">3</span>
+            </div>
+            <h3 class="mb-2">Test & Decide</h3>
+            <p class="text-sm text-base-content/70">
+              Try the products yourself. Love them? Order in bulk with confidence.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <%# ==================== TRUST SIGNALS ==================== %>
+  <%= render "pages/partials/client_logos" %>
+
+  <%# ==================== FINAL CTA ==================== %>
+  <section class="py-16 bg-gradient-to-br from-primary/10 to-secondary/10">
+    <div class="container mx-auto px-4">
+      <div class="max-w-2xl mx-auto text-center">
+        <h2 class="text-2xl md:text-3xl mb-4">Ready to Try Before You Buy?</h2>
+        <p class="text-base-content/70 mb-8">
+          Get your free <%= @sample_pack.name %> samples delivered for just <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %>. No commitment, no pressure.
+        </p>
+
+        <%= button_to request_pack_sample_pack_path(slug: @sample_pack.slug),
+                      method: :post,
+                      class: "btn btn-primary btn-lg" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+          </svg>
+          Order Your Free Samples
+        <% end %>
+        <p class="text-sm text-base-content/50 mt-2">Samples free, just pay <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> shipping</p>
+      </div>
+    </div>
+  </section>
+</div>

@@ -1,5 +1,5 @@
 <% content_for :title, "Request Free Product Samples | Afida" %>
-<% content_for :meta_description, "Request up to #{sample_limit} free samples of eco-friendly catering supplies. Try cups, lids, and containers before bulk ordering. UK delivery £7.50." %>
+<% content_for :meta_description, "Request up to #{sample_limit} free samples of eco-friendly catering supplies. Try cups, lids, and containers before bulk ordering. UK delivery #{number_to_currency(Shipping::STANDARD_COST / 100.0)}." %>
 
 <%= content_for :head do %>
   <script type="application/ld+json">
@@ -28,7 +28,7 @@
           "name": "Is there a cost for samples?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The samples themselves are completely free. You only need to cover the delivery cost of #{number_to_currency(Shipping::STANDARD_COST)}. If you add samples to a regular order, they ship free with your purchase."
+            "text": "The samples themselves are completely free. You only need to cover the delivery cost of #{number_to_currency(Shipping::STANDARD_COST / 100.0)}. If you add samples to a regular order, they ship free with your purchase."
           }
         }
       ]
@@ -42,7 +42,7 @@
 
   <!-- Header -->
   <div class="container mx-auto px-4">
-    <h1>Request Free Samples</h1>
+    <h1>Order Your Free Samples</h1>
   </div>
   <div class="bg-base-200 py-8">
     <div class="max-w-3xl mx-auto container px-4 text-center">
@@ -83,7 +83,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <% @sample_packs.each do |pack| %>
-          <%= link_to pack_samples_path(pack.slug), class: "card bg-base-100 shadow-sm hover:shadow-md transition" do %>
+          <%= link_to sample_pack_path(pack.slug), class: "card bg-base-100 shadow-sm hover:shadow-md transition" do %>
             <div class="relative">
               <% if pack.image.attached? %>
                 <figure class="aspect-video overflow-hidden">

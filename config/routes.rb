@@ -41,8 +41,13 @@ Rails.application.routes.draw do
   resources :samples, only: [ :index ] do
     collection do
       get "category/:category_slug", action: :category, as: :category
-      post "add_pack", action: :add_pack
-      get ":slug", action: :pack, as: :pack  # Must be last (catch-all pattern)
+    end
+  end
+
+  # Fixed sample packs for PPC/email landing pages
+  resources :sample_packs, only: [ :show ], path: "sample-packs", param: :slug do
+    member do
+      post :request_pack
     end
   end
   get "about", to: "pages#about"

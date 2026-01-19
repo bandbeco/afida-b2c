@@ -71,7 +71,7 @@ class SitemapGeneratorService
 
         # Sample packs (curated sample collections)
         Collection.where(sample_pack: true).find_each do |pack|
-          add_url(xml, pack_samples_url(slug: pack.slug),
+          add_url(xml, sample_pack_url(pack.slug),
                   priority: "0.6",
                   changefreq: "monthly",
                   lastmod: pack.updated_at)

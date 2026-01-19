@@ -243,12 +243,13 @@ namespace :collections do
     if coffee_sample.new_record? || coffee_sample.products.empty?
       coffee_sample.save!
       coffee_sample.collection_items.destroy_all
-      # Use SKU-based lookup for precision
+      # Use SKU-based lookup for precision - 5 products per pack
       sample_ids = [
         Product.find_by(sku: "8WSW")&.id,     # 8oz Single Wall Coffee Cup
         Product.find_by(sku: "8-DWC-W")&.id,  # 8oz Double Wall Coffee Cup (White)
         Product.find_by(sku: "8KRDW")&.id,    # 8oz Ripple Wall Coffee Cup (Kraft)
-        Product.find_by(sku: "8BL-PC")&.id    # 8oz Bagasse Sip Lid
+        Product.find_by(sku: "8BL-PC")&.id,   # 8oz Bagasse Sip Lid
+        Product.find_by(sku: "WCS14")&.id     # Coffee Stirrers
       ].compact
       sample_products = Product.active.catalog_products.sample_eligible.where(id: sample_ids)
       sample_products.each { |p| coffee_sample.collection_items.find_or_create_by!(product: p) }
@@ -271,11 +272,13 @@ namespace :collections do
     if restaurant_sample.new_record? || restaurant_sample.products.empty?
       restaurant_sample.save!
       restaurant_sample.collection_items.destroy_all
+      # 5 products per pack - use explicit SKUs
       rest_sample_ids = [
-        find_products("500ml", "Rectangular").first&.id,
-        find_products("1000ml", "Rectangular").first&.id,
-        find_products("Takeaway Box").first&.id,
-        find_products("Soup Container").where.not("name ILIKE ?", "%Lid%").first&.id
+        Product.find_by(sku: "5MLREC")&.id,   # 500ml Rectangular Kraft Bowl
+        Product.find_by(sku: "10MLREC")&.id,  # 1000ml Rectangular Kraft Bowl
+        Product.find_by(sku: "NO1KDV")&.id,   # No.1 Kraft Takeaway Box
+        Product.find_by(sku: "12SOUPCK")&.id, # 12oz Soup Container
+        Product.find_by(sku: "WFKPNK")&.id    # Wooden Cutlery Kit
       ].compact
       rest_sample_products = Product.active.catalog_products.sample_eligible.where(id: rest_sample_ids)
       rest_sample_products.each { |p| restaurant_sample.collection_items.find_or_create_by!(product: p) }
@@ -298,12 +301,13 @@ namespace :collections do
     if ice_cream_sample.new_record? || ice_cream_sample.products.empty?
       ice_cream_sample.save!
       ice_cream_sample.collection_items.destroy_all
-      # Use SKU-based lookup for precision (ice cream cups have specific SKUs)
+      # Use SKU-based lookup for precision - 5 products per pack
       ice_sample_ids = [
         Product.find_by(sku: "4PICC")&.id,   # 4oz Ice Cream Cup
         Product.find_by(sku: "6PICC")&.id,   # 6oz Ice Cream Cup
         Product.find_by(sku: "8PICC")&.id,   # 8oz Ice Cream Cup
-        Product.find_by(sku: "WCSPN")&.id    # Wooden Spoon
+        Product.find_by(sku: "WCSPN")&.id,   # Wooden Spoon
+        Product.find_by(sku: "AIRCNWH")&.id  # White Premium Airlaid Cocktail Napkins
       ].compact
       ice_sample_products = Product.active.catalog_products.sample_eligible.where(id: ice_sample_ids)
       ice_sample_products.each { |p| ice_cream_sample.collection_items.find_or_create_by!(product: p) }
@@ -326,11 +330,13 @@ namespace :collections do
     if bakery_sample.new_record? || bakery_sample.products.empty?
       bakery_sample.save!
       bakery_sample.collection_items.destroy_all
+      # 5 products per pack
       bakery_sample_ids = [
         Product.find_by(sku: "8-DWC-W")&.id,  # 8oz Double Wall Coffee Cup (White)
         Product.find_by(sku: "8BL-PC")&.id,   # 8oz Bagasse Sip Lid
         Product.find_by(sku: "SKTB")&.id,     # Small Kraft Flat Handle Bag
-        Product.find_by(sku: "AIRCNWH")&.id   # White Premium Airlaid Cocktail Napkins
+        Product.find_by(sku: "AIRCNWH")&.id,  # White Premium Airlaid Cocktail Napkins
+        Product.find_by(sku: "WCS14")&.id     # Coffee Stirrers
       ].compact
       bakery_sample_products = Product.active.catalog_products.sample_eligible.where(id: bakery_sample_ids)
       bakery_sample_products.each { |p| bakery_sample.collection_items.find_or_create_by!(product: p) }
@@ -353,11 +359,13 @@ namespace :collections do
     if takeaway_sample.new_record? || takeaway_sample.products.empty?
       takeaway_sample.save!
       takeaway_sample.collection_items.destroy_all
+      # 5 products per pack
       takeaway_sample_ids = [
         Product.find_by(sku: "9PIZBKR")&.id,  # 9 inch Kraft Pizza Box
         Product.find_by(sku: "NO1KDV")&.id,   # No.1 Kraft Takeaway Box
         Product.find_by(sku: "5MLREC")&.id,   # 500ml Rectangular Kraft Bowl
-        Product.find_by(sku: "WFKPNK")&.id    # Wooden Cutlery Kit
+        Product.find_by(sku: "WFKPNK")&.id,   # Wooden Cutlery Kit
+        Product.find_by(sku: "LRKTB")&.id     # Large Kraft Flat Handle Bag
       ].compact
       takeaway_sample_products = Product.active.catalog_products.sample_eligible.where(id: takeaway_sample_ids)
       takeaway_sample_products.each { |p| takeaway_sample.collection_items.find_or_create_by!(product: p) }
@@ -380,9 +388,11 @@ namespace :collections do
     if smoothie_sample.new_record? || smoothie_sample.products.empty?
       smoothie_sample.save!
       smoothie_sample.collection_items.destroy_all
+      # 5 products per pack
       smoothie_sample_ids = [
-        Product.find_by(sku: "16RPTRC")&.id,  # 16oz Clear Smoothie Cup
-        Product.find_by(sku: "20RPTDL")&.id,  # 16-20oz Dome Lid
+        Product.find_by(sku: "12RPTRC")&.id,    # 12oz Clear Smoothie Cup
+        Product.find_by(sku: "16RPTRC")&.id,    # 16oz Clear Smoothie Cup
+        Product.find_by(sku: "20RPTDL")&.id,    # 16-20oz Dome Lid
         Product.find_by(sku: "BB-PULP-JUM")&.id, # 8mm Jumbo Bamboo Straw (for smoothies)
         Product.find_by(sku: "BB-PULP-20")&.id   # 6mm Bamboo Straw (for juices)
       ].compact

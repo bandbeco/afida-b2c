@@ -136,9 +136,9 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     doc = Nokogiri::XML(xml)
     urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    # Sample pack pages use /samples/:slug route (clean URLs)
+    # Sample pack pages use /sample-packs/:slug route
     Collection.where(sample_pack: true).find_each do |pack|
-      assert urls.any? { |url| url.include?("/samples/#{pack.slug}") },
+      assert urls.any? { |url| url.include?("/sample-packs/#{pack.slug}") },
              "Expected sitemap to include sample pack: #{pack.slug}"
     end
 
