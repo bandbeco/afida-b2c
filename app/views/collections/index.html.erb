@@ -8,6 +8,11 @@ Browse our curated collections of eco-friendly catering supplies, organised by b
 
 <% content_for :head do %>
   <%= canonical_url(collections_url) %>
+
+  <%# Structured data for rich snippets %>
+  <script type="application/ld+json">
+    <%= raw(collections_index_structured_data(@collections).to_json) %>
+  </script>
 <% end %>
 
 <% content_for :breadcrumbs do %>

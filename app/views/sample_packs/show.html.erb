@@ -1,5 +1,30 @@
-<% content_for :title, "#{@sample_pack.name} | Free Sample Pack | Afida" %>
-<% content_for :meta_description, @sample_pack.description.presence || "Request your free #{@sample_pack.name} sample pack. #{@products.count} curated products delivered for just #{number_to_currency(Shipping::STANDARD_COST / 100.0)}. Try before you buy with Afida." %>
+<% content_for :title, sample_pack_meta_title(@sample_pack) %>
+<% content_for :meta_description, sample_pack_meta_description(@sample_pack, @products) %>
+
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
+<% content_for :head do %>
+  <%= canonical_url(sample_pack_url(@sample_pack.slug)) %>
+
+  <%# Open Graph tags for social sharing %>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= sample_pack_meta_title(@sample_pack) %>">
+  <meta property="og:description" content="<%= sample_pack_meta_description(@sample_pack, @products) %>">
+  <meta property="og:url" content="<%= sample_pack_url(@sample_pack.slug) %>">
+  <meta property="og:site_name" content="Afida">
+  <meta property="og:image" content="<%= @sample_pack.image.attached? ? url_for(@sample_pack.image) : vite_asset_url("images/hero.webp") %>">
+
+  <%# Twitter Card tags %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= sample_pack_meta_title(@sample_pack) %>">
+  <meta name="twitter:description" content="<%= sample_pack_meta_description(@sample_pack, @products) %>">
+  <meta name="twitter:image" content="<%= @sample_pack.image.attached? ? url_for(@sample_pack.image) : vite_asset_url("images/hero.webp") %>">
+
+  <%# Structured data for rich snippets %>
+  <script type="application/ld+json">
+    <%= raw(sample_pack_structured_data(@sample_pack, @products).to_json) %>
+  </script>
+<% end %>
 
 <div class="min-h-screen">
   <%# ==================== HERO SECTION ==================== %>
