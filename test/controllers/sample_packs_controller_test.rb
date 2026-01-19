@@ -28,7 +28,7 @@ class SamplePacksControllerTest < ActionDispatch::IntegrationTest
   test "show displays request pack CTA button" do
     get sample_pack_path(@sample_pack.slug)
     assert_response :success
-    assert_match(/Request.*Free.*Samples/i, response.body)
+    assert_match(/Order.*Free.*Samples/i, response.body)
   end
 
   test "show is publicly accessible" do
@@ -116,6 +116,20 @@ class SamplePacksControllerTest < ActionDispatch::IntegrationTest
 
     cart.reload
     assert_equal initial_count, cart.cart_items.samples.count
+  end
+
+  test "request_pack shows replacement message when clearing existing samples" do
+    get samples_path
+
+    # Add pack first time
+    post request_pack_sample_pack_path(@sample_pack.slug)
+    follow_redirect!
+
+    # Add pack again - should show replacement message
+    post request_pack_sample_pack_path(@sample_pack.slug)
+    follow_redirect!
+
+    assert_match(/Previous samples replaced/i, flash[:notice])
   end
 
   test "request_pack marks cart items as samples" do

@@ -34,6 +34,7 @@ class SamplePacksController < ApplicationController
     cart = Current.cart
 
     # Clear any existing samples to ensure clean pack experience
+    cleared_count = cart.cart_items.samples.count
     cart.cart_items.samples.destroy_all
 
     added_count = 0
@@ -47,7 +48,9 @@ class SamplePacksController < ApplicationController
     end
 
     if added_count > 0
-      redirect_to cart_path, notice: "#{@sample_pack.name} samples added to your cart!"
+      message = "#{@sample_pack.name} samples added to your cart!"
+      message = "Previous samples replaced. #{message}" if cleared_count > 0
+      redirect_to cart_path, notice: message
     else
       redirect_to cart_path, notice: "These products are already in your cart."
     end

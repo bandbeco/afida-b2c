@@ -27,11 +27,21 @@ class CollectionTest < ActiveSupport::TestCase
     assert_includes collection.errors[:slug], "can't be blank"
   end
 
-  test "validates uniqueness of slug" do
+  test "validates uniqueness of slug scoped to sample_pack" do
     existing = Collection.create!(@valid_attributes)
     collection = Collection.new(@valid_attributes)
     assert_not collection.valid?
     assert_includes collection.errors[:slug], "has already been taken"
+  end
+
+  test "allows same slug in different sample_pack scopes" do
+    # Regular collection with slug "test-collection"
+    regular = Collection.create!(@valid_attributes.merge(sample_pack: false))
+
+    # Sample pack can have the same slug
+    sample_pack = Collection.new(@valid_attributes.merge(sample_pack: true, position: 11))
+    assert sample_pack.valid?, "Same slug should be allowed in different sample_pack scope"
+    assert sample_pack.save
   end
 
   test "allows same name with different slug" do

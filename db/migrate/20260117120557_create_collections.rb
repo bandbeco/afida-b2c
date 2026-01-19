@@ -13,7 +13,7 @@ class CreateCollections < ActiveRecord::Migration[8.1]
       t.timestamps
     end
 
-    add_index :collections, :slug, unique: true
+    add_index :collections, [ :slug, :sample_pack ], unique: true
     add_index :collections, :featured
     add_index :collections, :sample_pack
     add_index :collections, :position
