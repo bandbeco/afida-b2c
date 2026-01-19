@@ -13,6 +13,7 @@ module SeoHelper
         "@type": "Offer",
         "price": product.price.to_s,
         "priceCurrency": "GBP",
+        "priceValidUntil": Date.new(Date.current.year, 12, 31).iso8601,
         "availability": product.in_stock? ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
         "url": product_url(product),
         "shippingDetails": {

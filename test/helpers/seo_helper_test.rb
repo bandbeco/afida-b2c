@@ -158,6 +158,18 @@ class SeoHelperTest < ActionView::TestCase
     refute data.key?("gtin")
   end
 
+  test "product structured data includes priceValidUntil" do
+    product = products(:single_wall_8oz_white)
+
+    json = product_structured_data(product)
+    data = JSON.parse(json)
+
+    assert data["offers"]["priceValidUntil"].present?
+    # Should be end of current calendar year (stable, cacheable value)
+    expected_date = Date.new(Date.current.year, 12, 31)
+    assert_equal expected_date.iso8601, data["offers"]["priceValidUntil"]
+  end
+
   # Canonical URL tests
   test "canonical_url strips query parameters by default" do
     # Simulate a request with query params
