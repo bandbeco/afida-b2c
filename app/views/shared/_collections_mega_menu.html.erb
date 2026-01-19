@@ -1,26 +1,28 @@
 <%# Collections mega-menu for navbar hover dropdown %>
 <%# Displays collection names on left, preview image on right %>
 <%# Includes backdrop overlay and slide-down animation %>
+<%# Cached by collection updates; image variants pre-processed for performance %>
 
 <% collections = Collection.regular.featured.by_position.includes(image_attachment: :blob) %>
 <% default_collection = collections.first %>
 
+<%# Pre-generate image variants to avoid on-demand processing %>
+<% menu_variant = ->(collection) { collection.image.variant(resize_to_fill: [400, 400]).processed if collection&.image&.attached? } %>
+<% default_image_url = default_collection ? url_for(menu_variant.call(default_collection)) : '' if default_collection&.image&.attached? %>
+
 <div class="relative hidden lg:block"
      data-controller="mega-menu"
-     data-mega-menu-default-image-value="<%= default_collection&.image&.attached? ? url_for(default_collection.image.variant(resize_to_fill: [400, 400])) : '' %>">
+     data-mega-menu-default-image-value="<%= default_image_url || '' %>">
 
-  <%# Trigger - the nav link (clickable, with mega-menu on hover) %>
-  <%= link_to collections_path,
-              class: "cursor-pointer hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors flex items-center gap-1 #{request.path.start_with?('/collections') ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}",
-              data: {
-                mega_menu_target: "trigger",
-                action: "mouseenter->mega-menu#showPanel mouseleave->mega-menu#hidePanel"
-              } do %>
+  <%# Trigger - hover to open mega-menu (not clickable) %>
+  <span class="cursor-default hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors flex items-center gap-1 <%= 'underline decoration-secondary decoration-2 underline-offset-8' if request.path.start_with?('/collections') %>"
+        data-mega-menu-target="trigger"
+        data-action="mouseenter->mega-menu#showPanel mouseleave->mega-menu#hidePanel">
     Collections
     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
     </svg>
-  <% end %>
+  </span>
 
   <%# Backdrop overlay - dims the rest of the page (starts below main navbar) %>
   <div class="hidden opacity-0 fixed inset-x-0 bottom-0 bg-black/30 z-40 transition-opacity duration-300"
@@ -34,27 +36,29 @@
        data-mega-menu-target="panel"
        data-action="mouseenter->mega-menu#cancelHide mouseleave->mega-menu#hidePanel">
 
-    <div class="mt-2 bg-base-100 rounded-xl shadow-2xl border border-base-200 p-8 flex gap-8 min-w-[650px]">
-
-      <%# Left column - Collection links %>
-      <nav class="flex flex-col gap-2 min-w-[220px]" aria-label="Collections">
-        <% collections.each do |collection| %>
-          <%= link_to collection_path(collection),
-                      class: "text-2xl hover:text-primary transition-colors py-1",
-                      data: {
-                        mega_menu_target: "item",
-                        action: "mouseenter->mega-menu#updatePreview mouseleave->mega-menu#resetPreview",
-                        image_url: collection.image.attached? ? url_for(collection.image.variant(resize_to_fill: [400, 400])) : ''
-                      } do %>
-            <%= collection.name %>
+    <% cache ["mega-menu-panel", collections.maximum(:updated_at), request.path.start_with?('/collections')] do %>
+    <div class="mt-2 bg-base-100 rounded-xl shadow-2xl border border-base-200 p-8 min-w-[650px] flex flex-col">
+      <div class="flex gap-8">
+        <%# Left column - Collection links %>
+        <nav class="flex flex-col gap-2 min-w-[220px]" aria-label="Collections">
+          <% collections.each do |collection| %>
+            <% variant = menu_variant.call(collection) %>
+            <%= link_to collection_path(collection),
+                        class: "text-2xl hover:text-primary transition-colors py-1",
+                        data: {
+                          mega_menu_target: "item",
+                          action: "mouseenter->mega-menu#updatePreview mouseleave->mega-menu#resetPreview",
+                          image_url: variant ? url_for(variant) : ''
+                        } do %>
+              <%= collection.name %>
+            <% end %>
           <% end %>
-        <% end %>
-      </nav>
+        </nav>
 
-      <%# Right column - Preview image %>
-      <div class="w-[320px] h-[320px] rounded-lg overflow-hidden bg-base-200 flex-shrink-0">
+        <%# Right column - Preview image %>
+        <div class="w-[320px] h-[320px] rounded-lg overflow-hidden bg-base-200 flex-shrink-0">
         <% if default_collection&.image&.attached? %>
-          <%= image_tag default_collection.image.variant(resize_to_fill: [400, 400]),
+          <%= image_tag menu_variant.call(default_collection),
                         class: "w-full h-full object-cover",
                         data: { mega_menu_target: "preview" },
                         alt: "Collection preview" %>
@@ -66,8 +70,16 @@
             </svg>
           </div>
         <% end %>
+        </div>
       </div>
 
+      <%# Footer - View all link %>
+      <div class="mt-4 pt-4 border-t border-base-200 flex justify-end">
+        <%= link_to collections_path, class: "text-sm text-base-content/60 hover:text-primary transition-colors" do %>
+          View all collections →
+        <% end %>
+      </div>
     </div>
+    <% end %>
   </div>
 </div>
