@@ -298,7 +298,7 @@ class OrderPdfGenerator
     end
 
     pdf.text "AFIDA", size: 20, style: :bold
-    pdf.text "Eco-Friendly Catering Supplies", size: 10, color: "666666"
+    pdf.text "Eco-Friendly packaging supplies", size: 10, color: "666666"
   end
 
   def build_order_info(pdf)
@@ -565,7 +565,7 @@ File.rename("app/frontend/images/logo.png.bak", "app/frontend/images/logo.png")
    PDF_CONFIG = {
      logo_path: Rails.root.join("app/frontend/images/logo.png"),
      company_name: "Afida",
-     company_tagline: "Eco-Friendly Catering Supplies",
+     company_tagline: "Eco-Friendly packaging supplies",
      contact_email: "hello@afida.com",
      contact_phone: "+44 (0)20 1234 5678"
    }

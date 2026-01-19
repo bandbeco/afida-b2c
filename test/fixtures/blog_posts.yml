@@ -20,7 +20,7 @@ published_post:
   published: true
   published_at: <%= 3.days.ago %>
   meta_title: "Complete Guide to Eco-Friendly Packaging | Afida"
-  meta_description: "Learn everything about sustainable packaging options for catering businesses."
+  meta_description: "Learn everything about sustainable packaging options for packaging businesses."
   blog_category: guides
 
 draft_post:

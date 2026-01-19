@@ -79,7 +79,7 @@ Afida Google Ads Account
 [afida catering]
 "afida"
 "afida cups"
-"afida catering supplies"
+"afida packaging supplies"
 ```
 
 **Negative Keywords:**
@@ -92,10 +92,10 @@ Afida Google Ads Account
 
 **Ad Copy Example:**
 ```
-Headline 1: Afida | Eco-Friendly Catering Supplies
+Headline 1: Afida | Eco-Friendly packaging supplies
 Headline 2: Compostable Cups, Containers & More
 Headline 3: Free UK Delivery Over £X
-Description 1: Shop sustainable catering supplies. Paper cups, food containers, and accessories. Trusted by UK hospitality businesses.
+Description 1: Shop sustainable packaging supplies. Paper cups, food containers, and accessories. Trusted by UK hospitality businesses.
 Description 2: Quality eco products at competitive prices. Order online today.
 ```
 

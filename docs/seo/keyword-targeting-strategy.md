@@ -293,7 +293,7 @@ Example: `Disposable single wall paper coffee cups for cafes and takeaway. Econo
 | Keyword | CPC | Opportunity |
 |---------|-----|-------------|
 | takeaway packaging wholesale | £1.30 | B2B landing page |
-| disposable catering supplies | £0.70 | Category page |
+| disposable packaging supplies | £0.70 | Category page |
 | printed kraft paper bags | £2.00 | Custom/branded page |
 | branded ice cream cups | £2.50 | Branded products |
 

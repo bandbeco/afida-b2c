@@ -48,7 +48,7 @@ Instead, design tools that journalists and bloggers will **cite and link to**.
 | Keyword | UK Volume | Difficulty |
 |---------|-----------|------------|
 | paper cups | 2,900/mo | 12 |
-| catering supplies | 1,700/mo | 51 |
+| packaging supplies | 1,700/mo | 51 |
 | disposable coffee cups | 1,500/mo | 2 |
 | disposable cups | 1,400/mo | 0 |
 | eco friendly food packaging | 800/mo | 22 |

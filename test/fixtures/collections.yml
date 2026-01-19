@@ -16,7 +16,7 @@ coffee_shop_essentials:
 restaurant_supplies:
   name: "Restaurant Supplies"
   slug: "restaurant-supplies"
-  description: "Professional catering supplies for restaurants"
+  description: "Professional packaging supplies for restaurants"
   featured: false
   sample_pack: false
   position: 2

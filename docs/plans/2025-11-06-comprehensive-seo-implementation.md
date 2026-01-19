@@ -708,22 +708,22 @@ git commit -m "feat: convert robots.txt to dynamic route with sitemap reference"
 ```erb
 <!-- app/views/pages/home.html.erb -->
 <!-- Add at the very top of the file -->
-<% content_for :title, "Premium Eco-Friendly Catering Supplies | Afida" %>
+<% content_for :title, "Premium Eco-Friendly packaging supplies | Afida" %>
 
-<% content_for :meta_description, "Discover sustainable catering supplies for your business. Premium quality eco-friendly packaging including pizza boxes, ice cream cups, napkins, and takeaway containers. Fast UK delivery." %>
+<% content_for :meta_description, "Discover sustainable packaging supplies for your business. Premium quality eco-friendly packaging including pizza boxes, ice cream cups, napkins, and takeaway containers. Fast UK delivery." %>
 
 <% content_for :head do %>
   <!-- Open Graph -->
   <meta property="og:type" content="website">
-  <meta property="og:title" content="Premium Eco-Friendly Catering Supplies | Afida">
-  <meta property="og:description" content="Discover sustainable catering supplies for your business. Premium quality eco-friendly packaging with fast UK delivery.">
+  <meta property="og:title" content="Premium Eco-Friendly packaging supplies | Afida">
+  <meta property="og:description" content="Discover sustainable packaging supplies for your business. Premium quality eco-friendly packaging with fast UK delivery.">
   <meta property="og:url" content="<%= root_url %>">
   <meta property="og:site_name" content="Afida">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Premium Eco-Friendly Catering Supplies | Afida">
-  <meta name="twitter:description" content="Discover sustainable catering supplies for your business. Premium quality eco-friendly packaging with fast UK delivery.">
+  <meta name="twitter:title" content="Premium Eco-Friendly packaging supplies | Afida">
+  <meta name="twitter:description" content="Discover sustainable packaging supplies for your business. Premium quality eco-friendly packaging with fast UK delivery.">
 <% end %>
 
 <!-- Rest of existing home page content -->
@@ -738,21 +738,21 @@ require "application_system_test_case"
 class HomePageSeoTest < ApplicationSystemTestCase
   test "home page has title tag" do
     visit root_path
-    assert_title "Premium Eco-Friendly Catering Supplies | Afida"
+    assert_title "Premium Eco-Friendly packaging supplies | Afida"
   end
 
   test "home page has meta description" do
     visit root_path
 
     meta_desc = page.find('meta[name="description"]', visible: false)
-    assert_includes meta_desc[:content], "sustainable catering supplies"
+    assert_includes meta_desc[:content], "sustainable packaging supplies"
   end
 
   test "home page has Open Graph tags" do
     visit root_path
 
     og_title = page.find('meta[property="og:title"]', visible: false)
-    assert_equal "Premium Eco-Friendly Catering Supplies | Afida", og_title[:content]
+    assert_equal "Premium Eco-Friendly packaging supplies | Afida", og_title[:content]
 
     og_type = page.find('meta[property="og:type"]', visible: false)
     assert_equal "website", og_type[:content]

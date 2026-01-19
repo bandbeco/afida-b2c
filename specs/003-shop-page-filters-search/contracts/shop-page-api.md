@@ -49,7 +49,7 @@ All parameters are **optional** and passed via query string:
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Shop Eco-Friendly Catering Supplies | Afida</title>
+  <title>Shop Eco-Friendly packaging supplies | Afida</title>
   <link rel="canonical" href="https://afida.com/shop">
   <meta name="description" content="Browse our complete range...">
 </head>
@@ -431,8 +431,8 @@ end
 ## SEO Contract
 
 **Meta Tags**:
-- Title: `"Shop Eco-Friendly Catering Supplies | Afida"`
-- Description: `"Browse our complete range of eco-friendly catering supplies..."`
+- Title: `"Shop Eco-Friendly packaging supplies | Afida"`
+- Description: `"Browse our complete range of eco-friendly packaging supplies..."`
 - Canonical URL: `https://afida.com/shop` (always points to base /shop URL)
 
 **Filter State in Title** (optional enhancement):

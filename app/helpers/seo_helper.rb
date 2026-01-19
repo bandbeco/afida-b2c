@@ -112,7 +112,7 @@ module SeoHelper
       "name": "Afida",
       "url": root_url,
       "logo": logo_url,
-      "description": "Eco-friendly catering supplies for UK businesses",
+      "description": "Eco-friendly packaging supplies for UK businesses",
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "Customer Service",

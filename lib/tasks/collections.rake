@@ -187,8 +187,8 @@ namespace :collections do
     hotels.assign_attributes(
       name: "Hotels",
       description: "Premium supplies for hotel restaurants, room service, and conference facilities. Professional quality for discerning guests.",
-      meta_title: "Hotel Supplies | Coffee Cups, Napkins & Catering Packaging | Afida",
-      meta_description: "Premium eco-friendly hotel supplies including paper coffee cups, napkins, and room service packaging. Sustainable catering supplies for hotels and B&Bs.",
+      meta_title: "Hotel Supplies | Coffee Cups, Napkins & Packaging | Afida",
+      meta_description: "Premium eco-friendly hotel supplies including paper coffee cups, napkins, and room service packaging. Sustainable packaging supplies for hotels and B&Bs.",
       featured: true,
       sample_pack: false
     )

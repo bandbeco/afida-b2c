@@ -225,7 +225,7 @@ end
 ```
 ┌────────────────────────────────────────┐
 │ [LOGO]  AFIDA                          │
-│         Eco-Friendly Catering Supplies │
+│         Eco-Friendly packaging supplies │
 │                                        │
 │ ORDER CONFIRMATION                     │
 │ Order #: ORD-2025-001234               │

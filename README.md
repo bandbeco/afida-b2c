@@ -1,6 +1,6 @@
 # Afida E-Commerce Shop
 
-A modern Rails 8 e-commerce application for selling eco-friendly catering supplies with Stripe payments, scheduled reorders, and Google Shopping integration.
+A modern Rails 8 e-commerce application for selling eco-friendly packaging supplies with Stripe payments, scheduled reorders, and Google Shopping integration.
 
 ## Features
 

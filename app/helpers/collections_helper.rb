@@ -125,7 +125,7 @@ module CollectionsHelper
       "@context": "https://schema.org",
       "@type": "CollectionPage",
       "name": "Collections",
-      "description": "Browse our curated collections of eco-friendly catering supplies, organised by business type and use case.",
+      "description": "Browse our curated collections of eco-friendly packaging supplies, organised by business type and use case.",
       "url": collections_url,
       "mainEntity": {
         "@type": "ItemList",

@@ -199,7 +199,7 @@ Here's what you'll receive:
 
 While you wait, here's a bit about us:
 
-Afida supplies eco-friendly catering packaging to cafes, restaurants, and events across the UK. Everything we sell is plastic-free and compostable.
+Afida supplies eco-friendly packaging to cafes, restaurants, and events across the UK. Everything we sell is plastic-free and compostable.
 
 We're a small team, so if you have any questions, just reply to this email - it comes straight to us.
 

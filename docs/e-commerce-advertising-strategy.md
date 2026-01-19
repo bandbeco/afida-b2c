@@ -1,11 +1,11 @@
 # E-commerce Advertising Strategy for Afida
 
 **Date**: November 2025
-**Purpose**: Comprehensive guide to driving high-converting traffic to the Afida eco-friendly catering supplies shop
+**Purpose**: Comprehensive guide to driving high-converting traffic to the Afida eco-friendly packaging supplies shop
 
 ## Executive Summary
 
-This document outlines proven advertising strategies for e-commerce businesses, specifically tailored for Afida's eco-friendly catering supplies business. The strategy focuses on multi-channel paid advertising, conversion optimization, and sustainable marketing messaging to drive qualified B2B traffic.
+This document outlines proven advertising strategies for e-commerce businesses, specifically tailored for Afida's eco-friendly packaging supplies business. The strategy focuses on multi-channel paid advertising, conversion optimization, and sustainable marketing messaging to drive qualified B2B traffic.
 
 **Key Recommendations**:
 - Multi-channel approach: Google Ads (60%) + Meta Ads (40%)
@@ -20,22 +20,22 @@ This document outlines proven advertising strategies for e-commerce businesses, 
 
 ### Priority 1: Google Ads (Shopping + Search)
 
-**Why**: Captures high-intent traffic from businesses actively searching for catering supplies
+**Why**: Captures high-intent traffic from businesses actively searching for packaging supplies
 
 **Target ROAS**: 4:1 ($4 revenue per $1 spent)
 
 **Strategy Components**:
 
 1. **Google Shopping Ads** (Primary)
-   - Product discovery for users browsing catering supplies
+   - Product discovery for users browsing packaging supplies
    - Visual product showcase with pricing
    - Accounts for ~65% of all Google Ads clicks for retailers
    - Lower funnel, high purchase intent
 
 2. **Search Ads** (Complementary)
-   - Branded keywords: "Afida", "Afida catering supplies"
+   - Branded keywords: "Afida", "Afida packaging supplies"
    - High-intent keywords:
-     - "eco-friendly catering supplies"
+     - "eco-friendly packaging supplies"
      - "sustainable disposable plates UK"
      - "compostable coffee cups wholesale"
      - "biodegradable cutlery bulk"
@@ -277,7 +277,7 @@ This means 60-70 out of every 100 shoppers who add items to cart leave without p
 ```
 "You left something behind!"
 Complete your order of [Product Name]
-Premium eco-friendly catering supplies
+Premium eco-friendly packaging supplies
 → Return to Cart
 ```
 
@@ -383,7 +383,7 @@ Join hundreds of UK businesses making the switch
 **Example - Search Ad**:
 ```
 Headline 1: Tired of Greenwashing Claims?
-Headline 2: Real Compostable Catering Supplies
+Headline 2: Real Compostable packaging supplies
 Headline 3: EN 13432 Certified | Free UK Shipping
 Description: UK's most trusted eco-friendly disposables for cafes &
 caterers. Fully compostable, premium quality, competitive B2B pricing.
@@ -425,7 +425,7 @@ Make the switch today →
 ```
 Subject: You're in good company, [First Name]
 
-500+ UK businesses trust Afida for their eco-friendly catering supplies.
+500+ UK businesses trust Afida for their eco-friendly packaging supplies.
 
 Here's why:
 ✅ Real certifications (not greenwashing)
@@ -463,7 +463,7 @@ Credible: "★★★★★ 4.8/5 from 127 reviews | FSC Certified"
 
 **Example - Landing Page Hero**:
 ```
-Before: "Struggling to find truly eco-friendly catering supplies
+Before: "Struggling to find truly eco-friendly packaging supplies
          that don't compromise on quality?"
 
 After: "Imagine serving your customers with certified compostable
@@ -543,7 +543,7 @@ Based on searches for:
 ```
 - Competitor brand names
 - Eco certifications (EN 13432, FSC, etc.)
-- "compostable catering supplies"
+- "compostable packaging supplies"
 - "sustainable disposables wholesale"
 - "eco-friendly coffee cups bulk"
 - "biodegradable plates for restaurants"
@@ -722,7 +722,7 @@ Industries: Restaurants, Catering, Hospitality
 
 **Example Hero Section**:
 ```
-Headline: "Premium Compostable Catering Supplies for UK Businesses"
+Headline: "Premium Compostable packaging supplies for UK Businesses"
 Subheadline: "EN 13432 certified. Trusted by 500+ cafes and caterers.
               Free UK shipping on orders £50+"
 CTA: [Shop Products] [Request Quote]
@@ -1346,7 +1346,7 @@ Solution: "Clear certifications you can confidently display"
 **Topics**:
 ```
 1. "Complete Guide: Compostable vs. Biodegradable vs. Recyclable"
-2. "How to Choose Genuinely Sustainable Catering Supplies"
+2. "How to Choose Genuinely Sustainable packaging supplies"
 3. "Understanding EN 13432 Certification"
 4. "5 Ways Compostable Products Improve Your Business"
 5. "The True Cost of Single-Use Plastic in Hospitality"

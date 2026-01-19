@@ -37,7 +37,7 @@
 | Keyword | Volume | Difficulty | CPC (pence) | Traffic Potential | Intent |
 |---------|--------|------------|-------------|-------------------|--------|
 | food packaging | 3,400 | 28 | 80 | 1,400 | Info/Commercial |
-| catering supplies | 1,900 | 55 | 80 | 101,000 | Info/Commercial |
+| packaging supplies | 1,900 | 55 | 80 | 101,000 | Info/Commercial |
 | eco friendly packaging | 1,500 | 1 | 150 | 3,900 | Info/Commercial |
 | disposable coffee cups | 1,500 | 2 | 30 | 1,300 | Commercial/Transactional |
 | takeaway coffee cups | 1,100 | 0 | 40 | 600 | Commercial/Transactional |
@@ -98,7 +98,7 @@
 | Keyword | Volume | Difficulty | CPC (pence) | Traffic Potential | Intent |
 |---------|--------|------------|-------------|-------------------|--------|
 | bubble tea supplies | 90 | 19 | 70 | 2,300 | Info/Commercial |
-| care home catering supplies | 90 | - | - | - | Commercial |
+| care home packaging supplies | 90 | - | - | - | Commercial |
 | deli packaging | 80 | 0 | 160 | 50 | Info/Commercial |
 | chinese takeaway containers | 80 | 1 | 25 | 70 | Commercial/Transactional |
 | cold cups wholesale | 80 | 0 | 70 | 250 | Commercial |
@@ -108,7 +108,7 @@
 | paper straws wholesale | 50 | 0 | 120 | 20 | Commercial/Transactional |
 | curry containers | 40 | - | 20 | - | Commercial |
 | restaurant packaging | 40 | - | 120 | - | Commercial |
-| office catering supplies | 40 | - | - | - | Info/Commercial |
+| office packaging supplies | 40 | - | - | - | Info/Commercial |
 | cocktail bar supplies | 40 | 1 | 40 | 150 | Info/Commercial |
 | brewery supplies | 40 | 40 | 45 | 4,800 | Info/Commercial |
 
@@ -138,7 +138,7 @@ These keywords have difficulty 0-5 and volume 100+:
 
 Keywords where traffic_potential significantly exceeds volume:
 
-1. **catering supplies** - Vol: 1,900, TP: 101,000 - Very competitive (55) but massive potential
+1. **packaging supplies** - Vol: 1,900, TP: 101,000 - Very competitive (55) but massive potential
 2. **eco friendly packaging** - Vol: 1,500, TP: 3,900 - Low difficulty (1), great opportunity
 3. **compostable packaging** - Vol: 400, TP: 3,800 - Moderate difficulty (15)
 4. **eco friendly packaging boxes** - Vol: 200, TP: 3,700 - Low difficulty (6)
@@ -193,8 +193,8 @@ Based on search volume and fit with product catalog:
 ### Priority 3: Consider for Content/SEO Pages (Not Collections)
 
 - **Delivery Platforms**: deliveroo packaging (250) - branded intent, but valuable for blog/guide
-- **Care Homes**: care home catering supplies (90) - B2B opportunity
-- **Office Catering**: office catering supplies (40) - B2B opportunity
+- **Care Homes**: care home packaging supplies (90) - B2B opportunity
+- **Office Catering**: office packaging supplies (40) - B2B opportunity
 - **Hospital Catering**: hospital catering (100) - informational intent, B2B
 
 ---
@@ -245,8 +245,8 @@ branding food packaging: 400, diff 8, cpc 190, tp 1100
 brewery supplies: 40, diff 40, cpc 45, tp 4800
 bubble tea supplies: 90, diff 19, cpc 70, tp 2300
 burger boxes: 800, diff 0, cpc 45, tp 250
-care home catering supplies: 90
-catering supplies: 1900, diff 55, cpc 80, tp 101000
+care home packaging supplies: 90
+packaging supplies: 1900, diff 55, cpc 80, tp 101000
 chip shop supplies: 30, diff 17, cpc 20, tp 150
 chinese takeaway containers: 80, diff 1, cpc 25, tp 70
 cocktail bar supplies: 40, diff 1, cpc 40, tp 150
@@ -277,7 +277,7 @@ eco friendly packaging materials: 300, diff 10, cpc 140, tp 3600
 eco friendly packaging tubes: 150
 eco friendly packaging uk: 150, diff 22, cpc 130, tp 3600
 eco friendly plastic packaging: 150
-event catering supplies: 10
+event packaging supplies: 10
 festival food packaging: 10
 fish and chip packaging: 20, cpc 70
 food brand packaging: 350, diff 1, cpc 60, tp 600
@@ -299,7 +299,7 @@ kebab boxes: 60, diff 0, cpc 60, tp 20
 market trader supplies: 10, cpc 20
 milkshake cups: 350, diff 0, cpc 25, tp 150
 noodle boxes: 150, diff 0, cpc 35, tp 40
-office catering supplies: 40
+office packaging supplies: 40
 paper coffee cups: 700, diff 1, cpc 40, tp 1100
 paper cups wholesale: 60, diff 0, cpc 140, tp 1300
 paper straws wholesale: 50, diff 0, cpc 120, tp 20
@@ -313,17 +313,17 @@ salad bar packaging: -
 salad containers wholesale: 0
 sandwich packaging: 350, diff 0, cpc 60, tp 250
 sandwich shop supplies: 10
-school catering supplies: 20
+school packaging supplies: 20
 smoothie cups: 450, diff 0, cpc 25, tp 350
 soup containers takeaway: 0
 street food containers: 60, diff 0, cpc 25, tp 100
 street food packaging: 100, diff 0, cpc 90, tp 100
 sushi packaging: 100, diff 0, cpc 110, tp 150
-sustainable catering supplies: 10
+sustainable packaging supplies: 10
 takeaway coffee cups: 1100, diff 0, cpc 40, tp 600
 takeaway containers wholesale: 150, diff 1, cpc 100, tp 150
 uber eats packaging: 30
-wedding catering supplies: 0
+wedding packaging supplies: 0
 wine packaging: 100, diff 0, cpc 100, tp 300
 wooden cutlery: 1000, diff 0, cpc 40, tp 250
 ```

@@ -336,7 +336,7 @@
 
 | Page | Primary Keyword | Secondary Keywords |
 |------|-----------------|-------------------|
-| Home | eco friendly catering supplies uk | sustainable packaging |
+| Home | eco friendly packaging supplies uk | sustainable packaging |
 | Hot Cups Category | paper coffee cups wholesale | disposable hot cups |
 | Single Wall Cups | single wall paper cups | single wall coffee cups |
 
@@ -357,7 +357,7 @@
   - "Guide to Choosing Eco-Friendly Packaging"
   - "Paper vs Plastic: Environmental Impact"
   - "How to Store Compostable Products"
-  - "Catering Supplies Checklist for Events"
+  - "packaging supplies Checklist for Events"
 
 - [ ] **Product-Adjacent Content**
   - "Best Cups for Coffee Shops"

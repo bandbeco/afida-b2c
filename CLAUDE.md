@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a Rails 8 e-commerce application for selling eco-friendly catering supplies. The application uses Vite for frontend asset bundling with TailwindCSS 4 and DaisyUI for styling, Hotwire (Turbo + Stimulus) for interactivity, Stripe for payments, and PostgreSQL as the database.
+This is a Rails 8 e-commerce application for selling eco-friendly packaging supplies. The application uses Vite for frontend asset bundling with TailwindCSS 4 and DaisyUI for styling, Hotwire (Turbo + Stimulus) for interactivity, Stripe for payments, and PostgreSQL as the database.
 
 ## Development Commands
 

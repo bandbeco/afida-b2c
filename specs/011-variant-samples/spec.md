@@ -9,7 +9,7 @@
 
 ### User Story 1 - Browse and Select Samples (Priority: P1)
 
-A visitor wants to try eco-friendly catering products before committing to a bulk purchase. They visit the samples page to browse available products by category and select specific variants to receive as free samples.
+A visitor wants to try eco-friendly packaging products before committing to a bulk purchase. They visit the samples page to browse available products by category and select specific variants to receive as free samples.
 
 **Why this priority**: This is the core value proposition—enabling customers to "try before they buy" reduces purchase anxiety and increases confidence in product selection. Without sample browsing and selection, no other sample functionality delivers value.
 

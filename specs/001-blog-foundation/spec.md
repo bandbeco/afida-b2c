@@ -9,7 +9,7 @@
 
 ### User Story 1 - View Blog Posts (Priority: P1)
 
-As a site visitor, I want to browse and read blog posts so I can learn about eco-friendly catering practices, company news, and product guides.
+As a site visitor, I want to browse and read blog posts so I can learn about eco-friendly packaging practices, company news, and product guides.
 
 **Why this priority**: The primary purpose of a blog is content consumption. Without the ability to view posts, the blog has no value to visitors. This is the core read experience.
 

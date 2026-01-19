@@ -116,7 +116,7 @@ namespace :products do
 
     detail_parts = []
     detail_parts << standard_desc
-    detail_parts << "Perfect for restaurants, cafes, takeaways, and catering businesses seeking reliable food service supplies."
+    detail_parts << "Perfect for restaurants, cafes, takeaways, and packaging businesses seeking reliable food service supplies."
 
     if variant_count > 1
       detail_parts << "Choose from multiple size options including #{sizes}#{variant_count > 5 ? ' and more' : ''}."

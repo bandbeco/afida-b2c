@@ -81,7 +81,7 @@ This document describes the contract for order confirmation emails with PDF atta
 1. **Header**
    - Company logo (150px width)
    - Company name: "AFIDA"
-   - Tagline: "Eco-Friendly Catering Supplies"
+   - Tagline: "Eco-Friendly packaging supplies"
 
 2. **Order Information**
    - Title: "ORDER CONFIRMATION"

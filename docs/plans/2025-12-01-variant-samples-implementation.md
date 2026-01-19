@@ -556,7 +556,7 @@ Replace `app/views/samples/index.html.erb`:
 
 ```erb
 <% content_for :title, "Free Samples | Afida" %>
-<% content_for :meta_description, "Request free samples of our eco-friendly catering supplies. Choose up to 5 product samples - just pay £7.50 shipping." %>
+<% content_for :meta_description, "Request free samples of our eco-friendly packaging supplies. Choose up to 5 product samples - just pay £7.50 shipping." %>
 
 <div class="container mx-auto px-4 py-8">
   <!-- Hero Section -->

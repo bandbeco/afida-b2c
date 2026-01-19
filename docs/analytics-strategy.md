@@ -1,7 +1,7 @@
 # Afida Analytics Strategy: Comprehensive Implementation Guide
 
 **Document Date:** November 24, 2025
-**Business Focus:** E-commerce conversion rate optimization for eco-friendly catering supplies
+**Business Focus:** E-commerce conversion rate optimization for eco-friendly packaging supplies
 **Target Customers:** B2B and B2C
 **Strategic Priority:** Data-driven decision making for growth
 

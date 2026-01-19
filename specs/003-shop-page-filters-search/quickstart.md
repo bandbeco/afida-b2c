@@ -452,8 +452,8 @@ application.register('search', SearchController)
 ```erb
 <!-- app/views/pages/shop.html.erb -->
 
-<% content_for :title, "Shop Eco-Friendly Catering Supplies | Afida" %>
-<% content_for :meta_description, "Browse our complete range of eco-friendly catering supplies. Filter by category, search products, and find exactly what you need." %>
+<% content_for :title, "Shop Eco-Friendly packaging supplies | Afida" %>
+<% content_for :meta_description, "Browse our complete range of eco-friendly packaging supplies. Filter by category, search products, and find exactly what you need." %>
 
 <div class="container mx-auto px-4 py-8">
   <h1 class="text-3xl font-bold mb-8">Shop All Products</h1>

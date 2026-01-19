@@ -79,7 +79,7 @@ class SeoHelperTest < ActionView::TestCase
     json = organization_structured_data
     data = JSON.parse(json)
 
-    assert_equal "Eco-friendly catering supplies for UK businesses", data["description"]
+    assert_equal "Eco-friendly packaging supplies for UK businesses", data["description"]
   end
 
   # Existing product structured data tests

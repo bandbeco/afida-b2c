@@ -12,7 +12,7 @@ class OrderPdfGenerator
   BORDER_GRAY = "E5E7EB".freeze        # Subtle borders
 
   COMPANY_NAME = "Afida".freeze
-  COMPANY_TAGLINE = "Eco-Friendly Catering Supplies".freeze
+  COMPANY_TAGLINE = "Eco-Friendly Packaging Supplies".freeze
   COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
   COMPANY_WEBSITE = "https://afida.com".freeze
   LOGO_PATH = Rails.root.join("app", "frontend", "images", "afida-logo-pdf.png").freeze

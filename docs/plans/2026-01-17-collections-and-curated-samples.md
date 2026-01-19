@@ -679,7 +679,7 @@ git commit -m "feat: add collection show view
 <%# app/views/collections/index.html.erb %>
 
 <% content_for :title, "Collections | Afida" %>
-<% content_for :meta_description, "Browse our curated collections of eco-friendly catering supplies for coffee shops, restaurants, and events." %>
+<% content_for :meta_description, "Browse our curated collections of eco-friendly packaging supplies for coffee shops, restaurants, and events." %>
 
 <%= render "shared/breadcrumbs", breadcrumbs: [
   { name: "Collections" }

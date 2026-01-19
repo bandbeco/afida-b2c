@@ -40,7 +40,7 @@ Currently, products like "Coffee Cups" have a single page with a guided selector
 
 A customer knows exactly what product they need (e.g., "8oz white coffee cups") and wants to find and purchase it quickly without navigating through selection steps.
 
-**Why this priority**: This is the primary use case. Most B2B catering supply customers know what they need and want fast access. Removing friction from the purchase path directly impacts conversion.
+**Why this priority**: This is the primary use case. Most B2B packaging supply customers know what they need and want fast access. Removing friction from the purchase path directly impacts conversion.
 
 **Independent Test**: Can be fully tested by navigating to a variant URL, selecting quantity, and adding to cart. Delivers immediate purchasing capability.
 
