@@ -19,7 +19,7 @@ class AnalyticsHelperTest < ActionView::TestCase
     item = ga4_item(@product)
 
     assert_equal @product.sku, item[:item_id]
-    assert_equal @product.name, item[:item_name]
+    assert_equal @product.generated_title, item[:item_name]
     assert_equal @product.price.to_f, item[:price]
     assert_equal 1, item[:quantity]
   end
@@ -33,7 +33,7 @@ class AnalyticsHelperTest < ActionView::TestCase
     item = ga4_cart_item(@cart_item)
 
     assert_equal @cart_item.product.sku, item[:item_id]
-    assert_equal @cart_item.product.name, item[:item_name]
+    assert_equal @cart_item.product.generated_title, item[:item_name]
     assert_equal @cart_item.quantity, item[:quantity]
   end
 
@@ -41,7 +41,7 @@ class AnalyticsHelperTest < ActionView::TestCase
     item = ga4_order_item(@order_item)
 
     assert_equal @order_item.product_sku, item[:item_id]
-    assert_equal @order_item.product_name, item[:item_name]
+    assert_equal @order_item.product.generated_title, item[:item_name]
     assert_equal @order_item.quantity, item[:quantity]
   end
 

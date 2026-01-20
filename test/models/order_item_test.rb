@@ -160,7 +160,7 @@ class OrderItemTest < ActiveSupport::TestCase
 
   test "product_display_name returns variant name when available" do
     order_item = order_items(:one)
-    assert_equal order_item.product.name, order_item.product_display_name
+    assert_equal order_item.product.generated_title, order_item.product_display_name
   end
 
   test "product_display_name returns fallback when variant is nil" do

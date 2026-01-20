@@ -26,21 +26,18 @@ module ProductsHelper
   # For family products: size - colour (e.g., "8oz / 280ml - Blue")
   # For standalone: product name
   def search_display_title(product)
-    if product.product_family.present?
-      [ product.size, product.colour ].compact_blank.join(" - ").presence || product.name
-    else
-      product.name
-    end
+    product.product_type
+    [ product.size, product.colour ].compact_blank.join(" - ").presence || product.generated_title
   end
 
   # Secondary text for search results - provides context
   # For family products: material + product name (e.g., "Paper Ice Cream Cups")
   # For standalone: category name
   def search_display_subtitle(product)
-    if product.product_family.present?
-      [ product.material, product.name ].compact_blank.join(" ")
+    if product.brandable?
+      product.branded_product_prices.map(&:size).uniq.sort_by { |size| size.to_i }.join(", ")
     else
-      product.category&.name
+      ([ product.material, product.name ].compact_blank.join(" ").presence || product.category&.name) + (product.pac_size.to_i > 1 ? " · Pack of " + number_with_delimiter(product.pac_size) : "")
     end
   end
 

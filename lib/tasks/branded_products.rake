@@ -20,7 +20,7 @@ namespace :branded_products do
     puts ""
 
     branded_products.each do |product|
-      puts "📦 #{product.name}"
+      puts "📦 #{product.generated_title}"
       puts "   Slug: #{product.slug}"
       puts "   Active: #{product.active ? '✅ Yes' : '❌ No'}"
       puts "   Position: #{product.position}"

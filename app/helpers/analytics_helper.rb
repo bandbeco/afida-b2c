@@ -26,7 +26,7 @@ module AnalyticsHelper
   def ga4_item(product, quantity: 1)
     {
       item_id: product.sku,
-      item_name: product.name,
+      item_name: product.generated_title,
       item_category: product.category&.name,
       price: product.price.to_f,
       quantity: quantity
@@ -41,7 +41,7 @@ module AnalyticsHelper
 
     {
       item_id: product.sku,
-      item_name: product.name,
+      item_name: product.generated_title,
       item_category: product.category&.name,
       price: cart_item.unit_price.to_f,
       quantity: cart_item.quantity

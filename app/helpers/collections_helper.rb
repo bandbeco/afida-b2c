@@ -67,7 +67,7 @@ module CollectionsHelper
             "position": index + 1,
             "item": {
               "@type": "Product",
-              "name": product.name,
+              "name": product.generated_title,
               "url": product_url(product),
               "image": product.product_photo.attached? ? url_for(product.product_photo) : nil
             }.compact

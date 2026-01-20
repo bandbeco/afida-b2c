@@ -47,7 +47,7 @@ class OrderItem < ApplicationRecord
   end
 
   def product_display_name
-    product&.name || "Product Unavailable"
+    product&.generated_title || "Product Unavailable"
   end
 
   def product_still_available?

@@ -42,7 +42,7 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal 1, snapshot["items"].count
     item = snapshot["items"].first
     assert_equal @product.id, item["product_id"]
-    assert_equal @product.name, item["product_name"]
+    assert_equal @product.generated_title, item["product_name"]
     assert_equal 2, item["quantity"]
     assert_equal true, item["available"]
   end

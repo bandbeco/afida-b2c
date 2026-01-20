@@ -15,7 +15,7 @@
           <span class="label-text">Product Name</span>
         </label>
         <%= text_field_tag :product_name,
-                          "#{customer_name} #{order_item.configuration['size']} #{order_item.product.name}",
+                          "#{customer_name} #{order_item.configuration['size']} #{order_item.product.generated_title}",
                           class: "input input-bordered",
                           required: true %>
       </div>

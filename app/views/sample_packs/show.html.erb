@@ -138,7 +138,7 @@
               <figure class="aspect-square bg-white">
                 <% if product.product_photo.attached? %>
                   <%= image_tag product.product_photo.variant(resize_to_fill: [200, 200]),
-                                alt: product.name,
+                                alt: product.generated_title,
                                 class: "w-full h-full object-contain p-3",
                                 loading: "lazy" %>
                 <% else %>

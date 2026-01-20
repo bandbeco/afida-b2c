@@ -92,6 +92,6 @@ if products_without_photos.any?
   puts ""
   puts "Products without photos (#{products_without_photos.count}):"
   products_without_photos.each do |product|
-    puts "  - #{product.name}: #{product.sku}"
+    puts "  - #{product.generated_title}: #{product.sku}"
   end
 end

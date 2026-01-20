@@ -29,11 +29,11 @@ module BrandedProducts
       lid_variants_data = matching_lids.map do |lid_product|
         {
           product_id: lid_product.id,
-          product_name: lid_product.name,
+          product_name: lid_product.generated_title,
           product_slug: lid_product.slug,
           variant_id: lid_product.id,  # Product IS the variant now
-          variant_name: lid_product.name,
-          name: lid_product.name,
+          variant_name: lid_product.generated_title,
+          name: lid_product.generated_title,
           material: lid_product.material,
           size: lid_product.size,
           image_url: lid_product.product_photo.attached? ? url_for(lid_product.product_photo.variant(resize_to_limit: [ 200, 200 ])) : nil,

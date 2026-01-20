@@ -116,7 +116,7 @@ CSV.foreach(csv_path, headers: true) do |row|
   end
 
   status = product.active ? '✓' : '○'
-  puts "  #{status} #{product.name} (#{product.sku})"
+  puts "  #{status} #{product.generated_title} (#{product.sku})"
 end
 
 puts ''

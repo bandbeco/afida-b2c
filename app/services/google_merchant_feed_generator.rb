@@ -101,7 +101,7 @@ class GoogleMerchantFeedGenerator
     parts << "Afida"
 
     # Product name
-    parts << product.name
+    parts << product.generated_title
 
     # Size/volume
     if product.volume_in_ml.present?
@@ -133,7 +133,7 @@ class GoogleMerchantFeedGenerator
 
   def optimized_description(product)
     # First 160 chars are critical for ads
-    intro = "Afida #{product.name} are perfect for eco-conscious cafes and packaging businesses."
+    intro = "Afida #{product.generated_title} are perfect for eco-conscious cafes and packaging businesses."
 
     material_info = if product.material.present?
       " Made from #{product.material},"

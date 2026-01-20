@@ -36,7 +36,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     get products_url
     assert_response :success
     # Response should contain product information
-    assert_match @product.name, response.body
+    assert_match @product.generated_title, response.body
   end
 
   # GET /products/:id (show)
@@ -49,7 +49,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     get product_url(@product.slug)
     assert_response :success
     # Response should contain product name
-    assert_match @product.name, response.body
+    assert_match @product.generated_title, response.body
   end
 
   test "show page displays variant information" do
@@ -146,7 +146,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     get product_url(product.slug)
 
     assert_response :success
-    assert_match product.name, response.body
+    assert_match product.generated_title, response.body
   end
 
   # GET /products/:id/quick_add
@@ -162,7 +162,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "turbo-frame#quick-add-modal"
     assert_select ".modal.modal-open"
-    assert_match standard_product.name, response.body
+    assert_match standard_product.generated_title, response.body
   end
 
   test "quick_add renders for customizable template product" do
@@ -192,7 +192,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     get product_url(product.slug)
 
     assert_response :success
-    assert_match product.name, response.body
+    assert_match product.generated_title, response.body
   end
 
   test "show displays add to cart form" do

@@ -49,7 +49,7 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Collection has products from fixtures
     @collection.products.active.each do |product|
-      assert_match product.name, response.body
+      assert_match product.generated_title, response.body
     end
   end
 

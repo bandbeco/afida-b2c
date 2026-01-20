@@ -6,7 +6,7 @@
     <div>
       <% if @product.product_photo.attached? %>
         <%= image_tag @product.product_photo.variant(resize_to_limit: [800, 800]),
-                      alt: @product.name,
+                      alt: @product.generated_title,
                       class: "w-full rounded-lg shadow-lg" %>
       <% else %>
         <div class="bg-base-200 w-full aspect-square rounded-lg flex items-center justify-center">
@@ -18,7 +18,7 @@
     <!-- Product Details & Reorder -->
     <div class="space-y-6">
       <div>
-        <h1 class="text-3xl font-bold"><%= @product.name %></h1>
+        <h1 class="text-3xl font-bold"><%= @product.generated_title %></h1>
         <p class="text-lg text-gray-600 mt-2">Your custom branded product</p>
       </div>
 

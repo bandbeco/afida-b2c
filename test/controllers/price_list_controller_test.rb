@@ -38,7 +38,7 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     get price_list_url
     assert_response :success
     # Should show standard products
-    assert_match @product.name, response.body
+    assert_match @product.generated_title, response.body
   end
 
   test "index excludes branded products" do
@@ -46,7 +46,7 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     get price_list_url
     assert_response :success
     # Price list should only show standard products, not branded templates
-    assert_no_match Regexp.new(Regexp.escape(branded.name)), response.body
+    assert_no_match Regexp.new(Regexp.escape(branded.generated_title)), response.body
   end
 
   test "index shows table with correct columns" do
@@ -80,16 +80,16 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     get price_list_url(category: @category.slug)
     assert_response :success
     # Should show products from selected category
-    assert_match @product.name, response.body
+    assert_match @product.generated_title, response.body
     # Should not show products from other category
-    assert_no_match @product_two.name, response.body
+    assert_no_match @product_two.generated_title, response.body
   end
 
   test "shows all products when no category filter" do
     get price_list_url
     assert_response :success
-    assert_match @product.name, response.body
-    assert_match @product_two.name, response.body
+    assert_match @product.generated_title, response.body
+    assert_match @product_two.generated_title, response.body
   end
 
   # =============================================================================

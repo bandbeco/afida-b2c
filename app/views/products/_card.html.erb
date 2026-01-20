@@ -2,7 +2,7 @@
   <%= link_to product_path(product.slug), class: "flex flex-col flex-1", data: { turbo_frame: "_top" } do %>
     <figure class="aspect-square bg-white flex-shrink-0 overflow-hidden">
       <%= product_photo_tag(product.primary_photo,
-                            alt: product.name,
+                            alt: product.generated_title,
                             class: "w-full h-full object-contain hover:scale-105 transition-transform duration-300",
                             variant: { resize_and_pad: [400, 400, { background: [255, 255, 255] }] },
                             loading: "lazy") %>

@@ -3,7 +3,7 @@
     <figure class="aspect-square">
       <% if product.product_photo.attached? %>
         <%= image_tag product.product_photo.variant(resize_to_limit: [400, 400]),
-                      alt: product.name,
+                      alt: product.generated_title,
                       class: "object-cover w-full h-full" %>
       <% else %>
         <div class="bg-base-200 w-full h-full flex items-center justify-center">
@@ -15,7 +15,7 @@
 
   <div class="card-body">
     <h2 class="card-title">
-      <%= product.name %>
+      <%= product.generated_title %>
     </h2>
 
     <div class="space-y-2 text-sm">

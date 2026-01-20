@@ -16,7 +16,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
     # Should include: Brand + Product Type + Size + Material + Feature + Pack Size
     assert_includes title, "Afida"
-    assert_includes title, product.name
+    assert_includes title, product.generated_title
     assert title.length <= 150, "Title should be 150 chars or less, got #{title.length}"
   end
 

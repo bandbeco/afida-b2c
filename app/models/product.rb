@@ -221,6 +221,10 @@ class Product < ApplicationRecord
     product_family.products.active.where.not(id: id).limit(limit)
   end
 
+  def brandable?
+    product_type == "customizable_template"
+  end
+
   # ==========================================================================
   # Pricing Methods
   # ==========================================================================

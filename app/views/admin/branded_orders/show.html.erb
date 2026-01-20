@@ -70,7 +70,7 @@
       <% @configured_items.each do |item| %>
         <div class="card bg-base-100 shadow-sm border border-base-200">
           <div class="card-body p-4 sm:p-6">
-            <h3 class="card-title text-base sm:text-lg"><%= item.product.name %></h3>
+            <h3 class="card-title text-base sm:text-lg"><%= item.product.generated_title %></h3>
 
             <%# Configuration and Pricing - stack on mobile %>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">

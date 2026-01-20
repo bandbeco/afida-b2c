@@ -52,7 +52,7 @@ module ProductHelper
     end
 
     # Fall back to name extraction
-    extract_size_from_name(product.respond_to?(:name) ? product.name : product.to_s)
+    extract_size_from_name(product.respond_to?(:generated_title) ? product.generated_title : product.to_s)
   end
 
   # Extract size from product name (e.g., "8oz" from "8oz/227ml White")

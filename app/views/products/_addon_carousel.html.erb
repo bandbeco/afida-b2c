@@ -10,7 +10,7 @@
               <figure class="p-4">
                 <% if addon.product_photo.attached? %>
                   <%= image_tag addon.product_photo.variant(resize_to_limit: [300, 300]),
-                               alt: addon.name,
+                               alt: addon.generated_title,
                                class: "w-full h-48 object-contain" %>
                 <% else %>
                   <div class="w-full h-48 bg-gray-100 flex items-center justify-center">
@@ -20,7 +20,7 @@
               </figure>
 
               <div class="card-body">
-                <h3 class="card-title text-lg"><%= addon.name %></h3>
+                <h3 class="card-title text-lg"><%= addon.generated_title %></h3>
 
                 <% min_price = addon.branded_product_prices.map(&:price_per_unit).min %>
                 <% if min_price %>
@@ -39,7 +39,7 @@
                 <button class="btn btn-primary btn-sm mt-4"
                         data-action="click->addon#openModal"
                         data-product-id="<%= addon.id %>"
-                        data-product-name="<%= addon.name %>"
+                        data-product-name="<%= addon.generated_title %>"
                         data-product-slug="<%= addon.slug %>">
                   Configure →
                 </button>

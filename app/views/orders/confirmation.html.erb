@@ -76,7 +76,7 @@
 
             <div class="flex-1">
               <% if item.configured? %>
-                <h3 class="text-lg text-gray-900"><%= link_to item.product.name, branded_product_path(item.product) %></h3>
+                <h3 class="text-lg text-gray-900"><%= link_to item.product.generated_title, branded_product_path(item.product) %></h3>
                 <p class="text-sm text-gray-500">Custom branded with your design</p>
                 <p class="text-sm text-gray-500">Quantity: <%= format_quantity_display(item) %></p>
               <% else %>

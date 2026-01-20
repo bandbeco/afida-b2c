@@ -21,7 +21,7 @@ class SamplePacksControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     @sample_pack.sample_eligible_products.limit(Cart::SAMPLE_LIMIT).each do |product|
-      assert_match product.name, response.body
+      assert_match product.generated_title, response.body
     end
   end
 
@@ -145,8 +145,8 @@ class SamplePacksControllerTest < ActionDispatch::IntegrationTest
     # All items added should be marked as samples
     assert cart.cart_items.any?, "Cart should have items"
     cart.cart_items.samples.each do |item|
-      assert item.is_sample, "Cart item for #{item.product.name} should have is_sample=true"
-      assert item.sample?, "Cart item for #{item.product.name} should be a sample"
+      assert item.is_sample, "Cart item for #{item.product.generated_title} should have is_sample=true"
+      assert item.sample?, "Cart item for #{item.product.generated_title} should be a sample"
       assert_equal 0, item.price, "Sample items should have price=0"
     end
   end
