@@ -4,6 +4,14 @@
     <%# Google Tag Manager - must be first in head for accurate tracking %>
     <%= render "layouts/google_tag_manager" %>
 
+    <%# Datafast Analytics %>
+    <script
+      defer
+      data-website-id="dfid_1CWdt0k6kD3HqR911G1Im"
+      data-domain="afida.com"
+      src="https://datafa.st/js/script.js">
+    </script>
+
     <%# Block search engine indexing on staging domains %>
     <% if request.host.include?("staging.afida.com") %>
       <meta name="robots" content="noindex, nofollow">
