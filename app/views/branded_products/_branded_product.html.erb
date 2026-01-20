@@ -2,7 +2,8 @@
 <div class="card shadow-sm bg-base-100"
      data-controller="product-card-hover"
      data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
-  <figure class="max-w-[600px] max-h-[600px] bg-white">
+  <figure class="relative max-w-[600px] max-h-[600px] bg-white">
+    <span class="badge bg-white text-black border-black absolute top-2 right-2 z-10 text-xs">Volume discount</span>
     <%= link_to branded_product_path(product), class: "w-full h-full" do %>
       <div class="product-image-container">
         <% if product.product_photo&.attached? %>
