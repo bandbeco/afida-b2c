@@ -47,7 +47,7 @@ h2 {
 }
 
 h3 {
-  @apply text-lg;
+  @apply text-xl;
   @apply mb-2;
 }
 
