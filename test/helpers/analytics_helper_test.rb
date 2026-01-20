@@ -41,7 +41,7 @@ class AnalyticsHelperTest < ActionView::TestCase
     item = ga4_order_item(@order_item)
 
     assert_equal @order_item.product_sku, item[:item_id]
-    assert_equal @order_item.product.generated_title, item[:item_name]
+    assert_equal @order_item.product_name, item[:item_name]
     assert_equal @order_item.quantity, item[:quantity]
   end
 
