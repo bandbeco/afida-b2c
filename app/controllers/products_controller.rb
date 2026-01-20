@@ -30,11 +30,10 @@ class ProductsController < ApplicationController
 
     @category = @product.category
 
-    # Compatible products (e.g., lids for cups)
-    @compatible_products = @product.compatible_lids
-                                   .active
-                                   .includes(product_photo_attachment: :blob)
-                                   .limit(4)
+    # Compatible products (e.g., lids for cups) - filtered by matching size
+    @compatible_products = helpers.matching_lids_for_cup_product(@product)
+                                  .select(&:active?)
+                                  .first(4)
 
     # Related products from the same family (for "See Also" section)
     @related_products = @product.siblings(limit: 4)
