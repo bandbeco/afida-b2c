@@ -2,137 +2,143 @@
 
 require "test_helper"
 
-class DatafastSubscriberTest < ActiveJob::TestCase
+class DatafastSubscriberTest < ActiveSupport::TestCase
   setup do
     @subscriber = DatafastSubscriber.new
     @visitor_id = "df_visitor_test123"
+    @tracked_calls = []
+
+    # Stub DatafastService.track to capture calls
+    DatafastService.stubs(:track).with { |*args| @tracked_calls << args; true }
   end
 
-  test "enqueues job for cart.item_added event" do
+  test "calls service for cart.item_added event" do
     event = build_event("cart.item_added",
       payload: { product_id: 1, product_sku: "SKU-001", quantity: 2 })
 
-    assert_enqueued_with(job: DatafastGoalJob) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal 1, @tracked_calls.size
+    assert_equal "add_to_cart", @tracked_calls.first[0]
   end
 
-  test "maps cart.item_added to add_to_cart goal" do
+  test "maps cart.item_added to add_to_cart goal with correct metadata" do
     event = build_event("cart.item_added",
       payload: { product_id: 1, product_sku: "SKU-001", quantity: 2 })
 
-    assert_enqueued_with(
-      job: DatafastGoalJob,
-      args: [ "add_to_cart", { visitor_id: @visitor_id, metadata: { product_id: 1, product_sku: "SKU-001", quantity: 2 } } ]
-    ) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal [ "add_to_cart", {
+      visitor_id: @visitor_id,
+      metadata: { product_id: 1, product_sku: "SKU-001", quantity: 2 }
+    } ], @tracked_calls.first
   end
 
   test "maps cart.item_removed to remove_from_cart goal" do
     event = build_event("cart.item_removed",
       payload: { product_id: 1, product_sku: "SKU-001" })
 
-    assert_enqueued_with(
-      job: DatafastGoalJob,
-      args: [ "remove_from_cart", { visitor_id: @visitor_id, metadata: { product_id: 1, product_sku: "SKU-001" } } ]
-    ) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal [ "remove_from_cart", {
+      visitor_id: @visitor_id,
+      metadata: { product_id: 1, product_sku: "SKU-001" }
+    } ], @tracked_calls.first
   end
 
   test "maps checkout.started to begin_checkout goal" do
     event = build_event("checkout.started",
       payload: { cart_id: 123, item_count: 3, subtotal: 99.99 })
 
-    assert_enqueued_with(
-      job: DatafastGoalJob,
-      args: [ "begin_checkout", { visitor_id: @visitor_id, metadata: { cart_id: 123, item_count: 3, subtotal: "99.99" } } ]
-    ) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal [ "begin_checkout", {
+      visitor_id: @visitor_id,
+      metadata: { cart_id: 123, item_count: 3, subtotal: "99.99" }
+    } ], @tracked_calls.first
   end
 
   test "maps checkout.completed to purchase goal" do
     event = build_event("checkout.completed",
       payload: { order_id: 456, total: 119.99 })
 
-    assert_enqueued_with(
-      job: DatafastGoalJob,
-      args: [ "purchase", { visitor_id: @visitor_id, metadata: { order_id: 456, total: "119.99" } } ]
-    ) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal [ "purchase", {
+      visitor_id: @visitor_id,
+      metadata: { order_id: 456, total: "119.99" }
+    } ], @tracked_calls.first
   end
 
   test "maps email_signup.completed to email_signup goal" do
     event = build_event("email_signup.completed",
       payload: { source: "homepage_popup" })
 
-    assert_enqueued_with(
-      job: DatafastGoalJob,
-      args: [ "email_signup", { visitor_id: @visitor_id, metadata: { source: "homepage_popup" } } ]
-    ) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal [ "email_signup", {
+      visitor_id: @visitor_id,
+      metadata: { source: "homepage_popup" }
+    } ], @tracked_calls.first
   end
 
-  test "does not enqueue job when visitor_id is missing" do
+  test "does not call service when visitor_id is missing" do
     event = build_event("cart.item_added",
       payload: { product_id: 1 },
       context: { datafast_visitor_id: nil })
 
-    assert_no_enqueued_jobs do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_empty @tracked_calls
   end
 
-  test "does not enqueue job when visitor_id is blank string" do
+  test "does not call service when visitor_id is blank string" do
     event = build_event("cart.item_added",
       payload: { product_id: 1 },
       context: { datafast_visitor_id: "" })
 
-    assert_no_enqueued_jobs do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_empty @tracked_calls
   end
 
   test "ignores unmapped events" do
     event = build_event("order.placed",
       payload: { order_id: 1 })
 
-    assert_no_enqueued_jobs do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_empty @tracked_calls
   end
 
   test "ignores webhook events" do
     event = build_event("webhook.received",
       payload: { event_type: "checkout.session.completed" })
 
-    assert_no_enqueued_jobs do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_empty @tracked_calls
   end
 
   test "handles missing payload fields gracefully" do
     event = build_event("checkout.started",
       payload: { cart_id: 123 }) # Missing item_count and subtotal
 
-    assert_enqueued_with(
-      job: DatafastGoalJob,
-      args: [ "begin_checkout", { visitor_id: @visitor_id, metadata: { cart_id: 123 } } ]
-    ) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal [ "begin_checkout", {
+      visitor_id: @visitor_id,
+      metadata: { cart_id: 123 }
+    } ], @tracked_calls.first
   end
 
   test "handles nil payload gracefully" do
     event = build_event("email_signup.completed", payload: nil)
 
-    assert_enqueued_with(job: DatafastGoalJob) do
-      @subscriber.emit(event)
-    end
+    @subscriber.emit(event)
+
+    assert_equal 1, @tracked_calls.size
+    assert_equal "email_signup", @tracked_calls.first[0]
   end
 
   private

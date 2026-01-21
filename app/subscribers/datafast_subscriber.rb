@@ -2,9 +2,6 @@
 
 # Subscribes to Rails.event events and routes them to DataFast as goals.
 #
-# Goals are tracked asynchronously via DatafastGoalJob to avoid
-# blocking user requests.
-#
 # Event → Goal Mapping:
 #   cart.item_added       → add_to_cart
 #   cart.item_removed     → remove_from_cart
@@ -36,7 +33,7 @@ class DatafastSubscriber
 
     metadata = build_metadata(event[:name], event[:payload])
 
-    DatafastGoalJob.perform_later(goal_name, visitor_id: visitor_id, metadata: metadata)
+    DatafastService.track(goal_name, visitor_id: visitor_id, metadata: metadata)
   end
 
   private
