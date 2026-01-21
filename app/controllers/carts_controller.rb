@@ -8,11 +8,11 @@ class CartsController < ApplicationController
       .includes(:product)
       .order("products.name ASC")
 
-    Rails.event.emit("cart.viewed", {
+    Rails.event.notify("cart.viewed",
       cart_id: Current.cart.id,
       item_count: Current.cart.items_count,
       subtotal: Current.cart.subtotal_amount.to_f
-    })
+    )
   end
 
   def destroy
