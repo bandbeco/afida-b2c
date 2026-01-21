@@ -35,15 +35,22 @@ class DatafastService
   end
 
   def track
-    return false if @visitor_id.blank?
-    return false unless api_key_configured?
+    if @visitor_id.blank?
+      log_error("visitor_id is blank")
+      return false
+    end
+
+    unless api_key_configured?
+      log_error("API key not configured in credentials")
+      return false
+    end
 
     send_goal
   rescue HTTP::Error, HTTP::TimeoutError => e
-    log_error("HTTP error: #{e.message}")
+    log_error("HTTP error: #{e.class} - #{e.message}")
     false
   rescue StandardError => e
-    log_error("Unexpected error: #{e.message}")
+    log_error("Unexpected error: #{e.class} - #{e.message}")
     false
   end
 
@@ -103,6 +110,7 @@ class DatafastService
   end
 
   def log_error(message)
-    Rails.logger.warn("[DataFast] Failed to track goal '#{@name}': #{message}")
+    # Use info level to ensure visibility in production logs
+    Rails.logger.info("[DataFast] FAILED goal='#{@name}' error='#{message}'")
   end
 end
