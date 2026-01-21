@@ -76,7 +76,9 @@ class CheckoutsController < ApplicationController
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: cancel_checkout_url,
         metadata: {
-          cart_id: cart.id.to_s
+          cart_id: cart.id.to_s,
+          datafast_visitor_id: cookies[:datafast_visitor_id],
+          datafast_session_id: cookies[:datafast_session_id]
         }
       }
 
