@@ -7,6 +7,7 @@ class PagesController < ApplicationController
                                 .limit(8)
     @featured_straw_product = Product.catalog_products.find_by(slug: "bio-fibre-straws")
     @categories = Category.browsable.with_attached_image
+    @collections = Collection.regular.featured.by_position.with_attached_image
     @client_logos = client_logos
   end
 
