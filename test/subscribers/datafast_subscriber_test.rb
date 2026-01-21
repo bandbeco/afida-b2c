@@ -41,6 +41,18 @@ class DatafastSubscriberTest < ActiveJob::TestCase
     end
   end
 
+  test "maps cart.viewed to view_cart goal" do
+    event = build_event("cart.viewed",
+      payload: { cart_id: 123, item_count: 3, subtotal: 99.99 })
+
+    assert_enqueued_with(
+      job: DatafastGoalJob,
+      args: [ "view_cart", { visitor_id: @visitor_id, metadata: { cart_id: 123, item_count: 3, subtotal: "99.99" } } ]
+    ) do
+      @subscriber.emit(event)
+    end
+  end
+
   test "maps checkout.started to begin_checkout goal" do
     event = build_event("checkout.started",
       payload: { cart_id: 123, item_count: 3, subtotal: 99.99 })

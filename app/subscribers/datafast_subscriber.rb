@@ -5,6 +5,7 @@
 # Event → Goal Mapping:
 #   cart.item_added       → add_to_cart
 #   cart.item_removed     → remove_from_cart
+#   cart.viewed           → view_cart
 #   checkout.started      → begin_checkout
 #   checkout.completed    → purchase
 #   email_signup.completed → email_signup
@@ -17,6 +18,7 @@ class DatafastSubscriber
   EVENT_GOAL_MAPPING = {
     "cart.item_added" => "add_to_cart",
     "cart.item_removed" => "remove_from_cart",
+    "cart.viewed" => "view_cart",
     "checkout.started" => "begin_checkout",
     "checkout.completed" => "purchase",
     "email_signup.completed" => "email_signup"
@@ -54,6 +56,12 @@ class DatafastSubscriber
       {
         product_id: payload[:product_id],
         product_sku: payload[:product_sku]
+      }
+    when "cart.viewed"
+      {
+        cart_id: payload[:cart_id],
+        item_count: payload[:item_count],
+        subtotal: payload[:subtotal]&.to_s
       }
     when "checkout.started"
       {

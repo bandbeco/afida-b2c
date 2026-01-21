@@ -7,6 +7,12 @@ class CartsController < ApplicationController
     @cart_items = Current.cart.cart_items
       .includes(:product)
       .order("products.name ASC")
+
+    Rails.event.emit("cart.viewed", {
+      cart_id: Current.cart.id,
+      item_count: Current.cart.items_count,
+      subtotal: Current.cart.subtotal_amount.to_f
+    })
   end
 
   def destroy

@@ -3,8 +3,8 @@
 # Helper methods for client-side DataFast goal tracking.
 #
 # These methods generate JavaScript for tracking events that occur
-# on page load (view_item, view_cart) where server-side tracking
-# is not feasible because they don't trigger controller actions.
+# on page load (view_item) where server-side tracking is not feasible
+# because they don't trigger controller actions.
 #
 # Usage in views:
 #   <script><%= datafast_view_item_goal(@product) %></script>
@@ -25,20 +25,6 @@ module DatafastHelper
     }
 
     datafast_goal_js("view_item", metadata)
-  end
-
-  # Generates JavaScript for view_cart goal (cart page)
-  # @param cart [Cart] The cart being viewed
-  # @return [String] JavaScript code (html_safe)
-  def datafast_view_cart_goal(cart)
-    return "".html_safe unless datafast_enabled?
-
-    metadata = {
-      item_count: cart.cart_items.count.to_s,
-      subtotal: cart.subtotal_amount.to_f.to_s
-    }
-
-    datafast_goal_js("view_cart", metadata)
   end
 
   private
