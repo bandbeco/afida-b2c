@@ -18,4 +18,5 @@
 
 Rails.application.config.after_initialize do
   Rails.event.subscribe(EventLogSubscriber.new)
+  Rails.event.subscribe(DatafastSubscriber.new)
 end
