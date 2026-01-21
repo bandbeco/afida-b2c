@@ -33,7 +33,7 @@ class DatafastSubscriber
 
     metadata = build_metadata(event[:name], event[:payload])
 
-    DatafastService.track(goal_name, visitor_id: visitor_id, metadata: metadata)
+    DatafastGoalJob.perform_later(goal_name, visitor_id: visitor_id, metadata: metadata)
   end
 
   private
