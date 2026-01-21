@@ -10,7 +10,7 @@
     <% if local_assigns[:cart] && cart&.subtotal_amount&.positive? %>
       <br>
       <span class="text-success font-medium">
-        You'll save <%= number_to_currency(cart.subtotal_amount * 0.05, unit: "£") %> on this order!
+        You'll save <span id="discount_savings"><%= number_to_currency(cart.subtotal_amount * 0.05, unit: "£") %></span> on this order!
       </span>
     <% end %>
   </p>

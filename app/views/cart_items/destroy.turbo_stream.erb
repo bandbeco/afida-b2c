@@ -18,6 +18,13 @@
   <%= number_to_currency(Current.cart.total_amount) %>
 <% end %>
 
+<%# Update discount savings if a discount is active %>
+<% if session[:discount_code].present? && Current.cart.subtotal_amount.positive? %>
+  <%= turbo_stream.update "discount_savings" do %>
+    <%= number_to_currency(Current.cart.subtotal_amount * 0.05, unit: "£") %>
+  <% end %>
+<% end %>
+
 <%# GA4 E-commerce: remove_from_cart event %>
 <%= turbo_stream.append_all "head" do %>
   <script>
