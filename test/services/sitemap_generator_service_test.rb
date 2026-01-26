@@ -52,7 +52,7 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     doc = Nokogiri::XML(xml)
     urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    %w[about contact shop terms privacy faqs branding samples delivery-returns accessibility-statement price-list].each do |page|
+    %w[about contact shop terms privacy faqs branding samples delivery-returns accessibility-statement price-list signin signup].each do |page|
       assert urls.any? { |url| url.include?(page) }, "Missing #{page} in sitemap"
     end
   end
