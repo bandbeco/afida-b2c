@@ -1,11 +1,31 @@
-<div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card h-full flex flex-col" data-product-id="<%= product.id %>">
+<div class="card bg-base-100 shadow-sm hover:shadow-md transition product-card h-full flex flex-col"
+     data-product-id="<%= product.id %>"
+     data-controller="product-card-hover"
+     data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
   <%= link_to product_path(product.slug), class: "flex flex-col flex-1", data: { turbo_frame: "_top" } do %>
     <figure class="aspect-square bg-white flex-shrink-0 overflow-hidden">
-      <%= product_photo_tag(product.primary_photo,
-                            alt: product.generated_title,
-                            class: "w-full h-full object-contain hover:scale-105 transition-transform duration-300",
-                            variant: { resize_and_pad: [400, 400, { background: [255, 255, 255] }] },
-                            loading: "lazy") %>
+      <div class="product-image-container">
+        <% if product.product_photo.attached? %>
+          <%= image_tag product.product_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
+                        alt: product.generated_title,
+                        class: "product-image object-contain",
+                        loading: "lazy",
+                        data: { product_card_hover_target: "productPhoto" } %>
+        <% elsif product.lifestyle_photo.attached? %>
+          <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
+                        alt: product.generated_title,
+                        class: "product-image object-contain",
+                        loading: "lazy" %>
+        <% end %>
+
+        <% if product.product_photo.attached? && product.lifestyle_photo.attached? %>
+          <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),
+                        alt: "#{product.generated_title} lifestyle",
+                        class: "product-image product-image-overlay object-contain",
+                        loading: "lazy",
+                        data: { product_card_hover_target: "lifestylePhoto" } %>
+        <% end %>
+      </div>
     </figure>
 
     <div class="card-body p-4 flex flex-col flex-1">
