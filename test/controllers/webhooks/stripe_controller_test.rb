@@ -243,4 +243,63 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     # Should still return OK (to prevent Stripe retries)
     assert_response :ok
   end
+
+  # ============================================================================
+  # DATAFAST CONVERSION TRACKING TESTS
+  # ============================================================================
+
+  test "emits checkout.completed event with datafast visitor ID from metadata" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+
+    # Build session with datafast IDs in metadata (as stored during checkout creation)
+    session = build_stripe_session(
+      id: "sess_datafast_test",
+      payment_status: "paid",
+      metadata: {
+        cart_id: cart.id.to_s,
+        datafast_visitor_id: "dfv_test_visitor_123",
+        datafast_session_id: "dfs_test_session_456"
+      }
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_event_reported("checkout.completed",
+      payload: {
+        order_id: ->(id) { id.is_a?(Integer) },
+        total: ->(t) { t.is_a?(Float) || t.is_a?(BigDecimal) },
+        payment_method: "card"
+      }
+    ) do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+  end
+
+  test "skips checkout.completed event when datafast visitor ID is missing" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+
+    # Build session without datafast metadata
+    session = build_stripe_session(
+      id: "sess_no_datafast",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    # Should emit webhook.processed but NOT checkout.completed
+    assert_no_event_reported("checkout.completed") do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+  end
 end

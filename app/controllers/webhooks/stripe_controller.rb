@@ -140,6 +140,10 @@ module Webhooks
 
       Rails.logger.info("[Stripe Webhook] Order #{order.id} created successfully")
 
+      # Emit checkout.completed event for Datafast conversion tracking
+      # The visitor ID was captured at checkout creation and stored in Stripe metadata
+      emit_checkout_completed_event(order, full_session)
+
       # Emit webhook.processed event for successful handling
       Rails.event.notify("webhook.processed",
         event_type: event.type,
@@ -180,6 +184,26 @@ module Webhooks
         postal_code: address[:postal_code],
         country: address[:country]
       }
+    end
+
+    # Emits checkout.completed event with Datafast visitor ID from Stripe metadata.
+    # This ensures conversion attribution works even when webhook beats the redirect.
+    def emit_checkout_completed_event(order, stripe_session)
+      visitor_id = stripe_session.metadata&.datafast_visitor_id
+      return unless visitor_id.present?
+
+      # Set context manually since webhooks don't have browser cookies
+      Rails.event.set_context(
+        request_id: request.request_id,
+        datafast_visitor_id: visitor_id,
+        datafast_session_id: stripe_session.metadata&.datafast_session_id
+      )
+
+      Rails.event.notify("checkout.completed",
+        order_id: order.id,
+        total: order.total_amount.to_f,
+        payment_method: "card"
+      )
     end
   end
 end
