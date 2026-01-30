@@ -156,11 +156,10 @@ class CheckoutsController < ApplicationController
         return redirect_to cart_path
       end
 
-      # Check if order already exists for this session (prevent duplicates)
+      # Check if order already exists for this session (webhook may have created it)
       existing_order = Order.find_by(stripe_session_id: session_id)
       if existing_order
-        # Redirect to show page (not confirmation) for duplicate requests
-        return redirect_to order_path(existing_order, token: existing_order.signed_access_token)
+        return redirect_to confirmation_order_path(existing_order, token: existing_order.signed_access_token)
       end
 
       # Get the cart with eager loading for order creation
