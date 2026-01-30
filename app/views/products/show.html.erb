@@ -200,6 +200,70 @@
             </div>
           </div>
 
+          <%# Compatible Lids Section (inline, above add to cart) %>
+          <% if @compatible_products.present? && @compatible_products.any? %>
+            <div class="mt-6"
+                 data-controller="compatible-lids"
+                 data-compatible-lids-product-id-value="<%= @product.id %>">
+              <h3 class="text-lg font-medium mb-2">Add matching lids <span class="text-sm font-normal text-base-content/60">(optional)</span></h3>
+              <p class="text-sm text-base-content/70 mb-4">Complete your order with compatible lids</p>
+
+              <div id="lids-loading" class="text-center py-4" style="display:none;">
+                <span class="loading loading-spinner loading-md"></span>
+              </div>
+
+              <div class="flex flex-col gap-3" data-compatible-lids-target="container">
+                <% @compatible_products.each do |lid| %>
+                  <div class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4">
+                    <div class="flex items-start gap-3 sm:gap-4">
+                      <%# Image %>
+                      <div class="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24">
+                        <% if lid.primary_photo&.attached? %>
+                          <%= image_tag lid.primary_photo.variant(resize_to_limit: [200, 200]),
+                                        alt: lid.generated_title,
+                                        class: "w-full h-full object-contain",
+                                        loading: "lazy" %>
+                        <% else %>
+                          <div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl">📦</div>
+                        <% end %>
+                      </div>
+
+                      <%# Content %>
+                      <div class="flex-1 min-w-0">
+                        <h4 class="text-base sm:text-lg mb-1 leading-tight">
+                          <%= [lid.material, lid.size].compact.join(' · ') %> compatible
+                        </h4>
+                        <p class="text-sm sm:text-base text-gray-900">
+                          <%= number_to_currency(lid.price) %> / pack of <%= number_with_delimiter(lid.pac_size) %>
+                        </p>
+
+                        <%# Actions %>
+                        <div class="flex flex-col gap-2 mt-3">
+                          <select class="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
+                                  data-lid-quantity="<%= lid.sku %>">
+                            <% (1..10).each do |num_packs| %>
+                              <% total_units = lid.pac_size * num_packs %>
+                              <option value="<%= num_packs %>">
+                                <%= num_packs %> <%= num_packs == 1 ? 'pack' : 'packs' %> (<%= number_with_delimiter(total_units) %> units)
+                              </option>
+                            <% end %>
+                          </select>
+                          <button type="button"
+                                  class="w-full px-3 sm:px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors cursor-pointer"
+                                  data-action="click->compatible-lids#addLidToCart"
+                                  data-lid-sku="<%= lid.sku %>"
+                                  data-lid-name="<%= lid.generated_title %>">
+                            Add to Cart
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
           <%# Order Summary & Add to Cart %>
           <div class="mt-6 space-y-2">
             <div class="flex items-center gap-2 justify-center lg:justify-start text-sm sm:text-base" data-controller="delivery-countdown">
@@ -251,17 +315,6 @@
           <div class="prose max-w-none">
             <h2>Product Details</h2>
             <%= render_product_description(@product.description_detailed_with_fallback) %>
-          </div>
-        </div>
-      <% end %>
-
-      <%# Compatible Products Section (for cups with compatible lids) %>
-      <% if @compatible_products.present? && @compatible_products.any? %>
-        <div class="mt-12">
-          <h2 class="text-2xl mb-2">Compatible Lids</h2>
-          <p class="text-base-content/70 mb-6">These lids fit perfectly with your <%= @product.size %> cups.</p>
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <%= render partial: "products/card", collection: @compatible_products, as: :product %>
           </div>
         </div>
       <% end %>

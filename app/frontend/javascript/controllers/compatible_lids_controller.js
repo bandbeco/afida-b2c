@@ -223,13 +223,21 @@ export default class extends Controller {
   async addLidToCart(event) {
     const button = event.currentTarget
     const sku = button.dataset.lidSku
-    const name = button.dataset.lidName
     const quantitySelect = button.parentElement.querySelector('select')
     const quantity = parseInt(quantitySelect.value)
 
+    // Detect button style: icon-only (DaisyUI btn-square) vs text button (full width)
+    const isIconButton = button.classList.contains('btn-square')
+    const originalText = button.textContent
+
     // Disable button during request - show loading spinner
     button.disabled = true
-    button.innerHTML = this.loadingIcon
+    if (isIconButton) {
+      // Icon button uses innerHTML for SVG icons (hardcoded, safe)
+      button.innerHTML = this.loadingIcon // eslint-disable-line no-unsanitized/property
+    } else {
+      button.textContent = 'Adding...'
+    }
 
     try {
       const response = await fetch("/cart/cart_items", {
@@ -241,7 +249,7 @@ export default class extends Controller {
         },
         body: JSON.stringify({
           cart_item: {
-            variant_sku: sku,
+            sku: sku,
             quantity: quantity
           }
         })
@@ -254,10 +262,16 @@ export default class extends Controller {
           Turbo.renderStreamMessage(text)
         }
 
-        // Show success state - checkmark icon
-        button.innerHTML = this.checkIcon
-        button.classList.remove('btn-primary')
-        button.classList.add('btn-success')
+        // Show success state
+        if (isIconButton) {
+          button.innerHTML = this.checkIcon // eslint-disable-line no-unsanitized/property
+          button.classList.remove('btn-primary')
+          button.classList.add('btn-success')
+        } else {
+          button.textContent = '✓ Added to Cart'
+          button.classList.remove('bg-primary', 'hover:bg-primary-focus')
+          button.classList.add('bg-success', 'text-success-content')
+        }
 
         // Open cart drawer (same behavior as main add-to-cart)
         window.dispatchEvent(new CustomEvent('cart:updated', { detail: { source: 'compatible-lids' } }))
@@ -265,24 +279,43 @@ export default class extends Controller {
         // Reset button after 2 seconds
         setTimeout(() => {
           button.disabled = false
-          button.innerHTML = this.cartIcon
-          button.classList.remove('btn-success')
-          button.classList.add('btn-primary')
+          if (isIconButton) {
+            button.innerHTML = this.cartIcon // eslint-disable-line no-unsanitized/property
+            button.classList.remove('btn-success')
+            button.classList.add('btn-primary')
+          } else {
+            button.textContent = originalText
+            button.classList.remove('bg-success', 'text-success-content')
+            button.classList.add('bg-primary', 'hover:bg-primary-focus')
+          }
         }, 2000)
       } else {
         throw new Error('Failed to add to cart')
       }
     } catch (error) {
       console.error('Error adding lid to cart:', error)
-      button.innerHTML = this.errorIcon
-      button.classList.remove('btn-primary')
-      button.classList.add('btn-error')
+
+      if (isIconButton) {
+        button.innerHTML = this.errorIcon // eslint-disable-line no-unsanitized/property
+        button.classList.remove('btn-primary')
+        button.classList.add('btn-error')
+      } else {
+        button.textContent = '✗ Failed'
+        button.classList.remove('bg-primary', 'hover:bg-primary-focus')
+        button.classList.add('bg-error', 'text-error-content')
+      }
 
       setTimeout(() => {
         button.disabled = false
-        button.innerHTML = this.cartIcon
-        button.classList.remove('btn-error')
-        button.classList.add('btn-primary')
+        if (isIconButton) {
+          button.innerHTML = this.cartIcon // eslint-disable-line no-unsanitized/property
+          button.classList.remove('btn-error')
+          button.classList.add('btn-primary')
+        } else {
+          button.textContent = originalText
+          button.classList.remove('bg-error', 'text-error-content')
+          button.classList.add('bg-primary', 'hover:bg-primary-focus')
+        }
       }, 2000)
     }
   }
