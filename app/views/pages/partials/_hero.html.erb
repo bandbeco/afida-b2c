@@ -63,7 +63,14 @@
       </div>
 
       <div class="flex justify-center lg:justify-start">
-        <%= vite_image_tag "images/hero.webp", alt: "Branded packaging", class: "w-full max-w-md lg:max-w-none h-auto drop-shadow-2xl rounded-2xl" %>
+        <div data-controller="hero-loop" class="relative w-full max-w-md lg:max-w-none">
+          <% Dir.glob(Rails.root.join("app/frontend/images/hero/*.webp")).sort_by { |f| File.basename(f)[/\d+/].to_i }.each_with_index do |path, index| %>
+            <%= vite_image_tag "images/hero/#{File.basename(path)}",
+                alt: "Eco-friendly packaging",
+                class: "w-auto max-h-[600px] drop-shadow-2xl rounded-2xl #{index == 0 ? '' : 'hidden'}",
+                data: { hero_loop_target: "image" } %>
+          <% end %>
+        </div>
       </div>
     </div>
   </div>
