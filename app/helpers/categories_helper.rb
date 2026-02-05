@@ -14,6 +14,18 @@ module CategoriesHelper
 
   DEFAULT_CATEGORY_ICON = "images/graphics/box.svg".freeze
 
+  # Pastel background colors for category cards (index-based cycling)
+  # Order: green, pink, blue, orange, red, yellow, purple
+  CATEGORY_PASTEL_COLORS = [
+    "#d1fae5", # pastel green
+    "#fce7f3", # pastel pink
+    "#dbeafe", # pastel blue
+    "#ffedd5", # pastel orange
+    "#fee2e2", # pastel red
+    "#fef9c3", # pastel yellow
+    "#ede9fe"  # pastel purple
+  ].freeze
+
   # Related category mappings for "You might also need" sections
   # Maps category slugs to arrays of related category slugs
   # Used to improve internal linking and cross-selling
@@ -46,6 +58,14 @@ module CategoriesHelper
   def category_icon_path(category)
     slug = category.respond_to?(:slug) ? category.slug : category.to_s
     CATEGORY_ICONS[slug] || DEFAULT_CATEGORY_ICON
+  end
+
+  # Returns a pastel background color for a category card based on its index
+  #
+  # @param index [Integer] The category's position in the list (0-indexed)
+  # @return [String] Hex color code
+  def category_pastel_color(index)
+    CATEGORY_PASTEL_COLORS[index % CATEGORY_PASTEL_COLORS.length]
   end
 
   # Renders a category icon image tag

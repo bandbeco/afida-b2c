@@ -1,16 +1,16 @@
 <div class="flex flex-wrap justify-center gap-4 md:gap-6">
-  <% @categories.each do |category| %>
+  <% @categories.each_with_index do |category, index| %>
     <%= link_to category_path(category), class: "group relative block aspect-square overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(25%-1.125rem)]" do %>
       <!-- Background Image/Color -->
-      <div class="absolute inset-0 bottom-12 bg-[#f4fbf8]">
+      <div class="absolute inset-0" style="background-color: <%= category_pastel_color(index) %>">
         <% if category.image.attached? %>
           <%= image_tag category.image, alt: category.name, class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" %>
         <% elsif category_icon_path(category).present? %>
-          <div class="w-full h-full flex items-center justify-center p-6 transition-transform duration-300 group-hover:scale-105">
+          <div class="w-full h-full flex items-center justify-center p-6 pb-14 transition-transform duration-300 group-hover:scale-105">
             <%= vite_image_tag category_icon_path(category), class: 'w-full h-full object-contain opacity-80', alt: "#{category.name} icon" %>
           </div>
         <% else %>
-          <div class="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
+          <div class="w-full h-full flex items-center justify-center pb-14 transition-transform duration-300 group-hover:scale-105">
             <span class="text-7xl font-black text-[#79ebc0]/20"><%= category.name[0] %></span>
           </div>
         <% end %>
