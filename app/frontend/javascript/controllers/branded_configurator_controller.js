@@ -32,7 +32,6 @@ export default class extends Controller {
 
   static values = {
     productId: Number,
-    vatRate: { type: Number, default: 0.2 },
     inModal: { type: Boolean, default: false }
   }
 
