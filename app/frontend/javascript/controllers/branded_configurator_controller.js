@@ -32,7 +32,6 @@ export default class extends Controller {
 
   static values = {
     productId: Number,
-    vatRate: { type: Number, default: 0.2 },
     inModal: { type: Boolean, default: false }
   }
 
@@ -417,8 +416,7 @@ export default class extends Controller {
             priceTarget.textContent = `£${parseFloat(data.price_per_unit).toFixed(3)}/unit`
           }
           if (totalTarget) {
-            const total = parseFloat(data.total_price) * (1 + this.vatRateValue)
-            totalTarget.textContent = `£${total.toFixed(2)}`
+            totalTarget.textContent = `£${parseFloat(data.total_price).toFixed(2)}`
           }
 
           // Store price per unit for savings calculation
@@ -482,23 +480,17 @@ export default class extends Controller {
 
   updateSummaryDisplay(data) {
     // Parse values as floats (server returns strings)
+    // All prices displayed excl. VAT
     const subtotal = parseFloat(data.total_price)
 
-    // Update subtotal
+    // Update subtotal (if target exists)
     if (this.hasSubtotalTarget) {
       this.subtotalTarget.textContent = `£${subtotal.toFixed(2)}`
     }
 
-    // Update VAT
-    const vat = subtotal * this.vatRateValue
-    if (this.hasVatTarget) {
-      this.vatTarget.textContent = `£${vat.toFixed(2)}`
-    }
-
-    // Update total
-    const total = subtotal + vat
+    // Update total (excl. VAT)
     if (this.hasTotalTarget) {
-      this.totalTarget.textContent = `£${total.toFixed(2)}`
+      this.totalTarget.textContent = `£${subtotal.toFixed(2)}`
     }
   }
 
