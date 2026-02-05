@@ -28,18 +28,16 @@
       </div>
     </figure>
 
-    <div class="card-body p-4 flex flex-col flex-1">
+    <div class="card-body p-4 pb-0 flex flex-col flex-1">
       <h3><%= product.generated_title %></h3>
-
-      <div class="flex-1"></div>
-
-      <p class="text-sm text-gray-600 mt-auto"><%= number_to_currency(product.price, unit: "£") %> / pack of <%= number_with_delimiter(product.pac_size) %></p>
     </div>
   <% end %>
 
-  <% show_quick_add = local_assigns.fetch(:show_quick_add, true) %>
-  <% if show_quick_add && product.product_type == "standard" && product.active? %>
-    <div class="card-actions p-4 pt-0">
+  <div class="px-4 pb-4 mt-auto">
+    <p class="text-sm text-gray-600 mb-2"><%= number_to_currency(product.price, unit: "£") %> / pack of <%= number_with_delimiter(product.pac_size) %></p>
+
+    <% show_quick_add = local_assigns.fetch(:show_quick_add, true) %>
+    <% if show_quick_add && product.product_type == "standard" && product.active? %>
       <%= link_to quick_add_product_path(product),
                   data: {
                     turbo_frame: "quick-add-modal",
@@ -51,6 +49,6 @@
         </svg>
         Quick Add
       <% end %>
-    </div>
-  <% end %>
+    <% end %>
+  </div>
 </div>

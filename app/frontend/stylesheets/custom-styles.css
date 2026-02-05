@@ -202,6 +202,23 @@ h4 {
   background-color: #f3f4f6 !important;
 }
 
+/* Make carousel slides equal height */
+.addon-carousel .swiper-wrapper,
+.related-products-carousel .swiper-wrapper {
+  align-items: stretch;
+}
+
+.addon-carousel .swiper-slide,
+.related-products-carousel .swiper-slide {
+  height: auto;
+  display: flex;
+}
+
+.addon-carousel .swiper-slide > *,
+.related-products-carousel .swiper-slide > * {
+  width: 100%;
+}
+
 /* Hide scrollbar while keeping scroll functionality */
 .scrollbar-hide {
   -ms-overflow-style: none;  /* IE and Edge */
