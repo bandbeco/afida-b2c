@@ -67,6 +67,9 @@ rubocop                 # Run RuboCop linter (uses rails-omakase config)
 brakeman                # Run security vulnerability scanner
 ```
 
+### Git
+**⚠️ IMPORTANT: Never use `git add -A` or `git add .`** - Always add specific files by name to avoid accidentally staging unrelated or sensitive files.
+
 ### Asset Management
 Vite automatically compiles assets during development. For production builds:
 ```bash
