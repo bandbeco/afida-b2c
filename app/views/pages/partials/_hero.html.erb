@@ -1,22 +1,24 @@
 <section aria-label="Hero banner">
-<div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-[#f4fbf8] overflow-hidden">
+<div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-white overflow-hidden">
   <div class="container mx-auto px-4 py-12 lg:py-16">
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-      <div class="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
-        <h1 class="font-semibold" data-controller="slide-in">
-          <span data-slide-in-target="item">Quality packaging supplies.</span><br>
-          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00a86b] to-[#79ebc0]" data-slide-in-target="item">Delivered Fast.</span>
+    <div class="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-0 items-center">
+      <div class="w-full text-center lg:text-left">
+        <h1 class="font-semibold !text-4xl lg:!text-5xl xl:!text-6xl" data-controller="slide-in">
+          <span data-slide-in-target="item">Quality packaging supplies</span><br>
+          <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00a86b] to-[#79ebc0]" data-slide-in-target="item">Delivered Fast</span>
         </h1>
 
-        <p class="text-lg text-neutral-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
-          Supply your restaurant, café, or takeaway with high-quality packaging. From custom branded cups to bamboo pulp straws, we deliver everything you need within 48 hours.
+        <p class="text-lg text-neutral-600 mb-8 leading-relaxed">
+          Supply your restaurant, café, or takeaway with high-quality packaging.<br>
+          From custom branded cups to bamboo pulp straws, we deliver everything<br>
+          you need within 48 hours.
         </p>
 
         <div class="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-6 mb-8 sm:mb-16">
           <!-- Free Delivery Badge -->
           <div class="flex items-center gap-2">
             <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5 text-[#00a86b] flex-shrink-0"><path d="M10 16V9.5a1 1 0 0 1 5 0"/><path d="M8 12h4"/><path d="M8 16h7"/><circle cx="12" cy="12" r="10"/></svg>
-            <span class="text-sm text-neutral-700">Free delivery on orders over £100 <span class="text-xs text-neutral-500">(excl. VAT)</span></span>
+            <span class="text-base text-neutral-700">Free delivery on orders over £100 <span class="text-sm text-neutral-500">(excl. VAT)</span></span>
           </div>
 
           <!-- 48-hour Delivery Badge -->
@@ -28,11 +30,11 @@
               <path d="M20 8.54V4a2 2 0 1 0-4 0v3"/>
               <path d="M7.612 12.524a3 3 0 1 0-1.6 4.3"/>
             </svg>
-            <span class="text-sm text-neutral-700">Order by 2pm for next-day delivery</span>
+            <span class="text-base text-neutral-700">Order by 2pm for next-day delivery</span>
           </div>
         </div>
 
-        <div class="flex flex-col sm:flex-row flex-wrap justify-center lg:justify-start gap-4 max-w-lg mx-auto lg:mx-0">
+        <div class="flex flex-col lg:flex-row justify-center lg:justify-start gap-4">
           <%= link_to shop_path, class: "btn btn-primary btn-lg shadow-lg shadow-black/20" do %>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
@@ -63,13 +65,10 @@
       </div>
 
       <div class="flex justify-center lg:justify-start">
-        <div data-controller="hero-loop" class="relative w-full max-w-md lg:max-w-none">
-          <% Dir.glob(Rails.root.join("app/frontend/images/hero/*.webp")).sort_by { |f| File.basename(f)[/\d+/].to_i }.each_with_index do |path, index| %>
-            <%= vite_image_tag "images/hero/#{File.basename(path)}",
-                alt: "Eco-friendly packaging",
-                class: "w-auto max-h-[600px] drop-shadow-2xl rounded-2xl #{index == 0 ? '' : 'hidden'}",
-                data: { hero_loop_target: "image" } %>
-          <% end %>
+        <div class="relative w-full max-w-md lg:max-w-none">
+          <%= vite_image_tag "images/hero/hero-main.jpg",
+              alt: "Eco-friendly packaging products including paper bags, cups, food containers, and cutlery",
+              class: "w-auto max-h-[750px]" %>
         </div>
       </div>
     </div>
