@@ -1,0 +1,29 @@
+<div class="container mx-auto px-4 py-16">
+  <div class="max-w-lg mx-auto text-center">
+
+    <div class="bg-gray-50 border border-gray-200 rounded-lg p-8 mb-8">
+      <svg class="h-16 w-16 text-gray-400 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <h1 class="text-2xl font-bold text-gray-800 mb-2">Order No Longer Available</h1>
+      <p class="text-gray-600">
+        <% if @pending_order.confirmed? %>
+          This order has already been confirmed. You should have received a confirmation email.
+        <% else %>
+          This order has expired because it wasn't confirmed before the scheduled delivery date.
+          Don't worry &mdash; your reorder schedule is still active and your next order will be created automatically.
+        <% end %>
+      </p>
+    </div>
+
+    <div class="flex flex-col sm:flex-row gap-3 justify-center">
+      <%= link_to "View My Reorder Schedules", reorder_schedules_path, class: "btn btn-primary" %>
+      <%= link_to "Go to Homepage", root_path, class: "btn btn-outline" %>
+    </div>
+
+    <p class="mt-6 text-sm text-gray-500">
+      Need help? <%= link_to "Contact us", contact_path, class: "link link-primary" %>.
+    </p>
+
+  </div>
+</div>

@@ -177,8 +177,7 @@ class PendingOrdersController < ApplicationController
   def ensure_pending_status
     return if @pending_order.pending?
 
-    render plain: "This order has already been processed or has expired",
-           status: :gone
+    render "order_no_longer_available", status: :gone
   end
 
   def pending_order_params
@@ -190,7 +189,7 @@ class PendingOrdersController < ApplicationController
   end
 
   def render_not_found
-    render plain: "Not Found", status: :not_found
+    render "expired_token", status: :not_found
   end
 
   def ensure_stripe_customer(user)
