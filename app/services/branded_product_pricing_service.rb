@@ -29,9 +29,10 @@ class BrandedProductPricingService
   end
 
   def available_sizes
-    # Sort sizes numerically (8oz, 12oz, 16oz, not 12oz, 16oz, 8oz)
+    # Sort sizes: numerically for oz-based sizes (8oz, 12oz, 16oz),
+    # alphabetically for text-based variants (A3 Kraft 1 Colour, A4 White 2 Colours)
     # Use map instead of pluck to utilize eager-loaded association
-    @product.branded_product_prices.map(&:size).uniq.sort_by { |size| size.to_i }
+    @product.branded_product_prices.map(&:size).uniq.sort_by { |size| [ size.to_i, size ] }
   end
 
   def available_quantities(size)

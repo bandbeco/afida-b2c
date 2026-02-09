@@ -27,12 +27,24 @@ export default class extends Controller {
     "sizeSelection",
     "quantitySelection",
     "lidsSelection",
-    "designSelection"
+    "designSelection",
+    "quantityContainer",
+    "dimensionStep",
+    "dimensionIndicator",
+    "dimensionSelection",
+    "dimensionOption"
   ]
 
   static values = {
     productId: Number,
-    inModal: { type: Boolean, default: false }
+    inModal: { type: Boolean, default: false },
+    hasLids: { type: Boolean, default: true },
+    sizeDimensions: { type: Array, default: [] },
+    allQuantityTiers: { type: Object, default: {} }
+  }
+
+  get isMultiDimension() {
+    return this.sizeDimensionsValue.length > 0
   }
 
   connect() {
@@ -40,6 +52,7 @@ export default class extends Controller {
     this.selectedQuantity = null
     this.calculatedPrice = null
     this.isProcessing = false
+    this.dimensionSelections = {}
     this.updateAddToCartButton()
 
     // Check for URL parameters and pre-select configuration
@@ -54,27 +67,65 @@ export default class extends Controller {
   loadFromUrlParams() {
     const params = new URLSearchParams(window.location.search)
 
-    // Pre-select size if in URL (normalize: "8 oz" or "8oz" → "8oz")
-    const sizeParam = params.get('size')
-    if (sizeParam) {
-      const normalizedSize = sizeParam.replace(/\s+/g, '')
-      const sizeButton = this.sizeOptionTargets.find(el =>
-        el.dataset.size.replace(/\s+/g, '') === normalizedSize
-      )
-      if (sizeButton) {
-        sizeButton.click()
-      }
-    }
+    if (this.isMultiDimension) {
+      // Multi-dimension: read individual dimension params
+      let allPresent = true
+      this.sizeDimensionsValue.forEach((dim, index) => {
+        const value = params.get(dim.key)
+        if (value) {
+          // Find and click the matching button
+          const button = this.dimensionOptionTargets.find(el =>
+            el.dataset.dimensionKey === dim.key && el.dataset.dimensionValue === value
+          )
+          if (button) {
+            button.click()
+          } else {
+            allPresent = false
+          }
+        } else {
+          allPresent = false
+        }
+      })
 
-    // Pre-select quantity if in URL
-    const quantityParam = params.get('quantity')
-    if (quantityParam) {
-      const quantity = parseInt(quantityParam)
-      const quantityCard = this.quantityOptionTargets.find(el =>
-        parseInt(el.dataset.quantity) === quantity
-      )
-      if (quantityCard) {
-        quantityCard.click()
+      // Pre-select quantity if all dimensions were set
+      if (allPresent) {
+        const quantityParam = params.get('quantity')
+        if (quantityParam) {
+          // Quantity cards are built dynamically, so wait for them
+          setTimeout(() => {
+            const quantity = parseInt(quantityParam)
+            const quantityCard = this.quantityOptionTargets.find(el =>
+              parseInt(el.dataset.quantity) === quantity
+            )
+            if (quantityCard) {
+              quantityCard.click()
+            }
+          }, 100)
+        }
+      }
+    } else {
+      // Single-dimension: existing behavior
+      const sizeParam = params.get('size')
+      if (sizeParam) {
+        const normalizedSize = sizeParam.replace(/\s+/g, '')
+        const sizeButton = this.sizeOptionTargets.find(el =>
+          el.dataset.size.replace(/\s+/g, '') === normalizedSize
+        )
+        if (sizeButton) {
+          sizeButton.click()
+        }
+      }
+
+      // Pre-select quantity if in URL
+      const quantityParam = params.get('quantity')
+      if (quantityParam) {
+        const quantity = parseInt(quantityParam)
+        const quantityCard = this.quantityOptionTargets.find(el =>
+          parseInt(el.dataset.quantity) === quantity
+        )
+        if (quantityCard) {
+          quantityCard.click()
+        }
       }
     }
   }
@@ -93,7 +144,6 @@ export default class extends Controller {
     const step = header.closest("[data-step-index]")
     if (!step) return
 
-    const stepIndex = parseInt(step.dataset.stepIndex, 10)
     const isExpanded = step.dataset.expanded === "true"
 
     if (isExpanded) {
@@ -143,10 +193,11 @@ export default class extends Controller {
 
   collapseAllSteps() {
     const allSteps = [
-      this.sizeStepTarget,
-      this.quantityStepTarget,
-      this.lidsStepTarget,
-      this.designStepTarget
+      this.hasSizeStepTarget && this.sizeStepTarget,
+      this.hasQuantityStepTarget && this.quantityStepTarget,
+      this.hasLidsStepTarget && this.lidsStepTarget,
+      this.hasDesignStepTarget && this.designStepTarget,
+      ...this.dimensionStepTargets
     ].filter(Boolean)
 
     allSteps.forEach(step => this.collapseStep(step))
@@ -155,6 +206,186 @@ export default class extends Controller {
   getStepByName(stepName) {
     const targetName = `${stepName}StepTarget`
     return this[targetName] || null
+  }
+
+  // ==================== MULTI-DIMENSION SELECTION ====================
+
+  selectDimension(event) {
+    if (this.isProcessing) return
+    this.isProcessing = true
+
+    try {
+      const button = event.currentTarget
+      const key = button.dataset.dimensionKey
+      const value = button.dataset.dimensionValue
+
+      // Find which dimension index this belongs to
+      const dimIndex = this.sizeDimensionsValue.findIndex(d => d.key === key)
+      if (dimIndex === -1) return
+
+      // Reset buttons in this dimension's step
+      this.dimensionOptionTargets
+        .filter(el => el.dataset.dimensionKey === key)
+        .forEach(el => {
+          el.classList.remove("border-primary", "border-4")
+          el.classList.add("border-gray-300", "border-2")
+          el.setAttribute("aria-pressed", "false")
+        })
+
+      // Highlight selected button
+      button.classList.remove("border-gray-300", "border-2")
+      button.classList.add("border-primary", "border-4")
+      button.setAttribute("aria-pressed", "true")
+
+      // Store selection
+      this.dimensionSelections[key] = value
+
+      // Clear selections for subsequent dimensions (changing paper_size resets paper_type and colours)
+      for (let i = dimIndex + 1; i < this.sizeDimensionsValue.length; i++) {
+        const laterKey = this.sizeDimensionsValue[i].key
+        delete this.dimensionSelections[laterKey]
+
+        // Reset button styles for later dimensions
+        this.dimensionOptionTargets
+          .filter(el => el.dataset.dimensionKey === laterKey)
+          .forEach(el => {
+            el.classList.remove("border-primary", "border-4")
+            el.classList.add("border-gray-300", "border-2")
+            el.setAttribute("aria-pressed", "false")
+          })
+
+        // Reset indicator for later dimension
+        if (this.dimensionIndicatorTargets[i]) {
+          this.dimensionIndicatorTargets[i].textContent = (i + 1).toString()
+          this.dimensionIndicatorTargets[i].classList.remove('bg-primary', 'text-white')
+          this.dimensionIndicatorTargets[i].classList.add('bg-gray-300')
+        }
+        if (this.dimensionSelectionTargets[i]) {
+          this.dimensionSelectionTargets[i].textContent = ''
+          this.dimensionSelectionTargets[i].classList.add('hidden')
+        }
+      }
+
+      // Also reset quantity when any dimension changes
+      this.selectedQuantity = null
+      this.calculatedPrice = null
+      this.resetQuantityIndicator()
+
+      // Show step complete for this dimension
+      if (this.dimensionIndicatorTargets[dimIndex]) {
+        this.dimensionIndicatorTargets[dimIndex].textContent = '✓'
+        this.dimensionIndicatorTargets[dimIndex].classList.remove('bg-gray-300')
+        this.dimensionIndicatorTargets[dimIndex].classList.add('bg-primary', 'text-white')
+      }
+      if (this.dimensionSelectionTargets[dimIndex]) {
+        this.dimensionSelectionTargets[dimIndex].textContent = ` : ${value}`
+        this.dimensionSelectionTargets[dimIndex].classList.remove('hidden')
+      }
+
+      // Collapse current dimension step
+      this.collapseStep(this.dimensionStepTargets[dimIndex])
+
+      // Check if all dimensions are selected
+      const allSelected = this.sizeDimensionsValue.every(d => this.dimensionSelections[d.key])
+
+      if (allSelected) {
+        // Compose the size string by joining selections in order
+        this.selectedSize = this.sizeDimensionsValue
+          .map(d => this.dimensionSelections[d.key])
+          .join(' ')
+
+        // Build quantity cards for this composed size
+        this.buildQuantityCards()
+
+        // Expand quantity step
+        this.expandStep(this.quantityStepTarget)
+
+        this.updateUrl()
+        this.calculatePrice()
+      } else {
+        // Expand next dimension step
+        const nextIndex = dimIndex + 1
+        if (nextIndex < this.dimensionStepTargets.length) {
+          this.expandStep(this.dimensionStepTargets[nextIndex])
+        }
+        this.selectedSize = null
+        this.updateUrl()
+      }
+    } finally {
+      this.isProcessing = false
+    }
+  }
+
+  resetQuantityIndicator() {
+    if (this.hasQuantityIndicatorTarget) {
+      const stepNumber = this.isMultiDimension ? this.sizeDimensionsValue.length + 1 : 2
+      this.quantityIndicatorTarget.textContent = stepNumber.toString()
+      this.quantityIndicatorTarget.classList.remove('bg-primary', 'text-white')
+      this.quantityIndicatorTarget.classList.add('bg-gray-300')
+    }
+    if (this.hasQuantitySelectionTarget) {
+      this.quantitySelectionTarget.textContent = ''
+      this.quantitySelectionTarget.classList.add('hidden')
+    }
+  }
+
+  /**
+   * Build quantity cards dynamically from allQuantityTiers for multi-dimension products.
+   * Matches the same HTML structure as server-rendered cards.
+   */
+  buildQuantityCards() {
+    if (!this.hasQuantityContainerTarget) return
+
+    const tiers = this.allQuantityTiersValue[this.selectedSize]
+    if (!tiers) return
+
+    // Clear existing cards
+    while (this.quantityContainerTarget.firstChild) {
+      this.quantityContainerTarget.removeChild(this.quantityContainerTarget.firstChild)
+    }
+
+    tiers.forEach((quantity, index) => {
+      const card = document.createElement('div')
+      card.className = 'border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center'
+      card.style.cssText = 'display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;'
+      card.dataset.brandedConfiguratorTarget = 'quantityOption'
+      card.dataset.quantity = quantity
+      card.dataset.action = 'click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown'
+      card.setAttribute('role', 'option')
+      card.setAttribute('aria-selected', 'false')
+      card.setAttribute('tabindex', '0')
+
+      // Column 1: Quantity
+      const label = document.createElement('div')
+      label.className = 'text-black whitespace-nowrap'
+      label.dataset.brandedConfiguratorTarget = 'quantityLabel'
+      label.textContent = `${quantity.toLocaleString()} units`
+
+      // Column 2: Unit price
+      const price = document.createElement('div')
+      price.className = 'text-gray-400'
+      price.style.width = '6rem'
+      price.dataset.brandedConfiguratorTarget = 'pricePerUnit'
+
+      // Column 3: Savings badge
+      const savings = document.createElement('div')
+      savings.style.width = '5rem'
+      savings.dataset.brandedConfiguratorTarget = 'savingsBadge'
+      if (index === 0) savings.classList.add('invisible')
+
+      // Column 4: Total price
+      const total = document.createElement('div')
+      total.className = 'text-black text-right'
+      total.style.width = '4.5rem'
+      total.dataset.brandedConfiguratorTarget = 'totalPrice'
+
+      card.appendChild(label)
+      card.appendChild(price)
+      card.appendChild(savings)
+      card.appendChild(total)
+
+      this.quantityContainerTarget.appendChild(card)
+    })
   }
 
   selectSize(event) {
@@ -211,9 +442,9 @@ export default class extends Controller {
       this.showStepComplete('quantity')
       this.updateSelectionDisplay('quantity', this.selectedQuantity.toLocaleString() + ' units')
 
-      // Collapse quantity step and expand lids step (or design in modal mode)
+      // Collapse quantity step and expand lids step (or design if no lids / modal mode)
       this.collapseStep(this.quantityStepTarget)
-      if (this.inModalValue) {
+      if (this.inModalValue || !this.hasLidsValue) {
         this.expandStep(this.designStepTarget)
       } else {
         this.expandStep(this.lidsStepTarget)
@@ -290,7 +521,7 @@ export default class extends Controller {
       placeholder.className = 'w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl sm:text-4xl'
       placeholder.setAttribute('role', 'img')
       placeholder.setAttribute('aria-label', 'Product image placeholder')
-      placeholder.textContent = '📦'
+      placeholder.textContent = '\u{1F4E6}'
       imageContainer.appendChild(placeholder)
     }
 
@@ -304,11 +535,11 @@ export default class extends Controller {
     const titleParts = []
     if (lid.material) titleParts.push(lid.material)
     if (lid.size) titleParts.push(lid.size)
-    title.textContent = titleParts.length > 0 ? `${titleParts.join(' · ')} compatible` : lid.name
+    title.textContent = titleParts.length > 0 ? `${titleParts.join(' \u00B7 ')} compatible` : lid.name
 
     const price = document.createElement('div')
     price.className = 'text-sm sm:text-base text-gray-900'
-    price.textContent = `£${parseFloat(lid.price).toFixed(2)} / pack of ${lid.pac_size.toLocaleString()}`
+    price.textContent = `\u00A3${parseFloat(lid.price).toFixed(2)} / pack of ${lid.pac_size.toLocaleString()}`
 
     // Actions - stacked vertically
     const actions = document.createElement('div')
@@ -413,10 +644,10 @@ export default class extends Controller {
           const totalTarget = card.querySelector('[data-branded-configurator-target="totalPrice"]')
 
           if (priceTarget) {
-            priceTarget.textContent = `£${parseFloat(data.price_per_unit).toFixed(3)}/unit`
+            priceTarget.textContent = `\u00A3${parseFloat(data.price_per_unit).toFixed(3)}/unit`
           }
           if (totalTarget) {
-            totalTarget.textContent = `£${parseFloat(data.total_price).toFixed(2)}`
+            totalTarget.textContent = `\u00A3${parseFloat(data.total_price).toFixed(2)}`
           }
 
           // Store price per unit for savings calculation
@@ -485,12 +716,12 @@ export default class extends Controller {
 
     // Update subtotal (if target exists)
     if (this.hasSubtotalTarget) {
-      this.subtotalTarget.textContent = `£${subtotal.toFixed(2)}`
+      this.subtotalTarget.textContent = `\u00A3${subtotal.toFixed(2)}`
     }
 
     // Update total (excl. VAT)
     if (this.hasTotalTarget) {
-      this.totalTarget.textContent = `£${subtotal.toFixed(2)}`
+      this.totalTarget.textContent = `\u00A3${subtotal.toFixed(2)}`
     }
   }
 
@@ -533,16 +764,32 @@ export default class extends Controller {
   updateUrl() {
     const params = new URLSearchParams(window.location.search)
 
-    // Update URL parameters based on current selections
-    if (this.selectedSize) {
-      params.set('size', this.selectedSize)
+    if (this.isMultiDimension) {
+      // Write individual dimension params
+      this.sizeDimensionsValue.forEach(dim => {
+        if (this.dimensionSelections[dim.key]) {
+          params.set(dim.key, this.dimensionSelections[dim.key])
+        } else {
+          params.delete(dim.key)
+        }
+      })
+      // Remove the composite 'size' param if it was set
+      params.delete('size')
+    } else {
+      if (this.selectedSize) {
+        params.set('size', this.selectedSize)
+      }
     }
+
     if (this.selectedQuantity) {
       params.set('quantity', this.selectedQuantity)
+    } else {
+      params.delete('quantity')
     }
 
     // Update browser URL without page reload
-    const newUrl = `${window.location.pathname}?${params.toString()}`
+    const paramString = params.toString()
+    const newUrl = paramString ? `${window.location.pathname}?${paramString}` : window.location.pathname
     window.history.replaceState({}, '', newUrl)
   }
 
@@ -550,7 +797,7 @@ export default class extends Controller {
     const indicatorTarget = `${step}IndicatorTarget`
     if (this[indicatorTarget]) {
       // Transform to checkmark - Afida green background with white checkmark
-      this[indicatorTarget].textContent = '✓'
+      this[indicatorTarget].textContent = '\u2713'
       this[indicatorTarget].classList.remove('bg-gray-300')
       this[indicatorTarget].classList.add('bg-primary', 'text-white')
     }
@@ -613,7 +860,7 @@ export default class extends Controller {
         }
 
         // Show success feedback
-        button.textContent = '✓ Added to cart'
+        button.textContent = '\u2713 Added to cart'
         button.classList.remove('bg-primary', 'hover:bg-primary-focus')
         button.classList.add('bg-success', 'hover:bg-success')
 
@@ -701,6 +948,15 @@ export default class extends Controller {
     formData.append("configuration[quantity]", this.selectedQuantity)
     formData.append("calculated_price", this.calculatedPrice)
 
+    // For multi-dimension products, also store individual dimension values
+    if (this.isMultiDimension) {
+      this.sizeDimensionsValue.forEach(dim => {
+        if (this.dimensionSelections[dim.key]) {
+          formData.append(`configuration[${dim.key}]`, this.dimensionSelections[dim.key])
+        }
+      })
+    }
+
     if (this.designInputTarget.files[0]) {
       formData.append("design", this.designInputTarget.files[0])
     }
@@ -744,20 +1000,50 @@ export default class extends Controller {
     this.selectedSize = null
     this.selectedQuantity = null
     this.calculatedPrice = null
+    this.dimensionSelections = {}
 
-    // Reset size buttons
+    // Reset dimension buttons (multi-dimension mode)
+    this.dimensionOptionTargets.forEach(el => {
+      el.classList.remove("border-primary", "border-4")
+      el.classList.add("border-gray-300", "border-2")
+      el.setAttribute("aria-pressed", "false")
+    })
+
+    // Reset dimension indicators
+    this.dimensionIndicatorTargets.forEach((indicator, index) => {
+      indicator.textContent = (index + 1).toString()
+      indicator.classList.remove('bg-primary', 'text-white')
+      indicator.classList.add('bg-gray-300')
+    })
+
+    // Reset dimension selections display
+    this.dimensionSelectionTargets.forEach(el => {
+      el.textContent = ''
+      el.classList.add('hidden')
+    })
+
+    // Clear dynamically built quantity cards (multi-dimension)
+    if (this.isMultiDimension && this.hasQuantityContainerTarget) {
+      while (this.quantityContainerTarget.firstChild) {
+        this.quantityContainerTarget.removeChild(this.quantityContainerTarget.firstChild)
+      }
+    }
+
+    // Reset size buttons (single-dimension mode)
     this.sizeOptionTargets.forEach(el => {
       el.classList.remove("border-primary", "border-4")
       el.classList.add("border-gray-300", "border-2")
       el.setAttribute("aria-pressed", "false")
     })
 
-    // Reset quantity cards
-    this.quantityOptionTargets.forEach(el => {
-      el.classList.remove("border-primary", "border-2")
-      el.classList.add("border-gray-200", "border")
-      el.setAttribute("aria-selected", "false")
-    })
+    // Reset quantity cards (single-dimension mode — server-rendered)
+    if (!this.isMultiDimension) {
+      this.quantityOptionTargets.forEach(el => {
+        el.classList.remove("border-primary", "border-2")
+        el.classList.add("border-gray-200", "border")
+        el.setAttribute("aria-selected", "false")
+      })
+    }
 
     // Reset design file input
     if (this.hasDesignInputTarget) {
@@ -769,12 +1055,29 @@ export default class extends Controller {
       this.designPreviewTarget.classList.add("hidden")
     }
 
-    // Reset step indicators and selection displays
-    const steps = ['size', 'quantity', 'lids', 'design']
-    steps.forEach((step, index) => {
+    // Reset step indicators and selection displays for named steps
+    const steps = this.hasLidsValue
+      ? ['size', 'quantity', 'lids', 'design']
+      : ['size', 'quantity', 'design']
+
+    // For multi-dimension mode, remove 'size' from the list (handled by dimension reset above)
+    const stepsToReset = this.isMultiDimension ? steps.filter(s => s !== 'size') : steps
+
+    stepsToReset.forEach((step, index) => {
       const indicatorTarget = `${step}IndicatorTarget`
-      if (this[indicatorTarget]) {
-        this[indicatorTarget].textContent = (index + 1).toString()
+      const hasIndicator = `has${step.charAt(0).toUpperCase() + step.slice(1)}IndicatorTarget`
+      if (this[hasIndicator] && this[indicatorTarget]) {
+        // Calculate correct step number
+        let stepNumber
+        if (this.isMultiDimension) {
+          const dimCount = this.sizeDimensionsValue.length
+          if (step === 'quantity') stepNumber = dimCount + 1
+          else if (step === 'lids') stepNumber = dimCount + 2
+          else if (step === 'design') stepNumber = this.hasLidsValue ? dimCount + 3 : dimCount + 2
+        } else {
+          stepNumber = index + 1
+        }
+        this[indicatorTarget].textContent = stepNumber.toString()
         this[indicatorTarget].classList.remove('bg-primary', 'text-white')
         this[indicatorTarget].classList.add('bg-gray-300')
       }
@@ -789,25 +1092,29 @@ export default class extends Controller {
 
     // Reset pricing display
     if (this.hasSubtotalTarget) {
-      this.subtotalTarget.textContent = '£0.00'
+      this.subtotalTarget.textContent = '\u00A30.00'
     }
     if (this.hasVatTarget) {
-      this.vatTarget.textContent = '£0.00'
+      this.vatTarget.textContent = '\u00A30.00'
     }
     if (this.hasTotalTarget) {
-      this.totalTarget.textContent = '£0.00'
+      this.totalTarget.textContent = '\u00A30.00'
     }
 
-    // Clear lids container using safe DOM method (if not in modal)
-    if (!this.inModalValue && this.hasLidsContainerTarget) {
+    // Clear lids container using safe DOM method (if not in modal and lids exist)
+    if (!this.inModalValue && this.hasLidsValue && this.hasLidsContainerTarget) {
       while (this.lidsContainerTarget.firstChild) {
         this.lidsContainerTarget.removeChild(this.lidsContainerTarget.firstChild)
       }
     }
 
-    // Collapse all steps and open the first one (size)
+    // Collapse all steps and open the first one
     this.collapseAllSteps()
-    if (this.hasSizeStepTarget) {
+    if (this.isMultiDimension) {
+      if (this.dimensionStepTargets.length > 0) {
+        this.expandStep(this.dimensionStepTargets[0])
+      }
+    } else if (this.hasSizeStepTarget) {
       this.expandStep(this.sizeStepTarget)
     }
 

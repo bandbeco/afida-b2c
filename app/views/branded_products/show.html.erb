@@ -71,10 +71,28 @@
   <%= render "shared/breadcrumbs", product: @product %>
 <% end %>
 
+<%# Compute step numbering based on product type and features %>
+<% multi_dimension = @size_dimensions.present? %>
+<% dimension_count = multi_dimension ? @size_dimensions.length : 0 %>
+<%# For multi-dimension: steps 0..N-1 are dimensions, N is quantity
+    For single-dimension: step 0 is size, step 1 is quantity %>
+<% quantity_step_index = multi_dimension ? dimension_count : 1 %>
+<% quantity_step_number = quantity_step_index + 1 %>
+<% lids_step_index = quantity_step_index + 1 %>
+<% lids_step_number = lids_step_index + 1 %>
+<% design_step_index = @has_lids ? lids_step_index + 1 : quantity_step_index + 1 %>
+<% design_step_number = design_step_index + 1 %>
+
 <div class="container mx-auto py-8 min-h-screen">
   <div data-controller="branded-configurator"
        data-branded-configurator-product-id-value="<%= @product.id %>"
-       data-branded-configurator-vat-rate-value="0.2">
+       data-branded-configurator-vat-rate-value="0.2"
+       data-branded-configurator-has-lids-value="<%= @has_lids %>"
+       <% if multi_dimension %>
+         data-branded-configurator-size-dimensions-value="<%= @size_dimensions.to_json %>"
+         data-branded-configurator-all-quantity-tiers-value="<%= @all_quantity_tiers.to_json %>"
+       <% end %>
+       >
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
     <!-- Left: Product Images -->
@@ -99,123 +117,168 @@
 
       <!-- Configuration Steps as Accordion -->
       <div class="space-y-2">
-        <!-- Step 1: Select Size -->
-        <div class="collapse collapse-arrow bg-base-200 collapse-open"
-             data-branded-configurator-target="sizeStep"
-             data-step-index="0"
-             data-expanded="true">
-          <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
-               id="step-0-header"
-               data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
-               role="button"
-               tabindex="0"
-               aria-expanded="true"
-               aria-controls="step-0-content">
-            <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
-                  data-branded-configurator-target="sizeIndicator"
-                  aria-hidden="true">1</span>
-            <span>Select size<span class="hidden" data-branded-configurator-target="sizeSelection"></span></span>
-          </div>
-          <div class="collapse-content"
-               id="step-0-content"
-               role="region"
-               aria-labelledby="step-0-header">
-            <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="Size options">
-          <% Array(@available_sizes).each do |size| %>
-            <button type="button"
-                    class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
-                    data-branded-configurator-target="sizeOption"
-                    data-size="<%= size %>"
-                    data-action="click->branded-configurator#selectSize"
-                    aria-pressed="false">
-              <%= size %>
-            </button>
+
+        <% if multi_dimension %>
+          <%# === MULTI-DIMENSION SIZE STEPS (e.g., greaseproof paper) === %>
+          <% @size_dimensions.each_with_index do |dim, idx| %>
+            <div class="collapse collapse-arrow bg-base-200 <%= 'collapse-open' if idx == 0 %>"
+                 data-branded-configurator-target="dimensionStep"
+                 data-step-index="<%= idx %>"
+                 data-dimension-index="<%= idx %>"
+                 data-expanded="<%= idx == 0 %>">
+              <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+                   id="step-<%= idx %>-header"
+                   data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+                   role="button"
+                   tabindex="0"
+                   aria-expanded="<%= idx == 0 %>"
+                   aria-controls="step-<%= idx %>-content">
+                <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                      data-branded-configurator-target="dimensionIndicator"
+                      aria-hidden="true"><%= idx + 1 %></span>
+                <span><%= dim[:label] %><span class="hidden" data-branded-configurator-target="dimensionSelection"></span></span>
+              </div>
+              <div class="collapse-content"
+                   id="step-<%= idx %>-content"
+                   role="region"
+                   aria-labelledby="step-<%= idx %>-header">
+                <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="<%= dim[:label] %>">
+                  <% dim[:options].each do |option| %>
+                    <button type="button"
+                            class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
+                            data-branded-configurator-target="dimensionOption"
+                            data-dimension-key="<%= dim[:key] %>"
+                            data-dimension-value="<%= option %>"
+                            data-action="click->branded-configurator#selectDimension"
+                            aria-pressed="false">
+                      <%= option %>
+                    </button>
+                  <% end %>
+                </div>
+              </div>
+            </div>
           <% end %>
+        <% else %>
+          <%# === SINGLE-STEP SIZE (e.g., cups) === %>
+          <div class="collapse collapse-arrow bg-base-200 collapse-open"
+               data-branded-configurator-target="sizeStep"
+               data-step-index="0"
+               data-expanded="true">
+            <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
+                 id="step-0-header"
+                 data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
+                 role="button"
+                 tabindex="0"
+                 aria-expanded="true"
+                 aria-controls="step-0-content">
+              <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
+                    data-branded-configurator-target="sizeIndicator"
+                    aria-hidden="true">1</span>
+              <span>Select size<span class="hidden" data-branded-configurator-target="sizeSelection"></span></span>
+            </div>
+            <div class="collapse-content"
+                 id="step-0-content"
+                 role="region"
+                 aria-labelledby="step-0-header">
+              <div class="grid grid-cols-2 gap-2 pt-4" role="group" aria-label="Size options">
+                <% Array(@available_sizes).each do |size| %>
+                  <button type="button"
+                          class="bg-white border-2 border-gray-300 text-black hover:border-primary rounded-full px-6 py-3 transition cursor-pointer"
+                          data-branded-configurator-target="sizeOption"
+                          data-size="<%= size %>"
+                          data-action="click->branded-configurator#selectSize"
+                          aria-pressed="false">
+                    <%= size %>
+                  </button>
+                <% end %>
+              </div>
             </div>
           </div>
-        </div>
+        <% end %>
 
-        <!-- Step 2: Select Quantity -->
+        <!-- Select Quantity -->
         <div class="collapse collapse-arrow bg-base-200"
              data-branded-configurator-target="quantityStep"
-             data-step-index="1"
+             data-step-index="<%= quantity_step_index %>"
              data-expanded="false">
           <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
-               id="step-1-header"
+               id="step-<%= quantity_step_index %>-header"
                data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
                role="button"
                tabindex="0"
                aria-expanded="false"
-               aria-controls="step-1-content">
+               aria-controls="step-<%= quantity_step_index %>-content">
             <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
                   data-branded-configurator-target="quantityIndicator"
-                  aria-hidden="true">2</span>
+                  aria-hidden="true"><%= quantity_step_number %></span>
             <span>Select quantity<span class="hidden" data-branded-configurator-target="quantitySelection"></span></span>
           </div>
           <div class="collapse-content"
-               id="step-1-content"
+               id="step-<%= quantity_step_index %>-content"
                role="region"
-               aria-labelledby="step-1-header">
-            <div class="space-y-2 pt-4" role="listbox" aria-label="Select quantity">
-          <% Array(@quantity_tiers).each_with_index do |quantity, index| %>
-            <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
-                 style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;"
-                 data-branded-configurator-target="quantityOption"
-                 data-quantity="<%= quantity %>"
-                 data-action="click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown"
-                 role="option"
-                 aria-selected="false"
-                 tabindex="0">
-              <%# Column 1: Quantity with units %>
-              <div class="text-black whitespace-nowrap" data-branded-configurator-target="quantityLabel">
-                <%= number_with_delimiter(quantity) %> units
-              </div>
+               aria-labelledby="step-<%= quantity_step_index %>-header">
+            <div class="space-y-2 pt-4" data-branded-configurator-target="quantityContainer" role="listbox" aria-label="Select quantity">
+              <% unless multi_dimension %>
+                <%# Single-dimension: server-render quantity cards %>
+                <% Array(@quantity_tiers).each_with_index do |quantity, index| %>
+                  <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
+                       style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;"
+                       data-branded-configurator-target="quantityOption"
+                       data-quantity="<%= quantity %>"
+                       data-action="click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown"
+                       role="option"
+                       aria-selected="false"
+                       tabindex="0">
+                    <%# Column 1: Quantity with units %>
+                    <div class="text-black whitespace-nowrap" data-branded-configurator-target="quantityLabel">
+                      <%= number_with_delimiter(quantity) %> units
+                    </div>
 
-              <%# Column 2: Unit price %>
-              <div class="text-gray-400" style="width: 6rem;"
-                   data-branded-configurator-target="pricePerUnit">
-                <!-- Price per unit filled by JS -->
-              </div>
+                    <%# Column 2: Unit price %>
+                    <div class="text-gray-400" style="width: 6rem;"
+                         data-branded-configurator-target="pricePerUnit">
+                    </div>
 
-              <%# Column 3: Savings badge %>
-              <div style="width: 5rem;"
-                   data-branded-configurator-target="savingsBadge"
-                   class="<%= 'invisible' if index == 0 %>">
-                <!-- Savings % filled by JS -->
-              </div>
+                    <%# Column 3: Savings badge %>
+                    <div style="width: 5rem;"
+                         data-branded-configurator-target="savingsBadge"
+                         class="<%= 'invisible' if index == 0 %>">
+                    </div>
 
-              <%# Column 4: Total price %>
-              <div class="text-black text-right" style="width: 4.5rem;"
-                   data-branded-configurator-target="totalPrice">
-                <!-- Total price filled by JS -->
-              </div>
-            </div>
-          <% end %>
+                    <%# Column 4: Total price %>
+                    <div class="text-black text-right" style="width: 4.5rem;"
+                         data-branded-configurator-target="totalPrice">
+                    </div>
+                  </div>
+                <% end %>
+              <% end %>
+              <%# Multi-dimension: quantity cards built dynamically by JS %>
             </div>
           </div>
         </div>
 
-        <!-- Step 3: Add Matching Lids (Optional) -->
+        <% if @has_lids %>
+        <!-- Add Matching Lids (Optional) -->
         <div class="collapse collapse-arrow bg-base-200"
              data-branded-configurator-target="lidsStep"
-             data-step-index="2"
+             data-step-index="<%= lids_step_index %>"
              data-expanded="false">
           <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
-               id="step-2-header"
+               id="step-<%= lids_step_index %>-header"
                data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
                role="button"
                tabindex="0"
                aria-expanded="false"
-               aria-controls="step-2-content">
+               aria-controls="step-<%= lids_step_index %>-content">
             <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
                   data-branded-configurator-target="lidsIndicator"
-                  aria-hidden="true">3</span>
+                  aria-hidden="true"><%= lids_step_number %></span>
             <span>Add matching lids<span class="text-sm font-normal text-base-content/60 ml-1">(optional)</span><span class="hidden" data-branded-configurator-target="lidsSelection"></span></span>
           </div>
           <div class="collapse-content overflow-visible"
-               id="step-2-content"
+               id="step-<%= lids_step_index %>-content"
                role="region"
-               aria-labelledby="step-2-header">
+               aria-labelledby="step-<%= lids_step_index %>-header">
             <div class="pt-4 pr-1">
               <p class="text-sm text-gray-600 mb-4">Complete your order with compatible lids</p>
 
@@ -236,28 +299,29 @@
             </div>
           </div>
         </div>
+        <% end %>
 
-        <!-- Step 4: Upload Design -->
+        <!-- Upload Design -->
         <div class="collapse collapse-arrow bg-base-200"
              data-branded-configurator-target="designStep"
-             data-step-index="3"
+             data-step-index="<%= design_step_index %>"
              data-expanded="false">
           <div class="collapse-title text-lg flex items-center gap-2 cursor-pointer"
-               id="step-3-header"
+               id="step-<%= design_step_index %>-header"
                data-action="click->branded-configurator#toggleStep keydown->branded-configurator#handleStepKeydown"
                role="button"
                tabindex="0"
                aria-expanded="false"
-               aria-controls="step-3-content">
+               aria-controls="step-<%= design_step_index %>-content">
             <span class="flex items-center justify-center w-7 h-7 rounded-full bg-gray-300 text-white text-sm font-bold"
                   data-branded-configurator-target="designIndicator"
-                  aria-hidden="true">4</span>
+                  aria-hidden="true"><%= design_step_number %></span>
             <span>Upload your design<span class="hidden" data-branded-configurator-target="designSelection"></span></span>
           </div>
           <div class="collapse-content"
-               id="step-3-content"
+               id="step-<%= design_step_index %>-content"
                role="region"
-               aria-labelledby="step-3-header">
+               aria-labelledby="step-<%= design_step_index %>-header">
             <div class="pt-4">
               <input type="file"
                      class="file-input file-input-bordered w-full"
