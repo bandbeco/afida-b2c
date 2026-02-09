@@ -18,12 +18,12 @@ ingesting_host = ENV["LOGTAIL_INGESTING_HOST"]
 
 return unless source_token.present? && ingesting_host.present?
 
-# Collapse HTTP events into a single log line per request.
-# Instead of two verbose events (http_request_received + http_response_sent)
-# with full headers, this produces one clean line:
-#   "GET /products sent 200 OK in 45ms"
-# Keeps useful HTTP metrics without header noise.
-Logtail::Integrations::Rack::HTTPEvents.collapse_into_single_event = true
+# Silence verbose per-request framework logging to reduce log volume.
+# This suppresses individual ActionView (template render), ActiveRecord (SQL),
+# and ActionController log lines. The collapsed HTTP event below still gives us
+# one summary line per request ("GET /products sent 200 OK in 45ms").
+# Our business events (order.placed, checkout.*, etc.) are unaffected.
+Logtail::Config.instance.logrageify!
 
 # Filter sensitive HTTP headers from logs
 Logtail::Integrations::Rack::HTTPEvents.http_header_filters = %w[
