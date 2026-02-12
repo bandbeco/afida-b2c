@@ -110,34 +110,43 @@
       </div>
 
       <!-- Photo Collage Grid -->
+      <% collage = branding_collage_images %>
       <div class="grid grid-cols-6 grid-rows-5 gap-2 h-[350px] sm:h-[400px] lg:h-[450px]">
-        <!-- Image 1: Shakedown cup - tall left -->
-        <div class="col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6621.webp",
-              alt: "Shakedown branded coffee cup",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
-
-        <!-- Image 2: OOO Koffee - top middle -->
-        <div class="col-span-2 row-span-2 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6736.webp",
-              alt: "OOO Koffee branded cup",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
-
-        <!-- Image 3: La Gelatiera mint - tall right -->
-        <div class="col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6770.webp",
-              alt: "La Gelatiera branded gelato cup",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
-
-        <!-- Image 4: Additional photo - bottom middle -->
-        <div class="col-span-2 row-span-3 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6898.webp",
-              alt: "Branded cup detail",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
+        <% if collage %>
+          <% grid_classes = [
+            "col-span-2 row-span-5",
+            "col-span-2 row-span-2",
+            "col-span-2 row-span-5",
+            "col-span-2 row-span-3"
+          ] %>
+          <% collage.each_with_index do |branding_image, i| %>
+            <div class="<%= grid_classes[i] %> group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <%= image_tag branding_image.image, alt: branding_image.alt_text,
+                  class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+            </div>
+          <% end %>
+        <% else %>
+          <div class="col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6621.webp",
+                alt: "Shakedown branded coffee cup",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+          <div class="col-span-2 row-span-2 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6736.webp",
+                alt: "OOO Koffee branded cup",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+          <div class="col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6770.webp",
+                alt: "La Gelatiera branded gelato cup",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+          <div class="col-span-2 row-span-3 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6898.webp",
+                alt: "Branded cup detail",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+        <% end %>
       </div>
     </div>
   </div>
@@ -210,51 +219,43 @@
       <p class="text-lg text-neutral-600 max-w-2xl mx-auto">See how businesses like yours are making their mark</p>
     </div>
 
+    <% gallery = branding_gallery_images %>
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6 max-w-6xl mx-auto">
-      <!-- Photo 1: Shakedown cup in hand -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_6621.webp", alt: "Shakedown branded coffee cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 2: OOO Koffee grey cup -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_6736.webp", alt: "OOO Koffee branded cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 3: La Gelatiera mint cup -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_6770.webp", alt: "La Gelatiera branded gelato cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 4: Multiple cups in bushes -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_6872.webp", alt: "Collection of branded cups", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 5: La Gelatiera pastel cups on table -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_7193.webp", alt: "La Gelatiera branded cups display", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 6: Gelato cups with ice cream -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_7239.webp", alt: "Branded gelato cups with gelato", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 7: Branded cup detail -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_6898.webp", alt: "Branded cup detail", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 8: Branded cups arrangement -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_7110.webp", alt: "Branded cups arrangement", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
-
-      <!-- Photo 9: Branded cups display -->
-      <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
-        <%= vite_image_tag "images/branding/DSC_7159.webp", alt: "Branded cups display", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
-      </div>
+      <% if gallery %>
+        <% gallery.each do |branding_image| %>
+          <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+            <%= image_tag branding_image.image, alt: branding_image.alt_text, class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_6621.webp", alt: "Shakedown branded coffee cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_6736.webp", alt: "OOO Koffee branded cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_6770.webp", alt: "La Gelatiera branded gelato cup", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_6872.webp", alt: "Collection of branded cups", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_7193.webp", alt: "La Gelatiera branded cups display", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_7239.webp", alt: "Branded gelato cups with gelato", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_6898.webp", alt: "Branded cup detail", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_7110.webp", alt: "Branded cups arrangement", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+        <div class="group relative overflow-hidden rounded-2xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] transition-all duration-200">
+          <%= vite_image_tag "images/branding/DSC_7159.webp", alt: "Branded cups display", class: "w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-300" %>
+        </div>
+      <% end %>
     </div>
   </div>
 </section>

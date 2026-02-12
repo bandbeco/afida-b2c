@@ -4,35 +4,45 @@
     <div class="bg-[#ffb7c5] rounded-3xl py-12 sm:py-16 px-6 sm:px-8 lg:px-12">
 
       <!-- Photo Collage -->
+      <% collage = branding_collage_images %>
       <div class="grid grid-cols-4 md:grid-cols-6 grid-rows-5 gap-2 sm:gap-3 mb-10 sm:mb-12 h-[500px] sm:h-[550px] md:h-[600px]">
-        <!-- Row 1-2: Top section -->
-        <!-- Image 1: Shakedown cup - large left -->
-        <div class="col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6621.webp",
-              alt: "Shakedown branded coffee cup",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
-
-        <!-- Image 2: OOO Koffee - top middle -->
-        <div class="col-span-2 row-span-2 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6736.webp",
-              alt: "OOO Koffee branded cup",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
-
-        <!-- Image 3: La Gelatiera mint - tall right (hidden on mobile) -->
-        <div class="hidden md:block col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6770.webp",
-              alt: "La Gelatiera branded gelato cup",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
-
-        <!-- Image 4: Additional photo - middle bottom -->
-        <div class="col-span-2 row-span-3 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <%= vite_image_tag "images/branding/DSC_6898.webp",
-              alt: "Branded cup detail",
-              class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
-        </div>
+        <% if collage %>
+          <%# Dynamic collage from admin-uploaded branding images %>
+          <% grid_classes = [
+            "col-span-2 row-span-5",
+            "col-span-2 row-span-2",
+            "hidden md:block col-span-2 row-span-5",
+            "col-span-2 row-span-3"
+          ] %>
+          <% collage.each_with_index do |branding_image, i| %>
+            <div class="<%= grid_classes[i] %> group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+              <%= image_tag branding_image.image, alt: branding_image.alt_text,
+                  class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+            </div>
+          <% end %>
+        <% else %>
+          <%# Static fallback images %>
+          <div class="col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6621.webp",
+                alt: "Shakedown branded coffee cup",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+          <div class="col-span-2 row-span-2 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6736.webp",
+                alt: "OOO Koffee branded cup",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+          <div class="hidden md:block col-span-2 row-span-5 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6770.webp",
+                alt: "La Gelatiera branded gelato cup",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+          <div class="col-span-2 row-span-3 group overflow-hidden rounded-xl border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <%= vite_image_tag "images/branding/DSC_6898.webp",
+                alt: "Branded cup detail",
+                class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" %>
+          </div>
+        <% end %>
       </div>
 
       <!-- Content Card (headline, badges, CTA) -->

@@ -203,6 +203,14 @@ Rails.application.routes.draw do
       resources :posts, controller: "blog_posts", as: :blog_posts
       resources :categories, controller: "blog_categories", except: [ :show ], as: :blog_categories
     end
+    resource :settings, only: [ :show, :update ] do
+      delete :hero_image, on: :member, action: :destroy_hero_image
+      post :branding_images, on: :collection, action: :add_branding_image
+      delete "branding_images/:id", on: :collection, action: :remove_branding_image, as: :remove_branding_image
+      patch "branding_images/:id/move_higher", on: :collection, action: :move_branding_image_higher, as: :move_branding_image_higher
+      patch "branding_images/:id/move_lower", on: :collection, action: :move_branding_image_lower, as: :move_branding_image_lower
+      patch "branding_images/:id", on: :collection, action: :update_branding_image, as: :update_branding_image
+    end
     resources :branded_orders, path: "branded-orders", only: [ :index, :show ] do
       member do
         patch :update_status

@@ -66,6 +66,9 @@ load Rails.root.join('db', 'seeds', 'product_photos.rb')
 # Load URL redirect mappings
 load Rails.root.join('db', 'seeds', 'url_redirects.rb')
 
+# Load site settings and branding images
+load Rails.root.join('db', 'seeds', 'site_settings.rb')
+
 # Mark 8 random products as featured
 puts "Marking featured products..."
 Product.update_all(featured: false)

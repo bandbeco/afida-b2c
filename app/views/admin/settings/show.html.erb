@@ -1,0 +1,159 @@
+<h1 class="text-3xl font-bold mb-6">Site Settings</h1>
+
+<div class="space-y-6 max-w-2xl">
+  <%# ==================== HERO BANNER ==================== %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">Hero Banner</h2>
+
+      <%= form_with(model: @site_setting, url: admin_settings_path, local: true, class: "space-y-4") do |form| %>
+        <% if @site_setting.errors.any? %>
+          <div class="alert alert-error">
+            <ul class="list-disc list-inside text-sm">
+              <% @site_setting.errors.full_messages.each do |message| %>
+                <li><%= message %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <%# Hero Image %>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Hero Image</span>
+          </label>
+          <% if @site_setting.hero_image.attached? %>
+            <div class="mb-3 relative inline-block">
+              <%= image_tag @site_setting.hero_image, class: "w-48 h-32 object-cover rounded-lg shadow-md" %>
+              <%= button_to hero_image_admin_settings_path, method: :delete, class: "btn btn-error btn-xs absolute -top-2 -right-2",
+                  data: { turbo_confirm: "Remove hero image?" } do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              <% end %>
+            </div>
+          <% end %>
+          <%= form.file_field :hero_image, class: "file-input file-input-bordered w-full", accept: "image/*" %>
+          <label class="label">
+            <span class="label-text-alt">Recommended: WebP format, at least 800px wide</span>
+          </label>
+        </div>
+
+        <%# Background Color %>
+        <div class="form-control" data-controller="color-picker">
+          <label class="label">
+            <span class="label-text font-medium">Background Color</span>
+          </label>
+          <div class="flex items-center gap-3">
+            <input type="color"
+                   value="<%= @site_setting.hero_background_color %>"
+                   class="w-12 h-10 rounded cursor-pointer border border-base-300"
+                   data-color-picker-target="picker"
+                   data-action="input->color-picker#pickerChanged">
+            <%= form.text_field :hero_background_color,
+                class: "input input-bordered w-40 font-mono",
+                placeholder: "#ffffff",
+                pattern: "#[0-9a-fA-F]{6}",
+                data: { color_picker_target: "text", action: "input->color-picker#textChanged" } %>
+          </div>
+          <label class="label">
+            <span class="label-text-alt">Hex color for the hero section background</span>
+          </label>
+        </div>
+
+        <div class="flex gap-2">
+          <%= form.submit "Save Hero Settings", class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ==================== BRANDING IMAGES ==================== %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-2">Branding Images</h2>
+      <p class="text-sm text-base-content/60 mb-4">
+        First 4 images populate homepage and branding page collages. All images appear in the branding gallery.
+      </p>
+
+      <%# Existing Images List %>
+      <% if @branding_images.any? %>
+        <div class="space-y-3 mb-6">
+          <% @branding_images.each_with_index do |branding_image, index| %>
+            <div class="flex items-center gap-3 p-3 bg-base-200 rounded-lg">
+              <%# Position Badge %>
+              <div class="badge badge-neutral badge-sm font-mono"><%= index + 1 %></div>
+
+              <%# Thumbnail %>
+              <% if branding_image.image.attached? %>
+                <%= image_tag branding_image.image, class: "w-16 h-16 object-cover rounded-lg flex-shrink-0" %>
+              <% end %>
+
+              <%# Alt Text (inline edit) %>
+              <%= form_with(url: update_branding_image_admin_settings_path(id: branding_image.id), method: :patch, local: true, class: "flex-1 flex items-center gap-2") do |f| %>
+                <%= f.text_field :alt_text, value: branding_image.alt_text, class: "input input-bordered input-sm flex-1", placeholder: "Alt text (required)", name: "branding_image[alt_text]" %>
+                <%= f.submit "Save", class: "btn btn-ghost btn-xs" %>
+              <% end %>
+
+              <%# Collage indicator %>
+              <% if index < 4 %>
+                <span class="badge badge-success badge-xs" title="Shown in collage">collage</span>
+              <% end %>
+
+              <%# Move Up/Down %>
+              <div class="flex flex-col gap-0.5">
+                <% unless branding_image.first? %>
+                  <%= button_to move_branding_image_higher_admin_settings_path(id: branding_image.id), method: :patch, class: "btn btn-ghost btn-xs px-1" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
+                    </svg>
+                  <% end %>
+                <% end %>
+                <% unless branding_image.last? %>
+                  <%= button_to move_branding_image_lower_admin_settings_path(id: branding_image.id), method: :patch, class: "btn btn-ghost btn-xs px-1" do %>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  <% end %>
+                <% end %>
+              </div>
+
+              <%# Delete %>
+              <%= button_to remove_branding_image_admin_settings_path(id: branding_image.id), method: :delete,
+                  class: "btn btn-error btn-xs",
+                  data: { turbo_confirm: "Remove this branding image?" } do %>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="text-center py-6 text-base-content/40 mb-4">
+          <p>No branding images uploaded yet. Static fallback images will be used.</p>
+        </div>
+      <% end %>
+
+      <%# Add New Image %>
+      <div class="border-t border-base-200 pt-4">
+        <h3 class="text-sm font-medium mb-3">Add New Image</h3>
+        <%= form_with(url: branding_images_admin_settings_path, local: true, class: "flex flex-col sm:flex-row items-start sm:items-end gap-3") do |f| %>
+          <div class="form-control flex-1 w-full">
+            <label class="label">
+              <span class="label-text text-xs">Image</span>
+            </label>
+            <%= f.file_field :image, class: "file-input file-input-bordered file-input-sm w-full", accept: "image/*", name: "branding_image[image]" %>
+          </div>
+          <div class="form-control flex-1 w-full">
+            <label class="label">
+              <span class="label-text text-xs">Alt Text</span>
+            </label>
+            <%= f.text_field :alt_text, class: "input input-bordered input-sm w-full", placeholder: "e.g. Branded coffee cup", name: "branding_image[alt_text]" %>
+          </div>
+          <%= f.submit "Add Image", class: "btn btn-primary btn-sm" %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
