@@ -46,6 +46,44 @@
           </label>
         </div>
 
+        <%# Hero Text %>
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Title Line 1</span>
+          </label>
+          <%= form.text_field :hero_title_line1,
+              class: "input input-bordered w-full",
+              placeholder: "Quality Packaging Supplies." %>
+          <label class="label">
+            <span class="label-text-alt">Main headline, first line (white text)</span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Title Line 2</span>
+          </label>
+          <%= form.text_field :hero_title_line2,
+              class: "input input-bordered w-full",
+              placeholder: "Delivered Fast." %>
+          <label class="label">
+            <span class="label-text-alt">Main headline, second line (green gradient text)</span>
+          </label>
+        </div>
+
+        <div class="form-control">
+          <label class="label">
+            <span class="label-text font-medium">Subtitle</span>
+          </label>
+          <%= form.text_area :hero_subtitle,
+              class: "textarea textarea-bordered w-full",
+              rows: 3,
+              placeholder: "Supply your restaurant, café, or takeaway with high-quality packaging. From custom branded cups to bamboo pulp straws, we deliver everything you need within 48 hours." %>
+          <label class="label">
+            <span class="label-text-alt">Supporting paragraph below the headline</span>
+          </label>
+        </div>
+
         <%# Background Color %>
         <div class="form-control" data-controller="color-picker">
           <label class="label">

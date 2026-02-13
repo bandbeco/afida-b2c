@@ -15,6 +15,18 @@ module SiteSettingsHelper
     site_settings.hero_background_color
   end
 
+  def hero_title_line1
+    site_settings.hero_title_line1.presence || "Quality Packaging Supplies."
+  end
+
+  def hero_title_line2
+    site_settings.hero_title_line2.presence || "Delivered Fast."
+  end
+
+  def hero_subtitle
+    site_settings.hero_subtitle.presence || "Supply your restaurant, café, or takeaway with high-quality packaging. From custom branded cups to bamboo pulp straws, we deliver everything you need within 48 hours."
+  end
+
   def hero_image_url
     if site_settings.hero_image.attached?
       url_for(site_settings.hero_image)

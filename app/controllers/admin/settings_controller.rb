@@ -66,7 +66,7 @@ class Admin::SettingsController < Admin::ApplicationController
   end
 
   def site_setting_params
-    params.require(:site_setting).permit(:hero_background_color, :hero_image)
+    params.require(:site_setting).permit(:hero_background_color, :hero_image, :hero_title_line1, :hero_title_line2, :hero_subtitle)
   end
 
   def branding_image_params
