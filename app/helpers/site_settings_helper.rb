@@ -24,12 +24,12 @@ module SiteSettingsHelper
   end
 
   def branding_collage_images
-    images = site_settings.collage_images.joins(:image_attachment)
-    images.any? ? images.with_attached_image : nil
+    images = site_settings.collage_images.joins(:image_attachment).with_attached_image.load
+    images.any? ? images : nil
   end
 
   def branding_gallery_images
-    images = site_settings.branding_images.joins(:image_attachment)
-    images.any? ? images.with_attached_image : nil
+    images = site_settings.branding_images.joins(:image_attachment).with_attached_image.load
+    images.any? ? images : nil
   end
 end
