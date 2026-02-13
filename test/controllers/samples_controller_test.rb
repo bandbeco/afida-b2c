@@ -25,7 +25,7 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     get samples_path
     assert_response :success
     # Category should be visible since it has sample-eligible variant
-    assert_select "h1", text: /Samples/i
+    assert_select "h1", text: /Try Before You Buy/i
   end
 
   test "GET /samples/:category_slug returns Turbo Frame with variants" do
