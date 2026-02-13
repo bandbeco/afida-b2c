@@ -1,5 +1,5 @@
 <section aria-label="Hero banner">
-<div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-white overflow-hidden">
+<div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] overflow-hidden" style="background-color: <%= hero_background_color %>">
   <div class="container mx-auto px-4 py-12 lg:py-16">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
       <div class="w-full text-center lg:text-left relative z-10">
@@ -63,9 +63,9 @@
       </div>
 
       <div class="hidden lg:flex justify-end overflow-hidden">
-        <%= vite_image_tag "images/hero/hero.webp",
+        <%= hero_image_tag(
             alt: "Eco-friendly packaging products including paper bags, cups, food containers, and cutlery",
-            class: "w-full h-auto max-h-[450px] xl:max-h-[550px] object-contain object-right" %>
+            class: "w-full h-auto max-h-[450px] xl:max-h-[550px] object-contain object-right") %>
       </div>
     </div>
   </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_17_211847) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_12_140526) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -100,6 +100,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_211847) do
     t.datetime "updated_at", null: false
     t.index ["product_id", "size", "quantity_tier"], name: "index_branded_prices_uniqueness", unique: true
     t.index ["product_id"], name: "index_branded_product_prices_on_product_id"
+  end
+
+  create_table "branding_images", force: :cascade do |t|
+    t.string "alt_text", default: "", null: false
+    t.datetime "created_at", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "site_setting_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["site_setting_id", "position"], name: "index_branding_images_on_site_setting_id_and_position"
+    t.index ["site_setting_id"], name: "index_branding_images_on_site_setting_id"
   end
 
   create_table "cart_items", force: :cascade do |t|
@@ -372,6 +382,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_211847) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "site_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "hero_background_color", default: "#ffffff", null: false
+    t.datetime "updated_at", null: false
+  end
+
   create_table "url_redirects", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -409,6 +425,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_17_211847) do
   add_foreign_key "addresses", "users"
   add_foreign_key "blog_posts", "blog_categories"
   add_foreign_key "branded_product_prices", "products"
+  add_foreign_key "branding_images", "site_settings"
   add_foreign_key "cart_items", "carts"
   add_foreign_key "cart_items", "products"
   add_foreign_key "carts", "users"

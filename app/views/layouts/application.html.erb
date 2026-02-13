@@ -35,7 +35,7 @@
       <meta property="og:description" content="<%= content_for(:meta_description) %>">
       <meta property="og:url" content="<%= request.original_url %>">
       <meta property="og:site_name" content="Afida">
-      <meta property="og:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero/hero.webp") %>">
+      <meta property="og:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : hero_image_url %>">
     <% end %>
 
     <%# Default Twitter Card tags %>
@@ -43,7 +43,7 @@
       <meta name="twitter:card" content="summary_large_image">
       <meta name="twitter:title" content="<%= content_for(:title) %>">
       <meta name="twitter:description" content="<%= content_for(:meta_description) %>">
-      <meta name="twitter:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : vite_asset_url("images/hero/hero.webp") %>">
+      <meta name="twitter:image" content="<%= content_for?(:og_image) ? content_for(:og_image) : hero_image_url %>">
     <% end %>
 
     <%# Organization structured data for Google Rich Results %>

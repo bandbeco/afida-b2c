@@ -1,0 +1,24 @@
+one:
+  site_setting: default
+  alt_text: "Shakedown branded coffee cup"
+  position: 1
+
+two:
+  site_setting: default
+  alt_text: "OOO Koffee branded cup"
+  position: 2
+
+three:
+  site_setting: default
+  alt_text: "La Gelatiera branded gelato cup"
+  position: 3
+
+four:
+  site_setting: default
+  alt_text: "Branded cup detail"
+  position: 4
+
+five:
+  site_setting: default
+  alt_text: "Gallery-only image"
+  position: 5

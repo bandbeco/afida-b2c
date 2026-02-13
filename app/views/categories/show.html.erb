@@ -22,7 +22,7 @@
   <meta property="og:description" content="<%= @category.meta_description %>">
   <meta property="og:url" content="<%= category_url(@category) %>">
   <meta property="og:site_name" content="Afida">
-  <meta property="og:image" content="<%= @category.image.attached? ? url_for(@category.image) : vite_asset_url("images/hero.webp") %>">
+  <meta property="og:image" content="<%= @category.image.attached? ? url_for(@category.image) : hero_image_url %>">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @category.meta_title %>">

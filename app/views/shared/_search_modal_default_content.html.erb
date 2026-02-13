@@ -28,10 +28,12 @@
   <div class="flex items-center gap-6 p-4">
     <%# Image %>
     <div class="hidden sm:block flex-shrink-0 w-36 h-36 rounded-lg overflow-hidden bg-gray-200">
-      <%= vite_image_tag "images/branding/DSC_6736.webp",
-                         class: "w-full h-full object-cover",
-                         alt: "Branded coffee cups",
-                         loading: "lazy" %>
+      <% first_branding = branding_collage_images&.first %>
+      <% if first_branding %>
+        <%= image_tag first_branding.image, class: "w-full h-full object-cover", alt: first_branding.alt_text, loading: "lazy" %>
+      <% else %>
+        <%= vite_image_tag "images/branding/DSC_6736.webp", class: "w-full h-full object-cover", alt: "Branded coffee cups", loading: "lazy" %>
+      <% end %>
     </div>
 
     <%# Content %>
