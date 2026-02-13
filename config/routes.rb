@@ -204,7 +204,7 @@ Rails.application.routes.draw do
       resources :categories, controller: "blog_categories", except: [ :show ], as: :blog_categories
     end
     resource :settings, only: [ :show, :update ] do
-      delete :hero_image, on: :member, action: :destroy_hero_image
+      delete :hero_image, on: :collection, action: :destroy_hero_image
       post :branding_images, on: :collection, action: :add_branding_image
       delete "branding_images/:id", on: :collection, action: :remove_branding_image, as: :remove_branding_image
       patch "branding_images/:id/move_higher", on: :collection, action: :move_branding_image_higher, as: :move_branding_image_higher

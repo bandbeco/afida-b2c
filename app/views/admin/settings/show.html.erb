@@ -6,33 +6,40 @@
     <div class="card-body p-4 sm:p-6">
       <h2 class="card-title text-lg mb-4">Hero Banner</h2>
 
-      <%= form_with(model: @site_setting, url: admin_settings_path, local: true, class: "space-y-4") do |form| %>
-        <% if @site_setting.errors.any? %>
-          <div class="alert alert-error">
-            <ul class="list-disc list-inside text-sm">
-              <% @site_setting.errors.full_messages.each do |message| %>
-                <li><%= message %></li>
-              <% end %>
-            </ul>
-          </div>
-        <% end %>
+      <% if @site_setting.errors.any? %>
+        <div class="alert alert-error mb-4">
+          <ul class="list-disc list-inside text-sm">
+            <% @site_setting.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
-        <%# Hero Image %>
+      <%# Hero Image Preview with Delete Button (outside form to avoid nesting) %>
+      <% if @site_setting.hero_image.attached? %>
+        <div class="mb-4">
+          <label class="label">
+            <span class="label-text font-medium">Current Hero Image</span>
+          </label>
+          <div class="relative inline-block">
+            <%= image_tag @site_setting.hero_image, class: "w-48 h-32 object-cover rounded-lg shadow-md" %>
+            <%= button_to hero_image_admin_settings_path, method: :delete, class: "btn btn-error btn-xs absolute -top-2 -right-2",
+                data: { turbo_confirm: "Remove hero image?" } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <%= form_with(model: @site_setting, url: admin_settings_path, local: true, class: "space-y-4") do |form| %>
+        <%# Hero Image Upload %>
         <div class="form-control">
           <label class="label">
-            <span class="label-text font-medium">Hero Image</span>
+            <span class="label-text font-medium"><%= @site_setting.hero_image.attached? ? "Replace Hero Image" : "Upload Hero Image" %></span>
           </label>
-          <% if @site_setting.hero_image.attached? %>
-            <div class="mb-3 relative inline-block">
-              <%= image_tag @site_setting.hero_image, class: "w-48 h-32 object-cover rounded-lg shadow-md" %>
-              <%= button_to hero_image_admin_settings_path, method: :delete, class: "btn btn-error btn-xs absolute -top-2 -right-2",
-                  data: { turbo_confirm: "Remove hero image?" } do %>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              <% end %>
-            </div>
-          <% end %>
           <%= form.file_field :hero_image, class: "file-input file-input-bordered w-full", accept: "image/*" %>
           <label class="label">
             <span class="label-text-alt">Recommended: WebP format, at least 800px wide</span>

@@ -15,8 +15,12 @@ class Admin::SettingsController < Admin::ApplicationController
   end
 
   def destroy_hero_image
-    @site_setting.hero_image.purge
-    redirect_to admin_settings_path, notice: "Hero image removed."
+    if @site_setting.hero_image.attached?
+      @site_setting.hero_image.purge
+      redirect_to admin_settings_path, notice: "Hero image removed."
+    else
+      redirect_to admin_settings_path, alert: "No hero image to remove."
+    end
   end
 
   def add_branding_image
@@ -62,10 +66,10 @@ class Admin::SettingsController < Admin::ApplicationController
   end
 
   def site_setting_params
-    params.expect(site_setting: [ :hero_background_color, :hero_image ])
+    params.require(:site_setting).permit(:hero_background_color, :hero_image)
   end
 
   def branding_image_params
-    params.expect(branding_image: [ :image, :alt_text ])
+    params.require(:branding_image).permit(:image, :alt_text)
   end
 end

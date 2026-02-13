@@ -69,6 +69,15 @@ class Admin::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_not @site_setting.hero_image.attached?
   end
 
+  test "should handle destroying hero image when none exists" do
+    @site_setting.hero_image.purge if @site_setting.hero_image.attached?
+    assert_not @site_setting.hero_image.attached?
+
+    delete hero_image_admin_settings_path, headers: @headers
+    assert_redirected_to admin_settings_path
+    assert_match /No hero image to remove/, flash[:alert]
+  end
+
   # === Add branding image ===
 
   test "should add branding image" do
