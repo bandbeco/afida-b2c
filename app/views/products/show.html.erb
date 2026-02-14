@@ -15,7 +15,7 @@
 <% end %>
 
 <% if @product&.primary_photo&.attached? %>
-  <% content_for :og_image, polymorphic_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>
+  <% content_for :og_image, rails_storage_proxy_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>
 <% end %>
 
 <% content_for :og_tags_custom, true %>
@@ -26,7 +26,7 @@
   <meta name="twitter:title" content="<%= @product.generated_title %>">
   <meta name="twitter:description" content="<%= @product.description_standard_with_fallback %>">
   <% if @product&.primary_photo&.attached? %>
-    <meta name="twitter:image" content="<%= polymorphic_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
+    <meta name="twitter:image" content="<%= rails_storage_proxy_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
   <% end %>
 
   <!-- Open Graph meta tags -->
@@ -36,7 +36,7 @@
   <meta property="og:url" content="<%= polymorphic_url(@product) %>">
   <meta property="og:site_name" content="Afida">
   <% if @product&.primary_photo&.attached? %>
-    <meta property="og:image" content="<%= polymorphic_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
+    <meta property="og:image" content="<%= rails_storage_proxy_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
   <% end %>
   <meta property="product:price:amount" content="<%= @product.price %>">
   <meta property="product:price:currency" content="GBP">
