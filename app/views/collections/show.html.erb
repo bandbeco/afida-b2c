@@ -17,7 +17,7 @@
 <% end %>
 
 <% if @collection.image.attached? %>
-  <% content_for :og_image, url_for(@collection.image) %>
+  <% content_for :og_image, polymorphic_url(@collection.image) %>
 <% end %>
 
 <% content_for :og_tags_custom, true %>
@@ -29,7 +29,7 @@
   <meta property="og:description" content="<%= collection_meta_description(@collection) %>">
   <meta property="og:url" content="<%= collection_url(@collection) %>">
   <meta property="og:site_name" content="Afida">
-  <meta property="og:image" content="<%= @collection.image.attached? ? url_for(@collection.image) : hero_image_url %>">
+  <meta property="og:image" content="<%= @collection.image.attached? ? polymorphic_url(@collection.image) : hero_image_url %>">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= collection_meta_title(@collection) %>">

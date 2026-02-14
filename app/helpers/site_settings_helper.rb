@@ -29,7 +29,7 @@ module SiteSettingsHelper
 
   def hero_image_url
     if site_settings.hero_image.attached?
-      url_for(site_settings.hero_image)
+      polymorphic_url(site_settings.hero_image)
     else
       vite_asset_url("images/hero/hero.webp")
     end

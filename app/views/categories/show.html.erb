@@ -11,7 +11,7 @@
 <% end %>
 
 <% if @category.image.attached? %>
-  <% content_for :og_image, url_for(@category.image) %>
+  <% content_for :og_image, polymorphic_url(@category.image) %>
 <% end %>
 
 <% content_for :og_tags_custom, true %>
@@ -22,7 +22,7 @@
   <meta property="og:description" content="<%= @category.meta_description %>">
   <meta property="og:url" content="<%= category_url(@category) %>">
   <meta property="og:site_name" content="Afida">
-  <meta property="og:image" content="<%= @category.image.attached? ? url_for(@category.image) : hero_image_url %>">
+  <meta property="og:image" content="<%= @category.image.attached? ? polymorphic_url(@category.image) : hero_image_url %>">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @category.meta_title %>">

@@ -12,13 +12,13 @@
   <meta property="og:description" content="<%= sample_pack_meta_description(@sample_pack, @products) %>">
   <meta property="og:url" content="<%= sample_pack_url(@sample_pack.slug) %>">
   <meta property="og:site_name" content="Afida">
-  <meta property="og:image" content="<%= @sample_pack.image.attached? ? url_for(@sample_pack.image) : hero_image_url %>">
+  <meta property="og:image" content="<%= @sample_pack.image.attached? ? polymorphic_url(@sample_pack.image) : hero_image_url %>">
 
   <%# Twitter Card tags %>
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= sample_pack_meta_title(@sample_pack) %>">
   <meta name="twitter:description" content="<%= sample_pack_meta_description(@sample_pack, @products) %>">
-  <meta name="twitter:image" content="<%= @sample_pack.image.attached? ? url_for(@sample_pack.image) : hero_image_url %>">
+  <meta name="twitter:image" content="<%= @sample_pack.image.attached? ? polymorphic_url(@sample_pack.image) : hero_image_url %>">
 
   <%# Structured data for rich snippets %>
   <script type="application/ld+json">
