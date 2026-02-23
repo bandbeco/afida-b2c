@@ -284,9 +284,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       get success_checkout_path, params: { session_id: session.id }
     end
 
-    # Duplicate requests go to show page (not confirmation) with token
+    # Duplicate requests redirect to confirmation page with signed token
     assert_response :redirect
-    assert_match %r{/orders/#{first_order.id}\?token=}, response.location
+    assert_match %r{/orders/#{first_order.id}/confirmation\?token=}, response.location
   end
 
   test "success handles missing session_id parameter" do

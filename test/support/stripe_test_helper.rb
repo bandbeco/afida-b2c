@@ -118,7 +118,9 @@ module StripeTestHelper
     # Build metadata stub for method access
     metadata_hash = overrides[:metadata] || {}
     metadata_stub = stub(
-      cart_id: metadata_hash[:cart_id]
+      cart_id: metadata_hash[:cart_id],
+      datafast_visitor_id: metadata_hash[:datafast_visitor_id],
+      datafast_session_id: metadata_hash[:datafast_session_id]
     )
 
     stub(

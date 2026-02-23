@@ -85,12 +85,16 @@ class VariantSeoTest < ActionDispatch::IntegrationTest
 
     sitemap_content = response.body
 
-    # Check that active products are included (sitemap uses /products/:slug format)
-    active_products = Product.active
-    active_products.limit(5).each do |product|
-      # Sitemap includes products under /products/ path
+    # Check that active standard products are under /products/ path
+    Product.active.standard.limit(5).each do |product|
       assert_includes sitemap_content, "/products/#{product.slug}",
-        "Sitemap should include product: #{product.slug}"
+        "Sitemap should include standard product: #{product.slug}"
+    end
+
+    # Branded products are under /branded-products/ path
+    Product.branded.limit(5).each do |product|
+      assert_includes sitemap_content, "/branded-products/#{product.slug}",
+        "Sitemap should include branded product: #{product.slug}"
     end
   end
 
