@@ -133,9 +133,19 @@ class SeoHelperTest < ActionView::TestCase
     assert_equal product.sku, data["sku"]
     assert_equal "Afida", data["brand"]["name"]
     assert data["offers"].present?
-    assert_equal product.price.to_s, data["offers"]["price"]
     assert_equal "GBP", data["offers"]["priceCurrency"]
-    assert_includes data["offers"]["url"], product.slug
+
+    # Products with pricing tiers use AggregateOffer with price range
+    if product.pricing_tiers.present?
+      assert_equal "AggregateOffer", data["offers"]["@type"]
+      prices = product.pricing_tiers.map { |t| t["price"].to_f }
+      assert_equal prices.min.to_s, data["offers"]["lowPrice"]
+      assert_equal prices.max.to_s, data["offers"]["highPrice"]
+    else
+      assert_equal "Offer", data["offers"]["@type"]
+      assert_equal product.price.to_s, data["offers"]["price"]
+      assert_includes data["offers"]["url"], product.slug
+    end
   end
 
   test "product structured data includes gtin when present" do
@@ -158,14 +168,16 @@ class SeoHelperTest < ActionView::TestCase
     refute data.key?("gtin")
   end
 
-  test "product structured data includes priceValidUntil" do
+  test "product structured data includes priceValidUntil for non-tier products" do
     product = products(:single_wall_8oz_white)
+    # Clear tiers so this product uses a standard Offer
+    product.update_columns(pricing_tiers: nil)
 
     json = product_structured_data(product)
     data = JSON.parse(json)
 
+    assert_equal "Offer", data["offers"]["@type"]
     assert data["offers"]["priceValidUntil"].present?
-    # Should be end of current calendar year (stable, cacheable value)
     expected_date = Date.new(Date.current.year, 12, 31)
     assert_equal expected_date.iso8601, data["offers"]["priceValidUntil"]
   end

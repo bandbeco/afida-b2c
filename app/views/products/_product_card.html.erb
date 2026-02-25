@@ -17,9 +17,13 @@
       <div class="flex-1"></div>
 
       <p class="text-sm text-gray-600 mt-auto">
-        <%= number_to_currency(product.price, unit: "£") %> / pack
-        <% if product.pac_size && product.pac_size > 1 %>
-          <span class="text-xs text-gray-400">(<%= number_with_delimiter(product.pac_size) %> units)</span>
+        <% if product.pricing_tiers.present? %>
+          From <%= number_to_currency(product.pricing_tiers.first["price"].to_f, unit: "£") %>
+        <% else %>
+          <%= number_to_currency(product.price, unit: "£") %> / pack
+          <% if product.pac_size && product.pac_size > 1 %>
+            <span class="text-xs text-gray-400">(<%= number_with_delimiter(product.pac_size) %> units)</span>
+          <% end %>
         <% end %>
       </p>
     </div>

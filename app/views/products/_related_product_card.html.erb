@@ -16,7 +16,11 @@
       <%= product.generated_title %>
     </h3>
     <p class="text-sm text-base-content/60 mt-2">
-      <%= number_to_currency(product.price) %> / pack of <%= number_with_delimiter(product.pac_size) %>
+      <% if product.pricing_tiers.present? %>
+        From <%= number_to_currency(product.pricing_tiers.first["price"].to_f) %>
+      <% else %>
+        <%= number_to_currency(product.price) %> / pack of <%= number_with_delimiter(product.pac_size) %>
+      <% end %>
     </p>
   </div>
 <% end %>

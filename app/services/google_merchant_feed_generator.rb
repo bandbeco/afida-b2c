@@ -32,8 +32,13 @@ class GoogleMerchantFeedGenerator
       xml["g"].link Rails.application.routes.url_helpers.product_url(product)
       xml["g"].image_link product_image_url(product)
       xml["g"].availability product.in_stock? ? "in_stock" : "out_of_stock"
-      xml["g"].price "#{product.price} GBP"
-      xml["g"].unit_pricing_measure "#{product.pac_size}ct" if product.pac_size.present?
+      if product.pricing_tiers.present?
+        xml["g"].price "#{product.pricing_tiers.first['price']} GBP"
+        xml["g"].unit_pricing_measure "#{product.pricing_tiers.first['quantity']}ct"
+      else
+        xml["g"].price "#{product.price} GBP"
+        xml["g"].unit_pricing_measure "#{product.pac_size}ct" if product.pac_size.present?
+      end
 
       # Category
       xml["g"].product_type product.category.name if product.category

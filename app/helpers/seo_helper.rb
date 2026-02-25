@@ -1,20 +1,25 @@
 module SeoHelper
   def product_structured_data(product)
-    data = {
-      "@context": "https://schema.org/",
-      "@type": "Product",
-      "name": product.generated_title,
-      "description": product.description_standard_with_fallback,
-      "brand": {
-        "@type": "Brand",
-        "name": "Afida"
-      },
-      "offers": {
+    availability = product.in_stock? ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
+
+    offers = if product.pricing_tiers.present?
+      prices = product.pricing_tiers.map { |t| t["price"].to_f }
+      {
+        "@type": "AggregateOffer",
+        "lowPrice": prices.min.to_s,
+        "highPrice": prices.max.to_s,
+        "priceCurrency": "GBP",
+        "offerCount": product.pricing_tiers.size,
+        "availability": availability,
+        "url": product_url(product)
+      }
+    else
+      {
         "@type": "Offer",
         "price": product.price.to_s,
         "priceCurrency": "GBP",
         "priceValidUntil": Date.new(Date.current.year, 12, 31).iso8601,
-        "availability": product.in_stock? ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        "availability": availability,
         "url": product_url(product),
         "shippingDetails": {
           "@type": "OfferShippingDetails",
@@ -44,6 +49,18 @@ module SeoHelper
           }
         }
       }
+    end
+
+    data = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      "name": product.generated_title,
+      "description": product.description_standard_with_fallback,
+      "brand": {
+        "@type": "Brand",
+        "name": "Afida"
+      },
+      "offers": offers
     }
 
     # Add image if available
