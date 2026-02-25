@@ -11,7 +11,8 @@ class CartItem < ApplicationRecord
   validate :cannot_add_sample_when_regular_exists, on: :create, if: :sample?
   # Prevent duplicate cart items for the same product
   # Configured products are excluded as they can have different configurations
-  validates_uniqueness_of :product, scope: :cart_id, unless: :configured?
+  # Tier-priced products can have multiple line items at different price points
+  validates_uniqueness_of :product, scope: :cart_id, unless: -> { configured? || tiered? }
   validates :calculated_price, presence: true, if: :configured?
   validate :design_required_for_configured_products
 
@@ -47,6 +48,10 @@ class CartItem < ApplicationRecord
     configuration.present?
   end
 
+  def tiered?
+    product&.pricing_tiers.present?
+  end
+
   # Uses the is_sample boolean flag set when the item is created
   def sample?
     is_sample
@@ -63,9 +68,16 @@ class CartItem < ApplicationRecord
     pack_priced? ? price : nil
   end
 
-  # Delegate to product for consistent interface with OrderItem
+  # Returns the pack size for this line item.
+  # For tier-priced items, returns the matching tier's quantity (e.g. 50 or 600).
+  # For standard items, delegates to product.pac_size.
   def pac_size
-    product.pac_size
+    if tiered?
+      matching_tier = product.pricing_tiers.find { |t| BigDecimal(t["price"].to_s) == price }
+      matching_tier ? matching_tier["quantity"] : product.pac_size
+    else
+      product.pac_size
+    end
   end
 
   private

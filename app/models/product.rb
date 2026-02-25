@@ -207,11 +207,11 @@ class Product < ApplicationRecord
   end
 
   # Generated title from product attributes
-  # Combines size, colour, material, and name into a descriptive title
-  # Example: "8oz White Paper Coffee Cups"
+  # Combines brand, size, colour, material, and name into a descriptive title
+  # Example: "Vegware 12oz White Paper Coffee Cups"
   # Deduplicates when colour and material are identical (e.g., "Kraft Kraft" -> "Kraft")
   def generated_title
-    parts = [ size, colour, material, name ].compact_blank.uniq(&:downcase)
+    parts = [ brand, size, colour, material, name ].compact_blank.uniq(&:downcase)
     parts.join(" ")
   end
 

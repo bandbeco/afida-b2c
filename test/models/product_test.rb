@@ -550,21 +550,23 @@ class ProductTest < ActiveSupport::TestCase
   end
 
   # Generated title tests
-  test "generated_title combines size colour material and name" do
+  test "generated_title combines brand size colour material and name" do
     product = products(:one)
     product.update_columns(
+      brand: "Vegware",
       size: "8oz",
       colour: "White",
       material: "Paper",
       name: "Coffee Cups"
     )
 
-    assert_equal "8oz White Paper Coffee Cups", product.generated_title
+    assert_equal "Vegware 8oz White Paper Coffee Cups", product.generated_title
   end
 
   test "generated_title omits blank attributes" do
     product = products(:one)
     product.update_columns(
+      brand: nil,
       size: nil,
       colour: "White",
       material: nil,
@@ -577,6 +579,7 @@ class ProductTest < ActiveSupport::TestCase
   test "generated_title returns only name when other attributes are blank" do
     product = products(:one)
     product.update_columns(
+      brand: nil,
       size: nil,
       colour: nil,
       material: nil,
@@ -589,6 +592,7 @@ class ProductTest < ActiveSupport::TestCase
   test "generated_title handles dimension-style sizes" do
     product = products(:one)
     product.update_columns(
+      brand: nil,
       size: "6 x 200mm",
       colour: "Natural",
       material: "Bamboo Pulp",
@@ -601,6 +605,7 @@ class ProductTest < ActiveSupport::TestCase
   test "generated_title skips empty strings" do
     product = products(:one)
     product.update_columns(
+      brand: "",
       size: "",
       colour: "Clear",
       material: "",
@@ -613,6 +618,7 @@ class ProductTest < ActiveSupport::TestCase
   test "generated_title deduplicates when colour and material are identical" do
     product = products(:one)
     product.update_columns(
+      brand: nil,
       size: "16 inch / 406 x 406mm",
       colour: "Kraft",
       material: "Kraft",
@@ -625,6 +631,7 @@ class ProductTest < ActiveSupport::TestCase
   test "generated_title deduplication is case-insensitive" do
     product = products(:one)
     product.update_columns(
+      brand: nil,
       size: nil,
       colour: "kraft",
       material: "Kraft",
@@ -632,5 +639,18 @@ class ProductTest < ActiveSupport::TestCase
     )
 
     assert_equal "kraft Pizza Boxes", product.generated_title
+  end
+
+  test "generated_title without brand omits it" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: "12oz",
+      colour: nil,
+      material: "Bagasse",
+      name: "Clamshell"
+    )
+
+    assert_equal "12oz Bagasse Clamshell", product.generated_title
   end
 end

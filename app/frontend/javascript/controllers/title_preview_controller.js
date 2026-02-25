@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["size", "colour", "material", "name", "preview"]
+  static targets = ["brand", "size", "colour", "material", "name", "preview"]
 
   connect() {
     this.update()
@@ -9,6 +9,7 @@ export default class extends Controller {
 
   update() {
     const parts = [
+      this.brandTarget.value.trim(),
       this.sizeTarget.value.trim(),
       this.colourTarget.value.trim(),
       this.materialTarget.value.trim(),

@@ -114,10 +114,18 @@
         </div>
 
         <%# Content Section %>
+        <% has_tiers = @product.pricing_tiers.present? %>
         <div class="lg:w-1/2 text-center lg:text-left"
-             data-controller="quantity-selector"
-             data-quantity-selector-price-value="<%= @product.price.to_f %>"
-             data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>">
+             <% if has_tiers %>
+               data-controller="pricing-tier"
+               data-pricing-tier-tiers-value="<%= @product.pricing_tiers.to_json %>"
+               data-pricing-tier-default-price-value="<%= @product.price.to_f %>"
+               data-pricing-tier-default-pac-size-value="<%= @product.pac_size || 1 %>"
+             <% else %>
+               data-controller="quantity-selector"
+               data-quantity-selector-price-value="<%= @product.price.to_f %>"
+               data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>"
+             <% end %>>
 
           <h1 class="text-2xl sm:text-3xl lg:text-4xl">
             <%= @product.generated_title %>
@@ -125,15 +133,20 @@
 
           <%# Price Display %>
           <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mt-3">
-            <p class="text-xl">
-              <% if @product.pac_size && @product.pac_size > 1 %>
-                <%= number_to_currency(@product.price) %> / pack of <%= number_with_delimiter(@product.pac_size) %>
-              <% else %>
-                <%= number_to_currency(@product.price) %>
-              <% end %>
-            </p>
+            <% if has_tiers %>
+              <p class="text-xl" data-pricing-tier-target="priceDisplay">
+                From <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
+              </p>
+            <% else %>
+              <p class="text-xl">
+                <% if @product.pac_size && @product.pac_size > 1 %>
+                  <%= number_to_currency(@product.price) %> / pack of <%= number_with_delimiter(@product.pac_size) %>
+                <% else %>
+                  <%= number_to_currency(@product.price) %>
+                <% end %>
+              </p>
+            <% end %>
           </div>
-
 
           <%# SKU %>
           <div class="mt-2">
@@ -149,45 +162,107 @@
             </p>
           <% end %>
 
-          <%# Quantity Selector %>
-          <div class="mt-6">
-            <label for="quantity" class="block text-lg font-medium mb-2">Quantity</label>
-            <div class="flex items-center justify-center lg:justify-start gap-4">
-              <div class="join">
-                <button type="button"
-                        class="join-item btn btn-outline"
-                        data-action="click->quantity-selector#decrement"
-                        aria-label="Decrease quantity">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                  </svg>
-                </button>
-                <input type="number"
-                       id="quantity"
-                       name="quantity"
-                       value="1"
-                       min="1"
-                       max="999"
-                       class="join-item input input-bordered w-20 text-center"
-                       data-quantity-selector-target="input"
-                       data-action="change->quantity-selector#updateTotal"
-                       aria-label="Quantity">
-                <button type="button"
-                        class="join-item btn btn-outline"
-                        data-action="click->quantity-selector#increment"
-                        aria-label="Increase quantity">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                  </svg>
-                </button>
+          <% if has_tiers %>
+            <%# === Pricing Tier Selector === %>
+            <div class="mt-6">
+              <label class="block text-lg font-medium mb-3">Select option</label>
+              <div class="flex flex-col gap-3" role="listbox" aria-label="Select pack size">
+                <% @product.pricing_tiers.each do |tier| %>
+                  <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[1fr_auto] gap-3 items-center"
+                       data-pricing-tier-target="tierCard"
+                       data-tier-price="<%= tier["price"] %>"
+                       data-tier-quantity="<%= tier["quantity"] %>"
+                       data-action="click->pricing-tier#selectTier keydown->pricing-tier#handleCardKeydown"
+                       role="option"
+                       aria-selected="false"
+                       tabindex="0">
+                    <div>
+                      <span class="font-medium"><%= tier["quantity"] >= 100 ? "Case" : "Pack" %> of <%= number_with_delimiter(tier["quantity"]) %></span>
+                    </div>
+                    <div class="text-right font-medium">
+                      <%= number_to_currency(tier["price"].to_f) %>
+                    </div>
+                  </div>
+                <% end %>
               </div>
-              <% if @product.pac_size && @product.pac_size > 1 %>
-                <span class="text-base-content/60" data-quantity-selector-target="unitsDisplay">
-                  (<%= number_with_delimiter(@product.pac_size) %> units)
-                </span>
-              <% end %>
             </div>
-          </div>
+
+            <%# Quantity (how many of selected tier) %>
+            <div class="mt-6">
+              <label for="quantity" class="block text-lg font-medium mb-2">Quantity</label>
+              <div class="flex items-center justify-center lg:justify-start gap-4">
+                <div class="join">
+                  <button type="button"
+                          class="join-item btn btn-outline"
+                          data-action="click->pricing-tier#decrement"
+                          aria-label="Decrease quantity">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <input type="number"
+                         id="quantity"
+                         name="quantity"
+                         value="1"
+                         min="1"
+                         max="999"
+                         class="join-item input input-bordered w-20 text-center"
+                         data-pricing-tier-target="input"
+                         data-action="change->pricing-tier#updateTotal"
+                         aria-label="Quantity">
+                  <button type="button"
+                          class="join-item btn btn-outline"
+                          data-action="click->pricing-tier#increment"
+                          aria-label="Increase quantity">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+                <span class="text-base-content/60" data-pricing-tier-target="unitsDisplay"></span>
+              </div>
+            </div>
+          <% else %>
+            <%# === Standard Quantity Selector (no tiers) === %>
+            <div class="mt-6">
+              <label for="quantity" class="block text-lg font-medium mb-2">Quantity</label>
+              <div class="flex items-center justify-center lg:justify-start gap-4">
+                <div class="join">
+                  <button type="button"
+                          class="join-item btn btn-outline"
+                          data-action="click->quantity-selector#decrement"
+                          aria-label="Decrease quantity">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
+                    </svg>
+                  </button>
+                  <input type="number"
+                         id="quantity"
+                         name="quantity"
+                         value="1"
+                         min="1"
+                         max="999"
+                         class="join-item input input-bordered w-20 text-center"
+                         data-quantity-selector-target="input"
+                         data-action="change->quantity-selector#updateTotal"
+                         aria-label="Quantity">
+                  <button type="button"
+                          class="join-item btn btn-outline"
+                          data-action="click->quantity-selector#increment"
+                          aria-label="Increase quantity">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+                <% if @product.pac_size && @product.pac_size > 1 %>
+                  <span class="text-base-content/60" data-quantity-selector-target="unitsDisplay">
+                    (<%= number_with_delimiter(@product.pac_size) %> units)
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
 
           <%# Custom Inquiry CTA %>
           <div class="mt-6">
@@ -278,9 +353,15 @@
 
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 border-t border-base-200">
               <p class="text-base sm:text-lg">Total (excl. VAT)</p>
-              <p class="text-xl sm:text-2xl" data-quantity-selector-target="totalDisplay">
-                <%= number_to_currency(@product.price) %>
-              </p>
+              <% if has_tiers %>
+                <p class="text-xl sm:text-2xl" data-pricing-tier-target="totalDisplay">
+                  <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
+                </p>
+              <% else %>
+                <p class="text-xl sm:text-2xl" data-quantity-selector-target="totalDisplay">
+                  <%= number_to_currency(@product.price) %>
+                </p>
+              <% end %>
             </div>
           </div>
 
@@ -290,13 +371,33 @@
                         data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", turbo: true },
                         class: "mt-4" do |f| %>
             <%= hidden_field_tag "cart_item[sku]", @product.sku %>
-            <input type="hidden"
-                   name="cart_item[quantity]"
-                   data-quantity-selector-target="quantityInput"
-                   value="1" />
-            <button type="submit" class="btn btn-primary btn-lg w-full">
-              Add to Cart
-            </button>
+            <% if has_tiers %>
+              <input type="hidden"
+                     name="cart_item[quantity]"
+                     data-pricing-tier-target="quantityInput"
+                     value="1" />
+              <input type="hidden"
+                     name="cart_item[tier_price]"
+                     data-pricing-tier-target="priceInput"
+                     value="" />
+              <input type="hidden"
+                     name="cart_item[tier_pac_size]"
+                     data-pricing-tier-target="pacSizeInput"
+                     value="" />
+              <button type="submit" class="btn btn-primary btn-lg w-full"
+                      data-pricing-tier-target="addToCartButton"
+                      disabled>
+                Add to Cart
+              </button>
+            <% else %>
+              <input type="hidden"
+                     name="cart_item[quantity]"
+                     data-quantity-selector-target="quantityInput"
+                     value="1" />
+              <button type="submit" class="btn btn-primary btn-lg w-full">
+                Add to Cart
+              </button>
+            <% end %>
           <% end %>
 
           <p class="text-sm text-base-content/60 text-center mt-3 flex items-center justify-center gap-1.5">

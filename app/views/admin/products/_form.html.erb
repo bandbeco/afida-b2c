@@ -17,6 +17,17 @@
 
     <div class="grid grid-cols-2 gap-4 py-4">
       <div>
+        <%= form.label :brand, class: "label text-base" %>
+        <%= form.text_field :brand,
+                            class: "input w-full",
+                            placeholder: "e.g. Vegware, Edenware",
+                            data: {
+                              title_preview_target: "brand",
+                              action: "input->title-preview#update"
+                            } %>
+      </div>
+
+      <div>
         <%= form.label :size, class: "label text-base" %>
         <%= form.text_field :size,
                             class: "input w-full",

@@ -245,6 +245,27 @@ class CartItemsController < ApplicationController
     # Find product by SKU
     product = Product.find_by!(sku: cart_item_params[:sku])
 
+    # Determine price: use tier price if provided and valid, otherwise product.price
+    price = product.price
+
+    if params.dig(:cart_item, :tier_price).present? && product.pricing_tiers.present?
+      submitted_price = BigDecimal(params[:cart_item][:tier_price].to_s)
+      submitted_pac_size = params.dig(:cart_item, :tier_pac_size)&.to_i
+
+      # Validate the submitted price matches an actual tier
+      matching_tier = product.pricing_tiers.find do |tier|
+        BigDecimal(tier["price"].to_s) == submitted_price &&
+          tier["quantity"] == submitted_pac_size
+      end
+
+      if matching_tier
+        price = submitted_price
+      else
+        redirect_back fallback_location: product_path(product), alert: "Invalid pricing tier selected."
+        return
+      end
+    end
+
     # Wrap in transaction to ensure sample removal and item creation are atomic
     # If save fails, sample won't be lost
     ActiveRecord::Base.transaction do
@@ -253,15 +274,16 @@ class CartItemsController < ApplicationController
       @sample_replaced = sample_items.exists?
       sample_items.destroy_all
 
-      # Find existing non-sample cart item for this product
-      @cart_item = @cart.cart_items.non_samples.find_by(product: product)
+      # Find existing non-sample cart item for this product (and same tier price)
+      # Tier products can have separate line items at different price points
+      @cart_item = @cart.cart_items.non_samples.find_by(product: product, price: price)
 
-      # If no regular item exists, create a new one
+      # If no matching item exists, create a new one
       @cart_item ||= @cart.cart_items.build(product: product)
 
       if @cart_item.new_record?
         @cart_item.quantity = cart_item_params[:quantity].to_i || 1
-        @cart_item.price = product.price
+        @cart_item.price = price
       else
         @cart_item.quantity += (cart_item_params[:quantity].to_i || 1)
       end

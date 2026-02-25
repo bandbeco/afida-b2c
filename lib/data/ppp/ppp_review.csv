@@ -1,0 +1,572 @@
+sku,original_name,original_material,proposed_brand,proposed_colour,proposed_material,proposed_name,size,certifications
+BGP-CS-9-WH,9″ x 9″ White Moulded Fibre Clamshell Box – Recyclable,fibre,,White,Fibre,Clamshell Box,9in,Recyclable
+BGP,Large Bagasse Food Box – Compostable,bagasse,,,Bagasse,Food Box,large,""
+BGP-TY-2,Medium Bagasse Chip Tray 7x5in Compostable,bagasse,,,Bagasse,Medium Chip Tray,5in,Compostable
+VEG-BGG-12-2,Vegware 12oz / 360ml Gourmet Base Compostable,bagasse,Vegware,,,Gourmet Base,"12oz, 340ml",Compostable
+VEG-BGG-12,Vegware 12oz / 360ml Gourmet Dipping Base Compostable,"bagasse, pp",Vegware,,,Gourmet Dipping Base,"12oz, 360ml",Compostable
+VEG-BGP-CS-3,Vegware 12x6in Bagasse Clamshell Compostable,bagasse,Vegware,,Bagasse,Clamshell,6in,Compostable
+VEG-BGG-16,Vegware 16oz / 500ml Gourmet Base Compostable,bagasse,Vegware,,,Gourmet Base,"16oz, 500ml",Compostable
+VEG-BGG-18,Vegware 18oz / 550ml Gourmet Dipping Base Compostable,"",Vegware,,,Gourmet Dipping Base,"",""
+VEG-BGG-22-2,Vegware 22oz / 650ml Gourmet Base Compostable,bagasse,Vegware,,,Gourmet Base,"22oz, 650ml",Compostable
+VEG-BGG-32,Vegware 32oz / 1000ml Gourmet Base Compostable,"",Vegware,,,Gourmet Base,"",""
+VEG-BGP-BG-3,Vegware 5in Bagasse Burger Box Recyclable Compostable,bagasse,Vegware,,Bagasse,Burger Box,5in,Compostable
+VEG-BGP-BG-2,Vegware 6in Bagasse Burger Box Recyclable Compostable,bagasse,Vegware,,Bagasse,Burger Box,6in,Compostable
+VEG-BGP-BG,Vegware 6in Heavyweight Bagasse Burger Box Compostable,bagasse,Vegware,,Bagasse,Heavyweight Burger Box,5in,Compostable
+VEG-BGP-CS-7,Vegware 7x5in Bagasse Clamshell Recyclable Compostable,bagasse,Vegware,,Bagasse,Clamshell,5in,Compostable
+VEG-BGP-CS-2,Vegware 7x5in Heavyweight Bagasse Clamshell Compostable,bagasse,Vegware,,Bagasse,Heavyweight Clamshell,5in,Compostable
+VEG-BGP-CS-6,Vegware 7x7in Bagasse Clamshell Compostable,bagasse,Vegware,,Bagasse,Clamshell,7in,Compostable
+VEG-BGP-SQ-RD,Vegware 8in Source Reduced Square Lunch Box Compostable,bagasse,Vegware,,,Source Reduced Square Lunch Box,8in,Compostable
+VEG-BGP-SQ-2,Vegware 8in square Bagasse Lunch Box Recyclable Compostable,bagasse,Vegware,,Bagasse,square Lunch Box,8in,Compostable
+VEG-BGP-SQ,Vegware 9in Square 3-Comp Bagasse Lunch Box Compostable,bagasse,Vegware,,Bagasse,Square 3-Comp Lunch Box,9in,Compostable
+VEG-BGP-CS-4,Vegware 9x6in 2-Compartment Bagasse Clamshell Compostable,bagasse,Vegware,,Bagasse,2-Compartment Clamshell,6in,Compostable
+VEG-BGP-CS-5,Vegware 9x6in Bagasse Clamshell Compostable,"bagasse, pla, fibre",Vegware,,Bagasse,Clamshell,"",Compostable
+VEG-BGP-CS,Vegware 9x6in Heavyweight Bagasse Clamshell Compostable,bagasse,Vegware,,Bagasse,Heavyweight Clamshell,6in,Compostable
+VEG-BGP-2,Vegware 9x8in Bagasse Lunch Box Compostable,"bagasse, pla, fibre",Vegware,,Bagasse,Lunch Box,"",Compostable
+VEG-BGG-5,Vegware Compostable Bagasse Lid (Size 4),bagasse,Vegware,,Bagasse,Lid (Size 4),"",Compostable
+VEG-BGG-42,Vegware Compostable Gourmet Base – 42oz / 1200ml (Fits Lid 5),pla,Vegware,,,Gourmet Base (Fits Lid 5),"42oz, 1200ml",Compostable
+VEG-BGG-60,Vegware Compostable Gourmet Base – 60oz / 1800ml (Fits Lid 5),pla,Vegware,,,Gourmet Base (Fits Lid 5),"60oz, 1800ml",Compostable
+VEG-BGG-4,Vegware Compostable PLA Lid (Size 4),pla,Vegware,,PLA,Lid (Size 4),"",Compostable
+VEG-BGG,Vegware Compostable PLA lid (Size 5),pla,Vegware,,PLA,lid (Size 5),"",Compostable
+VEG-BGG-6,Vegware Compostable Window Lid (Size 4),pla,Vegware,,,Window Lid (Size 4),"",Compostable
+VEG-BGG-3,Vegware Compostable Window Lid (Size 5),"",Vegware,,,Window Lid (Size 5),"",Compostable
+VEG-BGG-2,Vegware Gourmet Bagasse Lid (Size 5) Compostable,bagasse,Vegware,,Bagasse,Gourmet Lid (Size 5),"",Compostable
+VEG-BGG-22,Vegware Gourmet Base – 22oz / 650ml Compostable,pla,Vegware,,,Gourmet Base,"22oz, 650ml",Compostable
+VEG-BGP-TY,Vegware Medium Bagasse Chip Tray 7x5in Compostable,bagasse,Vegware,,Bagasse,Medium Chip Tray,5in,Compostable
+VEG-BGG-8,Vegware Size 3 Bagasse Gourmet Lid Compostable,"bagasse, pet, pp, bamboo",Vegware,,Bagasse,Size 3 Gourmet Lid,"",Compostable
+VEG-BGG-7,Vegware Size 3 PLA Gourmet Lid Compostable,pla,Vegware,,PLA,Size 3 Gourmet Lid,"",Compostable
+BAG-12,12-Inch Foil-Lined Food Bags (7 x 9 x 12 Inches) Recyclable,"paper, foil",,,Foil,Lined Food Bags,12 inch,""
+BAG-170-BK,Black Gingham 2 Open-Sided Bags 170mm x 160mm Food Safe Recyclable,"",,Black,,Gingham 2 Open-Sided Bags,"",""
+BAG-170-BL,Blue Gingham 2 Open-Sided Bags 170mm x 160mm Food Safe Recyclable,"",,Blue,,Gingham 2 Open-Sided Bags,"",""
+BAG-CR-BL,Blue Plastic Carrier Bags 11 x 17 x 21,"pla, plastic",,Blue,Plastic,Carrier Bags 21,"",""
+BAG-KR-3,Brown Kraft Wide Bag/Takeaway Bag Recyclable (Case of 250),"kraft, paper",,Brown,Kraft,Wide Bag/Takeaway Bag,250mm,""
+BAG-205-CL,"Clear Natureflex Bag 170 x 205mm Compostable (Case of 1,000)","pla, wood, pulp",,Clear,,Natureflex Bag,"",Compostable
+BAG-210-CL,Clear Natureflex Bag 70 x 210mm Compostable (Case of 1000),"wood, pulp",,Clear,,Natureflex Bag,"",Compostable
+BAG-350-CL-2,Clear Natureflex Baguette Bag 100 x 350mm Compostable (Case of 1000),"pla, wood, pulp",,Clear,,Natureflex Baguette Bag,"",Compostable
+BAG-350-CL,Clear Natureflex Baguette Bag With Gusset 100 x 50 x 350mm Compostable (Case of 1000),"pla, wood, pulp",,Clear,,Natureflex Baguette Bag With Gusset,"",Compostable
+BAG-180-CL,Clear Natureflex Multi Bag 220 x 180mm Compostable (Case of 1000),"pla, wood, pulp",,Clear,,Natureflex Multi Bag,"",Compostable
+BAG-240-CL,Clear Natureflex Multi Bag with Gusset 150 x 50 x 240mm Compostable (Case of 1000),"pla, wood, pulp",,Clear,,Natureflex Multi Bag with Gusset,"",Compostable
+BAG-170-2,Contact Grill Bag 170mm (Case of 600),paper,,,,Contact Grill Bag,40mm,"Compostable, Recyclable"
+BAG-195,Contact Grill Bag 195mm (Case of 500),paper,,,,Contact Grill Bag,40mm,"Compostable, Recyclable"
+BAG-RC-200,Contact Grill Bag 200mm Rectangular (Case of 1000),paper,,,,Contact Grill Bag Rectangular,40mm,"Compostable, Recyclable"
+BAG-260,Contact Grill Bag 260mm (Case of 500),paper,,,,Contact Grill Bag,40mm,"Compostable, Recyclable"
+BAG-320,Contact Grill Bag 320mm Compostable (Case of 600),paper,,,,Contact Grill Bag,40mm,"Compostable, Recyclable"
+BAG-CR-2,Frosted Plastic Carrier Bag/Takeaway Bag Recyclable (Case of 300),"",,Frosted,Plastic,Carrier Bag/Takeaway Bag,270mm,""
+BAG-170-KR,Kraft 2 Open-Sided Bags 170mm x 160mm Food Safe Recyclable,kraft,,,Kraft,2 Open-Sided Bags,"",""
+BAG-GR-KR,Large Kraft Brown SOS Paper Grab Bag – Recyclable,"kraft, paper",,Brown,Kraft,Large SOS Grab Bag,40cm,Recyclable
+BAG-CR-3,Large Recycled Paper Carrier 10in width Recyclable/Compostable (Case of 250),"kraft, paper, pla",,,Paper,Large Carrier width,"",Compostable
+BAG-CR-4,Medium Recycled Paper Carrier 8.5in width Recyclable/Compostable (Case of 250),"kraft, paper, pla",,,Paper,Medium Carrier width,"",Compostable
+BAG-170,Newspaper 2 Open-Sided Bags 170mm x 160mm Food Safe Recyclable,paper,,,,Newspaper 2 Open-Sided Bags,"",""
+BAG-170-RD,Red Gingham 2 Open-Sided Bags 170mm x 160mm Food Safe Recyclable,"",,Red,,Gingham 2 Open-Sided Bags,"",""
+BAG-CR-5,Small Recycled Paper Carrier 7in width Recyclable/Compostable (Case of 250),"kraft, paper, pla",,,Paper,Small Carrier width,"",Compostable
+VEG-BAG-4,Vegware 4 x 2 x 14in Therma Paper Bag Compostable (Case of 500),paper,Vegware,,Paper,Therma Bag,"",""
+VEG-BAG,Vegware 4x2x10in Glassine Bag With NatureFlex Window Compostable (Case 1000),"paper, pla, wood, pulp",Vegware,,,Glassine Bag With NatureFlex Window,"",Compostable
+VEG-BAG-3,Vegware 5 x 2 x 11.5in Therma Paper Bag Compostable (Case of 500),paper,Vegware,,Paper,Therma Bag,"",""
+VEG-BAG-5,Vegware 6.5 x 3 x 9in Therma Paper Bag Compostable (Case of 500),paper,Vegware,,Paper,Therma Bag,"",""
+VEG-BAG-6,Vegware 62.5x10in Glassine Bag With NatureFlex Window Compostable (Case of 500),"paper, pla, wood, pulp",Vegware,,,Glassine Bag With NatureFlex Window,"",Compostable
+VEG-BAG-2,Vegware 8 x 2 x 9in Therma Paper Pouch Compostable (Case of 500),"paper, pla",Vegware,,Paper,Therma Pouch,"",Compostable
+VEG-BAG-KR,Vegware Kraft PLA Window Bag 10 X 10in Compostable (Case of 1000),"kraft, paper, pla",Vegware,,Kraft,Window Bag,"",Compostable
+VEG-BAG-KR-2,Vegware Kraft PLA Window Bag 8.5 x 8.5in Compostable (Case of 1000),"kraft, paper, pla",Vegware,,Kraft,Window Bag,"",Compostable
+VEG-BAG-7,Vegware Ovenable Wrap 11 x 13.5 x 8in Compostable (Case of 500),"kraft, paper, pla",Vegware,,,Ovenable Wrap,"",Compostable
+VEG-BAG-KR-5,Vegware Recycled Kraft Flat Bag 10 x 10in Recyclable/Compostable (Case of 1000),"kraft, paper, pla",Vegware,,Kraft,Flat Bag,"",Compostable
+VEG-BAG-KR-4,Vegware Recycled Kraft Flat Bag 12 x 12in Recyclable/Compostable (Case of 500),"kraft, paper",Vegware,,Kraft,Flat Bag,"",""
+VEG-BAG-KR-7,Vegware Recycled Kraft Flat Bag 7 x 7in Recyclable/Compostable (Case of 1000),"kraft, paper",Vegware,,Kraft,Flat Bag,"",""
+VEG-BAG-KR-6,Vegware Recycled Kraft Flat Bag 8 x 8in Recyclable/Compostable (Case of 1000),"kraft, paper",Vegware,,Kraft,Flat Bag,"",""
+VEG-BAG-WH-2,Vegware Recycled White Kraft Flat Bag 10 x 10 Recyclable/Compostable (Case of 1000),"",Vegware,White,Kraft,Flat Bag 10,"",Compostable
+VEG-BAG-WH,Vegware Recycled White Kraft Flat Bag 12.5 x 12in Recyclable/Compostable (Case of 500),"",Vegware,White,Kraft,Flat Bag,"",Compostable
+VEG-BAG-WH-4,Vegware Recycled White Kraft Flat Bag 7 x 7 in Recyclable/Compostable (Case of 1000),"",Vegware,White,Kraft,Flat Bag,"",Compostable
+VEG-BAG-WH-3,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),"",Vegware,White,Kraft,Flat Bag 8,"",Compostable
+BAG-CR-WH-2,White Carrier Bags 11 x 17 x 21,paper,,White,,Carrier Bags 21,"",""
+BAG-CR-WH,White Plastic Carrier Bags 12 x 19 x 23 – 25 Micron Strong,"pla, plastic",,White,Plastic,Carrier Bags 23 25 Micron Strong,"",""
+BAG-CR,X Large Recycled Paper Carrier 13in width Recyclable/Compostable (Case of 200),"kraft, paper, pla",,,Paper,Large Carrier width,13 Inch,Compostable
+LID-16-BK,12-16oz Black CPLA Sip-Thru Hot Cup Lid Compostable(Case of 1000),"pla, cpla, pp",,Black,CPLA,Sip-Thru Hot Cup Lid,16oz,Compostable
+LID-16-WH,12-16oz White CPLA Sip-Thru Hot Cup Lid Compostable (Case of 1000),"pla, cpla",,White,CPLA,Sip-Thru Hot Cup Lid,"12oz, 16oz",Compostable
+LID-16,12/16oz Paper Lid (PE Lined) RECYCLABLE,"paper, pla",,,Paper,Lid (PE Lined),"",Recyclable
+CUP-12,12oz Aqueous Lined Takeaway Cup Compostable (Case of 500),pla,,,,Lined Takeaway Cup,8oz,Compostable
+CUP-DW-12-KR-2,"12oz Double Wall Brown Kraft Hot Takeaway Cup, 89 Series Compostable","pla, plastic",,Brown,Kraft,"Double Wall Hot Takeaway Cup, 89 Series","",""
+XMS-16,16oz Christmas Double-Wall Paper Cup – Compostable Recyclable,"",,,Paper,Christmas Double-Wall Cup,16oz,"Compostable, Recyclable"
+CUP-DW-16-KR,"16oz Double Wall Brown Kraft Hot Takeaway Cup, 89 Series Compostable","pla, plastic",,Brown,Kraft,"Double Wall Hot Takeaway Cup, 89 Series","",""
+CC-SH-25,25ml Plastic Shot Glasses – Recyclable,"pla, plastic",,,Plastic,Shot Glasses,25ml,""
+CC-SH-25-2,25ml rPET Bomb Shot Glass Recyclable (Case of 1000),"rpet, pet",,,rPET,Bomb Shot Glass,25ml,Recyclable
+LID-8-BK-2,8oz Black CPLA Sip-Thru Hot Cup Lid Compostable (Case of 1000),"pla, cpla",,Black,CPLA,Sip-Thru Hot Cup Lid,8oz,Compostable
+LID-8,8oz Paper Lid (PE Lined) RECYCLABLE,paper,,,Paper,Lid (PE Lined),8oz,Recyclable
+LID-8-WH-2,8oz White CPLA Sip-Thru Hot Cup Lid Compostable (Case of 1000),"pla, cpla",,White,CPLA,Sip-Thru Hot Cup Lid,8oz,Compostable
+CC-9-3,9oz r-PET Squat Cold Cup Recyclable (Case of 1000),"pla, pet, plastic",,,,r- Squat Cold Cup,"9oz, 93mm",""
+CC-22,Coke Zero 22oz Cold Cups – Recyclable,pp,,,,Coke Zero Cold Cups,"22oz, 90mm",""
+CUP-DW-12-3,Edenware 12oz Double Wall Takeaway Cup Compostable (Case of 500),"kraft, paper",Edenware,,,Double Wall Takeaway Cup,12oz,Compostable
+CUP-DW-8-3,Edenware 8oz Double Wall Takeaway Cup Compostable (Case of 500),"kraft, paper",Edenware,,,Double Wall Takeaway Cup,8oz,Compostable
+CC-PN-6,"Half pint to brim PLA cup, UKCA UKNI CE mark",pla,,,PLA,Half pint to brim cup,"",""
+CC-PN-285,HALF PINT TUMBLER (285ML) TO RIM (RPET) (Case of 1000),"rpet, pet",,,rPET,HALF PINT TUMBLER TO RIM,285ml,Recyclable
+CC-CR-KR,Kraft Takeaway Pint Cup Carrier – 4 Cup inline Holder with Handle,"kraft, paper, pp",,,Kraft,Takeaway Pint Cup Carrier 4 Cup inline Holder with Handle,"",""
+CC-22-2,Pepsi Max 22oz Cold Cups – Recyclable,pp,,,,Pepsi Max Cold Cups,"22oz, 90mm",""
+CC-PN-568,PINT TUMBLER (568ML) TO RIM (RPET) Recyclable (Case of 1000),"rpet, pet",,,rPET,PINT TUMBLER TO RIM,568ml,Recyclable
+CUP-DW-12-2,Planetware 12oz Double Wall Takeaway Cup Compostable Recyclable,"pla, pp, plastic",Planetware,,,Double Wall Takeaway Cup,12oz,"Compostable, Recyclable"
+CUP-DW-6,Planetware 6oz Double Wall Takeaway Cup – Recyclable Compostable,"pla, plastic",Planetware,,,Double Wall Takeaway Cup,6oz,"Compostable, Recyclable"
+CUP-DW-16-2,Planetware™ 16oz Double Wall Takeaway Cup Recyclable/Compostable,"paper, pla",Planetware,,,Double Wall Takeaway Cup,"8oz, 12oz, 16oz","Compostable, Recyclable"
+CUP-DW-8-2,Planetware™ 8oz Double Wall Takeaway Cup Recyclable/Compostable,"pla, pp, plastic",Planetware,,,Double Wall Takeaway Cup,8oz,"Compostable, Recyclable"
+CC-PN-4,Recyclable 2-in-1 Flexy Pint Glasses to Brim CE Marked,"pla, pp, plastic",,,,1 Flexy Pint Glasses to Brim,"",Recyclable
+CC-PN-2,Recyclable Two Pint to Brim CE Marked Cup,"pla, plastic",,,,Two Pint to Brim Cup,44oz,Recyclable
+CC-PN,Recyclable Two Pint to Line CE Marked Cup,"pla, plastic",,,,Two Pint to Line Cup,44oz,Recyclable
+VEG-CUP-DW-10-KR,Vegware 10 oz Double Wall Brown Kraft Hot Cup 89-Series – Compostable,kraft,Vegware,Brown,Kraft,Double Wall Hot Cup 89-Series,10 oz,"Compostable, Recyclable"
+VEG-CUP-DW-10,Vegware 10 oz Feel Good Double Wall Hot Cup 89-Series – Compostable,"pla, plastic",Vegware,,,Feel Good Double Wall Hot Cup 89-Series,10 oz,"Compostable, Recyclable"
+VEG-CC-10,"Vegware 10oz paper cold cup, 89-Series Compostable","paper, pla",Vegware,,Paper,"cold cup, 89-Series",10oz,Compostable
+VEG-CUP-SW-10-KR,"Vegware 10oz Single Wall Brown (Kraft) Takeaway Hot Cup, 89 Series Compostable","kraft, pla, plastic",Vegware,Brown,Kraft,"Single Wall Takeaway Hot Cup, 89 Series","",""
+VEG-CUP-SW-10,"Vegware 10oz Single Wall Feel Good Takeaway Hot Cup, 89 Series Compostable","pla, plastic",Vegware,,,"Single Wall Feel Good Takeaway Hot Cup, 89 Series","",""
+VEG-LID-16-WH-2,Vegware 12/16oz White Moulded Fibre Hot Cup Lid Compostable (Case of 1000),"bagasse, pla, plastic",Vegware,White,Fibre,Hot Cup Lid,"90mm, 16oz",Compostable
+VEG-CUP-DW-12-BK,Vegware 12oz Black Double Wall Takeaway Cup,"paper, pla",Vegware,Black,,Double Wall Takeaway Cup,12oz,Compostable
+VEG-CUP-DW-12-GN,"Vegware 12oz Double Wall Hot Takeaway Cup, 89 Series Green Britain Compostable",pla,Vegware,,,"Double Wall Hot Takeaway Cup, 89 Series Green Britain","",Recyclable
+VEG-CUP-DW-12-GN-2,"Vegware 12oz Double Wall Hot Takeaway Cup, 89 Series Green Tree Recyclable/Compostable",pla,Vegware,,,"Double Wall Hot Takeaway Cup, 89 Series Green Tree","",Recyclable
+VEG-CUP-DW-12-WH-2,"Vegware 12oz Double Wall White Takeaway Hot Cup, 89 Series, Compostable (Case of 500)",pla,Vegware,White,,"Double Wall Takeaway Hot Cup, 89 Series","",Recyclable
+VEG-CUP-DW-12,Vegware 12oz Feel Good double wall hot cup Compostable,"",Vegware,,,Feel Good double wall hot cup,12oz,Compostable
+VEG-CUP-DW-12-4,"Vegware 12oz Gallery Design Double Wall Hot Takeaway Cup, 89-Series Compostable",pla,Vegware,,,"Gallery Design Double Wall Hot Takeaway Cup, 89-Series","",Recyclable
+VEG-CC-12-5,"Vegware 12oz PLA Cold Cup, 96 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 96 Series","",Compostable
+VEG-CC-12-GN,"Vegware 12oz PLA Cold Cup, 96 Series Green Tree Recyclable/Compostable",pla,Vegware,,PLA,"Cold Cup, 96 Series Green Tree","",Compostable
+VEG-CUP-SW-12-KR,"Vegware 12oz Single Wall Brown (Kraft) Takeaway Hot Cup, 89 Series Compostable","kraft, pla, plastic",Vegware,Brown,Kraft,"Single Wall Takeaway Hot Cup, 89 Series","",""
+VEG-CUP-SW-12,"Vegware 12oz Single Wall Feel Good Takeaway Hot Cup, 89 Series Compostable","",Vegware,,,"Single Wall Feel Good Takeaway Hot Cup, 89 Series",12oz,""
+VEG-CUP-SW-12-GN,"Vegware 12oz Single Wall Hot Cup, 89 Series Green Tree Compostable","",Vegware,,,"Single Wall Hot Cup, 89 Series Green Tree",12oz,""
+VEG-CUP-SW-12-WH,"Vegware 12oz Single Wall White Takeaway Hot Cup, 89 Series Compostable","",Vegware,White,,"Single Wall Takeaway Hot Cup, 89 Series",12oz,""
+VEG-CC-12-3,"Vegware 12oz Takeaway Paper Cold Cup, 89-Series Compostable","paper, pla",Vegware,,Paper,"Takeaway Cold Cup, 89-Series",12oz,Compostable
+VEG-CUP-DW-16-BK,Vegware 16oz Black Double Wall Takeaway Cup,"paper, pla",Vegware,Black,,Double Wall Takeaway Cup,16oz,Compostable
+VEG-CUP-DW-16-WH,"Vegware 16oz Double Wall White Takeaway Hot Cup, 89 Series, Compostable (Case of 500)",pla,Vegware,White,,"Double Wall Takeaway Hot Cup, 89 Series","",Recyclable
+VEG-CUP-DW-16,Vegware 16oz Feel Good double wall hot cup Compostable,"",Vegware,,,Feel Good double wall hot cup,16oz,Compostable
+VEG-CUP-DW-16-3,"Vegware 16oz Gallery Design Double Wall Hot Takeaway Cup, 89-Series Compostable",pla,Vegware,,,"Gallery Design Double Wall Hot Takeaway Cup, 89-Series","",Recyclable
+VEG-CC-16-4,"Vegware 16oz PLA Cold Cup, 96 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 96 Series","",Compostable
+VEG-CC-16-3,"Vegware 16oz PLA Plain Cold Cup, 96 Series Compostable",pla,Vegware,,PLA,"Plain Cold Cup, 96 Series","",Compostable
+VEG-CUP-SW-16-KR,"Vegware 16oz Single Wall Brown (Kraft) Takeaway Hot Cup, 89 Series Compostable","kraft, pla, plastic",Vegware,Brown,Kraft,"Single Wall Takeaway Hot Cup, 89 Series","",""
+VEG-CUP-SW-16-GN,"Vegware 16oz Single Wall Hot Cup, 89 Series Green Tree Compostable","",Vegware,,,"Single Wall Hot Cup, 89 Series Green Tree",16oz,""
+VEG-CUP-SW-16-WH,"Vegware 16oz Single Wall White Takeaway Hot Cup, 89 Series Compostable","",Vegware,White,,"Single Wall Takeaway Hot Cup, 89 Series",16oz,""
+VEG-CC-16-2,"Vegware 16oz Takeaway Paper Cold Cup, 89-Series Compostable","paper, pla",Vegware,,Paper,"Takeaway Cold Cup, 89-Series",16oz,Compostable
+VEG-CC-20-4,"Vegware 20oz PLA Cold Cup, 96 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 96 Series","",Compostable
+VEG-CC-20-3,"Vegware 20oz PLA Plain Cold Cup, 96 Series Compostable",pla,Vegware,,PLA,"Plain Cold Cup, 96 Series","",Compostable
+VEG-CUP-SW-20-WH,"Vegware 20oz Single Wall White Takeaway Hot Cup, 89 Series Compostable",pp,Vegware,White,,"Single Wall Takeaway Hot Cup, 89 Series",20oz,""
+VEG-CC-20-2,"Vegware 20oz Takeaway paper cold cup, 89-Series Compostable","paper, pla",Vegware,,Paper,"Takeaway cold cup, 89-Series","",Compostable
+VEG-CUP-SW-4-KR,"Vegware 4oz Single Wall Brown (Kraft) Takeaway Hot Cup, 62 Series Compostable","kraft, pla, plastic",Vegware,Brown,Kraft,"Single Wall Takeaway Hot Cup, 62 Series","",""
+VEG-CUP-SW-4,"Vegware 4oz Single Wall Feel Good Takeaway Hot Cup, 62 Series Compostable",pp,Vegware,,,"Single Wall Feel Good Takeaway Hot Cup, 62 Series",4oz,""
+VEG-CUP-SW-4-GN,"Vegware 4oz Single Wall Hot Cup, 62 Series Green Tree Compostable",pp,Vegware,,,"Single Wall Hot Cup, 62 Series Green Tree",4oz,""
+VEG-CUP-SW-4-WH,"Vegware 4oz Single Wall White Takeaway Hot Cup, 62 Series Compostable",pp,Vegware,White,,"Single Wall Takeaway Hot Cup, 62 Series",4oz,""
+VEG-CC-5-2,"Vegware 5oz PLA Cold Cup, 76 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 76 Series","",Compostable
+VEG-CC-5-GN,"Vegware 5oz PLA Cold Cup, 76 Series Green Tree Compostable",pla,Vegware,,PLA,"Cold Cup, 76 Series Green Tree","",Compostable
+VEG-CC-5,"Vegware 5oz PLA Plain Cold Cup, 76 Series Compostable",pla,Vegware,,PLA,"Plain Cold Cup, 76 Series","",Compostable
+VEG-LID-6,Vegware 62-Series CPLA Hot Cup Lid Compostable,"pla, cpla",Vegware,,CPLA,62-Series Hot Cup Lid,"",Compostable
+VEG-CUP-SW-6-KR,"Vegware 6oz Single Wall Brown (Kraft) Takeaway Hot Cup, 72 Series Compostable","kraft, pla, plastic",Vegware,Brown,Kraft,"Single Wall Takeaway Hot Cup, 72 Series","",""
+VEG-CUP-SW-6,"Vegware 6oz Single Wall Feel Good Takeaway Hot Cup, 72 Series Compostable","pla, plastic",Vegware,,,"Single Wall Feel Good Takeaway Hot Cup, 72 Series",16oz,""
+VEG-CUP-SW-6-GN,"Vegware 6oz Single Wall Hot Cup, 72 Series Green Tree Compostable","",Vegware,,,"Single Wall Hot Cup, 72 Series Green Tree",6oz,""
+VEG-CUP-SW-6-WH,"Vegware 6oz Single Wall White Hot Cup, 79 Series Compostable","",Vegware,White,,"Single Wall Hot Cup, 79 Series",6oz,""
+VEG-CUP-SW-6-WH-2,"Vegware 6oz Single Wall White Takeaway Hot Cup, 72 Series Compostable","",Vegware,White,,"Single Wall Takeaway Hot Cup, 72 Series",6oz,""
+VEG-LID-2,Vegware 79-Series Paper Takeaway Hot Cup Lid Compostable,"paper, pla",Vegware,,Paper,79-Series Takeaway Hot Cup Lid,"",Compostable
+VEG-CC-7,"Vegware 7oz PLA Cold Cup, 76 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 76 Series","",Compostable
+VEG-CC-7-2,Vegware 7oz PLA Water Cup Compostable,pla,Vegware,,PLA,Water Cup,"",Compostable
+VEG-CC-2,Vegware 89-Series Nourish Fibre Dome Cold Cup Lid – STRAW SLOT,fibre,Vegware,,Fibre,89-Series Nourish Dome Cold Cup Lid STRAW SLOT,"",Compostable
+VEG-CC-FL,Vegware 89-Series Nourish Moulded Fibre Flat Lid – STRAW SLOT,fibre,Vegware,,Fibre,89-Series Nourish Flat Lid STRAW SLOT,"",Compostable
+VEG-LID,Vegware 89-Series Paper Takeaway Hot Cup Lid Compostable,"paper, pla",Vegware,,Paper,89-Series Takeaway Hot Cup Lid,"",Compostable
+VEG-CUP-DW-8-BK,Vegware 8oz Black Double Wall Takeaway Cup,"",Vegware,Black,,Double Wall Takeaway Cup,8oz,Compostable
+VEG-CUP-DW-8-KR-2,"Vegware 8oz Double Wall Brown (Kraft) Hot Takeaway Cup, 79 Series Recyclable/Compostable","pla, plastic",Vegware,Brown,Kraft,"Double Wall Hot Takeaway Cup, 79 Series","",""
+VEG-CUP-DW-8-GN,"Vegware 8oz Double Wall Hot Takeaway Cup, 79 Series Green Tree Compostable","paper, pla",Vegware,,,"Double Wall Hot Takeaway Cup, 79 Series Green Tree","",Recyclable
+VEG-CUP-DW-8-WH-2,"Vegware 8oz Double Wall White Takeaway Hot Cup, 79 Series, Compostable (Case of 500)",pla,Vegware,White,,"Double Wall Takeaway Hot Cup, 79 Series","",Recyclable
+VEG-CUP-DW-8,Vegware 8oz Feel Good double wall hot cup Compostable,"",Vegware,,,Feel Good double wall hot cup,8oz,Compostable
+VEG-CUP-DW-8-4,"Vegware 8oz Gallery Design Double Wall Hot Takeaway Cup, 79-series Compostable",pla,Vegware,,,"Gallery Design Double Wall Hot Takeaway Cup, 79-series","",Recyclable
+VEG-CUP-SW-8-KR,"Vegware 8oz Single Wall Brown (Kraft) Takeaway Hot Cup, 79 Series Compostable","kraft, pla, plastic",Vegware,Brown,Kraft,"Single Wall Takeaway Hot Cup, 79 Series","",""
+VEG-CUP-SW-8,"Vegware 8oz Single Wall Feel Good Takeaway Hot Cup, 79 Series Compostable","",Vegware,,,"Single Wall Feel Good Takeaway Hot Cup, 79 Series",8oz,""
+VEG-CUP-SW-8-GN,"Vegware 8oz Single Wall Hot Cup, 79 Series Green Tree Compostable","",Vegware,,,"Single Wall Hot Cup, 79 Series Green Tree",8oz,""
+VEG-CUP-SW-8-WH,"Vegware 8oz Single Wall White Takeaway Hot Cup, 79 Series Compostable","",Vegware,White,,"Single Wall Takeaway Hot Cup, 79 Series",8oz,""
+VEG-LID-8-WH-3,Vegware 8oz White Moulded Fibre Hot Cup Lid Compostable (Case of 1000),"bagasse, pla, plastic",Vegware,White,Fibre,Hot Cup Lid,"80mm, 8oz",Compostable
+VEG-CC-9-6,"Vegware 9oz PLA Cold Cup, 76 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 76 Series","",Compostable
+VEG-CC-9-7,"Vegware 9oz PLA Cold Cup, 96 Series Compostable",pla,Vegware,,PLA,"Cold Cup, 96 Series","",Compostable
+VEG-CC-9-GN,"Vegware 9oz PLA Cold Cup, 96 Series- Green Tree Compostable",pla,Vegware,,PLA,"Cold Cup, 96 Series- Green Tree","",Compostable
+VEG-LID-BK-2,Vegware Black CPLA Hot Cup Lid (Fits 79 Series) Compostable,"pla, cpla",Vegware,Black,CPLA,Hot Cup Lid (Fits 79 Series),"",Compostable
+VEG-LID-BK,Vegware Black CPLA Hot Cup Lid (Fits 89 Series) Compostable,"pla, cpla",Vegware,Black,CPLA,Hot Cup Lid (Fits 89 Series),"",Compostable
+VEG-LID-5,Vegware CPLA Hot Cup Lid (Fits 72 Series) Compostable,"pla, cpla",Vegware,,CPLA,Hot Cup Lid (Fits 72 Series),"",Compostable
+VEG-LID-4,Vegware CPLA Hot Cup Lid (Fits 79 Series) Compostable,"pla, cpla",Vegware,,CPLA,Hot Cup Lid (Fits 79 Series),"",Compostable
+VEG-LID-3,Vegware CPLA Hot Cup Lid (Fits 89 Series) Compostable,"pla, cpla",Vegware,,CPLA,Hot Cup Lid (Fits 89 Series),"",Compostable
+VEG-CC-PN-5,"Vegware Pint to brim PLA cup, UKCA UKNI CE mark,",pla,Vegware,,PLA,Pint to brim cup,"",Compostable
+VEG-CC-PN-3,Vegware Pint-to-Brim Paper Cup – UKCA Marked 89-Series,paper,Vegware,,Paper,Pint-to-Brim Cup 89-Series,"",Compostable
+VEG-CC,Vegware PLA Combo Lid 96-Series – Compostable Cold Cup Lid,"pla, pp",Vegware,,PLA,Combo Lid 96-Series Cold Cup Lid,"",Compostable
+VEG-CC-DL-2,"Vegware PLA Dome Lid, NO HOLE (Fits 76 Series) Compostable",pla,Vegware,,PLA,"Dome Lid, NO HOLE (Fits 76 Series)","",Compostable
+VEG-CC-DL-3,"Vegware PLA Dome Lid, STRAW SLOT (Fits 76 Series) Compostable",pla,Vegware,,PLA,"Dome Lid, STRAW SLOT (Fits 76 Series)","",Compostable
+VEG-CC-DL,"Vegware PLA Dome Lid, STRAW SLOT (Fits 96 Series) Compostable",pla,Vegware,,PLA,"Dome Lid, STRAW SLOT (Fits 96 Series)","",Compostable
+VEG-CC-FL-3,"Vegware PLA Flat Lid, NO HOLE (Fits 76 Series) Compostable",pla,Vegware,,PLA,"Flat Lid, NO HOLE (Fits 76 Series)","",Compostable
+VEG-CC-FL-4,"Vegware PLA Flat Lid, STRAW SLOT (Fits 76 Series) Compostable",pla,Vegware,,PLA,"Flat Lid, STRAW SLOT (Fits 76 Series)","",Compostable
+VEG-CC-FL-2,"Vegware PLA Flat Lid, STRAW SLOT (Fits 96 Series) Compostable",pla,Vegware,,PLA,"Flat Lid, STRAW SLOT (Fits 96 Series)","",Compostable
+VEG-CC-3,Vegware PLA sipping lid fits 96-Series Compostable (Case of 1000),"pla, pp",Vegware,,PLA,sipping lid fits 96-Series,"",Compostable
+CTL-SP-NT,6.6in Natural Cornstarch Desert Spoon (Case of 1000),"pla, cornstarch",,,Cornstarch,Natural Desert Spoon,"",Biodegradable
+CTL-FK-NT,7in Natural Cornstarch Fork (Case of 1000),"pla, cornstarch",,,Cornstarch,Natural Fork,"",Biodegradable
+CTL-KN-NT,7in Natural Cornstarch Knife (Case of 1000),"pla, cornstarch",,,Cornstarch,Natural Knife,"",Biodegradable
+CTL-229,Bamboo Chopstick (229mm/9) Paper Wrapped Recyclable/Compostable (Case of 1000),"pla, wood, wooden, plastic",,,Bamboo,Chopstick (/9) Wrapped,210mm,Biodegradable
+CTL-6,"Birchwood Cutlery Kit, 4 in 1 Recyclable/Compostable (Case of 250)","paper, pla, wood, wooden",,,,"Birchwood Cutlery Kit, 1","",""
+CTL-5,"Birchwood Cutlery Kit, 5 in 1 Recyclable/Compostable (Case of 250)","paper, pla, pp, wood, wooden",,,,"Birchwood Cutlery Kit, 1","",""
+CTL-4,"Birchwood Cutlery Kit, 6 in 1 Recyclable/Compostable (Case of 250)","paper, pla, pp, wood, wooden",,,,"Birchwood Cutlery Kit, 1","",""
+CTL-SP-4,Compostable 4.25in Mini Wooden Spoon Recyclable/Compostable,wood,,,Wood,Mini Spoon,"",""
+CTL,"Cornstarch Cutlery Kit, 3 in 1 (Case of 250)","pla, cornstarch",,,Cornstarch,"Cutlery Kit, 1","",""
+CTL-9,"Cornstarch Cutlery Kit, 3 in 1 (Case of 250)","pla, cornstarch",,,Cornstarch,"Cutlery Kit, 1","",""
+CTL-8,"Cornstarch Cutlery Kit, 4 in 1 (Case of 250)","pla, cornstarch",,,Cornstarch,"Cutlery Kit, 1","",""
+CTL-7,"Cornstarch Cutlery Kit, 5 in 1 (Case of 250)","pla, pp, cornstarch",,,Cornstarch,"Cutlery Kit, 1","",""
+CTL-FK-CL,"Heavy Duty Clear Reusable Plastic Forks – Case of 1,000","pla, plastic",,Clear,Plastic,Heavy Duty Reusable Forks,190 mm,""
+CTL-KN-CL,"Heavy Duty Clear Reusable Plastic Knives – Case of 1,000","pla, plastic",,Clear,Plastic,Heavy Duty Reusable Knives,190 mm,""
+CTL-SP-CL,"Heavy Duty Clear Reusable Plastic Spoons – Case of 1,000","pla, plastic",,Clear,Plastic,Heavy Duty Reusable Spoons,190 mm,""
+CTL-125-NT,"Natural Cornstarch Teaspoon – 125mm / 4.9” Reusable Compostable Cutlery (Case of 1,000)",cornstarch,,,Cornstarch,Natural Teaspoon / 4.9” Reusable Cutlery,125mm,Compostable
+VEG-CTL-SP-115,Vegware 4.5in / 115mm Paper Teaspoon Compostable (Case of 1000),"paper, pla",Vegware,,Paper,Teaspoon,"",Recyclable
+VEG-CTL-FK-4,Vegware 6.2in Compostable Paper Fork Compostable,"paper, pla",Vegware,,Paper,Fork,"",Compostable
+VEG-CTL-KN,Vegware 6.2in Compostable Paper Knife Compostable,"paper, pla",Vegware,,Paper,Knife,"",Compostable
+VEG-CTL-SP-2,Vegware 6.2in Compostable Paper Spoon Compostable,"paper, pla",Vegware,,Paper,Spoon,"",Compostable
+VEG-CTL-3,Vegware Compostable Paper Cutlery Kit (Case of 250),"paper, pla",Vegware,,Paper,Cutlery Kit,"",Compostable
+VEG-CTL-SP-90,Vegware Compostable Paper Ice Cream Spoon 3.5in / 90mm (Case of 2000),"paper, pla",Vegware,,Paper,Ice Cream Spoon,"",Recyclable
+VEG-CTL-FK,Vegware Compostable paper knife and fork kit (Case of 250),"paper, pla, pp",Vegware,,Paper,knife and fork kit,"",Compostable
+VEG-CTL-SP,Vegware Compostable Tutti Frutti Ice Cream Spoon (CASE OF 2000),"paper, pla, plastic",Vegware,,,Tutti Frutti Ice Cream Spoon,"",Compostable
+VEG-CTL-10,Vegware Compostable Wooden Cutlery Kit (Case of 250),"kraft, paper, pla, pp, wood, wooden",Vegware,,Wood,Cutlery Kit,"",Compostable
+VEG-CTL-FK-2,"Vegware Compostable wooden fork, wrapped (Case of 500)","kraft, paper, pla, pp, wood, wooden",Vegware,,Wood,"fork, wrapped","",Compostable
+VEG-CTL-FK-3,Vegware Compostable Wooden Knife and Fork Kit (Case of 250),"kraft, paper, pla, pp, wood, wooden",Vegware,,Wood,Knife and Fork Kit,"",Compostable
+CTL-2,Wooden Ice Cream Spade Recyclable/Compostable (Case of 4000),"pla, wood, wooden, plastic",,,Wood,Ice Cream Spade,95mm,Biodegradable
+POT-1-CL,1 oz Clear PET Portion Pot Lid – Recyclable,pet,,Clear,,Portion Pot Lid,1 oz,Recyclable
+POT-1-CL-2,1 oz Clear PP Portion Pot – Recyclable,pp,,Clear,,Portion Pot,1 oz,Recyclable
+CNT-150,150ml-250ml rPET Anti-mist Lid Stagione Recyclable (Case of 500),pp,,,rPET,Anti-mist Lid Stagione,"",Recyclable
+SPC-16-KR,16oz Kraft Paper Vented Lids fits 16oz Recyclable (Case of 500),"kraft, paper",,,Kraft,Vented Lids fits,16oz,""
+SPC-16,16oz Plastic Vented Lids fits 16oz Recyclable (Case of 500),"pla, plastic",,,Plastic,Vented Lids fits,"8oz, 12oz",""
+POT-1-KR-3,1oz Kraft Paper Portion Pot Recyclable (Case of 4000),"kraft, paper",,,Kraft,Portion Pot,"",""
+POT-1,1oz Paper Portion Pot Lid (44mm) Recyclable (Case of 2000),"kraft, paper",,,Paper,Portion Pot Lid,"",""
+POT-2-CL,2 oz Clear PET Portion Pot Lid – Recyclable,pet,,Clear,,Portion Pot Lid,2 oz,Recyclable
+POT-2-CL-2,2 oz Clear PP Portion Pot – Recyclable,pp,,Clear,,Portion Pot,2 oz,Recyclable
+BOX-26-WH,26 oz White Food Pail PE-Lined – Leak-Resistant Recyclable,"",,White,,Food Pail PE-Lined Leak-Resistant,26 oz,Recyclable
+SPC-26-KR,26oz -32oz Kraft Paper Vented Lids fits 26oz -32oz Recyclable (Case of 500),"kraft, paper",,,Kraft,Vented Lids fits,"26oz, 32oz",""
+SPC-26,26oz -32oz Plastic Vented Lids fits 26oz -32oz Recyclable (Case of 500),"pla, plastic",,,Plastic,Vented Lids fits,"26oz, 32oz",""
+SPC-26-KR-2,26oz Kraft Heavy Duty Soup Container Recyclable (Case of 500),"kraft, paper, pla, pp, plastic",,,Kraft,Heavy Duty Soup Container,"26oz, 32oz",""
+POT-2-3,2oz Bagasse Portion Pot Lid Recyclable/Compostable (Case of 200),"bagasse, pla, fibre",,,Bagasse,Portion Pot Lid,2oz,""
+POT-2-KR,2oz Kraft Paper Portion Pot Recyclable (Case of 3000),"kraft, paper",,,Kraft,Portion Pot,"",""
+POT-2-2,2oz Souffle Paper Portion Pot Recyclable/Compostable (Case of 5000),"paper, pla",,,Paper,Souffle Portion Pot,2oz,"Compostable, Biodegradable"
+POT-2,"2oz, 3oz, 4oz Paper Portion Pot Lid (62mm) Recyclable (Case of 1500)","kraft, paper",,,Paper,Portion Pot Lid,"",""
+POT-25-CL,3.25 oz Clear PP Portion Pot – Recyclable,pp,,Clear,,Portion Pot,25 oz,Recyclable
+POT-5-CL,3.25/4/5.5 oz Clear PET Portion Pot Lid,pet,,Clear,,3.25/4/ Portion Pot Lid,5 oz,Recyclable
+SPC-32-KR,32oz Kraft Heavy Duty Soup Container Recyclable (Case of 500),"kraft, paper, pla, pp, plastic",,,Kraft,Heavy Duty Soup Container,"32oz, 26oz",""
+POT-3-KR,3oz Kraft Paper Portion Pot Recyclable (Case of 3000),"kraft, paper",,,Kraft,Portion Pot,"",""
+POT-4-CL,4 oz Clear PP Portion Pot – Recyclable,pp,,Clear,,Portion Pot,4 oz,Recyclable
+POT-4-2,4oz Bagasse Portion Pot Lid Recyclable/Compostable (Case of 500),"bagasse, pla, fibre",,,Bagasse,Portion Pot Lid,4oz,""
+POT-4-KR,4oz Kraft Paper Portion Pot Recyclable (Case of 3000),"kraft, paper",,,Kraft,Portion Pot,"",""
+POT-4,4oz Souffle Paper Portion Pot Recyclable/Compostable (Case of 5000),"paper, pla",,,Paper,Souffle Portion Pot,4oz,"Compostable, Biodegradable"
+POT-5-CL-2,5.5 oz Clear PP Portion Pot – Recyclable,pp,,Clear,,Portion Pot,5 oz,Recyclable
+SPC-8,8oz -12oz Plastic Vented Lids fits 8oz -12oz Recyclable (Case of 500),"pla, plastic",,,Plastic,Vented Lids fits,"8oz, 12oz",""
+SPC-8-KR,8oz/12oz Kraft Heavy Duty Lid Recyclable Planetware (Case of 500),"kraft, paper, pp",,,Kraft,Heavy Duty Lid Planetware,"",""
+BWL-1300-KR,Extra Large Round Kraft Food Bowl 1300ml Recyclable (Case of 300),"kraft, pp",,,Kraft,Extra Large Round Food Bowl,"",""
+CNT-1000-KR,Kraft Food Tray 1000 ml – Recyclable PE-Lined,"kraft, pp",,,Kraft,Food Tray PE-Lined,1000 ml,Recyclable
+CNT-1000-KR-2,Kraft Food Tray 1000ml Stagione Recyclable (Case of 300),pp,,,Kraft,Food Tray Stagione,"",Recyclable
+CNT-150-KR,Kraft Food Tray 150ml Stagione Recyclable (Case of 500),pp,,,Kraft,Food Tray Stagione,"",Recyclable
+CNT-250-KR,Kraft Food Tray 250ml Stagione Recyclable (Case of 500),pp,,,Kraft,Food Tray Stagione,"",Recyclable
+CNT-500-KR-3,Kraft Food Tray 500ml Stagione Recyclable (Case of 300),pp,,,Kraft,Food Tray Stagione,"",Recyclable
+CNT-650-KR,Kraft Food Tray 650 ml – Recyclable PE-Lined,"kraft, pp",,,Kraft,Food Tray PE-Lined,650 ml,Recyclable
+CNT-650-KR-2,Kraft Food Tray 650ml Stagione Recyclable (Case of 300),pp,,,Kraft,Food Tray Stagione,"",Recyclable
+CNT-750-KR,Kraft Food Tray 750 ml – Recyclable PE-Lined,"kraft, pp",,,Kraft,Food Tray PE-Lined,750 ml,Recyclable
+CNT-750-KR-2,Kraft Food Tray 750ml Stagione Recyclable (Case of 300),pp,,,Kraft,Food Tray Stagione,"",Recyclable
+CNT-KR,Kraft PP Lined Lid Stagione Recyclable (Case of 300),pp,,,Kraft,Lined Lid Stagione,"",Recyclable
+CNT-500-KR-2,Kraft Rectangle Food Tray 500 ml – Recyclable PE-Lined,pp,,,Kraft,Rectangle Food Tray PE-Lined,"",Recyclable
+CNT-500-KR,"Kraft Salad Bowl Lid – Fits 500ml to 1,000ml Containers Recyclable",kraft,,,Kraft,"Salad Bowl Lid Fits to 1, Containers","500ml, 000ml",Recyclable
+BWL-1000-KR-3,Large Kraft Round Food Bowl 1000ml Recyclable (Case of 300) (149mm Diameter),"kraft, pla, pet, pp",,,Kraft,Large Round Food Bowl ( Diameter),1000ml,""
+FOL-7,No. 1 Aluminium Foil Food Containers Recyclable 250ml/8.7oz (Case of 1000),foil,,,Foil,No. 1 Aluminium Food Containers,33mm,""
+FOL-16,No. 2 Aluminium Foil Food Containers Recyclable 470ml/16oz (Case of 1000),foil,,,Foil,No. 2 Aluminium Food Containers,33mm,""
+FOL-30,No. 6 Aluminium Foil Food Containers Recyclable 860ml/30oz (Case of 500),foil,,,Foil,No. 6 Aluminium Food Containers,54mm,""
+FOL-24,No. 6a Aluminium Foil Food Containers Recyclable 700ml/24oz (Case of 500),foil,,,Foil,No. 6a Aluminium Food Containers,48mm,""
+FOL-RD-32,No.12 Round Aluminium Foil Food Containers Recyclable 920ml/32oz (Case of 400),foil,,,Foil,No.12 Round Aluminium Food Containers,44mm,""
+FOL-73,No.9 Deep Aluminium Foil Food Containers Recyclable 2100ml/73oz (Case of 200),foil,,,Foil,No.9 Deep Aluminium Food Containers,50mm,""
+FOL-52,No.9 Shallow Aluminium Foil Food Containers Recyclable 1500ml/52oz (Case of 200),foil,,,Foil,No.9 Shallow Aluminium Food Containers,38mm,""
+BWL-1000-KR,"PET Kraft Food Bowl Lids For 500, 750 1000ml Recyclable (Case of 300) (149mm Diameter)",pet,,,Kraft,"Food Bowl Lids For 500, 750 ( Diameter)","500ml, 750ml, 1000ml",Recyclable
+BOX-1200-KR,PLA Tuck Top Kraft Window Salad Box 1200ml Compostable (Case of 200),"kraft, pla",,,Kraft,Tuck Top Window Salad Box,1200ml,Compostable
+BOX-500-KR,PLA Tuck Top Kraft Window Salad Box 500ml Compostable (Case of 200),"kraft, pla",,,Kraft,Tuck Top Window Salad Box,500ml,Compostable
+BOX-700-KR,PLA Tuck Top Kraft Window Salad Box 700ml Compostable (Case of 200),"kraft, pla",,,Kraft,Tuck Top Window Salad Box,700ml,Compostable
+BOX-900-KR,PLA Tuck Top Kraft Window Salad Box 900ml Compostable (Case of 200),"kraft, pla",,,Kraft,Tuck Top Window Salad Box,900ml,Compostable
+BWL-1000-KR-2,"PP Kraft Food Bowl Lids For 500, 750 1000ml Recyclable (Case of 300) (149mm Diameter)",pp,,,Kraft,"Food Bowl Lids For 500, 750 ( Diameter)","500ml, 750ml, 1000ml",Recyclable
+CNT-TY-KR,PP Lid for Kraft Paperboard Food Trays – Recyclable,pp,,,Kraft,Lid for Paperboard Food Trays,"",Recyclable
+CNT,PP Lid Stagione Recyclable (Case of 300),pp,,,,Lid Stagione,"",Recyclable
+BWL-RD-KR-2,PP Lids For Extra Large Round Kraft Food Bowl Recyclable (Case of 300),pp,,,Kraft,Lids For Extra Large Round Food Bowl,1300ml,Recyclable
+BWL-168-KR,PP Lids For Large Kraft Round Food Bowl Recyclable (Case of 300) (168mm Diameter) (Dispo),pp,,,Kraft,Lids For Large Round Food Bowl ( Diameter) (Dispo),1090ml,Recyclable
+VEG-POT-5,Vegware 0.5oz PLA Cold Portion Pot Compostable,pp,Vegware,,PLA,Cold Portion Pot,"",""
+VEG-DEL-10,"Vegware 10oz PLA Bella pot, 96-Series Compostable",pla,Vegware,,PLA,"Bella pot, 96-Series",3oz,Compostable
+VEG-SPC-10,"Vegware 10oz Soup Container, 90 Series Compostable","",Vegware,,,"Soup Container, 90 Series","",""
+VEG-SPC-10-GN,"Vegware 10oz Soup Container, 90 Series Green Tree Compostable","",Vegware,,,"Soup Container, 90 Series Green Tree","",""
+VEG-SPC,Vegware 115-Series Flat Paper Hot Lid Compostable,"paper, pla",Vegware,,Paper,115-Series Flat Hot Lid,"",Compostable
+VEG-DEL-12,"Vegware 12oz PLA Bella pot, 96-Series Compostable",pla,Vegware,,PLA,"Bella pot, 96-Series",3oz,Compostable
+VEG-DEL-HG-12,Vegware 12oz PLA Hinged Lid Deli Container Compostable,"",Vegware,,PLA,Hinged Lid Deli Container,"",Compostable
+VEG-DEL-RD-12,Vegware 12oz PLA Round Deli Container Compostable,"",Vegware,,PLA,Round Deli Container,"",Compostable
+VEG-SPC-12,"Vegware 12oz Soup Container, 115 Series Compostable","",Vegware,,,"Soup Container, 115 Series","",""
+VEG-SPC-12-GN,"Vegware 12oz Soup Container, 115 Series Green Tree Compostable","",Vegware,,,"Soup Container, 115 Series Green Tree","",""
+VEG-CNT-SQ-16-KR,Vegware 16 oz / 500 ml Square Kraft Food Container (Case of 300),pla,Vegware,,Kraft,Square Food Container,"","Compostable, Recyclable"
+VEG-BWL-RD-16-BK,Vegware 16oz / 500ml Round Black Food Container Compostable,"",Vegware,Black,,Round Food Container,500ml,Compostable
+VEG-DEL-16,"Vegware 16oz PLA Bella pot, 96-Series Compostable",pla,Vegware,,PLA,"Bella pot, 96-Series",3oz,Compostable
+VEG-DEL-HG-16,Vegware 16oz PLA Hinged Lid Deli Container Compostable,"",Vegware,,PLA,Hinged Lid Deli Container,"",Compostable
+VEG-DEL-RD-16,Vegware 16oz PLA Round Deli Container Compostable,"",Vegware,,PLA,Round Deli Container,"",Compostable
+VEG-CNT-RC-16-BK,Vegware 16oz Rectangular Black Food Container Compostable,"",Vegware,Black,,Rectangular Food Container,"",Compostable
+VEG-SPC-16-2,"Vegware 16oz Soup Container, 115 Series Compostable","",Vegware,,,"Soup Container, 115 Series","",""
+VEG-SPC-16-GN,"Vegware 16oz Soup Container, 115 Series Green Tree Compostable","",Vegware,,,"Soup Container, 115 Series Green Tree","",""
+VEG-BWL-RD-16-KR,Vegware 16oz/500ml Round Kraft Food Container,"kraft, pla",Vegware,,Kraft,Round Food Container,16oz,Recyclable
+VEG-DEL-FL-32,Vegware 185-Series PLA flat lid (fits 24-32oz) Compostable,"paper, pla, pet, pp",Vegware,,PLA,185-Series flat lid,"",Compostable
+VEG-POT-1-KR-2,Vegware 1oz Kraft Paper Portion Pot Compostable,"kraft, paper, pla",Vegware,,Kraft,Portion Pot,1oz,Compostable
+VEG-POT-1-KR,Vegware 1oz Kraft Paper Portion Pot Lid Compostable,"kraft, paper, pla",Vegware,,Kraft,Portion Pot Lid,5oz,Compostable
+VEG-POT-1-3,Vegware 1oz PLA Cold Portion Pot Compostable,pp,Vegware,,PLA,Cold Portion Pot,"",""
+VEG-POT-5-KR-2,Vegware 2.5oz Kraft Paper Portion Pot Compostable,"kraft, paper, pla",Vegware,,Kraft,Portion Pot,5oz,Compostable
+VEG-POT-5-KR,Vegware 2.5oz Kraft Paper Portion Pot Lid Compostable,"kraft, paper, pla",Vegware,,Kraft,Portion Pot Lid,5oz,Compostable
+VEG-BOX-22,Vegware 22oz Medium Window Salad Box Compostable (Case of 300),"kraft, pla",Vegware,,,Medium Window Salad Box,"",Compostable
+VEG-CNT-SQ-24-KR,Vegware 24 oz / 750 ml Square Kraft Food Container (Case of 300),"kraft, pla, plastic",Vegware,,Kraft,Square Food Container,"",Compostable
+VEG-DEL-BW-24,"Vegware 24oz PLA food bowl, 185-Series Compostable","pla, pet, pp",Vegware,,PLA,"food bowl, 185-Series","",Compostable
+VEG-DEL-HG-24,Vegware 24oz PLA Hinged Lid Deli Container Compostable,"",Vegware,,PLA,Hinged Lid Deli Container,"",Compostable
+VEG-DEL-RD-24,Vegware 24oz PLA Round Deli Container Compostable,"",Vegware,,PLA,Round Deli Container,"",Compostable
+VEG-CNT-RC-24-BK,Vegware 24oz Rectangular Black Food Container Compostable,pla,Vegware,Black,,Rectangular Food Container,"",Compostable
+VEG-BWL-RD-24-BK,Vegware 24oz Round Black Food Container Compostable,"",Vegware,Black,,Round Food Container,"",Compostable
+VEG-SPC-24-GN,"Vegware 24oz Soup Container, 115 Series Green Tree Compostable","",Vegware,,,"Soup Container, 115 Series Green Tree","",""
+VEG-BWL-RD-24-KR,Vegware 24oz/750ml Round Kraft Food Container,"kraft, pla",Vegware,,Kraft,Round Food Container,24oz,Compostable
+VEG-BWL-BW-26-KR,"Vegware 26oz PLA-lined Kraft paper food bowl, 185 Series Compostable (Case of 300)","kraft, paper, pla, pet, pp",Vegware,,Kraft,"lined food bowl, 185 Series","",""
+VEG-BWL-BW-26,"Vegware 26oz PLA-Lined Paper Food Bowl, 185 Series Compostable","paper, pla, pet, pp",Vegware,,PLA,"Lined Food Bowl, 185 Series","",""
+VEG-POT-2-4,Vegware 2oz PLA Cold Portion Pot Compostable,pp,Vegware,,PLA,Cold Portion Pot,"",""
+VEG-BOX-32,Vegware 32oz Large Window Salad Box Compostable (Case of 300),"kraft, pla",Vegware,,,Large Window Salad Box,"",Compostable
+VEG-DEL-BW-32,"Vegware 32oz PLA food bowl, 185-Series Compostable","pla, pet, pp",Vegware,,PLA,"food bowl, 185-Series","",Compostable
+VEG-DEL-HG-32,Vegware 32oz PLA Hinged Lid Deli Container Compostable,"",Vegware,,PLA,Hinged Lid Deli Container,"",Compostable
+VEG-DEL-RD-32,Vegware 32oz PLA Round Deli Container Compostable,"",Vegware,,PLA,Round Deli Container,"",Compostable
+VEG-BWL-BW-32-KR,"Vegware 32oz PLA-lined Kraft paper food bowl, 185 Series Compostable (Case of 300)","kraft, paper, pla, pet, pp",Vegware,,Kraft,"lined food bowl, 185 Series","",""
+VEG-BWL-BW-32,"Vegware 32oz PLA-Lined Paper Food Bowl, 185 Series Compostable","paper, pla, pet, pp",Vegware,,PLA,"Lined Food Bowl, 185 Series","",""
+VEG-SPC-32,Vegware 32oz Soup Container 115 Series Compostable,"",Vegware,,,Soup Container 115 Series,"",""
+VEG-CNT-RC-34-KR,Vegware 34 oz Rectangular Kraft Food Container – Compostable,"kraft, pla",Vegware,,Kraft,Rectangular Food Container,34 oz,Compostable
+VEG-BWL-RD-34-KR,Vegware 34 oz Round Kraft Food Container (Case of 300),"kraft, pla",Vegware,,Kraft,Round Food Container,"",Compostable
+VEG-CNT-RC-34-BK,Vegware 34oz Rectangular Black Food Container Compostable,paper,Vegware,Black,,Rectangular Food Container,"",Compostable
+VEG-BWL-RD-34-BK,Vegware 34oz Round Black Food Container Compostable,kraft,Vegware,Black,,Round Food Container,"",Compostable
+VEG-POT-3,Vegware 3oz PLA Cold Portion Pot Compostable,pp,Vegware,,PLA,Cold Portion Pot,"",""
+VEG-DEL-HG-48,Vegware 48oz PLA Hinged Lid Deli Container Compostable,"",Vegware,,PLA,Hinged Lid Deli Container,"",Compostable
+VEG-BWL-BW-48-KR,"Vegware 48oz PLA-lined Kraft paper food bowl, 185 Series Compostable (Case of 300)","kraft, paper, pla, pet, pp",Vegware,,Kraft,"lined food bowl, 185 Series","",""
+VEG-BWL-BW-48,"Vegware 48oz PLA-Lined Paper Food Bowl, 185 Series Compostable","paper, pla, pet, pp",Vegware,,PLA,"Lined Food Bowl, 185 Series","",""
+VEG-POT-4-4,Vegware 4oz PLA Cold Portion Pot Compostable,pp,Vegware,,PLA,Cold Portion Pot,"",""
+VEG-SPC-6-2,"Vegware 6oz Soup Container, 90 Series Recyclable/Compostable","",Vegware,,,"Soup Container, 90 Series","",""
+VEG-DEL-8,"Vegware 8oz PLA Bella pot, 96-Series Compostable",pla,Vegware,,PLA,"Bella pot, 96-Series",3oz,Compostable
+VEG-DEL-HG-8,Vegware 8oz PLA Hinged Lid Deli Container Compostable,"",Vegware,,PLA,Hinged Lid Deli Container,"",Compostable
+VEG-DEL-RD-8,Vegware 8oz PLA Round Deli Container Compostable,"",Vegware,,PLA,Round Deli Container,"",Compostable
+VEG-SPC-8-2,"Vegware 8oz Soup Container, 90 Series Compostable","",Vegware,,,"Soup Container, 90 Series","",""
+VEG-SPC-8-GN,"Vegware 8oz Soup Container, 90 Series Green Tree Compostable","",Vegware,,,"Soup Container, 90 Series Green Tree","",""
+VEG-SPC-2,Vegware 90-Series Flat Paper Hot Lid Compostable,"paper, pla",Vegware,,Paper,90-Series Flat Hot Lid,"",Compostable
+VEG-SPC-5,Vegware Dome PLA Cold Lid (Fits 115 Series) Recyclable/Compostable,"pla, pp",Vegware,,PLA,Dome Cold Lid (Fits 115 Series),"",""
+VEG-SPC-6,Vegware Dome PLA Cold Lid (fits 90 Series) Recyclable/Compostable,pla,Vegware,,PLA,Dome Cold Lid (fits 90 Series),"",""
+VEG-SPC-7,Vegware Flat CPLA Opaque Hot Lid (Fits 115 Series) Recyclable/Compostable,"",Vegware,,CPLA,Flat Opaque Hot Lid (Fits 115 Series),"",""
+VEG-SPC-9,Vegware Flat CPLA Opaque Hot Lid (Fits 90 Series) Recyclable/Compostable,"",Vegware,,CPLA,Flat Opaque Hot Lid (Fits 90 Series),"",""
+VEG-SPC-4,Vegware Flat PLA Cold Lid (Fits 115 Series) Recyclable/Compostable,"",Vegware,,PLA,Flat Cold Lid (Fits 115 Series),"",""
+VEG-SPC-3,Vegware Flat PLA Cold Lid (Fits 90 Series) Compostable,"",Vegware,,PLA,Flat Cold Lid (Fits 90 Series),"",""
+VEG-BOX,Vegware Large Carry Pack Compostable (Case of 125),pla,Vegware,,,Large Carry Pack,"",Compostable
+VEG-BOX-5-4,Vegware No 2 Food Carton 19.5 x 14 x 5cm Compostable (Case of 200),"",Vegware,,,No 2 Food Carton,1500mm,""
+VEG-DEL-4-2,Vegware No 2 PLA Sushi Combo 17.5 x 12.5 x 4cm Compostable (Case of 300),pla,Vegware,,PLA,No 2 Sushi Combo,"",Compostable
+VEG-BOX-5-3,Vegware No 3 Food Carton 19.5 x 14 x 6.5cm Compostable (Case of 180),"",Vegware,,,No 3 Food Carton,1800ml,""
+VEG-DEL-4,Vegware No 4 PLA Sushi Combo 24.5 x 15 x 4cm Compostable (Case of 300),pla,Vegware,,PLA,No 4 Sushi Combo,"",Compostable
+VEG-BOX-5-2,Vegware No 5 Food Carton 15.2 x 12.1 x 5cm Compostable (Case of 150),"",Vegware,,,No 5 Food Carton,1050ml,""
+VEG-DEL-DL,"Vegware PLA Dome Lid, NO HOLE (Fits 96 Series) Compostable",pla,Vegware,,PLA,"Dome Lid, NO HOLE (Fits 96 Series)","",Compostable
+VEG-DEL-FL,"Vegware PLA Flat Lid, NO HOLE (Fits 96 Series) Compostable",pla,Vegware,,PLA,"Flat Lid, NO HOLE (Fits 96 Series)","",Compostable
+VEG-BWL-KR,"Vegware PLA Lined Kraft Paper Lid with Vents, 185 Series Compostable","kraft, paper, pla, pet, pp",Vegware,,Kraft,"Lined Lid with Vents, 185 Series","",Compostable
+VEG-BWL,"Vegware PLA Lined Paper Lid with Vents, 185 Series Compostable","paper, pla, pet, pp",Vegware,,PLA,"Lined Lid with Vents, 185 Series","",Compostable
+VEG-POT-1-2,Vegware PLA Portion Pot Lid (fits 0.5-1oz pot) Compostable,"",Vegware,,PLA,Portion Pot Lid (fits 0. pot),1oz,""
+VEG-POT-4-3,Vegware PLA Portion Pot Lid (fits 2-4oz pot) Compostable,"",Vegware,,PLA,Portion Pot Lid (fits pot),4oz,""
+VEG-DEL-RD-32-2,Vegware PLA Round Deli Outside-Fit Lid (Fits 8-32oz Deli) Compostable,"pla, plastic",Vegware,,PLA,Round Deli Outside-Fit Lid (Fits Deli),32oz,""
+VEG-CNT-RC-BK,Vegware Rectangular Black Paper Lid – Compostable,paper,Vegware,Black,Paper,Rectangular Lid,"",Compostable
+VEG-BWL-RD-BK,"Vegware Round Kraft Black Paper Lid, 150-Series Compostable","paper, pla",Vegware,Black,Kraft,"Round Lid, 150-Series","",Recyclable
+VEG-BWL-RD-KR,Vegware Round Kraft Paper Lid (Case of 300),"kraft, paper, pla, plastic",Vegware,,Kraft,Round Lid,"",Compostable
+VEG-CNT-SQ-KR,"Vegware Square Kraft Paper Lid – Food Container Lid, Compostable","kraft, paper, pp",Vegware,,Kraft,Square Lid Food Container Lid,"",Compostable
+VEG-BOX-2,Vegware Standard Carry Pack Compostable (Case of 125),pla,Vegware,,,Standard Carry Pack,"",Compostable
+IC-4-2,4oz Ice Cream Tub Domed rPET Lid (Case of 1000),"paper, rpet, pet",,,rPET,Ice Cream Tub Domed Lid,"4oz, 6oz, 8oz",""
+IC-4-3,4oz Ice Cream Tub Paper Lid Recyclable (Case of 500),"paper, rpet, pet",,,Paper,Ice Cream Tub Lid,"4oz, 6oz, 8oz",""
+IC-6-2,6oz Ice Cream Tub Domed rPET Lid Recyclable (Case of 1000),"paper, rpet, pet",,,rPET,Ice Cream Tub Domed Lid,"4oz, 6oz, 8oz",""
+IC-6-3,6oz Ice Cream Tub Paper Lid Recyclable (Case of 500),"paper, rpet, pet",,,Paper,Ice Cream Tub Lid,"4oz, 6oz, 8oz",""
+IC-8-2,8oz Ice Cream Tub Domed rPET Lid Recyclable (Case of 1000),"paper, rpet, pet",,,rPET,Ice Cream Tub Domed Lid,"4oz, 6oz, 8oz",""
+IC-8-3,8oz Ice Cream Tub Paper Lid Recyclable (Case of 500),"paper, rpet, pet",,,Paper,Ice Cream Tub Lid,"4oz, 6oz, 8oz",""
+IC-8,Knickerbocker Glory Dessert Cups – 231ml/8oz Recyclable Plastic Cup (Case of 1000),"pla, pet, plastic",,,Plastic,Knickerbocker Glory Dessert Cups Cup,231ml,Recyclable
+IC-5-OR,Orange Paper Ice Cream Tub (160ml/5oz) RECYCLABLE,paper,,Orange,Paper,Ice Cream Tub,"",""
+IC-5-PK,Pink Paper Ice Cream Tub (100ml/3.5oz) RECYCLABLE,"paper, pla",,Pink,Paper,Ice Cream Tub,"",""
+VEG-IC-3,Vegware 3oz Ice Cream Pot Compostable,pla,Vegware,,,Ice Cream Pot,3 oz,Compostable
+VEG-IC-4,Vegware 4oz Ice Cream Pot,"paper, pla",Vegware,,,Ice Cream Pot,4oz,Compostable
+VEG-IC-4-5,Vegware 4oz Soup/Gelato Pot Compostable,pla,Vegware,,,Soup/Gelato Pot,"",Compostable
+VEG-IC-6,Vegware 6 oz Ice Cream Pot (90‑Series) Compostable,pla,Vegware,,,Ice Cream Pot (90‑Series),6 oz,Compostable
+NAP-40-BL,40cm Navy Blue 8-Fold Tablin Pop-In Napkin – Compostable (Case of 500),"",,Blue,,Navy 8-Fold Tablin Pop-In Napkin,"",Compostable
+NAP-30-WH,Soft White Napkin 30cm 1-Ply – Recyclable,"paper, pp",,White,,Soft Napkin 1-Ply,30cm,"Recyclable, Biodegradable"
+VEG-NAP-24,Vegware 24cm 2-Ply Unbleached Napkin Compostable,fibre,Vegware,,,2-Ply Unbleached Napkin,"",""
+VEG-NAP-33-GN,Vegware 33cm 1-Ply Dispenser Napkin Green Tree Recyclable/Compostable (Case of 4000),fibre,Vegware,,,1-Ply Dispenser Napkin Green Tree,"",""
+VEG-NAP-33,Vegware 33cm 1-Ply Unbleached Dispenser Napkin (2 free dispensers) Compostable,"pp, cardboard, fibre",Vegware,,,1-Ply Unbleached Dispenser Napkin (2 free dispensers),"",""
+VEG-NAP-33-2,Vegware 33cm 2-Ply Unbleached Napkin Compostable,fibre,Vegware,,,2-Ply Unbleached Napkin,"",""
+VEG-NAP-33-WH,Vegware 33cm 2-Ply White Napkin Compostable,fibre,Vegware,White,,2-Ply Napkin,"",""
+VEG-NAP-40,Vegware 40cm 2-Ply Unbleached Napkin Compostable,fibre,Vegware,,,2-Ply Unbleached Napkin,"",""
+NAP-CK-24-WH,"White Premium Tablin Cocktail Napkins 24cm (Case of 2,400)","Airlaid, paper",,White,,Premium Tablin Cocktail Napkins,24cm,Recyclable
+BGT-RD-10,10″ Round 3-Compartment Bagasse Plate – Compostable Recyclable,"bagasse, pla, fibre",,,Bagasse,Round 3-Compartment Plate,10″,"Compostable, Recyclable"
+BGT-RD-7,7″ Round Bagasse Plate – Compostable Recyclable,"bagasse, pla, fibre",,,Bagasse,Round Plate,"7″, 180 mm","Compostable, Recyclable"
+PLF-RC,9.8” X 6” Palm Rectangle Plate Compostable (Case of 100),"",,,Palm Leaf,9.8” 6” Palm Rectangle Plate,"",""
+BGT-RD-9,9″ Round Bagasse Plate – Compostable Recyclable,"bagasse, pla, fibre",,,Bagasse,Round Plate,"9″, 225 mm","Compostable, Recyclable"
+PLT,Medium Platter Box with Insert Recyclable/Compostable (Case of 50),"kraft, pla",,,,Medium Platter Box with Insert,"",""
+PLF-OV,Palm leaf 10 x 6.5 in Oval Plate Compostable (Case of 100),"",,,Palm Leaf,Palm leaf Oval Plate,"",""
+PLF-RD-9,Palm Leaf 10in Round Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Plate,"",""
+PLF-SQ-6,Palm Leaf 10in Square Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Square Palm Plate,"",""
+PLF-RD-4,Palm Leaf 12in Round Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Plate,"",""
+PLF-RD-3,Palm Leaf 3 in Round Palm Bowl Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Bowl,"",""
+PLF-RC-2,Palm Leaf 6.5 x 4.5 in Rectangle Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Rectangle Plate,"",""
+PLF,Palm Leaf 6in Heart Palm Dish Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Heart Palm Dish,"",""
+PLF-RD-5,Palm Leaf 6in Round Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Plate,"",""
+PLF-SQ-2,Palm Leaf 6in Square Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Square Palm Plate,"",""
+PLF-RD,Palm Leaf 7 in Round Palm Bowl Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Bowl,"",""
+PLF-SQ,Palm Leaf 7 in Square Palm Bowl Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Square Palm Bowl,"",""
+PLF-RD-2,Palm Leaf 7.5 in Round Palm Salad Bowl Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Salad Bowl,"",""
+PLF-RD-6,Palm Leaf 7in Round Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Plate,"",""
+PLF-SQ-3,Palm Leaf 7in Square Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Square Palm Plate,"",""
+PLF-RD-7,Palm Leaf 8in Round Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Plate,"",""
+PLF-SQ-4,Palm Leaf 8in Square Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Square Palm Plate,"",""
+PLF-RD-8,Palm Leaf 9in Round Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Round Palm Plate,"",""
+PLF-SQ-5,Palm Leaf 9in Square Palm Plate Compostable (Case of 100),"",,,Palm Leaf,Palm Leaf Square Palm Plate,"",""
+VEG-BGT-PL,Vegware 10in Bagasse Plate Compostable,"bagasse, pla",Vegware,,Bagasse,Plate,10in,Compostable
+VEG-BGT-OV,Vegware 10in Oval Bagasse Plate Compostable,"bagasse, pla",Vegware,,Bagasse,Oval Plate,10in,Compostable
+VEG-BGT-SQ,Vegware 10in square Bagasse Plate Recyclable/Compostable,"paper, pla",Vegware,,Bagasse,square Plate,"",""
+VEG-BGT-RC,Vegware 10x5in rectangular Bagasse Plate Recyclable/Compostable,"paper, pla",Vegware,,Bagasse,rectangular Plate,"",""
+VEG-BGT-BW-12-2,Vegware 12oz Tall Bagasse Bowl Recyclable/Compostable,paper,Vegware,,Bagasse,Tall Bowl,"",""
+VEG-BGT-BW-12,Vegware 12oz Wide Bagasse Bowl Recyclable/Compostable,"paper, pla",Vegware,,Bagasse,Wide Bowl,"",""
+VEG-BGT-BW-14,Vegware 14oz Wide Bagasse Bowl Recyclable/Compostable,"paper, pla",Vegware,,Bagasse,Wide Bowl,"",""
+VEG-BGT-PL-4,Vegware 6in Bagasse Plate Compostable,"bagasse, pla",Vegware,,Bagasse,Plate,6in,Compostable
+VEG-BGT-SQ-3,Vegware 6in square Bagasse Plate Recyclable/Compostable,"paper, pla",Vegware,,Bagasse,square Plate,"",""
+VEG-BGT-PL-3,Vegware 7in Bagasse Plate Compostable,"paper, pla",Vegware,,Bagasse,Plate,"",""
+VEG-BGT-PL-RD-2,Vegware 7in Source-Reduced Bagasse Plate Compostable,"bagasse, pla",Vegware,,Bagasse,Source-Reduced Plate,7in,Compostable
+VEG-BGT-SQ-2,Vegware 8in square Bagasse Plate Recyclable/Compostable,"paper, pla",Vegware,,Bagasse,square Plate,"",""
+VEG-BGT-PL-2,Vegware 9in Bagasse Plate Compostable,"bagasse, pla",Vegware,,Bagasse,Plate,9in,Compostable
+VEG-BGT-PL-RD,Vegware 9in Source-Reduced Bagasse Plate Recyclable/Compostable,"bagasse, paper, pla",Vegware,,Bagasse,Source-Reduced Plate,"",""
+VEG-PLT-4,Vegware Large platter box and insert Compostable (Case of 25),"kraft, pla",Vegware,,,Large platter box and insert,"",""
+VEG-PLT-2,Vegware Platter Box Eighth Insert Compostable (Case of 50),pla,Vegware,,,Platter Box Eighth Insert,"",""
+VEG-PLT-5,Vegware Platter Box Half Insert Compostable (Case of 50),pla,Vegware,,,Platter Box Half Insert,"",""
+VEG-PLT-3,Vegware Platter Box Quarter Insert Compostable (Case of 50),pla,Vegware,,,Platter Box Quarter Insert,"",""
+VEG-PLT-6,Vegware Regular platter box Compostable (Case of 50),pla,Vegware,,,Regular platter box,2cm,""
+STR-12-WH,12 mm Red/White Angle-Cut Paper Straws (Case of 3000),paper,,White,Paper,Red/ Angle-Cut Straws,12 mm,"Compostable, Recyclable"
+STR-CK-6-BK,Black Paper Cocktail Straw 6mm x 140mm – Recyclable Food-Safe,paper,,Black,Paper,Cocktail Straw Food-Safe,"6mm, 140mm",Recyclable
+STR-6-BK-2,Black/White Paper Straw 6mm x 200mm – Recyclable Food-Safe,"paper, pp",,White,Paper,Black/ Straw Food-Safe,"6mm, 200mm, 6 mm",Recyclable
+STR-6-WH,Blue/White Paper Straw 6mm x 200mm – Recyclable Food-Safe,"paper, pp",,White,Paper,Blue/ Straw Food-Safe,"6mm, 200mm, 6 mm",Recyclable
+STR-10,Bright Colour Paper Straw 10mm x 200mm – Recyclable Food-Safe,"paper, pp",,,Paper,Bright Colour Straw Food-Safe,"10mm, 200mm, 10 mm",Recyclable
+STR-6-WH-3,Green/White Paper Straw 6mm x 200mm – Recyclable Food-Safe,"paper, pp",,White,Paper,Green/ Straw Food-Safe,"6mm, 200mm, 6 mm",Recyclable
+STR-8-WH-2,Jumbo White 8mm Paper Straw Wrapped 7.8 – Compostable Recyclable,"paper, pp",,White,Paper,Jumbo Straw Wrapped 7.8,8mm,"Compostable, Recyclable"
+STR-SP-8-WH,Red/White Paper Spoon Straw 8mm x 200mm – Recyclable Food-Safe,paper,,White,Paper,Red/ Spoon Straw Food-Safe,"",Compostable
+STR-6-WH-2,Red/White Paper Straw 6mm x 200mm – Recyclable Food-Safe,"paper, pp",,White,Paper,Red/ Straw Food-Safe,"6mm, 200mm, 6 mm",Recyclable
+VEG-STR-9-GN,Vegware Bubble Tea Green Stripe 12 mm Paper Straw 9″ – Compostable,"paper, pla, pp, plastic",Vegware,,Paper,Bubble Tea Green Stripe Straw,"12 mm, 9″","Compostable, Recyclable"
+VEG-STR-CK-6-BK-2,"Vegware Cocktail Black 6mm Paper Straw, 5.5in Recyclable/Compostable","paper, pla, pp",Vegware,Black,Paper,Cocktail Straw,6mm,Compostable
+VEG-STR-6-BK-3,"Vegware Highball Black 6mm Paper Straw, 7.8in Recyclable/Compostable","paper, pla, pp",Vegware,Black,Paper,Highball Straw,6mm,Compostable
+VEG-STR-10-GN,"Vegware Jumbissimo Green Stripe 10mm Paper Straw, 7.8in Recyclable/Compostable","paper, pla",Vegware,,Paper,Jumbissimo Green Stripe Straw,10mm,Compostable
+VEG-STR-8-GN,"Vegware Jumbo Green Stripe 8mm Paper Straw, 7.8in Recyclable/Compostable (Case of 3000)","paper, pla",Vegware,,Paper,Jumbo Green Stripe Straw,8mm,Compostable
+VEG-STR-6-GN,"Vegware Standard Green Stripe 6mm Paper Straw, 7.8in Recyclable/Compostable","paper, pla, pp",Vegware,,Paper,Standard Green Stripe Straw,6mm,Compostable
+STR-CK-6-WH,White Paper Cocktail Straw 6mm x 140mm – Recyclable Food-Safe,paper,,White,Paper,Cocktail Straw Food-Safe,"6mm, 140mm",Recyclable
+STR-10-WH,White Paper Straw 10mm x 200mm – Recyclable Food-Safe,"paper, pp",,White,Paper,Straw Food-Safe,"10mm, 200mm, 10 mm",Recyclable
+STR-200-WH,White Paper Straws Individually Wrapped – 200 mm × 8 mm,"paper, pp",,White,Paper,Straws Individually Wrapped ×,"",Compostable
+PIZ-KR,10in Brown Kraft Pizza Box Recyclable/Compostable (Case of 75),"",,Brown,Kraft,Pizza Box,"",""
+FNC-4,4oz Leakproof Recyclable Paper Pots with lids (Case of 250),"kraft, paper",,,Paper,Leakproof Pots with lids,"",Recyclable
+PIZ-BG-5-BK,5″ x 5″ Black Folded Board Burger Tray – Recyclable,"",,Black,,Folded Board Burger Tray,5″,Recyclable
+FNC-7,7oz Leakproof Recyclable Paper Pots with lids (Case of 250),paper,,,Paper,Leakproof Pots with lids,"",Recyclable
+MFB-BG-BK-2,Black Kraft Burger Box – Case of 200 Recyclable,"kraft, pp",,Black,Kraft,Burger Box,"",Recyclable
+MFB-BG-BK,Black Kraft Burger Chip Box Recyclable,"",,Black,Kraft,Burger Chip Box,"",Recyclable
+MFB-BG-KR,Kraft Burger Box Recyclable,"kraft, pp",,,Kraft,Burger Box,"",Recyclable
+MFB-BG-KR-2,Kraft Burger Chip Box Recyclable,kraft,,,Kraft,Burger Chip Box,"",Recyclable
+PIZ-TY-BK,Large Black Folded Board Tray – Recyclable,pp,,Black,,Large Folded Board Tray,"",Recyclable
+FNC,Large Fish ‘n’ Chips Recyclable Paper Bag (Case of 250),"kraft, paper",,,Paper,Large Fish ‘n’ Chips Bag,"",Recyclable
+FNC-3,Large Fish and Chips Takeaway Box (Case of 100),"",,,,Large Fish and Chips Takeaway Box,"",Recyclable
+PIZ-TY-KR,Large Kraft Folded Board Tray – Recyclable,"",,,Kraft,Large Folded Board Tray,"",Recyclable
+PIZ-TY-BK-2,Medium Black Folded Board Meal Tray – Recyclable,pp,,Black,,Medium Folded Board Meal Tray,"",Recyclable
+FNC-2,Medium Fish and Chips Recyclable Paper Bag (Case of 250),"kraft, paper",,,Paper,Medium Fish and Chips Bag,"",Recyclable
+FNC-5,Medium Fish and Chips Recyclable Takeaway Box (Case of 100),cardboard,,,,Medium Fish and Chips Takeaway Box,"",Recyclable
+PIZ-TY,Pizza Slice Tray Compostable (Case of 1000),"",,,,Pizza Slice Tray,"",""
+PIZ-BG-2,Premium burger box 5in Recyclable/Compostable (Case of 100),"kraft, pla",,,,Premium burger box,"",""
+PIZ-BG,Premium burger meal box 9 x 5in Recyclable/Compostable (Case of 100),pla,,,,Premium burger meal box,"",Compostable
+PIZ-TY-BK-3,Small Black Folded Board Tray – Recyclable,"",,Black,,Small Folded Board Tray,"",Recyclable
+FNC-6,Small Fish and Chips Recyclable Takeaway Box (Case of 100),cardboard,,,,Small Fish and Chips Takeaway Box,"",Recyclable
+PIZ-TY-KR-2,Small Kraft Folded Board Tray – Recyclable,kraft,,,Kraft,Small Folded Board Tray,"",Recyclable
+VEG-MFB-HG-4,Vegware 5 x 3in Microflute Hinged Window Hot Box – Compostable,"",Vegware,,,Microflute Hinged Window Hot Box,3in,Compostable
+VEG-MFB-HG-5,Vegware 6 x 4in Microflute Hinged Hot Box – Compostable,"",Vegware,,,Microflute Hinged Hot Box,4in,Compostable
+VEG-MFB-HG-3,Vegware 6 x 4in Microflute Hinged Window Hot Box – Compostable,"",Vegware,,,Microflute Hinged Window Hot Box,4in,Compostable
+VEG-MFB-TY-2,Vegware 6 x 6in Microflute Food Tray – Compostable,"",Vegware,,,Microflute Food Tray,6in,Compostable
+VEG-MFB-HG-6,Vegware 6 x 6in Microflute Hinged Hot Box – Compostable,"",Vegware,,,Microflute Hinged Hot Box,6in,Compostable
+VEG-MFB-HG-2,Vegware 6 x 6in Microflute Hinged Window Hot Box – Compostable,"",Vegware,,,Microflute Hinged Window Hot Box,6in,Compostable
+VEG-MFB-HG-7,Vegware 8 x 5in Microflute Hinged Hot Box – Compostable,"",Vegware,,,Microflute Hinged Hot Box,5in,Compostable
+VEG-MFB-HG,Vegware 8 x 5in Microflute Hinged Window Hot Box – Compostable,"",Vegware,,,Microflute Hinged Window Hot Box,5in,Compostable
+VEG-MFB-TY,Vegware 8 x 6in Microflute Food Tray – Compostable,"",Vegware,,,Microflute Food Tray,6in,Compostable
+PIZ-WH,White Paperboard Crepe Cone Recyclable/Compostable (Case of 1000),"paper, cardboard",,White,,Paperboard Crepe Cone,148 mm,Recyclable
+PFC,1000cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),"pla, polypropylene, plastic",,,Plastic,1000cc Microwaveable Container with Lids,"",""
+PFC-4,500cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),"pla, polypropylene, plastic",,,Plastic,500cc Microwaveable Container with Lids,"",""
+SUN-LB-50-RD,50mm Removable Use First Red Labels,pp,,Red,,Removable Use First Labels,50mm,""
+PFC-3,650cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),"pla, polypropylene, plastic",,,Plastic,650cc Microwaveable Container with Lids,"",""
+HCX-ST,7.5in Wooden Stirrer Recyclable/Compostable,"wood, wooden",,,Wood,Stirrer,"",""
+PFC-2,750cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),"pla, polypropylene, plastic",,,Plastic,750cc Microwaveable Container with Lids,"",""
+SUN-LB-50,Allergen Contents Label 50mm (Pack of 500),"",,,,Allergen Contents Label,"",""
+SUN-LB-95,Allergen Contents Label Date Prep Info 60x95mm (Pack of 500),"",,,,Allergen Contents Label Date Prep Info,"",""
+GP-250-BK,Black Gingham Printed Paper Sheets – 250mm x 200mm Food Safe Recyclable,"paper, pp",,Black,Paper,Gingham Printed Sheets,"250mm, 200mm",Recyclable
+SUN-BL,Blue Centrefeed Roll 2 Ply (Case of 6),"",,Blue,,ntrefeed Roll 2 Ply,"",""
+GP-250-BL,Blue Gingham Printed Paper Sheets – 250mm x 200mm Food Safe Recyclable,"paper, pp",,Blue,Paper,Gingham Printed Sheets,"250mm, 200mm",Recyclable
+GP-375-BL,Blue Gingham Printed Paper Sheets – 375mm x 250mm Food Safe Recyclable,"paper, pp",,Blue,Paper,Gingham Printed Sheets,"375mm, 250mm",Recyclable
+GP-BG-320-BL,Blue Printed Burger Wraps 250x320mm Food Safe Recyclable,pp,,Blue,,Printed Burger Wraps,"250mm, 200mm",Recyclable
+GP-375,Bon Appétit Printed Greaseproof Paper Sheets – 375mm x 245mm Food Safe Recyclable,"paper, pp",,,Paper,Bon Appétit Printed Greaseproof Sheets,"375mm, 245mm",Recyclable
+SUN-RD-19,Day Food Rotation Labels Complete Set 7 Days 19mm Round (7 rolls of 1000),"pp, cardboard",,,,Day Food Rotation Labels Complete Set 7 Days Round (7 rolls of 1000),"",""
+SUN-RD-20-3,Day Food Rotation Labels Round 20mm Friday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Friday (Roll of 1000),"",""
+SUN-RD-20-7,Day Food Rotation Labels Round 20mm Monday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Monday (Roll of 1000),"",""
+SUN-RD-20-2,Day Food Rotation Labels Round 20mm Saturday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Saturday (Roll of 1000),"",""
+SUN-RD-20,Day Food Rotation Labels Round 20mm Sunday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Sunday (Roll of 1000),"",""
+SUN-RD-20-4,Day Food Rotation Labels Round 20mm Thursday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Thursday (Roll of 1000),"",""
+SUN-RD-20-6,Day Food Rotation Labels Round 20mm Tuesday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Tuesday (Roll of 1000),"",""
+SUN-RD-20-5,Day Food Rotation Labels Round 20mm Wednesday (Roll of 1000),"pp, cardboard",,,,Day Food Rotation Labels Round Wednesday (Roll of 1000),"",""
+GP-375-2,Gourmet Grilled Printed Greaseproof Paper Sheets – 375mm x 245mm Food Safe Recyclable,"paper, pp",,,Paper,Gourmet Grilled Printed Greaseproof Sheets,"375mm, 245mm",Recyclable
+GP-BG-320-GN,Green Printed Burger Wraps 250x320mm Food Safe Recyclable,pp,,,,Green Printed Burger Wraps,"250mm, 200mm",Recyclable
+GP-350,Honeycomb Foil-Backed Deli Wrap Sheets – 267 x 350mm (Food Safe Insulating),foil,,,Foil,Honeycomb -Backed Deli Wrap Sheets ( Insulating),350mm,""
+GP-400,Honeycomb Foil-Backed Deli Wrap Sheets – 350x400mm (Food Safe Insulating),foil,,,Foil,Honeycomb -Backed Deli Wrap Sheets ( Insulating),400mm,""
+SAN-TY-KR,Kraft Baguette Tray Compostable (Case of 500),"kraft, pla",,,Kraft,Baguette Tray,"",Compostable
+SAN-6-KR,Kraft Bloomer Bag 6″ x 3″ x 9″ – NatureFlex Window,kraft,,,Kraft,Bloomer Bag NatureFlex Window,"6″, 3″, 9″",Compostable
+SAN-SW-KR,Kraft Sandwich Card Recyclable/Compostable 5 x 5in (Case of 500),"kraft, pla, pp",,,Kraft,Sandwich Card,"",Compostable
+SUN-CL,Large Clear Food Handling Gloves Recyclable (Case of 1000),pp,,Clear,,Large Food Handling Gloves,"",""
+FOL-5,Lids for No. 1 Container Recyclable (Case of 1000),foil,,,,Lids for No. 1 Container,121mm,""
+FOL-RD,Lids for No. 12 Container Round Recyclable (Case of 400),foil,,,,Lids for No. 12 Container Round,179mm,""
+FOL-4,Lids for No. 2 Container Recyclable (Case of 1000),foil,,,,Lids for No. 2 Container,121mm,""
+FOL-2,Lids for No. 6 Container Recyclable (Case of 500),foil,,,,Lids for No. 6 Container,213mm,""
+FOL-3,Lids for No. 6A Container Recyclable (Case of 500),foil,,,,Lids for No. 6A Container,5mm,""
+FOL,Lids for No. 9 Container Recyclable (Case of 200),foil,,,,Lids for No. 9 Container,237mm,""
+SAN-TR,Long Tortilla Bag with Film – Recyclable Wrap Packaging,pla,,,,Long Tortilla Bag with Film Wrap Packaging,"",Recyclable
+SUN-CL-2,Medium Clear Food Handling Gloves Recyclable (Case of 1000),pp,,Clear,,Medium Food Handling Gloves,"",""
+GP-375-4,Newspaper Printed Greaseproof Paper Sheets – 375mm x 245mm Food Safe Recyclable,"paper, pp",,,Paper,Newspaper Printed Greaseproof Sheets,"375mm, 245mm",Recyclable
+GP-BG-320-OR,Orange Printed Burger Wraps 250x320mm Food Safe Recyclable,pp,,Orange,,Printed Burger Wraps,"250mm, 200mm",Recyclable
+GP-250-RD,Red Gingham Printed Paper Sheets – 250mm x 200mm Food Safe Recyclable,"paper, pp",,Red,Paper,Gingham Printed Sheets,"250mm, 200mm",Recyclable
+GP-375-RD,Red Gingham Printed Paper Sheets – 375mm x 250mm Food Safe Recyclable,"paper, pp",,Red,Paper,Gingham Printed Sheets,"375mm, 250mm",Recyclable
+GP-BG-320-RD,Red Printed Burger Wraps 250x320mm Food Safe Recyclable,pp,,Red,,Printed Burger Wraps,"250mm, 200mm",Recyclable
+SUN,Release Agent Spray PR100,"",,,,Release Agent Spray PR100,600ml,""
+SUN-LB-65-RD,Removable Food Rotation Labels Red Day Label 50x65mm (Roll of 500),"",,Red,,Removable Food Rotation Labels Day Label (Roll of 500),"",""
+SAN-SW,Sandwich Bag with Film – Recyclable Packaging for Wraps Rolls,pla,,,,Sandwich Bag with Film Packaging for Wraps Rolls,"",Recyclable
+SUN-LB-100,Shelf Life Labels 50x100mm (Pack of 500),"pla, pp",,,,Shelf Life Labels,"",""
+SAN,Small Hot Pillow Pack (Case of 250),"",,,,Small Hot Pillow Pack,44 mm,""
+SUN-SQ-25,Square 7 Day Food Rotation Labels 25mm Mon Sun (7 x Rolls of 1000),"",,,,Square 7 Day Food Rotation Labels Mon Sun ( Rolls of 1000),"",""
+SUN-SQ-25-4,Square Day Food Rotation Labels 25mm Friday (Roll of 1000),"pla, plastic",,,,Square Day Food Rotation Labels Friday (Roll of 1000),"",""
+SUN-SQ-25-8,Square Day Food Rotation Labels 25mm Monday (Roll of 1000),"pla, plastic",,,,Square Day Food Rotation Labels Monday (Roll of 1000),"",""
+SUN-SQ-25-3,Square Day Food Rotation Labels 25mm Saturday (Roll of 1000),"pla, plastic",,,,Square Day Food Rotation Labels Saturday (Roll of 1000),"",""
+SUN-SQ-25-2,Square Day Food Rotation Labels 25mm Sunday (Roll of 1000),"pla, plastic",,,,Square Day Food Rotation Labels Sunday (Roll of 1000),"",""
+SUN-SQ-25-5,Square Day Food Rotation Labels 25mm Thursday (Roll of 1000,"pla, plastic",,,,Square Day Food Rotation Labels Thursday (Roll of 1000,"",""
+SUN-SQ-25-7,Square Day Food Rotation Labels 25mm Tuesday (Roll of 1000),"pla, plastic",,,,Square Day Food Rotation Labels Tuesday (Roll of 1000),"",""
+SUN-SQ-25-6,Square Day Food Rotation Labels 25mm Wednesday (Roll of 1000),"pla, plastic",,,,Square Day Food Rotation Labels Wednesday (Roll of 1000),"",""
+GP-250,Steak House Printed Greaseproof Paper Sheets – 250mm x 350mm Food Safe Recyclable,"paper, pp",,,Paper,Steak House Printed Greaseproof Sheets,"250mm, 350mm",Recyclable
+SUN-80,Thermal Till Rolls 80mm x 76mm (Pack of 20),paper,,,,Thermal Till Rolls,"80mm, 76mm",""
+SUN-57,Thermal Till/PDQ Roll 57mm x 30mm Chip N Pin (Pack of 20),"paper, pla",,,,Thermal Till/PDQ Roll Chip N Pin,5mm,""
+SUN-57-2,Thermal Till/PDQ Roll 57mm x 38mm Chip N Pin (Pack of 20),"paper, pla",,,,Thermal Till/PDQ Roll Chip N Pin,5mm,""
+VEG-SUN-8,Vegware 10L Completely Compostable Liner,"pla, plastic",Vegware,,,10L Completely Liner,"",Compostable
+VEG-SUN-3,Vegware 140L Completely Compostable Liner,"pla, plastic",Vegware,,,140L Completely Liner,"",Compostable
+VEG-SAN-CP,Vegware 2-compartment PLA Sandwich Sofa Compostable (Case of 250),pla,Vegware,,PLA,2-compartment Sandwich Sofa,"",Compostable
+VEG-HCX-CR-5,Vegware 2-Cup Handled Carrier Recyclable/Compostable (Case of 250),"pla, pulp",Vegware,,,2-Cup Handled Carrier,"",Recyclable
+VEG-SUN-2,Vegware 240L Completely Compostable Liner,"pla, plastic",Vegware,,,240L Completely Liner,"",Compostable
+VEG-SUN-7,Vegware 25L Completely Compostable Liner,"pla, plastic",Vegware,,,25L Completely Liner,"",Compostable
+VEG-GP-275-2,Vegware 300 x 275mm Unbleached Greaseproof Sheet Compostable (Case of 500),"paper, pla, pp",Vegware,,,Unbleached Greaseproof Sheet,"",Compostable
+VEG-GP-400-CL,Vegware 300 x 400mm Clear PLA Sheet Compostable (Case of 1000),"pla, pp",Vegware,Clear,PLA,Sheet,"",Compostable
+VEG-SUN-6,Vegware 30L Completely Compostable Liner,"pla, plastic",Vegware,,,30L Completely Liner,"",Compostable
+VEG-GP-225,Vegware 350 x 225mm Greaseproof Sheet Compostable (Case of 1920),"paper, pla, pp",Vegware,,,Greaseproof Sheet,"",Compostable
+VEG-GP-225-GN,Vegware 350 x 225mm Greaseproof Sheet Green Tree Compostable (Case of 1000),"paper, pla, pp",Vegware,,,Greaseproof Sheet Green Tree,"",Compostable
+VEG-GP-275,Vegware 380 x 275mm Unbleached Greaseproof Sheet Compostable (Case of 500),"paper, pla, pet, pp, plastic",Vegware,,,Unbleached Greaseproof Sheet,"",Compostable
+VEG-HCX-CR-4,Vegware 4-Cup Handled Carrier Recyclable/Compostable (Case of 200),"pla, pulp",Vegware,,,4-Cup Handled Carrier,"",Recyclable
+VEG-GP-300-WH,Vegware 400 x 300mm White Greaseproof Sheet Bakery Compostable (Case of 1000),paper,Vegware,White,,Greaseproof Sheet Bakery,"",""
+VEG-GP-300-WH-2,Vegware 400 x 300mm White Greaseproof Sheet Grill Compostable (Case of 1000),paper,Vegware,White,,Greaseproof Sheet Grill,"",""
+VEG-GP-350-GN,Vegware 430 x 350mm Greaseproof Green Tree Compostable (Case of 960),"paper, pla, pp",Vegware,,,Greaseproof Green Tree,"",Compostable
+VEG-GP-350-2,Vegware 430 x 350mm Greaseproof Sheet Compostable (Case of 960),"paper, pla, pp",Vegware,,,Greaseproof Sheet,"",Compostable
+VEG-SUN-RD-45-2,Vegware 45mm Round Compostable Sticker (Case of 1000),"",Vegware,,,Round Sticker,"",Compostable
+VEG-SUN-RD-45-GN,Vegware 45mm Round Sticker Green Tree Compostable (Roll of 1000),"",Vegware,,,Round Sticker Green Tree (Roll of 1000),"",Compostable
+VEG-SUN-RD-45,"Vegware 45mm Round Write-On Compostable Sticker (Case of 1,000)","",Vegware,,,Round Write-On Sticker,"",Compostable
+VEG-HCX-ST-2,Vegware 5.5in Wooden Stirrer Recyclable/Compostable,"wood, wooden",Vegware,,Wood,Stirrer,12oz,""
+VEG-SUN-5,Vegware 70L Completely Compostable Liner,"pla, plastic",Vegware,,,70L Completely Liner,"",Compostable
+VEG-SUN-4,Vegware 80L Completely Compostable Liner,"pla, plastic",Vegware,,,80L Completely Liner,"",Compostable
+VEG-SUN-9,Vegware 8L Completely Compostable Liner,"",Vegware,,,8L Completely Liner,"",Compostable
+VEG-SAN-SW-KR-2,Vegware Bloomer Sandwich Kraft Carton Compostable (Case of 500),"kraft, paper, pla",Vegware,,Kraft,Bloomer Sandwich Carton,"",Compostable
+VEG-GP-BG-330-GN,Vegware Burger Wrap (258 x 330mm) Green Tree Compostable (Case of 960),"paper, pla, pp, plastic",Vegware,,,Burger Wrap Green Tree,"",Compostable
+VEG-GP-BG-330,Vegware Burger Wrap 258 x 330mm Compostable (Case of 960),"paper, pla, pp",Vegware,,,Burger Wrap,"",Compostable
+VEG-SAN-SW-75-KR,Vegware Deep Fill 75mm Kraft Sandwich Wedge Compostable (Case of 500),"kraft, paper, pla",Vegware,,Kraft,Deep Fill Sandwich Wedge,"",Compostable
+VEG-HCX-BR,"Vegware Fairtrade Brown Sugar Sticks, Compostable Wrap (Case of 1000)","paper, pla, pp",Vegware,Brown,,"Fairtrade Sugar Sticks, Wrap","","Compostable, Recyclable"
+VEG-HCX-WH,"Vegware Fairtrade White Sugar Sticks, Compostable Wrap Recyclable/Compostable (Case of 1,000)","paper, pla, pp",Vegware,White,,"Fairtrade Sugar Sticks, Wrap","","Compostable, Recyclable"
+VEG-HCX-SV,Vegware Large sleeve fits 89 series cup Compostable (Case of 2000),kraft,Vegware,,,Large sleeve fits 89 series cup,16oz,Recyclable
+VEG-SUN-CR,Vegware Medium Compostable Carrier (Case of 500),"pla, pp, plastic",Vegware,,,Medium Carrier,"",Compostable
+VEG-HCX-SV-2,Vegware Small Sleeve Fits 79 Series Cup Recyclable/Compostable (Case of 1000),"kraft, pla",Vegware,,,Small Sleeve Fits 79 Series Cup,"",Recyclable
+VEG-HCX-CR,Vegware Splittable card cup carrier Compostable/Recyclable (Case of 130),"kraft, pla, pp",Vegware,,,Splittable card cup carrier,"",Compostable
+VEG-SAN-SW-65-KR,Vegware Standard 65mm Kraft Sandwich Wedge Compostable (Case of 500),"kraft, paper, pla",Vegware,,Kraft,Standard Sandwich Wedge,65mm,Compostable
+VEG-HCX-NT,"Vegware Stevia Natural Sweetener Sticks, Compostable Wrap (Case of 1000)","paper, pla",Vegware,,,"Stevia Natural Sweetener Sticks, Wrap","","Compostable, Recyclable"
+VEG-SAN-TR-KR,Vegware Tortilla / Wrap Kraft Carton Compostable (Case of 500),"kraft, pla, pp",Vegware,,Kraft,Tortilla / Wrap Carton,"",Compostable
+GP-BG-320-YL,Yellow Printed Burger Wraps 250x320mm Food Safe Recyclable,pp,,,,Yellow Printed Burger Wraps,"250mm, 200mm",Recyclable
+GP-375-3,Yum Yum Printed Greaseproof Paper Sheets – 375mm x 245mm Food Safe Recyclable,"paper, pp",,,Paper,Yum Yum Printed Greaseproof Sheets,"375mm, 245mm",Recyclable

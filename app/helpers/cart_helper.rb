@@ -12,7 +12,7 @@ module CartHelper
   # Generate quantity options for standard (pack-priced) products
   # Returns array of [label, value] pairs for options_for_select
   def standard_quantity_options_for_select(cart_item)
-    pac_size = cart_item.product.pac_size || 1
+    pac_size = cart_item.pac_size || 1
     pack_options = (1..10).to_a + [ 30, 40, 50, 60 ]
 
     # Include current quantity if it's not in the standard options

@@ -220,6 +220,7 @@ module Admin
         :featured,
         :sample_eligible,
         :name,
+        :brand,
         :size,
         :colour,
         :material,

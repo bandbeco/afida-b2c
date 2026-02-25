@@ -1,4 +1,6 @@
-<%# Quick Add Form - Simple form for adding product to cart %>
+<%# Quick Add Form - Supports both simple products and pricing tier products %>
+
+<% has_tiers = product.pricing_tiers.present? %>
 
 <%= form_with url: cart_cart_items_path,
               method: :post,
@@ -11,32 +13,117 @@
   <%# Hidden field for product SKU %>
   <%= hidden_field_tag "cart_item[sku]", product.sku %>
 
-  <%# Quantity selector - Show multiples of pack size %>
-  <% pac_size = product.pac_size || 1 %>
-  <div class="form-control">
-    <label class="label">
-      <span class="label-text font-semibold">Select quantity:</span>
-      <span class="label-text-alt text-sm text-base-content/60">
-        Pack size: <%= number_with_delimiter(pac_size) %> units
+  <% if has_tiers %>
+    <%# === Pricing Tier Mode === %>
+    <div data-controller="pricing-tier"
+         data-pricing-tier-tiers-value="<%= product.pricing_tiers.to_json %>"
+         data-pricing-tier-default-price-value="<%= product.price.to_f %>"
+         data-pricing-tier-default-pac-size-value="<%= product.pac_size || 1 %>"
+         class="space-y-4">
+
+      <%# Tier selection cards %>
+      <div>
+        <label class="label">
+          <span class="label-text font-semibold">Select option:</span>
+        </label>
+        <div class="flex flex-col gap-2" role="listbox" aria-label="Select pack size">
+          <% product.pricing_tiers.each do |tier| %>
+            <div class="border border-gray-200 bg-white rounded-lg px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[1fr_auto] gap-3 items-center"
+                 data-pricing-tier-target="tierCard"
+                 data-tier-price="<%= tier["price"] %>"
+                 data-tier-quantity="<%= tier["quantity"] %>"
+                 data-action="click->pricing-tier#selectTier keydown->pricing-tier#handleCardKeydown"
+                 role="option"
+                 aria-selected="false"
+                 tabindex="0">
+              <span class="font-medium text-sm">
+                <%= tier["quantity"] >= 100 ? "Case" : "Pack" %> of <%= number_with_delimiter(tier["quantity"]) %>
+              </span>
+              <span class="font-semibold">
+                <%= number_to_currency(tier["price"].to_f) %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# Quantity (how many of selected tier) %>
+      <div>
+        <label class="label">
+          <span class="label-text font-semibold">Quantity:</span>
+          <span class="label-text-alt text-sm text-base-content/60" data-pricing-tier-target="unitsDisplay"></span>
+        </label>
+        <div class="flex items-center gap-3">
+          <div class="join">
+            <button type="button"
+                    class="join-item btn btn-sm btn-outline"
+                    data-action="click->pricing-tier#decrement"
+                    aria-label="Decrease quantity">-</button>
+            <input type="number"
+                   value="1"
+                   min="1"
+                   max="999"
+                   class="join-item input input-sm input-bordered w-16 text-center"
+                   data-pricing-tier-target="input"
+                   data-action="change->pricing-tier#updateTotal"
+                   aria-label="Quantity">
+            <button type="button"
+                    class="join-item btn btn-sm btn-outline"
+                    data-action="click->pricing-tier#increment"
+                    aria-label="Increase quantity">+</button>
+          </div>
+        </div>
+      </div>
+
+      <%# Total display %>
+      <div class="flex justify-between items-center py-3 px-4 bg-base-200 rounded-lg">
+        <span class="font-medium">Total:</span>
+        <span class="font-semibold text-lg" data-pricing-tier-target="totalDisplay">
+          From <%= number_to_currency(product.pricing_tiers.first["price"].to_f) %>
+        </span>
+      </div>
+
+      <%# Hidden form fields synced by pricing-tier controller %>
+      <input type="hidden" name="cart_item[quantity]" data-pricing-tier-target="quantityInput" value="1">
+      <input type="hidden" name="cart_item[tier_price]" data-pricing-tier-target="priceInput" value="">
+      <input type="hidden" name="cart_item[tier_pac_size]" data-pricing-tier-target="pacSizeInput" value="">
+
+      <%# Submit %>
+      <button type="submit"
+              class="btn btn-primary w-full"
+              data-pricing-tier-target="addToCartButton"
+              disabled>
+        Add to Cart
+      </button>
+    </div>
+
+  <% else %>
+    <%# === Simple Mode (no tiers) === %>
+    <% pac_size = product.pac_size || 1 %>
+    <div class="form-control">
+      <label class="label">
+        <span class="label-text font-semibold">Select quantity:</span>
+        <span class="label-text-alt text-sm text-base-content/60">
+          Pack size: <%= number_with_delimiter(pac_size) %> units
+        </span>
+      </label>
+      <%= select_tag "cart_item[quantity]",
+                     options_for_select((1..10).map { |num_packs|
+                       total_units = num_packs * pac_size
+                       ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
+                     }, 1),
+                     class: "select select-bordered w-full" %>
+    </div>
+
+    <%# Price display %>
+    <div class="flex justify-between items-center py-3 px-4 bg-base-200 rounded-lg">
+      <span class="font-medium">Price:</span>
+      <span class="font-semibold text-lg">
+        <%= number_to_currency(product.price) %>
       </span>
-    </label>
-    <%# Value is number of packs, display shows "X packs (Y units)" %>
-    <%= select_tag "cart_item[quantity]",
-                   options_for_select((1..10).map { |num_packs|
-                     total_units = num_packs * pac_size
-                     ["#{num_packs} #{num_packs == 1 ? 'pack' : 'packs'} (#{number_with_delimiter(total_units)} units)", num_packs]
-                   }, 1),
-                   class: "select select-bordered w-full" %>
-  </div>
+    </div>
 
-  <%# Price display %>
-  <div class="flex justify-between items-center py-3 px-4 bg-base-200 rounded-lg">
-    <span class="font-medium">Price:</span>
-    <span class="font-semibold text-lg">
-      <%= number_to_currency(product.price) %>
-    </span>
-  </div>
-
-  <%# Submit button %>
-  <%= f.submit "Add to Cart", class: "btn btn-primary w-full mt-4" %>
+    <%# Submit button %>
+    <%= f.submit "Add to Cart", class: "btn btn-primary w-full mt-4" %>
+  <% end %>
 <% end %>
