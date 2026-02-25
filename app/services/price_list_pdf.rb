@@ -77,13 +77,28 @@ class PriceListPdf < Prawn::Document
     ]
 
     @products.each do |product|
-      table_data << [
-        product.generated_title,
-        product.sku,
-        number_with_delimiter(product.pac_size || 1),
-        number_to_currency(product.price),
-        number_to_currency(product.unit_price, precision: 4)
-      ]
+      if product.pricing_tiers.present?
+        product.pricing_tiers.each do |tier|
+          tier_qty = tier["quantity"]
+          tier_price = tier["price"].to_f
+          label = tier_qty >= 100 ? "Case" : "Pack"
+          table_data << [
+            "#{product.generated_title} (#{label} of #{number_with_delimiter(tier_qty)})",
+            product.sku,
+            number_with_delimiter(tier_qty),
+            number_to_currency(tier_price),
+            number_to_currency(tier_price / tier_qty, precision: 4)
+          ]
+        end
+      else
+        table_data << [
+          product.generated_title,
+          product.sku,
+          number_with_delimiter(product.pac_size || 1),
+          number_to_currency(product.price),
+          number_to_currency(product.unit_price, precision: 4)
+        ]
+      end
     end
 
     # A4 landscape with 30pt margins = 841.89 - 60 = ~781 available width

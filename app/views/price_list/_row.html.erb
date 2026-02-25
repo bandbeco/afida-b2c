@@ -1,28 +1,68 @@
-<tr class="hover" id="<%= dom_id(product) %>">
-  <td>
-    <%= link_to product_path(product), class: "link link-hover", data: { turbo_frame: "_top" } do %>
-      <span><%= product.generated_title %></span>
-    <% end %>
-  </td>
-  <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= product.sku %></td>
-  <td class="text-right hidden md:table-cell"><%= number_with_delimiter(product.pac_size || 1) %></td>
-  <td class="text-right"><%= number_to_currency(product.price) %></td>
-  <td class="text-right hidden lg:table-cell text-gray-500">
-    <%= number_to_currency(product.unit_price, precision: 4) %>
-  </td>
-  <td class="text-center">
-    <%= form_with url: cart_cart_items_path,
-        method: :post,
-        data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
-      <%= f.hidden_field :cart_item, value: product.sku, name: "cart_item[sku]" %>
-      <%= f.select :quantity,
-          options_for_select(price_list_quantity_options, 1),
-          {},
-          { name: "cart_item[quantity]", class: "select select-bordered select-xs w-16" } %>
-      <button type="submit" class="btn btn-primary btn-xs ml-1">
-        Add
-      </button>
-    <% end %>
-  </td>
-  <td></td>
-</tr>
+<% if product.pricing_tiers.present? %>
+  <% product.pricing_tiers.each_with_index do |tier, i| %>
+    <% tier_qty = tier["quantity"] %>
+    <% tier_price = tier["price"].to_f %>
+    <% tier_unit_price = tier_price / tier_qty %>
+    <% label = tier_qty >= 100 ? "Case" : "Pack" %>
+    <tr class="hover" id="<%= dom_id(product) %>_tier_<%= tier_qty %>">
+      <td>
+        <%= link_to product_path(product), class: "link link-hover", data: { turbo_frame: "_top" } do %>
+          <span><%= product.generated_title %></span>
+        <% end %>
+        <span class="text-xs text-gray-500 ml-1">(<%= label %> of <%= number_with_delimiter(tier_qty) %>)</span>
+      </td>
+      <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= product.sku %></td>
+      <td class="text-right hidden md:table-cell"><%= number_with_delimiter(tier_qty) %></td>
+      <td class="text-right"><%= number_to_currency(tier_price) %></td>
+      <td class="text-right hidden lg:table-cell text-gray-500">
+        <%= number_to_currency(tier_unit_price, precision: 4) %>
+      </td>
+      <td class="text-center">
+        <%= form_with url: cart_cart_items_path,
+            method: :post,
+            data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
+          <%= f.hidden_field :cart_item, value: product.sku, name: "cart_item[sku]" %>
+          <%= hidden_field_tag "cart_item[tier_price]", tier_price %>
+          <%= hidden_field_tag "cart_item[tier_pac_size]", tier_qty %>
+          <%= f.select :quantity,
+              options_for_select(price_list_quantity_options, 1),
+              {},
+              { name: "cart_item[quantity]", class: "select select-bordered select-xs w-16" } %>
+          <button type="submit" class="btn btn-primary btn-xs ml-1">
+            Add
+          </button>
+        <% end %>
+      </td>
+      <td></td>
+    </tr>
+  <% end %>
+<% else %>
+  <tr class="hover" id="<%= dom_id(product) %>">
+    <td>
+      <%= link_to product_path(product), class: "link link-hover", data: { turbo_frame: "_top" } do %>
+        <span><%= product.generated_title %></span>
+      <% end %>
+    </td>
+    <td class="hidden md:table-cell text-gray-500 font-mono text-xs"><%= product.sku %></td>
+    <td class="text-right hidden md:table-cell"><%= number_with_delimiter(product.pac_size || 1) %></td>
+    <td class="text-right"><%= number_to_currency(product.price) %></td>
+    <td class="text-right hidden lg:table-cell text-gray-500">
+      <%= number_to_currency(product.unit_price, precision: 4) %>
+    </td>
+    <td class="text-center">
+      <%= form_with url: cart_cart_items_path,
+          method: :post,
+          data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open" } do |f| %>
+        <%= f.hidden_field :cart_item, value: product.sku, name: "cart_item[sku]" %>
+        <%= f.select :quantity,
+            options_for_select(price_list_quantity_options, 1),
+            {},
+            { name: "cart_item[quantity]", class: "select select-bordered select-xs w-16" } %>
+        <button type="submit" class="btn btn-primary btn-xs ml-1">
+          Add
+        </button>
+      <% end %>
+    </td>
+    <td></td>
+  </tr>
+<% end %>
