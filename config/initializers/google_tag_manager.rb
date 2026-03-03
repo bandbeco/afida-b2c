@@ -11,4 +11,6 @@
 # In development, you can optionally test with your container by adding
 # to .env or exporting the variable
 
-Rails.application.config.x.gtm_container_id = "GTM-NCN4DWXN"
+Rails.application.config.x.gtm_container_id = if Rails.env.production?
+  "GTM-NCN4DWXN"
+end
