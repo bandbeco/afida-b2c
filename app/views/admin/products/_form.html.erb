@@ -101,6 +101,38 @@
 
   <div class="divider my-8"></div>
 
+  <%# Pricing Section %>
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend text-2xl font-medium">Pricing</legend>
+
+    <div class="grid grid-cols-2 gap-y-4 py-4">
+      <%= form.label :price, "Price (£)", class: "label text-base" %>
+      <%= form.number_field :price, class: "input w-full", step: 0.01, min: 0.01, placeholder: "e.g. 29.99" %>
+
+      <%= form.label :pac_size, "Pack Size", class: "label text-base" %>
+      <%= form.number_field :pac_size, class: "input w-full", step: 1, min: 1, placeholder: "e.g. 50" %>
+    </div>
+
+    <%# Pricing Tiers %>
+    <div class="mt-4" data-controller="pricing-tiers-form"
+         data-pricing-tiers-form-tiers-value="<%= (product.pricing_tiers || []).to_json %>">
+      <h3 class="text-lg font-medium mb-2">Volume Pricing Tiers</h3>
+      <p class="text-sm text-base-content/60 mb-3">Set quantity-based pricing. Each tier defines a quantity and its price.</p>
+
+      <%= form.hidden_field :pricing_tiers_json, value: (product.pricing_tiers || []).to_json,
+                            data: { pricing_tiers_form_target: "hiddenInput" } %>
+
+      <div data-pricing-tiers-form-target="container"></div>
+
+      <button type="button" class="btn btn-outline btn-sm mt-2"
+              data-action="pricing-tiers-form#add">
+        + Add Tier
+      </button>
+    </div>
+  </fieldset>
+
+  <div class="divider my-8"></div>
+
   <%# Details Section - Always Visible %>
   <fieldset class="fieldset">
     <legend class="fieldset-legend text-2xl font-medium">Details</legend>

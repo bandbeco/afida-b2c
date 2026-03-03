@@ -62,7 +62,8 @@ const lazyControllers = {
   "discount-signup": () => import("../javascript/controllers/discount_signup_controller"),
   "mega-menu": () => import("../javascript/controllers/mega_menu_controller"),
   "color-picker": () => import("../javascript/controllers/color_picker_controller"),
-  "sticky-atc": () => import("../javascript/controllers/sticky_atc_controller")
+  "sticky-atc": () => import("../javascript/controllers/sticky_atc_controller"),
+  "pricing-tiers-form": () => import("../javascript/controllers/pricing_tiers_form_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM

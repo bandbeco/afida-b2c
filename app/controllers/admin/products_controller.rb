@@ -215,7 +215,7 @@ module Admin
 
     # Only allow a list of trusted parameters through.
     def product_params
-      params.expect(product: [
+      permitted = params.expect(product: [
         :active,
         :featured,
         :sample_eligible,
@@ -239,15 +239,23 @@ module Admin
         :meta_image,
         :pac_size,
         :price,
-        :stock_quantity,
         :length_in_mm,
         :height_in_mm,
         :width_in_mm,
         :depth_in_mm,
         :weight_in_g,
         :volume_in_ml,
-        :diameter_in_mm
+        :diameter_in_mm,
+        :pricing_tiers_json
       ])
+
+      if permitted[:pricing_tiers_json].present?
+        permitted[:pricing_tiers] = JSON.parse(permitted.delete(:pricing_tiers_json))
+      else
+        permitted.delete(:pricing_tiers_json)
+      end
+
+      permitted
     end
   end
 end
