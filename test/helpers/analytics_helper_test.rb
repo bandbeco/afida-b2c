@@ -99,6 +99,30 @@ class AnalyticsHelperTest < ActionView::TestCase
     Rails.application.config.x.gtm_container_id = nil
   end
 
+  test "ecommerce_purchase_event includes coupon and discount when discount applied" do
+    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
+    @order.update!(discount_amount: 3.57, discount_code: "WELCOME5")
+
+    result = ecommerce_purchase_event(@order)
+
+    assert_includes result, '"coupon":"WELCOME5"'
+    assert_includes result, '"discount":3.57'
+
+    Rails.application.config.x.gtm_container_id = nil
+  end
+
+  test "ecommerce_purchase_event excludes coupon and discount when no discount" do
+    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
+    @order.update!(discount_amount: 0, discount_code: nil)
+
+    result = ecommerce_purchase_event(@order)
+
+    refute_includes result, '"coupon"'
+    refute_includes result, '"discount"'
+
+    Rails.application.config.x.gtm_container_id = nil
+  end
+
   test "ga4_cart_items_json returns valid JSON" do
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
 

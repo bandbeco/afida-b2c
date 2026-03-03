@@ -186,16 +186,23 @@ module AnalyticsHelper
 
     items = order.order_items.includes(:product).map { |item| ga4_order_item(item) }
 
+    ecommerce = {
+      transaction_id: order.order_number,
+      value: order.total_amount.to_f,
+      tax: order.vat_amount.to_f,
+      shipping: order.shipping_amount.to_f,
+      currency: CURRENCY,
+      items: items
+    }
+
+    if order.discount_amount > 0
+      ecommerce[:coupon] = order.discount_code if order.discount_code.present?
+      ecommerce[:discount] = order.discount_amount.to_f
+    end
+
     event_data = {
       event: "purchase",
-      ecommerce: {
-        transaction_id: order.order_number,
-        value: order.total_amount.to_f,
-        tax: order.vat_amount.to_f,
-        shipping: order.shipping_amount.to_f,
-        currency: CURRENCY,
-        items: items
-      }
+      ecommerce: ecommerce
     }
 
     ecommerce_push(event_data)

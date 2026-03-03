@@ -181,6 +181,27 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal first_tracked_at, @order_one.ga4_purchase_tracked_at
   end
 
+  test "confirmation page shows discount line item when discount was applied" do
+    @order_one.update!(discount_amount: 3.57, discount_code: "WELCOME5")
+
+    sign_in @user_one
+    get confirmation_order_url(@order_one)
+
+    assert_response :success
+    assert_match "Discount (WELCOME5)", response.body
+    assert_match "-£3.57", response.body
+  end
+
+  test "confirmation page hides discount row when no discount was applied" do
+    @order_one.update!(discount_amount: 0, discount_code: nil)
+
+    sign_in @user_one
+    get confirmation_order_url(@order_one)
+
+    assert_response :success
+    refute_match(/Discount/, response.body)
+  end
+
   test "confirmation page denied without authorization" do
     get confirmation_order_url(@guest_order)
     assert_redirected_to root_path
