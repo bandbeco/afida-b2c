@@ -131,6 +131,10 @@ module Webhooks
       # Send confirmation email
       OrderMailer.with(order: order).confirmation_email.deliver_later
 
+      # Track purchase server-side via GA4 Measurement Protocol
+      # This ensures the purchase is recorded even if the client-side event never fires
+      Ga4MeasurementProtocolService.track_purchase(order)
+
       Rails.logger.info("[Stripe Webhook] Order #{order.id} created successfully")
 
       # Emit checkout.completed event for Datafast conversion tracking

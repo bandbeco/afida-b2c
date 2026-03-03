@@ -170,6 +170,31 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================================
+  # GA4 MEASUREMENT PROTOCOL TRACKING
+  # ============================================================================
+
+  test "calls GA4 Measurement Protocol tracking after creating order from webhook" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_ga4_tracking",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    Ga4MeasurementProtocolService.expects(:track_purchase).once.with { |order| order.is_a?(Order) }
+
+    post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+
+    assert_response :ok
+  end
+
+  # ============================================================================
   # DISCOUNT / STRIPE-SOURCED TOTALS TESTS
   # ============================================================================
 
