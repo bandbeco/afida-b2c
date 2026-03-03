@@ -61,7 +61,8 @@ const lazyControllers = {
   "delivery-countdown": () => import("../javascript/controllers/delivery_countdown_controller"),
   "discount-signup": () => import("../javascript/controllers/discount_signup_controller"),
   "mega-menu": () => import("../javascript/controllers/mega_menu_controller"),
-  "color-picker": () => import("../javascript/controllers/color_picker_controller")
+  "color-picker": () => import("../javascript/controllers/color_picker_controller"),
+  "sticky-atc": () => import("../javascript/controllers/sticky_atc_controller")
 }
 
 // Lazy load controllers when their elements appear in DOM

@@ -117,12 +117,12 @@
         <% has_tiers = @product.pricing_tiers.present? %>
         <div class="lg:w-1/2 text-center lg:text-left"
              <% if has_tiers %>
-               data-controller="pricing-tier"
+               data-controller="pricing-tier sticky-atc"
                data-pricing-tier-tiers-value="<%= @product.pricing_tiers.to_json %>"
                data-pricing-tier-default-price-value="<%= @product.price.to_f %>"
                data-pricing-tier-default-pac-size-value="<%= @product.pac_size || 1 %>"
              <% else %>
-               data-controller="quantity-selector"
+               data-controller="quantity-selector sticky-atc"
                data-quantity-selector-price-value="<%= @product.price.to_f %>"
                data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>"
              <% end %>>
@@ -368,6 +368,7 @@
           <%# Add to Cart Form %>
           <%= form_with url: cart_cart_items_path,
                         method: :post,
+                        id: "add-to-cart-form",
                         data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", turbo: true },
                         class: "mt-4" do |f| %>
             <%= hidden_field_tag "cart_item[sku]", @product.sku %>
@@ -386,6 +387,7 @@
                      value="" />
               <button type="submit" class="btn btn-primary btn-lg w-full"
                       data-pricing-tier-target="addToCartButton"
+                      data-sticky-atc-target="mainButton"
                       disabled>
                 Add to Cart
               </button>
@@ -394,7 +396,8 @@
                      name="cart_item[quantity]"
                      data-quantity-selector-target="quantityInput"
                      value="1" />
-              <button type="submit" class="btn btn-primary btn-lg w-full">
+              <button type="submit" class="btn btn-primary btn-lg w-full"
+                      data-sticky-atc-target="mainButton">
                 Add to Cart
               </button>
             <% end %>
@@ -406,6 +409,28 @@
             </svg>
             Free delivery over £100
           </p>
+
+          <%# Sticky Add-to-Cart Bar (mobile only) %>
+          <div data-sticky-atc-target="stickyBar"
+               class="fixed bottom-0 inset-x-0 bg-base-100 border-t border-base-300 px-4 py-3 md:hidden z-40 translate-y-full transition-transform duration-300 ease-in-out">
+            <div class="flex items-center gap-3 max-w-lg mx-auto">
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-sm truncate"><%= @product.generated_title %></p>
+                <p class="text-sm text-base-content/70">
+                  <% if has_tiers %>
+                    From <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
+                  <% elsif @product.pac_size && @product.pac_size > 1 %>
+                    <%= number_to_currency(@product.price) %> / pack of <%= number_with_delimiter(@product.pac_size) %>
+                  <% else %>
+                    <%= number_to_currency(@product.price) %>
+                  <% end %>
+                </p>
+              </div>
+              <button type="submit" form="add-to-cart-form" class="btn btn-primary btn-sm flex-shrink-0">
+                Add to Cart
+              </button>
+            </div>
+          </div>
 
         </div>
       </div>
