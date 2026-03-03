@@ -78,22 +78,13 @@ module Webhooks
       cart_id = full_session.metadata&.cart_id
       cart = Cart.find_by(id: cart_id) if cart_id.present?
 
-      # Calculate amounts - prefer cart data if available, fall back to Stripe line items
-      if cart&.cart_items&.any?
-        subtotal = cart.subtotal_amount
-        vat_amount = cart.vat_amount
-      else
-        # Fallback: Calculate from Stripe line items
-        line_items = full_session.line_items.data
-        # Stripe line item amount_total includes tax, so we need to subtract it
-        tax_amount_from_stripe = full_session.total_details&.amount_tax.to_i / 100.0
-        subtotal = (line_items.sum { |item| item.amount_total } / 100.0) - tax_amount_from_stripe
-        vat_amount = tax_amount_from_stripe
-      end
-
-      # Get shipping amount from Stripe
-      shipping_amount = full_session.shipping_cost&.amount_total.to_i / 100.0
-      total_amount = subtotal + vat_amount + shipping_amount
+      # Use Stripe session amounts as source of truth (handles discounts correctly)
+      subtotal = full_session.amount_subtotal / 100.0
+      vat_amount = (full_session.total_details&.amount_tax || 0) / 100.0
+      discount_amount = (full_session.total_details&.amount_discount || 0) / 100.0
+      shipping_amount = (full_session.shipping_cost&.amount_total || 0) / 100.0
+      total_amount = full_session.amount_total / 100.0
+      discount_code = full_session.metadata&.discount_code
 
       order = Order.create!(
         user: user,
@@ -106,6 +97,8 @@ module Webhooks
         vat_amount: vat_amount,
         shipping_amount: shipping_amount,
         total_amount: total_amount,
+        discount_amount: discount_amount,
+        discount_code: discount_code.presence,
         shipping_name: shipping[:name],
         shipping_address_line1: shipping[:line1],
         shipping_address_line2: shipping[:line2],

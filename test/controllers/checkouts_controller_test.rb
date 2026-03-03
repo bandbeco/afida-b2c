@@ -207,19 +207,24 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "GB", order.shipping_country
   end
 
-  test "success calculates order totals from cart and Stripe session" do
+  test "success calculates order totals from Stripe session amounts" do
     session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
-      shipping_amount_total: 500 # £5.00 in pence
+      amount_subtotal: 2000,      # £20.00
+      amount_tax: 400,            # £4.00
+      shipping_amount_total: 500, # £5.00
+      amount_total: 2900          # £29.00
     )
 
-    get success_checkout_path, params: { session_id: session.id }
+    assert_difference "Order.count", 1 do
+      get success_checkout_path, params: { session_id: session.id }
+    end
 
     order = Order.last
-    assert_equal @cart.subtotal_amount, order.subtotal_amount
-    assert_equal @cart.vat_amount, order.vat_amount
-    assert_equal 5.0, order.shipping_amount
-    assert_equal @cart.subtotal_amount + @cart.vat_amount + 5.0, order.total_amount
+    assert_equal 20.0, order.subtotal_amount.to_f
+    assert_equal 4.0, order.vat_amount.to_f
+    assert_equal 5.0, order.shipping_amount.to_f
+    assert_equal 29.0, order.total_amount.to_f
   end
 
   test "success creates order items from cart items" do
@@ -355,6 +360,76 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     order = Order.last
     assert_nil order.user
     assert_equal "guest@example.com", order.email
+  end
+
+  # ============================================================================
+  # DISCOUNT / STRIPE-SOURCED TOTALS TESTS
+  # ============================================================================
+
+  test "success uses Stripe session amounts as source of truth for order totals" do
+    # Cart has subtotal £20 (2 items × £10), but Stripe session reflects
+    # a discount: subtotal £19 (post-discount), tax £3.80, shipping £5, total £27.80
+    session = build_stripe_session(
+      id: "sess_discount_test",
+      payment_status: "paid",
+      customer_email: "buyer@example.com",
+      amount_subtotal: 1900,    # £19.00 post-discount
+      amount_tax: 380,          # £3.80
+      shipping_amount_total: 500, # £5.00
+      amount_total: 2780,       # £27.80
+      amount_discount: 100      # £1.00 discount
+    )
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    order = Order.last
+    # Order should use Stripe amounts, NOT cart-calculated amounts
+    assert_equal 19.0, order.subtotal_amount.to_f
+    assert_equal 3.80, order.vat_amount.to_f
+    assert_equal 5.0, order.shipping_amount.to_f
+    assert_equal 27.80, order.total_amount.to_f
+    assert_equal 1.0, order.discount_amount.to_f
+  end
+
+  test "success stores discount code on order when discount was applied" do
+    session = build_stripe_session(
+      id: "sess_discount_code_test",
+      payment_status: "paid",
+      customer_email: "buyer@example.com",
+      amount_subtotal: 1900,
+      amount_tax: 380,
+      shipping_amount_total: 500,
+      amount_total: 2780,
+      amount_discount: 100,
+      metadata: { discount_code: "WELCOME5" }
+    )
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    order = Order.last
+    assert_equal "WELCOME5", order.discount_code
+  end
+
+  test "success sets zero discount when no discount applied" do
+    session = build_stripe_session(
+      id: "sess_no_discount_test",
+      payment_status: "paid",
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2000,
+      amount_tax: 400,
+      shipping_amount_total: 500,
+      amount_total: 2900,
+      amount_discount: 0
+    )
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    order = Order.last
+    assert_equal 0.0, order.discount_amount.to_f
+    assert_nil order.discount_code
   end
 
   # ============================================================================

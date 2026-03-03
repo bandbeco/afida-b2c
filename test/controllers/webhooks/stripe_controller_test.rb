@@ -170,6 +170,43 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================================
+  # DISCOUNT / STRIPE-SOURCED TOTALS TESTS
+  # ============================================================================
+
+  test "creates order with Stripe-sourced amounts including discount" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 2, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_webhook_discount",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s, discount_code: "WELCOME5" },
+      amount_subtotal: 1900,
+      amount_tax: 380,
+      shipping_amount_total: 500,
+      amount_total: 2780,
+      amount_discount: 100
+    )
+
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    order = Order.find_by(stripe_session_id: "sess_webhook_discount")
+    assert_equal 19.0, order.subtotal_amount.to_f
+    assert_equal 3.80, order.vat_amount.to_f
+    assert_equal 5.0, order.shipping_amount.to_f
+    assert_equal 27.80, order.total_amount.to_f
+    assert_equal 1.0, order.discount_amount.to_f
+    assert_equal "WELCOME5", order.discount_code
+  end
+
+  # ============================================================================
   # STRUCTURED EVENT EMISSION TESTS (User Story 1: Debug Silent Failures)
   # ============================================================================
 

@@ -77,6 +77,7 @@ class CheckoutsController < ApplicationController
         cancel_url: cancel_checkout_url,
         metadata: {
           cart_id: cart.id.to_s,
+          discount_code: session[:discount_code],
           datafast_visitor_id: cookies[:datafast_visitor_id],
           datafast_session_id: cookies[:datafast_session_id]
         }
@@ -237,18 +238,16 @@ class CheckoutsController < ApplicationController
 
   def create_order_from_stripe_session(stripe_session, cart)
     customer_details = stripe_session.customer_details
-    # Calculate totals from cart
-    subtotal = cart.subtotal_amount
-    vat_amount = cart.vat_amount
 
-    # Get shipping cost from Stripe session
-    shipping_cost = if stripe_session.shipping_cost
-      (stripe_session.shipping_cost.amount_total / 100.0).round(2)
-    else
-      0.0
-    end
+    # Use Stripe session amounts as source of truth (handles discounts correctly)
+    subtotal = stripe_session.amount_subtotal / 100.0
+    vat_amount = (stripe_session.total_details&.amount_tax || 0) / 100.0
+    discount_amount = (stripe_session.total_details&.amount_discount || 0) / 100.0
+    shipping_cost = (stripe_session.shipping_cost&.amount_total || 0) / 100.0
+    total_amount = stripe_session.amount_total / 100.0
 
-    total_amount = subtotal + vat_amount + shipping_cost
+    # Extract discount code from metadata (stored during checkout creation)
+    discount_code = stripe_session.metadata&.discount_code
 
     # Extract shipping address details
     shipping_address = extract_shipping_address(stripe_session)
@@ -272,6 +271,8 @@ class CheckoutsController < ApplicationController
       vat_amount: vat_amount,
       shipping_amount: shipping_cost,
       total_amount: total_amount,
+      discount_amount: discount_amount,
+      discount_code: discount_code.presence,
       shipping_name: shipping_address[:name],
       shipping_address_line1: shipping_address[:line1],
       shipping_address_line2: shipping_address[:line2],

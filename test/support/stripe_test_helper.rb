@@ -78,18 +78,21 @@ module StripeTestHelper
       setup_intent = stub(id: "seti_test_#{SecureRandom.hex(12)}", payment_method: payment_method)
     end
 
-    # Build total_details for tax information
+    # Build total_details for tax and discount information
     tax_amount = overrides[:amount_tax] || 0
+    discount_amount = overrides[:amount_discount] || 0
     total_details = stub(
-      amount_tax: tax_amount
+      amount_tax: tax_amount,
+      amount_discount: discount_amount
     )
 
     # Build line_items response (for webhook expansion)
     line_items_data = overrides[:line_items_data] || []
     line_items = stub(data: line_items_data)
 
-    # Calculate amount_total
-    amount_total = overrides[:amount_total] || ((overrides[:subtotal] || 0) + tax_amount + shipping_amount)
+    # Calculate amount_subtotal (post-discount, pre-tax, pre-shipping) and amount_total
+    amount_subtotal = overrides[:amount_subtotal] || (overrides[:subtotal] || 0)
+    amount_total = overrides[:amount_total] || (amount_subtotal + tax_amount + shipping_amount)
 
     # Build the full hash representation (used by controller's to_hash call)
     session_hash = {
@@ -119,6 +122,7 @@ module StripeTestHelper
     metadata_hash = overrides[:metadata] || {}
     metadata_stub = stub(
       cart_id: metadata_hash[:cart_id],
+      discount_code: metadata_hash[:discount_code],
       datafast_visitor_id: metadata_hash[:datafast_visitor_id],
       datafast_session_id: metadata_hash[:datafast_session_id]
     )
@@ -133,6 +137,7 @@ module StripeTestHelper
       shipping_cost: shipping_cost,
       total_details: total_details,
       amount_total: amount_total,
+      amount_subtotal: amount_subtotal,
       client_reference_id: overrides[:client_reference_id],
       line_items: line_items,
       setup_intent: setup_intent,
