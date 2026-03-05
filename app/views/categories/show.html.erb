@@ -25,7 +25,7 @@
   <meta property="og:image" content="<%= @category.image.attached? ? rails_storage_proxy_url(@category.image) : hero_image_url %>">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="<%= @category.meta_title %>">
+  <meta name="twitter:title" content="<%= @category.meta_title.presence || "#{@category.name} | Afida" %>">
   <meta name="twitter:description" content="<%= @category.meta_description %>">
 
   <script type="application/ld+json">
