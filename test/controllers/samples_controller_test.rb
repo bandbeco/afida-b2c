@@ -47,7 +47,9 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     get samples_path
     assert_response :success
 
-    # Empty category should not appear
-    assert_no_match(/Empty Category/, response.body)
+    # Empty category should not appear in the categories grid
+    assert_select ".space-y-6" do
+      assert_select "h2", text: /Empty Category/, count: 0
+    end
   end
 end

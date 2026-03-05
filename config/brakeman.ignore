@@ -1,0 +1,18 @@
+{
+  "ignored_warnings": [
+    {
+      "fingerprint": "5537dd21a03a6daa4601a163989f6cdc44f34d71e7560e41890f23bfd37978e3",
+      "note": "False positive: JSON-LD structured data output via .to_json inside script tag"
+    },
+    {
+      "fingerprint": "83b4ea229edd36788f3905d90a67f8f46a65ca3d5f7cfb7f23ef6a2fc756b7a4",
+      "note": "False positive: JSON-LD structured data output via .to_json inside script tag"
+    },
+    {
+      "fingerprint": "d83a0aa6c7873157690195dfab388a67e4a2baf5c020f0a1d1ea5b76cfaa095a",
+      "note": "False positive: JSON-LD structured data output via .to_json inside script tag"
+    }
+  ],
+  "updated": "2026-03-05",
+  "brakeman_version": "7.1.1"
+}
