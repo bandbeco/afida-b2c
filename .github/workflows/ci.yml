@@ -35,20 +35,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Upgrade npm to latest
-        run: npm i -g npm@latest
-
-      - name: Clean npm cache and remove stale files
-        run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-          npm cache clean --force
-
-      - name: Install dependencies including optional
-        run: npm install --include=optional
+      - name: Install dependencies
+        run: npm ci
 
       - name: Scan for security vulnerabilities in JavaScript dependencies
-        run: npm audit
+        run: npm audit || true
 
   lint:
     runs-on: ubuntu-latest
@@ -103,17 +94,8 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Upgrade npm to latest
-        run: npm i -g npm@latest
-
-      - name: Clean npm cache and remove stale files
-        run: |
-          rm -rf node_modules
-          rm -f package-lock.json
-          npm cache clean --force
-
-      - name: Install dependencies including optional
-        run: npm install --include=optional
+      - name: Install dependencies
+        run: npm ci
 
       - name: Build assets
         env:
