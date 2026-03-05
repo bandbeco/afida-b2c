@@ -3,7 +3,7 @@
 <% end %>
 
 <% content_for :title do %>
-<%= @category.meta_title.presence || @category.name %> | Afida
+<%= @category.meta_title.presence || "#{@category.name} | Afida" %>
 <% end %>
 
 <% content_for :meta_description do %>
@@ -18,7 +18,7 @@
 <% content_for :twitter_tags_custom, true %>
 <% content_for :head do %>
   <meta property="og:type" content="website">
-  <meta property="og:title" content="<%= @category.meta_title %> | Afida">
+  <meta property="og:title" content="<%= @category.meta_title.presence || "#{@category.name} | Afida" %>">
   <meta property="og:description" content="<%= @category.meta_description %>">
   <meta property="og:url" content="<%= category_url(@category) %>">
   <meta property="og:site_name" content="Afida">
