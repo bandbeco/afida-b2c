@@ -14,7 +14,7 @@ class PagesController < ApplicationController
   def shop
     @products = Product
       .active
-      .catalog_products
+      .standard
       .includes(:category, product_photo_attachment: :blob)
 
     # Get categories with their product counts
