@@ -10,7 +10,7 @@ class ProductsController < ApplicationController
 
   def index
     @products = Product.active
-                       .catalog_products
+                       .standard
                        .includes(:category, product_photo_attachment: :blob)
                        .order(position: :asc, id: :asc)
   end
