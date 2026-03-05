@@ -55,6 +55,7 @@ class ProductsController < ApplicationController
   def quick_add
     @product = Product.active.catalog_products.find_by!(slug: params[:slug])
 
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
     render layout: false  # Turbo Frame content only
   end
 end

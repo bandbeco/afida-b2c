@@ -1,6 +1,12 @@
 <footer class="bg-afida-green pattern-bg pattern-bg-primary pattern-visible">
   <div class="container mx-auto px-5 py-10">
     <div class="footer sm:footer-horizontal text-base-content justify-between">
+      <nav aria-labelledby="footer-categories">
+        <span id="footer-categories" class="footer-title">Shop by Category</span>
+        <% Category.browsable.order(:position, :name).each do |category| %>
+          <%= link_to category.name, category_path(category), class: "link link-hover" %>
+        <% end %>
+      </nav>
       <nav aria-labelledby="footer-services">
         <span id="footer-services" class="footer-title">Services</span>
         <%= link_to "Branding", branded_products_path, class: "link link-hover" %>

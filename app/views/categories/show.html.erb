@@ -3,7 +3,7 @@
 <% end %>
 
 <% content_for :title do %>
-<%= @category.meta_title %> | Afida
+<%= @category.meta_title.presence || @category.name %> | Afida
 <% end %>
 
 <% content_for :meta_description do %>

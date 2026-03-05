@@ -34,6 +34,11 @@ class RobotsController < ApplicationController
       Disallow: /admin/
       Disallow: /cart
       Disallow: /checkout
+      Disallow: /signin
+      Disallow: /signup
+
+      # Disallow quick_add modal endpoints (Turbo Frame content only)
+      Disallow: /products/*/quick_add
 
       # Sitemap
       Sitemap: #{base_url}/sitemap.xml
