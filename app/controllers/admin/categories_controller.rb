@@ -76,7 +76,7 @@ module Admin
     end
 
     def category_params
-      params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position ])
+      params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position, :parent_id ])
     end
   end
 end

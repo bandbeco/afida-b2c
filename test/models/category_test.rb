@@ -211,4 +211,28 @@ class CategoryTest < ActiveSupport::TestCase
     assert_equal 1, child1.position
     assert_equal 2, child2.position
   end
+
+  test "parent category can access products through children" do
+    parent = categories(:parent_hot_food)
+    child_pizza = categories(:child_pizza_boxes)
+    child_takeaway = categories(:child_takeaway_boxes)
+
+    assert child_pizza.products.exists?
+    assert child_takeaway.products.exists?
+    assert_equal 0, parent.products.count
+
+    all_child_ids = parent.children.pluck(:id)
+    all_products = Product.where(category_id: all_child_ids)
+    assert all_products.count >= 2
+  end
+
+  test "multiple parents have independent children" do
+    cups_parent = categories(:parent_cups_and_drinks)
+    food_parent = categories(:parent_hot_food)
+
+    cups_children = cups_parent.children.pluck(:id)
+    food_children = food_parent.children.pluck(:id)
+
+    assert_empty cups_children & food_children
+  end
 end

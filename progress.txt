@@ -1,0 +1,66 @@
+# Navigation Redesign — Progress
+
+## PRD
+- PRD v2 finalised and saved to /PRD.md and /docs/prd-navigation-redesign-v2.md
+- Parent GitHub issue: #79
+
+## Issues Created
+- #80 — Add parent_id to Category model (AFK, no blockers) — DONE
+- #81 — Create category hierarchy & reassign products (HITL, blocked by #80) — DONE
+- #82 — Update routes & 301 redirects (AFK, blocked by #81) — NOT STARTED
+- #83 — Desktop mega-menu, click-to-open (AFK, blocked by #81) — NOT STARTED
+- #84 — Mobile drill-down navigation (AFK, blocked by #81) — NOT STARTED
+- #85 — Vegware collection & SEO pages (AFK, blocked by #81, #82) — NOT STARTED
+- #86 — Update Shop All page filters (AFK, blocked by #81) — NOT STARTED
+- #87 — Update CategoriesHelper & icons (AFK, blocked by #81) — NOT STARTED
+
+## Critical Path
+#80 -> #81 -> #82-#87 (parallel, except #85 needs #82)
+
+## Key Decisions
+- Data model: self-referential Category with parent_id
+- Vegware: Collection (brand filter), not a category
+- Nav: two bars, click-to-open mega-menu
+- Mobile: hamburger drill-down, pill bar removed, account links included
+- URLs: /categories/:parent/:subcategory, 301 redirects from old URLs
+- Shop All: keep existing /shop page, no icon grid
+- Icons: SVGs top-level only, text-only subcategories
+- 7 real categories + 1 collection (Vegware), 27 subcategories total
+- Supplies & Essentials replaces Takeaway Extras (kitchen ops items)
+- Sugar sticks -> Supplies & Essentials
+- Branded Packaging: show only what exists (Branded Cups, Branded Greaseproof)
+
+## Completed Work
+
+### #80 — Add parent_id to Category model
+- Migration: `db/migrate/20260306203249_add_parent_id_to_categories.rb`
+  - Added `parent_id` (bigint, nullable) column
+  - Added index on `parent_id`
+  - Added foreign key constraint (categories -> categories)
+- Model: `app/models/category.rb`
+  - `belongs_to :parent` (optional)
+  - `has_many :children`
+  - `scope :top_level` (parent_id nil)
+  - `scope :subcategories` (parent_id not nil)
+  - `acts_as_list` scoped to `parent_id`
+- Tests: 7 new tests (28 total, all passing)
+- Full suite: 1603 tests, 0 failures
+
+### #81 — Create category hierarchy & reassign products
+- Migration: `db/migrate/20260306204621_create_category_hierarchy.rb`
+  - Created 7 top-level parent categories (Cups & Drinks, Hot Food, Cold Food & Salads, Tableware, Bags & Wraps, Supplies & Essentials, Branded Packaging)
+  - Created 27 subcategories across all parents
+  - Reassigned existing categories as subcategories (with renames: cups-and-lids→hot-cups, takeaway-containers→soup-containers, bagasse-eco-range→bagasse-containers, plates-trays→plates-and-trays, branded-products→branded-cups)
+  - Redistributed Takeaway Extras products using pattern matching (PRD Section 6.5)
+  - Deleted Takeaway Extras category after redistribution
+  - Reset counter caches
+  - Reversible migration (down restores flat structure)
+- Tests: `test/migrations/create_category_hierarchy_test.rb`
+  - 29 tests covering pattern matching rules, hierarchy structure, subcategory counts, slug uniqueness, rename mappings
+- Fixture updates: added hierarchy products for subcategory controller tests
+- Fixed pre-existing test bug: `.any?` unreliable with counter_cache in fixtures → changed to `.exists?`
+- Product distribution: 670 products across 27 subcategories, 0 orphaned
+- Full suite: 1637 tests, 0 failures
+
+## Next Step
+Start implementing #82 (Update routes & 301 redirects)

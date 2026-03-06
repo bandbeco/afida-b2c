@@ -89,6 +89,35 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # Parent category hierarchy tests
+  test "parent category shows products from all subcategories" do
+    parent = categories(:parent_hot_food)
+
+    get category_url(parent.slug)
+
+    assert_response :success
+    # Should include products from both child_pizza_boxes and child_takeaway_boxes
+    assert_match "10 Inch Pizza Box", response.body
+    assert_match "Kraft Takeaway Box", response.body
+  end
+
+  test "subcategory shows only its own products" do
+    subcategory = categories(:child_pizza_boxes)
+
+    get category_url(subcategory.slug)
+
+    assert_response :success
+    assert_match "10 Inch Pizza Box", response.body
+  end
+
+  test "parent category page is accessible" do
+    parent = categories(:parent_cups_and_drinks)
+
+    get category_url(parent.slug)
+
+    assert_response :success
+  end
+
   private
 
   def sign_in_as(user)

@@ -60,3 +60,15 @@ parent_hot_food:
   name: "Hot Food"
   slug: "hot-food"
   position: 10
+
+child_pizza_boxes:
+  name: "Pizza Boxes"
+  slug: "pizza-boxes-sub"
+  parent: parent_hot_food
+  position: 1
+
+child_takeaway_boxes:
+  name: "Takeaway Boxes"
+  slug: "takeaway-boxes-sub"
+  parent: parent_hot_food
+  position: 2

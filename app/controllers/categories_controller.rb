@@ -4,10 +4,17 @@ class CategoriesController < ApplicationController
   def show
     @category = Category.find_by!(slug: params[:id])
 
-    # Load products in this category
+    # For parent categories, load products from all subcategories
+    # For leaf categories (subcategories), load only direct products
+    categories_scope = if @category.children.any?
+      [ @category ] + @category.children
+    else
+      [ @category ]
+    end
+
     @products = Product.active
                        .catalog_products
-                       .where(category: @category)
+                       .where(category: categories_scope)
                        .includes(:category, product_photo_attachment: :blob)
                        .order(position: :asc, id: :asc)
 
