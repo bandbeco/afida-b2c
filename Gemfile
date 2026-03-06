@@ -90,7 +90,7 @@ group :test do
 end
 gem "mocha"
 
-gem "sentry-ruby", "~> 6.1"
+gem "sentry-ruby", "~> 6.4"
 
 gem "sentry-rails", "~> 6.1"
 
