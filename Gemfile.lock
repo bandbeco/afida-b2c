@@ -197,7 +197,7 @@ GEM
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
     jmespath (1.6.2)
-    json (2.18.1)
+    json (2.19.0)
     kamal (2.10.1)
       activesupport (>= 7.0)
       base64 (~> 0.2)
@@ -412,12 +412,13 @@ GEM
       rexml (~> 3.2, >= 3.2.5)
       rubyzip (>= 1.2.2, < 4.0)
       websocket (~> 1.0)
-    sentry-rails (6.1.0)
+    sentry-rails (6.4.1)
       railties (>= 5.2.0)
-      sentry-ruby (~> 6.1.0)
-    sentry-ruby (6.1.0)
+      sentry-ruby (~> 6.4.1)
+    sentry-ruby (6.4.1)
       bigdecimal
       concurrent-ruby (~> 1.0, >= 1.0.2)
+      logger
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -539,7 +540,7 @@ DEPENDENCIES
   redcarpet (~> 3.6)
   rubocop-rails-omakase
   selenium-webdriver
-  sentry-rails (~> 6.1)
+  sentry-rails (~> 6.4)
   sentry-ruby (~> 6.1)
   simplecov
   solid_cable
