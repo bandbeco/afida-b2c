@@ -441,7 +441,7 @@ The mega-menu dropdown expands as the branded range grows.
 | Add `parent_id` to Category model | High | Low |
 | ~~Category consolidation & product reassignment~~ | ~~High~~ | ~~Done~~ |
 | ~~Desktop mega-menu (click-to-open)~~ | ~~High~~ | ~~Done~~ |
-| Mobile drill-down nav | High | Medium |
+| ~~Mobile drill-down nav~~ | ~~High~~ | ~~Done~~ |
 | ~~301 redirects for old category URLs~~ | ~~High~~ | ~~Done~~ |
 | Vegware collection + SEO pages | Medium | Low |
 | Update `/shop` page filters for new structure | Medium | Low |

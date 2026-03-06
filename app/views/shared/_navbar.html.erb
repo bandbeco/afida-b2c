@@ -1,21 +1,7 @@
 <nav class="pattern-bg pattern-bg-primary pattern-visible py-2">
   <div class="navbar min-h-0 container mx-auto px-5">
     <div class="navbar-start">
-      <div class="dropdown lg:hidden">
-        <div tabindex="0" role="button" class="btn btn-ghost" aria-label="Open menu">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" /> </svg>
-        </div>
-        <ul tabindex="0" class="menu dropdown-content bg-base-100 rounded-box z-50 mt-3 w-52 p-4 shadow flex flex-col gap-3">
-          <li><%= link_to "Shop All", shop_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(shop_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-          <% Category.browsable.top_level.order(:position).each do |cat| %>
-            <li><%= link_to cat.name, category_browse_path(cat), class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors" %></li>
-          <% end %>
-          <li><%= link_to "Collections", collections_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{request.path.start_with?('/collections') ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-          <li><%= link_to "Free Samples", samples_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{request.path.start_with?('/samples') ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-          <li><%= link_to "Branding", branding_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(branding_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-          <li><%= link_to "Price List", price_list_path, class: "block hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(price_list_path) ? 'underline decoration-secondary decoration-2 underline-offset-8' : ''}" %></li>
-        </ul>
-      </div>
+      <%= render "shared/mobile_menu" %>
       <%= link_to root_path, class: "group hover:bg-transparent hover:border-transparent hover:shadow-none", "aria-label": "Afida Home" do %>
         <%= render "shared/logo" %>
       <% end %>

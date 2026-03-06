@@ -1,0 +1,124 @@
+<%# Mobile drill-down navigation menu %>
+<%# Visible below lg breakpoint only. Replaces old dropdown hamburger menu. %>
+
+<% categories = Category.browsable.top_level.includes(:children).order(:position) %>
+
+<div data-controller="mobile-menu" class="lg:hidden">
+  <%# Hamburger button %>
+  <button type="button"
+          class="btn btn-ghost"
+          aria-label="Open menu"
+          data-action="mobile-menu#open">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+    </svg>
+  </button>
+
+  <%# Backdrop overlay %>
+  <div class="hidden opacity-0 fixed inset-0 bg-black/30 z-50 transition-opacity duration-300"
+       data-mobile-menu-target="backdrop"
+       data-action="click->mobile-menu#close">
+  </div>
+
+  <%# Slide-in panel %>
+  <div class="fixed inset-y-0 left-0 w-80 max-w-[85vw] bg-base-100 z-50 transform -translate-x-full transition-transform duration-300 ease-in-out overflow-y-auto"
+       data-mobile-menu-target="panel">
+
+    <%# Close button %>
+    <div class="flex justify-end p-4 border-b border-base-200">
+      <button type="button"
+              class="btn btn-ghost btn-sm btn-circle"
+              aria-label="Close menu"
+              data-action="mobile-menu#close">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <%# Top-level navigation %>
+    <div data-mobile-menu-target="topLevel">
+      <ul class="menu p-4 gap-1">
+        <li>
+          <%= link_to "Shop All", shop_path, class: "text-base font-medium" %>
+        </li>
+
+        <%# Categories with drill-down %>
+        <% categories.each do |cat| %>
+          <li>
+            <button type="button"
+                    class="flex items-center justify-between w-full text-base font-medium"
+                    data-action="mobile-menu#drillDown"
+                    data-category-slug="<%= cat.slug %>">
+              <span><%= cat.name %></span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </li>
+        <% end %>
+
+        <%# Utility links %>
+        <li class="border-t border-base-200 mt-2 pt-2">
+          <%= link_to "Free Samples", samples_path, class: "text-base" %>
+        </li>
+        <li>
+          <%= link_to "Price List", price_list_path, class: "text-base" %>
+        </li>
+
+        <%# Account section %>
+        <% if authenticated? %>
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <%= link_to "Orders", orders_path, class: "text-base" %>
+          </li>
+          <li>
+            <%= link_to "Scheduled Reorders", reorder_schedules_path, class: "text-base" %>
+          </li>
+          <li>
+            <%= link_to "Addresses", account_addresses_path, class: "text-base" %>
+          </li>
+          <li>
+            <%= link_to "Account Settings", account_path, class: "text-base" %>
+          </li>
+          <li>
+            <%= link_to "Logout", session_path, data: { turbo_method: :delete }, class: "text-base" %>
+          </li>
+        <% else %>
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <%= link_to "Sign In", new_session_path, class: "text-base" %>
+          </li>
+          <li>
+            <%= link_to "Sign Up", new_registration_path, class: "text-base" %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <%# Subcategory panels (one per top-level category, hidden by default) %>
+    <% categories.each do |cat| %>
+      <div class="hidden" data-mobile-menu-target="subcategoryPanel" data-category="<%= cat.slug %>">
+        <div class="p-4 border-b border-base-200">
+          <button type="button"
+                  class="flex items-center gap-2 text-sm text-base-content/70"
+                  data-action="mobile-menu#goBack">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+            </svg>
+            Back
+          </button>
+          <span class="block text-lg font-semibold mt-2"><%= cat.name %></span>
+        </div>
+        <ul class="menu p-4 gap-1">
+          <li>
+            <%= link_to "View all #{cat.name}", category_browse_path(cat), class: "text-base font-medium text-primary" %>
+          </li>
+          <% cat.children.order(:position).each do |sub| %>
+            <li>
+              <%= link_to sub.name, category_browse_path(sub), class: "text-base" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+  </div>
+</div>

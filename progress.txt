@@ -9,7 +9,7 @@
 - #81 — Create category hierarchy & reassign products (HITL, blocked by #80) — DONE
 - #82 — Update routes & 301 redirects (AFK, blocked by #81) — DONE
 - #83 — Desktop mega-menu, click-to-open (AFK, blocked by #81) — DONE
-- #84 — Mobile drill-down navigation (AFK, blocked by #81) — NOT STARTED
+- #84 — Mobile drill-down navigation (AFK, blocked by #81) — DONE
 - #85 — Vegware collection & SEO pages (AFK, blocked by #81, #82) — NOT STARTED
 - #86 — Update Shop All page filters (AFK, blocked by #81) — NOT STARTED
 - #87 — Update CategoriesHelper & icons (AFK, blocked by #81) — DONE (partial, icon map updated with #83)
@@ -119,5 +119,26 @@
 - Added top-level parent category slugs to `CATEGORY_ICONS`
 - Kept legacy slug mappings for subcategory/samples page compatibility
 
+### #84 — Mobile drill-down navigation
+- View: `app/views/shared/_mobile_menu.html.erb` (new partial)
+  - Slide-in panel from left, max 80vw / 320px wide
+  - Top-level: Shop All link, category buttons with drill-down chevrons, Free Samples, Price List
+  - Account section: Orders, Scheduled Reorders, Addresses, Account Settings, Logout (authenticated) or Sign In / Sign Up (guest)
+  - Subcategory panels: one per top-level category, with back button, category heading, "View all" link, and subcategory links
+  - Backdrop overlay dims page behind panel
+  - Hidden by default (`-translate-x-full`), only visible below lg breakpoint (`lg:hidden`)
+- Controller: `app/frontend/javascript/controllers/mobile_menu_controller.js` (new)
+  - Targets: panel, backdrop, topLevel, subcategoryPanel
+  - Actions: open (slide in + show backdrop + lock body scroll), close (slide out + hide backdrop + reset to top level), drillDown (hide top-level, show subcategory panel), goBack (hide subcategory panel, show top-level)
+  - Escape key closes menu
+- Registration: `app/frontend/entrypoints/application.js`
+  - Added `mobile-menu` to lazy-loaded controllers
+- Navbar: `app/views/shared/_navbar.html.erb`
+  - Removed old DaisyUI dropdown hamburger menu (flat category links)
+  - Replaced with `<%= render "shared/mobile_menu" %>`
+- Tests: `test/integration/mobile_drill_down_nav_test.rb` (13 tests)
+  - Slide-in panel, open/close buttons, Shop All link, category drill-down buttons, subcategory panels with back/view-all/sub links, Free Samples & Price List, auth-gated account links (sign in/up vs orders/logout), hidden by default, lg:hidden, old dropdown removed
+- Full suite: 1685 tests, 0 failures
+
 ## Next Step
-Start implementing #84 (Mobile drill-down nav) or #85-#86 (parallel tasks)
+Start implementing #85 (Vegware collection & SEO pages) or #86 (Shop All page filters)
