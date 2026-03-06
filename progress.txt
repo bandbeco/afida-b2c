@@ -8,11 +8,11 @@
 - #80 — Add parent_id to Category model (AFK, no blockers) — DONE
 - #81 — Create category hierarchy & reassign products (HITL, blocked by #80) — DONE
 - #82 — Update routes & 301 redirects (AFK, blocked by #81) — DONE
-- #83 — Desktop mega-menu, click-to-open (AFK, blocked by #81) — NOT STARTED
+- #83 — Desktop mega-menu, click-to-open (AFK, blocked by #81) — DONE
 - #84 — Mobile drill-down navigation (AFK, blocked by #81) — NOT STARTED
 - #85 — Vegware collection & SEO pages (AFK, blocked by #81, #82) — NOT STARTED
 - #86 — Update Shop All page filters (AFK, blocked by #81) — NOT STARTED
-- #87 — Update CategoriesHelper & icons (AFK, blocked by #81) — NOT STARTED
+- #87 — Update CategoriesHelper & icons (AFK, blocked by #81) — DONE (partial, icon map updated with #83)
 
 ## Critical Path
 #80 -> #81 -> #82-#87 (parallel, except #85 needs #82)
@@ -86,5 +86,38 @@
 - Updated tests: `legacy_redirects_test.rb`, `categories_controller_test.rb`, `sitemap_generator_service_test.rb`
 - Full suite: 1661 tests, 0 failures
 
+### #83 — Desktop mega-menu (click-to-open)
+- View: `app/views/shared/_category_nav.html.erb` — full rewrite
+  - Removed old hardcoded flat category links (7 old categories)
+  - Removed mobile horizontal scroll pill bar (replaced by hamburger menu)
+  - Desktop: click-to-open mega-menu with top-level category buttons from DB
+  - Each button has SVG icon + text label + chevron
+  - Full-width dropdown panels showing subcategory links in grid layout
+  - "View all [category]" link at bottom of each panel
+  - Backdrop overlay dims page when panel is open
+  - ARIA attributes: `aria-expanded`, `aria-haspopup`, `aria-controls`
+  - Hidden on mobile (`hidden lg:block`), responsive at 768px breakpoint
+- Controller: `app/frontend/javascript/controllers/category_mega_menu_controller.js` (new)
+  - Click-to-open (not hover) — distinct from existing `mega_menu_controller.js` (hover-based, used by Collections)
+  - Toggle: clicking same button closes, clicking different button switches panel
+  - Close on: clicking outside (backdrop), pressing Escape
+  - Escape returns focus to trigger button
+  - Targets: trigger, panel, backdrop
+- Registration: `app/frontend/entrypoints/application.js`
+  - Added `category-mega-menu` to lazy-loaded controllers
+- Helper: `app/helpers/categories_helper.rb`
+  - Added 7 new top-level category slugs to `CATEGORY_ICONS` map
+  - Reused existing SVG icons where applicable, fallback `box.svg` for new categories
+  - Kept legacy subcategory slug mappings for backward compatibility
+- Navbar: `app/views/shared/_navbar.html.erb`
+  - Updated mobile hamburger dropdown: replaced old hardcoded category links with dynamic DB-driven top-level categories using `category_browse_path`
+- Tests: `test/integration/desktop_mega_menu_test.rb` (11 tests, pre-existing)
+  - All 11 pass: mega-menu buttons, subcategory links, nested URLs, ARIA attributes, backdrop, icons, responsive visibility, no old links, no mobile pill bar
+- Full suite: 1672 tests, 0 failures
+
+### #87 — Update CategoriesHelper & icons (partial — icon map updated as part of #83)
+- Added top-level parent category slugs to `CATEGORY_ICONS`
+- Kept legacy slug mappings for subcategory/samples page compatibility
+
 ## Next Step
-Start implementing #83 (Desktop mega-menu) or #84-#87 (parallel tasks)
+Start implementing #84 (Mobile drill-down nav) or #85-#86 (parallel tasks)

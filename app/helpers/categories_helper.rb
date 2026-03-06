@@ -3,6 +3,15 @@ module CategoriesHelper
   # Map category slugs to their SVG icon paths
   # These icons are used in the category nav bar and samples page
   CATEGORY_ICONS = {
+    # Top-level parent categories (new hierarchy)
+    "cups-and-drinks" => "images/graphics/cold-cups.svg",
+    "hot-food" => "images/graphics/kraft-food-containers.svg",
+    "cold-food-and-salads" => "images/graphics/box.svg",
+    "tableware" => "images/graphics/napkins.svg",
+    "bags-and-wraps" => "images/graphics/take-away-extras.svg",
+    "supplies-and-essentials" => "images/graphics/box.svg",
+    "branded-packaging" => "images/graphics/box.svg",
+    # Legacy/subcategory slugs (still used on subcategory pages, samples page, etc.)
     "cups-and-lids" => "images/graphics/cold-cups.svg",
     "ice-cream-cups" => "images/graphics/ice-cream-cups.svg",
     "napkins" => "images/graphics/napkins.svg",
