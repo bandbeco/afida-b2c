@@ -162,4 +162,53 @@ class CategoryTest < ActiveSupport::TestCase
     assert_not category.save
     assert_nil category.id
   end
+
+  # Parent/child hierarchy tests
+  test "category can have a parent" do
+    child = categories(:child_hot_cups)
+    parent = categories(:parent_cups_and_drinks)
+    assert_equal parent, child.parent
+  end
+
+  test "parent category has many children" do
+    parent = categories(:parent_cups_and_drinks)
+    assert_includes parent.children, categories(:child_hot_cups)
+    assert_includes parent.children, categories(:child_cold_cups)
+    assert_equal 2, parent.children.count
+  end
+
+  test "top-level category has nil parent" do
+    parent = categories(:parent_cups_and_drinks)
+    assert_nil parent.parent_id
+    assert_nil parent.parent
+  end
+
+  test "top_level scope returns only categories without parent" do
+    top_level = Category.top_level
+    top_level.each do |cat|
+      assert_nil cat.parent_id
+    end
+  end
+
+  test "subcategories scope returns only categories with parent" do
+    subcategories = Category.subcategories
+    subcategories.each do |cat|
+      assert_not_nil cat.parent_id
+    end
+  end
+
+  test "destroying parent with children raises foreign key error" do
+    parent = categories(:parent_cups_and_drinks)
+    assert_raises(ActiveRecord::InvalidForeignKey) do
+      parent.destroy
+    end
+  end
+
+  test "acts_as_list is scoped to parent_id" do
+    parent = categories(:parent_cups_and_drinks)
+    child1 = categories(:child_hot_cups)
+    child2 = categories(:child_cold_cups)
+    assert_equal 1, child1.position
+    assert_equal 2, child2.position
+  end
 end

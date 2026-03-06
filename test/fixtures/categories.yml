@@ -37,3 +37,26 @@ cutlery:
   name: "Cutlery"
   slug: "cutlery"
   position: 8
+
+# Parent/child fixtures for hierarchy tests
+parent_cups_and_drinks:
+  name: "Cups & Drinks"
+  slug: "cups-and-drinks"
+  position: 9
+
+child_hot_cups:
+  name: "Hot Cups"
+  slug: "hot-cups"
+  parent: parent_cups_and_drinks
+  position: 1
+
+child_cold_cups:
+  name: "Cold Cups"
+  slug: "cold-cups"
+  parent: parent_cups_and_drinks
+  position: 2
+
+parent_hot_food:
+  name: "Hot Food"
+  slug: "hot-food"
+  position: 10
