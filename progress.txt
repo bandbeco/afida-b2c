@@ -11,7 +11,7 @@
 - #83 — Desktop mega-menu, click-to-open (AFK, blocked by #81) — DONE
 - #84 — Mobile drill-down navigation (AFK, blocked by #81) — DONE
 - #85 — Vegware collection & SEO pages (AFK, blocked by #81, #82) — DONE
-- #86 — Update Shop All page filters (AFK, blocked by #81) — NOT STARTED
+- #86 — Update Shop All page filters (AFK, blocked by #81) — DONE
 - #87 — Update CategoriesHelper & icons (AFK, blocked by #81) — DONE (partial, icon map updated with #83)
 
 ## Critical Path
@@ -183,5 +183,30 @@
   - Mobile menu includes Vegware drill-down and subcategory panel with filter links
 - Full suite: 1703 tests, 0 failures
 
+### #86 — Update Shop All page filters
+- Controller: `app/controllers/pages_controller.rb`
+  - Replaced flat `@categories` with hierarchical structure
+  - `@parent_categories`: top-level browsable parents with products
+  - `@subcategories_by_parent`: subcategories grouped by parent ID
+  - `@parent_product_counts`: aggregated counts from all subcategories per parent
+  - `@subcategory_product_counts`: individual subcategory product counts
+- Model: `app/models/product.rb`
+  - Updated `in_categories` scope to expand parent category slugs to include all child subcategory slugs
+  - Selecting a parent category now returns products from all its subcategories
+- View: `app/views/pages/shop.html.erb`
+  - Replaced flat checkbox list with hierarchical category filter
+  - Parent categories shown as group headings with aggregated product counts
+  - Subcategory checkboxes nested under each parent with individual counts
+  - Branded Packaging excluded from sidebar (via `browsable` scope)
+  - Parents/subcategories without products are hidden
+- Tests: `test/integration/shop_page_filters_test.rb` (9 tests)
+  - Hierarchical sidebar structure, parent/subcategory display
+  - Filtering by parent slug returns all subcategory products
+  - Filtering by subcategory slug returns only that subcategory's products
+  - Multi-subcategory filtering across parents
+  - Aggregated parent counts, branded packaging exclusion
+  - Empty categories hidden
+- Full suite: 1712 tests, 0 failures
+
 ## Next Step
-Start implementing #86 (Update Shop All page filters)
+All PRD tasks are complete. Remaining items are external (SEO copy by Margot, SVG icons by Design) or future phase (product filtering on category pages).

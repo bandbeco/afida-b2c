@@ -15,11 +15,21 @@
           <div>
             <div class="font-semibold text-lg mb-3 pb-2 border-b">Product Types</div>
 
-            <% @categories.each do |category| %>
-              <label for="category_<%= category.slug %>" class="flex items-center gap-2 mb-2 cursor-pointer">
-                <%= check_box_tag 'categories[]', category.slug, (params[:categories] || []).include?(category.slug), id: "category_#{category.slug}", class: "checkbox checkbox-primary", aria: { label: "Filter by #{category.name}" }, data: { action: "change->form#submit" } %>
-                <span><%= category.name %> (<%= @category_product_counts[category.id] || 0 %>)</span>
-              </label>
+            <% @parent_categories.each do |parent| %>
+              <div class="shop-category-group mb-3" data-parent-slug="<%= parent.slug %>">
+                <div class="font-medium text-sm mb-1">
+                  <%= parent.name %>
+                  <span class="category-count text-gray-500">(<%= @parent_product_counts[parent.id] || 0 %>)</span>
+                </div>
+                <div class="pl-4">
+                  <% (@subcategories_by_parent[parent.id] || []).each do |subcategory| %>
+                    <label for="category_<%= subcategory.slug %>" class="flex items-center gap-2 mb-1.5 cursor-pointer text-sm">
+                      <%= check_box_tag 'categories[]', subcategory.slug, (params[:categories] || []).include?(subcategory.slug), id: "category_#{subcategory.slug}", class: "checkbox checkbox-primary checkbox-sm", aria: { label: "Filter by #{subcategory.name}" }, data: { action: "change->form#submit" } %>
+                      <span><%= subcategory.name %> (<%= @subcategory_product_counts[subcategory.id] || 0 %>)</span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
             <% end %>
           </div>
         <% end %>

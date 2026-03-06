@@ -85,6 +85,13 @@ class Product < ApplicationRecord
     slugs = Array(category_slugs).reject(&:blank?)
     return all if slugs.empty?
 
+    # Expand parent category slugs to include all their subcategory slugs
+    parent_ids = Category.top_level.where(slug: slugs).pluck(:id)
+    if parent_ids.any?
+      child_slugs = Category.where(parent_id: parent_ids).pluck(:slug)
+      slugs = (slugs + child_slugs).uniq
+    end
+
     joins(:category).where(categories: { slug: slugs })
   }
 

@@ -17,13 +17,27 @@ class PagesController < ApplicationController
       .standard
       .includes(:category, product_photo_attachment: :blob)
 
-    # Get categories with their product counts
-    category_product_counts = @products
-      .group(:category_id)
-      .count
+    # Build hierarchical category structure for sidebar
+    # Count products per subcategory
+    subcategory_counts = @products.group(:category_id).count
 
-    @categories = Category.browsable.where(id: category_product_counts.keys).order(:position)
-    @category_product_counts = category_product_counts
+    # Load subcategories that have products
+    subcategories_with_products = Category.subcategories
+      .where(id: subcategory_counts.keys)
+      .order(:position)
+
+    # Group subcategories by parent, aggregate counts
+    @parent_categories = Category.browsable.top_level
+      .where(id: subcategories_with_products.select(:parent_id))
+      .order(:position)
+
+    @subcategories_by_parent = subcategories_with_products.group_by(&:parent_id)
+    @subcategory_product_counts = subcategory_counts
+
+    @parent_product_counts = @parent_categories.each_with_object({}) do |parent, hash|
+      children = @subcategories_by_parent[parent.id] || []
+      hash[parent.id] = children.sum { |c| subcategory_counts[c.id] || 0 }
+    end
 
     # Search and category filter are mutually exclusive
     # If searching, ignore category filter
