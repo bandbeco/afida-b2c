@@ -101,13 +101,22 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Kraft Takeaway Box", response.body
   end
 
-  test "subcategory shows only its own products" do
+  test "subcategory shows only its own products via nested URL" do
+    parent = categories(:parent_hot_food)
+    subcategory = categories(:child_pizza_boxes)
+
+    get category_subcategory_url(parent.slug, subcategory.slug)
+
+    assert_response :success
+    assert_match "10 Inch Pizza Box", response.body
+  end
+
+  test "subcategory via flat URL redirects to nested URL" do
     subcategory = categories(:child_pizza_boxes)
 
     get category_url(subcategory.slug)
 
-    assert_response :success
-    assert_match "10 Inch Pizza Box", response.body
+    assert_response :moved_permanently
   end
 
   test "parent category page is accessible" do

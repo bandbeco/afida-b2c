@@ -68,6 +68,27 @@ module CategoriesHelper
     CATEGORY_PASTEL_COLORS[index % CATEGORY_PASTEL_COLORS.length]
   end
 
+  # Returns the browse path for a category, using nested URLs for subcategories
+  #
+  # @param category [Category] Category object
+  # @return [String] URL path like /categories/hot-food or /categories/hot-food/pizza-boxes
+  def category_browse_path(category)
+    if category.parent.present?
+      category_subcategory_path(category.parent.slug, category.slug)
+    else
+      category_path(category)
+    end
+  end
+
+  # Returns the browse URL for a category (absolute), using nested URLs for subcategories
+  def category_browse_url(category)
+    if category.parent.present?
+      category_subcategory_url(category.parent.slug, category.slug)
+    else
+      category_url(category)
+    end
+  end
+
   # Renders a category icon image tag
   #
   # @param category [Category, String] Category object or slug string

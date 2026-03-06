@@ -442,7 +442,7 @@ The mega-menu dropdown expands as the branded range grows.
 | ~~Category consolidation & product reassignment~~ | ~~High~~ | ~~Done~~ |
 | Desktop mega-menu (click-to-open) | High | Medium |
 | Mobile drill-down nav | High | Medium |
-| 301 redirects for old category URLs | High | Low |
+| ~~301 redirects for old category URLs~~ | ~~High~~ | ~~Done~~ |
 | Vegware collection + SEO pages | Medium | Low |
 | Update `/shop` page filters for new structure | Medium | Low |
 | SEO copy for new subcategory pages | Medium | Low (Margot) |

@@ -61,7 +61,7 @@
   <script type="application/ld+json">
     <%= raw breadcrumb_structured_data([
       { name: "Home", url: root_url },
-      { name: @product.category.name, url: category_url(@product.category) },
+      { name: @product.category.name, url: category_browse_url(@product.category) },
       { name: @product.generated_title, url: branded_product_url(@product) }
     ]) %>
   </script>

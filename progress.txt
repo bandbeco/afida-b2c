@@ -7,7 +7,7 @@
 ## Issues Created
 - #80 — Add parent_id to Category model (AFK, no blockers) — DONE
 - #81 — Create category hierarchy & reassign products (HITL, blocked by #80) — DONE
-- #82 — Update routes & 301 redirects (AFK, blocked by #81) — NOT STARTED
+- #82 — Update routes & 301 redirects (AFK, blocked by #81) — DONE
 - #83 — Desktop mega-menu, click-to-open (AFK, blocked by #81) — NOT STARTED
 - #84 — Mobile drill-down navigation (AFK, blocked by #81) — NOT STARTED
 - #85 — Vegware collection & SEO pages (AFK, blocked by #81, #82) — NOT STARTED
@@ -62,5 +62,29 @@
 - Product distribution: 670 products across 27 subcategories, 0 orphaned
 - Full suite: 1637 tests, 0 failures
 
+### #82 — Update routes & 301 redirects
+- Routes: `config/routes.rb`
+  - Added nested subcategory route: `/categories/:parent_slug/:id` → `categories#show`
+  - Added 7 old-slug 301 redirects (cups-and-lids→cups-and-drinks, ice-cream-cups→cups-and-drinks/ice-cream-cups, napkins→tableware/napkins, pizza-boxes→hot-food/pizza-boxes, straws→cups-and-drinks/straws, takeaway-containers→hot-food, takeaway-extras→supplies-and-essentials)
+  - Updated 8 legacy `/category/*` redirects to chain through to final new URLs (no dead intermediate URLs)
+- Controller: `app/controllers/categories_controller.rb`
+  - Handles nested route (validates subcategory belongs to parent)
+  - Flat subcategory URLs auto-redirect 301 to nested URL
+- Helper: `app/helpers/categories_helper.rb`
+  - Added `category_browse_path` / `category_browse_url` — generates nested URL for subcategories, flat URL for parents
+- Views updated:
+  - `_breadcrumbs.html.erb` — shows parent > subcategory for nested categories
+  - `categories/show.html.erb` — OG/structured data use `category_browse_url`, related categories use `category_browse_path`
+  - `products/show.html.erb` — breadcrumb structured data and "View All" link use browse helpers
+  - `branded_products/show.html.erb` — breadcrumb structured data uses browse helper
+  - `_footer.html.erb` — shows only top-level categories (`Category.browsable.top_level`)
+- Sitemap: `app/services/sitemap_generator_service.rb`
+  - Includes `CategoriesHelper`, uses `category_browse_url` for correct nested URLs
+  - Subcategories get priority 0.7 (vs 0.8 for parents)
+- Tests: `test/integration/category_routes_test.rb` (23 new tests)
+  - Nested subcategory routing, 404 for wrong parent, old-slug 301 redirects, legacy redirect chaining, URL helper generation
+- Updated tests: `legacy_redirects_test.rb`, `categories_controller_test.rb`, `sitemap_generator_service_test.rb`
+- Full suite: 1661 tests, 0 failures
+
 ## Next Step
-Start implementing #82 (Update routes & 301 redirects)
+Start implementing #83 (Desktop mega-menu) or #84-#87 (parallel tasks)

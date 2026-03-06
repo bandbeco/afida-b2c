@@ -17,15 +17,15 @@ Rails.application.routes.draw do
   # From old Wix site (afida.com) - preserves SEO and backlinks
   # =============================================================================
 
-  # Legacy category redirects (preserves query params for UTM tracking)
-  get "/category/cold-cups-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/hot-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/hot-cup-extras", to: redirect(status: 301) { |_params, req| "/categories/cups-and-lids#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/napkins", to: redirect(status: 301) { |_params, req| "/categories/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/straws", to: redirect(status: 301) { |_params, req| "/categories/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/takeaway-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/takeaway-extras#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  # Legacy category redirects — chained through to final new URLs
+  get "/category/cold-cups-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/hot-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/hot-cup-extras", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/napkins", to: redirect(status: 301) { |_params, req| "/categories/tableware/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/hot-food/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/supplies-and-essentials#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/all-products", to: redirect(status: 301) { |_params, req| "/shop#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
   # Catch-all for unknown /category/* paths (prevents URI::InvalidURIError from www redirect)
@@ -77,6 +77,19 @@ Rails.application.routes.draw do
       get :quick_add
     end
   end
+  # Category routes — old flat slugs redirect 301 to new URLs (PRD Section 8)
+  get "/categories/cups-and-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/ice-cream-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/ice-cream-cups#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/napkins", to: redirect(status: 301) { |_params, req| "/categories/tableware/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/hot-food/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/supplies-and-essentials#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
+  # Nested subcategory route: /categories/:parent_slug/:id
+  get "/categories/:parent_slug/:id", to: "categories#show", as: :category_subcategory
+
+  # Parent/top-level category route: /categories/:id
   resources :categories, only: [ :show ]
   resources :collections, only: [ :index, :show ], param: :slug
   resources :branded_products, only: [ :index, :show ], path: "branded-products", param: :slug

@@ -1,5 +1,6 @@
 class SitemapGeneratorService
   include Rails.application.routes.url_helpers
+  include CategoriesHelper
 
   def initialize
     # Set default URL options for URL generation
@@ -33,8 +34,8 @@ class SitemapGeneratorService
 
         # Categories (exclude branded-products which redirects)
         Category.where.not(slug: "branded-products").find_each do |category|
-          add_url(xml, category_url(category),
-                  priority: "0.8",
+          add_url(xml, category_browse_url(category),
+                  priority: category.parent_id? ? "0.7" : "0.8",
                   changefreq: "weekly",
                   lastmod: category.updated_at)
         end
