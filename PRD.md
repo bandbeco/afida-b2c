@@ -443,7 +443,7 @@ The mega-menu dropdown expands as the branded range grows.
 | ~~Desktop mega-menu (click-to-open)~~ | ~~High~~ | ~~Done~~ |
 | ~~Mobile drill-down nav~~ | ~~High~~ | ~~Done~~ |
 | ~~301 redirects for old category URLs~~ | ~~High~~ | ~~Done~~ |
-| Vegware collection + SEO pages | Medium | Low |
+| ~~Vegware collection + SEO pages~~ | ~~Medium~~ | ~~Done~~ |
 | Update `/shop` page filters for new structure | Medium | Low |
 | SEO copy for new subcategory pages | Medium | Low (Margot) |
 | New SVG icons for top-level categories | Medium | Low (Design) |

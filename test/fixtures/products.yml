@@ -638,3 +638,63 @@ acme_branded_cups:
   product_type: customized_instance
   parent_product: branded_double_wall_template
   organization: acme
+
+hot_cup_in_subcategory:
+  category: child_hot_cups
+  name: "Regular 8oz Hot Cup"
+  sku: HC-REG-8
+  slug: regular-8oz-hot-cup-hier
+  price: 24.00
+  stock_quantity: 500
+  active: true
+  position: 1
+  product_type: standard
+
+# Vegware brand products (for Vegware collection tests)
+vegware_hot_cup:
+  category: child_hot_cups
+  name: "Vegware 8oz Single Wall Hot Cup"
+  sku: VW-HC-8
+  slug: vegware-8oz-single-wall-hot-cup
+  price: 30.00
+  stock_quantity: 500
+  active: true
+  position: 50
+  product_type: standard
+  brand: "Vegware"
+
+vegware_straw:
+  category: straws
+  name: "Vegware Paper Straw"
+  sku: VW-STR-6
+  slug: vegware-paper-straw
+  price: 10.00
+  stock_quantity: 500
+  active: true
+  position: 50
+  product_type: standard
+  brand: "Vegware"
+
+vegware_napkin:
+  category: one
+  name: "Vegware Napkin"
+  sku: VW-NAP-SM
+  slug: vegware-napkin
+  price: 14.00
+  stock_quantity: 500
+  active: true
+  position: 50
+  product_type: standard
+  brand: "Vegware"
+
+vegware_inactive:
+  category: child_hot_cups
+  name: "Vegware Inactive Cup"
+  sku: VW-HC-INACTIVE
+  slug: vegware-inactive-cup
+  price: 30.00
+  stock_quantity: 500
+  active: false
+  position: 51
+  product_type: standard
+  brand: "Vegware"

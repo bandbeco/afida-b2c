@@ -91,7 +91,9 @@ Rails.application.routes.draw do
 
   # Parent/top-level category route: /categories/:id
   resources :categories, only: [ :show ]
-  resources :collections, only: [ :index, :show ], param: :slug
+  resources :collections, only: [ :index, :show ], param: :slug do
+    get ":category_slug", action: :category_filter, on: :member, as: :category_filter
+  end
   resources :branded_products, only: [ :index, :show ], path: "branded-products", param: :slug
 
   resource :session, path: "signin", path_names: { new: "" }

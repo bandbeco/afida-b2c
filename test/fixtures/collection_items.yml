@@ -33,3 +33,19 @@ sample_pack_item_2:
   collection: coffee_shop_sample_pack
   product: sample_cup_12oz
   position: 2
+
+# Vegware collection items
+vegware_item_hot_cup:
+  collection: vegware
+  product: vegware_hot_cup
+  position: 1
+
+vegware_item_straw:
+  collection: vegware
+  product: vegware_straw
+  position: 2
+
+vegware_item_napkin:
+  collection: vegware
+  product: vegware_napkin
+  position: 3

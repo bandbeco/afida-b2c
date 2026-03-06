@@ -11,6 +11,7 @@ module CategoriesHelper
     "bags-and-wraps" => "images/graphics/take-away-extras.svg",
     "supplies-and-essentials" => "images/graphics/box.svg",
     "branded-packaging" => "images/graphics/box.svg",
+    "vegware" => "images/graphics/box.svg",
     # Legacy/subcategory slugs (still used on subcategory pages, samples page, etc.)
     "cups-and-lids" => "images/graphics/cold-cups.svg",
     "ice-cream-cups" => "images/graphics/ice-cream-cups.svg",

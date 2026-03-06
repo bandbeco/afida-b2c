@@ -3,6 +3,8 @@
 <%# Hidden on mobile (< lg breakpoint) — mobile uses hamburger drill-down instead %>
 
 <% categories = Category.browsable.top_level.includes(:children).order(:position) %>
+<% vegware_collection = Collection.regular.find_by(slug: "vegware") %>
+<% vegware_categories = vegware_collection ? Category.browsable.top_level.order(:position) : [] %>
 
 <div class="category-mega-menu hidden lg:block bg-base-200 border-b border-base-300"
      data-controller="category-mega-menu">
@@ -34,6 +36,25 @@
           </button>
         </li>
       <% end %>
+
+      <% if vegware_collection %>
+        <li class="relative">
+          <button type="button"
+                  class="flex items-center gap-2 text-sm lg:text-base text-base-content hover:text-primary transition-colors cursor-pointer"
+                  data-category-mega-menu-target="trigger"
+                  data-action="click->category-mega-menu#toggle"
+                  data-index="<%= categories.size %>"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  aria-controls="category-panel-vegware">
+            <%= category_icon_tag("vegware", class: "w-5 h-5 object-contain") %>
+            <span>Vegware</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </li>
+      <% end %>
     </ul>
   </div>
 
@@ -55,6 +76,30 @@
           </div>
           <div class="mt-4 pt-3 border-t border-base-200">
             <%= link_to "View all #{cat.name}", category_browse_path(cat),
+                        class: "text-sm text-primary hover:underline" %>
+          </div>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if vegware_collection %>
+    <div id="category-panel-vegware"
+         class="hidden opacity-0 -translate-y-2 absolute left-0 right-0 z-50 transition-all duration-200 ease-out"
+         data-category-mega-menu-target="panel"
+         data-index="<%= categories.size %>">
+      <div class="bg-base-100 border-b border-base-200 shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+          <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-8 gap-y-3">
+            <% vegware_categories.each do |cat| %>
+              <%= link_to category_filter_collection_path(vegware_collection, category_slug: cat.slug),
+                          class: "text-base-content hover:text-primary transition-colors py-1" do %>
+                Vegware <%= cat.name %>
+              <% end %>
+            <% end %>
+          </div>
+          <div class="mt-4 pt-3 border-t border-base-200">
+            <%= link_to "View all Vegware", collection_path(vegware_collection),
                         class: "text-sm text-primary hover:underline" %>
           </div>
         </div>
