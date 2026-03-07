@@ -108,4 +108,33 @@ class ShopPageFiltersTest < ActionDispatch::IntegrationTest
     cold_cups = categories(:child_cold_cups)
     assert_select "input[type=checkbox][value='#{cold_cups.slug}']"
   end
+
+  test "sidebar shows brand filter section with available brands" do
+    get shop_path
+
+    assert_response :success
+    assert_select ".shop-brand-filter"
+    assert_select "input[type=radio][value='Vegware']"
+  end
+
+  test "filtering by brand returns only products with that brand" do
+    get shop_path, params: { brand: "Vegware" }
+
+    assert_response :success
+    @controller.instance_variable_get(:@products).each do |product|
+      assert_equal "Vegware", product.brand
+    end
+  end
+
+  test "filtering by brand and category returns intersection" do
+    hot_cups = categories(:child_hot_cups)
+
+    get shop_path, params: { brand: "Vegware", categories: [ hot_cups.slug ] }
+
+    assert_response :success
+    @controller.instance_variable_get(:@products).each do |product|
+      assert_equal "Vegware", product.brand
+      assert_equal hot_cups.id, product.category_id
+    end
+  end
 end

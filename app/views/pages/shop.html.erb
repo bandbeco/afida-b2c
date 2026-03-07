@@ -34,6 +34,25 @@
           </div>
         <% end %>
 
+        <!-- Brand Filter -->
+        <% if @available_brands.any? %>
+          <div class="shop-brand-filter">
+            <div class="font-semibold text-lg mb-3 pb-2 border-b">Brand</div>
+            <% @available_brands.each do |brand| %>
+              <label for="brand_<%= brand.parameterize %>" class="flex items-center gap-2 mb-1.5 cursor-pointer text-sm">
+                <%= radio_button_tag 'brand', brand, params[:brand] == brand, id: "brand_#{brand.parameterize}", class: "radio radio-primary radio-sm", data: { action: "change->form#submit" } %>
+                <span><%= brand %></span>
+              </label>
+            <% end %>
+            <% if params[:brand].present? %>
+              <label class="flex items-center gap-2 mb-1.5 cursor-pointer text-sm text-base-content/60">
+                <%= radio_button_tag 'brand', '', false, id: "brand_all", class: "radio radio-primary radio-sm", data: { action: "change->form#submit" } %>
+                <span>All Brands</span>
+              </label>
+            <% end %>
+          </div>
+        <% end %>
+
         <!-- Option Filters (Size, Colour, Material) -->
         <%= render "shared/filters" %>
 

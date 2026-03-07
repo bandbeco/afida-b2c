@@ -44,6 +44,7 @@ class PagesController < ApplicationController
     end
 
     # Apply attribute filters (direct column filters)
+    @products = @products.with_brand(params[:brand])
     @products = @products.with_colour(params[:colour])
     @products = @products.with_material(params[:material])
 
@@ -52,6 +53,11 @@ class PagesController < ApplicationController
 
     # Build available filter values from current product set
     @available_filters = build_available_filters(@products)
+
+    # Available brands for sidebar (from full active catalogue, not filtered set)
+    @available_brands = Product.active.standard
+      .where.not(brand: [ nil, "" ])
+      .distinct.pluck(:brand).sort
 
     @products = @products.to_a
   end

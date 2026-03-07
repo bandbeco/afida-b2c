@@ -122,6 +122,7 @@ class Product < ApplicationRecord
   # Attribute-based filtering scopes (direct column filters)
   scope :with_colour, ->(colour) { colour.present? ? where(colour: colour) : all }
   scope :with_material, ->(material) { material.present? ? where(material: material) : all }
+  scope :with_brand, ->(brand) { brand.present? ? where(brand: brand) : all }
 
   scope :sorted, ->(sort_param) {
     case sort_param
