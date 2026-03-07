@@ -21,17 +21,13 @@ class PagesController < ApplicationController
     # Count products per subcategory
     subcategory_counts = @products.group(:category_id).count
 
-    # Load subcategories that have products
-    subcategories_with_products = Category.subcategories
-      .where(id: subcategory_counts.keys)
-      .order(:position)
-
-    # Group subcategories by parent, aggregate counts
+    # Load all subcategories and parent categories (show even if empty)
+    all_subcategories = Category.subcategories.order(:position)
     @parent_categories = Category.browsable.top_level
-      .where(id: subcategories_with_products.select(:parent_id))
+      .where(id: Category.subcategories.select(:parent_id))
       .order(:position)
 
-    @subcategories_by_parent = subcategories_with_products.group_by(&:parent_id)
+    @subcategories_by_parent = all_subcategories.group_by(&:parent_id)
     @subcategory_product_counts = subcategory_counts
 
     @parent_product_counts = @parent_categories.each_with_object({}) do |parent, hash|

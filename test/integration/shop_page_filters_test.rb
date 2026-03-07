@@ -87,7 +87,7 @@ class ShopPageFiltersTest < ActionDispatch::IntegrationTest
     assert_select "[data-parent-slug='branded-packaging']", count: 0
   end
 
-  test "categories without products are not shown" do
+  test "categories without products are still shown" do
     # Create a parent with no products in any subcategory
     empty_parent = Category.create!(name: "Empty Parent", slug: "empty-parent", position: 99)
     Category.create!(name: "Empty Sub", slug: "empty-sub", parent: empty_parent, position: 1)
@@ -95,23 +95,17 @@ class ShopPageFiltersTest < ActionDispatch::IntegrationTest
     get shop_path
 
     assert_response :success
-    assert_select "[data-parent-slug='empty-parent']", count: 0
+    assert_select "[data-parent-slug='empty-parent']"
   ensure
     Category.where(slug: "empty-sub").delete_all
     Category.where(slug: "empty-parent").delete_all
   end
 
-  test "subcategories without products are not shown" do
+  test "subcategories without products are still shown" do
     get shop_path
 
     assert_response :success
-    # child_cold_cups may have no products - verify it's hidden if so
     cold_cups = categories(:child_cold_cups)
-    has_products = cold_cups.products.active.standard.exists?
-    if has_products
-      assert_select "input[type=checkbox][value='#{cold_cups.slug}']"
-    else
-      assert_select "input[type=checkbox][value='#{cold_cups.slug}']", count: 0
-    end
+    assert_select "input[type=checkbox][value='#{cold_cups.slug}']"
   end
 end
