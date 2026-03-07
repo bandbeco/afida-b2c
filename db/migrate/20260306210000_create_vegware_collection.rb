@@ -1,4 +1,4 @@
-class CreateVegwareCollection < ActiveRecord::Migration[8.0]
+class CreateVegwareCollection < ActiveRecord::Migration[8.1]
   def up
     vegware = Collection.find_or_create_by!(slug: "vegware") do |c|
       c.name = "Vegware"

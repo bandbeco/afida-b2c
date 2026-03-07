@@ -676,7 +676,7 @@ vegware_straw:
   brand: "Vegware"
 
 vegware_napkin:
-  category: one
+  category: child_pizza_boxes
   name: "Vegware Napkin"
   sku: VW-NAP-SM
   slug: vegware-napkin

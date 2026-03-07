@@ -197,11 +197,9 @@ class CategoryTest < ActiveSupport::TestCase
     end
   end
 
-  test "destroying parent with children raises foreign key error" do
+  test "destroying parent with children is prevented" do
     parent = categories(:parent_cups_and_drinks)
-    assert_raises(ActiveRecord::InvalidForeignKey) do
-      parent.destroy
-    end
+    assert_not parent.destroy
   end
 
   test "acts_as_list is scoped to parent_id" do
@@ -234,5 +232,22 @@ class CategoryTest < ActiveSupport::TestCase
     food_children = food_parent.children.pluck(:id)
 
     assert_empty cups_children & food_children
+  end
+
+  test "parent cannot be self" do
+    category = categories(:parent_cups_and_drinks)
+    category.parent_id = category.id
+    assert_not category.valid?
+    assert_includes category.errors[:parent].join, "cannot be the category itself"
+  end
+
+  test "max nesting depth prevents three levels" do
+    grandchild = Category.new(
+      name: "Grandchild",
+      slug: "grandchild-test",
+      parent: categories(:child_hot_cups)
+    )
+    assert_not grandchild.valid?
+    assert_includes grandchild.errors[:parent].join, "two levels"
   end
 end

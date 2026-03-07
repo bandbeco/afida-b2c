@@ -43,7 +43,7 @@ class VegwareCollectionTest < ActionDispatch::IntegrationTest
   test "vegware category filter page excludes products from other categories" do
     get category_filter_collection_url(@vegware.slug, @parent_cups_and_drinks.slug)
     assert_response :success
-    # Napkin is in category one, not in cups-and-drinks
+    # Napkin is in hot-food (pizza-boxes), not in cups-and-drinks
     assert_no_match(/Vegware Napkin/, response.body)
   end
 

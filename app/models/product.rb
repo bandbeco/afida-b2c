@@ -319,7 +319,7 @@ class Product < ApplicationRecord
 
   def category_must_be_subcategory
     return if category.blank?
-    if category.parent_id.nil? && category.children.exists?
+    if category.parent_id.nil? && Category.where(parent_id: category.id).exists?
       errors.add(:category, "must be a subcategory, not a top-level category")
     end
   end
