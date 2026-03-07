@@ -1,33 +1,53 @@
 import { Controller } from "@hotwired/stimulus"
 
 /**
- * Click-to-open mega-menu for the category navigation bar.
+ * Hover-to-open mega-menu for the desktop category navigation bar.
  *
  * Each top-level category has a trigger button and a panel.
- * Clicking a trigger opens its panel (and closes any other open panel).
- * Panels close on: clicking outside, pressing Escape, clicking the same trigger again.
+ * Hovering a trigger opens its panel (and closes any other open panel).
+ * Moving the mouse into the panel keeps it open.
+ * Panels close on: mouse leaving trigger+panel area, pressing Escape,
+ * or clicking the backdrop.
  */
 export default class extends Controller {
   static targets = ["trigger", "panel", "backdrop"]
 
   connect() {
     this.openIndex = null
+    this.hideTimeout = null
     this.boundHandleKeydown = this.handleKeydown.bind(this)
     document.addEventListener("keydown", this.boundHandleKeydown)
   }
 
   disconnect() {
     document.removeEventListener("keydown", this.boundHandleKeydown)
+    this.clearHideTimeout()
   }
 
-  toggle(event) {
+  // Called on mouseenter of a trigger button
+  showPanel(event) {
+    this.clearHideTimeout()
     const index = parseInt(event.currentTarget.dataset.index)
+    if (this.openIndex === index) return
+    this.open(index)
+  }
 
-    if (this.openIndex === index) {
+  // Called on mouseleave of a trigger button
+  scheduleHide() {
+    this.clearHideTimeout()
+    this.hideTimeout = setTimeout(() => {
       this.close()
-    } else {
-      this.open(index)
-    }
+    }, 150)
+  }
+
+  // Called on mouseenter of a panel — cancel the pending hide
+  cancelHide() {
+    this.clearHideTimeout()
+  }
+
+  // Called on mouseleave of a panel — schedule hide
+  panelLeave() {
+    this.scheduleHide()
   }
 
   open(index) {
@@ -49,11 +69,27 @@ export default class extends Controller {
       this.backdropTarget.classList.add("opacity-100")
     }
 
+    // Position panel horizontally under its trigger
+    const triggerRect = trigger.getBoundingClientRect()
+    const containerRect = this.element.getBoundingClientRect()
+    const panelLeft = triggerRect.left - containerRect.left
+    // Ensure panel doesn't overflow the right edge of the viewport
+    panel.style.left = `${panelLeft}px`
+    panel.style.right = "auto"
+
     // Show panel
     panel.classList.remove("hidden")
     panel.offsetHeight // force reflow
-    panel.classList.remove("opacity-0", "-translate-y-2")
-    panel.classList.add("opacity-100", "translate-y-0")
+
+    // Check if panel overflows right edge and adjust
+    const panelRect = panel.getBoundingClientRect()
+    if (panelRect.right > window.innerWidth) {
+      panel.style.left = "auto"
+      panel.style.right = "0px"
+    }
+
+    panel.classList.remove("opacity-0")
+    panel.classList.add("opacity-100")
 
     // Update ARIA
     trigger.setAttribute("aria-expanded", "true")
@@ -83,8 +119,8 @@ export default class extends Controller {
 
     if (!panel || !trigger) return
 
-    panel.classList.remove("opacity-100", "translate-y-0")
-    panel.classList.add("opacity-0", "-translate-y-2")
+    panel.classList.remove("opacity-100")
+    panel.classList.add("opacity-0")
 
     setTimeout(() => {
       if (this.openIndex !== index) {
@@ -100,6 +136,13 @@ export default class extends Controller {
       const trigger = this.triggerTargets[this.openIndex]
       this.close()
       if (trigger) trigger.focus()
+    }
+  }
+
+  clearHideTimeout() {
+    if (this.hideTimeout) {
+      clearTimeout(this.hideTimeout)
+      this.hideTimeout = null
     }
   }
 }

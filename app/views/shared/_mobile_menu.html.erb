@@ -125,14 +125,16 @@
           <span class="block text-lg font-semibold mt-2"><%= cat.name %></span>
         </div>
         <ul class="menu p-4 gap-1">
-          <li>
-            <%= link_to "View all #{cat.name}", category_browse_path(cat), class: "text-base font-medium text-primary" %>
-          </li>
           <% cat.children.order(:position).each do |sub| %>
             <li>
               <%= link_to sub.name, category_browse_path(sub), class: "text-base" %>
             </li>
           <% end %>
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <%= link_to category_browse_path(cat), class: "text-sm text-base-content/60 hover:text-primary transition-colors" do %>
+              View all <%= cat.name %> →
+            <% end %>
+          </li>
         </ul>
       </div>
     <% end %>
@@ -151,14 +153,16 @@
           <span class="block text-lg font-semibold mt-2">Vegware</span>
         </div>
         <ul class="menu p-4 gap-1">
-          <li>
-            <%= link_to "View all Vegware", collection_path(vegware_collection), class: "text-base font-medium text-primary" %>
-          </li>
           <% vegware_categories.each do |cat| %>
             <li>
               <%= link_to "Vegware #{cat.name}", category_filter_collection_path(vegware_collection, category_slug: cat.slug), class: "text-base" %>
             </li>
           <% end %>
+          <li class="border-t border-base-200 mt-2 pt-2">
+            <%= link_to collection_path(vegware_collection), class: "text-sm text-base-content/60 hover:text-primary transition-colors" do %>
+              View all Vegware →
+            <% end %>
+          </li>
         </ul>
       </div>
     <% end %>

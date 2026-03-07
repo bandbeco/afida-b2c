@@ -10,7 +10,7 @@
 <% menu_variant = ->(collection) { collection.image.variant(resize_to_fill: [400, 400]).processed if collection&.image&.attached? } %>
 <% default_image_url = default_collection ? url_for(menu_variant.call(default_collection)) : '' if default_collection&.image&.attached? %>
 
-<div class="relative hidden lg:block"
+<div class="relative hidden lg:block z-[60]"
      data-controller="mega-menu"
      data-mega-menu-default-image-value="<%= default_image_url || '' %>">
 
