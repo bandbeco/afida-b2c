@@ -3,7 +3,7 @@
     <div class="footer sm:footer-horizontal text-base-content justify-between">
       <nav aria-labelledby="footer-categories">
         <span id="footer-categories" class="footer-title">Shop by Category</span>
-        <% Category.browsable.order(:position, :name).each do |category| %>
+        <% Category.browsable.top_level.order(:position, :name).each do |category| %>
           <%= link_to category.name, category_path(category), class: "link link-hover" %>
         <% end %>
       </nav>

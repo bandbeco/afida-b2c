@@ -20,7 +20,7 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= @category.meta_title.presence || "#{@category.name} | Afida" %>">
   <meta property="og:description" content="<%= @category.meta_description %>">
-  <meta property="og:url" content="<%= category_url(@category) %>">
+  <meta property="og:url" content="<%= category_browse_url(@category) %>">
   <meta property="og:site_name" content="Afida">
   <meta property="og:image" content="<%= @category.image.attached? ? rails_storage_proxy_url(@category.image) : hero_image_url %>">
 
@@ -29,28 +29,26 @@
   <meta name="twitter:description" content="<%= @category.meta_description %>">
 
   <script type="application/ld+json">
+    <%
+      breadcrumb_items = [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": root_url }
+      ]
+      if @category.parent.present?
+        breadcrumb_items << { "@type": "ListItem", "position": 2, "name": @category.parent.name, "item": category_url(@category.parent) }
+        breadcrumb_items << { "@type": "ListItem", "position": 3, "name": @category.name, "item": category_browse_url(@category) }
+      else
+        breadcrumb_items << { "@type": "ListItem", "position": 2, "name": @category.name, "item": category_browse_url(@category) }
+      end
+    %>
     <%= raw({
       "@context": "https://schema.org",
       "@type": "CollectionPage",
       "name": @category.name,
       "description": @category.description,
-      "url": category_url(@category),
+      "url": category_browse_url(@category),
       "breadcrumb": {
         "@type": "BreadcrumbList",
-        "itemListElement": [
-          {
-            "@type": "ListItem",
-            "position": 1,
-            "name": "Home",
-            "item": root_url
-          },
-          {
-            "@type": "ListItem",
-            "position": 2,
-            "name": @category.name,
-            "item": category_url(@category)
-          }
-        ]
+        "itemListElement": breadcrumb_items
       }
     }.to_json) %>
   </script>
@@ -88,7 +86,7 @@
 
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
       <% related_cats.each do |related_category| %>
-        <%= link_to category_path(related_category), class: "card bg-base-100 border border-base-300 hover:border-primary hover:shadow-md transition-all" do %>
+        <%= link_to category_browse_path(related_category), class: "card bg-base-100 border border-base-300 hover:border-primary hover:shadow-md transition-all" do %>
           <div class="card-body flex-row items-center gap-4 p-4">
             <% if category_icon_path(related_category).present? %>
               <%= vite_image_tag category_icon_path(related_category), class: 'w-12 h-12 object-contain', alt: "#{related_category.name} icon" %>

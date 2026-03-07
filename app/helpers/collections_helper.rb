@@ -119,6 +119,48 @@ module CollectionsHelper
     "Request your free #{sample_pack.name} sample pack. #{product_count} curated products delivered for just #{shipping_cost}. Try before you buy with Afida."
   end
 
+  def vegware_filter_meta_title(category)
+    "Vegware #{category.name} | Eco-Friendly Packaging | Afida"
+  end
+
+  def vegware_filter_meta_description(category)
+    "Browse our range of Vegware #{category.name} products. Plant-based, compostable packaging from the UK's leading eco-friendly supplier."
+  end
+
+  def vegware_filter_structured_data(collection, category)
+    filter_url = category_filter_collection_url(collection, category_slug: category.slug)
+    {
+      "@context": "https://schema.org",
+      "@type": "CollectionPage",
+      "name": "Vegware #{category.name}",
+      "description": vegware_filter_meta_description(category),
+      "url": filter_url,
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": root_url
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Vegware",
+            "item": collection_url(collection)
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": category.name,
+            "item": filter_url
+          }
+        ]
+      }
+    }
+  end
+
   # Returns structured data for the collections index page (ItemList)
   def collections_index_structured_data(collections)
     {

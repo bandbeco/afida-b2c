@@ -1,44 +1,113 @@
-<!-- Category Sub-Navigation -->
-<%
-  # Navigation categories with their display names and slugs
-  nav_categories = [
-    { slug: "cups-and-lids", name: "Cups & Lids" },
-    { slug: "ice-cream-cups", name: "Ice Cream Cups" },
-    { slug: "napkins", name: "Napkins" },
-    { slug: "pizza-boxes", name: "Pizza Boxes" },
-    { slug: "straws", name: "Straws" },
-    { slug: "takeaway-containers", name: "Takeaway Containers" },
-    { slug: "takeaway-extras", name: "Takeaway Extras" }
-  ]
-%>
-<%# Mobile: Horizontal scrollable category bar %>
-<div class="bg-base-200 border-b border-base-300 lg:hidden">
-  <div class="overflow-x-auto scrollbar-hide">
-    <ul class="flex gap-1 px-4 py-2 min-w-max">
-      <% nav_categories.each do |cat| %>
-        <li>
-          <%= link_to category_path(cat[:slug]), class: "flex items-center gap-1.5 px-3 py-2 rounded-full text-sm whitespace-nowrap transition-colors #{current_page?(category_path(cat[:slug])) ? 'bg-primary text-primary-content' : 'bg-base-100 text-base-content hover:bg-base-300'}" do %>
-            <%= category_icon_tag(cat[:slug], alt: "#{cat[:name]} icon", class: "w-4 h-4") %>
-            <span><%= cat[:name] %></span>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
-  </div>
-</div>
+<%# Desktop mega-menu category bar (hover-to-open) %>
+<%# Replaces old flat category links with dropdown panels showing subcategories %>
+<%# Hidden on mobile (< lg breakpoint) — mobile uses hamburger drill-down instead %>
 
-<%# Desktop: Original centered navigation %>
-<div class="bg-base-200 border-b border-base-300 hidden lg:block">
-  <div class="container mx-auto px-4">
-    <ul class="flex justify-between py-4">
-      <% nav_categories.each do |cat| %>
+<% categories = Category.browsable.top_level.includes(:children).order(:position) %>
+<% vegware_collection = Collection.regular.find_by(slug: "vegware") %>
+<% vegware_categories = vegware_collection ? Category.browsable.top_level.where(id: vegware_collection.products.joins(:category).select("categories.parent_id")).order(:position) : [] %>
+
+<div class="category-mega-menu hidden lg:block bg-base-200 border-b border-base-300 relative"
+     data-controller="category-mega-menu">
+
+  <%# Backdrop overlay — dims page behind open panel %>
+  <div class="hidden opacity-0 fixed inset-x-0 bottom-0 bg-black/30 z-40 transition-opacity duration-300"
+       data-category-mega-menu-target="backdrop"
+       data-action="click->category-mega-menu#close"
+       style="top: 0;">
+  </div>
+
+  <div class="container mx-auto px-4 relative z-50">
+    <ul class="flex justify-between py-3">
+      <% categories.each_with_index do |cat, index| %>
         <li>
-          <%= link_to category_path(cat[:slug]), class: "flex items-center gap-2 hover:underline hover:decoration-secondary hover:decoration-2 hover:underline-offset-8 transition-colors #{current_page?(category_path(cat[:slug])) ? 'text-base-content underline decoration-secondary decoration-2 underline-offset-8' : 'text-base-content'}" do %>
-            <%= category_icon_tag(cat[:slug], alt: "#{cat[:name]} icon", class: "w-5 h-5 object-contain") %>
-            <span class="text-sm lg:text-base"><%= cat[:name] %></span>
-          <% end %>
+          <button type="button"
+                  class="flex items-center gap-2 text-sm lg:text-base text-base-content hover:text-primary transition-colors cursor-pointer"
+                  data-category-mega-menu-target="trigger"
+                  data-action="mouseenter->category-mega-menu#showPanel mouseleave->category-mega-menu#scheduleHide"
+                  data-index="<%= index %>"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  aria-controls="category-panel-<%= cat.slug %>">
+            <%= category_icon_tag(cat, class: "w-5 h-5 object-contain") %>
+            <span><%= cat.name %></span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </li>
+      <% end %>
+
+      <% if vegware_collection %>
+        <li>
+          <button type="button"
+                  class="flex items-center gap-2 text-sm lg:text-base text-base-content hover:text-primary transition-colors cursor-pointer"
+                  data-category-mega-menu-target="trigger"
+                  data-action="mouseenter->category-mega-menu#showPanel mouseleave->category-mega-menu#scheduleHide"
+                  data-index="<%= categories.size %>"
+                  aria-expanded="false"
+                  aria-haspopup="true"
+                  aria-controls="category-panel-vegware">
+            <%= category_icon_tag("vegware", class: "w-5 h-5 object-contain") %>
+            <span>Vegware</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
         </li>
       <% end %>
     </ul>
   </div>
+
+  <%# Dropdown panels — JS positions each under its trigger %>
+  <% categories.each_with_index do |cat, index| %>
+    <div id="category-panel-<%= cat.slug %>"
+         class="hidden opacity-0 absolute z-50 pt-2 transition-opacity duration-200 ease-out"
+         data-category-mega-menu-target="panel"
+         data-action="mouseenter->category-mega-menu#cancelHide mouseleave->category-mega-menu#panelLeave"
+         data-index="<%= index %>"
+         style="top: 100%;">
+      <div class="bg-base-100 rounded-xl shadow-2xl border border-base-200 p-6 min-w-[240px]">
+        <nav class="flex flex-col gap-1">
+          <% cat.children.order(:position).each do |sub| %>
+            <%= link_to category_browse_path(sub),
+                        class: "text-base-content hover:text-primary transition-colors py-1" do %>
+              <%= sub.name %>
+            <% end %>
+          <% end %>
+        </nav>
+        <div class="mt-4 pt-3 border-t border-base-200">
+          <%= link_to category_browse_path(cat),
+                      class: "text-sm text-base-content/60 hover:text-primary transition-colors" do %>
+            View all <%= cat.name %> →
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if vegware_collection %>
+    <div id="category-panel-vegware"
+         class="hidden opacity-0 absolute z-50 pt-2 transition-opacity duration-200 ease-out"
+         data-category-mega-menu-target="panel"
+         data-action="mouseenter->category-mega-menu#cancelHide mouseleave->category-mega-menu#panelLeave"
+         data-index="<%= categories.size %>"
+         style="top: 100%;">
+      <div class="bg-base-100 rounded-xl shadow-2xl border border-base-200 p-6 min-w-[240px]">
+        <nav class="flex flex-col gap-1">
+          <% vegware_categories.each do |cat| %>
+            <%= link_to category_filter_collection_path(vegware_collection, category_slug: cat.slug),
+                        class: "text-base-content hover:text-primary transition-colors py-1" do %>
+              Vegware <%= cat.name %>
+            <% end %>
+          <% end %>
+        </nav>
+        <div class="mt-4 pt-3 border-t border-base-200">
+          <%= link_to collection_path(vegware_collection),
+                      class: "text-sm text-base-content/60 hover:text-primary transition-colors" do %>
+            View all Vegware →
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
 </div>

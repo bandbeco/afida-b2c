@@ -3,6 +3,16 @@ module CategoriesHelper
   # Map category slugs to their SVG icon paths
   # These icons are used in the category nav bar and samples page
   CATEGORY_ICONS = {
+    # Top-level parent categories (new hierarchy)
+    "cups-and-drinks" => "images/graphics/cold-cups.svg",
+    "hot-food" => "images/graphics/kraft-food-containers.svg",
+    "cold-food-and-salads" => "images/graphics/box.svg",
+    "tableware" => "images/graphics/napkins.svg",
+    "bags-and-wraps" => "images/graphics/take-away-extras.svg",
+    "supplies-and-essentials" => "images/graphics/box.svg",
+    "branded-packaging" => "images/graphics/box.svg",
+    "vegware" => "images/graphics/box.svg",
+    # Legacy/subcategory slugs (still used on subcategory pages, samples page, etc.)
     "cups-and-lids" => "images/graphics/cold-cups.svg",
     "ice-cream-cups" => "images/graphics/ice-cream-cups.svg",
     "napkins" => "images/graphics/napkins.svg",
@@ -66,6 +76,27 @@ module CategoriesHelper
   # @return [String] Hex color code
   def category_pastel_color(index)
     CATEGORY_PASTEL_COLORS[index % CATEGORY_PASTEL_COLORS.length]
+  end
+
+  # Returns the browse path for a category, using nested URLs for subcategories
+  #
+  # @param category [Category] Category object
+  # @return [String] URL path like /categories/hot-food or /categories/hot-food/pizza-boxes
+  def category_browse_path(category)
+    if category.parent.present?
+      category_subcategory_path(category.parent.slug, category.slug)
+    else
+      category_path(category)
+    end
+  end
+
+  # Returns the browse URL for a category (absolute), using nested URLs for subcategories
+  def category_browse_url(category)
+    if category.parent.present?
+      category_subcategory_url(category.parent.slug, category.slug)
+    else
+      category_url(category)
+    end
   end
 
   # Renders a category icon image tag

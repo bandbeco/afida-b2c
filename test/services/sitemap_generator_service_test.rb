@@ -32,8 +32,13 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
 
     # branded-products category is excluded because it redirects
     Category.where.not(slug: "branded-products").find_each do |category|
-      assert all_urls.any? { |url| url.include?("/categories/#{category.slug}") },
-             "Expected sitemap to include category: #{category.slug}"
+      expected_path = if category.parent.present?
+        "/categories/#{category.parent.slug}/#{category.slug}"
+      else
+        "/categories/#{category.slug}"
+      end
+      assert all_urls.any? { |url| url.include?(expected_path) },
+             "Expected sitemap to include category: #{category.slug} at #{expected_path}"
     end
 
     # Verify /categories/branded-products is NOT in the sitemap (it redirects)

@@ -1,0 +1,75 @@
+<% content_for :breadcrumbs do %>
+  <nav aria-label="Breadcrumb" class="text-sm breadcrumbs">
+    <ul>
+      <li><%= link_to "Home", root_path %></li>
+      <li><%= link_to "Vegware", collection_path(@collection) %></li>
+      <li><%= @category.name %></li>
+    </ul>
+  </nav>
+<% end %>
+
+<% content_for :title do %>
+<%= vegware_filter_meta_title(@category) %>
+<% end %>
+
+<% content_for :meta_description do %>
+<%= vegware_filter_meta_description(@category) %>
+<% end %>
+
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
+<% content_for :head do %>
+  <%= canonical_url(category_filter_collection_url(@collection, category_slug: @category.slug)) %>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= vegware_filter_meta_title(@category) %>">
+  <meta property="og:description" content="<%= vegware_filter_meta_description(@category) %>">
+  <meta property="og:url" content="<%= category_filter_collection_url(@collection, category_slug: @category.slug) %>">
+  <meta property="og:site_name" content="Afida">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= vegware_filter_meta_title(@category) %>">
+  <meta name="twitter:description" content="<%= vegware_filter_meta_description(@category) %>">
+
+  <script type="application/ld+json">
+    <%= raw(vegware_filter_structured_data(@collection, @category).to_json) %>
+  </script>
+<% end %>
+
+<div class="drawer drawer-end">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
+  <div class="drawer-content">
+
+    <h1 class="text-4xl mb-4">Vegware <%= @category.name %></h1>
+
+    <% if @collection.description.present? %>
+      <div class="prose prose-sm max-w-none mb-6">
+        <%= @collection.description %>
+      </div>
+    <% end %>
+
+    <div class="min-h-[60vh]">
+      <% if @products.any? %>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <%= render partial: "products/card", collection: @products, as: :product %>
+        </div>
+      <% else %>
+        <div class="text-center py-16">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-base-content/30 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+          <h2 class="text-xl font-medium mb-2">No Vegware products in this category</h2>
+          <p class="text-base-content/70 mb-4">Check back soon as we add more products.</p>
+          <%= link_to "Browse All Vegware", collection_path(@collection), class: "btn btn-primary" %>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+
+  <div class="drawer-side">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="bg-base-200 text-base-content h-full w-80 p-4 flex flex-col">
+      <%= render "shared/drawer_cart_content" %>
+    </div>
+  </div>
+</div>

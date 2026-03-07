@@ -49,7 +49,7 @@
     <%= raw breadcrumb_structured_data([
       { name: "Home", url: root_url },
       { name: @product.category.slug == "branded-products" ? "Custom Branded Packaging" : @product.category.name,
-        url: @product.category.slug == "branded-products" ? branded_products_url : category_url(@product.category) },
+        url: @product.category.slug == "branded-products" ? branded_products_url : category_browse_url(@product.category) },
       { name: @product.generated_title, url: product_url(@product) }
     ]) %>
   </script>
@@ -452,7 +452,7 @@
             <h2 class="text-xl mb-1">Explore More <%= @category.name %></h2>
             <p class="text-base-content/70">Browse our full range of <%= @category.name.downcase %>.</p>
           </div>
-          <%= link_to category_path(@category), class: "btn btn-outline" do %>
+          <%= link_to category_browse_path(@category), class: "btn btn-outline" do %>
             View All <%= @category.name %>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />

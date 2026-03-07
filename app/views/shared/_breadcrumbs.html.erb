@@ -5,13 +5,19 @@
       <% if @product.category.slug == "branded-products" %>
         <li><%= link_to "Custom Branded Packaging", branded_products_path %></li>
       <% else %>
-        <li><%= link_to @product.category.name, category_path(@product.category) %></li>
+        <% if @product.category.parent.present? %>
+          <li><%= link_to @product.category.parent.name, category_path(@product.category.parent) %></li>
+        <% end %>
+        <li><%= link_to @product.category.name, category_browse_path(@product.category) %></li>
       <% end %>
       <li><%= @product.generated_title %></li>
     </ul>
   <% elsif @category.present? %>
     <ul>
       <li><%= link_to "All Products", shop_path %></li>
+      <% if @category.parent.present? %>
+        <li><%= link_to @category.parent.name, category_path(@category.parent) %></li>
+      <% end %>
       <li><%= @category.name %></li>
     </ul>
   <% end %>

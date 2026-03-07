@@ -46,6 +46,36 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert_equal "1234567890123", gtin.text
   end
 
+  test "product_type includes parent and subcategory" do
+    product = products(:hot_cup_in_subcategory)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    product_type = xml.at_xpath("//item/g:product_type", "g" => "http://base.google.com/ns/1.0").text
+    assert_equal "#{product.category.parent.name} > #{product.category.name}", product_type
+  end
+
+  test "brand uses product brand when present" do
+    product = products(:vegware_hot_cup)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    brand = xml.at_xpath("//item/g:brand", "g" => "http://base.google.com/ns/1.0").text
+    assert_equal "Vegware", brand
+  end
+
+  test "brand defaults to Afida when product has no brand" do
+    product = products(:one)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    brand = xml.at_xpath("//item/g:brand", "g" => "http://base.google.com/ns/1.0").text
+    assert_equal "Afida", brand
+  end
+
   test "optimized description has first 160 chars with key info" do
     product = products(:one)
     # Remove existing descriptions to test generated one

@@ -85,6 +85,13 @@ class Product < ApplicationRecord
     slugs = Array(category_slugs).reject(&:blank?)
     return all if slugs.empty?
 
+    # Expand parent category slugs to include all their subcategory slugs
+    parent_ids = Category.top_level.where(slug: slugs).pluck(:id)
+    if parent_ids.any?
+      child_slugs = Category.where(parent_id: parent_ids).pluck(:slug)
+      slugs = (slugs + child_slugs).uniq
+    end
+
     joins(:category).where(categories: { slug: slugs })
   }
 
@@ -115,6 +122,7 @@ class Product < ApplicationRecord
   # Attribute-based filtering scopes (direct column filters)
   scope :with_colour, ->(colour) { colour.present? ? where(colour: colour) : all }
   scope :with_material, ->(material) { material.present? ? where(material: material) : all }
+  scope :with_brand, ->(brand) { brand.present? ? where(brand: brand) : all }
 
   scope :sorted, ->(sort_param) {
     case sort_param
@@ -148,6 +156,7 @@ class Product < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than: 0 }
   validates :category, presence: true
+  validate :category_must_be_subcategory
   validates :gtin,
             format: { with: /\A\d{8}|\d{12}|\d{13}|\d{14}\z/, message: "must be 8, 12, 13, or 14 digits" },
             uniqueness: true,
@@ -307,6 +316,13 @@ class Product < ApplicationRecord
   end
 
   private
+
+  def category_must_be_subcategory
+    return if category.blank?
+    if category.parent_id.nil? && category.children.exists?
+      errors.add(:category, "must be a subcategory, not a top-level category")
+    end
+  end
 
   def truncate_to_words(text, word_count)
     return nil if text.blank?

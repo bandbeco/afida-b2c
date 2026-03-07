@@ -30,6 +30,17 @@ coffee_shop_sample_pack:
   sample_pack: true
   position: 1
 
+# Vegware collection (brand-based, for SEO pages)
+vegware:
+  name: "Vegware"
+  slug: "vegware"
+  description: "Vegware eco-friendly packaging products"
+  meta_title: "Vegware Eco-Friendly Packaging"
+  meta_description: "Browse our full range of Vegware plant-based compostable packaging"
+  featured: true
+  sample_pack: false
+  position: 4
+
 # Empty collection for edge case testing
 empty_collection:
   name: "Empty Collection"

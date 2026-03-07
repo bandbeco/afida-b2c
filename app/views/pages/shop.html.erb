@@ -15,10 +15,39 @@
           <div>
             <div class="font-semibold text-lg mb-3 pb-2 border-b">Product Types</div>
 
-            <% @categories.each do |category| %>
-              <label for="category_<%= category.slug %>" class="flex items-center gap-2 mb-2 cursor-pointer">
-                <%= check_box_tag 'categories[]', category.slug, (params[:categories] || []).include?(category.slug), id: "category_#{category.slug}", class: "checkbox checkbox-primary", aria: { label: "Filter by #{category.name}" }, data: { action: "change->form#submit" } %>
-                <span><%= category.name %> (<%= @category_product_counts[category.id] || 0 %>)</span>
+            <% @parent_categories.each do |parent| %>
+              <div class="shop-category-group mb-3" data-parent-slug="<%= parent.slug %>">
+                <div class="font-medium text-sm mb-1">
+                  <%= parent.name %>
+                  <span class="category-count text-gray-500">(<%= @parent_product_counts[parent.id] || 0 %>)</span>
+                </div>
+                <div class="pl-4">
+                  <% (@subcategories_by_parent[parent.id] || []).each do |subcategory| %>
+                    <label for="category_<%= subcategory.slug %>" class="flex items-center gap-2 mb-1.5 cursor-pointer text-sm">
+                      <%= check_box_tag 'categories[]', subcategory.slug, (params[:categories] || []).include?(subcategory.slug), id: "category_#{subcategory.slug}", class: "checkbox checkbox-primary checkbox-sm", aria: { label: "Filter by #{subcategory.name}" }, data: { action: "change->form#submit" } %>
+                      <span><%= subcategory.name %> (<%= @subcategory_product_counts[subcategory.id] || 0 %>)</span>
+                    </label>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Brand Filter -->
+        <% if @available_brands.any? %>
+          <div class="shop-brand-filter">
+            <div class="font-semibold text-lg mb-3 pb-2 border-b">Brand</div>
+            <% @available_brands.each do |brand| %>
+              <label for="brand_<%= brand.parameterize %>" class="flex items-center gap-2 mb-1.5 cursor-pointer text-sm">
+                <%= radio_button_tag 'brand', brand, params[:brand] == brand, id: "brand_#{brand.parameterize}", class: "radio radio-primary radio-sm", data: { action: "change->form#submit" } %>
+                <span><%= brand %></span>
+              </label>
+            <% end %>
+            <% if params[:brand].present? %>
+              <label class="flex items-center gap-2 mb-1.5 cursor-pointer text-sm text-base-content/60">
+                <%= radio_button_tag 'brand', '', false, id: "brand_all", class: "radio radio-primary radio-sm", data: { action: "change->form#submit" } %>
+                <span>All Brands</span>
               </label>
             <% end %>
           </div>
@@ -29,7 +58,7 @@
 
         <!-- Reset Filters Button -->
         <div class="mt-4">
-          <%= link_to "Reset Filters", shop_path, class: "btn btn-outline w-full" %>
+          <%= link_to "Reset Filters", shop_path, class: "btn btn-outline w-full", data: { turbo_frame: "_top" } %>
         </div>
       </aside>
 
@@ -71,7 +100,7 @@
           <% else %>
             <div class="text-center py-12">
               <p class="text-xl text-gray-600 mb-4">No products found.</p>
-              <%= link_to "Clear Filters", shop_path, class: "btn btn-primary" %>
+              <%= link_to "Clear Filters", shop_path, class: "btn btn-primary", data: { turbo_frame: "_top" } %>
             </div>
           <% end %>
         <% end %>

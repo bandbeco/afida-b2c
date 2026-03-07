@@ -570,6 +570,51 @@ paper_lids:
   position: 100
   product_type: standard
 
+# Products for parent category hierarchy tests
+pizza_in_subcategory:
+  category: child_pizza_boxes
+  name: "10 Inch Pizza Box"
+  sku: PIZ-10-HIER
+  slug: 10-inch-pizza-box-hier
+  price: 15.00
+  stock_quantity: 500
+  active: true
+  position: 1
+  product_type: standard
+
+pizza_12_in_subcategory:
+  category: child_pizza_boxes
+  name: "12 Inch Pizza Box"
+  sku: PIZ-12-HIER
+  slug: 12-inch-pizza-box-hier
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 2
+  product_type: standard
+
+takeaway_box_in_subcategory:
+  category: child_takeaway_boxes
+  name: "Kraft Takeaway Box"
+  sku: TKB-KRAFT-HIER
+  slug: kraft-takeaway-box-hier
+  price: 12.00
+  stock_quantity: 500
+  active: true
+  position: 1
+  product_type: standard
+
+takeaway_box_large_in_subcategory:
+  category: child_takeaway_boxes
+  name: "Large Kraft Takeaway Box"
+  sku: TKB-LG-KRAFT-HIER
+  slug: large-kraft-takeaway-box-hier
+  price: 14.00
+  stock_quantity: 500
+  active: true
+  position: 2
+  product_type: standard
+
 branded_double_wall_template:
   product_family: branded_double_wall
   category: branded
@@ -593,3 +638,63 @@ acme_branded_cups:
   product_type: customized_instance
   parent_product: branded_double_wall_template
   organization: acme
+
+hot_cup_in_subcategory:
+  category: child_hot_cups
+  name: "Regular 8oz Hot Cup"
+  sku: HC-REG-8
+  slug: regular-8oz-hot-cup-hier
+  price: 24.00
+  stock_quantity: 500
+  active: true
+  position: 1
+  product_type: standard
+
+# Vegware brand products (for Vegware collection tests)
+vegware_hot_cup:
+  category: child_hot_cups
+  name: "Vegware 8oz Single Wall Hot Cup"
+  sku: VW-HC-8
+  slug: vegware-8oz-single-wall-hot-cup
+  price: 30.00
+  stock_quantity: 500
+  active: true
+  position: 50
+  product_type: standard
+  brand: "Vegware"
+
+vegware_straw:
+  category: straws
+  name: "Vegware Paper Straw"
+  sku: VW-STR-6
+  slug: vegware-paper-straw
+  price: 10.00
+  stock_quantity: 500
+  active: true
+  position: 50
+  product_type: standard
+  brand: "Vegware"
+
+vegware_napkin:
+  category: one
+  name: "Vegware Napkin"
+  sku: VW-NAP-SM
+  slug: vegware-napkin
+  price: 14.00
+  stock_quantity: 500
+  active: true
+  position: 50
+  product_type: standard
+  brand: "Vegware"
+
+vegware_inactive:
+  category: child_hot_cups
+  name: "Vegware Inactive Cup"
+  sku: VW-HC-INACTIVE
+  slug: vegware-inactive-cup
+  price: 30.00
+  stock_quantity: 500
+  active: false
+  position: 51
+  product_type: standard
+  brand: "Vegware"
