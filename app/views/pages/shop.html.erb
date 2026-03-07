@@ -58,7 +58,7 @@
 
         <!-- Reset Filters Button -->
         <div class="mt-4">
-          <%= link_to "Reset Filters", shop_path, class: "btn btn-outline w-full" %>
+          <%= link_to "Reset Filters", shop_path, class: "btn btn-outline w-full", data: { turbo_frame: "_top" } %>
         </div>
       </aside>
 
@@ -100,7 +100,7 @@
           <% else %>
             <div class="text-center py-12">
               <p class="text-xl text-gray-600 mb-4">No products found.</p>
-              <%= link_to "Clear Filters", shop_path, class: "btn btn-primary" %>
+              <%= link_to "Clear Filters", shop_path, class: "btn btn-primary", data: { turbo_frame: "_top" } %>
             </div>
           <% end %>
         <% end %>
