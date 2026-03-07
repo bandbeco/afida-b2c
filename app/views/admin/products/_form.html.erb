@@ -139,7 +139,15 @@
 
     <div class="grid grid-cols-2 gap-y-4 py-4">
       <%= form.label :category, class: "label text-base" %>
-      <%= form.select :category_id, Category.all.map { |category| [category.name, category.id] }, {}, class: "select select-bordered" %>
+      <%= form.select :category_id,
+            grouped_options_for_select(
+              Category.top_level.includes(:children).order(:position).map { |parent|
+                [parent.name, parent.children.order(:position).map { |sub| [sub.name, sub.id] }]
+              },
+              product.category_id
+            ),
+            { include_blank: "Select a subcategory…" },
+            class: "select select-bordered" %>
 
       <%= form.label :product_photo, "Product Photo", class: "label text-base" %>
       <%= turbo_frame_tag "product_photo_#{form.object.id}" do %>

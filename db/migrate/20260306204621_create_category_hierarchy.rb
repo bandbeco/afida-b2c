@@ -16,8 +16,7 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
       { name: "Cold Food & Salads",     slug: "cold-food-and-salads",     position: 3 },
       { name: "Tableware",              slug: "tableware",                position: 4 },
       { name: "Bags & Wraps",           slug: "bags-and-wraps",           position: 5 },
-      { name: "Supplies & Essentials",  slug: "supplies-and-essentials",  position: 6 },
-      { name: "Branded Packaging",      slug: "branded-packaging",        position: 7 }
+      { name: "Supplies & Essentials",  slug: "supplies-and-essentials",  position: 6 }
     ]
 
     parent_definitions.each do |attrs|
@@ -49,8 +48,7 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
       "plates-trays"        => { parent: "tableware", new_slug: "plates-and-trays", new_name: "Plates & Trays" },
       "cutlery"             => { parent: "tableware" },
       "napkins"             => { parent: "tableware" },
-      "bags"                => { parent: "bags-and-wraps" },
-      "branded-products"    => { parent: "branded-packaging", new_slug: "branded-cups", new_name: "Branded Cups" }
+      "bags"                => { parent: "bags-and-wraps" }
     }
 
     # Reassign existing categories as subcategories
@@ -93,10 +91,7 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
       { parent: "supplies-and-essentials", name: "Bin Liners",         slug: "bin-liners" },
       { parent: "supplies-and-essentials", name: "Labels & Stickers",  slug: "labels-and-stickers" },
       { parent: "supplies-and-essentials", name: "Gloves & Cleaning",  slug: "gloves-and-cleaning" },
-      { parent: "supplies-and-essentials", name: "Till Rolls",         slug: "till-rolls" },
-
-      # Branded Packaging
-      { parent: "branded-packaging", name: "Branded Greaseproof", slug: "branded-greaseproof" }
+      { parent: "supplies-and-essentials", name: "Till Rolls",         slug: "till-rolls" }
     ]
 
     new_subcategories.each do |attrs|
@@ -139,8 +134,7 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
       "hot-cups"           => { slug: "cups-and-lids",        name: "Cups & Lids" },
       "soup-containers"    => { slug: "takeaway-containers",   name: "Takeaway Containers" },
       "bagasse-containers" => { slug: "bagasse-eco-range",     name: "Bagasse Eco Range" },
-      "plates-and-trays"   => { slug: "plates-trays",          name: "Plates & Trays" },
-      "branded-cups"       => { slug: "branded-products",      name: "Branded Products" }
+      "plates-and-trays"   => { slug: "plates-trays",          name: "Plates & Trays" }
     }
 
     renames.each do |current_slug, original|
@@ -152,7 +146,7 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
     Category.where.not(parent_id: nil).update_all(parent_id: nil)
 
     # Remove parent categories that were created (they have no products)
-    %w[cups-and-drinks hot-food cold-food-and-salads tableware bags-and-wraps supplies-and-essentials branded-packaging].each do |slug|
+    %w[cups-and-drinks hot-food cold-food-and-salads tableware bags-and-wraps supplies-and-essentials].each do |slug|
       cat = Category.find_by(slug: slug)
       cat&.destroy! if cat&.products&.count == 0
     end
@@ -160,8 +154,7 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
     # Remove new subcategories that were created
     %w[cold-cups cup-lids cup-accessories salad-boxes sandwich-and-wrap-boxes deli-pots
        aluminium-containers greaseproof-and-wraps natureflex-bags
-       bin-liners labels-and-stickers gloves-and-cleaning till-rolls
-       branded-greaseproof].each do |slug|
+       bin-liners labels-and-stickers gloves-and-cleaning till-rolls].each do |slug|
       Category.find_by(slug: slug)&.destroy!
     end
 

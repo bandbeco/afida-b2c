@@ -28,6 +28,20 @@ class ProductTest < ActiveSupport::TestCase
     assert product.errors[:category].any?
   end
 
+  test "should not allow association with a top-level category" do
+    parent = categories(:parent_cups_and_drinks)
+    product = Product.new(name: "Test", sku: "test-top-level", category: parent)
+    assert_not product.valid?
+    assert product.errors[:category].any?
+  end
+
+  test "should allow association with a subcategory" do
+    subcategory = categories(:child_hot_cups)
+    product = Product.new(name: "Test", sku: "test-sub", category: subcategory)
+    product.valid?
+    assert_not product.errors[:category].include?("must be a subcategory, not a top-level category")
+  end
+
   # Slug generation tests
   test "should generate slug from name on create if slug is blank" do
     product = Product.new(name: "New Awesome Product", sku: "NAP123", price: 10.00, category: @category)

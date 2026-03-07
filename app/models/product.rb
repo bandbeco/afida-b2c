@@ -155,6 +155,7 @@ class Product < ApplicationRecord
   validates :slug, presence: true, uniqueness: true
   validates :price, presence: true, numericality: { greater_than: 0 }
   validates :category, presence: true
+  validate :category_must_be_subcategory
   validates :gtin,
             format: { with: /\A\d{8}|\d{12}|\d{13}|\d{14}\z/, message: "must be 8, 12, 13, or 14 digits" },
             uniqueness: true,
@@ -314,6 +315,13 @@ class Product < ApplicationRecord
   end
 
   private
+
+  def category_must_be_subcategory
+    return if category.blank?
+    if category.parent_id.nil? && category.children.exists?
+      errors.add(:category, "must be a subcategory, not a top-level category")
+    end
+  end
 
   def truncate_to_words(text, word_count)
     return nil if text.blank?
