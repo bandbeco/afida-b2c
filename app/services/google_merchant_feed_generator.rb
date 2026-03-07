@@ -40,11 +40,17 @@ class GoogleMerchantFeedGenerator
         xml["g"].unit_pricing_measure "#{product.pac_size}ct" if product.pac_size.present?
       end
 
-      # Category
-      xml["g"].product_type product.category.name if product.category
+      # Category (hierarchical: "Parent > Subcategory")
+      if product.category
+        if product.category.parent
+          xml["g"].product_type "#{product.category.parent.name} > #{product.category.name}"
+        else
+          xml["g"].product_type product.category.name
+        end
+      end
 
       # Brand
-      xml["g"].brand "Afida"
+      xml["g"].brand product.brand.presence || "Afida"
 
       # Product identifiers
       xml["g"].gtin product.gtin if product.gtin.present?
