@@ -20,7 +20,7 @@
 ## Key Decisions
 - Data model: self-referential Category with parent_id
 - Vegware: Collection (brand filter), not a category
-- Nav: two bars, click-to-open mega-menu
+- Nav: two bars, hover-to-open mega-menu (deviates from PRD which specifies click; user preference)
 - Mobile: hamburger drill-down, pill bar removed, account links included
 - URLs: /categories/:parent/:subcategory, 301 redirects from old URLs
 - Shop All: keep existing /shop page, no icon grid
@@ -86,11 +86,11 @@
 - Updated tests: `legacy_redirects_test.rb`, `categories_controller_test.rb`, `sitemap_generator_service_test.rb`
 - Full suite: 1661 tests, 0 failures
 
-### #83 — Desktop mega-menu (click-to-open)
+### #83 — Desktop mega-menu (hover-to-open, per user preference over PRD)
 - View: `app/views/shared/_category_nav.html.erb` — full rewrite
   - Removed old hardcoded flat category links (7 old categories)
   - Removed mobile horizontal scroll pill bar (replaced by hamburger menu)
-  - Desktop: click-to-open mega-menu with top-level category buttons from DB
+  - Desktop: hover-to-open mega-menu with top-level category buttons from DB
   - Each button has SVG icon + text label + chevron
   - Full-width dropdown panels showing subcategory links in grid layout
   - "View all [category]" link at bottom of each panel
@@ -98,7 +98,7 @@
   - ARIA attributes: `aria-expanded`, `aria-haspopup`, `aria-controls`
   - Hidden on mobile (`hidden lg:block`), responsive at 768px breakpoint
 - Controller: `app/frontend/javascript/controllers/category_mega_menu_controller.js` (new)
-  - Click-to-open (not hover) — distinct from existing `mega_menu_controller.js` (hover-based, used by Collections)
+  - Hover-to-open with 150ms delay (mouseenter/mouseleave) — user explicitly requested hover over PRD's click-to-open
   - Toggle: clicking same button closes, clicking different button switches panel
   - Close on: clicking outside (backdrop), pressing Escape
   - Escape returns focus to trigger button

@@ -151,17 +151,20 @@ class CreateCategoryHierarchy < ActiveRecord::Migration[8.1]
       cat&.destroy! if cat&.products&.count == 0
     end
 
-    # Remove new subcategories that were created
+    # Recreate Takeaway Extras first so we have a destination for orphaned products
+    takeaway_extras = Category.find_or_create_by!(slug: "takeaway-extras") do |c|
+      c.name = "Takeaway Extras"
+      c.position = 99
+    end
+
+    # Remove new subcategories that were created, moving any products to Takeaway Extras
     %w[cold-cups cup-lids cup-accessories salad-boxes sandwich-and-wrap-boxes deli-pots
        aluminium-containers greaseproof-and-wraps natureflex-bags
        bin-liners labels-and-stickers gloves-and-cleaning till-rolls].each do |slug|
-      Category.find_by(slug: slug)&.destroy!
-    end
-
-    # Recreate Takeaway Extras if it was deleted
-    Category.find_or_create_by!(slug: "takeaway-extras") do |c|
-      c.name = "Takeaway Extras"
-      c.position = 99
+      cat = Category.find_by(slug: slug)
+      next unless cat
+      cat.products.update_all(category_id: takeaway_extras.id) if cat.products.exists?
+      cat.destroy!
     end
 
     # Reset counters

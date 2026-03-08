@@ -2,9 +2,9 @@
 <%# Replaces old flat category links with dropdown panels showing subcategories %>
 <%# Hidden on mobile (< lg breakpoint) — mobile uses hamburger drill-down instead %>
 
-<% categories = Category.browsable.top_level.includes(:children).order(:position) %>
-<% vegware_collection = Collection.regular.find_by(slug: "vegware") %>
-<% vegware_categories = vegware_collection ? Category.browsable.top_level.where(id: vegware_collection.products.joins(:category).select("categories.parent_id")).order(:position) : [] %>
+<% categories = @nav_categories %>
+<% vegware_collection = @nav_vegware_collection %>
+<% vegware_categories = @nav_vegware_categories %>
 
 <div class="category-mega-menu hidden lg:block bg-base-200 border-b border-base-300 relative"
      data-controller="category-mega-menu">

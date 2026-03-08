@@ -18,6 +18,8 @@
 # - Example: /collections/coffee-shop-essentials
 #
 class Collection < ApplicationRecord
+  VEGWARE_SLUG = "vegware".freeze
+
   acts_as_list
 
   has_many :collection_items, -> { order(:position) }, dependent: :destroy

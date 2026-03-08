@@ -2,12 +2,25 @@ class ApplicationController < ActionController::Base
   include Authentication
   include EventContext
   before_action :set_current_cart
+  before_action :set_nav_categories
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
   if Rails.env.production?
     allow_browser versions: :modern
   end
 
   private
+
+  def set_nav_categories
+    @nav_categories = Category.browsable.top_level.includes(:children).order(:position)
+    @nav_vegware_collection = Collection.regular.find_by(slug: Collection::VEGWARE_SLUG)
+    @nav_vegware_categories = if @nav_vegware_collection
+      Category.browsable.top_level
+              .where(id: @nav_vegware_collection.products.joins(:category).select("categories.parent_id"))
+              .order(:position)
+    else
+      []
+    end
+  end
 
   def set_current_cart
     # If the user is logged in, find or create a cart for them

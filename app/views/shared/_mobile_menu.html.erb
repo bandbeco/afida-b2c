@@ -1,9 +1,9 @@
 <%# Mobile drill-down navigation menu %>
 <%# Visible below lg breakpoint only. Replaces old dropdown hamburger menu. %>
 
-<% categories = Category.browsable.top_level.includes(:children).order(:position) %>
-<% vegware_collection = Collection.regular.find_by(slug: "vegware") %>
-<% vegware_categories = vegware_collection ? Category.browsable.top_level.where(id: vegware_collection.products.joins(:category).select("categories.parent_id")).order(:position) : [] %>
+<% categories = @nav_categories %>
+<% vegware_collection = @nav_vegware_collection %>
+<% vegware_categories = @nav_vegware_categories %>
 
 <div data-controller="mobile-menu" class="lg:hidden">
   <%# Hamburger button %>

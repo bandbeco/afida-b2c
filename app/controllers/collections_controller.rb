@@ -18,7 +18,7 @@ class CollectionsController < ApplicationController
 
   def category_filter
     @collection = Collection.regular.find_by!(slug: params[:slug])
-    raise ActiveRecord::RecordNotFound unless @collection.slug == "vegware"
+    raise ActiveRecord::RecordNotFound unless @collection.slug == Collection::VEGWARE_SLUG
 
     @category = Category.top_level.find_by!(slug: params[:category_slug])
 
