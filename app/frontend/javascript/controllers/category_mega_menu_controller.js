@@ -10,7 +10,7 @@ import { Controller } from "@hotwired/stimulus"
  * or clicking the backdrop.
  */
 export default class extends Controller {
-  static targets = ["trigger", "panel", "backdrop"]
+  static targets = ["trigger", "panel"]
 
   connect() {
     this.openIndex = null
@@ -62,13 +62,6 @@ export default class extends Controller {
 
     if (!panel || !trigger) return
 
-    // Show backdrop
-    if (this.hasBackdropTarget) {
-      this.backdropTarget.classList.remove("hidden")
-      this.backdropTarget.offsetHeight // force reflow
-      this.backdropTarget.classList.add("opacity-100")
-    }
-
     // Position panel horizontally under its trigger
     const triggerRect = trigger.getBoundingClientRect()
     const containerRect = this.element.getBoundingClientRect()
@@ -99,17 +92,6 @@ export default class extends Controller {
     if (this.openIndex === null) return
 
     this.closePanel(this.openIndex)
-
-    // Hide backdrop
-    if (this.hasBackdropTarget) {
-      this.backdropTarget.classList.remove("opacity-100")
-      setTimeout(() => {
-        if (this.openIndex === null) {
-          this.backdropTarget.classList.add("hidden")
-        }
-      }, 200)
-    }
-
     this.openIndex = null
   }
 
