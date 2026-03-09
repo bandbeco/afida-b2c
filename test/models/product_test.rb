@@ -341,6 +341,29 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal all_count, Product.search(nil).count
   end
 
+  test "search returns products matching brand" do
+    product = products(:one)
+    product.update(brand: "Vegware")
+
+    results = Product.search("vegware")
+
+    assert_includes results, product
+  end
+
+  test "search_extended returns products matching brand" do
+    product = products(:one)
+
+    results = Product.search_extended("vegware")
+
+    assert_not_includes results, product
+
+    product.update(brand: "Vegware")
+
+    results = Product.search_extended("vegware")
+
+    assert_includes results, product
+  end
+
   test "search truncates excessively long queries" do
     # Create a query longer than 100 characters
     long_query = "a" * 150

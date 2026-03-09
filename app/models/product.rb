@@ -95,14 +95,14 @@ class Product < ApplicationRecord
     joins(:category).where(categories: { slug: slugs })
   }
 
-  # Search on product name, SKU, and attributes (size, colour, material)
+  # Search on product name, SKU, brand, and attributes (size, colour, material)
   scope :search, ->(query) {
     return all if query.blank?
 
     truncated_query = query.to_s.truncate(100, omission: "")
     sanitized_query = sanitize_sql_like(truncated_query)
     where(
-      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q",
+      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q OR products.brand ILIKE :q",
       q: "%#{sanitized_query}%"
     )
   }
@@ -114,7 +114,7 @@ class Product < ApplicationRecord
     truncated_query = query.to_s.truncate(100, omission: "")
     sanitized_query = sanitize_sql_like(truncated_query)
     joins(:category).where(
-      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q OR categories.name ILIKE :q",
+      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q OR products.brand ILIKE :q OR categories.name ILIKE :q",
       q: "%#{sanitized_query}%"
     )
   }

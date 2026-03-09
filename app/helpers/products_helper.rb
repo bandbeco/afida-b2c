@@ -22,22 +22,27 @@ module ProductsHelper
     end
   end
 
-  # Primary text for search results - emphasizes differentiating attributes only
-  # For family products: size - colour (e.g., "8oz / 280ml - Blue")
-  # For standalone: product name
+  # Primary text for search results
+  # Format: size - brand material product_family_name
+  # e.g., "10 x 200mm - Vegware Bamboo Pulp Straws"
+  # Falls back to generated_title when no size
   def search_display_title(product)
-    product.product_type
-    [ product.size, product.colour ].compact_blank.join(" - ").presence || product.generated_title
+    family_name = product.product_family&.name || product.name
+    descriptor = [ product.brand, product.material, family_name ].compact_blank.join(" ")
+
+    if product.size.present?
+      "#{product.size} - #{descriptor}"
+    else
+      descriptor.presence || product.generated_title
+    end
   end
 
-  # Secondary text for search results - provides context
-  # For family products: material + product name (e.g., "Paper Ice Cream Cups")
-  # For standalone: category name
+  # Secondary text for search results - shows pack size only
   def search_display_subtitle(product)
     if product.brandable?
       product.branded_product_prices.map(&:size).uniq.sort_by { |size| size.to_i }.join(", ")
-    else
-      ([ product.material, product.name ].compact_blank.join(" ").presence || product.category&.name) + (product.pac_size.to_i > 1 ? " · Pack of " + number_with_delimiter(product.pac_size) : "")
+    elsif product.pac_size.to_i > 1
+      "Pack of #{number_with_delimiter(product.pac_size)}"
     end
   end
 

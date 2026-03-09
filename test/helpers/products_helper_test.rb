@@ -88,4 +88,82 @@ class ProductsHelperTest < ActionView::TestCase
 
     assert result.html_safe?
   end
+
+  # search_display_title tests
+
+  test "search_display_title shows size - brand material family_name" do
+    product = products(:one)
+    product.update_columns(brand: "Vegware", size: "10 x 200mm", material: "Bamboo Pulp", name: "Straws")
+
+    result = search_display_title(product)
+
+    assert_equal "10 x 200mm - Vegware Bamboo Pulp Straws", result
+  end
+
+  test "search_display_title without brand shows size - material name" do
+    product = products(:one)
+    product.update_columns(brand: nil, size: "8oz", material: "Paper", name: "Hot Cups")
+
+    result = search_display_title(product)
+
+    assert_equal "8oz - Paper Hot Cups", result
+  end
+
+  test "search_display_title without size shows brand material name" do
+    product = products(:one)
+    product.update_columns(brand: "Vegware", size: nil, material: "Bamboo Pulp", name: "Straws")
+
+    result = search_display_title(product)
+
+    assert_equal "Vegware Bamboo Pulp Straws", result
+  end
+
+  test "search_display_title uses product_family name when available" do
+    family = ProductFamily.create!(name: "Straws", slug: "straws")
+    product = products(:one)
+    product.update!(product_family: family)
+    product.update_columns(brand: "Vegware", size: "10 x 200mm", material: "Bamboo Pulp", name: "Vegware 10 x 200mm Bamboo Pulp Straws")
+
+    result = search_display_title(product)
+
+    assert_equal "10 x 200mm - Vegware Bamboo Pulp Straws", result
+  end
+
+  test "search_display_title falls back to generated_title when all blank" do
+    product = products(:one)
+    product.update_columns(brand: nil, size: nil, material: nil, name: "")
+
+    result = search_display_title(product)
+
+    assert_equal product.generated_title, result
+  end
+
+  # search_display_subtitle tests
+
+  test "search_display_subtitle shows pack size when present" do
+    product = products(:one)
+    product.update_columns(pac_size: 3600, material: "Bamboo Pulp", name: "Straws")
+
+    result = search_display_subtitle(product)
+
+    assert_equal "Pack of 3,600", result
+  end
+
+  test "search_display_subtitle returns nil when no pack size" do
+    product = products(:one)
+    product.update_columns(pac_size: nil, material: "Paper", name: "Cups")
+
+    result = search_display_subtitle(product)
+
+    assert_nil result
+  end
+
+  test "search_display_subtitle returns nil when pack size is 1" do
+    product = products(:one)
+    product.update_columns(pac_size: 1, material: "Paper", name: "Cups")
+
+    result = search_display_subtitle(product)
+
+    assert_nil result
+  end
 end
