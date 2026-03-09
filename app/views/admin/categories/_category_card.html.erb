@@ -1,0 +1,41 @@
+<div class="card bg-base-100 shadow-sm border border-base-200 <%= 'ml-6' if indent %>">
+  <div class="card-body p-4">
+    <div class="flex gap-3">
+      <%# Image %>
+      <% if category.image.attached? %>
+        <%= image_tag category.image, class: "w-14 h-14 object-cover rounded shrink-0", alt: category.name %>
+      <% else %>
+        <div class="w-14 h-14 bg-gradient-to-br from-primary/20 to-secondary/20 rounded flex items-center justify-center shrink-0">
+          <span class="text-xl font-bold text-primary/30"><%= category.name[0] %></span>
+        </div>
+      <% end %>
+
+      <%# Content %>
+      <div class="flex-1 min-w-0">
+        <div class="flex justify-between items-start gap-2">
+          <div>
+            <p class="font-medium">
+              <% if indent %>
+                <span class="text-base-content/40 mr-1">└</span>
+              <% end %>
+              <%= category.name %>
+            </p>
+            <p class="text-xs text-base-content/60"><%= category.products_count %> products</p>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <%= link_to edit_admin_category_path(category), class: "btn btn-sm btn-primary btn-square" do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            <% end %>
+            <%= button_to admin_category_path(category), method: :delete, class: "btn btn-sm btn-error btn-square", form: { data: { turbo_confirm: "Are you sure? This will affect #{category.products_count} products." } } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

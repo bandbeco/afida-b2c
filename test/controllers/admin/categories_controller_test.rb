@@ -137,6 +137,83 @@ class Admin::CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_name, @category.name
   end
 
+  test "should create subcategory with parent" do
+    parent = categories(:parent_cups_and_drinks)
+
+    assert_difference("Category.count") do
+      post admin_categories_path, headers: @headers, params: {
+        category: {
+          name: "New Sub",
+          slug: "new-sub",
+          parent_id: parent.id
+        }
+      }
+    end
+
+    assert_redirected_to admin_categories_path
+    category = Category.find_by(slug: "new-sub")
+    assert_equal parent.id, category.parent_id
+  end
+
+  test "should reassign parent category" do
+    child = categories(:child_hot_cups)
+    new_parent = categories(:parent_hot_food)
+
+    patch admin_category_path(child), headers: @headers, params: {
+      category: { parent_id: new_parent.id }
+    }
+
+    assert_redirected_to admin_categories_path
+    child.reload
+    assert_equal new_parent.id, child.parent_id
+  end
+
+  test "should promote subcategory to top-level by removing parent" do
+    child = categories(:child_hot_cups)
+    assert_not_nil child.parent_id
+
+    patch admin_category_path(child), headers: @headers, params: {
+      category: { parent_id: "" }
+    }
+
+    assert_redirected_to admin_categories_path
+    child.reload
+    assert_nil child.parent_id
+  end
+
+  test "new category form shows parent category dropdown" do
+    get new_admin_category_path, headers: @headers
+    assert_response :success
+    assert_select "select[name='category[parent_id]']"
+  end
+
+  test "edit category form shows parent category dropdown" do
+    get edit_admin_category_path(@category), headers: @headers
+    assert_response :success
+    assert_select "select[name='category[parent_id]']"
+  end
+
+  test "parent dropdown excludes the category being edited" do
+    parent = categories(:parent_cups_and_drinks)
+    get edit_admin_category_path(parent), headers: @headers
+    assert_response :success
+    assert_select "select[name='category[parent_id]'] option[value='#{parent.id}']", count: 0
+  end
+
+  test "parent dropdown only shows top-level categories" do
+    child = categories(:child_hot_cups)
+    get new_admin_category_path, headers: @headers
+    assert_response :success
+    assert_select "select[name='category[parent_id]'] option[value='#{child.id}']", count: 0
+  end
+
+  test "index shows categories grouped by parent with children" do
+    get admin_categories_path, headers: @headers
+    assert_response :success
+    assert_select "td", text: /Cups & Drinks/
+    assert_select "td", text: /Hot Cups/
+  end
+
   test "should use slug in URLs not numeric ID" do
     # Create a category without products for deletion test
     test_category = Category.create!(

@@ -38,6 +38,33 @@
                 </div>
               </td>
             </tr>
+            <% category.children.sort_by(&:position).each do |child| %>
+              <tr>
+                <td><%= child.position %></td>
+                <td>
+                  <span class="text-base-content/40 mr-1">└</span>
+                  <%= child.name %>
+                </td>
+                <td>
+                  <div class="flex gap-2">
+                    <%= button_to move_higher_admin_category_path(child),
+                        method: :patch,
+                        class: "btn btn-sm btn-ghost",
+                        disabled: child.first?,
+                        form: { data: { turbo_frame: "categories_list" } } do %>
+                      ↑
+                    <% end %>
+                    <%= button_to move_lower_admin_category_path(child),
+                        method: :patch,
+                        class: "btn btn-sm btn-ghost",
+                        disabled: child.last?,
+                        form: { data: { turbo_frame: "categories_list" } } do %>
+                      ↓
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
           <% end %>
         </tbody>
       </table>

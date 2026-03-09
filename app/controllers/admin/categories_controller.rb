@@ -1,10 +1,11 @@
 module Admin
   class CategoriesController < Admin::ApplicationController
     before_action :set_category, only: %i[ edit update destroy move_higher move_lower ]
+    before_action :set_parent_categories, only: %i[ new create edit update ]
 
     # GET /admin/categories
     def index
-      @categories = Category.includes(image_attachment: :blob).order(:position)
+      @categories = Category.top_level.includes(:children, image_attachment: :blob).order(:position)
     end
 
     # GET /admin/categories/new
@@ -44,13 +45,13 @@ module Admin
 
     # GET /admin/categories/order
     def order
-      @categories = Category.order(:position)
+      @categories = Category.top_level.includes(:children).order(:position)
     end
 
     # PATCH /admin/categories/:id/move_higher
     def move_higher
       @category.move_higher
-      @categories = Category.order(:position)
+      @categories = Category.top_level.includes(:children).order(:position)
 
       respond_to do |format|
         format.turbo_stream
@@ -61,7 +62,7 @@ module Admin
     # PATCH /admin/categories/:id/move_lower
     def move_lower
       @category.move_lower
-      @categories = Category.order(:position)
+      @categories = Category.top_level.includes(:children).order(:position)
 
       respond_to do |format|
         format.turbo_stream
@@ -77,6 +78,11 @@ module Admin
 
     def category_params
       params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position, :parent_id ])
+    end
+
+    def set_parent_categories
+      @parent_categories = Category.top_level.order(:name)
+      @parent_categories = @parent_categories.where.not(id: @category.id) if @category&.persisted?
     end
   end
 end

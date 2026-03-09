@@ -39,6 +39,19 @@
         </div>
 
         <div class="form-control">
+          <%= form.label :parent_id, class: "label" do %>
+            <span class="label-text font-medium">Parent Category</span>
+          <% end %>
+          <%= form.select :parent_id,
+                options_from_collection_for_select(@parent_categories, :id, :name, category.parent_id),
+                { include_blank: "None (top-level category)" },
+                class: "select select-bordered w-full" %>
+          <label class="label">
+            <span class="label-text-alt">Leave blank for a top-level category, or select a parent to create a subcategory</span>
+          </label>
+        </div>
+
+        <div class="form-control">
           <%= form.label :description, class: "label" do %>
             <span class="label-text font-medium">Description</span>
           <% end %>
