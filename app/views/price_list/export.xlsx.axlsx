@@ -24,9 +24,10 @@ wb.add_worksheet(name: "Price List") do |sheet|
     "Price/Unit"
   ], style: header_style
 
-  # Data rows - expand tier products into one row per tier
+  # Data rows - products are ordered by category for grouping
   @products.each do |product|
     category_name = product.category&.name
+
     if product.pricing_tiers.present?
       product.pricing_tiers.each do |tier|
         tier_qty = tier["quantity"]

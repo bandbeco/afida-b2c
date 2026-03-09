@@ -31,7 +31,8 @@ class PriceListController < ApplicationController
   def all_products
     base_product_scope
       .includes(:category)
-      .order("products.name ASC, products.position ASC")
+      .joins(:category)
+      .order("categories.name ASC, products.name ASC, products.position ASC")
   end
 
   def base_product_scope

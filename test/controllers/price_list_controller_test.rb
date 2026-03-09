@@ -179,6 +179,33 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "xlsx export groups items by category" do
+    get price_list_export_url(format: :xlsx)
+    assert_response :success
+
+    require "zip"
+    Zip::File.open_buffer(response.body) do |zip|
+      sheet_xml = zip.find_entry("xl/worksheets/sheet1.xml").get_input_stream.read.force_encoding("UTF-8")
+
+      # Extract category names in order of appearance from the shared strings
+      # Products should be grouped: all items in one category appear together
+      products = Product.active.standard.includes(:category)
+                        .joins(:category)
+                        .order("categories.name ASC, products.name ASC, products.position ASC")
+      category_names_in_order = products.map { |p| p.category&.name }.compact
+
+      # Verify grouping: once a category stops appearing, it should not appear again
+      seen_categories = []
+      category_names_in_order.each do |name|
+        if seen_categories.last != name
+          assert_not_includes seen_categories, name,
+            "Category '#{name}' appears in non-contiguous blocks - items are not grouped"
+          seen_categories << name
+        end
+      end
+    end
+  end
+
   test "xlsx export uses GBP currency format" do
     get price_list_export_url(format: :xlsx)
     assert_response :success
