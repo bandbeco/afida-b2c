@@ -34,21 +34,29 @@ export default class extends Controller {
       { threshold: this.thresholdValue, rootMargin: "0px 0px -40px 0px" }
     )
 
+    let elements
     if (this.selfValue) {
-      this.element.classList.add("scroll-reveal-hidden")
-      this.observer.observe(this.element)
+      elements = [this.element]
     } else if (this.hasItemTarget) {
-      this.itemTargets.forEach((item) => {
-        item.classList.add("scroll-reveal-hidden")
-        this.observer.observe(item)
-      })
+      elements = this.itemTargets
     } else {
-      // No targets defined — animate direct children
-      Array.from(this.element.children).forEach((child) => {
-        child.classList.add("scroll-reveal-hidden")
-        this.observer.observe(child)
-      })
+      elements = Array.from(this.element.children)
     }
+
+    elements.forEach((el) => {
+      if (this.isInViewport(el)) {
+        // Already visible — show immediately, no animation
+        el.classList.add("scroll-reveal-visible")
+      } else {
+        el.classList.add("scroll-reveal-hidden")
+        this.observer.observe(el)
+      }
+    })
+  }
+
+  isInViewport(el) {
+    const rect = el.getBoundingClientRect()
+    return rect.top < window.innerHeight && rect.bottom > 0
   }
 
   handleIntersection(entries) {
