@@ -27,15 +27,15 @@
       "@context": "https://schema.org",
       "@type": "ItemList",
       "name": "Vegware Compostable Packaging",
-      "description": "Plant-based compostable packaging products by Vegware, available at Afida.",
+      "description": "Plant-based compostable packaging categories by Vegware, available at Afida.",
       "url": vegware_url,
-      "numberOfItems": @products.size,
-      "itemListElement": @products.each_with_index.map { |product, i|
+      "numberOfItems": @vegware_categories.size,
+      "itemListElement": @vegware_categories.each_with_index.map { |category, i|
         {
           "@type": "ListItem",
           "position": i + 1,
-          "url": product_url(product.slug),
-          "name": product.generated_title
+          "url": category_filter_collection_url(@collection, category_slug: category.slug),
+          "name": "Vegware #{category.name}"
         }
       }
     }.to_json) %>
@@ -296,15 +296,34 @@
           <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
         </div>
 
-        <% if @products.any? %>
-          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <% @products.each do |product| %>
-              <%= render "products/card", product: product %>
+        <% if @vegware_categories.any? %>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-6">
+            <% @vegware_categories.each do |category| %>
+              <%= link_to category_filter_collection_path(@collection, category_slug: category.slug),
+                          class: "group block bg-base-100 rounded-2xl border border-base-200 overflow-hidden hover:shadow-lg transition-shadow" do %>
+                <div class="aspect-square bg-base-200 overflow-hidden">
+                  <% if category.image.attached? %>
+                    <%= image_tag category.image.variant(resize_to_fill: [400, 400]),
+                                  alt: category.name,
+                                  class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
+                                  loading: "lazy" %>
+                  <% else %>
+                    <div class="w-full h-full flex items-center justify-center text-base-content/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
+                  <% end %>
+                </div>
+                <div class="p-4 text-center">
+                  <h3 class="text-lg group-hover:text-primary transition-colors">Vegware <%= category.name %></h3>
+                </div>
+              <% end %>
             <% end %>
           </div>
         <% else %>
           <div class="text-center py-12">
-            <p class="text-lg text-base-content/60">Vegware products coming soon. Check back shortly!</p>
+            <p class="text-lg text-base-content/60">Vegware categories coming soon. Check back shortly!</p>
           </div>
         <% end %>
       </div>

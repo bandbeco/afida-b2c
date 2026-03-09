@@ -71,8 +71,10 @@ class PagesController < ApplicationController
 
   def vegware
     @collection = Collection.regular.find_by!(slug: Collection::VEGWARE_SLUG)
-    @products = @collection.visible_products
-                           .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
+    @vegware_categories = Category.browsable.top_level
+                                  .where(id: @collection.products.joins(:category).select("categories.parent_id"))
+                                  .includes(image_attachment: :blob)
+                                  .order(:position)
     @client_logos = client_logos
   end
 

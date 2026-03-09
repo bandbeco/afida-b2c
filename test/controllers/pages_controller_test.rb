@@ -163,11 +163,12 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", /Vegware/i
   end
 
-  test "vegware page shows active Vegware products" do
+  test "vegware page shows Vegware product categories" do
     get vegware_path
 
-    product = products(:vegware_hot_cup)
-    assert_select "a[href=?]", product_path(product.slug)
+    collection = collections(:vegware)
+    category = categories(:parent_cups_and_drinks)
+    assert_select "a[href=?]", category_filter_collection_path(collection, category_slug: category.slug)
   end
 
   test "vegware page has correct meta title" do
