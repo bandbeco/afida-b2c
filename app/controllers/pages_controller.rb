@@ -6,8 +6,9 @@ class PagesController < ApplicationController
                                 .with_attached_product_photo
                                 .limit(8)
     @featured_straw_product = Product.catalog_products.find_by(slug: "bio-fibre-straws")
-    @categories = Category.browsable.with_attached_image
-    @collections = Collection.regular.featured.by_position.with_attached_image
+    @categories = Category.browsable.subcategories.includes(:parent).with_attached_image
+    @vegware_collection = Collection.find_by(slug: Collection::VEGWARE_SLUG)
+    @collections = Collection.regular.featured.where.not(slug: Collection::VEGWARE_SLUG).by_position.with_attached_image
     @client_logos = client_logos
   end
 
