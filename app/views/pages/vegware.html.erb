@@ -207,30 +207,22 @@
     <%# ==================== WHY VEGWARE? ==================== %>
     <section class="py-4 sm:py-6 lg:py-8" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
       <div class="container mx-auto px-4">
-        <div class="bg-neutral-900 text-white overflow-hidden rounded-3xl relative">
-          <%# Subtle dot pattern background %>
-          <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+        <div class="bg-[#578556] text-white overflow-hidden rounded-3xl relative">
+          <%# Leaf-vein pattern background %>
+          <div class="absolute inset-0 opacity-[0.06]" style="background-image: radial-gradient(ellipse at 20% 50%, #fff 0.5px, transparent 0.5px), radial-gradient(ellipse at 80% 50%, #fff 0.5px, transparent 0.5px); background-size: 32px 32px, 32px 32px; background-position: 0 0, 16px 16px;"></div>
 
           <%# Decorative glow %>
-          <div class="absolute -top-20 -right-20 w-72 h-72 bg-[#79ebc0] rounded-full blur-[120px] opacity-15"></div>
-          <div class="absolute -bottom-20 -left-20 w-56 h-56 bg-[#79ebc0] rounded-full blur-[100px] opacity-10"></div>
+          <div class="absolute -top-20 -right-20 w-72 h-72 bg-[#8ebb8d] rounded-full blur-[120px] opacity-30"></div>
+          <div class="absolute -bottom-20 -left-20 w-56 h-56 bg-[#3d5e3c] rounded-full blur-[100px] opacity-30"></div>
 
           <div class="relative z-10">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
               <%# Left: Image %>
               <div class="flex items-center justify-center p-6 sm:p-10">
-                <% if @collection.image.attached? %>
-                  <%= image_tag @collection.image.variant(resize_to_fill: [600, 400]),
-                                alt: "Vegware compostable packaging range",
-                                class: "w-full h-auto rounded-2xl",
-                                loading: "lazy" %>
-                <% else %>
-                  <div class="w-full aspect-video bg-white/10 rounded-2xl flex items-center justify-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                  </div>
-                <% end %>
+                <%= vite_image_tag "images/vegware-why-choose.jpg",
+                                    alt: "Vegware Feel Good compostable cups",
+                                    class: "w-full h-auto rounded-2xl",
+                                    loading: "lazy" %>
               </div>
 
               <%# Right: Content %>
@@ -239,47 +231,47 @@
 
                 <ul class="space-y-4 mb-8">
                   <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-lg text-white/90">100% plant-based materials</span>
+                    <span class="text-lg text-white">100% plant-based materials</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-lg text-white/90">EN 13432 certified compostable</span>
+                    <span class="text-lg text-white">EN 13432 certified compostable</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-lg text-white/90">Full range: cups, containers, cutlery, napkins, and more</span>
+                    <span class="text-lg text-white">Full range: cups, containers, cutlery, napkins, and more</span>
                   </li>
                   <li class="flex items-start gap-3">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
-                    <span class="text-lg text-white/90">Commercially compostable — closes the waste loop</span>
+                    <span class="text-lg text-white">Commercially compostable — closes the waste loop</span>
                   </li>
                 </ul>
               </div>
             </div>
 
             <%# Bottom trust badges %>
-            <div class="border-t border-white/10 px-6 sm:px-10 py-8">
+            <div class="border-t border-white/15 px-6 sm:px-10 py-8">
               <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                 <div>
-                  <p class="text-lg text-[#79ebc0] mb-1">Certified Compostable</p>
-                  <p class="text-sm text-white/60">EN 13432 European standard</p>
+                  <p class="text-lg text-white mb-1">Certified Compostable</p>
+                  <p class="text-sm text-white/80">EN 13432 European standard</p>
                 </div>
                 <div>
-                  <p class="text-lg text-[#79ebc0] mb-1">Full Range Available</p>
-                  <p class="text-sm text-white/60">Everything from cups to cutlery</p>
+                  <p class="text-lg text-white mb-1">Full Range Available</p>
+                  <p class="text-sm text-white/80">Everything from cups to cutlery</p>
                 </div>
                 <div>
-                  <p class="text-lg text-[#79ebc0] mb-1">UK Stock, Fast Delivery</p>
-                  <p class="text-sm text-white/60">Next-day dispatch before 2pm</p>
+                  <p class="text-lg text-white mb-1">UK Stock, Fast Delivery</p>
+                  <p class="text-sm text-white/80">Next-day dispatch before 2pm</p>
                 </div>
               </div>
             </div>
