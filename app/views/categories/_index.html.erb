@@ -22,22 +22,4 @@
       </div>
     <% end %>
   <% end %>
-
-  <% if @vegware_collection %>
-    <%= link_to collection_path(@vegware_collection), class: "group flex flex-col overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(20%-1.2rem)]" do %>
-      <div class="relative aspect-square overflow-hidden bg-[#d1fae5]">
-        <% if @vegware_collection.image.attached? %>
-          <%= image_tag @vegware_collection.image, alt: @vegware_collection.name, class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" %>
-        <% else %>
-          <div class="w-full h-full flex items-center justify-center p-6 transition-transform duration-300 group-hover:scale-105">
-            <%= vite_image_tag category_icon_path("vegware"), class: 'w-full h-full object-contain opacity-80', alt: "Vegware icon" %>
-          </div>
-        <% end %>
-      </div>
-
-      <div class="bg-afida-green px-3 py-2.5 flex items-center justify-center">
-        <span class="text-black text-sm md:text-base whitespace-nowrap truncate"><%= @vegware_collection.name %></span>
-      </div>
-    <% end %>
-  <% end %>
 </div>
