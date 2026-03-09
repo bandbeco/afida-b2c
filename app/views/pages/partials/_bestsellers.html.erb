@@ -1,28 +1,45 @@
-<section aria-label="Bestsellers" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
-  <div class="container mx-auto py-4 sm:py-6">
-    <div class="text-center mb-8">
-      <h2>Bestsellers</h2>
-      <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
-      <div class="flex justify-center gap-3 mt-6">
-        <button class="bestsellers-button-prev w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow flex items-center justify-center relative z-10 cursor-pointer" aria-label="Previous bestseller product">
-          <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+<section aria-label="Bestsellers">
+  <div class="container mx-auto py-8 sm:py-12">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-3xl">Bestsellers</h2>
+      <div class="flex gap-2">
+        <button class="bestsellers-button-prev bestsellers-nav-btn" aria-label="Previous bestseller product">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"></path></svg>
         </button>
-        <button class="bestsellers-button-next w-12 h-12 bg-white rounded-full shadow-md hover:shadow-lg transition-shadow flex items-center justify-center relative z-10 cursor-pointer" aria-label="Next bestseller product">
-          <svg class="w-6 h-6 text-neutral-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+        <button class="bestsellers-button-next bestsellers-nav-btn" aria-label="Next bestseller product">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"></path></svg>
         </button>
       </div>
     </div>
 
-    <div class="swiper addon-carousel relative" data-controller="carousel" role="region" aria-label="Product carousel">
-      <div class="swiper-wrapper pb-4 px-2">
+    <div class="swiper addon-carousel" data-controller="carousel" role="region" aria-label="Bestsellers carousel">
+      <div class="swiper-wrapper">
         <% @featured_products.each do |product| %>
-          <div class="swiper-slide h-auto pb-2 px-2">
-            <%= render 'products/card', product: product, show_quick_add: true %>
+          <div class="swiper-slide h-auto">
+            <%= link_to product_path(product.slug), class: "bestseller-card block", data: { turbo_frame: "_top" } do %>
+              <div class="bestseller-card-image">
+                <% if product.lifestyle_photo.attached? %>
+                  <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [500, 500, { background: [243, 244, 246] }]),
+                                alt: product.generated_title,
+                                class: "object-contain w-full h-full",
+                                loading: "lazy" %>
+                <% elsif product.product_photo.attached? %>
+                  <%= image_tag product.product_photo.variant(resize_and_pad: [500, 500, { background: [243, 244, 246] }]),
+                                alt: product.generated_title,
+                                class: "object-contain w-full h-full",
+                                loading: "lazy" %>
+                <% end %>
+              </div>
+              <div class="mt-3">
+                <h3 class="text-base text-gray-900"><%= product.generated_title %></h3>
+                <p class="text-sm text-gray-500 mt-0.5">
+                  from <%= number_to_currency(product.unit_price, unit: "£", precision: 3) %>/unit
+                </p>
+              </div>
+            <% end %>
           </div>
         <% end %>
       </div>
-
-      <div class="swiper-pagination !bottom-0 !relative !mt-8"></div>
     </div>
   </div>
 </section>
