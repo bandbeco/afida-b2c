@@ -49,6 +49,7 @@ const lazyControllers = {
   "character-counter": () => import("../javascript/controllers/character_counter_controller"),
   "quick-add-modal": () => import("../javascript/controllers/quick_add_modal_controller"),
   "quick-add-form": () => import("../javascript/controllers/quick_add_form_controller"),
+  "scroll-reveal": () => import("../javascript/controllers/scroll_reveal_controller"),
   "slide-in": () => import("../javascript/controllers/slide_in_controller"),
   "category-expand": () => import("../javascript/controllers/category_expand_controller"),
   "sample-counter": () => import("../javascript/controllers/sample_counter_controller"),
