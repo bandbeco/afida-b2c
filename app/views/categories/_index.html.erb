@@ -1,41 +1,41 @@
 <div class="flex flex-wrap justify-center gap-4 md:gap-6">
   <% @categories.each_with_index do |category, index| %>
-    <%= link_to category_browse_path(category), class: "group relative block aspect-square overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(20%-1.2rem)]" do %>
-      <!-- Background Image/Color -->
-      <div class="absolute inset-0" style="background-color: <%= category_pastel_color(index) %>">
+    <%= link_to category_browse_path(category), class: "group flex flex-col overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(20%-1.2rem)]" do %>
+      <!-- Image area -->
+      <div class="relative aspect-square overflow-hidden" style="background-color: <%= category_pastel_color(index) %>">
         <% if category.image.attached? %>
           <%= image_tag category.image, alt: category.name, class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" %>
         <% elsif category_icon_path(category).present? %>
-          <div class="w-full h-full flex items-center justify-center p-6 pb-14 transition-transform duration-300 group-hover:scale-105">
+          <div class="w-full h-full flex items-center justify-center p-6 transition-transform duration-300 group-hover:scale-105">
             <%= vite_image_tag category_icon_path(category), class: 'w-full h-full object-contain opacity-80', alt: "#{category.name} icon" %>
           </div>
         <% else %>
-          <div class="w-full h-full flex items-center justify-center pb-14 transition-transform duration-300 group-hover:scale-105">
+          <div class="w-full h-full flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <span class="text-7xl font-black text-[#79ebc0]/20"><%= category.name[0] %></span>
           </div>
         <% end %>
       </div>
 
-      <!-- Banner at bottom -->
-      <div class="absolute bottom-0 left-0 right-0 bg-afida-green px-3 py-2.5 flex items-center justify-center">
+      <!-- Footer -->
+      <div class="bg-afida-green px-3 py-2.5 flex items-center justify-center">
         <span class="text-black text-sm md:text-base whitespace-nowrap truncate"><%= category.name %></span>
       </div>
     <% end %>
   <% end %>
 
   <% if @vegware_collection %>
-    <%= link_to collection_path(@vegware_collection), class: "group relative block aspect-square overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(20%-1.2rem)]" do %>
-      <div class="absolute inset-0 bg-[#d1fae5]">
+    <%= link_to collection_path(@vegware_collection), class: "group flex flex-col overflow-hidden border-2 border-black rounded-2xl shadow-xl w-[calc(50%-0.5rem)] md:w-[calc(20%-1.2rem)]" do %>
+      <div class="relative aspect-square overflow-hidden bg-[#d1fae5]">
         <% if @vegware_collection.image.attached? %>
           <%= image_tag @vegware_collection.image, alt: @vegware_collection.name, class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" %>
         <% else %>
-          <div class="w-full h-full flex items-center justify-center p-6 pb-14 transition-transform duration-300 group-hover:scale-105">
+          <div class="w-full h-full flex items-center justify-center p-6 transition-transform duration-300 group-hover:scale-105">
             <%= vite_image_tag category_icon_path("vegware"), class: 'w-full h-full object-contain opacity-80', alt: "Vegware icon" %>
           </div>
         <% end %>
       </div>
 
-      <div class="absolute bottom-0 left-0 right-0 bg-afida-green px-3 py-2.5 flex items-center justify-center">
+      <div class="bg-afida-green px-3 py-2.5 flex items-center justify-center">
         <span class="text-black text-sm md:text-base whitespace-nowrap truncate"><%= @vegware_collection.name %></span>
       </div>
     <% end %>
