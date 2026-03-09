@@ -108,4 +108,50 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
   end
+
+  # Inline boolean toggle tests
+
+  test "toggle_boolean enables active on product" do
+    @product.update!(active: false)
+
+    patch toggle_boolean_admin_product_path(@product), params: {
+      field: "active", value: "1"
+    }, headers: @headers
+
+    assert_response :success
+    @product.reload
+    assert @product.active
+  end
+
+  test "toggle_boolean disables featured on product" do
+    @product.update!(featured: true)
+
+    patch toggle_boolean_admin_product_path(@product), params: {
+      field: "featured", value: "0"
+    }, headers: @headers
+
+    assert_response :success
+    @product.reload
+    assert_not @product.featured
+  end
+
+  test "toggle_boolean enables sample_eligible on product" do
+    assert_not @product.sample_eligible
+
+    patch toggle_boolean_admin_product_path(@product), params: {
+      field: "sample_eligible", value: "1"
+    }, headers: @headers
+
+    assert_response :success
+    @product.reload
+    assert @product.sample_eligible
+  end
+
+  test "toggle_boolean rejects non-allowed fields" do
+    patch toggle_boolean_admin_product_path(@product), params: {
+      field: "name", value: "hacked"
+    }, headers: @headers
+
+    assert_response :unprocessable_entity
+  end
 end

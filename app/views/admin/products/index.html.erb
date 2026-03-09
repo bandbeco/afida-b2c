@@ -77,9 +77,9 @@
                 <%= number_to_currency(product.price, unit: "£") %>
               </td>
               <td><%= number_with_delimiter(product.pac_size) %></td>
-              <td><%= product.active ? "✅" : "❌" %></td>
-              <td><%= product.featured ? "✅" : "❌" %></td>
-              <td><%= product.sample_eligible ? "✅" : "❌" %></td>
+              <td><%= render "inline_toggle", product: product, field: "active" %></td>
+              <td><%= render "inline_toggle", product: product, field: "featured" %></td>
+              <td><%= render "inline_toggle", product: product, field: "sample_eligible" %></td>
               <td>
                 <div class="flex gap-1">
                   <%# View on storefront %>
@@ -151,15 +151,15 @@
                 <% end %>
               </div>
             </div>
-            <div class="flex gap-3 mt-2 text-xs">
+            <div class="flex gap-3 mt-2 text-xs items-center">
               <span class="flex items-center gap-1">
-                <%= product.active ? "✅" : "❌" %> Active
+                <%= render "inline_toggle", product: product, field: "active" %> Active
               </span>
               <span class="flex items-center gap-1">
-                <%= product.featured ? "✅" : "❌" %> Featured
+                <%= render "inline_toggle", product: product, field: "featured" %> Featured
               </span>
               <span class="flex items-center gap-1">
-                <%= product.sample_eligible ? "✅" : "❌" %> Sample
+                <%= render "inline_toggle", product: product, field: "sample_eligible" %> Sample
               </span>
             </div>
           </div>

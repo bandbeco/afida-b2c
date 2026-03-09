@@ -1,6 +1,6 @@
 module Admin
   class ProductsController < Admin::ApplicationController
-    before_action :set_product, only: %i[ show edit update destroy destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids inline_edit_category update_category ]
+    before_action :set_product, only: %i[ show edit update destroy destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids inline_edit_category update_category toggle_boolean ]
 
     # GET /products
     def index
@@ -187,6 +187,19 @@ module Admin
         @categories = Category.top_level.includes(:children).order(:position)
         render partial: "inline_category", locals: { product: @product, editing: true }, status: :unprocessable_entity
       end
+    end
+
+    TOGGLEABLE_FIELDS = %w[active featured sample_eligible].freeze
+
+    # PATCH /admin/products/:id/toggle_boolean
+    def toggle_boolean
+      field = params[:field]
+      unless TOGGLEABLE_FIELDS.include?(field)
+        return render partial: "inline_toggle", locals: { product: @product, field: field }, status: :unprocessable_entity
+      end
+
+      @product.update!(field => ActiveModel::Type::Boolean.new.cast(params[:value]))
+      render partial: "inline_toggle", locals: { product: @product, field: field }
     end
 
     # PATCH /admin/products/:id/update_compatible_lids

@@ -1,0 +1,10 @@
+<%= turbo_frame_tag "product_#{product.id}_#{field}" do %>
+  <%= form_with url: toggle_boolean_admin_product_path(product), method: :patch, data: { turbo_frame: "product_#{product.id}_#{field}" } do |f| %>
+    <%= f.hidden_field :field, value: field %>
+    <%= f.hidden_field :value, value: product.send(field) ? "0" : "1" %>
+    <input type="checkbox"
+           <%= "checked" if product.send(field) %>
+           onchange="this.closest('form').requestSubmit()"
+           class="checkbox checkbox-sm">
+  <% end %>
+<% end %>
