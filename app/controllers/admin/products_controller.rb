@@ -1,6 +1,6 @@
 module Admin
   class ProductsController < Admin::ApplicationController
-    before_action :set_product, only: %i[ show edit update destroy destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids ]
+    before_action :set_product, only: %i[ show edit update destroy destroy_product_photo destroy_lifestyle_photo add_compatible_lid remove_compatible_lid set_default_compatible_lid update_compatible_lids inline_edit_category update_category ]
 
     # GET /products
     def index
@@ -170,6 +170,22 @@ module Admin
         redirect_to edit_admin_product_path(@product), notice: "Set #{lid.name} as default lid"
       else
         redirect_to edit_admin_product_path(@product), alert: "Lid not found in compatible lids"
+      end
+    end
+
+    # GET /admin/products/:id/inline_edit_category
+    def inline_edit_category
+      @categories = Category.top_level.includes(:children).order(:position)
+      render partial: "inline_category", locals: { product: @product, editing: true }
+    end
+
+    # PATCH /admin/products/:id/update_category
+    def update_category
+      if @product.update(category_id: params[:product][:category_id])
+        render partial: "inline_category", locals: { product: @product, editing: false }
+      else
+        @categories = Category.top_level.includes(:children).order(:position)
+        render partial: "inline_category", locals: { product: @product, editing: true }, status: :unprocessable_entity
       end
     end
 

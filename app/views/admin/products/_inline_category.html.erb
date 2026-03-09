@@ -1,0 +1,28 @@
+<%= turbo_frame_tag "product_#{product.id}_category" do %>
+  <% if local_assigns[:editing] %>
+    <%= form_with model: [:admin, product], url: update_category_admin_product_path(product), method: :patch, data: { turbo_frame: "product_#{product.id}_category" } do |f| %>
+      <div class="flex items-center gap-1">
+        <%= f.select :category_id,
+              grouped_options_for_select(
+                @categories.map { |parent|
+                  [parent.name, parent.children.order(:position).map { |sub| [sub.name, sub.id] }]
+                },
+                product.category_id
+              ),
+              { include_blank: "Select a subcategory…" },
+              class: "select select-bordered select-sm" %>
+        <%= f.submit "Save", class: "btn btn-sm btn-primary" %>
+        <%= link_to "Cancel", admin_products_path, class: "btn btn-sm btn-ghost", data: { turbo_frame: "product_#{product.id}_category" } %>
+      </div>
+    <% end %>
+  <% else %>
+    <%= link_to inline_edit_category_admin_product_path(product),
+          data: { turbo_frame: "product_#{product.id}_category" },
+          class: "group inline-flex items-center gap-1 text-sm link link-hover" do %>
+      <%= product.category&.name || "—" %>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5 opacity-40">
+        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+      </svg>
+    <% end %>
+  <% end %>
+<% end %>

@@ -51,6 +51,7 @@
         <thead>
           <tr>
             <th><%= sort_link("Title", "name") %></th>
+            <th>Category</th>
             <th><%= sort_link("SKU", "sku") %></th>
             <th><%= sort_link("Price", "price") %></th>
             <th><%= sort_link("Pack Size", "pac_size") %></th>
@@ -65,6 +66,9 @@
             <tr>
               <td>
                 <%= product.generated_title %>
+              </td>
+              <td>
+                <%= render "inline_category", product: product, editing: false %>
               </td>
               <td>
                 <span class="font-mono text-sm"><%= product.sku %></span>
@@ -119,6 +123,9 @@
                 <div class="flex items-center gap-2 mt-1">
                   <span class="font-mono text-xs text-base-content/70"><%= product.sku %></span>
                   <span class="text-xs font-medium"><%= number_to_currency(product.price, unit: "£") %></span>
+                </div>
+                <div class="mt-1">
+                  <%= render "inline_category", product: product, editing: false %>
                 </div>
               </div>
               <div class="flex gap-1 shrink-0">

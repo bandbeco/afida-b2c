@@ -76,4 +76,36 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert @product.sample_eligible, "Product should be sample eligible after update"
     assert_equal "SAMPLE-#{@product.sku}", @product.effective_sample_sku
   end
+
+  # Inline category editing tests
+
+  test "inline_edit_category returns success and renders select" do
+    get inline_edit_category_admin_product_path(@product), headers: @headers
+
+    assert_response :success
+    assert_select "select[name='product[category_id]']"
+  end
+
+  test "update_category updates product category" do
+    new_category = categories(:child_hot_cups)
+
+    patch update_category_admin_product_path(@product), params: {
+      product: { category_id: new_category.id }
+    }, headers: @headers
+
+    assert_response :success
+    @product.reload
+    assert_equal new_category.id, @product.category_id
+  end
+
+  test "update_category with invalid category returns unprocessable entity" do
+    # Top-level categories are invalid (must be subcategory)
+    top_level = categories(:parent_cups_and_drinks)
+
+    patch update_category_admin_product_path(@product), params: {
+      product: { category_id: top_level.id }
+    }, headers: @headers
+
+    assert_response :unprocessable_entity
+  end
 end

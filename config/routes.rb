@@ -183,6 +183,8 @@ Rails.application.routes.draw do
         get :order
       end
       member do
+        get :inline_edit_category
+        patch :update_category
         patch :move_higher
         patch :move_lower
         delete :product_photo, to: "products#destroy_product_photo"
