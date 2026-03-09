@@ -30,7 +30,7 @@ class PriceListController < ApplicationController
 
   def all_products
     base_product_scope
-      .includes(:category)
+      .includes(category: { image_attachment: :blob })
       .joins(:category)
       .order("categories.name ASC, products.name ASC, products.position ASC")
   end

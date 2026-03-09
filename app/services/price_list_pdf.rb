@@ -14,6 +14,10 @@ class PriceListPdf < Prawn::Document
   LOGO_PATH = "app/frontend/images/afida-logo-pdf.png"
   TITLE_X_POSITION = 400
 
+  # Category header constants
+  CATEGORY_IMAGE_HEIGHT = 30
+  CATEGORY_HEADER_SPACING = 10
+
   # Footer constants
   FOOTER_LINE_Y = 40
   FOOTER_TEXT_Y = 20
@@ -40,7 +44,7 @@ class PriceListPdf < Prawn::Document
 
   def generate
     header
-    price_table
+    grouped_price_tables
     footer
   end
 
@@ -69,14 +73,49 @@ class PriceListPdf < Prawn::Document
     move_down 15
   end
 
-  def price_table
+  def grouped_price_tables
     return if @products.empty?
 
+    grouped = @products.group_by { |p| p.category }
+
+    grouped.each_with_index do |(category, products), index|
+      start_new_page if index > 0
+
+      category_header(category)
+      price_table(products)
+    end
+  end
+
+  def category_header(category)
+    category_name = category&.name || "Uncategorised"
+
+    if category&.image&.attached?
+      begin
+        blob = category.image.blob
+        tempfile = Tempfile.new([ "category", File.extname(blob.filename.to_s) ])
+        tempfile.binmode
+        tempfile.write(blob.download)
+        tempfile.rewind
+
+        image tempfile.path, height: CATEGORY_IMAGE_HEIGHT
+        move_down 5
+        tempfile.close
+        tempfile.unlink
+      rescue StandardError
+        # Fall through to text-only header if image fails
+      end
+    end
+
+    text category_name, size: 14, style: :bold, color: "2D3748"
+    move_down CATEGORY_HEADER_SPACING
+  end
+
+  def price_table(products)
     table_data = [
       [ "Product", "SKU", "Pack Size", "Price/Pack", "Price/Unit" ]
     ]
 
-    @products.each do |product|
+    products.each do |product|
       if product.pricing_tiers.present?
         product.pricing_tiers.each do |tier|
           tier_qty = tier["quantity"]

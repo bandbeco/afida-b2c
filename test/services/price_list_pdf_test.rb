@@ -83,4 +83,52 @@ class PriceListPdfTest < ActiveSupport::TestCase
     assert_includes PriceListPdf::CONTACT_INFO, "hello@afida.com"
     assert_includes PriceListPdf::CONTACT_INFO, "0203 302 7719"
   end
+
+  test "generates pdf with products grouped by category" do
+    products = Product.active.standard
+                      .includes(category: { image_attachment: :blob })
+                      .joins(:category)
+                      .order("categories.name ASC, products.name ASC")
+    pdf = PriceListPdf.new(products, "All products")
+    pdf_data = pdf.render
+
+    assert_not_nil pdf_data
+    assert pdf_data.start_with?("%PDF-")
+    assert pdf_data.bytesize > 0
+  end
+
+  test "generates pdf with category image when attached" do
+    category = categories(:one)
+    category.image.attach(
+      io: File.open(Rails.root.join("app/frontend/images/afida-logo-pdf.png")),
+      filename: "test-category.png",
+      content_type: "image/png"
+    )
+
+    products = Product.active.standard
+                      .where(category: category)
+                      .includes(category: { image_attachment: :blob })
+    pdf = PriceListPdf.new(products, "All products")
+    pdf_data = pdf.render
+
+    assert_not_nil pdf_data
+    assert pdf_data.start_with?("%PDF-")
+    # PDF should be larger than without image due to embedded image
+    pdf_without_image = PriceListPdf.new([], "Empty").render
+    assert pdf_data.bytesize > pdf_without_image.bytesize
+  end
+
+  test "generates pdf without error when category has no image" do
+    # Default fixtures have no attached images
+    products = Product.active.standard
+                      .includes(category: { image_attachment: :blob })
+                      .joins(:category)
+                      .order("categories.name ASC")
+                      .limit(5)
+    pdf = PriceListPdf.new(products, "All products")
+    pdf_data = pdf.render
+
+    assert_not_nil pdf_data
+    assert pdf_data.start_with?("%PDF-")
+  end
 end
