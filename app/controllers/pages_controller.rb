@@ -73,8 +73,21 @@ class PagesController < ApplicationController
     @collection = Collection.regular.find_by!(slug: Collection::VEGWARE_SLUG)
     @vegware_categories = Category.browsable.top_level
                                   .where(id: @collection.products.joins(:category).select("categories.parent_id"))
-                                  .includes(image_attachment: :blob)
                                   .order(:position)
+
+    # Map each category to the product_photo of its first vegware product
+    vegware_product_ids = @collection.products.select(:id)
+    first_products = Product.where(id: vegware_product_ids)
+                            .joins(:category, :product_photo_attachment)
+                            .where(categories: { parent_id: @vegware_categories.map(&:id) })
+                            .includes(:category, product_photo_attachment: :blob)
+                            .order(:position)
+    @category_images = {}
+    first_products.each do |product|
+      parent_id = product.category.parent_id
+      @category_images[parent_id] ||= product.product_photo
+    end
+
     @client_logos = client_logos
   end
 

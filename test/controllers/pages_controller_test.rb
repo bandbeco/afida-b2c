@@ -201,4 +201,18 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#vegware-products']"
     assert_select "a[href=?]", samples_path
   end
+
+  test "vegware page shows first product photo for each category card" do
+    product = products(:vegware_hot_cup)
+    product.product_photo.attach(
+      io: StringIO.new("fake image data"),
+      filename: "test.jpg",
+      content_type: "image/jpeg"
+    )
+
+    get vegware_path
+
+    assert_response :success
+    assert_select ".aspect-square img", minimum: 1
+  end
 end

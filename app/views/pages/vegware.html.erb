@@ -294,8 +294,8 @@
               <%= link_to category_filter_collection_path(@collection, category_slug: category.slug),
                           class: "group block bg-base-100 rounded-2xl border border-base-200 overflow-hidden hover:shadow-lg transition-shadow" do %>
                 <div class="aspect-square bg-base-200 overflow-hidden">
-                  <% if category.image.attached? %>
-                    <%= image_tag category.image.variant(resize_to_fill: [400, 400]),
+                  <% if @category_images[category.id] %>
+                    <%= image_tag @category_images[category.id].variant(resize_to_fill: [400, 400]),
                                   alt: category.name,
                                   class: "w-full h-full object-cover group-hover:scale-105 transition-transform duration-300",
                                   loading: "lazy" %>
