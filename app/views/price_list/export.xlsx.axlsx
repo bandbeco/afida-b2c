@@ -17,6 +17,7 @@ wb.add_worksheet(name: "Price List") do |sheet|
   # Header row
   sheet.add_row [
     "Product",
+    "Category",
     "SKU",
     "Pack Size",
     "Price/Pack",
@@ -25,6 +26,7 @@ wb.add_worksheet(name: "Price List") do |sheet|
 
   # Data rows - expand tier products into one row per tier
   @products.each do |product|
+    category_name = product.category&.name
     if product.pricing_tiers.present?
       product.pricing_tiers.each do |tier|
         tier_qty = tier["quantity"]
@@ -32,23 +34,25 @@ wb.add_worksheet(name: "Price List") do |sheet|
         label = tier_qty >= 100 ? "Case" : "Pack"
         sheet.add_row [
           "#{product.generated_title} (#{label} of #{tier_qty})",
+          category_name,
           product.sku,
           tier_qty,
           tier_price,
           tier_price / tier_qty
-        ], style: [ nil, nil, nil, currency_style, unit_price_style ]
+        ], style: [ nil, nil, nil, nil, currency_style, unit_price_style ]
       end
     else
       sheet.add_row [
         product.generated_title,
+        category_name,
         product.sku,
         product.pac_size || 1,
         product.price.to_f,
         product.unit_price.to_f
-      ], style: [ nil, nil, nil, currency_style, unit_price_style ]
+      ], style: [ nil, nil, nil, nil, currency_style, unit_price_style ]
     end
   end
 
   # Auto-width columns
-  sheet.column_widths 40, 15, 12, 12, 12
+  sheet.column_widths 40, 20, 15, 12, 12, 12
 end

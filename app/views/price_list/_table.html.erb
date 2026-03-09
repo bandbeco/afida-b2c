@@ -25,7 +25,12 @@
     <%= link_to "Clear filters", price_list_path, class: "btn btn-outline btn-sm mt-4" %>
   </div>
 <% else %>
-  <p class="text-sm text-gray-500 mt-4">
-    Showing <%= pluralize(products.count, "product") %>
-  </p>
+  <div class="mt-6 flex flex-col items-center gap-2">
+    <p class="text-sm text-gray-500">
+      Showing <%= pagy.from %>–<%= pagy.to %> of <%= pagy.count %> products
+    </p>
+    <% if pagy.pages > 1 %>
+      <%== pagy.series_nav %>
+    <% end %>
+  </div>
 <% end %>

@@ -4,21 +4,22 @@ class PriceListController < ApplicationController
   allow_unauthenticated_access
 
   def index
-    @products = filtered_products
-    @categories = Category.where.not(slug: "branded-products").order(:position)
+    @pagy, @products = pagy(filtered_products)
+    @categories = Category.top_level.where.not(slug: "branded-products")
+                          .includes(:children).order(:position)
   end
 
   def export
-    @products = filtered_products
+    @products = all_products
 
     respond_to do |format|
       format.xlsx do
-        render xlsx: "export", filename: "#{export_filename}.xlsx"
+        render xlsx: "export", filename: "afida-price-list-#{Date.current}.xlsx"
       end
       format.pdf do
-        pdf = PriceListPdf.new(@products, filter_description)
+        pdf = PriceListPdf.new(@products, "All products")
         send_data pdf.render,
-                  filename: "#{export_filename}.pdf",
+                  filename: "afida-price-list-#{Date.current}.pdf",
                   type: "application/pdf",
                   disposition: "attachment"
       end
@@ -26,6 +27,12 @@ class PriceListController < ApplicationController
   end
 
   private
+
+  def all_products
+    base_product_scope
+      .includes(:category)
+      .order("products.name ASC, products.position ASC")
+  end
 
   def base_product_scope
     Product.active
@@ -49,19 +56,5 @@ class PriceListController < ApplicationController
 
   def search_products(products)
     products.search(params[:q])
-  end
-
-  def export_filename
-    parts = [ "afida-price-list" ]
-    parts << params[:category].parameterize if params[:category].present?
-    parts << Date.current.to_s
-    parts.join("-")
-  end
-
-  def filter_description
-    parts = []
-    parts << Category.find_by(slug: params[:category])&.name if params[:category].present?
-    parts << "\"#{params[:q]}\"" if params[:q].present?
-    parts.any? ? "Filtered by: #{parts.join(', ')}" : "All products"
   end
 end

@@ -13,14 +13,14 @@
           <p class="text-gray-600 mt-1">All prices exclude VAT. Free UK delivery on orders over £100.</p>
         </div>
         <div class="flex gap-3 mt-4 md:mt-0">
-          <%= link_to price_list_export_path(request.query_parameters.merge(format: :xlsx)),
+          <%= link_to price_list_export_path(format: :xlsx),
               class: "btn btn-outline btn-sm flex items-center gap-1", data: { turbo: false } do %>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
             </svg>
             Excel
           <% end %>
-          <%= link_to price_list_export_path(request.query_parameters.merge(format: :pdf)),
+          <%= link_to price_list_export_path(format: :pdf),
               class: "btn btn-outline btn-sm flex items-center gap-1", data: { turbo: false } do %>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
               <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -35,7 +35,13 @@
         <div class="flex flex-wrap gap-3 mb-6 items-end">
           <div class="form-control w-full md:w-48">
             <%= select_tag :category,
-                options_for_select([["All Categories", ""]] + @categories.map { |c| [c.name, c.slug] }, params[:category]),
+                grouped_options_for_select(
+                  @categories.map { |parent|
+                    [parent.name, parent.children.order(:position).map { |sub| [sub.name, sub.slug] }]
+                  },
+                  params[:category],
+                  prompt: "All Categories"
+                ),
                 class: "select select-bordered select-sm w-full",
                 "aria-label": "Filter by category",
                 data: { action: "change->form#submit" } %>
@@ -57,7 +63,7 @@
 
       <!-- Table -->
       <%= turbo_frame_tag "price_list_table" do %>
-        <%= render "table", products: @products %>
+        <%= render "table", products: @products, pagy: @pagy %>
       <% end %>
     </div>
   </div>

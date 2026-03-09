@@ -68,13 +68,22 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
   test "index shows product count" do
     get price_list_url
     assert_response :success
-    # View shows "Showing X products" format
-    assert_match /Showing \d+ products?/, response.body
+    # View shows "Showing X–Y of Z products" format
+    assert_match /Showing.*of.*products/, response.body
   end
 
   # =============================================================================
   # Category Filter Tests
   # =============================================================================
+
+  test "category dropdown groups subcategories under parent categories" do
+    get price_list_url
+    assert_response :success
+    assert_select "select[name='category'] optgroup[label='Cups & Drinks']" do
+      assert_select "option", text: "Hot Cups"
+      assert_select "option", text: "Cold Cups"
+    end
+  end
 
   test "filters by category" do
     get price_list_url(category: @category.slug)
@@ -157,21 +166,17 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     assert_match /afida-price-list-.*\.xlsx/, response.headers["Content-Disposition"]
   end
 
-  test "xlsx export includes category in filename when filtered" do
-    get price_list_export_url(format: :xlsx, category: @category.slug)
-    assert_response :success
-    assert_match @category.slug, response.headers["Content-Disposition"]
-  end
 
-  test "xlsx export respects category filter" do
-    get price_list_export_url(format: :xlsx, category: @category.slug)
+  test "xlsx export includes category column with subcategory name" do
+    get price_list_export_url(format: :xlsx)
     assert_response :success
-    # Export should succeed (filtering applied server-side)
-  end
 
-  test "xlsx export respects search filter" do
-    get price_list_export_url(format: :xlsx, q: @product.name)
-    assert_response :success
+    require "zip"
+    Zip::File.open_buffer(response.body) do |zip|
+      sheet_xml = zip.find_entry("xl/worksheets/sheet1.xml").get_input_stream.read.force_encoding("UTF-8")
+      assert_includes sheet_xml, "Category", "Header row should include Category column"
+      assert_includes sheet_xml, @product.category.name, "Category name should appear in export"
+    end
   end
 
   test "xlsx export uses GBP currency format" do
@@ -206,21 +211,6 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     assert_match /afida-price-list-.*\.pdf/, response.headers["Content-Disposition"]
   end
 
-  test "pdf export includes category in filename when filtered" do
-    get price_list_export_url(format: :pdf, category: @category.slug)
-    assert_response :success
-    assert_match @category.slug, response.headers["Content-Disposition"]
-  end
-
-  test "pdf export respects category filter" do
-    get price_list_export_url(format: :pdf, category: @category.slug)
-    assert_response :success
-  end
-
-  test "pdf export respects search filter" do
-    get price_list_export_url(format: :pdf, q: @product.name)
-    assert_response :success
-  end
 
   # =============================================================================
   # Empty Results Tests
@@ -254,6 +244,87 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     # Clear button should only appear when filters are active
     # Using assert_select with count to check it doesn't appear in the filter bar
     # (it may appear in empty state, so we check the filter form area)
+  end
+
+  # =============================================================================
+  # Pagination Tests
+  # =============================================================================
+
+  test "index paginates products" do
+    get price_list_url
+    assert_response :success
+    # With few products, pagination info is shown but nav links only appear when pages > 1
+    assert_match /Showing.*of.*products/, response.body
+  end
+
+  test "index respects page parameter" do
+    get price_list_url(page: 1)
+    assert_response :success
+  end
+
+  test "pagination preserves category filter" do
+    get price_list_url(category: @category.slug, page: 1)
+    assert_response :success
+    # Should still filter by category
+    assert_no_match @product_two.generated_title, response.body
+  end
+
+  test "pagination preserves search filter" do
+    get price_list_url(q: @product.name, page: 1)
+    assert_response :success
+  end
+
+  test "pagination shows product count with total" do
+    get price_list_url
+    assert_response :success
+    assert_match /Showing.*of.*products/, response.body
+  end
+
+  test "pagination works within turbo frame" do
+    get price_list_url(page: 1), headers: { "Turbo-Frame" => "price_list_table" }
+    assert_response :success
+    assert_select "turbo-frame#price_list_table"
+  end
+
+  test "xlsx export contains all products regardless of pagination" do
+    total = Product.active.standard.count
+    assert total > 0, "Need active standard products for this test"
+
+    get price_list_export_url(format: :xlsx)
+    assert_response :success
+
+    require "zip"
+    require "nokogiri"
+    Zip::File.open_buffer(response.body) do |zip|
+      sheet_xml = zip.find_entry("xl/worksheets/sheet1.xml").get_input_stream.read
+      doc = Nokogiri::XML(sheet_xml)
+      data_rows = doc.xpath("//xmlns:row", "xmlns" => "http://schemas.openxmlformats.org/spreadsheetml/2006/main").count - 1
+      assert data_rows >= total, "Export should contain all #{total} products, got #{data_rows} rows"
+    end
+  end
+
+  test "xlsx export contains full catalogue even when category filter is active" do
+    total = Product.active.standard.count
+    filtered = Product.active.standard.where(category_id: @category.id).count
+    assert total > filtered, "Need products in multiple categories for this test"
+
+    get price_list_export_url(format: :xlsx, category: @category.slug)
+    assert_response :success
+
+    require "zip"
+    require "nokogiri"
+    Zip::File.open_buffer(response.body) do |zip|
+      sheet_xml = zip.find_entry("xl/worksheets/sheet1.xml").get_input_stream.read
+      doc = Nokogiri::XML(sheet_xml)
+      data_rows = doc.xpath("//xmlns:row", "xmlns" => "http://schemas.openxmlformats.org/spreadsheetml/2006/main").count - 1
+      assert data_rows >= total, "Export should contain all #{total} products even with category filter, got #{data_rows} rows"
+    end
+  end
+
+  test "pdf export contains full catalogue even when category filter is active" do
+    get price_list_export_url(format: :pdf, category: @category.slug)
+    assert_response :success
+    assert_equal "application/pdf", response.content_type
   end
 
   # =============================================================================

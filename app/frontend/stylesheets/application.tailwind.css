@@ -8,3 +8,20 @@
 @source "../../../app/views/**/*.html.erb";
 @source "../../../app/views/**/*.rb";
 @source "../../../app/helpers/**/*.rb";
+
+/* Pagy pagination styling */
+nav.pagy.series-nav {
+  @apply flex items-center gap-0;
+
+  & > a {
+    @apply btn btn-ghost font-semibold text-base;
+  }
+
+  & > a[aria-current="page"] {
+    @apply btn btn-primary font-semibold text-base;
+  }
+
+  & > a[aria-disabled="true"] {
+    @apply btn btn-ghost font-semibold text-base opacity-40 pointer-events-none;
+  }
+}
