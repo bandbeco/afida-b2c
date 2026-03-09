@@ -234,6 +234,10 @@ class Product < ApplicationRecord
     product_type == "customizable_template"
   end
 
+  def vegware?
+    brand&.downcase == "vegware"
+  end
+
   # ==========================================================================
   # Pricing Methods
   # ==========================================================================

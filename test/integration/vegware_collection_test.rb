@@ -28,6 +28,12 @@ class VegwareCollectionTest < ActionDispatch::IntegrationTest
     assert_no_match(/Vegware Inactive Cup/, response.body)
   end
 
+  test "vegware collection page shows Vegware badge on product cards" do
+    get collection_url(@vegware.slug)
+    assert_response :success
+    assert_select ".vegware-badge", minimum: 1
+  end
+
   # ==========================================================================
   # GET /collections/vegware/:category_slug (filtered by parent category)
   # ==========================================================================

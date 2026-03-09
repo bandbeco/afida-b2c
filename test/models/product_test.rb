@@ -655,6 +655,17 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal "kraft Pizza Boxes", product.generated_title
   end
 
+  # Vegware collection membership tests
+  test "vegware? returns true for products in the Vegware collection" do
+    product = products(:vegware_hot_cup)
+    assert product.vegware?
+  end
+
+  test "vegware? returns false for products not in the Vegware collection" do
+    product = products(:one)
+    assert_not product.vegware?
+  end
+
   test "generated_title without brand omits it" do
     product = products(:one)
     product.update_columns(

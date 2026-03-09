@@ -1,0 +1,416 @@
+<% content_for :title, "Vegware Compostable Packaging | Plant-Based Cups, Containers & More | Afida" %>
+
+<% content_for :meta_description, "Shop Vegware compostable packaging at Afida. Plant-based cups, containers, cutlery and more. EN 13432 certified. Free delivery over £100. Next-day dispatch before 2pm." %>
+
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
+<% content_for :head do %>
+  <%= canonical_url(vegware_url) %>
+
+  <%# Open Graph tags %>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Vegware Compostable Packaging | Afida">
+  <meta property="og:description" content="<%= content_for(:meta_description) %>">
+  <meta property="og:url" content="<%= vegware_url %>">
+  <meta property="og:site_name" content="Afida">
+  <meta property="og:image" content="<%= @collection.image.attached? ? rails_storage_proxy_url(@collection.image) : hero_image_url %>">
+
+  <%# Twitter Card tags %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Vegware Compostable Packaging | Afida">
+  <meta name="twitter:description" content="<%= content_for(:meta_description) %>">
+  <meta name="twitter:image" content="<%= @collection.image.attached? ? rails_storage_proxy_url(@collection.image) : hero_image_url %>">
+
+  <%# Structured data: ItemList %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Vegware Compostable Packaging",
+      "description": "Plant-based compostable packaging products by Vegware, available at Afida.",
+      "url": vegware_url,
+      "numberOfItems": @products.size,
+      "itemListElement": @products.each_with_index.map { |product, i|
+        {
+          "@type": "ListItem",
+          "position": i + 1,
+          "url": product_url(product.slug),
+          "name": product.generated_title
+        }
+      }
+    }.to_json) %>
+  </script>
+
+  <%# Structured data: FAQPage %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What does 'compostable' mean?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Compostable means the product will fully break down into natural elements in a commercial composting facility, typically within 12 weeks. Vegware products are EN 13432 certified, the European standard for industrial compostability."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is Vegware made from?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Vegware products are made from plant-based materials including sustainably sourced paper, cornstarch (PLA), and other renewable resources. No petroleum-based plastics are used."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I get free delivery?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Orders over £100 (excl. VAT) qualify for free standard delivery across the UK mainland."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How fast is delivery?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Orders placed before 2pm are dispatched the same day for next-day delivery. Standard delivery typically arrives within 1-2 working days."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do you offer bulk or trade pricing?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, we offer competitive trade pricing for bulk orders. Many of our products include tiered pricing — the more you order, the more you save. Contact us for bespoke quotes on large orders."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I get Vegware products branded with my logo?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! We offer custom branding on a wide range of Vegware-compatible products including cups, containers, and napkins. Visit our branding page or contact us for details."
+          }
+        }
+      ]
+    }.to_json) %>
+  </script>
+<% end %>
+
+<div class="drawer drawer-end">
+  <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
+  <div class="drawer-content">
+
+    <%# ==================== HERO SECTION ==================== %>
+    <section aria-label="Vegware hero">
+      <div class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-white overflow-hidden">
+        <div class="container mx-auto px-4 pt-6 pb-0 lg:pt-8 lg:pb-0">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <%# Left column - Content %>
+            <div class="max-w-2xl text-center lg:text-left mx-auto lg:mx-0">
+              <span class="badge badge-neutral bg-white text-black badge-lg mb-4 gap-2">
+                <%= vite_image_tag "images/logos/vegware.svg", alt: "", class: "h-4 w-auto", aria: { hidden: true } %>
+                Official  Stockist
+              </span>
+
+              <h1 style="font-size: clamp(1.5rem, 5vw, 3.75rem);" data-controller="slide-in">
+                <div class="whitespace-nowrap" data-slide-in-target="item">Compostable Packaging</div>
+                <div class="whitespace-nowrap" data-slide-in-target="item">
+                  From
+                  <%= vite_image_tag "images/logos/vegware.svg", alt: "", class: "h-18 w-auto inline", aria: { hidden: true } %>
+                </div>
+              </h1>
+
+              <p class="text-lg text-neutral-600 mb-8 leading-relaxed max-w-lg mx-auto lg:mx-0">
+                Plant-based cups, containers, cutlery and more. EN 13432 certified compostable packaging that helps your business close the waste loop.
+              </p>
+
+              <%# Trust badges %>
+              <div class="flex flex-wrap justify-center lg:justify-start gap-3 sm:gap-6 mb-8">
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span class="text-sm text-neutral-700">Certified compostable</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span class="text-sm text-neutral-700">Next-day delivery</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span class="text-sm text-neutral-700">Free delivery over £100</span>
+                </div>
+              </div>
+
+              <%# CTAs %>
+              <div class="flex flex-col sm:flex-row justify-center lg:justify-start gap-4 mb-8">
+                <%= link_to "#vegware-products",
+                      class: "btn btn-primary btn-lg shadow-lg shadow-black/20",
+                      data: {
+                        controller: "analytics",
+                        action: "click->analytics#track",
+                        analytics_event_param: "vegware_lp_cta_click"
+                      } do %>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                  Shop Vegware Products
+                <% end %>
+                <%= link_to samples_path, class: "btn btn-outline btn-lg border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white" do %>
+                  Order Free Samples
+                <% end %>
+              </div>
+
+              <%# Trust signals %>
+              <div class="flex flex-col items-center lg:items-start gap-1.5 text-sm text-neutral-600">
+                <div class="pl-1">
+                  <%= render "shared/gbp_badge", variant: :homepage %>
+                </div>
+                <div class="flex items-center gap-2">
+                  <div class="flex -space-x-2">
+                    <% @client_logos.reject { |logo| logo == "the-grove.webp" }.first(8).each do |logo| %>
+                      <div class="w-8 h-8 rounded-full bg-gray-200 border-2 border-white">
+                        <%= vite_image_tag "images/logos/#{logo}", alt: "", class: "w-full h-full object-contain" %>
+                      </div>
+                    <% end %>
+                  </div>
+                  <span>Trusted by 500+ UK businesses</span>
+                </div>
+              </div>
+            </div>
+
+            <%# Right column - Image %>
+            <div class="hidden lg:flex justify-center lg:justify-end">
+              <%= vite_image_tag "images/vegware-hero.jpg",
+                            alt: "Vegware compostable packaging products",
+                            class: "w-full max-w-xl lg:max-w-2xl h-auto rounded-2xl",
+                            loading: "eager" %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <%# ==================== CLIENT LOGOS ==================== %>
+    <div class="-mt-4">
+      <%= render "pages/partials/client_logos" %>
+    </div>
+
+    <%# ==================== WHY VEGWARE? ==================== %>
+    <section class="py-4 sm:py-6 lg:py-8" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+      <div class="container mx-auto px-4">
+        <div class="bg-neutral-900 text-white overflow-hidden rounded-3xl relative">
+          <%# Subtle dot pattern background %>
+          <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+          <%# Decorative glow %>
+          <div class="absolute -top-20 -right-20 w-72 h-72 bg-[#79ebc0] rounded-full blur-[120px] opacity-15"></div>
+          <div class="absolute -bottom-20 -left-20 w-56 h-56 bg-[#79ebc0] rounded-full blur-[100px] opacity-10"></div>
+
+          <div class="relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-0">
+              <%# Left: Image %>
+              <div class="flex items-center justify-center p-6 sm:p-10">
+                <% if @collection.image.attached? %>
+                  <%= image_tag @collection.image.variant(resize_to_fill: [600, 400]),
+                                alt: "Vegware compostable packaging range",
+                                class: "w-full h-auto rounded-2xl",
+                                loading: "lazy" %>
+                <% else %>
+                  <div class="w-full aspect-video bg-white/10 rounded-2xl flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# Right: Content %>
+              <div class="flex flex-col justify-center px-6 sm:px-10 lg:px-12 py-10 lg:py-16">
+                <h2 class="text-4xl sm:text-5xl mb-6">Why Choose <%= vite_image_tag "images/logos/vegware.svg", alt: "Vegware", class: "h-8 pb-1 w-auto inline brightness-0 invert" %> ?</h2>
+
+                <ul class="space-y-4 mb-8">
+                  <li class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-lg text-white/90">100% plant-based materials</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-lg text-white/90">EN 13432 certified compostable</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-lg text-white/90">Full range: cups, containers, cutlery, napkins, and more</span>
+                  </li>
+                  <li class="flex items-start gap-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-[#79ebc0] flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span class="text-lg text-white/90">Commercially compostable — closes the waste loop</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <%# Bottom trust badges %>
+            <div class="border-t border-white/10 px-6 sm:px-10 py-8">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                <div>
+                  <p class="text-lg text-[#79ebc0] mb-1">Certified Compostable</p>
+                  <p class="text-sm text-white/60">EN 13432 European standard</p>
+                </div>
+                <div>
+                  <p class="text-lg text-[#79ebc0] mb-1">Full Range Available</p>
+                  <p class="text-sm text-white/60">Everything from cups to cutlery</p>
+                </div>
+                <div>
+                  <p class="text-lg text-[#79ebc0] mb-1">UK Stock, Fast Delivery</p>
+                  <p class="text-sm text-white/60">Next-day dispatch before 2pm</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <%# ==================== PRODUCT GRID ==================== %>
+    <section class="py-12 sm:py-16" id="vegware-products" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+      <div class="container mx-auto px-4">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl md:text-4xl mb-4">Shop Vegware Products</h2>
+          <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
+        </div>
+
+        <% if @products.any? %>
+          <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <% @products.each do |product| %>
+              <%= render "products/card", product: product %>
+            <% end %>
+          </div>
+        <% else %>
+          <div class="text-center py-12">
+            <p class="text-lg text-base-content/60">Vegware products coming soon. Check back shortly!</p>
+          </div>
+        <% end %>
+      </div>
+    </section>
+
+    <%# ==================== TESTIMONIALS ==================== %>
+    <%= render "pages/partials/testimonials" %>
+
+    <%# ==================== FAQ SECTION ==================== %>
+    <section class="py-12 sm:py-16 bg-base-200" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto">
+          <div class="text-center mb-10">
+            <h2 class="text-3xl md:text-4xl mb-4">Frequently Asked Questions</h2>
+            <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
+          </div>
+
+          <div class="space-y-2">
+            <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+              <input type="radio" name="vegware-faq" />
+              <div class="collapse-title text-lg">What does 'compostable' mean?</div>
+              <div class="collapse-content">
+                <p class="text-base-content/70">Compostable means the product will fully break down into natural elements in a commercial composting facility, typically within 12 weeks. Vegware products are EN 13432 certified, the European standard for industrial compostability.</p>
+              </div>
+            </div>
+
+            <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+              <input type="radio" name="vegware-faq" />
+              <div class="collapse-title text-lg">What is Vegware made from?</div>
+              <div class="collapse-content">
+                <p class="text-base-content/70">Vegware products are made from plant-based materials including sustainably sourced paper, cornstarch (PLA), and other renewable resources. No petroleum-based plastics are used.</p>
+              </div>
+            </div>
+
+            <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+              <input type="radio" name="vegware-faq" />
+              <div class="collapse-title text-lg">Can I get free delivery?</div>
+              <div class="collapse-content">
+                <p class="text-base-content/70">Yes! Orders over £100 (excl. VAT) qualify for free standard delivery across the UK mainland.</p>
+              </div>
+            </div>
+
+            <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+              <input type="radio" name="vegware-faq" />
+              <div class="collapse-title text-lg">How fast is delivery?</div>
+              <div class="collapse-content">
+                <p class="text-base-content/70">Orders placed before 2pm are dispatched the same day for next-day delivery. Standard delivery typically arrives within 1-2 working days.</p>
+              </div>
+            </div>
+
+            <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+              <input type="radio" name="vegware-faq" />
+              <div class="collapse-title text-lg">Do you offer bulk or trade pricing?</div>
+              <div class="collapse-content">
+                <p class="text-base-content/70">Yes, we offer competitive trade pricing for bulk orders. Many of our products include tiered pricing — the more you order, the more you save. Contact us for bespoke quotes on large orders.</p>
+              </div>
+            </div>
+
+            <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+              <input type="radio" name="vegware-faq" />
+              <div class="collapse-title text-lg">Can I get Vegware products branded with my logo?</div>
+              <div class="collapse-content">
+                <p class="text-base-content/70">Yes! We offer custom branding on a wide range of Vegware-compatible products including cups, containers, and napkins. Visit our <%= link_to "branding page", branding_path, class: "link link-primary" %> or <%= link_to "contact us", contact_path, class: "link link-primary" %> for details.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <%# ==================== FINAL CTA ==================== %>
+    <section class="py-16 bg-gradient-to-br from-primary/10 to-secondary/10">
+      <div class="container mx-auto px-4">
+        <div class="max-w-2xl mx-auto text-center">
+          <h2 class="text-3xl md:text-4xl mb-4">Ready to Switch to Compostable?</h2>
+          <p class="text-base-content/70 mb-8">
+            Join 500+ UK businesses already using Vegware compostable packaging. Better for your business, better for the planet.
+          </p>
+
+          <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <%= link_to "#vegware-products",
+                  class: "btn btn-primary btn-lg",
+                  data: {
+                    controller: "analytics",
+                    action: "click->analytics#track",
+                    analytics_event_param: "vegware_lp_bottom_cta_click"
+                  } do %>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+              </svg>
+              Shop Vegware Products
+            <% end %>
+            <%= link_to samples_path, class: "btn btn-outline btn-lg border-2 border-neutral-800 hover:bg-neutral-800 hover:text-white" do %>
+              Request Free Samples
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="drawer-side">
+    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+    <div class="bg-base-200 text-base-content h-full w-80 p-4 flex flex-col">
+      <%= render "shared/drawer_cart_content" %>
+    </div>
+  </div>
+</div>

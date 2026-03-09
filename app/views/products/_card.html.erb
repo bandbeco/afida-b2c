@@ -3,7 +3,10 @@
      data-controller="product-card-hover"
      data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
   <%= link_to product_path(product.slug), class: "flex flex-col flex-1", data: { turbo_frame: "_top" } do %>
-    <figure class="aspect-square bg-white flex-shrink-0 overflow-hidden">
+    <figure class="aspect-square bg-white flex-shrink-0 overflow-hidden relative">
+      <% if product.vegware? %>
+        <%= render "shared/vegware_badge", size: :sm %>
+      <% end %>
       <div class="product-image-container">
         <% if product.product_photo.attached? %>
           <%= image_tag product.product_photo.variant(resize_and_pad: [400, 400, { background: [255, 255, 255] }]),

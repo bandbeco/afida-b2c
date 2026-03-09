@@ -226,6 +226,25 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to branded_product_path(branded_template.slug)
   end
 
+  # Vegware badge tests
+  test "show page displays Vegware badge for Vegware products" do
+    vegware_product = products(:vegware_hot_cup)
+
+    get product_url(vegware_product.slug)
+
+    assert_response :success
+    assert_select ".vegware-badge"
+  end
+
+  test "show page does not display Vegware badge for non-Vegware products" do
+    product = products(:one)
+
+    get product_url(product.slug)
+
+    assert_response :success
+    assert_select ".vegware-badge", count: 0
+  end
+
   test "show does not redirect standard products" do
     standard_product = products(:one)
     standard_product.update!(product_type: "standard")

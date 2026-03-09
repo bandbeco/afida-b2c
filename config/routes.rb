@@ -50,6 +50,7 @@ Rails.application.routes.draw do
       post :request_pack
     end
   end
+  get "vegware", to: "pages#vegware"
   get "about", to: "pages#about"
   get "contact", to: "pages#contact"
   get "terms-conditions", to: "pages#terms_conditions"

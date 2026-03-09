@@ -1,0 +1,19 @@
+<%#
+  Vegware badge overlay for product cards and product pages.
+
+  Usage:
+    render "shared/vegware_badge", size: :sm
+    render "shared/vegware_badge", size: :lg
+
+  Sizes:
+    :sm - For product cards (compact views)
+    :lg (default) - For product detail pages
+
+  Note: Parent container must have `position: relative` (class="relative")
+%>
+<% size ||= :lg %>
+<div class="vegware-badge absolute top-2 left-2 z-10">
+  <%= vite_image_tag "images/logos/vegware.svg",
+                      alt: "Vegware",
+                      class: "#{size == :sm ? 'h-5' : 'h-10'} w-auto" %>
+</div>

@@ -69,6 +69,13 @@ class PagesController < ApplicationController
   def samples
   end
 
+  def vegware
+    @collection = Collection.regular.find_by!(slug: Collection::VEGWARE_SLUG)
+    @products = @collection.visible_products
+                           .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
+    @client_logos = client_logos
+  end
+
   def about
     @client_logos = client_logos
   end

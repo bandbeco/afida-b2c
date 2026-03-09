@@ -146,4 +146,58 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     # Should show empty state or "no results" message
   end
+
+  # =========================================================================
+  # Vegware landing page tests
+  # =========================================================================
+
+  test "vegware page returns 200" do
+    get vegware_path
+
+    assert_response :success
+  end
+
+  test "vegware page displays Vegware in H1" do
+    get vegware_path
+
+    assert_select "h1", /Vegware/i
+  end
+
+  test "vegware page shows active Vegware products" do
+    get vegware_path
+
+    product = products(:vegware_hot_cup)
+    assert_select "a[href=?]", product_path(product.slug)
+  end
+
+  test "vegware page has correct meta title" do
+    get vegware_path
+
+    assert_select "title", /Vegware/
+  end
+
+  test "vegware page has canonical URL" do
+    get vegware_path
+
+    assert_select "link[rel=canonical][href=?]", vegware_url
+  end
+
+  test "vegware page has structured data" do
+    get vegware_path
+
+    assert_select "script[type='application/ld+json']"
+  end
+
+  test "vegware page has FAQ section with collapse elements" do
+    get vegware_path
+
+    assert_select ".collapse", minimum: 5
+  end
+
+  test "vegware page has CTA buttons" do
+    get vegware_path
+
+    assert_select "a[href='#vegware-products']"
+    assert_select "a[href=?]", samples_path
+  end
 end
