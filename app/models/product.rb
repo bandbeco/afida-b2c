@@ -96,27 +96,39 @@ class Product < ApplicationRecord
   }
 
   # Search on product name, SKU, brand, and attributes (size, colour, material)
+  # Splits multi-word queries so each word is matched independently across columns
   scope :search, ->(query) {
     return all if query.blank?
 
     truncated_query = query.to_s.truncate(100, omission: "")
-    sanitized_query = sanitize_sql_like(truncated_query)
-    where(
-      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q OR products.brand ILIKE :q",
-      q: "%#{sanitized_query}%"
-    )
+    words = truncated_query.split
+    columns = %w[products.name products.sku products.size products.colour products.material products.brand]
+
+    scope = all
+    words.each_with_index do |word, i|
+      sanitized = sanitize_sql_like(word)
+      conditions = columns.map { |col| "#{col} ILIKE :q#{i}" }.join(" OR ")
+      scope = scope.where(conditions, "q#{i}": "%#{sanitized}%")
+    end
+    scope
   }
 
   # Extended search including category names
+  # Splits multi-word queries so each word is matched independently across columns
   scope :search_extended, ->(query) {
     return all if query.blank?
 
     truncated_query = query.to_s.truncate(100, omission: "")
-    sanitized_query = sanitize_sql_like(truncated_query)
-    joins(:category).where(
-      "products.name ILIKE :q OR products.sku ILIKE :q OR products.size ILIKE :q OR products.colour ILIKE :q OR products.material ILIKE :q OR products.brand ILIKE :q OR categories.name ILIKE :q",
-      q: "%#{sanitized_query}%"
-    )
+    words = truncated_query.split
+    columns = %w[products.name products.sku products.size products.colour products.material products.brand categories.name]
+
+    scope = joins(:category)
+    words.each_with_index do |word, i|
+      sanitized = sanitize_sql_like(word)
+      conditions = columns.map { |col| "#{col} ILIKE :q#{i}" }.join(" OR ")
+      scope = scope.where(conditions, "q#{i}": "%#{sanitized}%")
+    end
+    scope
   }
 
   # Attribute-based filtering scopes (direct column filters)

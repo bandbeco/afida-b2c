@@ -375,6 +375,24 @@ class ProductTest < ActiveSupport::TestCase
     assert_kind_of ActiveRecord::Relation, results
   end
 
+  test "search matches across multiple columns with multi-word queries" do
+    product = products(:one)
+    product.update(name: "Tutti Frutti Ice Cream Spoon", brand: "Vegware")
+
+    results = Product.search("Vegware Tutti")
+
+    assert_includes results, product
+  end
+
+  test "search_extended matches across multiple columns with multi-word queries" do
+    product = products(:one)
+    product.update(name: "Tutti Frutti Ice Cream Spoon", brand: "Vegware")
+
+    results = Product.search_extended("Vegware Tutti")
+
+    assert_includes results, product
+  end
+
   # Sort scope tests
   test "sorted by relevance uses default order" do
     products = Product.sorted("relevance").to_a
