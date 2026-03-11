@@ -51,6 +51,30 @@ class Admin::CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "A test category", category.description
   end
 
+  test "should update category with FAQs" do
+    faqs = [
+      { "question" => "What is this?", "answer" => "A test category." },
+      { "question" => "Is it good?", "answer" => "Yes, very good." }
+    ]
+
+    patch admin_category_path(@category), headers: @headers, params: {
+      category: {
+        faqs: faqs.to_json
+      }
+    }
+
+    assert_redirected_to admin_categories_path
+    @category.reload
+    assert_equal 2, @category.faqs.size
+    assert_equal "What is this?", @category.faqs.first["question"]
+  end
+
+  test "edit form shows FAQs section" do
+    get edit_admin_category_path(@category), headers: @headers
+    assert_response :success
+    assert_select "h2", text: /FAQs/
+  end
+
   test "should get edit" do
     get edit_admin_category_path(@category), headers: @headers
     assert_response :success

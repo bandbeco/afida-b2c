@@ -26,7 +26,10 @@ class FaqHelperTest < ActionView::TestCase
   end
 
   test "category_faq_schema_markup generates FAQPage schema for category FAQs" do
-    faqs = CategoryFaqService.for_category("hot-cups")
+    faqs = [
+      { "question" => "What cups do you offer?", "answer" => "Paper cups in various sizes." },
+      { "question" => "Are they compostable?", "answer" => "Yes, PLA-lined." }
+    ]
     schema_html = category_faq_schema_markup(faqs)
 
     assert_includes schema_html, "application/ld+json"
@@ -35,11 +38,15 @@ class FaqHelperTest < ActionView::TestCase
   end
 
   test "category_faq_schema_markup includes all questions" do
-    faqs = CategoryFaqService.for_category("hot-cups")
+    faqs = [
+      { "question" => "Q1?", "answer" => "A1." },
+      { "question" => "Q2?", "answer" => "A2." },
+      { "question" => "Q3?", "answer" => "A3." }
+    ]
     schema_html = category_faq_schema_markup(faqs)
 
     question_count = schema_html.scan(/"@type":"Question"/).size
-    assert_equal faqs.size, question_count
+    assert_equal 3, question_count
   end
 
   test "category_faq_schema_markup strips markdown links from answers" do

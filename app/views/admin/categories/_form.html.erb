@@ -90,6 +90,24 @@
     </div>
   </div>
 
+  <%# FAQs %>
+  <div class="card bg-base-100 shadow-sm border border-base-200">
+    <div class="card-body p-4 sm:p-6">
+      <h2 class="card-title text-lg mb-4">FAQs</h2>
+      <p class="text-sm text-base-content/60 mb-4">Add question-and-answer pairs that appear on the category page. These also generate FAQPage schema for AI search engines.</p>
+
+      <div data-controller="category-faqs-form"
+           data-category-faqs-form-faqs-value="<%= (category.faqs || []).to_json %>">
+        <div data-category-faqs-form-target="container" class="space-y-4 mb-4"></div>
+        <%= form.hidden_field :faqs, value: (category.faqs || []).to_json, data: { category_faqs_form_target: "hiddenInput" } %>
+        <button type="button" class="btn btn-outline btn-sm"
+                data-action="category-faqs-form#add">
+          + Add FAQ
+        </button>
+      </div>
+    </div>
+  </div>
+
   <%# Image %>
   <div class="card bg-base-100 shadow-sm border border-base-200">
     <div class="card-body p-4 sm:p-6">

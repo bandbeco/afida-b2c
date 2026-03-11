@@ -79,7 +79,7 @@
 </div>
 
 <%# Category FAQs Section %>
-<% category_faqs = CategoryFaqService.for_category(@category.slug) %>
+<% category_faqs = @category.faqs.presence || [] %>
 <% if category_faqs.any? %>
   <section class="mt-12 py-8 border-t border-base-300 flex flex-col items-center">
     <h2 class="text-2xl mb-6">Frequently Asked Questions About <%= @category.name %></h2>
