@@ -40,6 +40,52 @@ class RobotsController < ApplicationController
       # Disallow quick_add modal endpoints (Turbo Frame content only)
       Disallow: /products/*/quick_add
 
+      # AI Search Engine Crawlers - Explicitly Allowed
+      User-agent: GPTBot
+      Allow: /
+      Disallow: /admin/
+      Disallow: /cart
+      Disallow: /checkout
+      Disallow: /signin
+      Disallow: /signup
+
+      User-agent: ChatGPT-User
+      Allow: /
+
+      User-agent: OAI-SearchBot
+      Allow: /
+
+      User-agent: ClaudeBot
+      Allow: /
+      Disallow: /admin/
+      Disallow: /cart
+      Disallow: /checkout
+      Disallow: /signin
+      Disallow: /signup
+
+      User-agent: Claude-Web
+      Allow: /
+
+      User-agent: PerplexityBot
+      Allow: /
+      Disallow: /admin/
+      Disallow: /cart
+      Disallow: /checkout
+      Disallow: /signin
+      Disallow: /signup
+
+      User-agent: Google-Extended
+      Allow: /
+
+      User-agent: Applebot-Extended
+      Allow: /
+
+      User-agent: cohere-ai
+      Allow: /
+
+      User-agent: Diffbot
+      Allow: /
+
       # Sitemap
       Sitemap: #{base_url}/sitemap.xml
     ROBOTS

@@ -1,31 +1,70 @@
 # Afida
 
-> Afida is a UK-based B2B supplier of eco-friendly disposable food and drink packaging for cafes, restaurants, takeaways, and catering businesses.
+> Afida is a UK-based supplier of eco-friendly disposable food and drink packaging for cafes, restaurants, takeaways, and catering businesses. Free UK delivery on orders over £100.
 
-## About
-
-Afida supplies sustainable disposable packaging to hospitality businesses across the UK. Our product range includes paper coffee cups and lids, takeaway food containers, pizza boxes, paper bags, napkins, straws, wooden cutlery, ice cream cups, bagasse eco containers, and plates and trays. We offer bulk pricing with free UK delivery on orders over £100.
+Afida supplies sustainable disposable packaging to hospitality businesses and consumers across the UK. Our product range includes paper coffee cups and lids, takeaway food containers, pizza boxes, paper bags, napkins, straws, wooden cutlery, ice cream cups, bagasse eco containers, and plates and trays. We offer bulk pricing with free UK delivery on orders over £100 (excl. VAT). Founded in 2020, Afida (B&B Eco) is trusted by 500+ businesses including The Ritz, Marriott, and Hawksmoor.
 
 ## Product Categories
 
-- Cups & Lids: Single wall, double wall, and ripple wall paper coffee cups with matching sip lids
-- Ice Cream Cups: Paper ice cream and dessert cups in sizes from 4oz to 10oz
-- Napkins: Cocktail napkins, dinner napkins, airlaid napkins, and dispenser napkins
-- Pizza Boxes: Kraft corrugated pizza boxes from 7 inch to 16 inch
-- Straws: Paper straws and biodegradable bamboo straws
-- Takeaway Containers: Kraft salad bowls, soup containers, and food boxes with lids
-- Takeaway Boxes: Burger boxes, chip boxes, and general takeaway food boxes
-- Food Containers: Portion pots, deli containers, soup cups, and lids
-- Bags: Paper bags with handles, carrier bags, and kraft bags
-- Cutlery: Wooden forks, knives, spoons, and cutlery kits
-- Plates & Trays: Palm leaf plates, bagasse plates, and platter boxes
-- Bagasse Eco Range: Compostable clamshells, burger boxes, and food containers
-- Takeaway Extras: Coffee stirrers, cup carriers, and accessories
+### Cups & Drinks
+- [Hot Cups](https://afida.com/categories/hot-cups): Single wall, double wall, and ripple wall paper coffee cups
+- [Cold Cups](https://afida.com/categories/cold-cups): PLA-lined and clear cold drink cups
+- [Cup Lids](https://afida.com/categories/cup-lids): Sip lids and dome lids for hot and cold cups
+- [Cup Accessories](https://afida.com/categories/cup-accessories): Cup carriers, sleeves, and stirrers
+- [Ice Cream Cups](https://afida.com/categories/ice-cream-cups): Paper ice cream and dessert cups in sizes from 4oz to 10oz
+- [Straws](https://afida.com/categories/straws): Paper straws and biodegradable bamboo straws
+
+### Hot Food
+- [Pizza Boxes](https://afida.com/categories/pizza-boxes): Kraft corrugated pizza boxes from 7 inch to 16 inch
+- [Takeaway Boxes](https://afida.com/categories/takeaway-boxes): Burger boxes, chip boxes, and general takeaway food boxes
+- [Food Containers](https://afida.com/categories/food-containers): Portion pots, deli containers, and food boxes with lids
+- [Soup Containers](https://afida.com/categories/soup-containers): Paper soup cups and containers with lids
+- [Bagasse Containers](https://afida.com/categories/bagasse-containers): Compostable clamshells, burger boxes, and food containers
+
+### Cold Food & Salads
+- [Salad Boxes](https://afida.com/categories/salad-boxes): Kraft and clear salad bowls and boxes
+- [Sandwich & Wrap Boxes](https://afida.com/categories/sandwich-and-wrap-boxes): Sandwich wedges and wrap boxes
+- [Deli Pots](https://afida.com/categories/deli-pots): Small portion pots and deli containers
+
+### Tableware
+- [Plates & Trays](https://afida.com/categories/plates-and-trays): Palm leaf plates, bagasse plates, and platter boxes
+- [Cutlery](https://afida.com/categories/cutlery): Wooden forks, knives, spoons, and cutlery kits
+- [Napkins](https://afida.com/categories/napkins): Cocktail napkins, dinner napkins, airlaid napkins, and dispenser napkins
+- [Aluminium Containers](https://afida.com/categories/aluminium-containers): Aluminium foil trays and containers
+
+### Bags & Wraps
+- [Bags](https://afida.com/categories/bags): Paper bags with handles, carrier bags, and kraft bags
+- [Greaseproof & Wraps](https://afida.com/categories/greaseproof-and-wraps): Greaseproof paper sheets and food wraps
+- [NatureFlex Bags](https://afida.com/categories/natureflex-bags): Compostable NatureFlex window bags
+
+### Supplies & Essentials
+- [Bin Liners](https://afida.com/categories/bin-liners): Compostable and standard bin liners
+- [Labels & Stickers](https://afida.com/categories/labels-and-stickers): Day-of-week labels, allergy labels, and custom stickers
+- [Gloves & Cleaning](https://afida.com/categories/gloves-and-cleaning): Disposable gloves and cleaning supplies
+- [Till Rolls](https://afida.com/categories/till-rolls): Thermal and plain till receipt rolls
+
+## Services
+
+- [Custom Branded Packaging](https://afida.com/branded-products): Custom printing with your logo and branding on cups, boxes, bags, and more
+- [Free Sample Packs](https://afida.com/samples): Try before you buy — order free product samples with low-cost delivery
+
+## Key Pages
+
+- [Shop All Products](https://afida.com/shop)
+- [About Afida](https://afida.com/about)
+- [Frequently Asked Questions](https://afida.com/faqs)
+- [Contact Us](https://afida.com/contact)
+- [Blog](https://afida.com/blog)
+- [Delivery & Returns](https://afida.com/delivery-returns)
 
 ## Key Information
 
 - Website: https://afida.com
+- Phone: +44 203 302 7719
+- Email: hello@afida.com
 - Location: United Kingdom
+- Hours: Monday–Friday, 9am–5pm GMT
 - Customers: Cafes, restaurants, takeaways, ice cream parlours, caterers, and event organisers
 - Sustainability: Focus on eco-friendly, biodegradable, compostable, and recyclable packaging
-- Ordering: Bulk pricing available, free delivery on orders over £100
+- Delivery: Free UK delivery on orders over £100 (excl. VAT), next-day delivery available
+- Founded: 2020 (originally as B&B Eco)

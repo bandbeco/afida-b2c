@@ -128,13 +128,37 @@ module SeoHelper
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Afida",
+      "alternateName": "B&B Eco",
       "url": root_url,
       "logo": logo_url,
       "description": "Eco-friendly packaging supplies for UK businesses",
+      "foundingDate": "2020",
+      "telephone": "+44-203-302-7719",
+      "email": "hello@afida.com",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Unit 27, The Metro Centre, Dwight Rd",
+        "addressLocality": "Watford",
+        "addressRegion": "Hertfordshire",
+        "postalCode": "WD18 9SB",
+        "addressCountry": "GB"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      },
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "Customer Service",
-        "email": "hello@afida.com"
+        "telephone": "+44-203-302-7719",
+        "email": "hello@afida.com",
+        "availableLanguage": "English",
+        "hoursAvailable": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": %w[Monday Tuesday Wednesday Thursday Friday],
+          "opens": "09:00",
+          "closes": "17:00"
+        }
       },
       "sameAs": [
         "https://www.linkedin.com/company/afidasupplies",
@@ -155,6 +179,24 @@ module SeoHelper
     end
 
     data.to_json
+  end
+
+  def website_structured_data
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Afida",
+      "url": root_url,
+      "description": "Eco-friendly packaging supplies for UK businesses",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "#{root_url}search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }.to_json
   end
 
   # Structured data for blog posts using Schema.org Article type

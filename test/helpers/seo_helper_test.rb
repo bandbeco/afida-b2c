@@ -82,6 +82,64 @@ class SeoHelperTest < ActionView::TestCase
     assert_equal "Eco-friendly packaging supplies for UK businesses", data["description"]
   end
 
+  test "organization_structured_data includes full postal address" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = organization_structured_data
+    data = JSON.parse(json)
+
+    assert data["address"].present?
+    assert_equal "PostalAddress", data["address"]["@type"]
+    assert_equal "GB", data["address"]["addressCountry"]
+    assert data["address"]["postalCode"].present?
+    assert data["address"]["addressLocality"].present?
+  end
+
+  test "organization_structured_data includes telephone" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = organization_structured_data
+    data = JSON.parse(json)
+
+    assert_equal "+44-203-302-7719", data["telephone"]
+  end
+
+  test "organization_structured_data includes foundingDate and alternateName" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = organization_structured_data
+    data = JSON.parse(json)
+
+    assert_equal "2020", data["foundingDate"]
+    assert_equal "B&B Eco", data["alternateName"]
+  end
+
+  test "organization_structured_data contactPoint includes telephone and hours" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = organization_structured_data
+    data = JSON.parse(json)
+
+    cp = data["contactPoint"]
+    assert_equal "+44-203-302-7719", cp["telephone"]
+    assert_equal "hello@afida.com", cp["email"]
+    assert cp["hoursAvailable"].present?
+    assert_equal "09:00", cp["hoursAvailable"]["opens"]
+  end
+
+  test "website_structured_data generates WebSite schema with SearchAction" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = website_structured_data
+    data = JSON.parse(json)
+
+    assert_equal "WebSite", data["@type"]
+    assert_equal "Afida", data["name"]
+    assert data["potentialAction"].present?
+    assert_equal "SearchAction", data["potentialAction"]["@type"]
+    assert_includes data["potentialAction"]["target"]["urlTemplate"], "search?q="
+  end
+
   # Existing product structured data tests
   test "generates product JSON-LD structured data" do
     product = products(:single_wall_8oz_white)
