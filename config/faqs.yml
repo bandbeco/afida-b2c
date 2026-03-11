@@ -36,7 +36,7 @@ categories:
     questions:
       - id: place-order
         question: "How do I place an order?"
-        answer: "You can place an order via our website or by contacting our sales team directly at sales@afida.com. [Start shopping](/shop) or for branded items, [request a quote](/branding)."
+        answer: "You can place an order via our website or by contacting our sales team directly at hello@afida.com. [Start shopping](/shop) or for branded items, [request a quote](/branding)."
       - id: delivery-cost-time
         question: "How much does delivery cost and how long will it take?"
         answer: "Delivery cost depends on order size, weight, destination and service selected. We offer standard shipping and expedited options. See our [delivery & returns policy](/delivery) for full details."
@@ -133,7 +133,7 @@ categories:
     questions:
       - id: further-questions
         question: "Who do I contact if I have further questions?"
-        answer: "You can email our Customer Support team at info@afida.com, or call us on 0203 302 7719. We aim to respond to all enquiries within 48 hours. [Visit our contact page](/contact) for more ways to reach us."
+        answer: "You can email our Customer Support team at hello@afida.com, or call us on 0203 302 7719. We aim to respond to all enquiries within 48 hours. [Visit our contact page](/contact) for more ways to reach us."
       - id: product-advice
         question: "I'm unsure which product or material to choose. Can you help?"
         answer: "Yes — we're happy to advise on material suitability, print finishes, durability, regulatory compliance and lead‑times. [Browse our full product range](/shop), [request free samples](/samples), or [contact us](/contact) with your requirements and we'll guide you through the options."

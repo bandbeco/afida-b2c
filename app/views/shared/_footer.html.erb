@@ -22,6 +22,8 @@
         <span id="footer-support" class="footer-title">Help & Support</span>
         <%= link_to "FAQs", faqs_path, class: "link link-hover" %>
         <%= link_to "Contact", contact_path, class: "link link-hover" %>
+        <a href="tel:+442033027719" class="link link-hover">0203 302 7719</a>
+        <a href="mailto:hello@afida.com" class="link link-hover">hello@afida.com</a>
       </nav>
       <nav aria-labelledby="footer-legal">
         <span id="footer-legal" class="footer-title">Legal</span>
@@ -63,11 +65,11 @@
     <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-base-content">
       <aside class="flex items-center gap-4">
         <%= render "shared/logo" %>
-        <p class="text-sm">
-          Afida &copy; <%= Date.current.year %>
-          <br />
-          Everything's compostable except our attitude.
-        </p>
+        <div class="text-sm">
+          <p>Afida &copy; <%= Date.current.year %></p>
+          <p>Everything's compostable except our attitude.</p>
+          <p class="mt-2 max-w-md text-base-content/70">Afida (B&B Eco) has been supplying eco-friendly disposable packaging to UK businesses since 2020. Trusted by 500+ businesses including The Ritz, Marriott, and Hawksmoor. Free delivery on orders over £100.</p>
+        </div>
       </aside>
       <nav class="flex items-center gap-6">
         <%= render "shared/gbp_badge", variant: :footer %>

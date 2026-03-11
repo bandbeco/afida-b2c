@@ -51,6 +51,11 @@
       <%= raw organization_structured_data %>
     </script>
 
+    <%# WebSite structured data with SearchAction for AI engine discovery %>
+    <script type="application/ld+json">
+      <%= raw website_structured_data %>
+    </script>
+
     <%= vite_client_tag if Rails.env.development? %>
     <%= vite_javascript_tag "application" %>
     <%= vite_stylesheet_tag "application" %>
