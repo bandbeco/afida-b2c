@@ -87,6 +87,42 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
     assert_redirected_to "/categories/supplies-and-essentials"
   end
 
+  test "redirects /categories/plates-trays to /categories/tableware/plates-and-trays" do
+    get "/categories/plates-trays"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/tableware/plates-and-trays"
+  end
+
+  test "redirects /categories/bagasse-eco-range to /categories/hot-food/bagasse-containers" do
+    get "/categories/bagasse-eco-range"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/hot-food/bagasse-containers"
+  end
+
+  test "redirects /categories/takeaway-boxes to /categories/hot-food/takeaway-boxes" do
+    get "/categories/takeaway-boxes"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/hot-food/takeaway-boxes"
+  end
+
+  test "redirects /categories/food-containers to /categories/hot-food/food-containers" do
+    get "/categories/food-containers"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/hot-food/food-containers"
+  end
+
+  test "redirects /categories/cutlery to /categories/tableware/cutlery" do
+    get "/categories/cutlery"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/tableware/cutlery"
+  end
+
+  test "redirects /categories/bags to /categories/bags-and-wraps/bags" do
+    get "/categories/bags"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/bags-and-wraps/bags"
+  end
+
   test "old category redirects preserve query parameters" do
     get "/categories/ice-cream-cups?utm_source=google"
     assert_response :moved_permanently
