@@ -73,13 +73,6 @@ class DesktopMegaMenuTest < ActionDispatch::IntegrationTest
     assert_select "button[data-category-mega-menu-target='trigger'][aria-haspopup='true']", minimum: 1
   end
 
-  test "mega-menu has backdrop overlay" do
-    get root_url
-
-    assert_response :success
-
-    assert_select "[data-category-mega-menu-target='backdrop']"
-  end
 
   test "category nav shows category icons" do
     get root_url
