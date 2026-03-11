@@ -79,8 +79,8 @@ class DesktopMegaMenuTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
-    # Top-level buttons should include icon images
-    assert_select ".category-mega-menu button img", minimum: 1
+    # Top-level buttons should include chevron SVGs
+    assert_select ".category-mega-menu button svg", minimum: 1
   end
 
   test "desktop category nav is hidden on mobile" do
