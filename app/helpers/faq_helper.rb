@@ -34,6 +34,28 @@ module FaqHelper
     content_tag(:script, schema.to_json.html_safe, type: "application/ld+json")
   end
 
+  # Generates FAQPage schema markup for category-specific FAQs
+  def category_faq_schema_markup(faqs)
+    return "" if faqs.blank?
+
+    schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faqs.map do |faq|
+        {
+          "@type": "Question",
+          "name": faq["question"],
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": strip_markdown_links(faq["answer"])
+          }
+        }
+      end
+    }
+
+    content_tag(:script, schema.to_json.html_safe, type: "application/ld+json")
+  end
+
   # Renders FAQ answer text with markdown-style links converted to HTML
   # Supports: [link text](/path) and [link text](https://example.com)
   def render_faq_answer(answer)
