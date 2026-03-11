@@ -86,6 +86,12 @@ Rails.application.routes.draw do
   get "/categories/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/categories/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/categories/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/supplies-and-essentials#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/plates-trays", to: redirect(status: 301) { |_params, req| "/categories/tableware/plates-and-trays#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/bagasse-eco-range", to: redirect(status: 301) { |_params, req| "/categories/hot-food/bagasse-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/takeaway-boxes", to: redirect(status: 301) { |_params, req| "/categories/hot-food/takeaway-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/food-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food/food-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/cutlery", to: redirect(status: 301) { |_params, req| "/categories/tableware/cutlery#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/bags", to: redirect(status: 301) { |_params, req| "/categories/bags-and-wraps/bags#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
   # Nested subcategory route: /categories/:parent_slug/:id
   get "/categories/:parent_slug/:id", to: "categories#show", as: :category_subcategory
