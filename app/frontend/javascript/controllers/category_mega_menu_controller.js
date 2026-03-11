@@ -6,8 +6,7 @@ import { Controller } from "@hotwired/stimulus"
  * Each top-level category has a trigger button and a panel.
  * Hovering a trigger opens its panel (and closes any other open panel).
  * Moving the mouse into the panel keeps it open.
- * Panels close on: mouse leaving trigger+panel area, pressing Escape,
- * or clicking the backdrop.
+ * Panels close on: mouse leaving trigger+panel area or pressing Escape.
  */
 export default class extends Controller {
   static targets = ["trigger", "panel"]
@@ -93,6 +92,7 @@ export default class extends Controller {
 
     this.closePanel(this.openIndex)
     this.openIndex = null
+
   }
 
   closePanel(index) {
