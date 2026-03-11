@@ -10,18 +10,18 @@
      data-controller="category-mega-menu">
 
   <div class="container mx-auto px-4 relative z-50">
-    <ul class="flex justify-between py-3">
+    <ul class="flex justify-center gap-6 xl:gap-8 py-3">
       <% categories.each_with_index do |cat, index| %>
         <li>
           <button type="button"
-                  class="flex items-center gap-2 text-sm lg:text-base text-base-content hover:text-primary transition-colors cursor-pointer"
+                  class="flex items-center gap-2 text-sm whitespace-nowrap text-base-content hover:text-primary transition-colors cursor-pointer"
                   data-category-mega-menu-target="trigger"
                   data-action="mouseenter->category-mega-menu#showPanel mouseleave->category-mega-menu#scheduleHide"
                   data-index="<%= index %>"
                   aria-expanded="false"
                   aria-haspopup="true"
                   aria-controls="category-panel-<%= cat.slug %>">
-            <%= category_icon_tag(cat, class: "w-5 h-5 object-contain") %>
+
             <span><%= cat.name %></span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -33,14 +33,14 @@
       <% if vegware_collection %>
         <li>
           <button type="button"
-                  class="flex items-center gap-2 text-sm lg:text-base text-base-content hover:text-primary transition-colors cursor-pointer"
+                  class="flex items-center gap-2 text-sm whitespace-nowrap text-base-content hover:text-primary transition-colors cursor-pointer"
                   data-category-mega-menu-target="trigger"
                   data-action="mouseenter->category-mega-menu#showPanel mouseleave->category-mega-menu#scheduleHide"
                   data-index="<%= categories.size %>"
                   aria-expanded="false"
                   aria-haspopup="true"
                   aria-controls="category-panel-vegware">
-            <%= category_icon_tag("vegware", class: "w-5 h-5 object-contain") %>
+
             <span>Vegware</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
