@@ -2,44 +2,33 @@
 
 require "test_helper"
 
-class CategoryFaqServiceTest < ActiveSupport::TestCase
-  setup do
-    CategoryFaqService.reload!
+class CategoryFaqsTest < ActiveSupport::TestCase
+  test "category faqs column defaults to empty array" do
+    category = Category.create!(name: "Test", slug: "test-faq-default")
+    assert_equal [], category.faqs
   end
 
-  test "loads FAQs for a known category slug" do
-    faqs = CategoryFaqService.for_category("hot-cups")
-    assert_not_nil faqs
-    assert_not_empty faqs
+  test "category can store FAQ entries" do
+    category = categories(:cups)
+    faqs = [
+      { "question" => "What cups do you offer?", "answer" => "We offer paper cups in various sizes." },
+      { "question" => "Are your cups compostable?", "answer" => "Yes, our cups are PLA-lined and commercially compostable." }
+    ]
+
+    category.update!(faqs: faqs)
+    category.reload
+
+    assert_equal 2, category.faqs.size
+    assert_equal "What cups do you offer?", category.faqs.first["question"]
+    assert_equal "Yes, our cups are PLA-lined and commercially compostable.", category.faqs.last["answer"]
   end
 
-  test "returns empty array for unknown category slug" do
-    faqs = CategoryFaqService.for_category("nonexistent-slug")
-    assert_equal [], faqs
-  end
+  test "category faqs can be cleared" do
+    category = categories(:cups)
+    category.update!(faqs: [ { "question" => "Test?", "answer" => "Yes." } ])
+    category.update!(faqs: [])
+    category.reload
 
-  test "each FAQ has question and answer keys" do
-    faqs = CategoryFaqService.for_category("hot-cups")
-    faqs.each do |faq|
-      assert faq.key?("question"), "FAQ missing 'question' key"
-      assert faq.key?("answer"), "FAQ missing 'answer' key"
-      assert faq["question"].present?, "FAQ question should not be blank"
-      assert faq["answer"].present?, "FAQ answer should not be blank"
-    end
-  end
-
-  test "returns FAQs for top-level parent categories" do
-    faqs = CategoryFaqService.for_category("cups-and-drinks")
-    assert_not_empty faqs, "Top-level categories should have FAQs"
-  end
-
-  test "YAML file contains expected category slugs" do
-    all_slugs = CategoryFaqService.all_slugs
-    # Verify key categories are present
-    assert_includes all_slugs, "hot-cups"
-    assert_includes all_slugs, "cups-and-drinks"
-    assert_includes all_slugs, "pizza-boxes"
-    assert_includes all_slugs, "napkins"
-    assert all_slugs.size >= 25, "Should have FAQs for all categories"
+    assert_equal [], category.faqs
   end
 end

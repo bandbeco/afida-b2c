@@ -77,7 +77,14 @@ module Admin
     end
 
     def category_params
-      params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position, :parent_id ])
+      permitted = params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position, :parent_id, :faqs ])
+      if permitted[:faqs].is_a?(String)
+        permitted[:faqs] = JSON.parse(permitted[:faqs])
+      end
+      permitted
+    rescue JSON::ParserError
+      permitted[:faqs] = []
+      permitted
     end
 
     def set_parent_categories
