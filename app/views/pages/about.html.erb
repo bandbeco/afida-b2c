@@ -53,66 +53,75 @@
   </script>
 <% end %>
 
-<div class="pattern-bg-grey pattern-visible">
 <!-- Section 1: Hero -->
-<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] overflow-hidden">
-  <div class="container mx-auto px-4 py-12 lg:py-16 text-center">
-    <h1 class="text-4xl lg:text-5xl text-gray-900 mb-4">How Two Mates With A Box Of Straws Built A Packaging Company</h1>
-    <p class="text-xl text-gray-700 max-w-2xl mx-auto">It's less glamorous than it sounds. And it sounds exactly as glamorous as it is.</p>
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-neutral-900 overflow-hidden">
+  <!-- Subtle dot pattern background -->
+  <div class="absolute inset-0 opacity-[0.04]" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 24px 24px;"></div>
+
+  <!-- Decorative glows -->
+  <div class="absolute -top-20 -right-20 w-96 h-96 bg-[#79ebc0] rounded-full blur-[140px] opacity-15"></div>
+  <div class="absolute -bottom-20 -left-20 w-72 h-72 bg-[#79ebc0] rounded-full blur-[120px] opacity-10"></div>
+
+  <div class="container mx-auto px-4 py-16 lg:py-24 text-center relative z-10">
+    <h1 class="!text-3xl sm:!text-4xl lg:!text-5xl text-white mb-6">
+      How Two Mates With A Box Of Straws<br>
+      <span class="text-[#79ebc0]">Built A Packaging Company</span>
+    </h1>
+    <p class="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">It's less glamorous than it sounds. And it sounds exactly as glamorous as it is.</p>
   </div>
 </section>
 
 <!-- Section 2: Timeline -->
-<section class="py-8 lg:py-12">
-  <div class="container mx-auto px-4">
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-neutral-950 overflow-hidden">
+  <!-- Decorative glow -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-[#79ebc0] rounded-full blur-[200px] opacity-[0.06]"></div>
+
+  <div class="container mx-auto px-4 py-16 lg:py-24 relative z-10" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
     <div class="max-w-2xl mx-auto relative">
 
       <!-- Vertical connecting line -->
-      <div class="absolute left-1/2 -translate-x-1/2 top-8 bottom-8 w-0.5 border-l-2 border-dashed border-black hidden md:block"></div>
+      <div class="absolute left-1/2 -translate-x-1/2 top-8 bottom-8 border-l border-dashed border-white/10 hidden md:block"></div>
 
       <!-- Chapter 1: The Problem -->
-      <div class="relative mb-8">
-        <div class="flex justify-center mb-4">
-          <div class="w-12 h-12 bg-[#ffb7c5] border-2 border-black rounded-full flex items-center justify-center font-bold text-lg z-10">
+      <div class="relative mb-12">
+        <div class="flex justify-center mb-6">
+          <div class="w-16 h-16 rounded-full bg-[#79ebc0]/15 border border-[#79ebc0]/30 flex items-center justify-center text-2xl font-black text-[#79ebc0] relative z-10">
             1
           </div>
         </div>
-        <div class="bg-[#ffb7c5] border-2 border-black p-6 lg:p-8
-                    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <h2 class="text-center text-gray-900 mb-3">The Soggy Straw Problem</h2>
-          <p class="text-gray-800 leading-relaxed">
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-6 lg:p-8 backdrop-blur-sm">
+          <h2 class="text-center text-white mb-3">The Soggy Straw Problem</h2>
+          <p class="text-gray-400 leading-relaxed">
             It all started in the aftermath of lockdown, when Marco Bungish had one simple but powerful idea: there had to be a better alternative to those soggy, short-lived paper straws.
           </p>
         </div>
       </div>
 
       <!-- Chapter 2: The Discovery -->
-      <div class="relative mb-8">
-        <div class="flex justify-center mb-4">
-          <div class="w-12 h-12 bg-[#79ebc0] border-2 border-black rounded-full flex items-center justify-center font-bold text-lg z-10">
+      <div class="relative mb-12">
+        <div class="flex justify-center mb-6">
+          <div class="w-16 h-16 rounded-full bg-[#79ebc0]/15 border border-[#79ebc0]/30 flex items-center justify-center text-2xl font-black text-[#79ebc0] relative z-10">
             2
           </div>
         </div>
-        <div class="bg-[#79ebc0] border-2 border-black p-6 lg:p-8
-                    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <h2 class="text-center text-gray-900 mb-3">The Bamboo Moment</h2>
-          <p class="text-gray-800 leading-relaxed">
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-6 lg:p-8 backdrop-blur-sm">
+          <h2 class="text-center text-white mb-3">The Bamboo Moment</h2>
+          <p class="text-gray-400 leading-relaxed">
             After rounds of testing and debates, Marco stumbled upon a game-changing solution — a straw made from bamboo pulp. Stronger, longer-lasting, and 100% eco-friendly. It was everything the paper straw wasn't.
           </p>
         </div>
       </div>
 
       <!-- Chapter 3: The Launch -->
-      <div class="relative mb-8">
-        <div class="flex justify-center mb-4">
-          <div class="w-12 h-12 bg-[#fef08a] border-2 border-black rounded-full flex items-center justify-center font-bold text-lg z-10">
+      <div class="relative mb-12">
+        <div class="flex justify-center mb-6">
+          <div class="w-16 h-16 rounded-full bg-[#79ebc0]/15 border border-[#79ebc0]/30 flex items-center justify-center text-2xl font-black text-[#79ebc0] relative z-10">
             3
           </div>
         </div>
-        <div class="bg-[#fef08a] border-2 border-black p-6 lg:p-8
-                    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <h2 class="text-center text-gray-900 mb-3">A Living Room, A Box Of Straws, And A Plan</h2>
-          <p class="text-gray-800 leading-relaxed">
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-6 lg:p-8 backdrop-blur-sm">
+          <h2 class="text-center text-white mb-3">A Living Room, A Box Of Straws, And A Plan</h2>
+          <p class="text-gray-400 leading-relaxed">
             Marco teamed up with his lifelong friend Tariq, and together they launched B&B Eco — from the most humble of HQs: Tariq's living room. Armed with passion and a box full of bamboo straws, they hit the ground running. The response? Overwhelming.
           </p>
         </div>
@@ -120,15 +129,14 @@
 
       <!-- Chapter 4: Today -->
       <div class="relative">
-        <div class="flex justify-center mb-4">
-          <div class="w-12 h-12 bg-[#c4b5fd] border-2 border-black rounded-full flex items-center justify-center font-bold text-lg z-10">
+        <div class="flex justify-center mb-6">
+          <div class="w-16 h-16 rounded-full bg-[#79ebc0]/15 border border-[#79ebc0]/30 flex items-center justify-center text-2xl font-black text-[#79ebc0] relative z-10">
             4
           </div>
         </div>
-        <div class="bg-[#c4b5fd] border-2 border-black p-6 lg:p-8
-                    shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-          <h2 class="text-center text-gray-900 mb-3">Four Years Later</h2>
-          <p class="text-gray-800 leading-relaxed">
+        <div class="bg-white/[0.03] border border-white/10 rounded-2xl p-6 lg:p-8 backdrop-blur-sm">
+          <h2 class="text-center text-white mb-3">Four Years Later</h2>
+          <p class="text-gray-400 leading-relaxed">
             Fast forward four years, and B&B Eco has grown into Afida — now proudly supplying sustainable packaging to hundreds of businesses, from independent cafés to global names like The Ritz, Marriott, and Hawksmoor.
           </p>
         </div>
@@ -138,15 +146,30 @@
   </div>
 </section>
 
-<!-- Section 3: Closing Tagline -->
-<section class="py-8 lg:py-12">
-  <div class="container mx-auto px-4 text-center">
-    <p class="text-xl lg:text-2xl text-gray-700 max-w-3xl mx-auto">
-      We're here to help you ditch the plastic. No compromises, no lectures, no nonsense.
-    </p>
+<!-- Section 3: Client Logos -->
+<%= render "pages/partials/client_logos" %>
+
+<!-- Section 4: Closing CTA -->
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] -mb-16 bg-neutral-900 overflow-hidden">
+  <!-- Decorative glows -->
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#79ebc0] rounded-full blur-[200px] opacity-[0.08]"></div>
+
+  <div class="container mx-auto px-4 py-16 lg:py-24 relative z-10" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="text-xl lg:text-2xl text-gray-400 mb-8">
+        We're here to help you ditch the plastic. No compromises, no lectures, no nonsense.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <%= link_to products_path, class: "btn btn-primary btn-lg" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          Shop Now
+        <% end %>
+        <%= link_to contact_path, class: "btn btn-outline btn-lg border border-white/20 text-white hover:bg-white/10 hover:border-white/40" do %>
+          Get In Touch
+        <% end %>
+      </div>
+    </div>
   </div>
 </section>
-
-<!-- Section 4: Client Logos -->
-<%= render "pages/partials/client_logos" %>
-</div>
