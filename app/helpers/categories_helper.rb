@@ -99,6 +99,53 @@ module CategoriesHelper
     end
   end
 
+  # Question-style headings for category pages (GEO optimization)
+  # These help AI search engines understand what the page answers
+  CATEGORY_QUESTION_HEADINGS = {
+    # Top-level parents
+    "cups-and-drinks" => "What eco-friendly cups and drinks packaging does Afida offer?",
+    "hot-food" => "What eco-friendly hot food packaging does Afida offer?",
+    "cold-food-and-salads" => "What eco-friendly cold food and salad packaging does Afida offer?",
+    "tableware" => "What eco-friendly tableware does Afida offer?",
+    "bags-and-wraps" => "What eco-friendly bags and wraps does Afida offer?",
+    "supplies-and-essentials" => "What catering supplies and essentials does Afida offer?",
+    # Subcategories
+    "hot-cups" => "What eco-friendly hot cups does Afida offer?",
+    "cold-cups" => "What eco-friendly cold cups does Afida offer?",
+    "cup-lids" => "What cup lids does Afida offer?",
+    "cup-accessories" => "What cup accessories does Afida offer?",
+    "ice-cream-cups" => "What eco-friendly ice cream cups does Afida offer?",
+    "straws" => "What eco-friendly straws does Afida offer?",
+    "pizza-boxes" => "What eco-friendly pizza boxes does Afida offer?",
+    "takeaway-boxes" => "What eco-friendly takeaway boxes does Afida offer?",
+    "food-containers" => "What eco-friendly food containers does Afida offer?",
+    "soup-containers" => "What eco-friendly soup containers does Afida offer?",
+    "bagasse-containers" => "What compostable bagasse containers does Afida offer?",
+    "salad-boxes" => "What eco-friendly salad boxes does Afida offer?",
+    "sandwich-and-wrap-boxes" => "What eco-friendly sandwich and wrap boxes does Afida offer?",
+    "deli-pots" => "What eco-friendly deli pots does Afida offer?",
+    "plates-and-trays" => "What eco-friendly plates and trays does Afida offer?",
+    "cutlery" => "What eco-friendly cutlery does Afida offer?",
+    "napkins" => "What eco-friendly napkins does Afida offer?",
+    "aluminium-containers" => "What aluminium containers does Afida offer?",
+    "bags" => "What eco-friendly paper bags does Afida offer?",
+    "greaseproof-and-wraps" => "What greaseproof paper and wraps does Afida offer?",
+    "natureflex-bags" => "What compostable NatureFlex bags does Afida offer?",
+    "bin-liners" => "What bin liners does Afida offer?",
+    "labels-and-stickers" => "What labels and stickers does Afida offer?",
+    "gloves-and-cleaning" => "What gloves and cleaning supplies does Afida offer?",
+    "till-rolls" => "What till rolls does Afida offer?"
+  }.freeze
+
+  # Returns a question-style heading for a category page
+  # Used as an H2 below the category name H1 for GEO optimization
+  #
+  # @param category [Category] The category
+  # @return [String] A question-phrased heading
+  def category_question_heading(category)
+    CATEGORY_QUESTION_HEADINGS[category.slug] || "What #{category.name} products does Afida offer?"
+  end
+
   # Renders a category icon image tag
   #
   # @param category [Category, String] Category object or slug string

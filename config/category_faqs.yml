@@ -1,0 +1,207 @@
+# Category-specific FAQs for GEO optimization
+# Each category slug maps to an array of Q&A pairs
+# These are rendered on category pages with FAQPage schema markup
+
+# === Top-level parent categories ===
+
+cups-and-drinks:
+  - question: "What types of eco-friendly cups does Afida offer?"
+    answer: "Afida offers single wall, double wall, and ripple wall paper hot cups from 4oz to 16oz, PLA-lined cold cups for smoothies and iced drinks, and paper ice cream cups from 4oz to 10oz. All our cups are made from sustainably sourced materials."
+  - question: "Do you sell cup lids and accessories?"
+    answer: "Yes — we stock matching sip lids and dome lids for all our cup sizes, plus cup carriers, kraft sleeves for single wall cups, and wooden stirrers. Everything you need for a complete takeaway drinks service."
+  - question: "Are your cups compostable?"
+    answer: "Our paper cups are lined with PLA (a plant-based material) rather than traditional plastic, making them commercially compostable. Check with your local waste processor for composting availability in your area."
+
+hot-food:
+  - question: "What hot food packaging does Afida supply?"
+    answer: "We supply kraft pizza boxes in sizes from 7 to 16 inch, takeaway burger and chip boxes, food containers with lids, paper soup cups, and compostable bagasse clamshells. All designed to keep food warm and secure during delivery."
+  - question: "Is your hot food packaging microwave-safe?"
+    answer: "Our bagasse containers are microwave-safe and oven-safe up to 220°C. Kraft boxes and paper soup containers are not suitable for microwave use. Check individual product descriptions for specific guidance."
+  - question: "Can I get branded hot food packaging?"
+    answer: "Yes — we offer [custom printing](/branding) on pizza boxes, burger boxes, and food containers with your logo and branding. Minimum order quantities apply for branded items."
+
+cold-food-and-salads:
+  - question: "What cold food packaging does Afida offer?"
+    answer: "Our cold food range includes kraft and clear salad bowls, sandwich wedge boxes, tortilla wrap boxes, baguette boxes, and small deli pots for dressings and dips. All available with matching lids for grab-and-go service."
+  - question: "Do your salad boxes come with lids?"
+    answer: "Yes — our salad bowls and boxes come with matching clear lids so customers can see the contents. Lids are available in PLA or rPET depending on the product."
+  - question: "Are your cold food containers leak-proof?"
+    answer: "Our deli pots and soup containers have secure-fitting lids to prevent leaks. Salad bowls with snap-fit lids also provide a reliable seal for transport and delivery."
+
+tableware:
+  - question: "What disposable tableware does Afida supply?"
+    answer: "We supply palm leaf plates, bagasse plates, platter boxes for buffets, wooden cutlery (forks, knives, spoons), cutlery kits, paper napkins from cocktail to dinner size, and aluminium foil trays. All biodegradable, compostable, or recyclable."
+  - question: "What napkin sizes do you stock?"
+    answer: "We stock 23cm cocktail napkins, 33cm lunch napkins, and 40cm dinner napkins. Available in white, black, and natural colours, in standard paper and luxury airlaid (linen-feel) options."
+  - question: "Are your wooden cutlery items strong enough for regular use?"
+    answer: "Yes — our birchwood cutlery is thick-cut and designed for real meals, not just cake and nibbles. The forks and knives handle meat, salads, and pasta without snapping."
+
+bags-and-wraps:
+  - question: "What eco-friendly bags does Afida offer?"
+    answer: "We offer kraft paper bags with flat and twisted handles, carrier bags for heavier items, greaseproof paper sheets and wraps, and compostable NatureFlex window bags for bakeries and delis. All are sustainable alternatives to plastic."
+  - question: "What are NatureFlex bags?"
+    answer: "NatureFlex is a plant-based, fully compostable film made from wood pulp. Our NatureFlex bags have a clear window so customers can see the product inside, making them ideal for bread, pastries, and confectionery."
+  - question: "Do you offer custom printed bags?"
+    answer: "Yes — we offer [custom printing](/branding) on paper bags with your logo, colours, and design. Ideal for retail, bakeries, and restaurants wanting branded packaging."
+
+supplies-and-essentials:
+  - question: "What catering supplies does Afida sell?"
+    answer: "We supply bin liners (including compostable options), day-of-week and allergy food labels, disposable gloves, cleaning supplies, and thermal till rolls. Essential back-of-house products for any food business."
+  - question: "Do you sell food safety labels?"
+    answer: "Yes — we stock day-of-week labels for food prep tracking and allergy labels for communicating allergen information. Available in rolls for easy dispensing, essential for HACCP compliance."
+  - question: "What glove types do you stock?"
+    answer: "We offer vinyl, nitrile, and latex-free disposable gloves in sizes from small to extra large. All suitable for food preparation and meeting food safety standards."
+
+# === Subcategories ===
+
+hot-cups:
+  - question: "What is the difference between single wall, double wall, and ripple wall cups?"
+    answer: "Single wall cups are the most economical option and may need a sleeve for insulation. Double wall cups have two layers of paper for built-in insulation. Ripple wall cups have a textured outer layer that insulates and provides grip — no sleeve needed."
+  - question: "What sizes of paper coffee cups do you stock?"
+    answer: "We stock 4oz (espresso), 8oz (small), 10oz (medium), 12oz (regular), and 16oz (large) paper cups. The 8oz and 12oz are our most popular sizes for coffee shops and cafes."
+  - question: "Can I get my logo printed on paper cups?"
+    answer: "Yes — we offer [custom branded cups](/branding) with your logo, colours, and design printed directly onto the cup. Perfect for building brand recognition with every takeaway coffee."
+
+cold-cups:
+  - question: "What are cold cups made from?"
+    answer: "Our cold cups are made from PET or PLA-lined paper. PLA is a plant-based material that provides a clear, durable finish for cold drinks like smoothies, iced coffees, and juices."
+  - question: "What sizes of cold cups do you offer?"
+    answer: "We offer cold cups in sizes from 9oz to 20oz, suitable for everything from small juices to large smoothies and milkshakes."
+
+cup-lids:
+  - question: "Do your lids fit all cup brands?"
+    answer: "Our lids are designed to fit standard cup sizes (8oz, 12oz, 16oz etc.) and work with most paper cup brands. We recommend ordering a sample to check the fit if you're switching from another supplier."
+  - question: "What is the difference between sip lids and dome lids?"
+    answer: "Sip lids are flat with a drinking hole, designed for hot drinks like coffee and tea. Dome lids are raised to accommodate whipped cream, ice, and frothy toppings on cold drinks."
+
+cup-accessories:
+  - question: "How many cups do your carriers hold?"
+    answer: "Our cardboard cup carriers are available in 2-cup and 4-cup configurations. They fold flat for storage and pop up for use, making them space-efficient for busy takeaway counters."
+  - question: "Do you sell cup sleeves for single wall cups?"
+    answer: "Yes — our kraft cup sleeves slide onto 8oz to 16oz single wall cups, adding insulation so customers can hold hot drinks comfortably without burning their hands."
+
+ice-cream-cups:
+  - question: "What sizes of ice cream cups do you stock?"
+    answer: "We stock ice cream cups in 4oz (sample/kids), 5oz (single scoop), 8oz (double scoop), and 10oz (generous portion). The 5oz and 8oz are the most popular for ice cream parlours."
+  - question: "Will your ice cream cups go soggy?"
+    answer: "No — our ice cream cups are made from sturdy, PE-lined paper that resists moisture and condensation. They hold up well even with melting ice cream and frozen yogurt."
+
+straws:
+  - question: "What types of eco-friendly straws do you offer?"
+    answer: "We offer paper straws in white, black, and classic red-and-white stripe, plus bamboo straws that are stronger and longer-lasting. All are fully biodegradable and compostable."
+  - question: "Do paper straws go soggy quickly?"
+    answer: "Our paper straws are made from 3-ply food-grade paper and are designed to last for 2-3 hours in cold drinks without going soft. For longer-lasting options, try our bamboo straws."
+
+pizza-boxes:
+  - question: "What sizes of pizza boxes do you stock?"
+    answer: "We stock 7 inch (kids/personal), 10 inch (small), 12 inch (medium), and 14 inch (large) kraft pizza boxes. All made from strong corrugated kraft board to keep pizzas protected during delivery."
+  - question: "Can pizza boxes be recycled?"
+    answer: "Yes — our kraft pizza boxes are recyclable when not heavily contaminated with grease. Light grease staining is generally accepted by most UK recycling facilities."
+
+takeaway-boxes:
+  - question: "What types of takeaway boxes do you offer?"
+    answer: "We stock burger boxes, chip boxes and trays, fish and chip boxes, carry-out boxes, and leak-proof food pots. Available in kraft board, white card, and bagasse (compostable) materials."
+  - question: "Are your takeaway boxes grease-resistant?"
+    answer: "Yes — our kraft takeaway boxes are designed to handle greasy foods like burgers, chips, and fried chicken. Bagasse boxes are naturally grease-resistant without any additional coatings."
+
+food-containers:
+  - question: "What sizes of food containers do you offer?"
+    answer: "Our food containers range from 1oz portion pots for sauces and dressings up to 32oz deli containers for salads and meal prep. Available in paper, PLA, and bagasse materials."
+  - question: "Do your food containers come with lids?"
+    answer: "Yes — all our food containers are available with matching lids. Depending on the product, lids may be included or sold separately for flexibility."
+
+soup-containers:
+  - question: "What sizes of soup containers do you stock?"
+    answer: "We stock soup containers in 8oz (small), 12oz (regular), 16oz (large), and 26oz (extra large) sizes. All come with matching vented lids to prevent spills and allow steam to escape."
+  - question: "Can your soup containers hold hot liquids safely?"
+    answer: "Yes — our paper soup containers are lined with PE and designed to hold hot soups, stews, porridge, and noodle dishes safely up to 100°C without leaking or deforming."
+
+bagasse-containers:
+  - question: "What is bagasse?"
+    answer: "Bagasse is the fibrous material left over after extracting juice from sugarcane. It is moulded into food containers that are naturally grease-resistant, microwave-safe, and fully compostable — a sustainable alternative to polystyrene."
+  - question: "Are bagasse containers microwave and oven safe?"
+    answer: "Yes — bagasse containers are microwave-safe and oven-safe up to 220°C. They are also freezer-safe, making them versatile for meal prep, reheating, and food delivery."
+
+salad-boxes:
+  - question: "Do your salad boxes have clear lids?"
+    answer: "Yes — our salad bowls come with matching clear lids so customers can see the contents inside. This makes them ideal for grab-and-go displays in delis and cafes."
+  - question: "What materials are your salad boxes made from?"
+    answer: "Our salad boxes are made from recyclable kraft board with PLA or rPET clear lids. The kraft base is compostable and the lids are recyclable, depending on local facilities."
+
+sandwich-and-wrap-boxes:
+  - question: "Do your sandwich boxes have windows?"
+    answer: "Yes — our sandwich wedge boxes and wrap boxes feature clear NatureFlex windows so customers can see the fillings. The windows are plant-based and compostable."
+  - question: "What sandwich packaging formats do you offer?"
+    answer: "We stock kraft sandwich wedges (for triangle-cut sandwiches), tortilla wrap boxes, and baguette boxes. All in natural kraft with compostable windows."
+
+deli-pots:
+  - question: "What are deli pots used for?"
+    answer: "Deli pots are small portion containers ideal for sauces, dressings, dips, chutney, coleslaw, and dessert samples. Available in sizes from 1oz to 4oz with secure snap-fit lids."
+  - question: "Are your deli pots compostable?"
+    answer: "We offer deli pots in both PLA (commercially compostable) and standard materials. Check individual product descriptions for the compostability of each option."
+
+plates-and-trays:
+  - question: "What types of disposable plates do you offer?"
+    answer: "We offer palm leaf plates with a natural elegant finish, bagasse plates for everyday catering, paper plates, and platter boxes for buffets and corporate events. All biodegradable and compostable."
+  - question: "Are palm leaf plates suitable for hot food?"
+    answer: "Yes — palm leaf plates are naturally heat-resistant, microwave-safe, and oven-safe up to 200°C. They hold up well with hot, wet, and oily foods without bending or leaking."
+
+cutlery:
+  - question: "What eco-friendly cutlery options do you offer?"
+    answer: "We offer wooden forks, knives, and spoons made from sustainable birchwood, as well as bamboo chopsticks and pre-wrapped cutlery kits with napkins. All fully biodegradable and compostable."
+  - question: "Is your wooden cutlery strong enough for regular meals?"
+    answer: "Yes — our birchwood cutlery is thick-cut and sturdy enough for proper meals including meat, pasta, and salads. Unlike thin wooden cutlery, ours won't snap during use."
+
+napkins:
+  - question: "What is the difference between standard and airlaid napkins?"
+    answer: "Standard paper napkins are lightweight and economical for casual dining. Airlaid napkins have a cloth-like feel and are thicker and more absorbent — perfect for fine dining and events where you want a premium touch."
+  - question: "What napkin sizes do you stock?"
+    answer: "We stock 23cm cocktail napkins, 33cm lunch napkins, and 40cm dinner napkins. Available in white, black, and natural colours."
+
+aluminium-containers:
+  - question: "Are aluminium containers recyclable?"
+    answer: "Yes — aluminium is infinitely recyclable and widely accepted by UK kerbside recycling. Our aluminium trays and containers can be recycled after use, even with light food residue."
+  - question: "Are your aluminium containers oven-safe?"
+    answer: "Yes — our aluminium containers are oven-safe, freezer-safe, and suitable for reheating. They come with optional foil or card lids for sealing."
+
+bags:
+  - question: "What types of paper bags do you offer?"
+    answer: "We offer kraft paper bags with flat handles, twisted handles, and carrier bags for heavier items. Available in brown kraft and white, in sizes from small counter bags to large carrier bags."
+  - question: "How much weight can your paper bags hold?"
+    answer: "Our paper carrier bags with twisted handles can hold up to 5kg, making them suitable for takeaway food orders and retail. Flat-handle bags are better for lighter items like pastries and sandwiches."
+
+greaseproof-and-wraps:
+  - question: "What is greaseproof paper used for?"
+    answer: "Greaseproof paper is used for wrapping sandwiches, burgers, and baked goods, lining baskets and trays, and serving chips and fried foods. It prevents grease from soaking through to keep presentation clean."
+  - question: "Do you offer greaseproof paper in sheets and rolls?"
+    answer: "Yes — we offer greaseproof paper in pre-cut sheets for quick service and in rolls for custom cutting. Available in bleached white and natural brown."
+
+natureflex-bags:
+  - question: "Are NatureFlex bags compostable?"
+    answer: "Yes — NatureFlex bags are certified commercially compostable to EN 13432. They break down fully in industrial composting facilities within 12 weeks."
+  - question: "What products are NatureFlex bags best for?"
+    answer: "NatureFlex bags are ideal for bread, pastries, dried goods, confectionery, and deli items. The clear window lets customers see the product while keeping it fresh."
+
+bin-liners:
+  - question: "Do you offer compostable bin liners?"
+    answer: "Yes — we stock compostable bin liners made from plant-based materials, ideal for food waste collection bins. They break down alongside food waste in commercial composting facilities."
+  - question: "What sizes of bin liners do you offer?"
+    answer: "We offer bin liners in standard sizes to fit commercial kitchen bins, from small food waste caddy liners to large refuse sacks."
+
+labels-and-stickers:
+  - question: "What food safety labels do you stock?"
+    answer: "We stock day-of-week labels (colour-coded Monday to Sunday) for food prep date tracking, plus allergy labels for communicating the 14 major allergens. Essential for HACCP compliance in commercial kitchens."
+  - question: "Are your labels removable?"
+    answer: "Our day-of-week labels are designed to be removable and dissolve in water, making them easy to clean off reusable containers without leaving residue."
+
+gloves-and-cleaning:
+  - question: "What types of disposable gloves do you stock?"
+    answer: "We stock vinyl, nitrile, and latex-free disposable gloves in sizes from small to extra large. All are food-safe and suitable for food preparation and handling."
+  - question: "Are nitrile gloves better than vinyl for food prep?"
+    answer: "Nitrile gloves offer better puncture resistance and a closer fit, making them preferred for tasks requiring dexterity. Vinyl gloves are more economical for lighter food handling tasks."
+
+till-rolls:
+  - question: "What till roll sizes do you stock?"
+    answer: "We stock 80mm x 80m thermal rolls (standard EPOS width) and 57mm x 40m rolls for card machines. Compatible with most point-of-sale systems used in restaurants, cafes, and retail."
+  - question: "Are your thermal till rolls BPA-free?"
+    answer: "Yes — we offer BPA-free thermal receipt rolls. BPA-free paper is increasingly required by food businesses and is safer for staff who handle receipts frequently."

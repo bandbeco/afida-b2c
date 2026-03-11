@@ -58,12 +58,13 @@
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
 
-<h1 class="text-4xl mb-4 flex items-center gap-3">
+<h1 class="text-4xl mb-2 flex items-center gap-3">
   <% if category_icon_path(@category).present? %>
     <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 object-contain', alt: "#{@category.name} icon" %>
   <% end %>
   <%= @category.name %>
 </h1>
+<h2 class="text-lg text-base-content/70 mb-4"><%= category_question_heading(@category) %></h2>
 
 <% if @category.description.present? %>
   <div class="prose max-w-none mb-6">
@@ -76,6 +77,27 @@
     <%= render partial: "products/card", collection: @products, as: :product %>
   </div>
 </div>
+
+<%# Category FAQs Section %>
+<% category_faqs = CategoryFaqService.for_category(@category.slug) %>
+<% if category_faqs.any? %>
+  <section class="mt-12 py-8 border-t border-base-300 flex flex-col items-center">
+    <h2 class="text-2xl mb-6">Frequently Asked Questions About <%= @category.name %></h2>
+    <div class="join join-vertical w-full max-w-3xl">
+      <% category_faqs.each do |faq| %>
+        <div class="collapse collapse-arrow join-item bg-base-100 border border-base-300">
+          <input type="radio" name="category-faq" aria-label="<%= faq["question"] %>" />
+          <h3 class="collapse-title text-lg"><%= faq["question"] %></h3>
+          <div class="collapse-content">
+            <p class="text-base-content/70 leading-relaxed pt-2"><%= render_faq_answer(faq["answer"]) %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%= category_faq_schema_markup(category_faqs) %>
+<% end %>
 
 <%# Related Categories Section - "You Might Also Need" %>
 <% related_cats = related_categories_for(@category) %>
