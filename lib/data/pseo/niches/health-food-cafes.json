@@ -1,0 +1,17 @@
+{
+  "slug": "health-food-cafes",
+  "name": "Health Food Cafés",
+  "audience": "Health food café owners, wellness kitchen operators, clean eating restaurant businesses",
+  "pain_points": [
+    "Brand ethos demands visibly sustainable, natural-looking packaging",
+    "Salad bowls and poké containers are high-volume daily items",
+    "Customers photograph their food — packaging is part of the brand",
+    "Nutritional labelling and allergen info expected on every pre-packed item"
+  ],
+  "top_products": ["cold-food-and-salads", "cups-and-lids", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling", "Nutritional and health claims regulations (EC 1924/2006 retained)"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

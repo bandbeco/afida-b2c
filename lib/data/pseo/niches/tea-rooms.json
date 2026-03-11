@@ -1,0 +1,17 @@
+{
+  "slug": "tea-rooms",
+  "name": "Tea Rooms",
+  "audience": "Traditional tea room owners, heritage café operators, afternoon tea businesses",
+  "pain_points": [
+    "Presentation is everything — packaging must feel premium",
+    "Seasonal tourist trade means unpredictable order volumes",
+    "Cake and pastry packaging needs to protect delicate items",
+    "Many customers are older and expect traditional, non-plastic materials"
+  ],
+  "top_products": ["tableware", "napkins", "cold-food-and-salads", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed food", "Food hygiene rating display requirements"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–1,500 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "medium"
+}

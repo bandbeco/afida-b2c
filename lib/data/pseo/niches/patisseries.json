@@ -1,0 +1,17 @@
+{
+  "slug": "patisseries",
+  "name": "Patisseries",
+  "audience": "French patisserie owners, artisan pastry chefs, premium cake and pastry businesses",
+  "pain_points": [
+    "Delicate pastries demand rigid, protective packaging",
+    "Premium brand perception requires high-quality presentation boxes",
+    "Individual pastry portions need elegant single-serve containers",
+    "Gift boxing and ribbon options are expected by customers"
+  ],
+  "top_products": ["cold-food-and-salads", "bags-and-wraps", "napkins", "tableware"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (nuts, dairy, gluten)", "Food Information Regulations (ingredient listing)"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–2,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

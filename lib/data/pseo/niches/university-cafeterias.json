@@ -1,0 +1,17 @@
+{
+  "slug": "university-cafeterias",
+  "name": "University Cafeterias",
+  "audience": "University catering managers, student union food outlets, campus café operators",
+  "pain_points": [
+    "Student population is highly vocal about sustainability",
+    "Multiple outlets across campus need consistent packaging",
+    "Term-time peaks and holiday troughs make stock planning tricky",
+    "Price sensitivity among students demands affordable packaging solutions"
+  ],
+  "top_products": ["cups-and-lids", "hot-food", "cold-food-and-salads", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling", "University sustainability charter commitments", "Plastic-free campus pledges"],
+  "order_frequency": "Bi-weekly (term-time)",
+  "avg_order_size": "Large (10,000–30,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}

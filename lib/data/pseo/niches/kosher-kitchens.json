@@ -1,0 +1,17 @@
+{
+  "slug": "kosher-kitchens",
+  "name": "Kosher Kitchens",
+  "audience": "Kosher restaurant operators, kosher catering businesses, Jewish community kitchen managers",
+  "pain_points": [
+    "Meat and dairy packaging must be kept strictly separate",
+    "Kosher certification requirements extend to packaging materials",
+    "Smaller customer base means lower volumes but higher specificity",
+    "Shabbat and holiday catering creates seasonal demand spikes"
+  ],
+  "top_products": ["hot-food", "cold-food-and-salads", "tableware", "bags-and-wraps"],
+  "compliance_concerns": ["Kosher certification (Beth Din) requirements for food contact materials", "Natasha's Law allergen labelling"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–2,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "medium"
+}

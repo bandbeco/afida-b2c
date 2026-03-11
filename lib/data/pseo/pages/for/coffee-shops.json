@@ -1,0 +1,81 @@
+{
+  "meta": {
+    "slug": "coffee-shops",
+    "business_type": "Coffee Shops",
+    "seo_title": "Packaging Supplies for Coffee Shops | Afida",
+    "seo_description": "Wholesale packaging for coffee shops: eco-friendly cups, lids, stirrers, napkins and bags. Free UK delivery over £100. Trusted by 500+ cafés.",
+    "keywords": ["coffee shop packaging", "disposable cups wholesale", "eco coffee cups", "takeaway cup supplier", "coffee shop supplies UK"]
+  },
+  "hero": {
+    "headline": "Packaging Built for Coffee Shops",
+    "subheadline": "Everything your café needs, from cup to carrier bag — eco-friendly, competitively priced, and delivered fast.",
+    "intro": "Running a coffee shop means going through packaging at speed. Cups, lids, stirrers, napkins, bags — they all add up, and they all matter. Your customers notice when the cup feels cheap, when the lid doesn't click properly, or when the bag rips on the walk home. That's why choosing the right packaging supplier isn't just a back-office decision — it affects how people experience your brand every single day. At Afida, we supply hundreds of UK coffee shops with high-quality, eco-friendly packaging at wholesale prices. Whether you're a single-site independent or a growing chain, we've got the range, the stock, and the delivery speed to keep your operation running without the stress of running out. Free delivery on orders over £100, next-day dispatch before 2pm, and a team that actually understands what coffee shops need."
+  },
+  "packaging_needs": [
+    {
+      "category": "Cups & Lids",
+      "why_it_matters": "Your cup is a walking advert. It's the first thing customers hold and the last thing they throw away. A good cup says quality — a bad one says corner-cutting.",
+      "recommended_products": ["single-wall-coffee-cups", "double-wall-coffee-cups", "sip-lids"],
+      "buying_tip": "Double-wall cups eliminate the need for sleeves, saving you money per serve. If you're doing high volumes, calculate the per-unit saving — it adds up fast over a month."
+    },
+    {
+      "category": "Straws & Stirrers",
+      "why_it_matters": "The UK plastic straw ban means you need compliant alternatives. Paper and bio-fibre straws are now the standard, and customers expect them.",
+      "recommended_products": ["paper-straws", "bio-fibre-straws", "wooden-stirrers"],
+      "buying_tip": "Bio-fibre straws last longer in drinks than standard paper straws. If you serve iced coffees or smoothies, they're worth the small premium."
+    },
+    {
+      "category": "Napkins",
+      "why_it_matters": "Napkins are one of those things nobody notices until they're missing. Keep dispensers stocked and quality consistent — recycled napkins work well and cost less.",
+      "recommended_products": ["recycled-napkins", "dispenser-napkins"],
+      "buying_tip": "Dispenser napkins reduce waste by 30% compared to open napkin holders. Customers take what they need instead of grabbing a fistful."
+    },
+    {
+      "category": "Bags & Carriers",
+      "why_it_matters": "Takeaway orders need bags that can handle hot cups without going soggy. A branded bag also extends your marketing reach beyond the shop door.",
+      "recommended_products": ["paper-carrier-bags", "kraft-bags"],
+      "buying_tip": "If you do a lot of takeaway, invest in bags with a flat base that can stand upright. It makes packing faster and reduces spills."
+    },
+    {
+      "category": "Food Packaging",
+      "why_it_matters": "Most coffee shops sell food too — sandwiches, pastries, cakes. You need packaging that keeps food fresh, looks clean, and fits your cabinet layout.",
+      "recommended_products": ["sandwich-wedges", "cake-boxes", "deli-containers"],
+      "buying_tip": "Clear-window sandwich wedges let customers see the filling without you needing to label everything. They also stack neatly in chiller displays."
+    }
+  ],
+  "sustainability_section": {
+    "intro": "Coffee shops face more sustainability pressure than almost any other food business. Customers see the cups piling up and they want to know you're doing something about it. Here's how Afida can help you make meaningful changes without blowing your budget.",
+    "options": [
+      { "name": "Vegware Compostable Cups", "benefit": "Made from plants, not plastic. Commercially compostable and EN 13432 certified — genuinely breaks down, not just greenwashing." },
+      { "name": "Recyclable Paper Cups", "benefit": "PE-free paper cups that go straight into standard paper recycling streams. No special waste collections needed." },
+      { "name": "Bio-Fibre Straws", "benefit": "Last longer in drinks than paper straws and are fully compostable. Customers won't complain about soggy straws." },
+      { "name": "Recycled Napkins", "benefit": "Made from 100% recycled paper. Same quality, significantly lower environmental footprint." }
+    ]
+  },
+  "faqs": [
+    {
+      "question": "What's the minimum order for coffee shop packaging?",
+      "answer": "There's no minimum order at Afida. You can order as little or as much as you need. However, orders over £100 (excl. VAT) qualify for free standard delivery across the UK mainland, so most coffee shops find it cost-effective to consolidate their orders to hit that threshold."
+    },
+    {
+      "question": "How quickly can you deliver to my coffee shop?",
+      "answer": "Orders placed before 2pm on a working day are dispatched the same day for next-day delivery. Standard delivery typically arrives within one to two working days. We hold good stock levels across our full range, so back-orders are rare and we'll always let you know upfront if something is temporarily out of stock."
+    },
+    {
+      "question": "Can I get my coffee cups branded with my logo?",
+      "answer": "Yes. We offer custom branding on double-wall coffee cups starting from just 1,000 units. No setup fees, UK production, and delivered in around 20 business days. You can design your cup using our online configurator — upload your logo, preview it in real time, and order directly. No quote requests or back-and-forth needed."
+    },
+    {
+      "question": "Are your eco-friendly cups actually compostable?",
+      "answer": "Our Vegware range is EN 13432 certified, which is the European standard for industrial compostability. That means they'll fully break down in a commercial composting facility within 12 weeks. They're made from plant-based materials — no petroleum plastics. We also carry recyclable PE-free cups for areas without commercial composting."
+    },
+    {
+      "question": "Do you offer trade pricing for coffee shops ordering regularly?",
+      "answer": "Absolutely. Most of our products include tiered pricing — the more you buy, the less you pay per unit. Many coffee shops set up regular monthly orders to lock in the best rates. We also offer a reorder scheduling feature so your packaging arrives automatically without you having to remember to place an order each time."
+    }
+  ],
+  "social_proof": {
+    "relevant_clients": ["La Gelatiera", "Hawksmoor", "Mandarin Oriental"],
+    "testimonial_angle": "Leading London cafés and restaurants trust Afida for their daily packaging needs."
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "office-canteens",
+  "name": "Office Canteens",
+  "audience": "Corporate catering managers, workplace canteen operators, contract caterers serving offices",
+  "pain_points": [
+    "Corporate ESG commitments drive sustainable packaging mandates",
+    "Lunchtime rush requires fast, efficient grab-and-go packaging",
+    "Multiple floors or buildings may need separate stock points",
+    "Companies want branded or co-branded packaging for staff restaurants"
+  ],
+  "top_products": ["cold-food-and-salads", "hot-food", "cups-and-lids", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed meals", "Corporate ESG and sustainability reporting requirements"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium-large (5,000–15,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "deli-counters",
+  "name": "Deli Counters",
+  "audience": "Delicatessen owners, artisan food shop operators, gourmet deli counter managers",
+  "pain_points": [
+    "Greaseproof and wax paper wrapping is used for every customer interaction",
+    "Cheese, meats, and olives each need different packaging solutions",
+    "Pre-packed items for grab-and-go need allergen-compliant labelling",
+    "Premium products demand packaging that signals quality"
+  ],
+  "top_products": ["bags-and-wraps", "cold-food-and-salads", "supplies-and-essentials", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed deli items", "Food Information Regulations (weight and ingredient listing)"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

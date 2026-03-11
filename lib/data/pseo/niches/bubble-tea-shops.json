@@ -1,0 +1,17 @@
+{
+  "slug": "bubble-tea-shops",
+  "name": "Bubble Tea Shops",
+  "audience": "Bubble tea bar owners, boba franchise operators, Asian drink specialists",
+  "pain_points": [
+    "Need specialised wide-bore straws for tapioca pearls",
+    "Sealing film and dome lids are essential but hard to source sustainably",
+    "Younger customer base is vocal about sustainability",
+    "High Instagram visibility means branding on cups is critical"
+  ],
+  "top_products": ["cups-and-lids", "straws", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Plastic straw ban (England 2023) — need compliant wide-bore alternatives", "HFSS display restrictions for high-sugar drinks"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (2,000–8,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

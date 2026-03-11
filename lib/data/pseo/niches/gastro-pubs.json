@@ -1,0 +1,17 @@
+{
+  "slug": "gastro-pubs",
+  "name": "Gastro Pubs",
+  "audience": "Gastro pub owners, premium pub dining operators, chef-led pub restaurants",
+  "pain_points": [
+    "Takeaway packaging must match the premium dining experience",
+    "Seasonal menus mean packaging needs change throughout the year",
+    "Delivery apps demand consistent, professional packaging",
+    "Sustainability credentials matter to the foodie customer base"
+  ],
+  "top_products": ["hot-food", "cold-food-and-salads", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling", "Calorie labelling for chains with 250+ employees"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small-medium (1,000–4,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

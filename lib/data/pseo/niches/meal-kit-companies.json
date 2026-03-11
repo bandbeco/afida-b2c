@@ -1,0 +1,17 @@
+{
+  "slug": "meal-kit-companies",
+  "name": "Meal Kit Companies",
+  "audience": "Meal kit delivery startups, recipe box companies, ingredient kit businesses",
+  "pain_points": [
+    "Each kit contains multiple components needing individual packaging",
+    "Insulated and temperature-controlled outer packaging is essential",
+    "Sustainability is a core brand value — customers reject excess plastic",
+    "Scale-up from hundreds to thousands of kits per week strains packaging supply"
+  ],
+  "top_products": ["bags-and-wraps", "cold-food-and-salads", "supplies-and-essentials", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for each component", "Food Information Regulations (full ingredient listing per item)"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Large (10,000–50,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}
