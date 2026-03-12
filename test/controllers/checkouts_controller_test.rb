@@ -533,18 +533,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Unable to verify payment/, flash[:error]
   end
 
-  test "success handles general errors during order creation" do
+  test "success raises on order creation errors instead of silently swallowing" do
     session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 
     # Simulate an error during order creation (e.g., validation failure)
     Order.any_instance.stubs(:save!).raises(StandardError.new("Database error"))
 
-    assert_no_difference "Order.count" do
+    assert_raises(StandardError) do
       get success_checkout_path, params: { session_id: session.id }
     end
-
-    assert_redirected_to cart_path
-    assert_match /error processing your order/, flash[:error]
   end
 
   test "success validates required shipping details presence" do
@@ -556,12 +553,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
-    assert_no_difference "Order.count" do
+    assert_raises(RuntimeError, "Shipping details are required") do
       get success_checkout_path, params: { session_id: session.id }
     end
-
-    assert_redirected_to cart_path
-    assert_match /error processing your order/, flash[:error]
   end
 
   test "create respects rate limiting" do

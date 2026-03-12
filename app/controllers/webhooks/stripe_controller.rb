@@ -75,7 +75,7 @@ module Webhooks
       user = User.find_by(id: full_session.client_reference_id)
 
       # Try to get cart from metadata (added to checkout session for webhook fallback)
-      cart_id = full_session.metadata&.cart_id
+      cart_id = full_session.metadata&.[]("cart_id")
       cart = Cart.find_by(id: cart_id) if cart_id.present?
 
       # Use Stripe session amounts as source of truth (handles discounts correctly)
@@ -84,7 +84,7 @@ module Webhooks
       discount_amount = (full_session.total_details&.amount_discount || 0) / 100.0
       shipping_amount = (full_session.shipping_cost&.amount_total || 0) / 100.0
       total_amount = full_session.amount_total / 100.0
-      discount_code = full_session.metadata&.discount_code
+      discount_code = full_session.metadata&.[]("discount_code")
 
       order = Order.create!(
         user: user,
@@ -150,6 +150,7 @@ module Webhooks
     rescue => e
       Rails.logger.error("[Stripe Webhook] Error creating order: #{e.message}")
       Rails.logger.error(e.backtrace.first(10).join("\n"))
+      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
 
       # Emit webhook.failed event for debugging
       Rails.event.notify("webhook.failed",
@@ -186,14 +187,14 @@ module Webhooks
     # Emits checkout.completed event with Datafast visitor ID from Stripe metadata.
     # This ensures conversion attribution works even when webhook beats the redirect.
     def emit_checkout_completed_event(order, stripe_session)
-      visitor_id = stripe_session.metadata&.datafast_visitor_id
+      visitor_id = stripe_session.metadata&.[]("datafast_visitor_id")
       return unless visitor_id.present?
 
       # Set context manually since webhooks don't have browser cookies
       Rails.event.set_context(
         request_id: request.request_id,
         datafast_visitor_id: visitor_id,
-        datafast_session_id: stripe_session.metadata&.datafast_session_id
+        datafast_session_id: stripe_session.metadata&.[]("datafast_session_id")
       )
 
       Rails.event.notify("checkout.completed",

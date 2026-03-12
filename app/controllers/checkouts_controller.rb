@@ -221,11 +221,8 @@ class CheckoutsController < ApplicationController
 
     rescue Stripe::StripeError => e
       Rails.logger.error("Stripe error in checkout success: #{e.message}")
+      Sentry.capture_exception(e, extra: { session_id: session_id })
       flash[:error] = "Unable to verify payment. Please contact support."
-      redirect_to cart_path
-    rescue => e
-      Rails.logger.error("Error creating order: #{e.message}")
-      flash[:error] = "There was an error processing your order. Please contact support."
       redirect_to cart_path
     end
   end
@@ -247,7 +244,7 @@ class CheckoutsController < ApplicationController
     total_amount = stripe_session.amount_total / 100.0
 
     # Extract discount code from metadata (stored during checkout creation)
-    discount_code = stripe_session.metadata&.discount_code
+    discount_code = stripe_session.metadata&.[]("discount_code")
 
     # Extract shipping address details
     shipping_address = extract_shipping_address(stripe_session)

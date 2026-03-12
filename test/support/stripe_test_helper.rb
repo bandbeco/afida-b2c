@@ -118,14 +118,10 @@ module StripeTestHelper
       metadata: overrides[:metadata] || {}
     }
 
-    # Build metadata stub for method access
+    # Build metadata as a hash-like object to support bracket access (metadata["key"])
+    # Stripe gem v18 no longer supports method_missing for missing metadata keys
     metadata_hash = overrides[:metadata] || {}
-    metadata_stub = stub(
-      cart_id: metadata_hash[:cart_id],
-      discount_code: metadata_hash[:discount_code],
-      datafast_visitor_id: metadata_hash[:datafast_visitor_id],
-      datafast_session_id: metadata_hash[:datafast_session_id]
-    )
+    metadata_stub = Stripe::StripeObject.construct_from(metadata_hash.transform_keys(&:to_s))
 
     stub(
       id: session_id,
