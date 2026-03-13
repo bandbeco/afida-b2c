@@ -1,0 +1,17 @@
+{
+  "slug": "fishmongers",
+  "name": "Fishmongers",
+  "audience": "Independent fishmonger shop owners, fish market stallholders, fresh seafood retailers",
+  "pain_points": [
+    "Wrapping paper must be moisture-resistant and odour-containing",
+    "Carrier bags must handle wet, heavy products without tearing",
+    "Ice and drainage mean packaging gets wet — durability is key",
+    "Shellfish and prepared fish need different packaging formats"
+  ],
+  "top_products": ["bags-and-wraps", "supplies-and-essentials", "cold-food-and-salads", "tableware"],
+  "compliance_concerns": ["Food Information Regulations (species, origin, catch method)", "Allergen labelling for shellfish and crustaceans"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "medium"
+}

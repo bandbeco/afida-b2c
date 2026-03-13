@@ -1,0 +1,17 @@
+{
+  "slug": "market-traders",
+  "name": "Market Traders",
+  "audience": "Food market stallholders, farmers market vendors, borough market traders",
+  "pain_points": [
+    "Markets often mandate compostable or recyclable packaging only",
+    "Need packaging that works for sampling as well as full portions",
+    "Setup and teardown time means packaging must be quick to assemble",
+    "Variable weekly income makes cost control on packaging critical"
+  ],
+  "top_products": ["bags-and-wraps", "hot-food", "cold-food-and-salads", "napkins"],
+  "compliance_concerns": ["Market-specific sustainability requirements", "Natasha's Law allergen labelling for pre-packed goods"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–2,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}

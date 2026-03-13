@@ -1,0 +1,17 @@
+{
+  "slug": "school-canteens",
+  "name": "School Canteens",
+  "audience": "School catering managers, academy trust procurement teams, school meal providers",
+  "pain_points": [
+    "Strict budgets set by local authorities or academy trusts",
+    "Allergen management is critical with young children",
+    "Must balance cost with government healthy eating standards",
+    "High volume of single-use items for packed lunch and grab-and-go options"
+  ],
+  "top_products": ["hot-food", "cold-food-and-salads", "cups-and-lids", "tableware"],
+  "compliance_concerns": ["School Food Standards (nutrient-based)", "Natasha's Law allergen labelling", "HFSS restrictions in school settings"],
+  "order_frequency": "Monthly (term-time only)",
+  "avg_order_size": "Medium-large (5,000–15,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "low"
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "smoothie-bars",
+  "name": "Smoothie Bars",
+  "audience": "Smoothie bar operators, health food drink vendors, gym-adjacent juice shops",
+  "pain_points": [
+    "Thick smoothies need sturdy cups and wide straws",
+    "Brand identity tied to wellness — packaging must match the ethos",
+    "Peak morning and lunchtime rushes require fast, reliable packaging",
+    "Acai bowls and smoothie bowls need separate cold food containers"
+  ],
+  "top_products": ["cups-and-lids", "straws", "cold-food-and-salads", "napkins"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "HFSS display restrictions for high-sugar smoothies"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–4,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}
