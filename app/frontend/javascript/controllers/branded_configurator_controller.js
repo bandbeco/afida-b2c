@@ -346,8 +346,7 @@ export default class extends Controller {
 
     tiers.forEach((quantity, index) => {
       const card = document.createElement('div')
-      card.className = 'border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center'
-      card.style.cssText = 'display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;'
+      card.className = 'border border-gray-200 bg-white rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:border-primary transition flex items-center gap-2 sm:gap-3'
       card.dataset.brandedConfiguratorTarget = 'quantityOption'
       card.dataset.quantity = quantity
       card.dataset.action = 'click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown'
@@ -357,26 +356,24 @@ export default class extends Controller {
 
       // Column 1: Quantity
       const label = document.createElement('div')
-      label.className = 'text-black whitespace-nowrap'
+      label.className = 'text-black whitespace-nowrap flex-1 min-w-0'
       label.dataset.brandedConfiguratorTarget = 'quantityLabel'
       label.textContent = `${quantity.toLocaleString()} units`
 
       // Column 2: Unit price
       const price = document.createElement('div')
-      price.className = 'text-gray-400'
-      price.style.width = '6rem'
+      price.className = 'text-gray-400 whitespace-nowrap shrink-0'
       price.dataset.brandedConfiguratorTarget = 'pricePerUnit'
 
       // Column 3: Savings badge
       const savings = document.createElement('div')
-      savings.style.width = '5rem'
+      savings.className = 'whitespace-nowrap shrink-0'
       savings.dataset.brandedConfiguratorTarget = 'savingsBadge'
       if (index === 0) savings.classList.add('invisible')
 
       // Column 4: Total price
       const total = document.createElement('div')
-      total.className = 'text-black text-right'
-      total.style.width = '4.5rem'
+      total.className = 'text-black text-right whitespace-nowrap shrink-0'
       total.dataset.brandedConfiguratorTarget = 'totalPrice'
 
       card.appendChild(label)

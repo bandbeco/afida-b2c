@@ -221,8 +221,7 @@
               <% unless multi_dimension %>
                 <%# Single-dimension: server-render quantity cards %>
                 <% Array(@quantity_tiers).each_with_index do |quantity, index| %>
-                  <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition items-center"
-                       style="display: grid; grid-template-columns: 1fr auto auto auto; gap: 0.75rem;"
+                  <div class="border border-gray-200 bg-white rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:border-primary transition flex items-center gap-2 sm:gap-3"
                        data-branded-configurator-target="quantityOption"
                        data-quantity="<%= quantity %>"
                        data-action="click->branded-configurator#selectQuantity keydown->branded-configurator#handleCardKeydown"
@@ -230,23 +229,22 @@
                        aria-selected="false"
                        tabindex="0">
                     <%# Column 1: Quantity with units %>
-                    <div class="text-black whitespace-nowrap" data-branded-configurator-target="quantityLabel">
+                    <div class="text-black whitespace-nowrap flex-1 min-w-0" data-branded-configurator-target="quantityLabel">
                       <%= number_with_delimiter(quantity) %> units
                     </div>
 
                     <%# Column 2: Unit price %>
-                    <div class="text-gray-400" style="width: 6rem;"
+                    <div class="text-gray-400 whitespace-nowrap shrink-0"
                          data-branded-configurator-target="pricePerUnit">
                     </div>
 
                     <%# Column 3: Savings badge %>
-                    <div style="width: 5rem;"
-                         data-branded-configurator-target="savingsBadge"
-                         class="<%= 'invisible' if index == 0 %>">
+                    <div class="whitespace-nowrap shrink-0 <%= 'invisible' if index == 0 %>"
+                         data-branded-configurator-target="savingsBadge">
                     </div>
 
                     <%# Column 4: Total price %>
-                    <div class="text-black text-right" style="width: 4.5rem;"
+                    <div class="text-black text-right whitespace-nowrap shrink-0"
                          data-branded-configurator-target="totalPrice">
                     </div>
                   </div>
