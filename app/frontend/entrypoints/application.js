@@ -68,6 +68,7 @@ const lazyControllers = {
   "sticky-atc": () => import("../javascript/controllers/sticky_atc_controller"),
   "pricing-tiers-form": () => import("../javascript/controllers/pricing_tiers_form_controller"),
   "category-faqs-form": () => import("../javascript/controllers/category_faqs_form_controller"),
+  "click-outside": () => import("../javascript/controllers/click_outside_controller"),
   "dismissable-banner": () => import("../javascript/controllers/dismissable_banner_controller")
 }
 
