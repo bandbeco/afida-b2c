@@ -67,11 +67,12 @@ class MobileDrillDownNavTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "mobile menu contains Free Samples and Price List links" do
+  test "mobile menu contains Branding, Free Samples, and Price List links" do
     get root_url
 
     assert_response :success
     assert_select "[data-mobile-menu-target='panel']" do
+      assert_select "a[href='#{branding_path}']", text: "Branding"
       assert_select "a[href='#{samples_path}']", text: "Free Samples"
       assert_select "a[href='#{price_list_path}']", text: "Price List"
     end
