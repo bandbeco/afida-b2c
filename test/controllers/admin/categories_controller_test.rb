@@ -224,6 +224,43 @@ class Admin::CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='category[parent_id]'] option[value='#{parent.id}']", count: 0
   end
 
+  # Buying guide admin tests
+  test "edit form shows buying guide textarea" do
+    get edit_admin_category_path(@category), headers: @headers
+    assert_response :success
+    assert_select "textarea[name='category[buying_guide]']"
+  end
+
+  test "should create category with buying guide" do
+    assert_difference("Category.count") do
+      post admin_categories_path, headers: @headers, params: {
+        category: {
+          name: "Guide Category",
+          slug: "guide-category",
+          description: "A category with a guide",
+          buying_guide: "## Our Guide\n\nSome helpful content.",
+          position: 200
+        }
+      }
+    end
+
+    assert_redirected_to admin_categories_path
+    category = Category.find_by(slug: "guide-category")
+    assert_equal "## Our Guide\n\nSome helpful content.", category.buying_guide
+  end
+
+  test "should update category with buying guide" do
+    patch admin_category_path(@category), headers: @headers, params: {
+      category: {
+        buying_guide: "## Updated Guide\n\nNew content here."
+      }
+    }
+
+    assert_redirected_to admin_categories_path
+    @category.reload
+    assert_equal "## Updated Guide\n\nNew content here.", @category.buying_guide
+  end
+
   test "parent dropdown only shows top-level categories" do
     child = categories(:child_hot_cups)
     get new_admin_category_path, headers: @headers

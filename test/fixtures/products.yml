@@ -698,3 +698,26 @@ vegware_inactive:
   position: 51
   product_type: standard
   brand: "Vegware"
+
+# Products for buying guide category tests
+guide_container_small:
+  category: category_with_buying_guide
+  name: "Small Bagasse Container"
+  sku: BG-SM-001
+  slug: small-bagasse-container
+  price: 18.00
+  stock_quantity: 500
+  active: true
+  position: 1
+  product_type: standard
+
+guide_container_large:
+  category: category_with_buying_guide
+  name: "Large Bagasse Container"
+  sku: BG-LG-001
+  slug: large-bagasse-container
+  price: 24.00
+  stock_quantity: 500
+  active: true
+  position: 2
+  product_type: standard

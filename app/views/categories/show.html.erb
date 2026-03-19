@@ -58,25 +58,43 @@
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" aria-label="Toggle shopping cart" />
   <div class="drawer-content">
 
-<h1 class="text-4xl mb-2 flex items-center gap-3">
-  <% if category_icon_path(@category).present? %>
-    <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 object-contain', alt: "#{@category.name} icon" %>
-  <% end %>
-  <%= @category.name %>
-</h1>
-<h2 class="text-lg text-base-content/70 mb-4"><%= category_question_heading(@category) %></h2>
-
-<% if @category.description.present? %>
-  <div class="prose max-w-none mb-6">
-    <%= @category.description %>
+<%# Hero Section %>
+<section class="category-hero rounded-2xl overflow-hidden mb-8 <%= @category.image.attached? ? 'grid md:grid-cols-2 gap-0' : '' %>">
+  <div class="p-6 md:p-10 flex flex-col justify-center bg-base-200">
+    <h1 class="text-4xl mb-3 flex items-center gap-3">
+      <% if category_icon_path(@category).present? %>
+        <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 object-contain', alt: "#{@category.name} icon" %>
+      <% end %>
+      <%= @category.name %>
+    </h1>
+    <% if @category.description.present? %>
+      <p class="text-base-content/70 text-lg mb-4"><%= @category.description %></p>
+    <% end %>
+    <p class="text-base-content/60"><%= "Browse #{@products.size}+ #{@category.name.downcase}" %></p>
   </div>
-<% end %>
+  <% if @category.image.attached? %>
+    <div class="hidden md:block">
+      <%= image_tag @category.image, class: "w-full h-full object-cover", alt: @category.name %>
+    </div>
+  <% end %>
+</section>
 
 <div class="min-h-[60vh]">
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
     <%= render partial: "products/card", collection: @products, as: :product %>
   </div>
 </div>
+
+<%# Buying Guide Section %>
+<% if @category.buying_guide.present? %>
+  <section class="buying-guide mt-12 py-8 border-t border-base-300">
+    <div class="prose max-w-none">
+      <%= render_markdown(@category.buying_guide) %>
+    </div>
+  </section>
+
+  <%= buying_guide_structured_data(@category) %>
+<% end %>
 
 <%# Category FAQs Section %>
 <% category_faqs = @category.faqs.presence || [] %>

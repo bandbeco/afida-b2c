@@ -72,3 +72,25 @@ child_takeaway_boxes:
   slug: "takeaway-boxes-sub"
   parent: parent_hot_food
   position: 2
+
+category_with_buying_guide:
+  name: "Takeaway Containers"
+  slug: "takeaway-containers-guide"
+  position: 11
+  description: "Eco-friendly takeaway containers for your business."
+  buying_guide: |
+    ## Why Choose Eco-Friendly Takeaway Containers?
+
+    Switching to compostable takeaway containers helps reduce plastic waste and shows your customers you care about the environment.
+
+    ## Materials Guide
+
+    Our containers come in several sustainable materials:
+
+    - **Bagasse** — made from sugarcane fibre
+    - **Kraft paperboard** — recyclable and sturdy
+    - **PLA-lined** — plant-based plastic alternative
+
+    ## Sizing and Use Cases
+
+    Choose the right size for your menu items. Small containers suit sides and sauces, while large containers work for mains and sharing platters.

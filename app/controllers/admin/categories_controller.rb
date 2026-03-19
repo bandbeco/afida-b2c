@@ -77,7 +77,7 @@ module Admin
     end
 
     def category_params
-      permitted = params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position, :parent_id, :faqs ])
+      permitted = params.expect(category: [ :name, :slug, :description, :meta_title, :meta_description, :image, :position, :parent_id, :faqs, :buying_guide ])
       if permitted[:faqs].is_a?(String)
         permitted[:faqs] = JSON.parse(permitted[:faqs])
       end

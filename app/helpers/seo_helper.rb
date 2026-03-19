@@ -246,6 +246,41 @@ module SeoHelper
     }.to_json
   end
 
+  def buying_guide_structured_data(category)
+    return "" if category.buying_guide.blank?
+
+    plain_text = category.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    description = plain_text.truncate(160, separator: " ")
+
+    data = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Guide to #{category.name}",
+      "description": description,
+      "articleBody": plain_text,
+      "dateModified": category.updated_at.iso8601,
+      "author": {
+        "@type": "Organization",
+        "name": "Afida"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Afida",
+        "url": root_url
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": category_browse_url(category)
+      }
+    }
+
+    if category.image.attached?
+      data[:image] = url_for(category.image)
+    end
+
+    content_tag(:script, data.to_json.html_safe, type: "application/ld+json")
+  end
+
   def canonical_url(url = nil)
     # Strip query parameters by default to avoid duplicate content issues
     # Google penalizes pages where the canonical includes tracking params,

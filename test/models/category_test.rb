@@ -241,6 +241,28 @@ class CategoryTest < ActiveSupport::TestCase
     assert_includes category.errors[:parent].join, "cannot be the category itself"
   end
 
+  # Buying guide tests
+  test "buying_guide can be set and read back" do
+    category = Category.create!(@valid_attributes.merge(
+      slug: "guide-test",
+      buying_guide: "## Test Guide\n\nSome content."
+    ))
+    category.reload
+    assert_equal "## Test Guide\n\nSome content.", category.buying_guide
+  end
+
+  test "blank buying_guide is treated as no guide" do
+    category = Category.create!(@valid_attributes.merge(slug: "blank-guide", buying_guide: ""))
+    category.reload
+    assert_not category.buying_guide.present?
+  end
+
+  test "nil buying_guide is treated as no guide" do
+    category = Category.create!(@valid_attributes.merge(slug: "nil-guide", buying_guide: nil))
+    category.reload
+    assert_nil category.buying_guide
+  end
+
   test "max nesting depth prevents three levels" do
     grandchild = Category.new(
       name: "Grandchild",

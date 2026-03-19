@@ -127,6 +127,107 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  # Hero section tests
+  test "show page renders hero section with H1 and description" do
+    category = categories(:category_with_buying_guide)
+
+    get category_url(category.slug)
+
+    assert_response :success
+    assert_select ".category-hero h1", text: category.name
+    assert_select ".category-hero", text: /#{Regexp.escape(category.description)}/
+  end
+
+  test "show page hero displays product count" do
+    category = categories(:category_with_buying_guide)
+
+    get category_url(category.slug)
+
+    assert_response :success
+    assert_select ".category-hero", text: /Browse 2\+/
+  end
+
+  test "show page hero handles category without image gracefully" do
+    category = categories(:category_with_buying_guide)
+    assert_not category.image.attached?
+
+    get category_url(category.slug)
+
+    assert_response :success
+    assert_select ".category-hero"
+  end
+
+  test "show page does not render question heading" do
+    category = categories(:category_with_buying_guide)
+
+    get category_url(category.slug)
+
+    assert_response :success
+    assert_select "h2", text: /What.*does Afida offer/, count: 0
+  end
+
+  # Buying guide tests
+  test "show page renders buying guide when present" do
+    category = categories(:category_with_buying_guide)
+
+    get category_url(category.slug)
+
+    assert_response :success
+    assert_select ".buying-guide"
+    assert_select ".buying-guide h2", text: /Why Choose Eco-Friendly/
+    assert_select ".buying-guide h2", text: /Materials Guide/
+    assert_select ".buying-guide h2", text: /Sizing and Use Cases/
+  end
+
+  test "show page does not render buying guide when blank" do
+    get category_url(@category.slug)
+
+    assert_response :success
+    assert_select ".buying-guide", count: 0
+  end
+
+  test "buying guide renders between product grid and FAQs" do
+    category = categories(:category_with_buying_guide)
+
+    get category_url(category.slug)
+
+    assert_response :success
+    body = response.body
+    product_grid_pos = body.index("grid-cols-2")
+    buying_guide_pos = body.index("buying-guide")
+    assert buying_guide_pos > product_grid_pos, "Buying guide should appear after the product grid"
+  end
+
+  # Buying guide Article JSON-LD tests
+  test "show page includes Article JSON-LD when buying guide present" do
+    category = categories(:category_with_buying_guide)
+
+    get category_url(category.slug)
+
+    assert_response :success
+    assert_select 'script[type="application/ld+json"]' do |scripts|
+      article_script = scripts.find { |s| s.text.include?('"Article"') }
+      assert article_script, "Expected Article JSON-LD script tag"
+      data = JSON.parse(article_script.text)
+      assert_equal "Article", data["@type"]
+      assert_includes data["headline"], category.name
+      assert_equal "Afida", data.dig("author", "name")
+      assert_equal "Afida", data.dig("publisher", "name")
+      assert data["articleBody"].present?
+      assert data["dateModified"].present?
+    end
+  end
+
+  test "show page does not include Article JSON-LD when no buying guide" do
+    get category_url(@category.slug)
+
+    assert_response :success
+    assert_select 'script[type="application/ld+json"]' do |scripts|
+      article_script = scripts.find { |s| s.text.include?('"Article"') }
+      assert_nil article_script, "Should not have Article JSON-LD without a buying guide"
+    end
+  end
+
   private
 
   def sign_in_as(user)
