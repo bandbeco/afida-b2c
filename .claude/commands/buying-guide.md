@@ -1,6 +1,6 @@
 ---
 description: Write a comprehensive, SEO-informed buying guide for a product category
-allowed-tools: mcp__semrush__keyword_research, mcp__semrush__organic_research, mcp__firecrawl__firecrawl_scrape, Read, Glob, Grep, Edit, Write, Bash
+allowed-tools: mcp__gsc__get_search_analytics, mcp__gsc__get_search_by_page_query, mcp__gsc__get_performance_overview, mcp__gsc__compare_search_periods, mcp__firecrawl__firecrawl_scrape, Read, Glob, Grep, Edit, Write, Bash
 ---
 
 Write a comprehensive buying guide for the product category: $ARGUMENTS
@@ -21,9 +21,11 @@ Before writing, gather information about the category and its products from the 
 Before writing, gather keyword data to inform the guide's language and topics:
 
 1. First, check if a keyword research file already exists (e.g. keyword_research.csv or similar) that contains relevant keywords for this category.
-2. If relevant keyword data exists, use it. If not, use the Semrush MCP tools to research keywords:
-   - Use `keyword_research` to find high-volume, relevant search terms for the category.
-   - Use `organic_research` on top-ranking competitor pages to identify content gaps and themes that perform well.
+2. If relevant keyword data exists, use it. If not, use the Google Search Console MCP tools to research keywords:
+   - Use `get_search_analytics` to find queries that are already driving impressions and clicks for this category and related pages on afida.com.
+   - Use `get_search_by_page_query` on the category page URL to see which queries users search before landing on that page.
+   - Use `compare_search_periods` to identify trending queries and seasonal patterns relevant to the category.
+   - Look for high-impression, low-click queries as content opportunities; these are terms where the site appears in results but the current content does not fully address the searcher's intent.
 3. From the research, identify:
    - Primary keyword: the highest-volume term that matches buyer intent for this category.
    - Secondary keywords (3-6): related terms, long-tail queries, and question-based searches buyers use.
