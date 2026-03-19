@@ -99,7 +99,7 @@ gem "pagy", "~> 43.0"
 # Markdown rendering
 gem "redcarpet", "~> 3.6"
 
-gem "http", "~> 5.3"
+gem "http", "~> 6.0"
 
 gem "webmock", "~> 3.26", group: :test
 
