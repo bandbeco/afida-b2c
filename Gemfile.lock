@@ -287,8 +287,9 @@ GEM
     nokogiri (1.19.2-x86_64-linux-musl)
       racc (~> 1.4)
     ostruct (0.6.3)
-    pagy (43.0.5)
+    pagy (43.4.1)
       json
+      uri
       yaml
     parallel (1.27.0)
     parser (3.3.9.0)
@@ -530,7 +531,7 @@ DEPENDENCIES
   logtail-rails (~> 0.2)
   mailgun-ruby
   mocha
-  pagy (~> 43.0)
+  pagy (~> 43.4)
   pg (~> 1.6)
   prawn (~> 2.5)
   prawn-table (~> 0.2)
