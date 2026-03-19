@@ -73,8 +73,8 @@
     <p class="text-base-content/60"><%= "Browse #{@products.size}+ #{@category.name.downcase}" %></p>
   </div>
   <% if @category.image.attached? %>
-    <div class="hidden md:block">
-      <%= image_tag @category.image, class: "w-full h-full object-cover", alt: @category.name %>
+    <div class="hidden md:block relative">
+      <%= image_tag @category.image, class: "absolute inset-0 w-full h-full object-cover", alt: @category.name %>
     </div>
   <% end %>
 </section>
