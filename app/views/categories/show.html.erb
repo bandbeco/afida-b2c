@@ -59,8 +59,8 @@
   <div class="drawer-content">
 
 <%# Hero Section %>
-<section class="category-hero rounded-2xl overflow-hidden mb-8 <%= @category.image.attached? ? 'grid md:grid-cols-2 gap-0' : '' %>">
-  <div class="p-6 md:p-10 flex flex-col justify-center bg-base-200">
+<section class="category-hero rounded-2xl overflow-hidden mb-8 bg-base-200 <%= @category.image.attached? ? 'grid md:grid-cols-2 gap-0' : '' %>">
+  <div class="p-6 md:p-10 flex flex-col justify-center">
     <h1 class="text-4xl mb-3 flex items-center gap-3">
       <% if category_icon_path(@category).present? %>
         <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 object-contain', alt: "#{@category.name} icon" %>
