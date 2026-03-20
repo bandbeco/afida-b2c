@@ -92,7 +92,7 @@ gem "mocha"
 
 gem "sentry-ruby", "~> 6.1"
 
-gem "sentry-rails", "~> 6.4"
+gem "sentry-rails", "~> 6.5"
 
 gem "pagy", "~> 43.4"
 
