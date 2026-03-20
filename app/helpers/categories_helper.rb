@@ -40,13 +40,37 @@ module CategoriesHelper
   # Maps category slugs to arrays of related category slugs
   # Used to improve internal linking and cross-selling
   RELATED_CATEGORIES = {
-    "cups-and-lids" => %w[napkins straws takeaway-extras],
-    "ice-cream-cups" => %w[takeaway-extras napkins],
-    "napkins" => %w[cups-and-lids takeaway-containers straws],
-    "pizza-boxes" => %w[napkins takeaway-extras],
-    "straws" => %w[cups-and-lids napkins],
-    "takeaway-containers" => %w[napkins takeaway-extras cups-and-lids],
-    "takeaway-extras" => %w[takeaway-containers cups-and-lids napkins]
+    # Cups & Drinks subcategories
+    "hot-cups" => %w[cup-lids cup-accessories napkins],
+    "cold-cups" => %w[cup-lids straws napkins],
+    "cup-lids" => %w[hot-cups cold-cups cup-accessories],
+    "cup-accessories" => %w[cup-lids hot-cups cold-cups],
+    "ice-cream-cups" => %w[napkins cutlery cold-cups],
+    "straws" => %w[cold-cups cup-lids napkins],
+    # Hot Food subcategories
+    "pizza-boxes" => %w[napkins greaseproof-and-wraps bags],
+    "takeaway-boxes" => %w[napkins cutlery bags],
+    "food-containers" => %w[napkins cutlery bags],
+    "soup-containers" => %w[napkins cutlery hot-cups],
+    "bagasse-containers" => %w[napkins cutlery greaseproof-and-wraps],
+    # Cold Food & Salads subcategories
+    "salad-boxes" => %w[napkins cutlery deli-pots],
+    "sandwich-and-wrap-boxes" => %w[napkins bags greaseproof-and-wraps],
+    "deli-pots" => %w[salad-boxes napkins cutlery],
+    # Tableware subcategories
+    "plates-and-trays" => %w[napkins cutlery aluminium-containers],
+    "cutlery" => %w[napkins plates-and-trays takeaway-boxes],
+    "napkins" => %w[cutlery plates-and-trays hot-cups],
+    "aluminium-containers" => %w[plates-and-trays napkins greaseproof-and-wraps],
+    # Bags & Wraps subcategories
+    "bags" => %w[greaseproof-and-wraps napkins labels-and-stickers],
+    "greaseproof-and-wraps" => %w[bags napkins natureflex-bags],
+    "natureflex-bags" => %w[bags greaseproof-and-wraps labels-and-stickers],
+    # Supplies & Essentials subcategories
+    "bin-liners" => %w[gloves-and-cleaning labels-and-stickers],
+    "labels-and-stickers" => %w[bags natureflex-bags till-rolls],
+    "gloves-and-cleaning" => %w[bin-liners napkins],
+    "till-rolls" => %w[labels-and-stickers bags]
   }.freeze
 
   # Returns related categories for cross-linking
