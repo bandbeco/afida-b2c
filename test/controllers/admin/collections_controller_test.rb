@@ -202,6 +202,46 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
   # Product assignment
   # ==========================================================================
 
+  # ==========================================================================
+  # Buying guide
+  # ==========================================================================
+
+  test "edit form shows buying guide textarea" do
+    get edit_admin_collection_path(@collection.id), headers: @headers
+    assert_response :success
+    assert_select "textarea[name='collection[buying_guide]']"
+  end
+
+  test "should create collection with buying guide" do
+    assert_difference("Collection.count") do
+      post admin_collections_path, headers: @headers, params: {
+        collection: {
+          name: "Guide Collection",
+          slug: "guide-collection",
+          description: "A collection with a guide",
+          buying_guide: "## Our Guide\n\nSome helpful content.",
+          position: 200
+        }
+      }
+    end
+
+    assert_redirected_to admin_collections_path
+    collection = Collection.find_by(slug: "guide-collection")
+    assert_equal "## Our Guide\n\nSome helpful content.", collection.buying_guide
+  end
+
+  test "should update collection with buying guide" do
+    patch admin_collection_path(@collection.id), headers: @headers, params: {
+      collection: {
+        buying_guide: "## Updated Guide\n\nNew content here."
+      }
+    }
+
+    assert_redirected_to admin_collections_path
+    @collection.reload
+    assert_equal "## Updated Guide\n\nNew content here.", @collection.buying_guide
+  end
+
   test "should update collection with product ids" do
     product1 = products(:one)
     product2 = products(:two)

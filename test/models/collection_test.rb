@@ -219,4 +219,29 @@ class CollectionTest < ActiveSupport::TestCase
   test "collection can have image attachment" do
     assert_respond_to @collection, :image
   end
+
+  # ==========================================================================
+  # Buying guide tests
+  # ==========================================================================
+
+  test "buying_guide can be set and read back" do
+    collection = Collection.create!(@valid_attributes.merge(
+      slug: "guide-test",
+      buying_guide: "## Test Guide\n\nSome content."
+    ))
+    collection.reload
+    assert_equal "## Test Guide\n\nSome content.", collection.buying_guide
+  end
+
+  test "blank buying_guide is treated as no guide" do
+    collection = Collection.create!(@valid_attributes.merge(slug: "blank-guide", buying_guide: ""))
+    collection.reload
+    assert_not collection.buying_guide.present?
+  end
+
+  test "nil buying_guide is treated as no guide" do
+    collection = Collection.create!(@valid_attributes.merge(slug: "nil-guide", buying_guide: nil))
+    collection.reload
+    assert_nil collection.buying_guide
+  end
 end

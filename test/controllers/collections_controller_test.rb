@@ -115,6 +115,24 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # Buying guide
+  # ==========================================================================
+
+  test "show renders buying guide when present" do
+    collection = collections(:collection_with_buying_guide)
+    get collection_url(collection.slug)
+    assert_response :success
+    assert_select "section.buying-guide"
+    assert_select ".prose"
+  end
+
+  test "show does not render buying guide section when absent" do
+    get collection_url(@collection.slug)
+    assert_response :success
+    assert_select "section.buying-guide", count: 0
+  end
+
+  # ==========================================================================
   # URL Tests
   # ==========================================================================
 

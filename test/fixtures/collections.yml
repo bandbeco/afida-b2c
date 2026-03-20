@@ -41,6 +41,31 @@ vegware:
   sample_pack: false
   position: 4
 
+# Collection with buying guide for testing
+collection_with_buying_guide:
+  name: "Eco-Friendly Cups"
+  slug: "eco-friendly-cups-guide"
+  description: "Our range of eco-friendly cups for your business."
+  featured: true
+  sample_pack: false
+  position: 5
+  buying_guide: |
+    ## Why Choose Eco-Friendly Cups?
+
+    Switching to compostable cups helps reduce plastic waste and shows your customers you care about the environment.
+
+    ## Materials Guide
+
+    Our cups come in several sustainable materials:
+
+    - **PLA-lined** -- plant-based plastic alternative
+    - **Bagasse** -- made from sugarcane fibre
+    - **Kraft paperboard** -- recyclable and sturdy
+
+    ## Sizing and Use Cases
+
+    Choose the right size for your drinks menu. Small cups suit espressos, while large cups work for lattes and cold drinks.
+
 # Empty collection for edge case testing
 empty_collection:
   name: "Empty Collection"

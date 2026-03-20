@@ -47,6 +47,42 @@ module CollectionsHelper
     }
   end
 
+  # Returns structured data JSON-LD for a collection buying guide
+  def collection_buying_guide_structured_data(collection)
+    return "" if collection.buying_guide.blank?
+
+    plain_text = collection.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    description = plain_text.truncate(160, separator: " ")
+
+    data = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Guide to #{collection.name}",
+      "description": description,
+      "articleBody": plain_text,
+      "dateModified": collection.updated_at.iso8601,
+      "author": {
+        "@type": "Organization",
+        "name": "Afida"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Afida",
+        "url": root_url
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": collection_url(collection)
+      }
+    }
+
+    if collection.image.attached?
+      data[:image] = url_for(collection.image)
+    end
+
+    content_tag(:script, data.to_json.html_safe, type: "application/ld+json")
+  end
+
   # Returns structured data JSON-LD for a sample pack landing page
   # Uses WebPage with mainEntity of ItemList to represent the curated product set
   def sample_pack_structured_data(sample_pack, products)
