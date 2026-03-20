@@ -63,9 +63,9 @@ module SeoHelper
       "offers": offers
     }
 
-    # Add image if available
+    # Add image if available (must be absolute URL for Google structured data)
     if product.product_photo.attached?
-      data[:image] = url_for(product.product_photo)
+      data[:image] = rails_storage_proxy_url(product.product_photo)
     end
 
     # Add SKU/GTIN
@@ -117,12 +117,13 @@ module SeoHelper
   end
 
   def organization_structured_data
-    logo_url = begin
+    logo_path = begin
       vite_asset_path("images/logo.svg")
     rescue
       # Fallback if vite_asset_path is not available (like in tests)
       "/vite/assets/images/logo.svg"
     end
+    logo_url = URI.join(root_url, logo_path).to_s
 
     data = {
       "@context": "https://schema.org",

@@ -240,6 +240,31 @@ class SeoHelperTest < ActionView::TestCase
     assert_equal expected_date.iso8601, data["offers"]["priceValidUntil"]
   end
 
+  test "product structured data image is an absolute URL" do
+    product = products(:single_wall_8oz_white)
+    product.product_photo.attach(
+      io: StringIO.new("fake image"),
+      filename: "test.jpg",
+      content_type: "image/jpeg"
+    )
+
+    json = product_structured_data(product)
+    data = JSON.parse(json)
+
+    assert data["image"].present?
+    assert data["image"].start_with?("http"), "Image URL must be absolute, got: #{data['image']}"
+  end
+
+  test "organization structured data logo is an absolute URL" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = organization_structured_data
+    data = JSON.parse(json)
+
+    assert data["logo"].present?
+    assert data["logo"].start_with?("http"), "Logo URL must be absolute, got: #{data['logo']}"
+  end
+
   # Canonical URL tests
   test "canonical_url strips query parameters by default" do
     # Simulate a request with query params
