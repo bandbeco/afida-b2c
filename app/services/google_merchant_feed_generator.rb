@@ -12,6 +12,8 @@ class GoogleMerchantFeedGenerator
           xml.link Rails.application.routes.url_helpers.shop_url
 
           @products.each do |product|
+            next unless product.product_photo.attached? || product.lifestyle_photo.attached?
+
             generate_product_item(xml, product)
           end
         end
@@ -181,6 +183,10 @@ class GoogleMerchantFeedGenerator
     image = product.product_photo.attached? ? product.product_photo : product.lifestyle_photo
     return "" unless image&.attached?
 
-    Rails.application.routes.url_helpers.url_for(image)
+    if image.content_type == "image/webp"
+      Rails.application.routes.url_helpers.url_for(image.variant(format: :jpeg))
+    else
+      Rails.application.routes.url_helpers.url_for(image)
+    end
   end
 end

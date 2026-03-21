@@ -5,9 +5,23 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     Rails.application.routes.default_url_options[:host] = "example.com"
   end
 
+  private
+
+  def attach_product_photo(product)
+    return if product.product_photo.attached?
+
+    product.product_photo.attach(
+      io: file_fixture("test_image.jpg").open,
+      filename: "product.jpg",
+      content_type: "image/jpeg"
+    )
+  end
+
+  public
+
   test "generates optimized product title" do
     product = products(:one)
-    variant = products(:one)
+    attach_product_photo(product)
 
     generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
     xml = Nokogiri::XML(generator.generate_xml)
@@ -22,6 +36,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
   test "includes custom labels in feed" do
     product = products(:one)
+    attach_product_photo(product)
     product.update!(
       best_seller: true,
       b2b_priority: "high"
@@ -37,6 +52,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
   test "includes GTIN when present" do
     product = products(:one)
+    attach_product_photo(product)
     product.update!(gtin: "1234567890123")
 
     generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
@@ -48,6 +64,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
   test "product_type includes parent and subcategory" do
     product = products(:hot_cup_in_subcategory)
+    attach_product_photo(product)
 
     generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
     xml = Nokogiri::XML(generator.generate_xml)
@@ -58,6 +75,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
   test "brand uses product brand when present" do
     product = products(:vegware_hot_cup)
+    attach_product_photo(product)
 
     generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
     xml = Nokogiri::XML(generator.generate_xml)
@@ -68,6 +86,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
 
   test "brand defaults to Afida when product has no brand" do
     product = products(:one)
+    attach_product_photo(product)
 
     generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
     xml = Nokogiri::XML(generator.generate_xml)
@@ -76,8 +95,52 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert_equal "Afida", brand
   end
 
+  test "product_image_url converts webp to jpeg" do
+    product = products(:one)
+    product.product_photo.attach(
+      io: file_fixture("test_image.webp").open,
+      filename: "product.webp",
+      content_type: "image/webp"
+    )
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+    image_link = xml.at_xpath("//item/g:image_link", "g" => "http://base.google.com/ns/1.0").text
+
+    assert_includes image_link, "representations", "WebP images should use variant representation for format conversion"
+  end
+
+  test "product_image_url passes through jpeg images without conversion" do
+    product = products(:one)
+    product.product_photo.attach(
+      io: file_fixture("test_image.jpg").open,
+      filename: "product.jpg",
+      content_type: "image/jpeg"
+    )
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+    image_link = xml.at_xpath("//item/g:image_link", "g" => "http://base.google.com/ns/1.0").text
+
+    assert_not_empty image_link
+    assert_includes image_link, "blobs", "JPEG images should use direct blob URL"
+  end
+
+  test "excludes products without any images from feed" do
+    product = products(:one)
+    # product has no attached photos
+    assert_not product.product_photo.attached?
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+    items = xml.xpath("//item")
+
+    assert_equal 0, items.count, "Products without images should be excluded from feed"
+  end
+
   test "optimized description has first 160 chars with key info" do
     product = products(:one)
+    attach_product_photo(product)
     # Remove existing descriptions to test generated one
     product.update!(description_short: nil, description_standard: nil, description_detailed: nil)
 
