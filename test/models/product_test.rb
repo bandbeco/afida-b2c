@@ -719,4 +719,25 @@ class ProductTest < ActiveSupport::TestCase
 
     assert_equal "12oz Bagasse Clamshell", product.generated_title
   end
+
+  # ==========================================================================
+  # Stock Methods
+  # ==========================================================================
+
+  test "in_stock? returns true for active product" do
+    product = products(:one)
+    assert product.active?
+    assert product.in_stock?
+  end
+
+  test "in_stock? returns true for active product regardless of stock_quantity" do
+    product = products(:one)
+    product.stock_quantity = 0
+    assert product.in_stock?
+  end
+
+  test "in_stock? returns false for inactive product" do
+    product = products(:inactive_product)
+    assert_not product.in_stock?
+  end
 end
