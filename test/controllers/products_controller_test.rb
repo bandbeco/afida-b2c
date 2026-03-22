@@ -215,6 +215,27 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/£/, response.body) # Should show GBP currency
   end
 
+  test "show OG price meta tag uses first tier price for tiered products" do
+    product = products(:single_wall_8oz_white)
+    assert product.pricing_tiers.present?, "Fixture should have pricing tiers"
+
+    get product_url(product.slug)
+
+    assert_response :success
+    first_tier_price = product.pricing_tiers.first["price"]
+    assert_select "meta[property='product:price:amount'][content='#{first_tier_price}']"
+  end
+
+  test "show OG price meta tag uses product price for non-tiered products" do
+    product = products(:paper_straws)
+    assert product.pricing_tiers.blank?, "Fixture should not have pricing tiers"
+
+    get product_url(product.slug)
+
+    assert_response :success
+    assert_select "meta[property='product:price:amount'][content='#{product.price}']"
+  end
+
   # Branded Product Redirect Tests
   test "show redirects branded templates to /branded-products/ with 301" do
     branded_template = products(:branded_template_variant)

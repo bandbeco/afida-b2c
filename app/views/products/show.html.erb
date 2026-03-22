@@ -38,7 +38,7 @@
   <% if @product&.primary_photo&.attached? %>
     <meta property="og:image" content="<%= rails_storage_proxy_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>">
   <% end %>
-  <meta property="product:price:amount" content="<%= @product.price %>">
+  <meta property="product:price:amount" content="<%= @product.pricing_tiers.present? ? @product.pricing_tiers.first["price"] : @product.price %>">
   <meta property="product:price:currency" content="GBP">
 
   <script type="application/ld+json">
