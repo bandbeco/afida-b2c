@@ -57,8 +57,13 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
     doc = Nokogiri::XML(xml)
     urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
 
-    %w[about contact shop terms privacy faqs branding samples delivery-returns accessibility-statement price-list signin signup].each do |page|
+    %w[about contact shop terms privacy faqs branding samples delivery-returns accessibility-statement price-list].each do |page|
       assert urls.any? { |url| url.include?(page) }, "Missing #{page} in sitemap"
+    end
+
+    # Authentication pages should NOT be in the sitemap (low value, wastes crawl budget)
+    %w[signin signup].each do |page|
+      refute urls.any? { |url| url.include?(page) }, "#{page} should not be in sitemap"
     end
   end
 
