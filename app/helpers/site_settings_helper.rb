@@ -5,7 +5,11 @@ module SiteSettingsHelper
 
   def hero_image_tag(**options)
     if site_settings.hero_image.attached?
-      image_tag site_settings.hero_image, **options
+      image_tag site_settings.hero_image.variant(
+        resize_to_limit: [ 800, 800 ],
+        format: :webp,
+        saver: { quality: 80 }
+      ), **options
     else
       vite_image_tag "images/hero/hero.webp", **options
     end
