@@ -26,6 +26,10 @@ Rails.application.configure do
   config.active_storage.service = :hetzner
   config.active_storage.variant_processor = :vips
 
+  # Serve images through Rails proxy instead of S3 redirect.
+  # This lets us set cache headers and avoids short-lived signed URLs with no caching.
+  config.active_storage.resolve_model_to_route = :rails_storage_proxy
+
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true
 

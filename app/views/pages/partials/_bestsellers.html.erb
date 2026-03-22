@@ -19,12 +19,12 @@
             <%= link_to product_path(product.slug), class: "bestseller-card block", data: { turbo_frame: "_top" } do %>
               <div class="bestseller-card-image">
                 <% if product.lifestyle_photo.attached? %>
-                  <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [500, 500, { background: [243, 244, 246] }]),
+                  <%= image_tag product.lifestyle_photo.variant(resize_and_pad: [500, 500, { background: [243, 244, 246] }], format: :webp, saver: { quality: 80 }),
                                 alt: product.generated_title,
                                 class: "object-contain w-full h-full",
                                 loading: "lazy" %>
                 <% elsif product.product_photo.attached? %>
-                  <%= image_tag product.product_photo.variant(resize_and_pad: [500, 500, { background: [243, 244, 246] }]),
+                  <%= image_tag product.product_photo.variant(resize_and_pad: [500, 500, { background: [243, 244, 246] }], format: :webp, saver: { quality: 80 }),
                                 alt: product.generated_title,
                                 class: "object-contain w-full h-full",
                                 loading: "lazy" %>

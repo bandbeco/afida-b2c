@@ -4,7 +4,12 @@
       <!-- Image area -->
       <div class="relative aspect-square overflow-hidden" style="background-color: <%= category_pastel_color(index) %>">
         <% if category.image.attached? %>
-          <%= image_tag category.image, alt: category.name, class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" %>
+          <%= image_tag category.image.variant(
+                resize_to_fill: [400, 400],
+                format: :webp,
+                saver: { quality: 80 }
+              ), alt: category.name, class: "w-full h-full object-cover transition-transform duration-300 group-hover:scale-105",
+              loading: "lazy" %>
         <% elsif category_icon_path(category).present? %>
           <div class="w-full h-full flex items-center justify-center p-6 transition-transform duration-300 group-hover:scale-105">
             <%= vite_image_tag category_icon_path(category), class: 'w-full h-full object-contain opacity-80', alt: "#{category.name} icon" %>

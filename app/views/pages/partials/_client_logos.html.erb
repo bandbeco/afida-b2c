@@ -10,12 +10,12 @@
       <div class="flex overflow-hidden group">
         <div class="logo-conveyor flex items-center whitespace-nowrap">
           <% @client_logos.each do |logo| %>
-            <%= vite_image_tag "images/logos/#{logo}", alt: "#{client_name_for.call(logo)} - Afida client", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
+            <%= vite_image_tag "images/logos/#{logo}", alt: "#{client_name_for.call(logo)} - Afida client", class: "mx-8 h-12 w-auto object-contain transition-all duration-300", width: 120, height: 48, loading: "lazy" %>
           <% end %>
 
           <!-- Duplicate for infinite scroll effect - decorative only -->
           <% @client_logos.each do |logo| %>
-            <%= vite_image_tag "images/logos/#{logo}", alt: "#{client_name_for.call(logo)}", role: "presentation", class: "mx-8 h-12 w-auto object-contain transition-all duration-300" %>
+            <%= vite_image_tag "images/logos/#{logo}", alt: "#{client_name_for.call(logo)}", role: "presentation", class: "mx-8 h-12 w-auto object-contain transition-all duration-300", width: 120, height: 48, loading: "lazy" %>
           <% end %>
         </div>
       </div>
