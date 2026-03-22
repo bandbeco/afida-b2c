@@ -202,6 +202,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     refute_match(/Discount/, response.body)
   end
 
+  test "confirmation page omits GCR survey when merchant_id not configured" do
+    sign_in @user_one
+
+    get confirmation_order_url(@order_one)
+    assert_response :success
+    # Without google_customer_reviews.merchant_id in credentials, survey should not render
+    refute_match(/surveyoptin/, response.body)
+  end
+
   test "confirmation page denied without authorization" do
     get confirmation_order_url(@guest_order)
     assert_redirected_to root_path
