@@ -138,6 +138,30 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert_equal 0, items.count, "Products without images should be excluded from feed"
   end
 
+  test "includes google_product_category for products with categories" do
+    product = products(:hot_cup_in_subcategory)
+    attach_product_photo(product)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    google_category = xml.at_xpath("//item/g:google_product_category", "g" => "http://base.google.com/ns/1.0")
+    assert_not_nil google_category, "Feed should include google_product_category"
+    assert_not_empty google_category.text
+  end
+
+  test "google_product_category maps known category slugs to Google taxonomy IDs" do
+    product = products(:hot_cup_in_subcategory)
+    attach_product_photo(product)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    google_category = xml.at_xpath("//item/g:google_product_category", "g" => "http://base.google.com/ns/1.0")
+    # Hot Cups should map to a Google taxonomy category
+    assert_match(/\d+/, google_category.text, "Google product category should be a taxonomy ID")
+  end
+
   test "optimized description has first 160 chars with key info" do
     product = products(:one)
     attach_product_photo(product)
