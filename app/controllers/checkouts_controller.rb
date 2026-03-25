@@ -83,9 +83,9 @@ class CheckoutsController < ApplicationController
         }
       }
 
-      # Apply discount coupon if present in session
-      # We'll validate the coupon separately and skip it if invalid rather than failing checkout
+      # Apply discount coupon if present in session, otherwise allow customer to enter a promotion code
       if session[:discount_code].present?
+        # Programmatic discount (e.g. email signup) - validate and apply directly
         begin
           Stripe::Coupon.retrieve(session[:discount_code])
           session_params[:discounts] = [ { coupon: session[:discount_code] } ]
@@ -94,7 +94,12 @@ class CheckoutsController < ApplicationController
           Rails.logger.warn("Invalid discount coupon '#{session[:discount_code]}': #{e.message}")
           session.delete(:discount_code)
           flash[:alert] = "Your discount code could not be applied. Please continue with your order."
+          # Fall back to allowing customer-entered promotion codes
+          session_params[:allow_promotion_codes] = true
         end
+      else
+        # No programmatic discount - let customers enter promotion codes on checkout page
+        session_params[:allow_promotion_codes] = true
       end
 
       if Current.user
@@ -243,8 +248,12 @@ class CheckoutsController < ApplicationController
     shipping_cost = (stripe_session.shipping_cost&.amount_total || 0) / 100.0
     total_amount = stripe_session.amount_total / 100.0
 
-    # Extract discount code from metadata (stored during checkout creation)
+    # Extract discount code: prefer metadata (programmatic discount), fall back to
+    # customer-entered promotion code from Stripe session
     discount_code = stripe_session.metadata&.[]("discount_code")
+    if discount_code.blank?
+      discount_code = extract_promotion_code(stripe_session)
+    end
 
     # Extract shipping address details
     shipping_address = extract_shipping_address(stripe_session)
@@ -315,6 +324,19 @@ class CheckoutsController < ApplicationController
       postal_code: address[:postal_code],
       country: address[:country]
     }
+  end
+
+  def extract_promotion_code(stripe_session)
+    stripe_session
+      .total_details
+      &.breakdown
+      &.discounts
+      &.first
+      &.discount
+      &.promotion_code
+      &.code
+  rescue NoMethodError
+    nil
   end
 
   def tax_rate

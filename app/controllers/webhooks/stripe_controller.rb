@@ -85,6 +85,9 @@ module Webhooks
       shipping_amount = (full_session.shipping_cost&.amount_total || 0) / 100.0
       total_amount = full_session.amount_total / 100.0
       discount_code = full_session.metadata&.[]("discount_code")
+      if discount_code.blank?
+        discount_code = extract_promotion_code(full_session)
+      end
 
       order = Order.create!(
         user: user,
@@ -182,6 +185,19 @@ module Webhooks
         postal_code: address[:postal_code],
         country: address[:country]
       }
+    end
+
+    def extract_promotion_code(stripe_session)
+      stripe_session
+        .total_details
+        &.breakdown
+        &.discounts
+        &.first
+        &.discount
+        &.promotion_code
+        &.code
+    rescue NoMethodError
+      nil
     end
 
     # Emits checkout.completed event with Datafast visitor ID from Stripe metadata.

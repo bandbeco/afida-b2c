@@ -460,6 +460,81 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil captured_params[:discounts]
   end
 
+  test "create sets allow_promotion_codes when no session discount" do
+    captured_params = nil
+    stripe_session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(stripe_session)
+
+    post checkout_path
+
+    assert_equal true, captured_params[:allow_promotion_codes]
+  end
+
+  test "create does not set allow_promotion_codes when session discount exists" do
+    # Set discount code in session via email subscription
+    post email_subscriptions_path, params: { email: "promo-test@example.com" }
+
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME5"))
+
+    captured_params = nil
+    stripe_session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(stripe_session)
+
+    post checkout_path
+
+    assert_nil captured_params[:allow_promotion_codes]
+    assert_equal [ { coupon: "WELCOME5" } ], captured_params[:discounts]
+  end
+
+  test "success extracts discount code from Stripe promotion code when customer enters code" do
+    session = build_stripe_session(
+      id: "sess_promo_code_test",
+      payment_status: "paid",
+      customer_email: "buyer@example.com",
+      amount_subtotal: 1800,
+      amount_tax: 360,
+      shipping_amount_total: 500,
+      amount_total: 2660,
+      amount_discount: 200,
+      metadata: {},
+      promotion_code: "SUMMER20"
+    )
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    order = Order.last
+    assert_equal 2.0, order.discount_amount.to_f
+    assert_equal "SUMMER20", order.discount_code
+  end
+
+  test "success prefers metadata discount code over Stripe promotion code" do
+    session = build_stripe_session(
+      id: "sess_metadata_priority",
+      payment_status: "paid",
+      customer_email: "buyer@example.com",
+      amount_subtotal: 1800,
+      amount_tax: 360,
+      shipping_amount_total: 500,
+      amount_total: 2660,
+      amount_discount: 200,
+      metadata: { discount_code: "WELCOME5" },
+      promotion_code: "SUMMER20"
+    )
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    order = Order.last
+    assert_equal "WELCOME5", order.discount_code
+  end
+
   # Note: Testing discount application requires session state persistence
   # across requests, which is complex in integration tests. The implementation
   # in checkouts_controller.rb lines 83-95 handles:

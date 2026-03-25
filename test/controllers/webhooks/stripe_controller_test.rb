@@ -232,6 +232,40 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ============================================================================
+  # CUSTOMER-ENTERED PROMOTION CODE TESTS
+  # ============================================================================
+
+  test "creates order with promotion code when customer enters code at checkout" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 2, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_webhook_promo_code",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s },
+      amount_subtotal: 1800,
+      amount_tax: 360,
+      shipping_amount_total: 500,
+      amount_total: 2660,
+      amount_discount: 200,
+      promotion_code: "SUMMER20"
+    )
+
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    order = Order.find_by(stripe_session_id: "sess_webhook_promo_code")
+    assert_equal 2.0, order.discount_amount.to_f
+    assert_equal "SUMMER20", order.discount_code
+  end
+
+  # ============================================================================
   # STRUCTURED EVENT EMISSION TESTS (User Story 1: Debug Silent Failures)
   # ============================================================================
 

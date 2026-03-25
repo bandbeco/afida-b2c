@@ -81,9 +81,24 @@ module StripeTestHelper
     # Build total_details for tax and discount information
     tax_amount = overrides[:amount_tax] || 0
     discount_amount = overrides[:amount_discount] || 0
+
+    # Build breakdown with promotion code discounts (used when customer enters a code)
+    breakdown_discounts = []
+    if overrides[:promotion_code].present?
+      promo_coupon = stub(name: overrides[:promotion_code])
+      promo = stub(code: overrides[:promotion_code], coupon: promo_coupon)
+      discount_obj = stub(
+        amount: discount_amount,
+        discount: stub(promotion_code: promo)
+      )
+      breakdown_discounts << discount_obj
+    end
+    breakdown = stub(discounts: breakdown_discounts)
+
     total_details = stub(
       amount_tax: tax_amount,
-      amount_discount: discount_amount
+      amount_discount: discount_amount,
+      breakdown: breakdown
     )
 
     # Build line_items response (for webhook expansion)
