@@ -71,8 +71,9 @@ class PriceListPdf < Prawn::Document
     logo_path = Rails.root.join(LOGO_PATH)
     image logo_path, at: [ 0, logo_top ], height: LOGO_HEIGHT
 
-    # Title and metadata on the right, aligned with logo
-    bounding_box([ TITLE_X_POSITION, logo_top ], width: 400, height: LOGO_HEIGHT) do
+    # Title and metadata on the right, aligned with logo top
+    metadata_height = LOGO_HEIGHT + 20
+    bounding_box([ TITLE_X_POSITION, logo_top ], width: 400, height: metadata_height) do
       text "Price List", size: 20, style: :bold
       move_down 5
       text @filter_description, size: 10, color: "666666"
@@ -80,8 +81,9 @@ class PriceListPdf < Prawn::Document
       text "All prices exclude VAT", size: 10, color: "666666"
     end
 
-    # Move down to clear logo height
-    move_down 20
+    # Move cursor below whichever is taller: logo or metadata block
+    move_cursor_to logo_top - metadata_height
+    move_down 10
 
     # Value propositions underneath the logo
     text VALUE_PROPOSITIONS, size: 11, style: :bold, color: "000000"
@@ -95,7 +97,11 @@ class PriceListPdf < Prawn::Document
     grouped = @products.group_by { |p| p.category }
 
     grouped.each_with_index do |(category, products), index|
-      start_new_page if index > 0
+      if index > 0
+        # Start a new page only if not enough room for category header + a few rows
+        start_new_page if cursor < 120
+        move_down 25 unless cursor > bounds.top - 10
+      end
 
       category_header(category)
       price_table(products)
