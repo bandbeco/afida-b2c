@@ -17,6 +17,10 @@ class OrderPdfGenerator
   COMPANY_WEBSITE = "https://afida.com".freeze
   LOGO_PATH = Rails.root.join("app", "frontend", "images", "afida-logo-pdf.png").freeze
 
+  FONT_DIR = Rails.root.join("app/frontend/fonts/fredoka/static")
+  FONT_REGULAR = FONT_DIR.join("Fredoka-Regular.ttf").to_s.freeze
+  FONT_BOLD = FONT_DIR.join("Fredoka-Medium.ttf").to_s.freeze
+
   def initialize(order)
     @order = order
   end
@@ -25,6 +29,8 @@ class OrderPdfGenerator
     raise StandardError, "Order must have items" if @order.order_items.empty?
 
     Prawn::Document.new(page_size: "A4", margin: [ 40, 50, 40, 50 ]) do |pdf|
+      setup_fonts(pdf)
+
       # Set default font color
       pdf.fill_color TEXT_DARK
 
@@ -53,6 +59,16 @@ class OrderPdfGenerator
   end
 
   private
+
+  def setup_fonts(pdf)
+    pdf.font_families.update(
+      "Fredoka" => {
+        normal: FONT_REGULAR,
+        bold: FONT_BOLD
+      }
+    )
+    pdf.font "Fredoka"
+  end
 
   def add_header(pdf)
     header_top = pdf.cursor
@@ -267,7 +283,7 @@ class OrderPdfGenerator
 
     pdf.fill_color TEXT_GRAY
     pdf.text "Together we're making sustainable choices for a greener future.",
-      size: 10, style: :italic, align: :center
+      size: 10, align: :center
     pdf.move_down 8
 
     pdf.text "Questions? Contact us at #{COMPANY_EMAIL}",

@@ -118,6 +118,21 @@ class PriceListPdfTest < ActiveSupport::TestCase
     assert pdf_data.bytesize > pdf_without_image.bytesize
   end
 
+  test "generates pdf with UTF-8 characters in product data" do
+    product = Product.active.where(product_type: "standard").first
+    original_title = product.name
+    # U+2033 is the double prime character that triggered the production error
+    product.update_column(:name, "Test Product 12\u2033 Size")
+
+    pdf = PriceListPdf.new(Product.where(id: product.id), @filter_description)
+    pdf_data = pdf.render
+
+    assert pdf_data.start_with?("%PDF-")
+    assert pdf_data.length > 0
+  ensure
+    product.update_column(:name, original_title) if original_title
+  end
+
   test "generates pdf without error when category has no image" do
     # Default fixtures have no attached images
     products = Product.active.standard

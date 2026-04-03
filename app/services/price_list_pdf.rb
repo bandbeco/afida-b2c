@@ -24,9 +24,14 @@ class PriceListPdf < Prawn::Document
   FOOTER_LEFT_PADDING = 30
   FOOTER_PAGE_NUMBER_OFFSET = 80
 
+  # Font paths
+  FONT_DIR = Rails.root.join("app/frontend/fonts/fredoka/static")
+  FONT_REGULAR = FONT_DIR.join("Fredoka-Regular.ttf").to_s
+  FONT_BOLD = FONT_DIR.join("Fredoka-Medium.ttf").to_s
+
   # Branding content
-  VALUE_PROPOSITIONS = "Free UK delivery over £100 • Low MOQs • 48-hour delivery"
-  CONTACT_INFO = "afida.com  •  hello@afida.com  •  0203 302 7719"
+  VALUE_PROPOSITIONS = "Free UK delivery over £100 \u2022 Low MOQs \u2022 48-hour delivery"
+  CONTACT_INFO = "afida.com  \u2022  hello@afida.com  \u2022  0203 302 7719"
 
   def initialize(products, filter_description)
     super(
@@ -37,10 +42,21 @@ class PriceListPdf < Prawn::Document
     @products = products
     @filter_description = filter_description
 
+    setup_fonts
     generate
   end
 
   private
+
+  def setup_fonts
+    font_families.update(
+      "Fredoka" => {
+        normal: FONT_REGULAR,
+        bold: FONT_BOLD
+      }
+    )
+    font "Fredoka"
+  end
 
   def generate
     header
