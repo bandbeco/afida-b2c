@@ -58,7 +58,7 @@ gem "prawn", "~> 2.5"
 gem "prawn-table", "~> 0.2"
 
 # Excel generation for price list export [https://github.com/caxlsx/caxlsx]
-gem "caxlsx", "~> 4.1"
+gem "caxlsx", "~> 4.4"
 gem "caxlsx_rails", "~> 0.6"
 
 group :development, :test do
