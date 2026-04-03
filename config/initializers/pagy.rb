@@ -5,10 +5,10 @@ require "pagy"
 require "pagy/toolbox/helpers/series_nav"
 
 # Set default items per page
-Pagy.options[:limit] = 50
+Pagy::OPTIONS[:limit] = 50
 
 # Handle page overflow gracefully (redirect to last page instead of raising error)
-Pagy.options[:overflow] = :last_page
+Pagy::OPTIONS[:overflow] = :last_page
 
 # Include Pagy method in controllers and views
 # Pagy 43.x provides pagy() method through Pagy::Method module
