@@ -126,6 +126,17 @@ class ShopPageFiltersTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "categories param sent as hash-style parameters does not raise TypeError" do
+    # When bots or malformed requests send categories as hash params
+    # e.g. ?categories[0]=hot-cups instead of ?categories[]=hot-cups
+    # Rails parses this as ActionController::Parameters, not an array
+    subcategory = categories(:child_hot_cups)
+
+    get shop_path, params: { categories: { "0" => subcategory.slug } }
+
+    assert_response :success
+  end
+
   test "filtering by brand and category returns intersection" do
     hot_cups = categories(:child_hot_cups)
 

@@ -82,6 +82,7 @@ class Product < ApplicationRecord
   scope :in_categories, ->(category_slugs) {
     return all if category_slugs.blank?
 
+    category_slugs = category_slugs.values if category_slugs.is_a?(ActionController::Parameters)
     slugs = Array(category_slugs).reject(&:blank?)
     return all if slugs.empty?
 
