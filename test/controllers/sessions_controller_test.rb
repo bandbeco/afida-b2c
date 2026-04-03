@@ -148,4 +148,26 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_path
   end
+
+  test "return_to URL is truncated to prevent cookie overflow" do
+    long_param = "x" * 5000
+    get account_url(bypass: long_param)
+
+    assert_redirected_to new_session_path
+    # Should not raise CookieOverflow; stored path must be capped
+  end
+
+  test "return_to stores only path without query string for oversized URLs" do
+    long_param = "x" * 5000
+    get account_url(bypass: long_param)
+
+    # Login after redirect
+    post session_url, params: {
+      email_address: @user.email_address,
+      password: @valid_password
+    }
+
+    # Should redirect to the path without the oversized query string
+    assert_redirected_to account_path
+  end
 end

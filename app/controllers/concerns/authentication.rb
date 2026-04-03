@@ -30,8 +30,15 @@ module Authentication
     end
 
     def request_authentication
-      session[:return_to_after_authenticating] = request.url
+      session[:return_to_after_authenticating] = safe_return_to_url
       redirect_to new_session_path
+    end
+
+    def safe_return_to_url
+      url = request.url
+      return request.path if url.bytesize > 2048
+
+      url
     end
 
     def after_authentication_url
