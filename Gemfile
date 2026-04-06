@@ -59,7 +59,7 @@ gem "prawn-table", "~> 0.2"
 
 # Excel generation for price list export [https://github.com/caxlsx/caxlsx]
 gem "caxlsx", "~> 4.4"
-gem "caxlsx_rails", "~> 0.6"
+gem "caxlsx_rails", "~> 0.7"
 
 group :development, :test do
   # See https://guides.rubyonrails.org/debugging_rails_applications.html#debugging-with-the-debug-gem
