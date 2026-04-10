@@ -84,12 +84,16 @@ module Admin
         :final_cta_heading,
         :final_cta_body,
         :conclusion,
-        :primary_keyword
+        :primary_keyword,
+        *BlogPost::JSONB_ARRAY_FIELDS
       )
 
-      # Parse JSONB fields submitted as JSON text
+      # JSONB fields arrive as JSON strings from textareas. Parse each one,
+      # falling back to [] for blank input. On parse failure, store the error
+      # and assign [] so model validations don't add a redundant "must be an
+      # array" message; the controller error is the only one the user sees.
       BlogPost::JSONB_ARRAY_FIELDS.each do |field|
-        raw = params[:blog_post][field]
+        raw = permitted[field]
         next if raw.nil?
 
         text = raw.to_s.strip
@@ -99,9 +103,7 @@ module Admin
           permitted[field] = JSON.parse(text)
         end
       rescue JSON::ParserError
-        # Assign the raw string so the model validation fails
-        # and we can add a clear error message
-        permitted[field] = raw
+        permitted[field] = []
         @json_parse_errors ||= {}
         @json_parse_errors[field] = "contains invalid JSON"
       end

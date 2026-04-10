@@ -249,6 +249,12 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_not @published_post.structured?
   end
 
+  test "structured? returns false when jsonb fields contain only empty arrays" do
+    post = BlogPost.new(title: "Test", body: "Content")
+    BlogPost::JSONB_ARRAY_FIELDS.each { |f| post[f] = [] }
+    assert_not post.structured?
+  end
+
   test "structured? returns true when intro is present" do
     @published_post.intro = "Welcome to our guide."
     assert @published_post.structured?

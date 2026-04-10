@@ -147,7 +147,8 @@ class BlogPost < ApplicationRecord
     self.published_at = Time.current
   end
 
-  # Ensure JSONB fields are never nil at the model level
+  # Coerces nil to [] for new/unpersisted records where a field is explicitly
+  # set to nil. Persisted records already get [] from the DB default.
   def coerce_jsonb_nils
     JSONB_ARRAY_FIELDS.each do |field|
       self[field] = [] if self[field].nil?
