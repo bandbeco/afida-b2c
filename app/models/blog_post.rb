@@ -11,8 +11,32 @@
 # - SEO fields with fallback to title/excerpt
 # - Cover image for visual appeal on index pages
 # - Optional category for content organization
+# - Structured content fields for templated blog posts (intro, CTAs, FAQ, etc.)
+#
+# Structured content JSONB fields are arrays. Expected shapes:
+#
+#   faq_items:            [{ "question" => "...", "answer" => "..." }]
+#   decision_factors:     [{ "heading" => "...", "body" => "..." }]
+#   buyer_setups:         [{ "heading" => "...", "body" => "...", "image_url" => "..." }]
+#   recommended_options:  [{ "heading" => "...", "body" => "...", "url" => "..." }]
+#   top_cta_buttons:      [{ "label" => "...", "url" => "..." }]
+#   final_cta_buttons:    [{ "label" => "...", "url" => "..." }]
+#   internal_link_targets: [{ "label" => "...", "url" => "..." }]
+#   target_category_slugs, target_collection_slugs, target_product_slugs: ["slug-1", "slug-2"]
+#   secondary_keywords:   ["keyword one", "keyword two"]
 #
 class BlogPost < ApplicationRecord
+  # ==========================================================================
+  # Constants
+  # ==========================================================================
+
+  JSONB_ARRAY_FIELDS = %i[
+    decision_factors buyer_setups recommended_options faq_items
+    top_cta_buttons final_cta_buttons internal_link_targets
+    target_category_slugs target_collection_slugs target_product_slugs
+    secondary_keywords
+  ].freeze
+
   # ==========================================================================
   # Associations
   # ==========================================================================
@@ -34,11 +58,14 @@ class BlogPost < ApplicationRecord
   validates :slug, presence: true, uniqueness: true,
                    format: { with: /\A[a-z0-9-]+\z/, message: "only allows lowercase letters, numbers, and hyphens" }
 
+  validate :jsonb_fields_are_arrays
+
   # ==========================================================================
   # Callbacks
   # ==========================================================================
 
   before_validation :generate_slug
+  before_validation :coerce_jsonb_nils
   before_save :set_published_at
 
   # ==========================================================================
@@ -56,6 +83,12 @@ class BlogPost < ApplicationRecord
   # URL generation uses slug instead of ID
   def to_param
     slug
+  end
+
+  # True when any structured template section has content.
+  # Checks intro as the primary signal, plus all JSONB array fields.
+  def structured?
+    intro.present? || JSONB_ARRAY_FIELDS.any? { |field| self[field].present? }
   end
 
   # Returns excerpt if present, otherwise truncates body (stripped of Markdown)
@@ -91,5 +124,22 @@ class BlogPost < ApplicationRecord
     return unless published_changed? && published? && published_at.nil?
 
     self.published_at = Time.current
+  end
+
+  # Ensure JSONB fields are never nil at the model level
+  def coerce_jsonb_nils
+    JSONB_ARRAY_FIELDS.each do |field|
+      self[field] = [] if self[field].nil?
+    end
+  end
+
+  # Validate that JSONB fields contain arrays, not objects or scalars
+  def jsonb_fields_are_arrays
+    JSONB_ARRAY_FIELDS.each do |field|
+      value = self[field]
+      next if value.is_a?(Array)
+
+      errors.add(field, "must be an array")
+    end
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_20_135249) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_10_113738) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,15 +73,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_135249) do
   create_table "blog_posts", force: :cascade do |t|
     t.bigint "blog_category_id"
     t.text "body", null: false
+    t.text "branding_body"
+    t.string "branding_heading"
+    t.jsonb "buyer_setups", default: [], null: false
+    t.text "conclusion"
     t.datetime "created_at", null: false
+    t.jsonb "decision_factors", default: [], null: false
     t.text "excerpt"
+    t.jsonb "faq_items", default: [], null: false
+    t.text "final_cta_body"
+    t.jsonb "final_cta_buttons", default: [], null: false
+    t.string "final_cta_heading"
+    t.jsonb "internal_link_targets", default: [], null: false
+    t.text "intro"
     t.text "meta_description"
     t.string "meta_title"
     t.string "outrank_id"
+    t.string "primary_keyword"
     t.boolean "published", default: false, null: false
     t.datetime "published_at"
+    t.jsonb "recommended_options", default: [], null: false
+    t.jsonb "secondary_keywords", default: [], null: false
     t.string "slug", null: false
+    t.jsonb "target_category_slugs", default: [], null: false
+    t.jsonb "target_collection_slugs", default: [], null: false
+    t.jsonb "target_product_slugs", default: [], null: false
     t.string "title", null: false
+    t.text "top_cta_body"
+    t.jsonb "top_cta_buttons", default: [], null: false
+    t.string "top_cta_heading"
     t.datetime "updated_at", null: false
     t.index ["blog_category_id"], name: "index_blog_posts_on_blog_category_id"
     t.index ["outrank_id"], name: "index_blog_posts_on_outrank_id", unique: true
