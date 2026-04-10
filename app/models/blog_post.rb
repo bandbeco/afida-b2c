@@ -37,6 +37,14 @@ class BlogPost < ApplicationRecord
     secondary_keywords
   ].freeze
 
+  STRUCTURED_TEXT_FIELDS = %i[
+    intro conclusion
+    top_cta_heading top_cta_body
+    branding_heading branding_body
+    final_cta_heading final_cta_body
+    primary_keyword
+  ].freeze
+
   # ==========================================================================
   # Associations
   # ==========================================================================
@@ -85,10 +93,10 @@ class BlogPost < ApplicationRecord
     slug
   end
 
-  # True when any structured template section has content.
-  # Checks intro as the primary signal, plus all JSONB array fields.
+  # True when any structured template field has content.
   def structured?
-    intro.present? || JSONB_ARRAY_FIELDS.any? { |field| self[field].present? }
+    STRUCTURED_TEXT_FIELDS.any? { |field| self[field].present? } ||
+      JSONB_ARRAY_FIELDS.any? { |field| self[field].present? }
   end
 
   # Returns excerpt if present, otherwise truncates body (stripped of Markdown)

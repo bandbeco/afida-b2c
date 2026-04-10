@@ -211,4 +211,19 @@ class BlogPostTest < ActiveSupport::TestCase
     @published_post.faq_items = [ { "question" => "Why?", "answer" => "Because." } ]
     assert @published_post.structured?
   end
+
+  test "structured? returns true when a CTA field is present" do
+    @published_post.top_cta_heading = "Ready to switch?"
+    assert @published_post.structured?
+  end
+
+  test "structured? returns true when branding fields are present" do
+    @published_post.branding_heading = "Why Afida?"
+    assert @published_post.structured?
+  end
+
+  test "structured? returns true when conclusion is present" do
+    @published_post.conclusion = "Thanks for reading."
+    assert @published_post.structured?
+  end
 end
