@@ -266,4 +266,109 @@ class Admin::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to new_session_path
   end
+
+  # ==========================================================================
+  # Structured Content Fields
+  # ==========================================================================
+
+  test "new form has structured content fields" do
+    get new_admin_blog_post_url, headers: @headers
+
+    assert_response :success
+    assert_select "textarea[name='blog_post[intro]']"
+    assert_select "input[name='blog_post[primary_keyword]']"
+    assert_select "textarea[name='blog_post[faq_items]']"
+    assert_select "textarea[name='blog_post[decision_factors]']"
+  end
+
+  test "create saves simple structured fields" do
+    post admin_blog_posts_url, params: {
+      blog_post: {
+        title: "Structured Post",
+        body: "Body content.",
+        intro: "Welcome to our guide.",
+        primary_keyword: "compostable cups",
+        top_cta_heading: "Ready to switch?",
+        conclusion: "Thanks for reading."
+      }
+    }, headers: @headers
+
+    blog_post = BlogPost.last
+    assert_equal "Welcome to our guide.", blog_post.intro
+    assert_equal "compostable cups", blog_post.primary_keyword
+    assert_equal "Ready to switch?", blog_post.top_cta_heading
+    assert_equal "Thanks for reading.", blog_post.conclusion
+  end
+
+  test "create parses JSON array fields" do
+    faq_json = '[ { "question": "Why?", "answer": "Because." } ]'
+
+    post admin_blog_posts_url, params: {
+      blog_post: {
+        title: "JSON Post",
+        body: "Body content.",
+        faq_items: faq_json,
+        secondary_keywords: '[ "eco", "green" ]'
+      }
+    }, headers: @headers
+
+    blog_post = BlogPost.last
+    assert_equal [ { "question" => "Why?", "answer" => "Because." } ], blog_post.faq_items
+    assert_equal %w[ eco green ], blog_post.secondary_keywords
+  end
+
+  test "create treats blank JSON fields as empty arrays" do
+    post admin_blog_posts_url, params: {
+      blog_post: {
+        title: "Blank JSON Post",
+        body: "Body content.",
+        faq_items: "",
+        decision_factors: "  "
+      }
+    }, headers: @headers
+
+    blog_post = BlogPost.last
+    assert_equal [], blog_post.faq_items
+    assert_equal [], blog_post.decision_factors
+  end
+
+  test "create with invalid JSON re-renders form with error" do
+    assert_no_difference("BlogPost.count") do
+      post admin_blog_posts_url, params: {
+        blog_post: {
+          title: "Bad JSON Post",
+          body: "Body content.",
+          faq_items: "not valid json {"
+        }
+      }, headers: @headers
+    end
+
+    assert_response :unprocessable_entity
+    assert_match(/faq items.*invalid json/i, response.body)
+  end
+
+  test "update saves structured and JSON fields" do
+    faq_json = '[ { "question": "What?", "answer": "This." } ]'
+
+    patch admin_blog_post_url(id: @draft_post.id), params: {
+      blog_post: {
+        intro: "Updated intro.",
+        faq_items: faq_json
+      }
+    }, headers: @headers
+
+    @draft_post.reload
+    assert_equal "Updated intro.", @draft_post.intro
+    assert_equal [ { "question" => "What?", "answer" => "This." } ], @draft_post.faq_items
+  end
+
+  test "update with invalid JSON re-renders form with error" do
+    patch admin_blog_post_url(id: @draft_post.id), params: {
+      blog_post: {
+        faq_items: "broken json ["
+      }
+    }, headers: @headers
+
+    assert_response :unprocessable_entity
+  end
 end

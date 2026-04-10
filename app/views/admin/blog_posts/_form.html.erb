@@ -10,9 +10,11 @@
     </div>
   <% end %>
 
-  <%# Main Content Section %>
+  <%# ================================================================ %>
+  <%# Basic Info %>
+  <%# ================================================================ %>
   <fieldset class="fieldset mt-8">
-    <legend class="fieldset-legend text-2xl font-medium">Content</legend>
+    <legend class="fieldset-legend text-2xl">Content</legend>
 
     <div class="py-4 space-y-4">
       <div>
@@ -47,14 +49,222 @@
           </div>
         <% end %>
         <%= form.file_field :cover_image, accept: "image/*", class: "file-input file-input-bordered w-full" %>
-        <p class="text-sm text-gray-500 mt-1">Recommended size: 1200×630px for optimal display on blog index and social sharing.</p>
+        <p class="text-sm text-gray-500 mt-1">Recommended size: 1200x630px for optimal display on blog index and social sharing.</p>
       </div>
     </div>
   </fieldset>
 
-  <%# Publishing Section %>
+  <%# ================================================================ %>
+  <%# Structured Article Sections %>
+  <%# ================================================================ %>
   <fieldset class="fieldset mt-8">
-    <legend class="fieldset-legend text-2xl font-medium">Publishing</legend>
+    <legend class="fieldset-legend text-2xl">Structured Article Sections</legend>
+    <p class="text-sm text-gray-500 mb-2">These fields power the structured blog template. Leave blank to use the legacy body-only layout.</p>
+
+    <div class="py-4 space-y-4">
+      <div>
+        <%= form.label :intro, "Introduction", class: "label text-base" %>
+        <%= form.text_area :intro, class: "textarea w-full h-32", placeholder: "Opening paragraph for the structured article..." %>
+      </div>
+
+      <div>
+        <%= form.label :primary_keyword, class: "label text-base" %>
+        <%= form.text_field :primary_keyword, class: "input w-full", placeholder: "e.g. compostable coffee cups" %>
+      </div>
+
+      <div>
+        <%= form.label :conclusion, class: "label text-base" %>
+        <%= form.text_area :conclusion, class: "textarea w-full h-32", placeholder: "Closing paragraph summarising the article..." %>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# ================================================================ %>
+  <%# CTA Sections %>
+  <%# ================================================================ %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl">Call-to-Action Sections</legend>
+
+    <div class="py-4 space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= form.label :top_cta_heading, "Top CTA Heading", class: "label text-base" %>
+          <%= form.text_field :top_cta_heading, class: "input w-full", placeholder: "e.g. Ready to switch to compostable?" %>
+        </div>
+        <div>
+          <%= form.label :final_cta_heading, "Final CTA Heading", class: "label text-base" %>
+          <%= form.text_field :final_cta_heading, class: "input w-full", placeholder: "e.g. Get started today" %>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= form.label :top_cta_body, "Top CTA Body", class: "label text-base" %>
+          <%= form.text_area :top_cta_body, class: "textarea w-full h-20", placeholder: "Supporting text for top CTA..." %>
+        </div>
+        <div>
+          <%= form.label :final_cta_body, "Final CTA Body", class: "label text-base" %>
+          <%= form.text_area :final_cta_body, class: "textarea w-full h-20", placeholder: "Supporting text for final CTA..." %>
+        </div>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# ================================================================ %>
+  <%# Branding Section %>
+  <%# ================================================================ %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl">Branding Section</legend>
+
+    <div class="py-4 space-y-4">
+      <div>
+        <%= form.label :branding_heading, class: "label text-base" %>
+        <%= form.text_field :branding_heading, class: "input w-full", placeholder: "e.g. Why Afida?" %>
+      </div>
+
+      <div>
+        <%= form.label :branding_body, class: "label text-base" %>
+        <%= form.text_area :branding_body, class: "textarea w-full h-20", placeholder: "Short branding pitch..." %>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# ================================================================ %>
+  <%# JSON Content Blocks %>
+  <%# ================================================================ %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl">JSON Content Blocks</legend>
+    <p class="text-sm text-gray-500 mb-2">Edit as JSON arrays. Leave empty or use <code>[]</code> for no content.</p>
+
+    <div class="py-4 space-y-6">
+      <%# --- Complex object arrays --- %>
+      <div>
+        <%= form.label :faq_items, "FAQ Items", class: "label text-base" %>
+        <%= form.text_area :faq_items,
+              value: json_field_value(blog_post, :faq_items),
+              class: "textarea w-full h-32 font-mono text-sm",
+              placeholder: '[{ "question": "...", "answer": "..." }]' %>
+        <p class="text-sm text-gray-500 mt-1">Array of objects with <code>question</code> and <code>answer</code> keys.</p>
+      </div>
+
+      <div>
+        <%= form.label :decision_factors, "Decision Factors", class: "label text-base" %>
+        <%= form.text_area :decision_factors,
+              value: json_field_value(blog_post, :decision_factors),
+              class: "textarea w-full h-32 font-mono text-sm",
+              placeholder: '[{ "heading": "...", "body": "..." }]' %>
+        <p class="text-sm text-gray-500 mt-1">Array of objects with <code>heading</code> and <code>body</code> keys.</p>
+      </div>
+
+      <div>
+        <%= form.label :buyer_setups, "Buyer Setups", class: "label text-base" %>
+        <%= form.text_area :buyer_setups,
+              value: json_field_value(blog_post, :buyer_setups),
+              class: "textarea w-full h-32 font-mono text-sm",
+              placeholder: '[{ "title": "...", "best_for": "...", "body": "...", "cta_label": "...", "cta_url": "..." }]' %>
+        <p class="text-sm text-gray-500 mt-1">Array of objects with <code>title</code>, <code>best_for</code>, <code>body</code>, <code>cta_label</code>, and <code>cta_url</code> keys.</p>
+      </div>
+
+      <div>
+        <%= form.label :recommended_options, "Recommended Options", class: "label text-base" %>
+        <%= form.text_area :recommended_options,
+              value: json_field_value(blog_post, :recommended_options),
+              class: "textarea w-full h-32 font-mono text-sm",
+              placeholder: '[{ "heading": "...", "body": "...", "url": "..." }]' %>
+        <p class="text-sm text-gray-500 mt-1">Array of objects with <code>heading</code>, <code>body</code>, and <code>url</code> keys.</p>
+      </div>
+
+      <%# --- CTA button arrays --- %>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <%= form.label :top_cta_buttons, "Top CTA Buttons", class: "label text-base" %>
+          <%= form.text_area :top_cta_buttons,
+                value: json_field_value(blog_post, :top_cta_buttons),
+                class: "textarea w-full h-24 font-mono text-sm",
+                placeholder: '[{ "label": "...", "url": "...", "style": "primary" }]' %>
+          <p class="text-sm text-gray-500 mt-1"><code>label</code>, <code>url</code>, optional <code>style</code>.</p>
+        </div>
+        <div>
+          <%= form.label :final_cta_buttons, "Final CTA Buttons", class: "label text-base" %>
+          <%= form.text_area :final_cta_buttons,
+                value: json_field_value(blog_post, :final_cta_buttons),
+                class: "textarea w-full h-24 font-mono text-sm",
+                placeholder: '[{ "label": "...", "url": "...", "style": "primary" }]' %>
+          <p class="text-sm text-gray-500 mt-1"><code>label</code>, <code>url</code>, optional <code>style</code>.</p>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :internal_link_targets, "Internal Link Targets", class: "label text-base" %>
+        <%= form.text_area :internal_link_targets,
+              value: json_field_value(blog_post, :internal_link_targets),
+              class: "textarea w-full h-24 font-mono text-sm",
+              placeholder: '[{ "label": "...", "url": "..." }]' %>
+        <p class="text-sm text-gray-500 mt-1">Array of objects with <code>label</code> and <code>url</code> keys.</p>
+      </div>
+
+      <%# --- Simple string arrays --- %>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <%= form.label :target_category_slugs, "Target Category Slugs", class: "label text-base" %>
+          <%= form.text_area :target_category_slugs,
+                value: json_field_value(blog_post, :target_category_slugs),
+                class: "textarea w-full h-20 font-mono text-sm",
+                placeholder: '["cups-and-drinks", "food-packaging"]' %>
+        </div>
+        <div>
+          <%= form.label :target_collection_slugs, "Target Collection Slugs", class: "label text-base" %>
+          <%= form.text_area :target_collection_slugs,
+                value: json_field_value(blog_post, :target_collection_slugs),
+                class: "textarea w-full h-20 font-mono text-sm",
+                placeholder: '["vegware", "summer-range"]' %>
+        </div>
+        <div>
+          <%= form.label :target_product_slugs, "Target Product Slugs", class: "label text-base" %>
+          <%= form.text_area :target_product_slugs,
+                value: json_field_value(blog_post, :target_product_slugs),
+                class: "textarea w-full h-20 font-mono text-sm",
+                placeholder: '["8oz-single-wall-cup", "12oz-ripple-cup"]' %>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :secondary_keywords, "Secondary Keywords", class: "label text-base" %>
+        <%= form.text_area :secondary_keywords,
+              value: json_field_value(blog_post, :secondary_keywords),
+              class: "textarea w-full h-20 font-mono text-sm",
+              placeholder: '["eco friendly cups", "biodegradable packaging"]' %>
+        <p class="text-sm text-gray-500 mt-1">Array of keyword strings.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# ================================================================ %>
+  <%# SEO & Sharing %>
+  <%# ================================================================ %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl">SEO & Sharing</legend>
+
+    <div class="py-4 space-y-4">
+      <div>
+        <%= form.label :meta_title, "Meta Title (optional)", class: "label text-base" %>
+        <%= form.text_field :meta_title, class: "input w-full", placeholder: "Custom title for search engines..." %>
+        <p class="text-sm text-gray-500 mt-1">If blank, the post title will be used.</p>
+      </div>
+
+      <div>
+        <%= form.label :meta_description, "Meta Description (optional)", class: "label text-base" %>
+        <%= form.text_area :meta_description, class: "textarea w-full h-20", placeholder: "Brief description for search engine results..." %>
+        <p class="text-sm text-gray-500 mt-1">If blank, the excerpt will be used. Recommended: 150-160 characters.</p>
+      </div>
+    </div>
+  </fieldset>
+
+  <%# ================================================================ %>
+  <%# Publishing %>
+  <%# ================================================================ %>
+  <fieldset class="fieldset mt-8">
+    <legend class="fieldset-legend text-2xl">Publishing</legend>
 
     <div class="py-4 space-y-4">
       <div>
@@ -74,25 +284,6 @@
           <span class="label-text text-base">Published</span>
         </label>
         <p class="text-sm text-gray-500 ml-10">When checked, this post will be visible on the public blog.</p>
-      </div>
-    </div>
-  </fieldset>
-
-  <%# SEO Section %>
-  <fieldset class="fieldset mt-8">
-    <legend class="fieldset-legend text-2xl font-medium">SEO & Sharing</legend>
-
-    <div class="py-4 space-y-4">
-      <div>
-        <%= form.label :meta_title, "Meta Title (optional)", class: "label text-base" %>
-        <%= form.text_field :meta_title, class: "input w-full", placeholder: "Custom title for search engines..." %>
-        <p class="text-sm text-gray-500 mt-1">If blank, the post title will be used.</p>
-      </div>
-
-      <div>
-        <%= form.label :meta_description, "Meta Description (optional)", class: "label text-base" %>
-        <%= form.text_area :meta_description, class: "textarea w-full h-20", placeholder: "Brief description for search engine results..." %>
-        <p class="text-sm text-gray-500 mt-1">If blank, the excerpt will be used. Recommended: 150-160 characters.</p>
       </div>
     </div>
   </fieldset>

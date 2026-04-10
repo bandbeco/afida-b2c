@@ -21,6 +21,16 @@ module AdminHelper
     end
   end
 
+  # Format a JSONB array field as pretty JSON for editing in a text area.
+  # Returns empty string for empty arrays so the placeholder shows through.
+  def json_field_value(record, field)
+    value = record.public_send(field)
+    return "" if value.blank?
+    return value if value.is_a?(String) # Preserve raw input on validation failure
+
+    JSON.pretty_generate(value)
+  end
+
   private
 
   def sort_indicator(direction)
