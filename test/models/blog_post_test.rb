@@ -279,4 +279,11 @@ class BlogPostTest < ActiveSupport::TestCase
     @published_post.conclusion = "Thanks for reading."
     assert @published_post.structured?
   end
+
+  test "structured? returns false when only SEO metadata fields are present" do
+    post = BlogPost.new(title: "Test", body: "Content", primary_keyword: "eco cups")
+    post.secondary_keywords = %w[green sustainable]
+    post.target_category_slugs = %w[cups]
+    assert_not post.structured?
+  end
 end

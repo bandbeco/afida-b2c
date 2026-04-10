@@ -265,6 +265,35 @@ class SeoHelperTest < ActionView::TestCase
     assert data["logo"].start_with?("http"), "Logo URL must be absolute, got: #{data['logo']}"
   end
 
+  # FAQ structured data tests
+  test "faq_structured_data generates FAQPage schema" do
+    faq_items = [
+      { "question" => "Is it compostable?", "answer" => "Yes, certified to EN 13432." },
+      { "question" => "What sizes?", "answer" => "8oz, 12oz, and 16oz." }
+    ]
+
+    json = faq_structured_data(faq_items)
+    data = JSON.parse(json)
+
+    assert_equal "https://schema.org", data["@context"]
+    assert_equal "FAQPage", data["@type"]
+    assert_equal 2, data["mainEntity"].length
+
+    first = data["mainEntity"].first
+    assert_equal "Question", first["@type"]
+    assert_equal "Is it compostable?", first["name"]
+    assert_equal "Answer", first["acceptedAnswer"]["@type"]
+    assert_equal "Yes, certified to EN 13432.", first["acceptedAnswer"]["text"]
+  end
+
+  test "faq_structured_data handles empty array" do
+    json = faq_structured_data([])
+    data = JSON.parse(json)
+
+    assert_equal "FAQPage", data["@type"]
+    assert_equal [], data["mainEntity"]
+  end
+
   # Canonical URL tests
   test "canonical_url strips query parameters by default" do
     # Simulate a request with query params

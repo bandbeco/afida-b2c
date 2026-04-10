@@ -25,22 +25,22 @@
 
   <%# Article Structured Data %>
   <script type="application/ld+json">
-    <%= raw blog_post_structured_data(@blog_post) %>
+    <%= raw json_escape(blog_post_structured_data(@blog_post)) %>
   </script>
 
   <%# Breadcrumb Structured Data %>
   <script type="application/ld+json">
-    <%= raw breadcrumb_structured_data([
+    <%= raw json_escape(breadcrumb_structured_data([
       { name: "Home", url: root_url },
       { name: "Blog", url: blog_posts_url },
       { name: @blog_post.title, url: blog_post_url(@blog_post) }
-    ]) %>
+    ])) %>
   </script>
 
   <% if @blog_post.faq_items.present? %>
     <%# FAQ Structured Data (Schema.org FAQPage) %>
     <script type="application/ld+json">
-      <%= raw faq_structured_data(@blog_post.faq_items) %>
+      <%= raw json_escape(faq_structured_data(@blog_post.faq_items)) %>
     </script>
   <% end %>
 <% end %>

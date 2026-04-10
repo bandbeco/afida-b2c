@@ -8,8 +8,10 @@
   <% if buttons.present? %>
     <div class="flex flex-wrap gap-3">
       <% buttons.each do |button| %>
-        <%= link_to button["label"], button["url"],
-              class: "inline-block px-5 py-2.5 text-sm text-white bg-primary rounded-lg hover:bg-primary-focus transition-colors" %>
+        <% if button["label"].present? && button["url"].present? %>
+          <%= link_to button["label"], button["url"],
+                class: "inline-block px-5 py-2.5 text-sm text-white bg-primary rounded-lg hover:bg-primary-focus transition-colors" %>
+        <% end %>
       <% end %>
     </div>
   <% end %>

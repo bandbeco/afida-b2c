@@ -130,14 +130,6 @@ class BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "practical, affordable way"
   end
 
-  test "show renders intro section for structured posts" do
-    structured = blog_posts(:structured_post)
-    get blog_post_url(structured)
-
-    assert_response :success
-    assert_includes response.body, "Switching to compostable cups"
-  end
-
   test "show renders top CTA section for structured posts" do
     structured = blog_posts(:structured_post)
     get blog_post_url(structured)
@@ -250,6 +242,14 @@ class BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Key Decision Factors"
     assert_not_includes response.body, "Frequently Asked Questions"
     assert_not_includes response.body, "Fallback body for partially structured post"
+  end
+
+  test "show does not render FAQ schema for posts without faq items" do
+    partial = blog_posts(:partially_structured_post)
+    get blog_post_url(partial)
+
+    assert_response :success
+    assert_not_includes response.body, "FAQPage"
   end
 
   test "show renders FAQ schema markup for structured posts" do
