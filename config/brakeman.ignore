@@ -11,8 +11,12 @@
     {
       "fingerprint": "d83a0aa6c7873157690195dfab388a67e4a2baf5c020f0a1d1ea5b76cfaa095a",
       "note": "False positive: JSON-LD structured data output via .to_json inside script tag"
+    },
+    {
+      "fingerprint": "1d68964ff5f42f0957a04449ceaed69dca8e65dde6932075fb45efc38bf61846",
+      "note": "False positive: JSON-LD structured data output via .to_json inside script tag"
     }
   ],
-  "updated": "2026-03-05",
-  "brakeman_version": "7.1.1"
+  "updated": "2026-04-10",
+  "brakeman_version": "8.0.4"
 }
