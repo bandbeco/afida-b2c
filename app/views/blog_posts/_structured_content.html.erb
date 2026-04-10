@@ -24,7 +24,7 @@
     <h2 class="text-xl md:text-2xl text-gray-900 mb-6">Key Decision Factors</h2>
     <div class="space-y-5">
       <% blog_post.decision_factors.each do |factor| %>
-        <div class="border-l-2 border-primary pl-5">
+        <div>
           <h3 class="text-lg text-gray-900 mb-1"><%= factor["heading"] %></h3>
           <p class="text-gray-700 leading-relaxed"><%= factor["body"] %></p>
         </div>
@@ -39,9 +39,9 @@
     <h2 class="text-xl md:text-2xl text-gray-900 mb-6">Which Setup Fits You?</h2>
     <div class="space-y-4">
       <% blog_post.buyer_setups.each do |setup| %>
-        <div class="border-l-2 border-gray-300 pl-5 py-1">
+        <div>
           <h3 class="text-lg text-gray-900 mb-1"><%= setup["title"] %></h3>
-          <p class="text-sm text-primary mb-2"><%= setup["best_for"] %></p>
+          <p class="text-sm text-gray-900 mb-2">Best for: <%= setup["best_for"] %></p>
           <p class="text-gray-700 leading-relaxed mb-3"><%= setup["body"] %></p>
           <% if setup["cta_label"].present? && setup["cta_url"].present? %>
             <%= link_to setup["cta_label"], setup["cta_url"],
