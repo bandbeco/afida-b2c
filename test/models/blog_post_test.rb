@@ -187,6 +187,53 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_includes post.errors[:secondary_keywords], "must be an array"
   end
 
+  # ==========================================================================
+  # Structured Content - JSONB Shape Validation
+  # ==========================================================================
+
+  test "faq_items rejects items missing required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: [ { "question" => "Why?" } ])
+    assert_not post.valid?
+    assert post.errors[:faq_items].any? { |e| e.include?("missing required keys: answer") }
+  end
+
+  test "faq_items accepts items with all required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: [ { "question" => "Why?", "answer" => "Because." } ])
+    assert post.valid?
+  end
+
+  test "buyer_setups rejects items missing required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", buyer_setups: [ { "title" => "Budget" } ])
+    assert_not post.valid?
+    assert post.errors[:buyer_setups].any? { |e| e.include?("missing required keys") }
+  end
+
+  test "top_cta_buttons rejects items missing required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", top_cta_buttons: [ { "label" => "Click" } ])
+    assert_not post.valid?
+    assert post.errors[:top_cta_buttons].any? { |e| e.include?("missing required keys: url") }
+  end
+
+  test "object array fields reject non-hash items" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: [ "just a string" ])
+    assert_not post.valid?
+    assert post.errors[:faq_items].any? { |e| e.include?("must be an object") }
+  end
+
+  test "object array fields allow extra keys beyond required ones" do
+    post = BlogPost.new(
+      title: "Test",
+      body: "Content",
+      top_cta_buttons: [ { "label" => "Go", "url" => "/shop", "style" => "primary" } ]
+    )
+    assert post.valid?
+  end
+
+  test "string array fields skip shape validation" do
+    post = BlogPost.new(title: "Test", body: "Content", secondary_keywords: %w[ eco green ])
+    assert post.valid?
+  end
+
   test "coerce_jsonb_nils converts nil to empty array before validation" do
     post = BlogPost.new(title: "Test", body: "Content")
     post.faq_items = nil

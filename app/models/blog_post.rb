@@ -45,6 +45,18 @@ class BlogPost < ApplicationRecord
     primary_keyword
   ].freeze
 
+  # Required keys for JSONB object-array fields. Fields not listed here
+  # contain simple strings and only get the array-of-strings check.
+  JSONB_REQUIRED_KEYS = {
+    faq_items: %w[question answer],
+    decision_factors: %w[heading body],
+    buyer_setups: %w[title best_for body cta_label cta_url],
+    recommended_options: %w[heading body url],
+    top_cta_buttons: %w[label url],
+    final_cta_buttons: %w[label url],
+    internal_link_targets: %w[label url]
+  }.freeze
+
   # ==========================================================================
   # Associations
   # ==========================================================================
@@ -67,6 +79,7 @@ class BlogPost < ApplicationRecord
                    format: { with: /\A[a-z0-9-]+\z/, message: "only allows lowercase letters, numbers, and hyphens" }
 
   validate :jsonb_fields_are_arrays
+  validate :jsonb_object_shapes
 
   # ==========================================================================
   # Callbacks
@@ -148,6 +161,27 @@ class BlogPost < ApplicationRecord
       next if value.is_a?(Array)
 
       errors.add(field, "must be an array")
+    end
+  end
+
+  # Validate that object-array JSONB fields have the expected keys.
+  # Skips fields that already failed the array check.
+  def jsonb_object_shapes
+    JSONB_REQUIRED_KEYS.each do |field, required_keys|
+      items = self[field]
+      next unless items.is_a?(Array)
+
+      items.each_with_index do |item, index|
+        unless item.is_a?(Hash)
+          errors.add(field, "item #{index + 1} must be an object")
+          next
+        end
+
+        missing = required_keys - item.keys
+        if missing.any?
+          errors.add(field, "item #{index + 1} is missing required keys: #{missing.join(', ')}")
+        end
+      end
     end
   end
 end
