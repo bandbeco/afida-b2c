@@ -148,6 +148,15 @@ module Api
           assert response.parsed_body["errors"]["faq_items"].present?
         end
 
+        test "create returns 400 for invalid JSON body" do
+          post api_internal_v1_blog_posts_url,
+            params: "this is not json{{{",
+            headers: auth_headers.merge("Content-Type" => "application/json")
+
+          assert_response :bad_request
+          assert_equal "Invalid JSON body", response.parsed_body["error"]
+        end
+
         test "create returns 422 for jsonb items missing required keys" do
           post api_internal_v1_blog_posts_url,
             params: { title: "Test", body: "Content", faq_items: [ { question: "Why?" } ] },
@@ -190,12 +199,14 @@ module Api
           assert_equal @published_post.title, response.parsed_body["data"]["title"]
         end
 
-        test "show finds post with numeric slug by slug not id" do
-          numeric_slug_post = BlogPost.create!(title: "Numeric Slug Post", slug: "123", body: "Content.")
-          get api_internal_v1_blog_post_url("123"), headers: auth_headers
+        test "show prefers slug over id for numeric lookup" do
+          other_post = BlogPost.create!(title: "Other Post", slug: "other-post", body: "Content.")
+          numeric_slug_post = BlogPost.create!(title: "Numeric Slug Post", slug: other_post.id.to_s, body: "Content.")
+          get api_internal_v1_blog_post_url(other_post.id.to_s), headers: auth_headers
 
           assert_response :ok
-          assert_equal numeric_slug_post.id, response.parsed_body["data"]["id"]
+          assert_equal numeric_slug_post.id, response.parsed_body["data"]["id"],
+            "Should find post by slug, not by id"
         end
 
         test "show returns all structured fields" do
@@ -271,6 +282,28 @@ module Api
           data = response.parsed_body["data"]
           assert_equal 1, data.length
           assert_equal "100% Compostable Cups", data.first["title"]
+        end
+
+        test "index clamps page to minimum of 1" do
+          get api_internal_v1_blog_posts_url, params: { page: 0 }, headers: auth_headers
+
+          assert_response :ok
+          assert_equal 1, response.parsed_body["meta"]["page"]
+        end
+
+        test "index clamps negative page to 1" do
+          get api_internal_v1_blog_posts_url, params: { page: -5 }, headers: auth_headers
+
+          assert_response :ok
+          assert_equal 1, response.parsed_body["meta"]["page"]
+        end
+
+        test "index ignores invalid published filter values" do
+          get api_internal_v1_blog_posts_url, params: { published: "yes" }, headers: auth_headers
+
+          assert_response :ok
+          total_posts = BlogPost.count
+          assert_equal total_posts, response.parsed_body["meta"]["total"]
         end
 
         test "index paginates results" do
