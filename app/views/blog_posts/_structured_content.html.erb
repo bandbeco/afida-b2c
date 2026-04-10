@@ -41,7 +41,7 @@
       <% blog_post.buyer_setups.each do |setup| %>
         <div>
           <h3 class="text-lg text-gray-900 mb-1"><%= setup["title"] %></h3>
-          <p class="text-sm text-gray-900 mb-2">Best for: <%= setup["best_for"] %></p>
+          <p class="text-gray-900 mb-2">Best for: <%= setup["best_for"] %></p>
           <p class="text-gray-700 leading-relaxed mb-3"><%= setup["body"] %></p>
           <% if setup["cta_label"].present? && setup["cta_url"].present? %>
             <%= link_to setup["cta_label"], setup["cta_url"],
