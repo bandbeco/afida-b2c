@@ -128,3 +128,14 @@ structured_post:
   final_cta_body: "Join hundreds of UK cafes already using Afida compostable cups."
   final_cta_buttons: <%= [{"label" => "Browse All Cups", "url" => "/collections/cups"}, {"label" => "Contact Sales", "url" => "/contact"}].to_json %>
   conclusion: "Compostable coffee cups are a practical, affordable way to reduce your cafe's environmental footprint. Whether you are a high-volume chain or a small independent, there is an option that fits your needs and budget."
+
+partially_structured_post:
+  title: "Why Compostable Packaging Matters"
+  slug: "why-compostable-packaging-matters"
+  body: "Fallback body for partially structured post."
+  excerpt: "A short intro to compostable packaging."
+  published: true
+  published_at: <%= 2.days.ago %>
+  blog_category: guides
+  intro: "Compostable packaging is gaining traction across the UK food service industry."
+  conclusion: "Making the switch is easier than you think."

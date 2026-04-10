@@ -37,7 +37,7 @@
     ]) %>
   </script>
 
-  <% if @blog_post.structured? && @blog_post.faq_items.present? %>
+  <% if @blog_post.faq_items.present? %>
     <%# FAQ Structured Data (Schema.org FAQPage) %>
     <script type="application/ld+json">
       <%= raw faq_structured_data(@blog_post.faq_items) %>

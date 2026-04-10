@@ -240,6 +240,18 @@ class BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/meta.*description.*#{Regexp.escape(structured.meta_description[0..20])}/, response.body)
   end
 
+  test "show renders partially structured post with only intro and conclusion" do
+    partial = blog_posts(:partially_structured_post)
+    get blog_post_url(partial)
+
+    assert_response :success
+    assert_includes response.body, "gaining traction across the UK"
+    assert_includes response.body, "easier than you think"
+    assert_not_includes response.body, "Key Decision Factors"
+    assert_not_includes response.body, "Frequently Asked Questions"
+    assert_not_includes response.body, "Fallback body for partially structured post"
+  end
+
   test "show renders FAQ schema markup for structured posts" do
     structured = blog_posts(:structured_post)
     get blog_post_url(structured)
