@@ -11,8 +11,52 @@
 # - SEO fields with fallback to title/excerpt
 # - Cover image for visual appeal on index pages
 # - Optional category for content organization
+# - Structured content fields for templated blog posts (intro, CTAs, FAQ, etc.)
+#
+# Structured content JSONB fields are arrays. Expected shapes:
+#
+#   faq_items:            [{ "question" => "...", "answer" => "..." }]
+#   decision_factors:     [{ "heading" => "...", "body" => "..." }]
+#   buyer_setups:         [{ "title" => "...", "best_for" => "...", "body" => "...", "cta_label" => "...", "cta_url" => "..." }]
+#   recommended_options:  [{ "heading" => "...", "body" => "...", "url" => "..." }]
+#   top_cta_buttons:      [{ "label" => "...", "url" => "..." }]
+#   final_cta_buttons:    [{ "label" => "...", "url" => "..." }]
+#   internal_link_targets: [{ "label" => "...", "url" => "..." }]
+#   target_category_slugs, target_collection_slugs, target_product_slugs: ["slug-1", "slug-2"]
+#   secondary_keywords:   ["keyword one", "keyword two"]
 #
 class BlogPost < ApplicationRecord
+  # ==========================================================================
+  # Constants
+  # ==========================================================================
+
+  JSONB_ARRAY_FIELDS = %i[
+    decision_factors buyer_setups recommended_options faq_items
+    top_cta_buttons final_cta_buttons internal_link_targets
+    target_category_slugs target_collection_slugs target_product_slugs
+    secondary_keywords
+  ].freeze
+
+  STRUCTURED_TEXT_FIELDS = %i[
+    intro conclusion
+    top_cta_heading top_cta_body
+    branding_heading branding_body
+    final_cta_heading final_cta_body
+    primary_keyword
+  ].freeze
+
+  # Required keys for JSONB object-array fields. Fields not listed here
+  # contain simple strings and only get the array-of-strings check.
+  JSONB_REQUIRED_KEYS = {
+    faq_items: %w[question answer],
+    decision_factors: %w[heading body],
+    buyer_setups: %w[title best_for body cta_label cta_url],
+    recommended_options: %w[heading body url],
+    top_cta_buttons: %w[label url],
+    final_cta_buttons: %w[label url],
+    internal_link_targets: %w[label url]
+  }.freeze
+
   # ==========================================================================
   # Associations
   # ==========================================================================
@@ -34,11 +78,15 @@ class BlogPost < ApplicationRecord
   validates :slug, presence: true, uniqueness: true,
                    format: { with: /\A[a-z0-9-]+\z/, message: "only allows lowercase letters, numbers, and hyphens" }
 
+  validate :jsonb_fields_are_arrays
+  validate :jsonb_object_shapes
+
   # ==========================================================================
   # Callbacks
   # ==========================================================================
 
   before_validation :generate_slug
+  before_validation :coerce_jsonb_nils
   before_save :set_published_at
 
   # ==========================================================================
@@ -56,6 +104,12 @@ class BlogPost < ApplicationRecord
   # URL generation uses slug instead of ID
   def to_param
     slug
+  end
+
+  # True when any structured template field has content.
+  def structured?
+    STRUCTURED_TEXT_FIELDS.any? { |field| self[field].present? } ||
+      JSONB_ARRAY_FIELDS.any? { |field| self[field].present? }
   end
 
   # Returns excerpt if present, otherwise truncates body (stripped of Markdown)
@@ -91,5 +145,44 @@ class BlogPost < ApplicationRecord
     return unless published_changed? && published? && published_at.nil?
 
     self.published_at = Time.current
+  end
+
+  # Coerces nil to [] for new/unpersisted records where a field is explicitly
+  # set to nil. Persisted records already get [] from the DB default.
+  def coerce_jsonb_nils
+    JSONB_ARRAY_FIELDS.each do |field|
+      self[field] = [] if self[field].nil?
+    end
+  end
+
+  # Validate that JSONB fields contain arrays, not objects or scalars
+  def jsonb_fields_are_arrays
+    JSONB_ARRAY_FIELDS.each do |field|
+      value = self[field]
+      next if value.is_a?(Array)
+
+      errors.add(field, "must be an array")
+    end
+  end
+
+  # Validate that object-array JSONB fields have the expected keys.
+  # Skips fields that already failed the array check.
+  def jsonb_object_shapes
+    JSONB_REQUIRED_KEYS.each do |field, required_keys|
+      items = self[field]
+      next unless items.is_a?(Array)
+
+      items.each_with_index do |item, index|
+        unless item.is_a?(Hash)
+          errors.add(field, "item #{index + 1} must be an object")
+          next
+        end
+
+        missing = required_keys - item.keys
+        if missing.any?
+          errors.add(field, "item #{index + 1} is missing required keys: #{missing.join(', ')}")
+        end
+      end
+    end
   end
 end

@@ -150,4 +150,133 @@ class BlogPostTest < ActiveSupport::TestCase
   test "meta_description_with_fallback returns excerpt_with_fallback when meta_description is blank" do
     assert_equal @draft_post.excerpt_with_fallback, @draft_post.meta_description_with_fallback
   end
+
+  # ==========================================================================
+  # Structured Content - JSONB Fields
+  # ==========================================================================
+
+  test "jsonb array fields default to empty arrays" do
+    post = BlogPost.new(title: "Test", body: "Content")
+    BlogPost::JSONB_ARRAY_FIELDS.each do |field|
+      assert_equal [], post[field], "Expected #{field} to default to []"
+    end
+  end
+
+  test "jsonb fields reject non-array values" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: { "bad" => "data" })
+    assert_not post.valid?
+    assert_includes post.errors[:faq_items], "must be an array"
+  end
+
+  test "jsonb fields accept arrays" do
+    post = BlogPost.new(
+      title: "Test",
+      body: "Content",
+      faq_items: [ { "question" => "Why?", "answer" => "Because." } ],
+      decision_factors: [ { "heading" => "Cost", "body" => "Affordable" } ],
+      secondary_keywords: %w[eco green]
+    )
+    assert post.valid?
+    assert_equal 1, post.faq_items.length
+    assert_equal %w[eco green], post.secondary_keywords
+  end
+
+  test "jsonb fields reject scalar values" do
+    post = BlogPost.new(title: "Test", body: "Content", secondary_keywords: "not an array")
+    assert_not post.valid?
+    assert_includes post.errors[:secondary_keywords], "must be an array"
+  end
+
+  # ==========================================================================
+  # Structured Content - JSONB Shape Validation
+  # ==========================================================================
+
+  test "faq_items rejects items missing required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: [ { "question" => "Why?" } ])
+    assert_not post.valid?
+    assert post.errors[:faq_items].any? { |e| e.include?("missing required keys: answer") }
+  end
+
+  test "faq_items accepts items with all required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: [ { "question" => "Why?", "answer" => "Because." } ])
+    assert post.valid?
+  end
+
+  test "buyer_setups rejects items missing required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", buyer_setups: [ { "title" => "Budget" } ])
+    assert_not post.valid?
+    assert post.errors[:buyer_setups].any? { |e| e.include?("missing required keys") }
+  end
+
+  test "top_cta_buttons rejects items missing required keys" do
+    post = BlogPost.new(title: "Test", body: "Content", top_cta_buttons: [ { "label" => "Click" } ])
+    assert_not post.valid?
+    assert post.errors[:top_cta_buttons].any? { |e| e.include?("missing required keys: url") }
+  end
+
+  test "object array fields reject non-hash items" do
+    post = BlogPost.new(title: "Test", body: "Content", faq_items: [ "just a string" ])
+    assert_not post.valid?
+    assert post.errors[:faq_items].any? { |e| e.include?("must be an object") }
+  end
+
+  test "object array fields allow extra keys beyond required ones" do
+    post = BlogPost.new(
+      title: "Test",
+      body: "Content",
+      top_cta_buttons: [ { "label" => "Go", "url" => "/shop", "style" => "primary" } ]
+    )
+    assert post.valid?
+  end
+
+  test "string array fields skip shape validation" do
+    post = BlogPost.new(title: "Test", body: "Content", secondary_keywords: %w[ eco green ])
+    assert post.valid?
+  end
+
+  test "coerce_jsonb_nils converts nil to empty array before validation" do
+    post = BlogPost.new(title: "Test", body: "Content")
+    post.faq_items = nil
+    post.valid?
+    assert_equal [], post.faq_items
+  end
+
+  # ==========================================================================
+  # Structured Content - structured? Helper
+  # ==========================================================================
+
+  test "structured? returns false for legacy posts" do
+    assert_not @published_post.structured?
+  end
+
+  test "structured? returns false when jsonb fields contain only empty arrays" do
+    post = BlogPost.new(title: "Test", body: "Content")
+    BlogPost::JSONB_ARRAY_FIELDS.each { |f| post[f] = [] }
+    assert_not post.structured?
+  end
+
+  test "structured? returns true when intro is present" do
+    @published_post.intro = "Welcome to our guide."
+    assert @published_post.structured?
+  end
+
+  test "structured? returns true when any jsonb array field is populated" do
+    @published_post.faq_items = [ { "question" => "Why?", "answer" => "Because." } ]
+    assert @published_post.structured?
+  end
+
+  test "structured? returns true when a CTA field is present" do
+    @published_post.top_cta_heading = "Ready to switch?"
+    assert @published_post.structured?
+  end
+
+  test "structured? returns true when branding fields are present" do
+    @published_post.branding_heading = "Why Afida?"
+    assert @published_post.structured?
+  end
+
+  test "structured? returns true when conclusion is present" do
+    @published_post.conclusion = "Thanks for reading."
+    assert @published_post.structured?
+  end
 end
