@@ -232,6 +232,23 @@ module SeoHelper
     data.to_json
   end
 
+  def faq_structured_data(faq_items)
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": faq_items.map do |item|
+        {
+          "@type": "Question",
+          "name": item["question"],
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": item["answer"]
+          }
+        }
+      end
+    }.to_json
+  end
+
   def breadcrumb_structured_data(items)
     {
       "@context": "https://schema.org",

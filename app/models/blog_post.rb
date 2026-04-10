@@ -45,6 +45,21 @@ class BlogPost < ApplicationRecord
     primary_keyword
   ].freeze
 
+  # Fields that produce visible content in the structured partial.
+  # Used by structured? to avoid false positives from SEO-only metadata
+  # like primary_keyword, secondary_keywords, or target slugs.
+  STRUCTURED_CONTENT_TEXT_FIELDS = %i[
+    intro conclusion
+    top_cta_heading top_cta_body
+    branding_heading branding_body
+    final_cta_heading final_cta_body
+  ].freeze
+
+  STRUCTURED_CONTENT_JSONB_FIELDS = %i[
+    decision_factors buyer_setups recommended_options faq_items
+    top_cta_buttons final_cta_buttons
+  ].freeze
+
   # Required keys for JSONB object-array fields. Fields not listed here
   # contain simple strings and only get the array-of-strings check.
   JSONB_REQUIRED_KEYS = {
@@ -106,10 +121,13 @@ class BlogPost < ApplicationRecord
     slug
   end
 
-  # True when any structured template field has content.
+  # True when any structured content field that produces visible output
+  # in the structured partial has content. SEO-only metadata fields
+  # (primary_keyword, secondary_keywords, target slugs) are excluded
+  # to avoid rendering an empty structured layout.
   def structured?
-    STRUCTURED_TEXT_FIELDS.any? { |field| self[field].present? } ||
-      JSONB_ARRAY_FIELDS.any? { |field| self[field].present? }
+    STRUCTURED_CONTENT_TEXT_FIELDS.any? { |field| self[field].present? } ||
+      STRUCTURED_CONTENT_JSONB_FIELDS.any? { |field| self[field].present? }
   end
 
   # Returns excerpt if present, otherwise truncates body (stripped of Markdown)

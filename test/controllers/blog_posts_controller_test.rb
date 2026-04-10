@@ -116,4 +116,148 @@ class BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, blog_posts_path
   end
+
+  # ==========================================================================
+  # Show Action - Structured Posts
+  # ==========================================================================
+
+  test "show renders structured layout for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "Switching to compostable cups"
+    assert_includes response.body, "practical, affordable way"
+  end
+
+  test "show renders top CTA section for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, structured.top_cta_heading
+    assert_includes response.body, structured.top_cta_body
+    assert_includes response.body, "Shop Compostable Cups"
+    assert_includes response.body, "/collections/compostable-cups"
+  end
+
+  test "show renders decision factors for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "Material"
+    assert_includes response.body, "PLA-lined cups"
+    assert_includes response.body, "Size Range"
+  end
+
+  test "show renders buyer setups for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "High-Volume Cafe"
+    assert_includes response.body, "Cafes serving 200+ cups per day"
+    assert_includes response.body, "View Bulk Options"
+  end
+
+  test "show renders recommended options for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "Afida Classic PLA Cup"
+    assert_includes response.body, "/products/afida-classic-pla-cup"
+  end
+
+  test "show renders branding section for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, structured.branding_heading
+    assert_includes response.body, structured.branding_body
+  end
+
+  test "show renders FAQ items for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "Are PLA cups really compostable?"
+    assert_includes response.body, "EN 13432"
+    assert_includes response.body, "Can I print my logo"
+  end
+
+  test "show renders final CTA for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, structured.final_cta_heading
+    assert_includes response.body, "Browse All Cups"
+    assert_includes response.body, "/collections/cups"
+  end
+
+  test "show renders conclusion for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "practical, affordable way"
+  end
+
+  test "show does not render legacy body for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_not_includes response.body, "Fallback body content for structured post"
+  end
+
+  test "show still renders legacy body for non-structured posts" do
+    get blog_post_url(@published_post)
+
+    assert_response :success
+    assert_includes response.body, "eco-friendly packaging"
+    assert_not @published_post.structured?
+  end
+
+  test "show preserves SEO meta tags for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, structured.meta_title
+    assert_match(/meta.*description.*#{Regexp.escape(structured.meta_description[0..20])}/, response.body)
+  end
+
+  test "show renders partially structured post with only intro and conclusion" do
+    partial = blog_posts(:partially_structured_post)
+    get blog_post_url(partial)
+
+    assert_response :success
+    assert_includes response.body, "gaining traction across the UK"
+    assert_includes response.body, "easier than you think"
+    assert_not_includes response.body, "Key Decision Factors"
+    assert_not_includes response.body, "Frequently Asked Questions"
+    assert_not_includes response.body, "Fallback body for partially structured post"
+  end
+
+  test "show does not render FAQ schema for posts without faq items" do
+    partial = blog_posts(:partially_structured_post)
+    get blog_post_url(partial)
+
+    assert_response :success
+    assert_not_includes response.body, "FAQPage"
+  end
+
+  test "show renders FAQ schema markup for structured posts" do
+    structured = blog_posts(:structured_post)
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert_includes response.body, "FAQPage"
+    assert_includes response.body, "Are PLA cups really compostable?"
+  end
 end
