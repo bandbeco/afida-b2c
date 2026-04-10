@@ -6,8 +6,8 @@
   "author": "Laurent Curau <github@lqro.slmail.me>",
   "license": "MIT",
   "devDependencies": {
-    "@tailwindcss/vite": "^4.1.7",
-    "tailwindcss": "^4.1.7",
+    "@tailwindcss/vite": "^4.2.2",
+    "tailwindcss": "^4.2.2",
     "vite": "^8.0.3",
     "vite-plugin-full-reload": "^1.2.0",
     "vite-plugin-ruby": "^5.2.1"
