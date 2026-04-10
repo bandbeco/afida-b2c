@@ -194,6 +194,14 @@ module Api
           assert_equal @published_post.title, response.parsed_body["data"]["title"]
         end
 
+        test "show finds post with numeric slug by slug not id" do
+          numeric_slug_post = BlogPost.create!(title: "Numeric Slug Post", slug: "123", body: "Content.")
+          get api_internal_v1_blog_post_url("123"), headers: auth_headers
+
+          assert_response :ok
+          assert_equal numeric_slug_post.id, response.parsed_body["data"]["id"]
+        end
+
         test "show returns all structured fields" do
           get api_internal_v1_blog_post_url(@draft_post.id), headers: auth_headers
 
@@ -257,6 +265,16 @@ module Api
           assert_response :ok
           data = response.parsed_body["data"]
           assert data.any? { |p| p["title"].include?("Eco-Friendly") }
+        end
+
+        test "index search handles LIKE wildcard characters literally" do
+          BlogPost.create!(title: "100% Compostable Cups", body: "Content.", slug: "compostable-cups")
+          get api_internal_v1_blog_posts_url, params: { q: "100%" }, headers: auth_headers
+
+          assert_response :ok
+          data = response.parsed_body["data"]
+          assert_equal 1, data.length
+          assert_equal "100% Compostable Cups", data.first["title"]
         end
 
         test "index paginates results" do
@@ -333,6 +351,17 @@ module Api
             as: :json
 
           assert_response :not_found
+        end
+
+        test "update allows modifying a published post" do
+          patch api_internal_v1_blog_post_url(@published_post.id),
+            params: { intro: "Updated intro for published post." },
+            headers: auth_headers,
+            as: :json
+
+          assert_response :ok
+          assert_equal "Updated intro for published post.", @published_post.reload.intro
+          assert_equal true, @published_post.published?, "published status should remain unchanged"
         end
 
         test "update prevents changing published to true" do

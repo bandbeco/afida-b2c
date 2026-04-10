@@ -29,7 +29,7 @@ module Api
 
           posts = posts.where(published: params[:published] == "true") if params[:published].present?
           posts = posts.where(blog_category_id: params[:category_id]) if params[:category_id].present?
-          posts = posts.where("title ILIKE ?", "%#{params[:q]}%") if params[:q].present?
+          posts = posts.where("title ILIKE ?", "%#{BlogPost.sanitize_sql_like(params[:q])}%") if params[:q].present?
 
           page = (params[:page] || 1).to_i
           per_page = (params[:per_page] || 25).to_i.clamp(1, 100)
@@ -45,7 +45,7 @@ module Api
         # PATCH /api/internal/v1/blog_posts/:id_or_slug
         def update
           update_params = blog_post_params
-          update_params.delete(:published)
+          update_params.delete("published")
 
           if @blog_post.update(update_params)
             render json: { data: serialize_full(@blog_post) }
@@ -58,11 +58,7 @@ module Api
 
         def set_blog_post
           id_or_slug = params[:id_or_slug]
-          @blog_post = if id_or_slug.match?(/\A\d+\z/)
-            BlogPost.find_by(id: id_or_slug)
-          else
-            BlogPost.find_by(slug: id_or_slug)
-          end
+          @blog_post = BlogPost.find_by(id: id_or_slug) || BlogPost.find_by(slug: id_or_slug)
 
           render json: { error: "Not found" }, status: :not_found unless @blog_post
         end
@@ -79,7 +75,12 @@ module Api
 
           # Extract JSONB array fields from the parsed JSON body directly,
           # bypassing strong parameters so the model can validate their shape.
-          json_body = request.body.rewind && JSON.parse(request.body.read) rescue {}
+          json_body = begin
+            request.body.rewind
+            JSON.parse(request.body.read)
+          rescue JSON::ParserError
+            {}
+          end
           jsonb_fields = {}
           BlogPost::JSONB_ARRAY_FIELDS.each do |field|
             key = field.to_s
