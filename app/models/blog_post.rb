@@ -17,7 +17,7 @@
 #
 #   faq_items:            [{ "question" => "...", "answer" => "..." }]
 #   decision_factors:     [{ "heading" => "...", "body" => "..." }]
-#   buyer_setups:         [{ "heading" => "...", "body" => "...", "image_url" => "..." }]
+#   buyer_setups:         [{ "title" => "...", "best_for" => "...", "body" => "...", "cta_label" => "...", "cta_url" => "..." }]
 #   recommended_options:  [{ "heading" => "...", "body" => "...", "url" => "..." }]
 #   top_cta_buttons:      [{ "label" => "...", "url" => "..." }]
 #   final_cta_buttons:    [{ "label" => "...", "url" => "..." }]
