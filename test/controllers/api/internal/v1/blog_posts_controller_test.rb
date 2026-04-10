@@ -9,13 +9,9 @@ module Api
         API_TOKEN = "test-internal-api-token-abc123"
 
         setup do
-          ENV["AFIDA_INTERNAL_API_TOKEN"] = API_TOKEN
+          Rails.application.credentials.stubs(:internal_api_token).returns(API_TOKEN)
           @published_post = blog_posts(:published_post)
           @draft_post = blog_posts(:draft_post)
-        end
-
-        teardown do
-          ENV.delete("AFIDA_INTERNAL_API_TOKEN")
         end
 
         # ====================================================================
@@ -34,7 +30,7 @@ module Api
         end
 
         test "returns 503 when API token is not configured" do
-          ENV.delete("AFIDA_INTERNAL_API_TOKEN")
+          Rails.application.credentials.stubs(:internal_api_token).returns(nil)
           get api_internal_v1_blog_posts_url, headers: auth_headers(API_TOKEN)
           assert_response :service_unavailable
         end

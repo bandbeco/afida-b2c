@@ -3,7 +3,7 @@
 # Bearer-token authentication for internal API endpoints.
 #
 # Reads the token from the Authorization header and compares it against
-# the AFIDA_INTERNAL_API_TOKEN environment variable using secure comparison.
+# the internal_api_token stored in Rails credentials using secure comparison.
 module ApiTokenAuthentication
   extend ActiveSupport::Concern
 
@@ -14,7 +14,7 @@ module ApiTokenAuthentication
   private
 
   def authenticate_api_token
-    expected = ENV["AFIDA_INTERNAL_API_TOKEN"]
+    expected = Rails.application.credentials.internal_api_token
 
     if expected.blank?
       render json: { error: "API authentication is not configured" }, status: :service_unavailable
