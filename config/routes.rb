@@ -167,6 +167,15 @@ Rails.application.routes.draw do
     end
   end
 
+  # Internal API
+  namespace :api, defaults: { format: :json } do
+    namespace :internal do
+      namespace :v1 do
+        resources :blog_posts, only: [ :create, :show, :index, :update ], param: :id_or_slug
+      end
+    end
+  end
+
   # Webhooks (Stripe, Outrank, etc.)
   namespace :webhooks do
     post :stripe, to: "stripe#create"
