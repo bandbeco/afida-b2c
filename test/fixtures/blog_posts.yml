@@ -102,3 +102,29 @@ duplicate_outrank:
     This tests duplicate article handling via outrank_id.
   published: false
   outrank_id: "outrank-duplicate-456"
+
+structured_post:
+  title: "Best Compostable Coffee Cups for UK Cafes"
+  slug: "best-compostable-coffee-cups"
+  body: "Fallback body content for structured post."
+  excerpt: "Find the best compostable coffee cups for your cafe."
+  published: true
+  published_at: <%= 1.day.ago %>
+  meta_title: "Best Compostable Coffee Cups 2026 | Afida"
+  meta_description: "Compare the top compostable coffee cups for UK cafes."
+  blog_category: guides
+  primary_keyword: "compostable coffee cups"
+  intro: "Switching to compostable cups is one of the easiest wins for any cafe looking to reduce waste. In this guide, we compare the top options available in the UK."
+  top_cta_heading: "Ready to make the switch?"
+  top_cta_body: "Browse our full range of compostable cups and get free delivery on orders over 50 GBP."
+  top_cta_buttons: <%= [{"label" => "Shop Compostable Cups", "url" => "/collections/compostable-cups"}, {"label" => "Get a Quote", "url" => "/contact"}].to_json %>
+  decision_factors: <%= [{"heading" => "Material", "body" => "PLA-lined cups are the most common compostable option. They look and feel like traditional cups but break down in industrial composting."}, {"heading" => "Size Range", "body" => "Most suppliers offer 8oz, 12oz, and 16oz. Make sure your supplier covers all the sizes you need."}].to_json %>
+  buyer_setups: <%= [{"title" => "High-Volume Cafe", "best_for" => "Cafes serving 200+ cups per day", "body" => "Bulk ordering reduces per-unit cost significantly. Look for suppliers with next-day delivery.", "cta_label" => "View Bulk Options", "cta_url" => "/collections/bulk-cups"}, {"title" => "Small Independent", "best_for" => "Cafes serving under 50 cups per day", "body" => "Smaller case sizes keep storage manageable. Focus on quality and branding options.", "cta_label" => "View Small Cases", "cta_url" => "/collections/small-cases"}].to_json %>
+  recommended_options: <%= [{"heading" => "Afida Classic PLA Cup", "body" => "Our most popular compostable cup. Available in 8oz, 12oz, and 16oz.", "url" => "/products/afida-classic-pla-cup"}].to_json %>
+  branding_heading: "Why choose Afida?"
+  branding_body: "We source all our compostable cups from certified suppliers and offer free branding on bulk orders."
+  faq_items: <%= [{"question" => "Are PLA cups really compostable?", "answer" => "Yes. PLA cups are certified to EN 13432 and break down fully in industrial composting facilities."}, {"question" => "Can I print my logo on compostable cups?", "answer" => "Absolutely. We offer custom printing on orders of 1,000 cups or more."}].to_json %>
+  final_cta_heading: "Start your switch to compostable"
+  final_cta_body: "Join hundreds of UK cafes already using Afida compostable cups."
+  final_cta_buttons: <%= [{"label" => "Browse All Cups", "url" => "/collections/cups"}, {"label" => "Contact Sales", "url" => "/contact"}].to_json %>
+  conclusion: "Compostable coffee cups are a practical, affordable way to reduce your cafe's environmental footprint. Whether you are a high-volume chain or a small independent, there is an option that fits your needs and budget."
