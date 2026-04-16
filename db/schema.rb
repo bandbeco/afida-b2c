@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_10_113738) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_16_142119) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -325,6 +325,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_10_113738) do
     t.string "b2b_priority"
     t.boolean "best_seller", default: false
     t.string "brand"
+    t.integer "case_depth_in_mm"
+    t.integer "case_length_in_mm"
+    t.integer "case_weight_in_g"
+    t.integer "case_width_in_mm"
     t.bigint "category_id"
     t.string "certifications"
     t.string "colour"
