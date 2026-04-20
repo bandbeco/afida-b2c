@@ -54,7 +54,7 @@ class ProductSpecificationsDisplayTest < ActionDispatch::IntegrationTest
   test "renders certifications as badges inside the materials group" do
     @product.update_columns(
       material: "Kraft paper",
-      certifications: "FSC / Compostable / BPI"
+      certifications: "FSC, Compostable, BPI"
     )
 
     get product_path(@product)

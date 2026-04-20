@@ -96,16 +96,16 @@ class ProductSpecificationTest < ActiveSupport::TestCase
     assert_equal [], spec.certifications
   end
 
-  test "#certifications splits on slash and strips whitespace" do
+  test "#certifications splits on comma and strips whitespace" do
     spec = ProductSpecification.new(product_with(
-      certifications: "FSC / Compostable / BPI"
+      certifications: "FSC, Compostable, BPI"
     ))
     assert_equal [ "FSC", "Compostable", "BPI" ], spec.certifications
   end
 
-  test "#certifications ignores empty tokens from adjacent or trailing slashes" do
+  test "#certifications ignores empty tokens from adjacent or trailing commas" do
     spec = ProductSpecification.new(product_with(
-      certifications: "FSC //Compostable/"
+      certifications: "FSC ,,Compostable,"
     ))
     assert_equal [ "FSC", "Compostable" ], spec.certifications
   end

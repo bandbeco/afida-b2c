@@ -30,7 +30,7 @@ Display the following fields on `products#show`:
 - `material` → label "Material"
 - `colour` → label "Colour"
 - `size` → label "Size"
-- `certifications` → label "Certifications", split on `/`, rendered as DaisyUI badges
+- `certifications` → label "Certifications", split on `,` (the importer normalises `/` to `,` on write), rendered as DaisyUI badges
 
 ### Out of scope
 
@@ -49,7 +49,7 @@ Display the following fields on `products#show`:
 1. **Row hiding.** A spec row is omitted from its group when the underlying value is `nil`, blank, or (for numeric fields) zero. No "—" placeholders.
 2. **Group hiding.** If every field in a group is blank/zero, that group's heading and list are not rendered.
 3. **Section hiding.** If both groups are empty, the entire "Specifications" section (heading + container) is not rendered.
-4. **Certifications parsing.** The `certifications` string is split on `/`, each resulting token is `strip`ped, blank tokens are rejected. The remaining tokens render as DaisyUI `badge` components. If the resulting list is empty, the certifications row is treated as empty (see row hiding).
+4. **Certifications parsing.** The `certifications` string is split on `,`, each resulting token is `strip`ped, blank tokens are rejected. The remaining tokens render as DaisyUI `badge` components. If the resulting list is empty, the certifications row is treated as empty (see row hiding). The importer rewrites `/` to `,` before storing, so the view always sees comma-separated values.
 
 ### Display format
 

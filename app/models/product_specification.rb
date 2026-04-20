@@ -39,7 +39,7 @@ class ProductSpecification
     raw = @product.certifications
     return [] if raw.blank?
 
-    raw.split("/").map(&:strip).reject(&:blank?)
+    raw.split(",").map(&:strip).reject(&:blank?)
   end
 
   def dimensions?
