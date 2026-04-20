@@ -1,0 +1,46 @@
+<% specification = ProductSpecification.new(product) %>
+<% if specification.any? %>
+  <section data-test="product-specifications" class="mt-12 space-y-6">
+    <h2 class="text-2xl">Specifications</h2>
+
+    <div class="grid gap-8 md:grid-cols-2">
+      <% if specification.dimensions? %>
+        <div data-test="specifications-dimensions">
+          <h3 class="text-lg mb-3">Dimensions</h3>
+          <dl class="divide-y divide-base-200">
+            <% specification.dimensions.each do |row| %>
+              <div class="grid grid-cols-2 gap-4 py-2">
+                <dt class="text-base-content/70"><%= row[:label] %></dt>
+                <dd><%= row[:value] %> <%= row[:unit] %></dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+      <% end %>
+
+      <% if specification.materials? || specification.certifications? %>
+        <div data-test="specifications-materials">
+          <h3 class="text-lg mb-3">Materials</h3>
+          <dl class="divide-y divide-base-200">
+            <% specification.materials.each do |row| %>
+              <div class="grid grid-cols-2 gap-4 py-2">
+                <dt class="text-base-content/70"><%= row[:label] %></dt>
+                <dd><%= row[:value] %></dd>
+              </div>
+            <% end %>
+            <% if specification.certifications? %>
+              <div class="grid grid-cols-2 gap-4 py-2">
+                <dt class="text-base-content/70">Certifications</dt>
+                <dd class="flex flex-wrap gap-1">
+                  <% specification.certifications.each do |cert| %>
+                    <span data-test="certification-badge" class="badge badge-outline"><%= cert %></span>
+                  <% end %>
+                </dd>
+              </div>
+            <% end %>
+          </dl>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>
