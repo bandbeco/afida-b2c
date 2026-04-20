@@ -275,6 +275,7 @@ module Admin
         :weight_in_g,
         :volume_in_ml,
         :diameter_in_mm,
+        :certifications,
         :pricing_tiers_json
       ])
 

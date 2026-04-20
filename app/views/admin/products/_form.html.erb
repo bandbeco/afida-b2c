@@ -133,6 +133,43 @@
 
   <div class="divider my-8"></div>
 
+  <%# Specifications Section %>
+  <fieldset class="fieldset">
+    <legend class="fieldset-legend text-2xl font-medium">Specifications</legend>
+
+    <h3 class="text-lg font-medium mt-4 mb-2">Dimensions</h3>
+    <div class="grid grid-cols-2 gap-y-4 py-4">
+      <%= form.label :length_in_mm, "Length (mm)", class: "label text-base" %>
+      <%= form.number_field :length_in_mm, class: "input w-full", min: 0, placeholder: "e.g. 254" %>
+
+      <%= form.label :width_in_mm, "Width (mm)", class: "label text-base" %>
+      <%= form.number_field :width_in_mm, class: "input w-full", min: 0, placeholder: "e.g. 90" %>
+
+      <%= form.label :height_in_mm, "Height (mm)", class: "label text-base" %>
+      <%= form.number_field :height_in_mm, class: "input w-full", min: 0, placeholder: "e.g. 120" %>
+
+      <%= form.label :depth_in_mm, "Depth (mm)", class: "label text-base" %>
+      <%= form.number_field :depth_in_mm, class: "input w-full", min: 0, placeholder: "e.g. 45" %>
+
+      <%= form.label :diameter_in_mm, "Diameter (mm)", class: "label text-base" %>
+      <%= form.number_field :diameter_in_mm, class: "input w-full", min: 0, placeholder: "e.g. 75" %>
+
+      <%= form.label :weight_in_g, "Weight (g)", class: "label text-base" %>
+      <%= form.number_field :weight_in_g, class: "input w-full", min: 0, placeholder: "e.g. 450" %>
+
+      <%= form.label :volume_in_ml, "Volume (ml)", class: "label text-base" %>
+      <%= form.number_field :volume_in_ml, class: "input w-full", min: 0, placeholder: "e.g. 250" %>
+    </div>
+
+    <h3 class="text-lg font-medium mt-4 mb-2">Certifications</h3>
+    <div class="grid grid-cols-2 gap-y-4 py-4">
+      <%= form.label :certifications, "Certifications", class: "label text-base" %>
+      <%= form.text_field :certifications, class: "input w-full", placeholder: "e.g. Compostable, Recyclable, FSC" %>
+    </div>
+  </fieldset>
+
+  <div class="divider my-8"></div>
+
   <%# Details Section - Always Visible %>
   <fieldset class="fieldset">
     <legend class="fieldset-legend text-2xl font-medium">Details</legend>

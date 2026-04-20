@@ -63,6 +63,60 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name='product[sample_eligible]']"
   end
 
+  test "edit form includes all dimension input fields" do
+    get edit_admin_product_path(@product), headers: @headers
+
+    assert_response :success
+    assert_select "input[name='product[length_in_mm]']"
+    assert_select "input[name='product[width_in_mm]']"
+    assert_select "input[name='product[height_in_mm]']"
+    assert_select "input[name='product[depth_in_mm]']"
+    assert_select "input[name='product[diameter_in_mm]']"
+    assert_select "input[name='product[weight_in_g]']"
+    assert_select "input[name='product[volume_in_ml]']"
+  end
+
+  test "edit form includes certifications input field" do
+    get edit_admin_product_path(@product), headers: @headers
+
+    assert_response :success
+    assert_select "input[name='product[certifications]'], textarea[name='product[certifications]']"
+  end
+
+  test "update permits all dimension parameters" do
+    patch admin_product_path(@product), params: {
+      product: {
+        length_in_mm: 254,
+        width_in_mm: 90,
+        height_in_mm: 120,
+        depth_in_mm: 45,
+        diameter_in_mm: 75,
+        weight_in_g: 450,
+        volume_in_ml: 250
+      }
+    }, headers: @headers
+
+    assert_response :redirect
+    @product.reload
+    assert_equal 254, @product.length_in_mm
+    assert_equal 90, @product.width_in_mm
+    assert_equal 120, @product.height_in_mm
+    assert_equal 45, @product.depth_in_mm
+    assert_equal 75, @product.diameter_in_mm
+    assert_equal 450, @product.weight_in_g
+    assert_equal 250, @product.volume_in_ml
+  end
+
+  test "update permits certifications parameter" do
+    patch admin_product_path(@product), params: {
+      product: { certifications: "Compostable, Recyclable, FSC" }
+    }, headers: @headers
+
+    assert_response :redirect
+    @product.reload
+    assert_equal "Compostable, Recyclable, FSC", @product.certifications
+  end
+
   test "should update sample eligibility" do
     assert_not @product.sample_eligible, "Product should not be sample eligible initially"
 
