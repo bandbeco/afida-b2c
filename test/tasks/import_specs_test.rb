@@ -200,10 +200,86 @@ class ImportSpecsTaskTest < ActiveSupport::TestCase
     assert_equal "Recyclable, Compostable", product.certifications
   end
 
+  test "updates product depth and diameter" do
+    product = products(:one)
+    csv_path = write_csv([
+      { afida_sku: product.sku, product_depth: "75mm", product_diameter: "90mm" }
+    ])
+
+    Rake::Task["products:import_specs"].invoke(csv_path)
+    product.reload
+
+    assert_equal 75, product.depth_in_mm
+    assert_equal 90, product.diameter_in_mm
+  end
+
+  test "converts depth and diameter from cm and inches" do
+    product = products(:one)
+    csv_path = write_csv([
+      { afida_sku: product.sku, product_depth: "7.5 cm", product_diameter: "3 inches" }
+    ])
+
+    Rake::Task["products:import_specs"].invoke(csv_path)
+    product.reload
+
+    assert_equal 75, product.depth_in_mm
+    assert_equal 76, product.diameter_in_mm
+  end
+
+  test "updates product volume in ml" do
+    product = products(:one)
+    csv_path = write_csv([
+      { afida_sku: product.sku, product_volume: "250ml" }
+    ])
+
+    Rake::Task["products:import_specs"].invoke(csv_path)
+    product.reload
+
+    assert_equal 250, product.volume_in_ml
+  end
+
+  test "converts litres to ml" do
+    product = products(:one)
+    csv_path = write_csv([
+      { afida_sku: product.sku, product_volume: "1.5 L" }
+    ])
+
+    Rake::Task["products:import_specs"].invoke(csv_path)
+    product.reload
+
+    assert_equal 1500, product.volume_in_ml
+  end
+
+  test "converts cubic metres to ml" do
+    product = products(:one)
+    csv_path = write_csv([
+      { afida_sku: product.sku, product_volume: "0.058m³" }
+    ])
+
+    Rake::Task["products:import_specs"].invoke(csv_path)
+    product.reload
+
+    assert_equal 58_000, product.volume_in_ml
+  end
+
+  test "skips null-like volume values" do
+    product = products(:one)
+    product.update_columns(volume_in_ml: 999)
+
+    csv_path = write_csv([
+      { afida_sku: product.sku, product_volume: "Not specified" }
+    ])
+
+    Rake::Task["products:import_specs"].invoke(csv_path)
+    product.reload
+
+    assert_equal 999, product.volume_in_ml
+  end
+
   private
 
   def write_csv(rows)
-    headers = %w[afida_sku ppp_sku name category size material colour pack_size pack_price certifications description website_url product_weight product_length product_width product_height case_length case_width case_depth case_volume case_weight additional_specs]
+    headers = %w[afida_sku ppp_sku name category size material colour pack_size pack_price certifications description website_url product_weight product_length product_width product_height product_depth product_diameter product_volume case_length case_width case_depth case_volume case_weight additional_specs]
     path = Rails.root.join("tmp", "test_specs_#{SecureRandom.hex(4)}.csv")
 
     CSV.open(path, "w") do |csv|

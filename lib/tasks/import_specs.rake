@@ -33,7 +33,10 @@ namespace :products do
       attrs[:length_in_mm] = parse_dimension_to_mm(row["product_length"])
       attrs[:width_in_mm] = parse_dimension_to_mm(row["product_width"])
       attrs[:height_in_mm] = parse_dimension_to_mm(row["product_height"])
+      attrs[:depth_in_mm] = parse_dimension_to_mm(row["product_depth"])
+      attrs[:diameter_in_mm] = parse_dimension_to_mm(row["product_diameter"])
       attrs[:weight_in_g] = parse_weight_to_g(row["product_weight"])
+      attrs[:volume_in_ml] = parse_volume_to_ml(row["product_volume"])
 
       # Case dimensions
       attrs[:case_length_in_mm] = parse_dimension_to_mm(row["case_length"])
@@ -109,6 +112,19 @@ def parse_weight_to_g(value)
     ($1.to_f * 28.3495).round
   else
     nil
+  end
+end
+
+def parse_volume_to_ml(value)
+  return nil if null_value?(value)
+
+  case value.strip
+  when /\A(\d+(?:\.\d+)?)\s*ml\z/i
+    $1.to_f.round
+  when /\A(\d+(?:\.\d+)?)\s*l\z/i
+    ($1.to_f * 1000).round
+  when /\A(\d+(?:\.\d+)?)\s*m(?:³|3|\^3)\z/i
+    ($1.to_f * 1_000_000).round
   end
 end
 
