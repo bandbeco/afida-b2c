@@ -148,6 +148,57 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # =========================================================================
+  # Legacy category filter slug redirects (SEO)
+  # Old /shop?categories[]=<legacy-slug> URLs from external backlinks
+  # should 301 to the matching new category page.
+  # =========================================================================
+
+  test "shop page 301 redirects legacy cups-and-lids filter to new category" do
+    get shop_path, params: { categories: [ "cups-and-lids" ] }
+
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/cups-and-drinks"
+  end
+
+  test "shop page 301 redirects legacy ice-cream-cups filter to new subcategory" do
+    get shop_path, params: { categories: [ "ice-cream-cups" ] }
+
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/cups-and-drinks/ice-cream-cups"
+  end
+
+  test "shop page 301 redirects legacy napkins filter to new subcategory" do
+    get shop_path, params: { categories: [ "napkins" ] }
+
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/tableware/napkins"
+  end
+
+  test "shop page 301 redirects legacy pizza-boxes filter to new subcategory" do
+    get shop_path, params: { categories: [ "pizza-boxes" ] }
+
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/hot-food/pizza-boxes"
+  end
+
+  test "shop page does not redirect when legacy slug matches an existing category" do
+    # If a current category slug happens to collide with a legacy-list entry,
+    # we should prefer the standard filter behaviour rather than redirect.
+    existing = categories(:one)
+
+    get shop_path, params: { categories: [ existing.slug ] }
+
+    assert_response :success
+  end
+
+  test "shop page does not redirect when multiple filter slugs are selected" do
+    # Multi-select is an active filter action by the user, not a stale backlink.
+    get shop_path, params: { categories: [ "cups-and-lids", "napkins" ] }
+
+    assert_response :success
+  end
+
+  # =========================================================================
   # Vegware landing page tests
   # =========================================================================
 

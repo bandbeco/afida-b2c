@@ -11,7 +11,22 @@ class PagesController < ApplicationController
     @client_logos = client_logos
   end
 
+  # Legacy category filter slugs that survived in external backlinks and
+  # Google's index after the category restructure. Redirect single-slug filter
+  # URLs to the new category pages to recover link equity.
+  LEGACY_CATEGORY_FILTER_REDIRECTS = {
+    "cups-and-lids" => "/categories/cups-and-drinks",
+    "ice-cream-cups" => "/categories/cups-and-drinks/ice-cream-cups",
+    "napkins" => "/categories/tableware/napkins",
+    "pizza-boxes" => "/categories/hot-food/pizza-boxes"
+  }.freeze
+
   def shop
+    if (target = legacy_category_filter_target)
+      redirect_to target, status: :moved_permanently
+      return
+    end
+
     @products = Product
       .active
       .standard
@@ -153,6 +168,22 @@ class PagesController < ApplicationController
   end
 
   private
+
+  # Returns a redirect target path if the incoming request is a single-slug
+  # legacy filter URL (e.g. /shop?categories[]=cups-and-lids) AND the slug is
+  # no longer a real category. Multi-slug selections are treated as active
+  # user filtering and are left alone.
+  def legacy_category_filter_target
+    slugs = Array(params[:categories]).compact_blank
+    return nil unless slugs.size == 1
+
+    slug = slugs.first
+    target = LEGACY_CATEGORY_FILTER_REDIRECTS[slug]
+    return nil if target.nil?
+    return nil if Category.exists?(slug: slug)
+
+    target
+  end
 
   # Build hash of available filter values from current product set
   # Queries direct Product columns (colour, material)
