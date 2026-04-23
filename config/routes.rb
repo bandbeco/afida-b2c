@@ -51,6 +51,9 @@ Rails.application.routes.draw do
     end
   end
   get "vegware", to: "pages#vegware"
+
+  # Programmatic SEO: Business type pages
+  get "for/:business_type", to: "pseo#business_type", as: :pseo_business_type
   get "about", to: "pages#about"
   get "contact", to: "pages#contact"
   get "terms-conditions", to: "pages#terms_conditions"

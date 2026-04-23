@@ -52,6 +52,17 @@ class SitemapGeneratorService
                   lastmod: product.updated_at)
         end
 
+        # PSEO business type pages
+        pseo_pages_dir = Rails.root.join("lib/data/pseo/pages/for")
+        if pseo_pages_dir.exist?
+          Dir.glob(pseo_pages_dir.join("*.json")).each do |file|
+            slug = File.basename(file, ".json")
+            add_url(xml, pseo_business_type_url(business_type: slug),
+                    priority: "0.8",
+                    changefreq: "monthly")
+          end
+        end
+
         # Blog posts (published only)
         add_url(xml, blog_posts_url, priority: "0.7", changefreq: "weekly")
         BlogPost.published.find_each do |post|

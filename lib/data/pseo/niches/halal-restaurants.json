@@ -1,0 +1,17 @@
+{
+  "slug": "halal-restaurants",
+  "name": "Halal Restaurants",
+  "audience": "Halal restaurant owners, halal-certified food businesses, Muslim community food operators",
+  "pain_points": [
+    "Packaging supply chain must not be contaminated with non-halal materials",
+    "Large family-size portions are common — need bigger containers",
+    "Delivery trade is significant, especially during Ramadan",
+    "Branding must communicate halal credentials clearly"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "cups-and-lids", "cold-food-and-salads"],
+  "compliance_concerns": ["Halal certification display requirements", "Natasha's Law allergen labelling"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (3,000–8,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "medium"
+}

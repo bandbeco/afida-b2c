@@ -1,0 +1,17 @@
+{
+  "slug": "fish-and-chip-shops",
+  "name": "Fish & Chip Shops",
+  "audience": "Traditional chippy owners, seaside fish and chip businesses, family-run takeaways",
+  "pain_points": [
+    "Grease-proof wrapping paper is used in huge volumes",
+    "Transition from polystyrene trays to sustainable alternatives is costly",
+    "Wooden chip forks and cutlery are now expected instead of plastic",
+    "Vinegar and sauce sachets create additional packaging waste"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "tableware", "supplies-and-essentials"],
+  "compliance_concerns": ["Single-use plastics ban — polystyrene food containers", "Food hygiene rating display requirements"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (2,000–8,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "medium"
+}

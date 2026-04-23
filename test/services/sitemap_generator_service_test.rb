@@ -158,4 +158,31 @@ class SitemapGeneratorServiceTest < ActiveSupport::TestCase
              "Sample pack #{pack.slug} should NOT be in /collections/ URLs"
     end
   end
+
+  test "includes PSEO business type pages" do
+    service = SitemapGeneratorService.new
+    xml = service.generate
+
+    doc = Nokogiri::XML(xml)
+    urls = doc.xpath("//xmlns:url/xmlns:loc").map(&:text)
+
+    # The coffee-shops page exists as seed data
+    assert urls.any? { |url| url.include?("/for/coffee-shops") },
+           "Expected sitemap to include /for/coffee-shops PSEO page"
+  end
+
+  test "PSEO pages have correct priority and changefreq" do
+    service = SitemapGeneratorService.new
+    xml = service.generate
+
+    doc = Nokogiri::XML(xml)
+    pseo_urls = doc.xpath("//xmlns:url").select do |url_node|
+      url_node.at_xpath("xmlns:loc").text.include?("/for/")
+    end
+
+    pseo_urls.each do |url_node|
+      assert_equal "0.8", url_node.at_xpath("xmlns:priority").text
+      assert_equal "monthly", url_node.at_xpath("xmlns:changefreq").text
+    end
+  end
 end

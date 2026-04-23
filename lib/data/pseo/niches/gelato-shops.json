@@ -1,0 +1,17 @@
+{
+  "slug": "gelato-shops",
+  "name": "Gelato Shops",
+  "audience": "Artisan gelato makers, Italian-style ice cream businesses, premium frozen dessert shops",
+  "pain_points": [
+    "Premium positioning demands high-quality, visually appealing cups and tubs",
+    "Gelato containers need to be freezer-safe for take-home pints",
+    "Tasting spoons used in high volumes — plastic ban means sourcing alternatives",
+    "Seasonal demand swings make stock planning difficult"
+  ],
+  "top_products": ["cups-and-lids", "tableware", "napkins", "bags-and-wraps"],
+  "compliance_concerns": ["Single-use plastics ban — plastic spoons and tasting sticks", "Natasha's Law allergen labelling (dairy, nuts, gluten in cones)"],
+  "order_frequency": "Monthly (seasonal peaks in summer)",
+  "avg_order_size": "Small (500–3,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}
