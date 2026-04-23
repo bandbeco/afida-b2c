@@ -38,4 +38,28 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert section.any? { |l| l.include?("Allow: /") }
     assert section.any? { |l| l.include?("Disallow: /admin/") }
   end
+
+  test "robots txt declares Content-Signal under wildcard user-agent" do
+    get "/robots.txt"
+    lines = response.body.lines.map(&:strip)
+    wildcard_index = lines.index("User-agent: *")
+    assert wildcard_index, "wildcard user-agent not found"
+
+    section = lines[(wildcard_index + 1)..].take_while { |l| !l.start_with?("User-agent:") }
+    assert section.any? { |l| l == "Content-Signal: ai-train=yes, search=yes, ai-input=yes" },
+      "Content-Signal directive missing under User-agent: *"
+  end
+
+  test "robots txt declares Content-Signal for each AI crawler block" do
+    get "/robots.txt"
+    lines = response.body.lines.map(&:strip)
+
+    %w[GPTBot ClaudeBot PerplexityBot].each do |bot|
+      index = lines.index("User-agent: #{bot}")
+      assert index, "#{bot} user-agent not found"
+      section = lines[(index + 1)..].take_while { |l| !l.start_with?("User-agent:") }
+      assert section.any? { |l| l == "Content-Signal: ai-train=yes, search=yes, ai-input=yes" },
+        "Content-Signal directive missing under User-agent: #{bot}"
+    end
+  end
 end

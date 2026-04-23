@@ -28,6 +28,7 @@ class RobotsController < ApplicationController
 
     <<~ROBOTS
       User-agent: *
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       # Disallow admin and checkout areas
@@ -42,6 +43,7 @@ class RobotsController < ApplicationController
 
       # AI Search Engine Crawlers - Explicitly Allowed
       User-agent: GPTBot
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
       Disallow: /admin/
       Disallow: /cart
@@ -50,12 +52,15 @@ class RobotsController < ApplicationController
       Disallow: /signup
 
       User-agent: ChatGPT-User
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       User-agent: OAI-SearchBot
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       User-agent: ClaudeBot
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
       Disallow: /admin/
       Disallow: /cart
@@ -64,9 +69,11 @@ class RobotsController < ApplicationController
       Disallow: /signup
 
       User-agent: Claude-Web
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       User-agent: PerplexityBot
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
       Disallow: /admin/
       Disallow: /cart
@@ -75,15 +82,19 @@ class RobotsController < ApplicationController
       Disallow: /signup
 
       User-agent: Google-Extended
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       User-agent: Applebot-Extended
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       User-agent: cohere-ai
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       User-agent: Diffbot
+      Content-Signal: ai-train=yes, search=yes, ai-input=yes
       Allow: /
 
       # Sitemap
