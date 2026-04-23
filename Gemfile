@@ -99,6 +99,9 @@ gem "pagy", "~> 43.5"
 # Markdown rendering
 gem "redcarpet", "~> 3.6"
 
+# HTML to Markdown conversion for agent content negotiation
+gem "reverse_markdown", "~> 3.0"
+
 gem "http", "~> 6.0"
 
 gem "webmock", "~> 3.26", group: :test
