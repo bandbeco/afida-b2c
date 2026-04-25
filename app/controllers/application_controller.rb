@@ -14,6 +14,7 @@ class ApplicationController < ActionController::Base
     @nav_categories = Category.browsable.top_level.order(:position)
     @nav_subcategories_by_parent = Category.subcategories
                                            .where(parent_id: @nav_categories.select(:id))
+                                           .includes(:parent)
                                            .order(:position)
                                            .group_by(&:parent_id)
     @nav_vegware_collection = Collection.regular.find_by(slug: Collection::VEGWARE_SLUG)

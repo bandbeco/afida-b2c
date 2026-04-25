@@ -228,6 +228,105 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "parent show eager loads attachments for products across subcategories" do
+    parent = categories(:parent_hot_food)
+
+    get category_url(parent.slug)
+    assert_response :success
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      queries << payload[:sql] if payload[:sql] && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get category_url(parent.slug)
+    end
+
+    assert_response :success
+
+    per_record_attachment_lookups = queries.count do |sql|
+      sql.include?("active_storage_attachments") &&
+        sql.include?("\"record_id\" = $") &&
+        sql.match?(/LIMIT \$\d+\z/)
+    end
+
+    assert per_record_attachment_lookups <= 1,
+      "Expected at most 1 per-record attachment lookup (category image only), " \
+      "got #{per_record_attachment_lookups}:\n" +
+      queries.select { |q|
+        q.include?("active_storage_attachments") &&
+          q.include?("\"record_id\" = $") &&
+          q.match?(/LIMIT \$\d+\z/)
+      }.first(10).join("\n")
+  end
+
+  test "subcategory show eager loads attachments for products" do
+    parent = categories(:parent_hot_food)
+    subcategory = categories(:child_pizza_boxes)
+
+    get category_subcategory_url(parent.slug, subcategory.slug)
+    assert_response :success
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      queries << payload[:sql] if payload[:sql] && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get category_subcategory_url(parent.slug, subcategory.slug)
+    end
+
+    assert_response :success
+
+    per_record_attachment_lookups = queries.count do |sql|
+      sql.include?("active_storage_attachments") &&
+        sql.include?("\"record_id\" = $") &&
+        sql.match?(/LIMIT \$\d+\z/)
+    end
+
+    assert per_record_attachment_lookups <= 1,
+      "Expected at most 1 per-record attachment lookup (category image only), " \
+      "got #{per_record_attachment_lookups}:\n" +
+      queries.select { |q|
+        q.include?("active_storage_attachments") &&
+          q.include?("\"record_id\" = $") &&
+          q.match?(/LIMIT \$\d+\z/)
+      }.first(10).join("\n")
+  end
+
+  test "parent show does not fire N+1 categories queries" do
+    parent = categories(:parent_hot_food)
+
+    get category_url(parent.slug)
+    assert_response :success
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      queries << payload[:sql] if payload[:sql] && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get category_url(parent.slug)
+    end
+
+    assert_response :success
+
+    per_record_category_lookups = queries.count do |sql|
+      sql.include?("\"categories\"") &&
+        sql.include?("\"id\" = $") &&
+        sql.match?(/LIMIT \$\d+\z/)
+    end
+
+    assert per_record_category_lookups <= 1,
+      "Expected at most 1 per-record categories lookup, got #{per_record_category_lookups}:\n" +
+      queries.select { |q|
+        q.include?("\"categories\"") &&
+          q.include?("\"id\" = $") &&
+          q.match?(/LIMIT \$\d+\z/)
+      }.first(10).join("\n")
+  end
+
   private
 
   def sign_in_as(user)
