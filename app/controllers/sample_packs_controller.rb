@@ -43,8 +43,14 @@ class SamplePacksController < ApplicationController
       # Skip if product already in cart as regular (non-sample) item
       next if cart.cart_items.non_samples.exists?(product_id: product.id)
 
-      cart.cart_items.create!(product: product, quantity: 1, price: 0, is_sample: true)
-      added_count += 1
+      begin
+        cart.cart_items.create!(product: product, quantity: 1, price: 0, is_sample: true)
+        added_count += 1
+      rescue ActiveRecord::RecordInvalid => e
+        # Concurrent request likely already inserted this sample. Treat as
+        # already-fulfilled and continue with the rest of the pack.
+        raise unless e.record.errors.of_kind?(:product, :taken)
+      end
     end
 
     if added_count > 0

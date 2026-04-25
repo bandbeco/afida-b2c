@@ -132,6 +132,26 @@ class SamplePacksControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Previous samples replaced/i, flash[:notice])
   end
 
+  test "request_pack tolerates duplicate sample created by concurrent request" do
+    # Race scenario: a sibling request inserts a sample for a pack product
+    # AFTER this request's destroy_all but BEFORE this request's create!.
+    # Simulate by stubbing destroy_all to a no-op and pre-seeding the cart
+    # with a sample for one of the pack's products.
+    get samples_path
+    cart = Cart.last
+
+    pack_product = @sample_pack.sample_eligible_products.first
+    cart.cart_items.create!(product: pack_product, quantity: 1, price: 0, is_sample: true)
+
+    ActiveRecord::Relation.any_instance.stubs(:destroy_all).returns([])
+
+    assert_nothing_raised do
+      post request_pack_sample_pack_path(@sample_pack.slug)
+    end
+
+    assert_response :redirect
+  end
+
   test "request_pack marks cart items as samples" do
     # Initialize cart
     get samples_path
