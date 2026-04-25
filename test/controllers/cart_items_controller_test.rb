@@ -418,6 +418,24 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
   end
 
+  test "rejects unparseable tier_price string without crashing" do
+    product = products(:single_wall_8oz_white)
+
+    assert_no_difference("CartItem.count") do
+      post cart_cart_items_path, params: {
+        cart_item: {
+          sku: product.sku,
+          quantity: 1,
+          tier_price: "(select 198766*667891)",
+          tier_pac_size: "5"
+        }
+      }
+    end
+
+    assert_response :redirect
+    assert_match(/invalid pricing tier/i, flash[:alert].to_s)
+  end
+
   # Rate limiting
   test "rate limiting is configured" do
     # Just verify the endpoint works - actual rate limit testing is slow
