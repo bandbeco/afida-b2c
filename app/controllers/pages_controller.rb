@@ -30,7 +30,7 @@ class PagesController < ApplicationController
     @products = Product
       .active
       .standard
-      .includes(:category, product_photo_attachment: :blob)
+      .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
 
     # Build hierarchical category structure for sidebar
     # Count products per subcategory

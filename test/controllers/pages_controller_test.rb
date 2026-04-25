@@ -284,4 +284,42 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".aspect-square img", minimum: 1
   end
+
+  test "shop page eager loads product attachments to avoid N+1" do
+    # Warm up the response cycle (autoload / view compilation)
+    get shop_path
+    assert_response :success
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      queries << payload[:sql] if payload[:sql] && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get shop_path
+    end
+
+    # Per-product attachment lookups are the N+1 signature: a separate
+    # "record_id = $1 ... LIMIT 1" query for each product's photo. Eager-loaded
+    # preloads use "record_id IN (...)" instead.
+    per_record_lookups = queries.count do |sql|
+      sql.include?("active_storage_attachments") &&
+        sql.include?("\"record_id\" = $") &&
+        sql.match?(/LIMIT \$\d+\z/)
+    end
+
+    product_count = Product.active.standard.count
+
+    # The page renders one product card per active standard product. Without
+    # eager loading, each card's `lifestyle_photo.attached?` triggers a query.
+    # With eager loading, the count is bounded (and unrelated to product_count).
+    assert per_record_lookups < product_count,
+      "Expected attachment lookups to not scale with #{product_count} products, " \
+      "got #{per_record_lookups} per-record queries:\n" +
+      queries.select { |q|
+        q.include?("active_storage_attachments") &&
+          q.include?("\"record_id\" = $") &&
+          q.match?(/LIMIT \$\d+\z/)
+      }.first(5).join("\n")
+  end
 end
