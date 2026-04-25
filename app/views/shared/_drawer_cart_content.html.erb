@@ -15,7 +15,7 @@
 
   <% if Current.cart && Current.cart.cart_items.any? %>
     <div class="space-y-3 mb-4 flex-1 overflow-y-auto min-h-0 scrollbar-visible">
-      <% Current.cart.cart_items.includes(product: [:product_photo_attachment, :lifestyle_photo_attachment]).each do |cart_item| %>
+      <% Current.cart.cart_items.includes(product: [:category, :product_photo_attachment, :lifestyle_photo_attachment]).each do |cart_item| %>
         <% if cart_item.product.present? %>
           <div class="flex items-center space-x-3 p-3 bg-base-100 rounded-lg">
             <div class="relative flex-shrink-0">

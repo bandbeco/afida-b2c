@@ -820,6 +820,52 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Regression: Sentry issue 115130350 — N+1 in CartItemsController#create.
+  # The drawer cart partial renders cart_item.product.category for every line
+  # item, and Cart#subtotal_amount iterates cart_items.
+  test "create does not trigger N+1 for cart item products and categories" do
+    # Pre-populate the cart with several distinct products so the drawer has
+    # multiple line items to render after the new item is added.
+    @cart.cart_items.create!(product: products(:napkin_small_white), quantity: 1, price: products(:napkin_small_white).price)
+    @cart.cart_items.create!(product: products(:wooden_fork), quantity: 1, price: products(:wooden_fork).price)
+    @cart.cart_items.create!(product: products(:bamboo_spoon), quantity: 1, price: products(:bamboo_spoon).price)
+
+    new_product = products(:single_wall_12oz_white)
+    turbo_headers = { "Accept" => "text/vnd.turbo-stream.html" }
+
+    # Warm up autoload / view compilation so we measure steady-state queries.
+    post cart_cart_items_path,
+      params: { cart_item: { sku: new_product.sku, quantity: 1 } },
+      headers: turbo_headers
+    @cart.cart_items.find_by(product: new_product)&.destroy
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      sql = payload[:sql]
+      queries << sql if sql && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      post cart_cart_items_path,
+        params: { cart_item: { sku: new_product.sku, quantity: 1 } },
+        headers: turbo_headers
+    end
+
+    # Per-record category lookups are the N+1 signature: one
+    # "WHERE id = $1 ... LIMIT 1" against categories per cart item.
+    per_record_category_lookups = queries.count do |sql|
+      sql.include?('"categories"') &&
+        sql.match?(/"id" = \$\d+/) &&
+        sql.match?(/LIMIT \$?\d+\s*\z/)
+    end
+
+    cart_item_count = @cart.cart_items.count
+    assert per_record_category_lookups < cart_item_count,
+      "Expected category lookups to not scale with #{cart_item_count} cart items, " \
+      "got #{per_record_category_lookups} per-record category queries:\n" +
+      queries.select { |q| q.include?('"categories"') }.first(5).join("\n")
+  end
+
   private
 
   def sign_in_as(user)
