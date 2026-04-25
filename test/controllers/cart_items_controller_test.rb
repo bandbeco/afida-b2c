@@ -384,6 +384,40 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # Malformed input handling
+  test "rejects nested tier_pac_size param without crashing" do
+    product = products(:single_wall_8oz_white)
+
+    assert_no_difference("CartItem.count") do
+      post cart_cart_items_path, params: {
+        cart_item: {
+          sku: product.sku,
+          quantity: 1,
+          tier_price: "22.00",
+          tier_pac_size: { foo: "bar" }
+        }
+      }
+    end
+
+    assert_response :redirect
+  end
+
+  test "rejects nested tier_price param without crashing" do
+    product = products(:single_wall_8oz_white)
+
+    assert_no_difference("CartItem.count") do
+      post cart_cart_items_path, params: {
+        cart_item: {
+          sku: product.sku,
+          quantity: 1,
+          tier_price: { foo: "bar" },
+          tier_pac_size: "5"
+        }
+      }
+    end
+
+    assert_response :redirect
+  end
+
   test "rejects sku containing null byte without crashing" do
     assert_no_difference("CartItem.count") do
       post cart_cart_items_path, params: {

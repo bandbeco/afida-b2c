@@ -254,11 +254,23 @@ class CartItemsController < ApplicationController
     # Determine price: use tier price if provided and valid, otherwise product.price
     price = product.price
 
-    if params.dig(:cart_item, :tier_price).present? && product.pricing_tiers.present?
-      submitted_price = BigDecimal(params[:cart_item][:tier_price].to_s)
-      submitted_pac_size = params.dig(:cart_item, :tier_pac_size)&.to_i
+    raw_tier_price = params.dig(:cart_item, :tier_price)
+    raw_tier_pac_size = params.dig(:cart_item, :tier_pac_size)
 
-      # Validate the submitted price matches an actual tier
+    if raw_tier_price.present? && product.pricing_tiers.present?
+      unless scalar_param?(raw_tier_price) && scalar_param?(raw_tier_pac_size)
+        redirect_back fallback_location: product_path(product), alert: "Invalid pricing tier selected."
+        return
+      end
+
+      begin
+        submitted_price = BigDecimal(raw_tier_price.to_s)
+      rescue ArgumentError
+        redirect_back fallback_location: product_path(product), alert: "Invalid pricing tier selected."
+        return
+      end
+      submitted_pac_size = raw_tier_pac_size&.to_i
+
       matching_tier = product.pricing_tiers.find do |tier|
         BigDecimal(tier["price"].to_s) == submitted_price &&
           tier["quantity"] == submitted_pac_size
@@ -334,6 +346,10 @@ class CartItemsController < ApplicationController
 
   def cart_item_params
     params.expect(cart_item: [ :sku, :quantity ])
+  end
+
+  def scalar_param?(value)
+    value.nil? || value.is_a?(String) || value.is_a?(Numeric)
   end
 
   def sample_params
