@@ -20,7 +20,11 @@ class ProductsController < ApplicationController
     @in_modal = params[:modal] == "true"
 
     @product = Product.active
-                      .includes(:category, :product_family, :compatible_lids)
+                      .includes(:category, :product_family,
+                                compatible_lids: [
+                                  { product_photo_attachment: :blob },
+                                  { lifestyle_photo_attachment: :blob }
+                                ])
                       .find_by!(slug: params[:slug])
 
     # Redirect branded product templates to /branded-products/:slug
@@ -37,7 +41,8 @@ class ProductsController < ApplicationController
 
     # Related products from the same family (for "See Also" section)
     @related_products = @product.siblings(limit: 4)
-                                .includes(product_photo_attachment: :blob)
+                                .includes(product_photo_attachment: :blob,
+                                          lifestyle_photo_attachment: :blob)
 
     # Fallback to same category if no family siblings
     if @related_products.empty?
@@ -45,7 +50,8 @@ class ProductsController < ApplicationController
                                  .catalog_products
                                  .where(category: @category)
                                  .where.not(id: @product.id)
-                                 .includes(product_photo_attachment: :blob)
+                                 .includes(product_photo_attachment: :blob,
+                                           lifestyle_photo_attachment: :blob)
                                  .limit(4)
     end
   rescue ActiveRecord::RecordNotFound

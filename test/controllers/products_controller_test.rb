@@ -275,6 +275,49 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show eager loads attachments for related products and compatible lids" do
+    # branded_cup_8oz has two compatible lids (flat_lid_8oz, domed_lid_8oz),
+    # both matching by size, so the show page renders the compatible-lids
+    # block — exposing any per-lid attachment lookup as an N+1.
+    cup = products(:branded_cup_8oz)
+
+    # Warm up autoload / view compilation so first-request overhead doesn't
+    # pollute the query log.
+    get product_url(cup.slug)
+    assert_response :success
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      queries << payload[:sql] if payload[:sql] && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get product_url(cup.slug)
+    end
+
+    assert_response :success
+
+    # N+1 signature: "record_id = $1 ... LIMIT 1" — one attachment lookup per
+    # record. Eager-loaded preloads use "record_id IN (...)" instead.
+    per_record_attachment_lookups = queries.count do |sql|
+      sql.include?("active_storage_attachments") &&
+        sql.include?("\"record_id\" = $") &&
+        sql.match?(/LIMIT \$\d+\z/)
+    end
+
+    # The main product itself legitimately reads its own product_photo and
+    # lifestyle_photo, so allow a small fixed budget. Each compatible lid and
+    # related product should add zero per-record lookups.
+    assert per_record_attachment_lookups <= 2,
+      "Expected at most 2 per-record attachment lookups (main product only), " \
+      "got #{per_record_attachment_lookups}:\n" +
+      queries.select { |q|
+        q.include?("active_storage_attachments") &&
+          q.include?("\"record_id\" = $") &&
+          q.match?(/LIMIT \$\d+\z/)
+      }.first(10).join("\n")
+  end
+
   private
 
   def sign_in_as(user)
