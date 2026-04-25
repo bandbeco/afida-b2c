@@ -242,8 +242,14 @@ class CartItemsController < ApplicationController
   end
 
   def create_standard_cart_item
+    sku = cart_item_params[:sku].to_s
+    if sku.include?("\x00")
+      redirect_back fallback_location: cart_path, alert: "Item could not be added to cart: invalid SKU."
+      return
+    end
+
     # Find product by SKU
-    product = Product.find_by!(sku: cart_item_params[:sku])
+    product = Product.find_by!(sku: sku)
 
     # Determine price: use tier price if provided and valid, otherwise product.price
     price = product.price

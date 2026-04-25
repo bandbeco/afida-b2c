@@ -383,6 +383,21 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Cart item not found.", flash[:alert]
   end
 
+  # Malformed input handling
+  test "rejects sku containing null byte without crashing" do
+    assert_no_difference("CartItem.count") do
+      post cart_cart_items_path, params: {
+        cart_item: {
+          sku: "ABC 123",
+          quantity: 1
+        }
+      }
+    end
+
+    assert_response :redirect
+    assert_match(/could not be added/i, flash[:alert].to_s)
+  end
+
   # Rate limiting
   test "rate limiting is configured" do
     # Just verify the endpoint works - actual rate limit testing is slow
