@@ -62,6 +62,24 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     # Query should be truncated to 100 chars, not cause errors
   end
 
+  test "shop page handles nested brand param safely" do
+    get shop_path, params: { brand: { foo: "bar" } }
+
+    assert_response :success
+  end
+
+  test "shop page handles nested colour param safely" do
+    get shop_path, params: { colour: { foo: "bar" } }
+
+    assert_response :success
+  end
+
+  test "shop page handles nested material param safely" do
+    get shop_path, params: { material: { foo: "bar" } }
+
+    assert_response :success
+  end
+
   test "shop page filters by size" do
     # Use fixture variant with size option
     variant = products(:single_wall_8oz_white)
