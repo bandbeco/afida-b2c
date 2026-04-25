@@ -128,7 +128,7 @@
           <span class="block text-lg font-semibold mt-2"><%= cat.name %></span>
         </div>
         <ul class="menu p-4 gap-1">
-          <% cat.children.order(:position).each do |sub| %>
+          <% (@nav_subcategories_by_parent[cat.id] || []).each do |sub| %>
             <li>
               <%= link_to sub.name, category_browse_path(sub), class: "text-base" %>
             </li>

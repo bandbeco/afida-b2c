@@ -61,7 +61,7 @@
          style="top: 100%;">
       <div class="bg-base-100 rounded-xl shadow-2xl border border-base-200 p-6 min-w-[240px]">
         <nav class="flex flex-col gap-1">
-          <% cat.children.order(:position).each do |sub| %>
+          <% (@nav_subcategories_by_parent[cat.id] || []).each do |sub| %>
             <%= link_to category_browse_path(sub),
                         class: "text-base-content hover:text-primary transition-colors py-1" do %>
               <%= sub.name %>

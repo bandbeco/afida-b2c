@@ -5,8 +5,11 @@ class PriceListController < ApplicationController
 
   def index
     @pagy, @products = pagy(filtered_products)
-    @categories = Category.top_level.where.not(slug: "branded-products")
-                          .includes(:children).order(:position)
+    @categories = Category.top_level.where.not(slug: "branded-products").order(:position)
+    @subcategories_by_parent = Category.subcategories
+                                       .where(parent_id: @categories.select(:id))
+                                       .order(:position)
+                                       .group_by(&:parent_id)
   end
 
   def export

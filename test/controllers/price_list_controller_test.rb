@@ -364,6 +364,45 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", price_list_path
   end
 
+  # =============================================================================
+  # N+1 Query Tests
+  # =============================================================================
+
+  test "index does not issue per-category subcategory queries" do
+    # Warm up autoload / view compilation
+    get price_list_url
+    assert_response :success
+
+    queries = []
+    counter = ->(_, _, _, _, payload) {
+      queries << payload[:sql] if payload[:sql] && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    }
+
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+      get price_list_url
+    end
+
+    # The N+1 signature is "WHERE parent_id = $1 ORDER BY position" — one
+    # lookup per top-level category. The preloaded :children association is
+    # discarded by .order(:position) in the view.
+    per_parent_lookups = queries.count do |sql|
+      sql.include?("FROM \"categories\"") &&
+        sql.match?(/"parent_id" = \$\d+/) &&
+        sql.include?("ORDER BY")
+    end
+
+    parent_count = Category.top_level.where.not(slug: "branded-products").count
+
+    assert per_parent_lookups < parent_count,
+      "Expected subcategory queries to not scale with #{parent_count} parents, " \
+      "got #{per_parent_lookups} per-parent queries:\n" +
+      queries.select { |q|
+        q.include?("FROM \"categories\"") &&
+          q.match?(/"parent_id" = \$\d+/) &&
+          q.include?("ORDER BY")
+      }.first(5).join("\n")
+  end
+
   private
 
   def sign_in_as(user)

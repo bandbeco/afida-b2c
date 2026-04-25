@@ -37,7 +37,7 @@
             <%= select_tag :category,
                 grouped_options_for_select(
                   @categories.map { |parent|
-                    [parent.name, parent.children.order(:position).map { |sub| [sub.name, sub.slug] }]
+                    [parent.name, (@subcategories_by_parent[parent.id] || []).map { |sub| [sub.name, sub.slug] }]
                   },
                   params[:category],
                   prompt: "All Categories"
