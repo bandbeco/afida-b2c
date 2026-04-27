@@ -214,7 +214,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert_nil identifier_exists
   end
 
-  test "emits flat min/max handling_time integers in days" do
+  test "nests min/max handling_time inside g:shipping" do
     product = products(:one)
     attach_product_photo(product)
 
@@ -222,12 +222,12 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     xml = Nokogiri::XML(generator.generate_xml)
     ns = { "g" => "http://base.google.com/ns/1.0" }
 
-    assert_equal "0", xml.at_xpath("//item/g:min_handling_time", ns).text
-    assert_equal "1", xml.at_xpath("//item/g:max_handling_time", ns).text
-    assert_nil xml.at_xpath("//item/g:handling_time", ns), "Wrapper g:handling_time is unrecognized by Google"
+    assert_equal "0", xml.at_xpath("//item/g:shipping/g:min_handling_time", ns).text
+    assert_equal "1", xml.at_xpath("//item/g:shipping/g:max_handling_time", ns).text
+    assert_nil xml.at_xpath("//item/g:min_handling_time", ns), "Handling time must be nested inside g:shipping per Google spec"
   end
 
-  test "emits flat min/max transit_time integers in days" do
+  test "nests min/max transit_time inside g:shipping" do
     product = products(:one)
     attach_product_photo(product)
 
@@ -235,9 +235,9 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     xml = Nokogiri::XML(generator.generate_xml)
     ns = { "g" => "http://base.google.com/ns/1.0" }
 
-    assert_equal "1", xml.at_xpath("//item/g:min_transit_time", ns).text
-    assert_equal "1", xml.at_xpath("//item/g:max_transit_time", ns).text
-    assert_nil xml.at_xpath("//item/g:transit_time", ns), "Wrapper g:transit_time is unrecognized by Google"
+    assert_equal "1", xml.at_xpath("//item/g:shipping/g:min_transit_time", ns).text
+    assert_equal "1", xml.at_xpath("//item/g:shipping/g:max_transit_time", ns).text
+    assert_nil xml.at_xpath("//item/g:min_transit_time", ns), "Transit time must be nested inside g:shipping per Google spec"
   end
 
   test "unit_pricing_measure separates value and unit with a space" do

@@ -137,20 +137,16 @@ class GoogleMerchantFeedGenerator
       xml["g"].custom_label_3 product.category.slug if product.category # category for grouping
       xml["g"].custom_label_4 product.b2b_priority if product.b2b_priority.present?
 
-      # Shipping
+      # Shipping (handling/transit times nested per Google spec)
       xml["g"].shipping do
         xml["g"].country "GB"
         xml["g"].service "Standard"
         xml["g"].price "6.99 GBP"
+        xml["g"].min_handling_time 0
+        xml["g"].max_handling_time 1
+        xml["g"].min_transit_time 1
+        xml["g"].max_transit_time 1
       end
-
-      # Handling time: same day if ordered before 2pm, otherwise next day
-      xml["g"].min_handling_time 0
-      xml["g"].max_handling_time 1
-
-      # Transit time: DPD next working day
-      xml["g"].min_transit_time 1
-      xml["g"].max_transit_time 1
     end
   end
 
