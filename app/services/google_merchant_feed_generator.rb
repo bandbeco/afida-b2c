@@ -111,9 +111,6 @@ class GoogleMerchantFeedGenerator
       # Condition
       xml["g"].condition "new"
 
-      # Sales channel — flag as online (not local/in-store)
-      xml["g"].channel "online"
-
       # Item group for products in the same family
       if product.product_family.present?
         xml["g"].item_group_id generate_item_group_id(product)

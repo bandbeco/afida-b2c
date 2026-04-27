@@ -179,7 +179,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert first_160.length <= 160
   end
 
-  test "declares feed channel as online" do
+  test "does not emit g:channel (set on data source in Merchant Center Next)" do
     product = products(:one)
     attach_product_photo(product)
 
@@ -187,7 +187,7 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     xml = Nokogiri::XML(generator.generate_xml)
 
     channel = xml.at_xpath("//item/g:channel", "g" => "http://base.google.com/ns/1.0")
-    assert_equal "online", channel.text
+    assert_nil channel
   end
 
   test "sets identifier_exists to no when product has no GTIN" do
