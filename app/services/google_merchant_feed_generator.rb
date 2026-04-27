@@ -78,10 +78,10 @@ class GoogleMerchantFeedGenerator
       xml["g"].availability product.in_stock? ? "in_stock" : "out_of_stock"
       if product.pricing_tiers.present?
         xml["g"].price "#{product.pricing_tiers.first['price']} GBP"
-        xml["g"].unit_pricing_measure "#{product.pricing_tiers.first['quantity']}ct"
+        xml["g"].unit_pricing_measure "#{product.pricing_tiers.first['quantity']} ct"
       else
         xml["g"].price "#{product.price} GBP"
-        xml["g"].unit_pricing_measure "#{product.pac_size}ct" if product.pac_size.present?
+        xml["g"].unit_pricing_measure "#{product.pac_size} ct" if product.pac_size.present?
       end
 
       # Category (hierarchical: "Parent > Subcategory")
@@ -145,18 +145,12 @@ class GoogleMerchantFeedGenerator
       end
 
       # Handling time: same day if ordered before 2pm, otherwise next day
-      xml["g"].send("handling_time") do
-        xml["g"].min_value 0
-        xml["g"].max_value 1
-        xml["g"].unit "business_day"
-      end
+      xml["g"].min_handling_time 0
+      xml["g"].max_handling_time 1
 
       # Transit time: DPD next working day
-      xml["g"].send("transit_time") do
-        xml["g"].min_value 1
-        xml["g"].max_value 1
-        xml["g"].unit "business_day"
-      end
+      xml["g"].min_transit_time 1
+      xml["g"].max_transit_time 1
     end
   end
 

@@ -213,4 +213,42 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     identifier_exists = xml.at_xpath("//item/g:identifier_exists", "g" => "http://base.google.com/ns/1.0")
     assert_nil identifier_exists
   end
+
+  test "emits flat min/max handling_time integers in days" do
+    product = products(:one)
+    attach_product_photo(product)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+    ns = { "g" => "http://base.google.com/ns/1.0" }
+
+    assert_equal "0", xml.at_xpath("//item/g:min_handling_time", ns).text
+    assert_equal "1", xml.at_xpath("//item/g:max_handling_time", ns).text
+    assert_nil xml.at_xpath("//item/g:handling_time", ns), "Wrapper g:handling_time is unrecognized by Google"
+  end
+
+  test "emits flat min/max transit_time integers in days" do
+    product = products(:one)
+    attach_product_photo(product)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+    ns = { "g" => "http://base.google.com/ns/1.0" }
+
+    assert_equal "1", xml.at_xpath("//item/g:min_transit_time", ns).text
+    assert_equal "1", xml.at_xpath("//item/g:max_transit_time", ns).text
+    assert_nil xml.at_xpath("//item/g:transit_time", ns), "Wrapper g:transit_time is unrecognized by Google"
+  end
+
+  test "unit_pricing_measure separates value and unit with a space" do
+    product = products(:one)
+    attach_product_photo(product)
+    product.update!(pac_size: 500, pricing_tiers: nil)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    measure = xml.at_xpath("//item/g:unit_pricing_measure", "g" => "http://base.google.com/ns/1.0").text
+    assert_equal "500 ct", measure
+  end
 end
