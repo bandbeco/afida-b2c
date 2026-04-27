@@ -101,11 +101,18 @@ class GoogleMerchantFeedGenerator
       xml["g"].brand product.brand.presence || "Afida"
 
       # Product identifiers
-      xml["g"].gtin product.gtin if product.gtin.present?
+      if product.gtin.present?
+        xml["g"].gtin product.gtin
+      else
+        xml["g"].identifier_exists "no"
+      end
       xml["g"].mpn product.sku
 
       # Condition
       xml["g"].condition "new"
+
+      # Sales channel — flag as online (not local/in-store)
+      xml["g"].channel "online"
 
       # Item group for products in the same family
       if product.product_family.present?

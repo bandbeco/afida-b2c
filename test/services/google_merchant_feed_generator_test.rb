@@ -178,4 +178,39 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert_includes first_160.downcase, "afida"
     assert first_160.length <= 160
   end
+
+  test "declares feed channel as online" do
+    product = products(:one)
+    attach_product_photo(product)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    channel = xml.at_xpath("//item/g:channel", "g" => "http://base.google.com/ns/1.0")
+    assert_equal "online", channel.text
+  end
+
+  test "sets identifier_exists to no when product has no GTIN" do
+    product = products(:one)
+    attach_product_photo(product)
+    product.update!(gtin: nil)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    identifier_exists = xml.at_xpath("//item/g:identifier_exists", "g" => "http://base.google.com/ns/1.0")
+    assert_equal "no", identifier_exists.text
+  end
+
+  test "omits identifier_exists when product has a GTIN" do
+    product = products(:one)
+    attach_product_photo(product)
+    product.update!(gtin: "1234567890123")
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    identifier_exists = xml.at_xpath("//item/g:identifier_exists", "g" => "http://base.google.com/ns/1.0")
+    assert_nil identifier_exists
+  end
 end
