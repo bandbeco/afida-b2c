@@ -1,22 +1,25 @@
 <%# Turbo Stream response for adding a sample to cart %>
 
-<%# Update the product card to show "Added" state %>
+<%# Update the product card to show "Added" state (only present on /samples page) %>
 <%= turbo_stream.replace dom_id(@product, :sample),
       partial: "samples/product_card",
       locals: { product: @product, in_cart: true, at_limit: @at_limit } %>
 
-<%# Update sample counter %>
+<%# Update sample counter (only present on /samples page) %>
 <%= turbo_stream.replace "sample_counter",
       partial: "samples/sample_counter",
       locals: { sample_count: @sample_count } %>
 
-<%# Update category header with new selected count %>
+<%# Update category header with new selected count (only present on /samples page) %>
 <%= turbo_stream.replace dom_id(@category, :sample_header),
       partial: "samples/category_header",
       locals: { category: @category, selected_count: @category_selected_count } %>
 
 <%# Update cart counter %>
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
+
+<%# Update cart drawer content so the sample appears in it (PDP and any page with the drawer) %>
+<%= turbo_stream.replace "drawer_cart_content", partial: "shared/drawer_cart_content" %>
 
 <%# GA4 E-commerce: add_to_cart event for samples (value = 0) %>
 <%= turbo_stream.append_all "head" do %>

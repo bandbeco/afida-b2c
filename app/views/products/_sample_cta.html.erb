@@ -1,0 +1,25 @@
+<%# Free-sample CTA for the product detail page.
+    Appears only when the product is sample-eligible.
+    Lets buyers add this exact product to cart as a free sample. %>
+<% return unless product.sample_eligible? %>
+
+<div data-test="product-sample-cta" class="mt-4 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-4">
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+    <div class="flex-1">
+      <p class="text-base">Try before you buy</p>
+      <p class="text-sm text-base-content/70 mt-1">
+        Order this as a free sample. You only pay for delivery.
+      </p>
+    </div>
+    <%= form_with url: cart_cart_items_path,
+                  method: :post,
+                  data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", turbo: true },
+                  class: "flex-shrink-0" do |f| %>
+      <%= hidden_field_tag :product_id, product.id %>
+      <%= hidden_field_tag :sample, "true" %>
+      <button type="submit" class="btn btn-outline btn-primary btn-sm whitespace-nowrap">
+        Order a free sample
+      </button>
+    <% end %>
+  </div>
+</div>

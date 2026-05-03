@@ -278,6 +278,8 @@
             </div>
           </div>
 
+          <%= render "products/sample_cta", product: @product %>
+
           <%# Compatible Lids Section (inline, above add to cart) %>
           <% if @compatible_products.present? && @compatible_products.any? %>
             <div class="mt-6"
@@ -406,12 +408,14 @@
             <% end %>
           <% end %>
 
-          <p class="text-sm text-base-content/60 text-center mt-3 flex items-center justify-center gap-1.5">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+          <div data-test="free-delivery-hint" class="mt-3 flex items-center justify-center gap-2 text-base text-base-content/80">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM3 4h2l2 11h11l2-7H7"/>
             </svg>
-            Free delivery over £100
-          </p>
+            <span>Free delivery on orders over <span data-test="free-delivery-amount" class="text-success">£100</span></span>
+          </div>
+
+          <%= render "products/trust_strip" %>
 
           <%# Sticky Add-to-Cart Bar (mobile only) %>
           <div data-sticky-atc-target="stickyBar"
@@ -475,6 +479,8 @@
           </div>
         </div>
       <% end %>
+
+      <%= render "products/social_proof" %>
 
     </div>
   </div>
