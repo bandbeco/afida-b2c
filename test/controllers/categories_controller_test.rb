@@ -377,7 +377,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
                  "products should be grouped by name first, then ascending volume_in_ml"
   end
 
-  test "within a family, products with same name sort by colour+material, then size" do
+  test "within a family, products group by material then colour, with sizes ascending in each colour" do
     family = product_families(:paper_lids)
     family.update!(sort_order: 5)
 
@@ -387,10 +387,9 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
       position: 997,
     )
 
-    # Same product line ("Coffee Cup Sip Lids"), three variants × two sizes.
-    # Goal: each colour/material run stays adjacent and ascends by volume,
-    # so a buyer comparing "Black rPET 4oz" never has to scan past a
-    # "White rPET 4oz" to find its 8oz sibling.
+    # Same product line ("Coffee Cup Sip Lids"), two materials × varying sizes.
+    # Within a name+material run we sort by colour first then volume, so a
+    # row reads as one colour's full size run, then the next colour's run.
     black_4 = make_variant(category, family, "Coffee Cup Sip Lids", "Black", "rPET", 118)
     black_8 = make_variant(category, family, "Coffee Cup Sip Lids", "Black", "rPET", 227)
     white_4 = make_variant(category, family, "Coffee Cup Sip Lids", "White", "rPET", 118)
@@ -403,8 +402,8 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     products = @controller.view_assigns["products"].to_a
     ids = products.map(&:id)
 
-    # Black rPET → White Bagasse (B before r) → White rPET, each ascending by volume.
-    assert_equal [ black_4.id, black_8.id, bag_8.id, white_4.id, white_8.id ], ids
+    # Bagasse first (B before r), then rPET sorted by colour then volume.
+    assert_equal [ bag_8.id, black_4.id, black_8.id, white_4.id, white_8.id ], ids
   end
 
   # Family group headers in the rendered view
@@ -433,6 +432,116 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", text: /Flat Lid/, count: 0
     assert_select ".product-family-heading", text: /Domed Lid/, count: 0
     assert_select ".product-family-heading", text: /Sip Lid - 8oz/, count: 0
+  end
+
+  test "renders one centered flex row per name+material run" do
+    family = product_families(:single_wall_cups)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Row Break Test",
+      slug: "row-break-test-#{SecureRandom.hex(4)}",
+      position: 995,
+    )
+
+    # Two named sub-lines under one family → 2 separate flex rows.
+    make_variant(category, family, "Double Wall Cups", "White", "Paper", 227)
+    make_variant(category, family, "Double Wall Cups", "White", "Paper", 340)
+    make_variant(category, family, "Single Wall Cups", "White", "Paper", 227)
+    make_variant(category, family, "Single Wall Cups", "White", "Paper", 340)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    assert_select "div.col-span-full.flex.justify-center", count: 2
+  end
+
+  test "splits each name+material+colour combination into its own row when each colour has 2+ products" do
+    family = product_families(:paper_lids)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Variant Row Break Test",
+      slug: "variant-row-break-#{SecureRandom.hex(4)}",
+      position: 993,
+    )
+
+    # Each (name, material, colour) has 2+ products so no merging happens.
+    # 3 distinct combinations → 3 rows.
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "rPET", 118)
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "rPET", 227)
+    make_variant(category, family, "Coffee Cup Sip Lids", "White", "rPET", 118)
+    make_variant(category, family, "Coffee Cup Sip Lids", "White", "rPET", 227)
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "PP", 340)
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "PP", 455)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    assert_select "div.col-span-full.flex.justify-center", count: 3
+  end
+
+  test "merges a singleton colour row into the previous multi-card row of the same name+material" do
+    family = product_families(:paper_lids)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Backward Merge Test",
+      slug: "backward-merge-#{SecureRandom.hex(4)}",
+      position: 991,
+    )
+
+    # Black PP has 2 sizes (a multi-card row), White PP has 1 size (singleton).
+    # Singleton White should merge backward into the Black PP row, not float alone.
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "PP", 340)
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "PP", 455)
+    make_variant(category, family, "Coffee Cup Sip Lids", "White", "PP", 340)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    assert_select "div.col-span-full.flex.justify-center", count: 1
+  end
+
+  test "merges singleton colour rows into the next colour row of the same name+material" do
+    family = product_families(:paper_lids)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Singleton Merge Test",
+      slug: "singleton-merge-#{SecureRandom.hex(4)}",
+      position: 992,
+    )
+
+    # Black PP and White PP each have only one product. They should merge
+    # into a single row instead of leaving a lone Black PP card alone.
+    make_variant(category, family, "Coffee Cup Sip Lids", "Black", "PP", 340)
+    make_variant(category, family, "Coffee Cup Sip Lids", "White", "PP", 340)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    assert_select "div.col-span-full.flex.justify-center", count: 1
+  end
+
+  test "renders a single centered row when all products share name and material" do
+    family = product_families(:single_wall_cups)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Same-Name Test",
+      slug: "same-name-test-#{SecureRandom.hex(4)}",
+      position: 994,
+    )
+
+    make_variant(category, family, "Cups", "White", "Paper", 227)
+    make_variant(category, family, "Cups", "White", "Paper", 340)
+    make_variant(category, family, "Cups", "White", "Paper", 455)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
   test "does not render any family heading when only one family is on the page" do

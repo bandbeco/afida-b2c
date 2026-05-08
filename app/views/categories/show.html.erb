@@ -96,7 +96,33 @@
           <span class="h-px flex-1 bg-base-300"></span>
         </h2>
       <% end %>
-      <%= render partial: "products/card", collection: group, as: :product %>
+      <%
+        # Slice by (name, material, colour), then absorb any singleton run
+        # into an adjacent run that shares (name, material). Avoids skinny
+        # one-card rows for variants that differ only by colour.
+        runs = group.slice_when { |a, b| [ a.name, a.material, a.colour ] != [ b.name, b.material, b.colour ] }.to_a
+        merged_runs = []
+        runs.each do |run|
+          prev = merged_runs.last
+          same_line = prev && [ prev.first.name, prev.first.material ] == [ run.first.name, run.first.material ]
+          if same_line && (prev.size == 1 || run.size == 1)
+            merged_runs[-1] = prev + run
+          else
+            merged_runs << run
+          end
+        end
+      %>
+      <% merged_runs.each do |variant_run| %>
+        <%# Each variant run is its own centered flex row spanning the full grid. %>
+        <%# Card widths match the parent grid's column sizing so a full row looks identical. %>
+        <div class="col-span-full flex flex-wrap justify-center gap-4">
+          <% variant_run.each do |product| %>
+            <div class="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+              <%= render partial: "products/card", locals: { product: product } %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
       <% rendered_anything = true %>
     <% end %>
   </div>
