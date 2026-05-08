@@ -576,6 +576,30 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
+  test "treats blank material and colour values as equal to nil when slicing rows" do
+    family = product_families(:single_wall_cups)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Blank Attr Test",
+      slug: "blank-attr-test-#{SecureRandom.hex(4)}",
+      position: 987,
+    )
+
+    # All four share name and effectively-blank material/colour. The legacy
+    # '' value on one row must not fragment it from its nil-valued siblings.
+    make_variant(category, family, "Double Wall Takeaway Cup", nil, nil, 170)
+    make_variant(category, family, "Double Wall Takeaway Cup", nil, nil, 227)
+    make_variant(category, family, "Double Wall Takeaway Cup", "", "", 340)
+    make_variant(category, family, "Double Wall Takeaway Cup", nil, nil, 455)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    # All four should land in a single centered flex row.
+    assert_select "div.col-span-full.flex.justify-center", count: 1
+  end
+
   test "merges singleton rows of the same name across different materials" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)

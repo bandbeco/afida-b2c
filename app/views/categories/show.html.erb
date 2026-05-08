@@ -108,12 +108,15 @@
           # such neighbour, fall back to merging with any adjacent run that
           # shares the name — avoids skinny one-card rows for products that
           # differ only by colour/material (e.g. Kraft vs Black trays).
-          runs = group.slice_when { |a, b| [ a.name, a.material, a.colour ] != [ b.name, b.material, b.colour ] }.to_a
+          # Treat blank strings as nil so legacy '' values don't fragment runs
+          # away from products with nil material/colour.
+          slice_attrs = ->(p) { [ p.name, p.material.presence, p.colour.presence ] }
+          runs = group.slice_when { |a, b| slice_attrs.call(a) != slice_attrs.call(b) }.to_a
           merged_runs = []
           runs.each do |run|
             prev = merged_runs.last
             if prev && (prev.size == 1 || run.size == 1) && prev.first.name == run.first.name
-              same_material = prev.first.material == run.first.material
+              same_material = prev.first.material.presence == run.first.material.presence
               both_singletons = prev.size == 1 && run.size == 1
               if same_material || both_singletons
                 merged_runs[-1] = prev + run
