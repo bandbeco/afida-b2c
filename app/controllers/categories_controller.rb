@@ -31,7 +31,6 @@ class CategoriesController < ApplicationController
     @products = Product.active
                        .catalog_products
                        .where(category: categories_scope)
-                       .left_joins(:product_family)
                        .includes(:category, :product_family,
                                  product_photo_attachment: :blob,
                                  lifestyle_photo_attachment: :blob)

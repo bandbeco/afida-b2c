@@ -17,37 +17,21 @@ class ProductSizeParser
     str = input.to_s.strip
     return nil if str.empty?
 
-    # Prefer ml when present — it's the explicit, no-conversion-needed value.
-    # `(\d+)\s*ml` matches the number that's *adjacent* to "ml", not just any
-    # number that precedes it elsewhere in the string. So "8oz / 227ml" → 227.
-    # For ranges like "500-1000ml", we then take the lower bound by re-scanning.
-    if str.match?(/\d+\s*ml/i)
-      ml_value = ml_with_lower_bound(str)
-      return ml_value if ml_value
+    if (ml = lower_bound(str, range: /(\d+)\s*-\s*\d+\s*ml/i, single: /(\d+)\s*ml/i))
+      return ml.to_i
     end
 
-    if str.match?(/\d+(?:\.\d+)?\s*oz/i)
-      oz_value = oz_with_lower_bound(str)
-      return (oz_value * ML_PER_OZ).round if oz_value
+    if (oz = lower_bound(str, range: /(\d+(?:\.\d+)?)(?:\s*oz)?\s*-\s*\d+(?:\.\d+)?\s*oz/i, single: /(\d+(?:\.\d+)?)\s*oz/i))
+      return (oz.to_f * ML_PER_OZ).round
     end
 
     nil
   end
 
-  # In a hyphenated range like "500-1000ml" or "8-12oz", take the lower bound
-  # so the product sorts with its smallest-cohort siblings. Otherwise return
-  # the number adjacent to the unit (so "8oz / 227ml" returns 227 for ml).
-  def self.ml_with_lower_bound(str)
-    range_match = str.match(/(\d+)\s*-\s*\d+\s*ml/i)
-    return range_match[1].to_i if range_match
-
-    str[/(\d+)\s*ml/i, 1]&.to_i
-  end
-
-  def self.oz_with_lower_bound(str)
-    range_match = str.match(/(\d+(?:\.\d+)?)(?:\s*oz)?\s*-\s*\d+(?:\.\d+)?\s*oz/i)
-    return range_match[1].to_f if range_match
-
-    str[/(\d+(?:\.\d+)?)\s*oz/i, 1]&.to_f
+  # For "500-1000ml" or "8-12oz" return the lower bound so the product sorts
+  # with its smallest-cohort siblings. Otherwise return the number adjacent
+  # to the unit ("8oz / 227ml" → 227 when called for ml).
+  def self.lower_bound(str, range:, single:)
+    str.match(range)&.[](1) || str[single, 1]
   end
 end
