@@ -85,9 +85,9 @@
     groups = products.slice_when { |a, b| a.product_family_id != b.product_family_id }.to_a
     multi_family_page = groups.count { |g| g.first.product_family_id.present? && g.size > 1 } > 1
     # Row breaks only earn their keep when at least one product line has 2+
-    # variants under the same (name, material). Otherwise every card becomes a
-    # singleton run, stair-stepping the layout for no benefit.
-    sectioned = products.group_by { |p| [ p.name, p.material ] }.values.any? { |run| run.size > 1 }
+    # variants sharing a name. Without that, every card becomes a singleton
+    # run and the layout stair-steps for no benefit.
+    sectioned = products.group_by(&:name).values.any? { |run| run.size > 1 }
   %>
   <% if sectioned %>
     <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
@@ -103,19 +103,24 @@
           </h2>
         <% end %>
         <%
-          # Slice by (name, material, colour), then absorb any singleton run
-          # into an adjacent run that shares (name, material). Avoids skinny
-          # one-card rows for variants that differ only by colour.
+          # Slice by (name, material, colour), then absorb singleton runs into
+          # an adjacent run sharing (name, material). If a singleton has no
+          # such neighbour, fall back to merging with any adjacent run that
+          # shares the name — avoids skinny one-card rows for products that
+          # differ only by colour/material (e.g. Kraft vs Black trays).
           runs = group.slice_when { |a, b| [ a.name, a.material, a.colour ] != [ b.name, b.material, b.colour ] }.to_a
           merged_runs = []
           runs.each do |run|
             prev = merged_runs.last
-            same_line = prev && [ prev.first.name, prev.first.material ] == [ run.first.name, run.first.material ]
-            if same_line && (prev.size == 1 || run.size == 1)
-              merged_runs[-1] = prev + run
-            else
-              merged_runs << run
+            if prev && (prev.size == 1 || run.size == 1) && prev.first.name == run.first.name
+              same_material = prev.first.material == run.first.material
+              both_singletons = prev.size == 1 && run.size == 1
+              if same_material || both_singletons
+                merged_runs[-1] = prev + run
+                next
+              end
             end
+            merged_runs << run
           end
         %>
         <% merged_runs.each do |variant_run| %>

@@ -549,6 +549,27 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
+  test "merges singleton rows of the same name across different materials" do
+    family = product_families(:single_wall_cups)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Cross-Material Singleton Test",
+      slug: "cross-material-singleton-#{SecureRandom.hex(4)}",
+      position: 989,
+    )
+
+    # Same name, different materials, each a singleton. Falling back to
+    # name-only merge keeps them on one row instead of stair-stepping.
+    make_variant(category, family, "Small Folded Board Tray", "Kraft", "Bagasse", 300)
+    make_variant(category, family, "Small Folded Board Tray", "Black", "Paperboard", 500)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    assert_select "div.col-span-full.flex.justify-center", count: 1
+  end
+
   test "renders a single centered row when all products share name and material" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
