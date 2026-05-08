@@ -124,14 +124,20 @@
           end
         %>
         <% merged_runs.each do |variant_run| %>
-          <%# Card widths match the parent grid's column sizing (grid-cols-2/3/4 with gap-4). %>
-          <div class="col-span-full flex flex-wrap justify-center gap-4">
-            <% variant_run.each do |product| %>
-              <div class="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
-                <%= render partial: "products/card", locals: { product: product } %>
-              </div>
-            <% end %>
-          </div>
+          <% if variant_run.size > 1 %>
+            <%# Card widths match the parent grid's column sizing (grid-cols-2/3/4 with gap-4). %>
+            <div class="col-span-full flex flex-wrap justify-center gap-4">
+              <% variant_run.each do |product| %>
+                <div class="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+                  <%= render partial: "products/card", locals: { product: product } %>
+                </div>
+              <% end %>
+            </div>
+          <% else %>
+            <%# Lone product with no row-mate — flow with the surrounding grid
+                instead of taking a full-width row. %>
+            <%= render partial: "products/card", locals: { product: variant_run.first } %>
+          <% end %>
         <% end %>
       <% end %>
     </div>

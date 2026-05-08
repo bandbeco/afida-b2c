@@ -549,6 +549,33 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
+  test "renders solo unmergeable products inline with the grid, not as full-width rows" do
+    family = product_families(:single_wall_cups)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Mixed Solo And Pair Test",
+      slug: "mixed-solo-pair-#{SecureRandom.hex(4)}",
+      position: 988,
+    )
+
+    # One mergeable pair (same name, both Kraft) plus four name-unique solo
+    # products. The pair earns its own flex row; the solos should flow as
+    # normal grid cells, not stair-step into four full-width rows.
+    make_variant(category, family, "Cups", "White", "Paper", 227)
+    make_variant(category, family, "Cups", "White", "Paper", 340)
+    make_variant(category, family, "Burger Tray", "Black", "Paperboard", nil)
+    make_variant(category, family, "Carry Pack", "Kraft", "Card", nil)
+    make_variant(category, family, "Takeaway Box", "White", "Card", nil)
+    make_variant(category, family, "Chips Bag", "White", "Paper", nil)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    # Only the same-name pair should produce a flex row.
+    assert_select "div.col-span-full.flex.justify-center", count: 1
+  end
+
   test "merges singleton rows of the same name across different materials" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
