@@ -576,6 +576,33 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
+  test "sorts by volume even when sibling rows have blank-string vs nil material" do
+    family = product_families(:single_wall_cups)
+    family.update!(sort_order: 5)
+
+    category = Category.create!(
+      name: "Blank Sort Test",
+      slug: "blank-sort-test-#{SecureRandom.hex(4)}",
+      position: 986,
+    )
+
+    # Mirror the real-world Planetware data: one variant has '' for
+    # material/colour while siblings have nil. The order-by must treat
+    # '' as nil so volume_in_ml ASC takes effect across the family.
+    p_16 = make_variant(category, family, "Double Wall Takeaway Cup", "", "", 455)
+    p_6  = make_variant(category, family, "Double Wall Takeaway Cup", nil, nil, 170)
+    p_8  = make_variant(category, family, "Double Wall Takeaway Cup", nil, nil, 227)
+    p_12 = make_variant(category, family, "Double Wall Takeaway Cup", nil, nil, 341)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    expected_order = [ p_6.id, p_8.id, p_12.id, p_16.id ]
+    actual_order = controller.view_assigns["products"].map(&:id) & expected_order
+    assert_equal expected_order, actual_order,
+      "Expected ascending volume order despite blank-string material/colour"
+  end
+
   test "treats blank material and colour values as equal to nil when slicing rows" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
