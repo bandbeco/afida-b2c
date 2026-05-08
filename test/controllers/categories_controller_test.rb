@@ -434,6 +434,31 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", text: /Sip Lid - 8oz/, count: 0
   end
 
+  test "falls back to a flat grid when no name+material has 2+ products on the page" do
+    family_a = product_families(:single_wall_cups)
+    family_a.update!(sort_order: 5)
+    family_b = product_families(:paper_lids)
+    family_b.update!(sort_order: 6)
+
+    category = Category.create!(
+      name: "Miscellaneous Test",
+      slug: "miscellaneous-test-#{SecureRandom.hex(4)}",
+      position: 990,
+    )
+
+    # Each product is unique by (name, material). No row break would help.
+    make_variant(category, family_a, "Item A", "White", "Paper", 227)
+    make_variant(category, family_b, "Item B", "Black", "rPET", 340)
+    make_variant(category, family_a, "Item C", "Kraft", "Bagasse", 455)
+
+    get category_url(category.slug)
+    assert_response :success
+
+    # Flat grid: no flex-row wrappers, no chip headings.
+    assert_select "div.col-span-full.flex.justify-center", count: 0
+    assert_select ".product-family-heading", count: 0
+  end
+
   test "renders one centered flex row per name+material run" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
