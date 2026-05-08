@@ -31,8 +31,20 @@ class CategoriesController < ApplicationController
     @products = Product.active
                        .catalog_products
                        .where(category: categories_scope)
-                       .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
-                       .order(position: :asc, id: :asc)
+                       .left_joins(:product_family)
+                       .includes(:category, :product_family,
+                                 product_photo_attachment: :blob,
+                                 lifestyle_photo_attachment: :blob)
+                       .order(
+                         Arel.sql("product_families.sort_order ASC NULLS LAST"),
+                         Arel.sql("product_families.id ASC NULLS LAST"),
+                         :name,
+                         Arel.sql("products.colour ASC NULLS LAST"),
+                         Arel.sql("products.material ASC NULLS LAST"),
+                         Arel.sql("products.volume_in_ml ASC NULLS LAST"),
+                         :position,
+                         :id,
+                       )
 
     # Redirect to product page if only one product in category
     if @products.count == 1

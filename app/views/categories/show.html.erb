@@ -61,9 +61,9 @@
 <%# Hero Section %>
 <section class="category-hero rounded-2xl overflow-hidden mb-8 bg-base-200 <%= @category.image.attached? ? 'grid md:grid-cols-2 gap-0' : '' %>">
   <div class="p-6 md:p-10 flex flex-col justify-center">
-    <h1 class="text-4xl mb-3 flex items-center gap-3">
+    <h1 class="text-4xl md:text-5xl tracking-tight mb-4 flex items-center gap-3">
       <% if category_icon_path(@category).present? %>
-        <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 object-contain', alt: "#{@category.name} icon" %>
+        <%= vite_image_tag category_icon_path(@category), class: 'w-10 h-10 md:w-12 md:h-12 object-contain', alt: "#{@category.name} icon" %>
       <% end %>
       <%= @category.name %>
     </h1>
@@ -81,7 +81,24 @@
 
 <div class="min-h-[60vh]">
   <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    <%= render partial: "products/card", collection: @products, as: :product %>
+    <% groups = @products.to_a.slice_when { |a, b| a.product_family_id != b.product_family_id }.to_a %>
+    <% multi_family_page = groups.count { |g| g.first.product_family_id.present? && g.size > 1 } > 1 %>
+    <% rendered_anything = false %>
+    <% groups.each do |group| %>
+      <% family = group.first.product_family %>
+      <% if multi_family_page && family.present? && group.size > 1 %>
+        <% spacing_classes = rendered_anything ? "mt-8 mb-3" : "mt-0 mb-3" %>
+        <h2 class="product-family-heading col-span-full flex items-center gap-4 <%= spacing_classes %>">
+          <span class="h-px flex-1 bg-base-300"></span>
+          <span class="inline-flex items-baseline px-6 py-2 rounded-full bg-base-200 border border-base-300 text-2xl uppercase tracking-wider text-base-content/80">
+            <%= family.name %>
+          </span>
+          <span class="h-px flex-1 bg-base-300"></span>
+        </h2>
+      <% end %>
+      <%= render partial: "products/card", collection: group, as: :product %>
+      <% rendered_anything = true %>
+    <% end %>
   </div>
 </div>
 
