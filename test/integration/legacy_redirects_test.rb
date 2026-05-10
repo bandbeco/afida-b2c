@@ -76,10 +76,10 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Accessibility Statement"
   end
 
-  test "cookies policy page loads" do
+  test "redirects /cookies-policy to privacy-policy cookies section" do
     get "/cookies-policy"
-    assert_response :success
-    assert_select "h1", "Cookies Policy"
+    assert_redirected_to "/privacy-policy#cookies"
+    assert_equal 301, response.status
   end
 
   # Legacy Wix homepage / catch-all aliases

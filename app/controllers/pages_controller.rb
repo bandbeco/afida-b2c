@@ -119,9 +119,6 @@ class PagesController < ApplicationController
   def privacy_policy
   end
 
-  def cookies_policy
-  end
-
   def accessibility_statement
   end
 
