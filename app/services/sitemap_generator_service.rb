@@ -21,6 +21,7 @@ class SitemapGeneratorService
         add_url(xml, faqs_url, priority: "0.6", changefreq: "weekly")
         add_url(xml, terms_conditions_url, priority: "0.3", changefreq: "yearly")
         add_url(xml, privacy_policy_url, priority: "0.3", changefreq: "yearly")
+        add_url(xml, cookies_policy_url, priority: "0.3", changefreq: "yearly")
         add_url(xml, branding_url, priority: "0.8", changefreq: "weekly")
         add_url(xml, branded_products_url, priority: "0.8", changefreq: "weekly")
         add_url(xml, samples_url, priority: "0.7", changefreq: "monthly")
