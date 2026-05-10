@@ -16,7 +16,7 @@ Lid choice is where Vegware cups quietly save you SKUs. The white fibre hot cup 
 
 ### Sustainability
 
-Every Vegware cup carries EN 13432 certification, which is a genuine, audited industrial composting standard. The certification matters most in operations that actually feed cups into a commercial composter or a council food-waste stream that accepts compostable packaging. Where that infrastructure exists, the sustainability claim is real and verifiable. Where it doesn't, a Vegware cup goes to landfill the same as a conventional PE-lined cup, and the environmental benefit is largely lost. Before you market your cups as compostable to customers, check what your local council and waste contractor actually accept. Being precise about that builds more trust than overpromising.
+Every Vegware cup carries EN 13432 certification, which is a genuine, audited industrial composting standard. The certification matters most in operations that actually feed cups into a commercial composter or a council food-waste stream that accepts compostable packaging. Where that infrastructure exists, the sustainability claim is real and verifiable. Where it doesn't, a Vegware cup goes to landfill the same as a conventional PE-lined cup, and the environmental benefit is largely lost. Before you market your cups as compostable to customers, check what your local council and waste contractor actually accept. Being precise about that builds more trust than overpromising. The back-of-house side of this story is the [compostable bin liner](/collections/vegware/supplies-and-essentials), which is what actually carries the post-service load to its disposal route.
 
 ### Cost
 
