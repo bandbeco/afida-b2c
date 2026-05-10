@@ -51,7 +51,7 @@ module CollectionsHelper
   def collection_buying_guide_structured_data(collection)
     return "" if collection.buying_guide.blank?
 
-    plain_text = collection.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    plain_text = MarkdownHelper.to_plain_text(collection.buying_guide)
     description = plain_text.truncate(160, separator: " ")
 
     data = {
@@ -199,7 +199,7 @@ module CollectionsHelper
   def filter_buying_guide_structured_data(collection, category, guide)
     return "" if guide.nil? || guide.buying_guide.blank?
 
-    plain_text = guide.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    plain_text = MarkdownHelper.to_plain_text(guide.buying_guide)
     return "" if plain_text.blank?
 
     description = plain_text.truncate(160, separator: " ")

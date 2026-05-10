@@ -267,7 +267,7 @@ module SeoHelper
   def buying_guide_structured_data(category)
     return "" if category.buying_guide.blank?
 
-    plain_text = category.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    plain_text = MarkdownHelper.to_plain_text(category.buying_guide)
     description = plain_text.truncate(160, separator: " ")
 
     data = {

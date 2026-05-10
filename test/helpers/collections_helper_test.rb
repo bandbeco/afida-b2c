@@ -149,6 +149,29 @@ class CollectionsHelperTest < ActionView::TestCase
     assert_equal "", filter_buying_guide_structured_data(collection, category, only_chars_guide)
   end
 
+  test "filter_buying_guide_structured_data strips markdown links cleanly from articleBody" do
+    collection = collections(:vegware)
+    category = categories(:parent_cups_and_drinks)
+    guide = CollectionCategoryGuide.new(
+      collection: collection,
+      category: category,
+      buying_guide: "See the [compostable bin liner](/collections/vegware/supplies-and-essentials) for the back-of-house side.",
+      updated_at: Time.current
+    )
+
+    html = filter_buying_guide_structured_data(collection, category, guide)
+    json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
+    parsed = JSON.parse(json)
+
+    assert_includes parsed["articleBody"], "compostable bin liner"
+    refute_includes parsed["articleBody"], "/collections/vegware/supplies-and-essentials",
+      "articleBody should not contain raw URLs from markdown links"
+    refute_includes parsed["articleBody"], "[",
+      "articleBody should not contain markdown link brackets"
+    refute_includes parsed["articleBody"], "](",
+      "articleBody should not contain markdown link syntax remnants"
+  end
+
   test "filter_buying_guide_structured_data emits a parseable Article JSON-LD script tag" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
