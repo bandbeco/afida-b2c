@@ -35,4 +35,10 @@ class FooterTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "footer a[href='mailto:hello@afida.com']", text: "hello@afida.com"
   end
+
+  test "footer links to cookies policy" do
+    get root_url
+    assert_response :success
+    assert_select "footer a[href='#{cookies_policy_path}']", text: "Cookies Policy"
+  end
 end
