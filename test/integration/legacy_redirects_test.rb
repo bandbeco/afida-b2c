@@ -76,10 +76,15 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_select "h1", "Accessibility Statement"
   end
 
-  test "cookies policy page loads" do
+  test "cookies policy page loads with CookieYes embed and noscript fallback" do
     get "/cookies-policy"
     assert_response :success
-    assert_select "h1", "Cookies Policy"
+    assert_select "script#cky-cookie-policy[src*='cookieyes.com']"
+    # Heading is injected by CookieYes' JS at runtime; without JS we serve a
+    # fallback that points readers at the privacy policy's cookies section.
+    assert_select "noscript" do
+      assert_select "a[href='/privacy-policy#cookies']"
+    end
   end
 
   # Legacy Wix homepage / catch-all aliases
