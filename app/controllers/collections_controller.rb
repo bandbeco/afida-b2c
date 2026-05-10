@@ -27,5 +27,7 @@ class CollectionsController < ApplicationController
                            .where(categories: { parent_id: @category.id })
                            .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
                            .order("collection_items.position ASC")
+
+    @guide = CollectionCategoryGuide.for(@collection, @category)
   end
 end

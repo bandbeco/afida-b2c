@@ -1,0 +1,8 @@
+<%# locals: (markdown:) %>
+<% if markdown.present? %>
+  <section class="buying-guide mt-12 py-8 border-t border-base-300">
+    <div class="prose max-w-none">
+      <%= render_markdown(markdown) %>
+    </div>
+  </section>
+<% end %>

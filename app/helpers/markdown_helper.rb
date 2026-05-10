@@ -37,4 +37,16 @@ module MarkdownHelper
 
     markdown.render(text).html_safe
   end
+
+  # Strips markdown syntax to produce plain text, suitable for JSON-LD
+  # articleBody and description fields. Preserves link anchor text while
+  # discarding URLs, then strips the remaining markdown punctuation.
+  def self.to_plain_text(text)
+    return "" if text.blank?
+
+    text.gsub(/\[([^\]]+)\]\([^)]*\)/, '\1')
+        .gsub(/[#*_\[\]\(\)]/, "")
+        .gsub(/\n+/, " ")
+        .strip
+  end
 end

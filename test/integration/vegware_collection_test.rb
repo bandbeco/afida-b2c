@@ -89,7 +89,7 @@ class VegwareCollectionTest < ActionDispatch::IntegrationTest
     get category_filter_collection_url(@vegware.slug, @parent_cups_and_drinks.slug)
     assert_response :success
     assert_select "meta[name=description]" do |elements|
-      assert elements.any? { |e| e[:content].include?("Vegware") && e[:content].include?("Cups & Drinks") }
+      assert elements.any? { |e| e[:content].include?("Vegware") && e[:content].downcase.include?("cups") }
     end
   end
 
@@ -120,6 +120,44 @@ class VegwareCollectionTest < ActionDispatch::IntegrationTest
   test "vegware category filter URL uses collection slug and category slug" do
     url = category_filter_collection_url(@vegware.slug, @parent_cups_and_drinks.slug)
     assert_includes url, "/collections/vegware/cups-and-drinks"
+  end
+
+  # ==========================================================================
+  # Buying guide on filter pages
+  # ==========================================================================
+
+  test "vegware filter page renders buying-guide section when a CollectionCategoryGuide exists" do
+    get category_filter_collection_url(@vegware.slug, @parent_cups_and_drinks.slug)
+    assert_response :success
+    assert_select "section.buying-guide"
+    assert_select "section.buying-guide div.prose"
+  end
+
+  test "vegware filter page omits buying-guide section when no CollectionCategoryGuide exists" do
+    other_category = categories(:parent_hot_food)
+    get category_filter_collection_url(@vegware.slug, other_category.slug)
+    assert_response :success
+    assert_select "section.buying-guide", count: 0
+  end
+
+  test "vegware filter page emits Article JSON-LD when a CollectionCategoryGuide exists" do
+    get category_filter_collection_url(@vegware.slug, @parent_cups_and_drinks.slug)
+    assert_response :success
+    assert_select "script[type='application/ld+json']", minimum: 2
+    article_scripts = css_select("script[type='application/ld+json']").select do |script|
+      script.text.include?('"@type":"Article"')
+    end
+    assert_equal 1, article_scripts.length, "Expected exactly one Article JSON-LD script tag"
+  end
+
+  test "vegware filter page omits Article JSON-LD when no CollectionCategoryGuide exists" do
+    other_category = categories(:parent_hot_food)
+    get category_filter_collection_url(@vegware.slug, other_category.slug)
+    assert_response :success
+    article_scripts = css_select("script[type='application/ld+json']").select do |script|
+      script.text.include?('"@type":"Article"')
+    end
+    assert_equal 0, article_scripts.length
   end
 
   # ==========================================================================

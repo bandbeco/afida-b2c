@@ -51,7 +51,7 @@ module CollectionsHelper
   def collection_buying_guide_structured_data(collection)
     return "" if collection.buying_guide.blank?
 
-    plain_text = collection.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    plain_text = MarkdownHelper.to_plain_text(collection.buying_guide)
     description = plain_text.truncate(160, separator: " ")
 
     data = {
@@ -177,8 +177,8 @@ module CollectionsHelper
       description: "Vegware compostable hot food containers, soup pots and PLA-lined boxes. Heat-stable, leakproof packaging for restaurants, takeaways and delivery service."
     },
     "supplies-and-essentials" => {
-      title: "Vegware Napkins, Straws & Stirrers | Compostable",
-      description: "Vegware napkins, straws, stirrers and disposable accessories for cafes, takeaways and events. Compostable foodservice essentials in bulk wholesale quantities."
+      title: "Vegware Stickers & Bin Liners | Compostable",
+      description: "Vegware compostable bin liners and round stickers. Completely liners from 8L to 240L for food waste. Sealing and write-on stickers for takeaway bags."
     }
   }.freeze
 
@@ -194,6 +194,40 @@ module CollectionsHelper
     return curated if curated
 
     "Browse our range of Vegware #{category.name} products. Plant-based, compostable packaging from the UK's leading eco-friendly supplier."
+  end
+
+  def filter_buying_guide_structured_data(collection, category, guide)
+    return "" if guide.nil? || guide.buying_guide.blank?
+
+    plain_text = MarkdownHelper.to_plain_text(guide.buying_guide)
+    return "" if plain_text.blank?
+
+    description = plain_text.truncate(160, separator: " ")
+    filter_url = category_filter_collection_url(collection, category_slug: category.slug)
+
+    data = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Guide to #{collection.name} #{category.name}",
+      "description": description,
+      "articleBody": plain_text,
+      "dateModified": guide.updated_at.iso8601,
+      "author": {
+        "@type": "Organization",
+        "name": "Afida"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Afida",
+        "url": root_url
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": filter_url
+      }
+    }
+
+    content_tag(:script, data.to_json.html_safe, type: "application/ld+json")
   end
 
   def vegware_filter_structured_data(collection, category)

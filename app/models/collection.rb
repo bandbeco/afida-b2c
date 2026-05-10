@@ -24,6 +24,7 @@ class Collection < ApplicationRecord
 
   has_many :collection_items, -> { order(:position) }, dependent: :destroy
   has_many :products, through: :collection_items
+  has_many :collection_category_guides, dependent: :destroy
 
   has_one_attached :image
 

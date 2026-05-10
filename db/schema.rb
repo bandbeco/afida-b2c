@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_142119) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_10_231756) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -174,6 +174,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_142119) do
     t.index ["parent_id"], name: "index_categories_on_parent_id"
     t.index ["position"], name: "index_categories_on_position"
     t.index ["slug"], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "collection_category_guides", force: :cascade do |t|
+    t.text "buying_guide"
+    t.bigint "category_id", null: false
+    t.bigint "collection_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_collection_category_guides_on_category_id"
+    t.index ["collection_id", "category_id"], name: "index_collection_category_guides_on_collection_and_category", unique: true
+    t.index ["collection_id"], name: "index_collection_category_guides_on_collection_id"
   end
 
   create_table "collection_items", force: :cascade do |t|
@@ -466,6 +477,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_142119) do
   add_foreign_key "cart_items", "products"
   add_foreign_key "carts", "users"
   add_foreign_key "categories", "categories", column: "parent_id"
+  add_foreign_key "collection_category_guides", "categories", on_delete: :cascade
+  add_foreign_key "collection_category_guides", "collections", on_delete: :cascade
   add_foreign_key "collection_items", "collections"
   add_foreign_key "collection_items", "products"
   add_foreign_key "order_items", "orders"
