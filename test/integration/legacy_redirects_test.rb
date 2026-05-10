@@ -75,4 +75,86 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", "Accessibility Statement"
   end
+
+  test "cookies policy page loads" do
+    get "/cookies-policy"
+    assert_response :success
+    assert_select "h1", "Cookies Policy"
+  end
+
+  # Legacy Wix homepage / catch-all aliases
+  test "redirects legacy index.php to root" do
+    get "/index.php"
+    assert_redirected_to "/"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy /home to root" do
+    get "/home"
+    assert_redirected_to "/"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy /blank-3 to root" do
+    get "/blank-3"
+    assert_redirected_to "/"
+    assert_equal 301, response.status
+  end
+
+  # Legacy Wix collection
+  test "redirects legacy /collections/paper-straws to straws category" do
+    get "/collections/paper-straws"
+    assert_redirected_to "/categories/cups-and-drinks/straws"
+    assert_equal 301, response.status
+  end
+
+  # Legacy Wix /product-page/* redirects
+  test "redirects legacy 12oz double-wall ripple cup to current ripple cup" do
+    get "/product-page/12oz-340ml-double-wall-ripple-paper-hot-cup"
+    assert_redirected_to "/products/ripple-wall-coffee-cups-12oz-340ml-kraft-paper"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy 8oz black double-wall ripple cup to current 8oz black ripple cup" do
+    get "/product-page/8oz-227ml-double-wall-ripple-paper-hot-cup-black"
+    assert_redirected_to "/products/ripple-wall-coffee-cups-8oz-227ml-black-paper"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy 6mm bamboo fibre straws (black) to bamboo pulp straws" do
+    get "/product-page/6mm-x-200mm-bamboo-fibre-straws-black"
+    assert_redirected_to "/products/straws-6-x-200mm-bamboo-pulp"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy 6mm bamboo fibre straws (natural) to bamboo pulp straws" do
+    get "/product-page/6mm-x-200mm-bamboo-fibre-straws-natural"
+    assert_redirected_to "/products/straws-6-x-200mm-bamboo-pulp"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy 4-fold white 2ply dinner napkins to current product" do
+    get "/product-page/4-fold-white-2ply-dinner-napkins-40cm-x-40cm"
+    assert_redirected_to "/products/4-fold-2-ply-dinner-napkins-40-x-40cm-white-paper"
+    assert_equal 301, response.status
+  end
+
+  test "redirects legacy no-3 kraft deli box to takeaway box no-3 kraft" do
+    get "/product-page/no-3-kraft-deli-box-70oz"
+    assert_redirected_to "/products/takeaway-boxes-no-3-1900ml-69oz-kraft"
+    assert_equal 301, response.status
+  end
+
+  # Catch-all for unmapped /product-page/* paths (sends to shop)
+  test "unmapped /product-page paths fall back to /shop" do
+    get "/product-page/some-deleted-old-product"
+    assert_redirected_to "/shop"
+    assert_equal 301, response.status
+  end
+
+  # Query string preservation on legacy product redirect
+  test "preserves query parameters on legacy product-page redirect" do
+    get "/product-page/12oz-340ml-double-wall-ripple-paper-hot-cup?utm_source=google"
+    assert_redirected_to "/products/ripple-wall-coffee-cups-12oz-340ml-kraft-paper?utm_source=google"
+  end
 end

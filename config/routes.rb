@@ -35,6 +35,26 @@ Rails.application.routes.draw do
   # Legacy page redirects (preserves query params for UTM tracking)
   get "/branded-packaging", to: redirect(status: 301) { |_params, req| "/branding#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
+  # Legacy Wix homepage / orphan page aliases (Google Search Console drilldown 2026-05-10)
+  get "/index.php", to: redirect(status: 301, path: "/")
+  get "/home", to: redirect(status: 301, path: "/")
+  get "/blank-3", to: redirect(status: 301, path: "/")
+
+  # Legacy Wix /collections/* (only the one URL we've seen 404 in GSC)
+  get "/collections/paper-straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
+  # Legacy Wix /product-page/* — map known SKUs to current product slugs
+  get "/product-page/12oz-340ml-double-wall-ripple-paper-hot-cup", to: redirect(status: 301) { |_params, req| "/products/ripple-wall-coffee-cups-12oz-340ml-kraft-paper#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/product-page/8oz-227ml-double-wall-ripple-paper-hot-cup-black", to: redirect(status: 301) { |_params, req| "/products/ripple-wall-coffee-cups-8oz-227ml-black-paper#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/product-page/6mm-x-200mm-bamboo-fibre-straws-black", to: redirect(status: 301) { |_params, req| "/products/straws-6-x-200mm-bamboo-pulp#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/product-page/6mm-x-200mm-bamboo-fibre-straws-natural", to: redirect(status: 301) { |_params, req| "/products/straws-6-x-200mm-bamboo-pulp#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/product-page/4-fold-white-2ply-dinner-napkins-40cm-x-40cm", to: redirect(status: 301) { |_params, req| "/products/4-fold-2-ply-dinner-napkins-40-x-40cm-white-paper#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/product-page/no-3-kraft-deli-box-70oz", to: redirect(status: 301) { |_params, req| "/products/takeaway-boxes-no-3-1900ml-69oz-kraft#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
+  # Catch-all for unmapped /product-page/* paths — fall back to /shop
+  # Must come after the specific product-page redirects above
+  get "/product-page/*path", to: redirect(status: 301) { "/shop" }
+
   get "shop", to: "pages#shop"
   get "search", to: "search#index"
   get "branding", to: "pages#branding"
