@@ -7,6 +7,7 @@ class Category < ApplicationRecord
   has_many :children, class_name: "Category", foreign_key: :parent_id, dependent: :restrict_with_error
 
   has_many :products
+  has_many :collection_category_guides, dependent: :destroy
   has_one_attached :image
 
   validates :name, presence: true

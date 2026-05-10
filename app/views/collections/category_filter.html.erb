@@ -1,3 +1,5 @@
+<% guide = CollectionCategoryGuide.for(@collection, @category) %>
+
 <% content_for :breadcrumbs do %>
   <nav aria-label="Breadcrumb" class="text-sm breadcrumbs">
     <ul>
@@ -33,6 +35,8 @@
   <script type="application/ld+json">
     <%= raw(vegware_filter_structured_data(@collection, @category).to_json) %>
   </script>
+
+  <%= vegware_filter_buying_guide_structured_data(@collection, @category, guide) %>
 <% end %>
 
 <div class="drawer drawer-end">
@@ -63,6 +67,8 @@
         </div>
       <% end %>
     </div>
+
+    <%= render "shared/buying_guide", markdown: guide&.buying_guide %>
 
   </div>
 

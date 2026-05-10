@@ -151,14 +151,8 @@
   <% end %>
 </div>
 
-<%# Buying Guide Section %>
+<%= render "shared/buying_guide", markdown: @category.buying_guide %>
 <% if @category.buying_guide.present? %>
-  <section class="buying-guide mt-12 py-8 border-t border-base-300">
-    <div class="prose max-w-none">
-      <%= render_markdown(@category.buying_guide) %>
-    </div>
-  </section>
-
   <%= buying_guide_structured_data(@category) %>
 <% end %>
 

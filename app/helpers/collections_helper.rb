@@ -196,6 +196,38 @@ module CollectionsHelper
     "Browse our range of Vegware #{category.name} products. Plant-based, compostable packaging from the UK's leading eco-friendly supplier."
   end
 
+  def vegware_filter_buying_guide_structured_data(collection, category, guide)
+    return "" if guide.nil? || guide.buying_guide.blank?
+
+    plain_text = guide.buying_guide.gsub(/[#*_\[\]\(\)]/, "").gsub(/\n+/, " ").strip
+    description = plain_text.truncate(160, separator: " ")
+    filter_url = category_filter_collection_url(collection, category_slug: category.slug)
+
+    data = {
+      "@context": "https://schema.org",
+      "@type": "Article",
+      "headline": "Guide to Vegware #{category.name}",
+      "description": description,
+      "articleBody": plain_text,
+      "dateModified": guide.updated_at.iso8601,
+      "author": {
+        "@type": "Organization",
+        "name": "Afida"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Afida",
+        "url": root_url
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": filter_url
+      }
+    }
+
+    content_tag(:script, data.to_json.html_safe, type: "application/ld+json")
+  end
+
   def vegware_filter_structured_data(collection, category)
     filter_url = category_filter_collection_url(collection, category_slug: category.slug)
     {
