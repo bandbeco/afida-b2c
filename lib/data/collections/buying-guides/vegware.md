@@ -10,12 +10,13 @@ Vegware is a brand, not a material. The range uses several different base materi
 
 The Vegware collection on Afida covers most of what a takeaway, cafe, or catering operation needs:
 
-- **Bagasse containers:** Clamshells from 5in to 9in, burger boxes (standard and heavyweight), square lunch boxes, multi-compartment boxes, chip trays, and gourmet bases from 340ml up to 1800ml. These handle hot, greasy food without softening or leaking.
+- **[Hot food containers](/collections/vegware/hot-food):** Clamshells from 5in to 9in, burger boxes (standard and heavyweight), square lunch boxes, multi-compartment boxes, chip trays, gourmet bases from 340ml up to 1800ml, soup cups, kraft food bowls, and microflute corrugated hot boxes. Handles hot, greasy food without softening or leaking.
 - **Lids:** Bagasse lids, PLA clear lids, and window lids in multiple sizes (Size 3, 4, and 5). Matching lids to containers by size number is essential. PLA lids give visibility for cold food displays; bagasse lids suit hot dishes and stacking.
-- **Hot cups:** Single wall and double wall in 10oz, 12oz, 16oz, and 20oz. Available in kraft brown, white, printed designs (Green Britain, Green Tree, Gallery, Feel Good), and plain black. All 89-Series with standardised lid fit.
-- **Cold cups:** PLA clear cups in the 96-Series (12oz, 16oz, 20oz) and paper cold cups in the 89-Series (10oz, 12oz, 16oz). PLA cups suit smoothies, juices, and iced drinks where visibility matters.
-- **Cup lids:** White fibre hot cup lids (90mm for 89-Series). One lid size covers 12oz and 16oz cups in the same series.
-- **Bags and wraps:** Kraft flat bags (white and brown, multiple sizes), therma bags for hot food, glassine bags with NatureFlex windows, kraft window bags, and ovenable wrap. Therma bags keep food warm during delivery; glassine bags work well for pastries and sandwiches.
+- **[Cups and drinks](/collections/vegware/cups-and-drinks):** Single wall and double wall hot cups in 10oz, 12oz, 16oz, and 20oz, plus PLA clear cold cups in the 96-Series and paper cold cups in the 89-Series. Kraft brown, white, and printed designs (Green Britain, Green Tree, Gallery, Feel Good). One lid covers 12oz and 16oz cups in the same series.
+- **[Cold food and salads](/collections/vegware/cold-food-and-salads):** Kraft sandwich wedges and cartons, PLA salad boxes with windows, Bella Pots in 3oz to 12oz, cold portion pots, and therma bags for chilled delivery. Suits delis, meal-prep operations, and lunchtime cold service.
+- **[Tableware](/collections/vegware/tableware):** Bagasse plates and bowls in round, square, rectangular, and oval formats, paper and wood cutlery loose and in kits, paper napkins from cocktail size to large dinner, and platter boxes with modular inserts. Designed for dine-in, events, and casual catering.
+- **[Bags and wraps](/collections/vegware/bags-and-wraps):** Kraft flat bags (white and brown, multiple sizes), kraft window bags, glassine bags with home-compostable NatureFlex windows, greaseproof sheets and burger wraps (plain and Green Tree print), and ovenable wrap. Therma bags for hot delivery, glassine bags for premium bakery and deli items.
+- **[Supplies and essentials](/collections/vegware/supplies-and-essentials):** Round stickers for sealing and labelling takeaway bags, and Completely compostable bin liners from 8L under-counter caddies through 240L wheelie bins. The back-of-house counterpart that closes the compostable loop.
 
 ### Sizing and Compatibility
 
