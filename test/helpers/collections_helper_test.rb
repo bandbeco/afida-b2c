@@ -69,7 +69,10 @@ class CollectionsHelperTest < ActionView::TestCase
   test "vegware_filter_meta_description returns curated copy for supplies-and-essentials" do
     category = Category.new(name: "Supplies & Essentials", slug: "supplies-and-essentials")
     result = vegware_filter_meta_description(category)
-    assert_includes result.downcase, "napkins"
+    assert_includes result.downcase, "bin liners"
+    assert_includes result.downcase, "stickers"
+    refute_includes result.downcase, "napkins"
+    refute_includes result.downcase, "straws"
     refute_includes result, "Browse our range of"
     assert result.length <= 160
   end

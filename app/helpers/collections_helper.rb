@@ -177,8 +177,8 @@ module CollectionsHelper
       description: "Vegware compostable hot food containers, soup pots and PLA-lined boxes. Heat-stable, leakproof packaging for restaurants, takeaways and delivery service."
     },
     "supplies-and-essentials" => {
-      title: "Vegware Napkins, Straws & Stirrers | Compostable",
-      description: "Vegware napkins, straws, stirrers and disposable accessories for cafes, takeaways and events. Compostable foodservice essentials in bulk wholesale quantities."
+      title: "Vegware Stickers & Bin Liners | Compostable",
+      description: "Vegware compostable bin liners and round stickers. Completely liners from 8L to 240L for food waste. Sealing and write-on stickers for takeaway bags."
     }
   }.freeze
 
