@@ -24,7 +24,7 @@ Platter boxes are the often-overlooked part of the tableware range and the highe
 
 ### Compostability for Dine-In
 
-Compostable tableware works differently from compostable takeaway packaging. In takeaway, you hand the cup to the customer and lose control of the disposal route. In dine-in or events, the operator collects every plate, bowl, and napkin at the end of service and routes them as a single waste stream. That makes EN 13432 certification practically useful in a way it often isn't for takeaway: you can actually feed the entire post-service tableware load into a commercial composter or food-waste collection. For caterers and venues, this is the strongest case in the Vegware range for genuine end-to-end sustainability, not just packaging that's compostable in principle.
+Compostable tableware works differently from compostable takeaway packaging. In takeaway, you hand the cup to the customer and lose control of the disposal route. In dine-in or events, the operator collects every plate, bowl, and napkin at the end of service and routes them as a single waste stream, typically by lining the collection bin with a [compostable bin liner](/collections/vegware/supplies-and-essentials) sized to the venue's waste flow. That makes EN 13432 certification practically useful in a way it often isn't for takeaway: you can actually feed the entire post-service tableware load into a commercial composter or food-waste collection. For caterers and venues, this is the strongest case in the Vegware range for genuine end-to-end sustainability, not just packaging that's compostable in principle.
 
 ### Cost Per Cover
 
