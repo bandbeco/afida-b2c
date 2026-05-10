@@ -123,28 +123,35 @@ class CollectionsHelperTest < ActionView::TestCase
   end
 
   # ==========================================================================
-  # vegware_filter_buying_guide_structured_data
+  # filter_buying_guide_structured_data
   # ==========================================================================
 
-  test "vegware_filter_buying_guide_structured_data returns empty when guide is nil" do
+  test "filter_buying_guide_structured_data returns empty when guide is nil" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
-    assert_equal "", vegware_filter_buying_guide_structured_data(collection, category, nil)
+    assert_equal "", filter_buying_guide_structured_data(collection, category, nil)
   end
 
-  test "vegware_filter_buying_guide_structured_data returns empty when buying_guide is blank" do
+  test "filter_buying_guide_structured_data returns empty when buying_guide is blank" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     blank_guide = CollectionCategoryGuide.new(collection: collection, category: category, buying_guide: "")
-    assert_equal "", vegware_filter_buying_guide_structured_data(collection, category, blank_guide)
+    assert_equal "", filter_buying_guide_structured_data(collection, category, blank_guide)
   end
 
-  test "vegware_filter_buying_guide_structured_data emits a parseable Article JSON-LD script tag" do
+  test "filter_buying_guide_structured_data returns empty when buying_guide is only markdown chars" do
+    collection = collections(:vegware)
+    category = categories(:parent_cups_and_drinks)
+    only_chars_guide = CollectionCategoryGuide.new(collection: collection, category: category, buying_guide: "### *** ___")
+    assert_equal "", filter_buying_guide_structured_data(collection, category, only_chars_guide)
+  end
+
+  test "filter_buying_guide_structured_data emits a parseable Article JSON-LD script tag" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     guide = collection_category_guides(:vegware_cups_and_drinks)
 
-    html = vegware_filter_buying_guide_structured_data(collection, category, guide)
+    html = filter_buying_guide_structured_data(collection, category, guide)
     assert_match %r{<script type="application/ld\+json">}, html
 
     json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
@@ -154,12 +161,12 @@ class CollectionsHelperTest < ActionView::TestCase
     assert_equal "Article", parsed["@type"]
   end
 
-  test "vegware_filter_buying_guide_structured_data headline includes the category name" do
+  test "filter_buying_guide_structured_data headline includes the category name" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     guide = collection_category_guides(:vegware_cups_and_drinks)
 
-    html = vegware_filter_buying_guide_structured_data(collection, category, guide)
+    html = filter_buying_guide_structured_data(collection, category, guide)
     json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
     parsed = JSON.parse(json)
 
@@ -167,12 +174,12 @@ class CollectionsHelperTest < ActionView::TestCase
     assert_includes parsed["headline"].downcase, "vegware"
   end
 
-  test "vegware_filter_buying_guide_structured_data mainEntityOfPage points to the filter URL" do
+  test "filter_buying_guide_structured_data mainEntityOfPage points to the filter URL" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     guide = collection_category_guides(:vegware_cups_and_drinks)
 
-    html = vegware_filter_buying_guide_structured_data(collection, category, guide)
+    html = filter_buying_guide_structured_data(collection, category, guide)
     json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
     parsed = JSON.parse(json)
 
@@ -180,12 +187,12 @@ class CollectionsHelperTest < ActionView::TestCase
     assert_equal expected_url, parsed["mainEntityOfPage"]["@id"]
   end
 
-  test "vegware_filter_buying_guide_structured_data description is at most 160 chars" do
+  test "filter_buying_guide_structured_data description is at most 160 chars" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     guide = collection_category_guides(:vegware_cups_and_drinks)
 
-    html = vegware_filter_buying_guide_structured_data(collection, category, guide)
+    html = filter_buying_guide_structured_data(collection, category, guide)
     json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
     parsed = JSON.parse(json)
 
@@ -193,12 +200,12 @@ class CollectionsHelperTest < ActionView::TestCase
       "Article description is #{parsed["description"].length} chars (max 160)"
   end
 
-  test "vegware_filter_buying_guide_structured_data sets author and publisher to Afida" do
+  test "filter_buying_guide_structured_data sets author and publisher to Afida" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     guide = collection_category_guides(:vegware_cups_and_drinks)
 
-    html = vegware_filter_buying_guide_structured_data(collection, category, guide)
+    html = filter_buying_guide_structured_data(collection, category, guide)
     json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
     parsed = JSON.parse(json)
 
@@ -208,12 +215,12 @@ class CollectionsHelperTest < ActionView::TestCase
     assert_equal "Afida", parsed["publisher"]["name"]
   end
 
-  test "vegware_filter_buying_guide_structured_data dateModified comes from guide.updated_at" do
+  test "filter_buying_guide_structured_data dateModified comes from guide.updated_at" do
     collection = collections(:vegware)
     category = categories(:parent_cups_and_drinks)
     guide = collection_category_guides(:vegware_cups_and_drinks)
 
-    html = vegware_filter_buying_guide_structured_data(collection, category, guide)
+    html = filter_buying_guide_structured_data(collection, category, guide)
     json = html.match(%r{<script[^>]*>(.+?)</script>}m)[1]
     parsed = JSON.parse(json)
 
