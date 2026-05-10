@@ -80,75 +80,7 @@
 </section>
 
 <div class="min-h-[60vh]">
-  <%
-    products = @products.to_a
-    groups = products.slice_when { |a, b| a.product_family_id != b.product_family_id }.to_a
-    multi_family_page = groups.count { |g| g.first.product_family_id.present? && g.size > 1 } > 1
-    # Row breaks only earn their keep when at least one product line has 2+
-    # variants sharing a name. Without that, every card becomes a singleton
-    # run and the layout stair-steps for no benefit.
-    sectioned = products.group_by(&:name).values.any? { |run| run.size > 1 }
-  %>
-  <% if sectioned %>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <% groups.each do |group| %>
-        <% family = group.first.product_family %>
-        <% if multi_family_page && family.present? && group.size > 1 %>
-          <h2 class="product-family-heading col-span-full flex items-center gap-4 mb-3 mt-8 first-of-type:mt-0">
-            <span class="h-px flex-1 bg-base-300"></span>
-            <span class="inline-flex items-baseline px-6 py-2 rounded-full bg-base-200 border border-base-300 text-2xl uppercase tracking-wider text-base-content/80">
-              <%= family.name %>
-            </span>
-            <span class="h-px flex-1 bg-base-300"></span>
-          </h2>
-        <% end %>
-        <%
-          # Slice by (name, material, colour), then absorb singleton runs into
-          # an adjacent run sharing (name, material). If a singleton has no
-          # such neighbour, fall back to merging with any adjacent run that
-          # shares the name — avoids skinny one-card rows for products that
-          # differ only by colour/material (e.g. Kraft vs Black trays).
-          # Treat blank strings as nil so legacy '' values don't fragment runs
-          # away from products with nil material/colour.
-          slice_attrs = ->(p) { [ p.name, p.material.presence, p.colour.presence ] }
-          runs = group.slice_when { |a, b| slice_attrs.call(a) != slice_attrs.call(b) }.to_a
-          merged_runs = []
-          runs.each do |run|
-            prev = merged_runs.last
-            if prev && (prev.size == 1 || run.size == 1) && prev.first.name == run.first.name
-              same_material = prev.first.material.presence == run.first.material.presence
-              both_singletons = prev.size == 1 && run.size == 1
-              if same_material || both_singletons
-                merged_runs[-1] = prev + run
-                next
-              end
-            end
-            merged_runs << run
-          end
-        %>
-        <% merged_runs.each do |variant_run| %>
-          <% if variant_run.size > 1 %>
-            <%# Card widths match the parent grid's column sizing (grid-cols-2/3/4 with gap-4). %>
-            <div class="col-span-full flex flex-wrap justify-center gap-4">
-              <% variant_run.each do |product| %>
-                <div class="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
-                  <%= render partial: "products/card", locals: { product: product } %>
-                </div>
-              <% end %>
-            </div>
-          <% else %>
-            <%# Lone product with no row-mate — flow with the surrounding grid
-                instead of taking a full-width row. %>
-            <%= render partial: "products/card", locals: { product: variant_run.first } %>
-          <% end %>
-        <% end %>
-      <% end %>
-    </div>
-  <% else %>
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      <%= render partial: "products/card", collection: products, as: :product %>
-    </div>
-  <% end %>
+  <%= render partial: "products/grouped_grid", locals: { products: @products } %>
 </div>
 
 <%= render "shared/buying_guide", markdown: @category.buying_guide %>
