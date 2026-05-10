@@ -75,8 +75,7 @@ Rails.application.routes.draw do
   get "contact", to: "pages#contact"
   get "terms-conditions", to: "pages#terms_conditions"
   get "privacy-policy", to: "pages#privacy_policy"
-  # Legacy /cookies-policy redirects to the cookies section of the privacy policy
-  get "cookies-policy", to: redirect(status: 301, path: "/privacy-policy#cookies")
+  get "cookies-policy", to: "pages#cookies_policy"
   get "accessibility-statement", to: "pages#accessibility_statement"
   get "return-policy", to: "pages#return_policy"
   get "delivery-returns", to: "pages#delivery_returns"
