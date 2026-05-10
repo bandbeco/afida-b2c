@@ -155,11 +155,44 @@ module CollectionsHelper
     "Request your free #{sample_pack.name} sample pack. #{product_count} curated products delivered for just #{shipping_cost}. Try before you buy with Afida."
   end
 
+  VEGWARE_FILTER_METAS = {
+    "cups-and-drinks" => {
+      title: "Vegware Cups & Drinks | Compostable Coffee Cups",
+      description: "Vegware compostable cups for hot drinks, cold drinks and smoothies. Single and double-wall paper cups, PLA cold cups and lids in 4-16oz sizes."
+    },
+    "tableware" => {
+      title: "Vegware Tableware | Compostable Plates & Cutlery",
+      description: "Vegware compostable plates, bowls, cutlery and bagasse tableware for events, canteens and takeaway service. EN 13432 certified, plant-based and tree-free."
+    },
+    "bags-and-wraps" => {
+      title: "Vegware Bags & Wraps | Compostable Mailing Bags",
+      description: "Vegware compostable bags and wraps. Mailing bags, sandwich bags, NatureFlex film and greaseproof sheets. Plant-based, home-compostable alternatives."
+    },
+    "cold-food-and-salads" => {
+      title: "Vegware Cold Food & Salads | Compostable Boxes",
+      description: "Vegware compostable salad boxes, deli pots and cold food containers. PLA-lined kraft and clear bioplastic options for grab-and-go and meal prep."
+    },
+    "hot-food" => {
+      title: "Vegware Hot Food | Compostable Soup & Hot Boxes",
+      description: "Vegware compostable hot food containers, soup pots and PLA-lined boxes. Heat-stable, leakproof packaging for restaurants, takeaways and delivery service."
+    },
+    "supplies-and-essentials" => {
+      title: "Vegware Napkins, Straws & Stirrers | Compostable",
+      description: "Vegware napkins, straws, stirrers and disposable accessories for cafes, takeaways and events. Compostable foodservice essentials in bulk wholesale quantities."
+    }
+  }.freeze
+
   def vegware_filter_meta_title(category)
+    curated = VEGWARE_FILTER_METAS.dig(category.slug, :title)
+    return "#{curated} | Afida" if curated
+
     "Vegware #{category.name} | Eco-Friendly Packaging | Afida"
   end
 
   def vegware_filter_meta_description(category)
+    curated = VEGWARE_FILTER_METAS.dig(category.slug, :description)
+    return curated if curated
+
     "Browse our range of Vegware #{category.name} products. Plant-based, compostable packaging from the UK's leading eco-friendly supplier."
   end
 
