@@ -12,9 +12,11 @@
       src="https://datafa.st/js/script.js">
     </script>
 
-    <%# Block search engine indexing on staging domains %>
+    <%# Robots directive: block indexing on staging, opt into large previews and full snippets on production %>
     <% if request.host.include?("staging.afida.com") %>
       <meta name="robots" content="noindex, nofollow">
+    <% else %>
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <% end %>
 
     <title><%= content_for(:title) %></title>

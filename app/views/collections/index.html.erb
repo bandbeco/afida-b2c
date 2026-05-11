@@ -13,6 +13,13 @@ Browse our curated collections of eco-friendly packaging supplies, organised by 
   <script type="application/ld+json">
     <%= raw(collections_index_structured_data(@collections).to_json) %>
   </script>
+
+  <script type="application/ld+json">
+    <%= raw breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: "Collections", url: collections_url }
+    ]) %>
+  </script>
 <% end %>
 
 <% content_for :breadcrumbs do %>
