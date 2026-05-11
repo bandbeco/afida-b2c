@@ -77,12 +77,12 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "title tag falls back to generated_title alone without brand suffix" do
+  test "title tag falls back to generated_meta_title without brand suffix" do
     @product.update!(meta_title: nil)
     get product_url(@product.slug)
     assert_response :success
     title = response.body[/<title>(.*?)<\/title>/m, 1].to_s.strip
-    assert_equal @product.generated_title, title
+    assert_equal @product.generated_meta_title, title
     assert_no_match(/\|\s*Afida/, title)
   end
 

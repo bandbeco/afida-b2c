@@ -740,4 +740,74 @@ class ProductTest < ActiveSupport::TestCase
     product = products(:inactive_product)
     assert_not product.in_stock?
   end
+
+  # ==========================================================================
+  # generated_meta_title
+  # ==========================================================================
+
+  test "generated_meta_title appends compostable suffix when certified" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Vegware", size: "12oz", colour: "Kraft", material: "Paper",
+      name: "Hot Cup", certifications: "Compostable"
+    )
+    assert_equal "Vegware 12oz Kraft Paper Hot Cup, Compostable", product.generated_meta_title
+  end
+
+  test "generated_meta_title appends recyclable when compostable is absent" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: "12oz", colour: "Clear", material: "rPET",
+      name: "Smoothie Cup", certifications: "Recyclable, Food Safe"
+    )
+    assert_equal "12oz Clear rPET Smoothie Cup, Recyclable", product.generated_meta_title
+  end
+
+  test "generated_meta_title prioritises compostable over recyclable" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: nil, colour: nil, material: nil,
+      name: "Test Item", certifications: "Recyclable, Compostable"
+    )
+    assert_equal "Test Item, Compostable", product.generated_meta_title
+  end
+
+  test "generated_meta_title returns base title when certifications are blank" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: nil, colour: nil, material: nil,
+      name: "Plain Item", certifications: nil
+    )
+    assert_equal "Plain Item", product.generated_meta_title
+  end
+
+  test "generated_meta_title omits low-value certifications like Food Safe and FSC" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: nil, colour: nil, material: nil,
+      name: "Food Item", certifications: "Food Safe, FSC"
+    )
+    assert_equal "Food Item", product.generated_meta_title
+  end
+
+  test "generated_meta_title skips suffix when benefit word already in base title" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: "160mm", colour: nil, material: "Wood",
+      name: "Compostable Cutlery Kit", certifications: "Compostable"
+    )
+    assert_equal "160mm Wood Compostable Cutlery Kit", product.generated_meta_title
+  end
+
+  test "generated_meta_title drops suffix when combined length exceeds 60 chars" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: "12oz", colour: "Kraft Aqueous",
+      material: "Lined", name: "Compostable Takeaway Cup with Lid",
+      certifications: "Recyclable"
+    )
+    # Base: "12oz Kraft Aqueous Lined Compostable Takeaway Cup with Lid" = 58 chars
+    # With suffix: ", Recyclable" makes it 70 chars -> should drop suffix
+    assert_equal product.generated_title, product.generated_meta_title
+  end
 end

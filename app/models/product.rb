@@ -237,6 +237,29 @@ class Product < ApplicationRecord
     parts.join(" ")
   end
 
+  META_TITLE_BENEFIT_PRIORITY = [ "Compostable", "Recyclable", "Biodegradable", "Plastic Free" ].freeze
+  META_TITLE_MAX_LENGTH = 60
+
+  # Generated <title> tag content. Builds on generated_title and appends the
+  # first matching benefit certification ("Compostable", "Recyclable", ...) as
+  # a CTR-boosting suffix in SERPs. Drops the suffix when it would push the
+  # title past META_TITLE_MAX_LENGTH chars or when the benefit word is already
+  # in the base title.
+  def generated_meta_title
+    base = generated_title
+    return base if certifications.blank?
+
+    cert_list = certifications.split(/,\s*/).map(&:strip)
+    benefit = META_TITLE_BENEFIT_PRIORITY.find do |b|
+      cert_list.any? { |c| c.casecmp(b).zero? }
+    end
+    return base unless benefit
+    return base if base.match?(/\b#{Regexp.escape(benefit)}\b/i)
+
+    candidate = "#{base}, #{benefit}"
+    candidate.length <= META_TITLE_MAX_LENGTH ? candidate : base
+  end
+
   # Returns other products in the same family
   def siblings(limit: 8)
     return Product.none unless product_family_id.present?
