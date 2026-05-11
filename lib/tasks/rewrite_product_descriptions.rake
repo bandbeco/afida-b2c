@@ -49,25 +49,29 @@ namespace :products do
     puts "Review #{output_path} then run: bin/rails products:apply_description_short_rewrites"
   end
 
-  desc "Apply approved rewrites from tmp/description_short_rewrites.csv to Product#description_short. Skips rows with empty or ERROR new value."
+  desc "Apply approved rewrites to Product#description_short. CSV path defaults to tmp/description_short_rewrites.csv; override with CSV_PATH env var. Matches products by sku (not id), so the same CSV works against any environment."
   task apply_description_short_rewrites: :environment do
-    path = Rails.root.join("tmp", "description_short_rewrites.csv")
+    path = ENV["CSV_PATH"].presence || Rails.root.join("tmp", "description_short_rewrites.csv").to_s
     abort("Not found: #{path}") unless File.exist?(path)
 
     updated = 0
-    skipped = 0
+    skipped_no_value = 0
+    skipped_no_product = 0
     CSV.foreach(path, headers: true) do |row|
       new_value = row["new"].to_s.strip
       if new_value.empty? || new_value.start_with?("ERROR:")
-        skipped += 1
+        skipped_no_value += 1
         next
       end
-      product = Product.find_by(id: row["id"])
-      next skipped += 1 unless product
+      product = Product.find_by(sku: row["sku"])
+      unless product
+        skipped_no_product += 1
+        next
+      end
       product.update_columns(description_short: new_value)
       updated += 1
     end
-    puts "Updated #{updated} products, skipped #{skipped}."
+    puts "Updated #{updated} products, skipped #{skipped_no_value} (empty/error rows), #{skipped_no_product} (sku not found)."
   end
 end
 
