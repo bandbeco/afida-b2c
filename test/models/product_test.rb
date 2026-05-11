@@ -815,15 +815,14 @@ class ProductTest < ActiveSupport::TestCase
   # generated_meta_description
   # ==========================================================================
 
-  test "generated_meta_description combines title, description_short, qty, delivery" do
+  test "generated_meta_description combines description_short with qty and delivery" do
     product = products(:one)
     product.update_columns(
       brand: "Vegware", size: "12oz", colour: "Kraft", material: "Paper",
       name: "Hot Cup", certifications: "Compostable", pac_size: 1000,
       description_short: "Compostable double-wall coffee cups for hot drinks."
     )
-    expected = "Vegware 12oz Kraft Paper Hot Cup. " \
-               "Compostable double-wall coffee cups for hot drinks. " \
+    expected = "Compostable double-wall coffee cups for hot drinks. " \
                "Case of 1000, free UK delivery over £100."
     assert_equal expected, product.generated_meta_description
   end
@@ -845,7 +844,7 @@ class ProductTest < ActiveSupport::TestCase
       name: "Mystery Item", pac_size: nil,
       description_short: "Useful for many things."
     )
-    assert_equal "Mystery Item. Useful for many things. Free UK delivery over £100.",
+    assert_equal "Useful for many things. Free UK delivery over £100.",
                  product.generated_meta_description
   end
 
@@ -876,7 +875,7 @@ class ProductTest < ActiveSupport::TestCase
     assert_includes result, "free UK delivery over £100"
   end
 
-  test "generated_meta_description drops description_short entirely when even one sentence is too long" do
+  test "generated_meta_description falls back to title when even one description_short sentence is too long" do
     product = products(:one)
     product.update_columns(
       brand: nil, size: nil, colour: nil, material: nil,

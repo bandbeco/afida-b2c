@@ -262,22 +262,24 @@ class Product < ApplicationRecord
 
   META_DESCRIPTION_MAX_LENGTH = 155
 
-  # Generated meta description for SERPs. Built from generated_title +
-  # description_short + pack quantity + delivery promise, capped at
-  # META_DESCRIPTION_MAX_LENGTH so Google does not truncate it. When the
-  # combined string overflows, drops description_short sentences from the end
-  # until it fits, then drops description_short entirely if even one sentence
-  # is too long.
+  # Generated meta description for SERPs. Built from description_short + pack
+  # quantity + delivery promise, capped at META_DESCRIPTION_MAX_LENGTH so
+  # Google does not truncate it. The product title is intentionally omitted —
+  # it already appears in the SERP title link, and many description_short
+  # values restate it, which wastes the budget. When description_short is
+  # blank, or even its first sentence cannot fit, falls back to the title so
+  # the meta never starts with "Case of …".
   def generated_meta_description
-    title_fragment = "#{generated_title}."
     delivery_fragment = if pac_size.present? && pac_size.to_i > 0
       "Case of #{pac_size}, free UK delivery over £100."
     else
       "Free UK delivery over £100."
     end
 
-    [ title_fragment, fitted_description_short(title_fragment, delivery_fragment), delivery_fragment ]
-      .compact_blank.join(" ")
+    fitted = fitted_description_short(delivery_fragment)
+    lede = fitted || "#{generated_title}."
+
+    [ lede, delivery_fragment ].join(" ")
   end
 
   # Returns other products in the same family
@@ -385,13 +387,12 @@ class Product < ApplicationRecord
   end
 
   # Fits as many leading sentences from description_short as possible into the
-  # remaining META_DESCRIPTION_MAX_LENGTH budget after title + delivery. Returns
-  # nil when even one sentence overflows.
-  def fitted_description_short(title_fragment, delivery_fragment)
+  # META_DESCRIPTION_MAX_LENGTH budget after the delivery fragment. Returns
+  # nil when description_short is blank or even its first sentence overflows.
+  def fitted_description_short(delivery_fragment)
     return nil if description_short.blank?
 
-    fixed_length = title_fragment.length + 1 + delivery_fragment.length
-    budget = META_DESCRIPTION_MAX_LENGTH - fixed_length - 1
+    budget = META_DESCRIPTION_MAX_LENGTH - delivery_fragment.length - 1
     return nil if budget <= 0
 
     sentences = description_short.scan(/[^.!?]+[.!?]/).map(&:strip)
