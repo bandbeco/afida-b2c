@@ -77,6 +77,23 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "title tag falls back to generated_title alone without brand suffix" do
+    @product.update!(meta_title: nil)
+    get product_url(@product.slug)
+    assert_response :success
+    title = response.body[/<title>(.*?)<\/title>/m, 1].to_s.strip
+    assert_equal @product.generated_title, title
+    assert_no_match(/\|\s*Afida/, title)
+  end
+
+  test "title tag respects per-product meta_title override" do
+    @product.update!(meta_title: "Custom Bespoke Title")
+    get product_url(@product.slug)
+    assert_response :success
+    title = response.body[/<title>(.*?)<\/title>/m, 1].to_s.strip
+    assert_equal "Custom Bespoke Title", title
+  end
+
   test "show page accessible to authenticated users" do
     sign_in_as(users(:one))
     get product_url(@product.slug)
