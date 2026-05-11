@@ -244,4 +244,24 @@ class CollectionTest < ActiveSupport::TestCase
     collection.reload
     assert_nil collection.buying_guide
   end
+
+  # ==========================================================================
+  # FAQs tests
+  # ==========================================================================
+
+  test "faqs defaults to empty array" do
+    collection = Collection.create!(@valid_attributes.merge(slug: "faqs-default"))
+    collection.reload
+    assert_equal [], collection.faqs
+  end
+
+  test "faqs can be set and read back" do
+    items = [
+      { "question" => "Do you offer samples?", "answer" => "Yes, free samples." },
+      { "question" => "What is the delivery time?", "answer" => "Next day before 1pm cutoff." }
+    ]
+    collection = Collection.create!(@valid_attributes.merge(slug: "faqs-set", faqs: items))
+    collection.reload
+    assert_equal items, collection.faqs
+  end
 end

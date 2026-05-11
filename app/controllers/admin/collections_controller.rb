@@ -85,10 +85,17 @@ module Admin
     end
 
     def collection_params
-      params.expect(collection: [
+      permitted = params.expect(collection: [
         :name, :slug, :description, :meta_title, :meta_description,
-        :featured, :sample_pack, :image, :buying_guide, product_ids: []
+        :featured, :sample_pack, :image, :buying_guide, :faqs, product_ids: []
       ])
+      if permitted[:faqs].is_a?(String)
+        permitted[:faqs] = JSON.parse(permitted[:faqs])
+      end
+      permitted
+    rescue JSON::ParserError
+      permitted[:faqs] = []
+      permitted
     end
 
     def available_products

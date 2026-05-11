@@ -74,6 +74,26 @@
       <%= collection_buying_guide_structured_data(@collection) %>
     <% end %>
 
+    <% collection_faqs = @collection.faqs.presence || [] %>
+    <% if collection_faqs.any? %>
+      <section class="collection-faqs mt-12 py-8 border-t border-base-300 flex flex-col items-center">
+        <h2 class="text-2xl mb-6">Frequently Asked Questions About <%= @collection.name %></h2>
+        <div class="join join-vertical w-full max-w-3xl">
+          <% collection_faqs.each do |faq| %>
+            <div class="collapse collapse-arrow join-item bg-base-100 border border-base-300">
+              <input type="radio" name="collection-faq" aria-label="<%= faq["question"] %>" />
+              <h3 class="collapse-title text-lg"><%= faq["question"] %></h3>
+              <div class="collapse-content">
+                <p class="text-base-content/70 leading-relaxed pt-2"><%= render_faq_answer(faq["answer"]) %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+
+      <%= category_faq_schema_markup(collection_faqs) %>
+    <% end %>
+
   </div>
 
   <div class="drawer-side">

@@ -264,4 +264,41 @@ class Admin::CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes empty_collection.products, product1
     assert_includes empty_collection.products, product2
   end
+
+  # ==========================================================================
+  # FAQs
+  # ==========================================================================
+
+  test "edit form shows FAQs hidden input" do
+    get edit_admin_collection_path(@collection.id), headers: @headers
+    assert_response :success
+    assert_select "input[type='hidden'][name='collection[faqs]']"
+  end
+
+  test "should update collection with faqs as JSON string" do
+    faqs_json = [
+      { "question" => "Q1", "answer" => "A1" },
+      { "question" => "Q2", "answer" => "A2" }
+    ].to_json
+
+    patch admin_collection_path(@collection.id), headers: @headers, params: {
+      collection: { faqs: faqs_json }
+    }
+
+    assert_redirected_to admin_collections_path
+    @collection.reload
+    assert_equal 2, @collection.faqs.size
+    assert_equal "Q1", @collection.faqs.first["question"]
+    assert_equal "A1", @collection.faqs.first["answer"]
+  end
+
+  test "invalid faqs JSON falls back to empty array" do
+    patch admin_collection_path(@collection.id), headers: @headers, params: {
+      collection: { faqs: "not valid json {{{" }
+    }
+
+    assert_redirected_to admin_collections_path
+    @collection.reload
+    assert_equal [], @collection.faqs
+  end
 end

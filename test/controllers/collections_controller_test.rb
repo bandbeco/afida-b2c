@@ -133,6 +133,40 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # FAQs
+  # ==========================================================================
+
+  test "show renders FAQ section when faqs are present" do
+    @collection.update!(faqs: [
+      { "question" => "Do you offer samples?", "answer" => "Yes, free samples." },
+      { "question" => "What is the delivery time?", "answer" => "Next day before 1pm cutoff." }
+    ])
+    get collection_url(@collection.slug)
+    assert_response :success
+    assert_select "section.collection-faqs"
+    assert_match "Do you offer samples?", response.body
+    assert_match "What is the delivery time?", response.body
+  end
+
+  test "show emits FAQPage schema when faqs are present" do
+    @collection.update!(faqs: [
+      { "question" => "Do you offer samples?", "answer" => "Yes, free samples." }
+    ])
+    get collection_url(@collection.slug)
+    assert_response :success
+    assert_match '"@type":"FAQPage"', response.body
+    assert_match "Do you offer samples?", response.body
+  end
+
+  test "show does not render FAQ section when faqs are empty" do
+    @collection.update!(faqs: [])
+    get collection_url(@collection.slug)
+    assert_response :success
+    assert_select "section.collection-faqs", count: 0
+    assert_no_match(/"@type":"FAQPage"/, response.body)
+  end
+
+  # ==========================================================================
   # URL Tests
   # ==========================================================================
 
