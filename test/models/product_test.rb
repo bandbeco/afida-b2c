@@ -810,4 +810,91 @@ class ProductTest < ActiveSupport::TestCase
     # With suffix: ", Recyclable" makes it 70 chars -> should drop suffix
     assert_equal product.generated_title, product.generated_meta_title
   end
+
+  # ==========================================================================
+  # generated_meta_description
+  # ==========================================================================
+
+  test "generated_meta_description combines title, description_short, qty, delivery" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Vegware", size: "12oz", colour: "Kraft", material: "Paper",
+      name: "Hot Cup", certifications: "Compostable", pac_size: 1000,
+      description_short: "Compostable double-wall coffee cups for hot drinks."
+    )
+    expected = "Vegware 12oz Kraft Paper Hot Cup. " \
+               "Compostable double-wall coffee cups for hot drinks. " \
+               "Case of 1000, free UK delivery over £100."
+    assert_equal expected, product.generated_meta_description
+  end
+
+  test "generated_meta_description falls back to title plus delivery when description_short blank" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: "8oz", colour: nil, material: "Paper",
+      name: "Cold Cup", pac_size: 500, description_short: nil
+    )
+    assert_equal "8oz Paper Cold Cup. Case of 500, free UK delivery over £100.",
+                 product.generated_meta_description
+  end
+
+  test "generated_meta_description omits qty fragment when pac_size blank" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: nil, colour: nil, material: nil,
+      name: "Mystery Item", pac_size: nil,
+      description_short: "Useful for many things."
+    )
+    assert_equal "Mystery Item. Useful for many things. Free UK delivery over £100.",
+                 product.generated_meta_description
+  end
+
+  test "generated_meta_description never exceeds 155 chars" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Vegware", size: "16oz", colour: "Kraft", material: "Paper",
+      name: "Double Wall Hot Cup", pac_size: 1000,
+      description_short: "Insulated double-wall coffee cups, leakproof rolled rim, " \
+                         "stack tight, made from FSC-certified paperboard for daily takeaway service."
+    )
+    result = product.generated_meta_description
+    assert result.length <= 155,
+           "Expected meta_description <= 155 chars, got #{result.length}: #{result}"
+  end
+
+  test "generated_meta_description truncates description_short at sentence boundary when too long" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: "8oz", colour: nil, material: "Paper",
+      name: "Cup", pac_size: 1000,
+      description_short: "Short first sentence. " \
+                         "An extremely long second sentence that would push the meta description well past the 155-character budget Google permits."
+    )
+    result = product.generated_meta_description
+    assert result.length <= 155
+    assert_includes result, "Short first sentence."
+    assert_includes result, "free UK delivery over £100"
+  end
+
+  test "generated_meta_description drops description_short entirely when even one sentence is too long" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: nil, colour: nil, material: nil,
+      name: "Cup", pac_size: 1000,
+      description_short: "This single sentence is engineered to be absurdly long on purpose so that even alone it cannot fit inside the description budget once combined."
+    )
+    result = product.generated_meta_description
+    assert result.length <= 155
+    assert_equal "Cup. Case of 1000, free UK delivery over £100.", result
+  end
+
+  test "generated_meta_description has no double periods when description_short ends with period" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil, size: nil, colour: nil, material: nil,
+      name: "Cup", pac_size: 100,
+      description_short: "Ends with period."
+    )
+    refute_match(/\.\./, product.generated_meta_description)
+  end
 end

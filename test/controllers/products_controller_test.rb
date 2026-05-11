@@ -94,6 +94,23 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Custom Bespoke Title", title
   end
 
+  test "meta description falls back to generated_meta_description when blank" do
+    @product.update!(meta_description: nil)
+    get product_url(@product.slug)
+    assert_response :success
+    meta = response.body[/<meta name="description" content="([^"]*)"/, 1].to_s.strip
+    assert_equal @product.generated_meta_description, meta
+    assert_includes meta, "free UK delivery over £100"
+  end
+
+  test "meta description respects per-product meta_description override" do
+    @product.update!(meta_description: "A hand-curated meta description.")
+    get product_url(@product.slug)
+    assert_response :success
+    meta = response.body[/<meta name="description" content="([^"]*)"/, 1].to_s.strip
+    assert_equal "A hand-curated meta description.", meta
+  end
+
   test "show page accessible to authenticated users" do
     sign_in_as(users(:one))
     get product_url(@product.slug)

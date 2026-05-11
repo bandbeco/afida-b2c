@@ -260,6 +260,26 @@ class Product < ApplicationRecord
     candidate.length <= META_TITLE_MAX_LENGTH ? candidate : base
   end
 
+  META_DESCRIPTION_MAX_LENGTH = 155
+
+  # Generated meta description for SERPs. Built from generated_title +
+  # description_short + pack quantity + delivery promise, capped at
+  # META_DESCRIPTION_MAX_LENGTH so Google does not truncate it. When the
+  # combined string overflows, drops description_short sentences from the end
+  # until it fits, then drops description_short entirely if even one sentence
+  # is too long.
+  def generated_meta_description
+    title_fragment = "#{generated_title}."
+    delivery_fragment = if pac_size.present? && pac_size.to_i > 0
+      "Case of #{pac_size}, free UK delivery over £100."
+    else
+      "Free UK delivery over £100."
+    end
+
+    [ title_fragment, fitted_description_short(title_fragment, delivery_fragment), delivery_fragment ]
+      .compact_blank.join(" ")
+  end
+
   # Returns other products in the same family
   def siblings(limit: 8)
     return Product.none unless product_family_id.present?
@@ -362,6 +382,33 @@ class Product < ApplicationRecord
     if category.parent_id.nil? && Category.where(parent_id: category.id).exists?
       errors.add(:category, "must be a subcategory, not a top-level category")
     end
+  end
+
+  # Fits as many leading sentences from description_short as possible into the
+  # remaining META_DESCRIPTION_MAX_LENGTH budget after title + delivery. Returns
+  # nil when even one sentence overflows.
+  def fitted_description_short(title_fragment, delivery_fragment)
+    return nil if description_short.blank?
+
+    fixed_length = title_fragment.length + 1 + delivery_fragment.length
+    budget = META_DESCRIPTION_MAX_LENGTH - fixed_length - 1
+    return nil if budget <= 0
+
+    sentences = description_short.scan(/[^.!?]+[.!?]/).map(&:strip)
+    sentences = [ description_short.strip ] if sentences.empty?
+
+    accepted = []
+    sentences.each do |sentence|
+      candidate = (accepted + [ sentence ]).join(" ")
+      break if candidate.length > budget
+      accepted << sentence
+    end
+
+    return nil if accepted.empty?
+
+    fragment = accepted.join(" ")
+    fragment += "." unless fragment.match?(/[.!?]\z/)
+    fragment
   end
 
   def truncate_to_words(text, word_count)

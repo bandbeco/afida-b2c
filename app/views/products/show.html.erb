@@ -11,7 +11,7 @@
 <% end %>
 
 <% content_for :meta_description do %>
-<%= @product.meta_description.presence || @product.description_standard_with_fallback %>
+<%= @product.meta_description.presence || @product.generated_meta_description %>
 <% end %>
 
 <% if @product&.primary_photo&.attached? %>
