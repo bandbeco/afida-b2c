@@ -1,0 +1,15 @@
+<%# Samples CTA suitable for any audience-led page (collections, categories, vegware).
+    Routes the visitor to /samples where they can pick up to N free items.
+    Wording reflects the actual offer: samples are free, customer pays delivery. %>
+
+<% heading_text = local_assigns[:heading].presence || "Not sure yet? Try a sample first." %>
+<% subheading_text = local_assigns[:subheading].presence || "Pick from the sample range, pay the delivery fee, and test it in your own kitchen before you commit to a full order." %>
+<% button_text = local_assigns[:button_text].presence || "Order Your Free Samples" %>
+
+<section class="collection-samples-cta mt-12 py-10 border-t border-base-300">
+  <div class="max-w-3xl mx-auto text-center">
+    <h2 class="text-2xl mb-3"><%= heading_text %></h2>
+    <p class="text-base-content/70 mb-6"><%= subheading_text %></p>
+    <%= link_to button_text, samples_path, class: "btn btn-primary btn-lg" %>
+  </div>
+</section>

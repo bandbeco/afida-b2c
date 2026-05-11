@@ -167,6 +167,24 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # ==========================================================================
+  # Samples CTA
+  # ==========================================================================
+
+  test "show renders samples CTA linking to /samples" do
+    get collection_url(@collection.slug)
+    assert_response :success
+    assert_select "section.collection-samples-cta" do
+      assert_select "a[href=?]", samples_path
+    end
+  end
+
+  test "samples CTA does not promise free delivery" do
+    get collection_url(@collection.slug)
+    assert_response :success
+    assert_no_match(/we cover delivery/i, response.body)
+  end
+
+  # ==========================================================================
   # URL Tests
   # ==========================================================================
 
