@@ -25,7 +25,7 @@ class OrderItem < ApplicationRecord
       product_sku: cart_item.product.sku,
       quantity: cart_item.quantity,
       price: cart_item.price,  # Store pack price (not unit price) for correct display
-      pac_size: cart_item.product.pac_size,  # Capture pack size for pricing display
+      pac_size: cart_item.pac_size,  # Capture pack size for pricing display (tier-aware)
       line_total: cart_item.line_total,
       configuration: cart_item.configuration,
       is_sample: cart_item.is_sample

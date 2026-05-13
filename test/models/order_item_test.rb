@@ -234,6 +234,32 @@ class OrderItemTest < ActiveSupport::TestCase
     assert_equal cart_item.configuration["quantity"], order_item.configuration["quantity"]
   end
 
+  test "order item snapshots tier pac_size when cart item is at a non-base tier" do
+    product = Product.create!(
+      category: categories(:cups),
+      name: "Tiered cup",
+      sku: "TIER-CUP-1",
+      price: 125.18,
+      pac_size: 1000,
+      pricing_tiers: [
+        { "quantity" => 50, "price" => "12.07" },
+        { "quantity" => 1000, "price" => "125.18" }
+      ],
+      active: true
+    )
+
+    cart_item = CartItem.create!(
+      cart: carts(:one),
+      product: product,
+      quantity: 1,
+      price: BigDecimal("12.07")
+    )
+
+    order_item = OrderItem.create_from_cart_item(cart_item, @order)
+
+    assert_equal 50, order_item.pac_size
+  end
+
   test "order item has design attachment" do
     order_item = order_items(:acme_branded_item)
     assert_respond_to order_item, :design
