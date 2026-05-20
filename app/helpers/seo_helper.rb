@@ -182,6 +182,64 @@ module SeoHelper
     data.to_json
   end
 
+  def local_business_structured_data
+    data = {
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      "@id": "#{root_url}#localbusiness",
+      "name": "Afida",
+      "alternateName": "B&B Eco",
+      "url": root_url,
+      "description": "Eco-friendly packaging supplies for UK businesses",
+      "telephone": "+44-203-302-7719",
+      "email": "hello@afida.com",
+      "priceRange": "££",
+      "openingHours": "Mo-Fr 09:00-17:00",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Unit 27, The Metro Centre, Dwight Rd",
+        "addressLocality": "Watford",
+        "addressRegion": "Hertfordshire",
+        "postalCode": "WD18 9SB",
+        "addressCountry": "GB"
+      },
+      "areaServed": {
+        "@type": "Country",
+        "name": "United Kingdom"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Customer Service",
+        "telephone": "+44-203-302-7719",
+        "email": "hello@afida.com",
+        "availableLanguage": "English",
+        "hoursAvailable": {
+          "@type": "OpeningHoursSpecification",
+          "dayOfWeek": %w[Monday Tuesday Wednesday Thursday Friday],
+          "opens": "09:00",
+          "closes": "17:00"
+        }
+      },
+      "sameAs": [
+        "https://www.linkedin.com/company/afidasupplies",
+        "https://www.instagram.com/afidasupplies",
+        gbp_configured? ? gbp_profile_url : nil
+      ].compact
+    }
+
+    if gbp_configured?
+      data[:aggregateRating] = {
+        "@type": "AggregateRating",
+        "ratingValue": gbp_rating_data[:rating].to_s,
+        "reviewCount": gbp_rating_data[:review_count].to_s,
+        "bestRating": "5",
+        "worstRating": "1"
+      }
+    end
+
+    data.to_json
+  end
+
   def website_structured_data
     {
       "@context": "https://schema.org",

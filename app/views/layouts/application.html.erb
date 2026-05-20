@@ -58,6 +58,11 @@
       <%= raw website_structured_data %>
     </script>
 
+    <%# LocalBusiness structured data for local SEO / Maps %>
+    <script type="application/ld+json">
+      <%= raw local_business_structured_data %>
+    </script>
+
     <%= vite_client_tag if Rails.env.development? %>
     <%= vite_javascript_tag "application" %>
     <%= vite_stylesheet_tag "application" %>

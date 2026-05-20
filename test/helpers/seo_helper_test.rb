@@ -127,6 +127,55 @@ class SeoHelperTest < ActionView::TestCase
     assert_equal "09:00", cp["hoursAvailable"]["opens"]
   end
 
+  test "local_business_structured_data generates LocalBusiness schema with NAP" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = local_business_structured_data
+    data = JSON.parse(json)
+
+    assert_equal "https://schema.org", data["@context"]
+    assert_equal "LocalBusiness", data["@type"]
+    assert_equal "Afida", data["name"]
+    assert_equal "B&B Eco", data["alternateName"]
+    assert_equal "+44-203-302-7719", data["telephone"]
+    assert_equal "hello@afida.com", data["email"]
+    assert_equal "Mo-Fr 09:00-17:00", data["openingHours"]
+  end
+
+  test "local_business_structured_data includes full postal address" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = local_business_structured_data
+    data = JSON.parse(json)
+
+    assert_equal "PostalAddress", data["address"]["@type"]
+    assert_equal "Unit 27, The Metro Centre, Dwight Rd", data["address"]["streetAddress"]
+    assert_equal "Watford", data["address"]["addressLocality"]
+    assert_equal "Hertfordshire", data["address"]["addressRegion"]
+    assert_equal "WD18 9SB", data["address"]["postalCode"]
+    assert_equal "GB", data["address"]["addressCountry"]
+  end
+
+  test "local_business_structured_data includes aggregateRating when gbp configured" do
+    @gbp_rating_data = { rating: 4.8, review_count: 42, profile_url: "https://example.com/profile", place_id: "abc" }
+
+    json = local_business_structured_data
+    data = JSON.parse(json)
+
+    assert data["aggregateRating"].present?
+    assert_equal "4.8", data["aggregateRating"]["ratingValue"]
+    assert_equal "42", data["aggregateRating"]["reviewCount"]
+  end
+
+  test "local_business_structured_data excludes aggregateRating when gbp not configured" do
+    @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
+
+    json = local_business_structured_data
+    data = JSON.parse(json)
+
+    assert_nil data["aggregateRating"]
+  end
+
   test "website_structured_data generates WebSite schema with SearchAction" do
     @gbp_rating_data = { rating: nil, review_count: nil, profile_url: nil, place_id: nil }
 

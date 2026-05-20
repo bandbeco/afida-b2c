@@ -58,25 +58,56 @@
     </div>
   </div>
 
-  <!-- Divider -->
-  <div class="border-t border-base-content/10"></div>
+  <!-- Heavy divider (matches brutalist black-border treatment elsewhere) -->
+  <div class="border-t-2 border-black/80"></div>
 
-  <!-- Copyright and Payment Methods -->
-  <div class="container mx-auto px-5 py-4">
-    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 text-base-content">
+  <!-- Brand band: identity + trust signals -->
+  <div class="container mx-auto px-5 pt-8 pb-6">
+    <div class="grid gap-8 md:grid-cols-[auto_1fr_auto] md:items-center">
       <aside class="flex items-center gap-4">
         <%= render "shared/logo" %>
-        <div class="text-sm">
-          <p>Afida &copy; <%= Date.current.year %></p>
-          <p>Everything's compostable except our attitude.</p>
-          <p class="mt-2 max-w-md text-base-content/70">Afida (B&B Eco) has been supplying eco-friendly disposable packaging to UK businesses since 2020. Trusted by 500+ businesses including The Ritz, Marriott, and Hawksmoor. Free delivery on orders over £100.</p>
-          <address class="mt-2 not-italic text-base-content/70">Unit 27, The Metro Centre, Dwight Rd, Watford, Hertfordshire, WD18 9SB</address>
+        <div class="text-sm leading-tight">
+          <p class="text-base">Afida &copy; <%= Date.current.year %></p>
+          <p class="text-base-content/70">Everything's compostable except our attitude.</p>
         </div>
       </aside>
-      <nav class="flex items-center gap-6">
+
+      <p class="text-sm text-base-content/75 leading-relaxed max-w-xl md:px-6 md:border-l md:border-base-content/15">
+        Eco-friendly disposable packaging for UK businesses since 2020.
+        Trusted by 500+ kitchens including The Ritz, Marriott and Hawksmoor.
+        Free delivery on orders over &pound;100.
+      </p>
+
+      <div class="flex items-center md:justify-end">
         <%= render "shared/gbp_badge", variant: :footer %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hairline rule -->
+  <div class="container mx-auto px-5">
+    <div class="border-t border-base-content/15"></div>
+  </div>
+
+  <!-- Meta strip: address, payments, fine print -->
+  <div class="container mx-auto px-5 py-5">
+    <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between text-xs text-base-content/70">
+      <address class="not-italic flex items-start gap-2">
+        <svg class="h-4 w-4 mt-px shrink-0 text-base-content/60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 21s-7-7.5-7-12a7 7 0 1 1 14 0c0 4.5-7 12-7 12z"/>
+          <circle cx="12" cy="9" r="2.5"/>
+        </svg>
+        <span>Unit 27, The Metro Centre, Dwight Rd, Watford, Hertfordshire, WD18 9SB</span>
+      </address>
+
+      <nav aria-label="Accepted payment methods" class="md:justify-self-center">
         <%= render "shared/payment_methods" %>
       </nav>
+
+      <p class="md:text-right">
+        Website by
+        <a href="https://laurentcurau.com/en" target="_blank" rel="noopener" class="underline decoration-base-content/30 underline-offset-2 hover:decoration-base-content">Laurent Curau</a>
+      </p>
     </div>
   </div>
 </footer>

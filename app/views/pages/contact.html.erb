@@ -19,7 +19,7 @@
   <meta name="twitter:description" content="Get in touch with Afida for enquiries about eco-friendly packaging supplies. Contact us by phone or email.">
   <meta name="twitter:image" content="<%= hero_image_url %>">
 
-  <!-- Structured Data: ContactPage -->
+  <!-- Structured Data: ContactPage (LocalBusiness defined sitewide in layout) -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -27,36 +27,7 @@
       "name": "Contact Afida",
       "description": "Get in touch with Afida for enquiries about eco-friendly packaging supplies.",
       "url": "<%= contact_url %>",
-      "mainEntity": {
-        "@type": "LocalBusiness",
-        "name": "Afida",
-        "description": "Premium eco-friendly packaging supplies for businesses across the UK.",
-        "url": "<%= root_url %>",
-        "telephone": "+44-203-302-7719",
-        "email": "hello@afida.com",
-        "openingHours": "Mo-Fr 09:00-17:00",
-        "address": {
-          "@type": "PostalAddress",
-          "streetAddress": "Unit 27, The Metro Centre, Dwight Rd",
-          "addressLocality": "Watford",
-          "addressRegion": "Hertfordshire",
-          "postalCode": "WD18 9SB",
-          "addressCountry": "GB"
-        },
-        "contactPoint": {
-          "@type": "ContactPoint",
-          "contactType": "Customer Service",
-          "telephone": "+44-203-302-7719",
-          "email": "hello@afida.com",
-          "availableLanguage": "English",
-          "hoursAvailable": {
-            "@type": "OpeningHoursSpecification",
-            "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
-            "opens": "09:00",
-            "closes": "17:00"
-          }
-        }
-      }
+      "mainEntity": { "@id": "<%= root_url %>#localbusiness" }
     }
   </script>
 
