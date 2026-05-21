@@ -192,6 +192,7 @@ module AnalyticsHelper
       tax: order.vat_amount.to_f,
       shipping: order.shipping_amount.to_f,
       currency: CURRENCY,
+      new_customer: order.new_customer?,
       items: items
     }
 

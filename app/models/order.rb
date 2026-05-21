@@ -124,6 +124,15 @@ class Order < ApplicationRecord
     reorder_schedule_id.present?
   end
 
+  # Whether this is the customer's first completed purchase, matched by
+  # user_id (if logged in) or email. Drives Google Ads new-customer bidding.
+  def new_customer?
+    scope = Order.where(status: %w[paid processing shipped delivered]).where.not(id: id)
+    scope = scope.where(user_id: user_id).or(scope.where(email: email)) if user_id.present?
+    scope = scope.where(email: email) if user_id.blank?
+    !scope.exists?
+  end
+
   private
 
   def generate_order_number

@@ -473,4 +473,80 @@ class OrderTest < ActiveSupport::TestCase
 
     assert_not order.sample_request?
   end
+
+  # new_customer? tests
+  test "new_customer? returns true for guest with no prior orders for email" do
+    order = Order.create!(@valid_attributes.merge(
+      email: "brand-new@example.com",
+      stripe_session_id: "sess_new_guest",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert order.new_customer?
+  end
+
+  test "new_customer? returns false for guest with prior paid order at same email" do
+    Order.create!(@valid_attributes.merge(
+      email: "repeat@example.com",
+      stripe_session_id: "sess_prior",
+      order_number: nil,
+      status: "paid"
+    ))
+    later = Order.create!(@valid_attributes.merge(
+      email: "repeat@example.com",
+      stripe_session_id: "sess_later",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert_not later.new_customer?
+  end
+
+  test "new_customer? returns false for logged-in user's second order" do
+    user = users(:one)
+    second = Order.create!(@valid_attributes.merge(
+      user: user,
+      email: "different-email@example.com",
+      stripe_session_id: "sess_user_second",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert_not second.new_customer?
+  end
+
+  test "new_customer? ignores pending and cancelled prior orders" do
+    Order.create!(@valid_attributes.merge(
+      email: "abandoned@example.com",
+      stripe_session_id: "sess_pending",
+      order_number: nil,
+      status: "pending"
+    ))
+    Order.create!(@valid_attributes.merge(
+      email: "abandoned@example.com",
+      stripe_session_id: "sess_cancelled",
+      order_number: nil,
+      status: "cancelled"
+    ))
+    current = Order.create!(@valid_attributes.merge(
+      email: "abandoned@example.com",
+      stripe_session_id: "sess_current",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert current.new_customer?
+  end
+
+  test "new_customer? does not count the order itself" do
+    order = Order.create!(@valid_attributes.merge(
+      email: "self@example.com",
+      stripe_session_id: "sess_self",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert order.new_customer?
+  end
 end

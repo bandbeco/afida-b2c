@@ -99,6 +99,16 @@ class AnalyticsHelperTest < ActionView::TestCase
     Rails.application.config.x.gtm_container_id = nil
   end
 
+  test "ecommerce_purchase_event includes new_customer flag" do
+    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
+
+    result = ecommerce_purchase_event(@order)
+
+    assert_includes result, '"new_customer"'
+
+    Rails.application.config.x.gtm_container_id = nil
+  end
+
   test "ecommerce_purchase_event includes coupon and discount when discount applied" do
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     @order.update!(discount_amount: 3.57, discount_code: "WELCOME5")
