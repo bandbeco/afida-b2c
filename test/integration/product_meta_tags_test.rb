@@ -14,7 +14,7 @@ class ProductMetaTagsTest < ActionDispatch::IntegrationTest
     product.update(meta_title: nil)
 
     get product_path(product)
-    assert_select "title", "#{product.generated_title} | #{product.category.name} | Afida"
+    assert_select "title", product.generated_meta_title
   end
 
   test "uses custom meta_description when present" do
