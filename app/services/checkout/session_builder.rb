@@ -19,8 +19,6 @@ module Checkout
       @cancel_url = cancel_url
     end
 
-    attr_reader :invalid_discount_code, :selected_address_id
-
     # Mirrors Result#invalid_discount? so the controller can clean up session
     # state even when Stripe::Checkout::Session.create raises after validation.
     def invalid_discount?
@@ -41,7 +39,8 @@ module Checkout
 
     private
 
-    attr_reader :cart, :user, :address_id, :discount_code, :datafast_visitor_id, :datafast_session_id, :success_url, :cancel_url
+    attr_reader :cart, :user, :address_id, :discount_code, :datafast_visitor_id, :datafast_session_id, :success_url,
+                :cancel_url, :invalid_discount_code, :selected_address_id
 
     def build_session_params
       {
@@ -140,7 +139,8 @@ module Checkout
       nil
     rescue Stripe::InvalidRequestError => e
       Rails.logger.warn("Invalid discount coupon '#{discount_code}': #{e.message}")
-      session_params[:metadata][:discount_code] = nil
+      # Do not persist unusable customer input to Stripe metadata.
+      session_params[:metadata].delete(:discount_code)
       session_params[:allow_promotion_codes] = true
       discount_code
     end

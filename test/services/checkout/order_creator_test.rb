@@ -47,6 +47,27 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal 5.0, order.discount_amount.to_f
   end
 
+  test "marks orders with configured products as design pending" do
+    @cart.cart_items.destroy_all
+    cart_item = @cart.cart_items.build(
+      product: products(:branded_template_variant),
+      quantity: 5000,
+      price: 0.20,
+      configuration: { size: "12oz", quantity: 5000 },
+      calculated_price: 1000.00
+    )
+    cart_item.design.attach(
+      io: StringIO.new("fake design content"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    cart_item.save!
+
+    order = Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: @cart).create
+
+    assert_equal "design_pending", order.branded_order_status
+  end
+
   test "requires shipping details from collected information" do
     stripe_session = build_stripe_session(
       shipping_address: { line1: nil, line2: "Flat 4", city: "London", postal_code: "SW1A 1AA", country: "GB" }

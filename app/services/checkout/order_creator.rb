@@ -8,11 +8,7 @@ module Checkout
     def create
       order = Order.create!(order_attributes)
 
-      if cart.cart_items.any?(&:configured?)
-        order.update!(branded_order_status: "design_pending")
-      end
-
-      cart.cart_items.each do |cart_item|
+      cart_items.each do |cart_item|
         OrderItem.create_from_cart_item(cart_item, order).save!
       end
 
@@ -31,7 +27,7 @@ module Checkout
         raise "Shipping details are required"
       end
 
-      {
+      attributes = {
         user: user,
         organization: user&.organization,
         placed_by_user: user&.organization_id? ? user : nil,
@@ -51,6 +47,13 @@ module Checkout
         shipping_postal_code: shipping_address[:postal_code],
         shipping_country: shipping_address[:country]
       }
+
+      attributes[:branded_order_status] = "design_pending" if cart_items.any?(&:configured?)
+      attributes
+    end
+
+    def cart_items
+      @cart_items ||= cart.cart_items.includes(:product, { design_attachment: :blob }).load
     end
 
     def required_shipping_values(shipping_address)

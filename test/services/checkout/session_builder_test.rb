@@ -70,12 +70,24 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     assert result.invalid_discount?
     assert_equal true, captured_params[:allow_promotion_codes]
-    assert_nil captured_params[:metadata][:discount_code]
+    assert_not captured_params[:metadata].key?(:discount_code)
+  end
+
+  test "does not expose intermediate checkout state readers" do
+    builder = build_session_builder(discount_code: "WELCOME5")
+
+    assert_respond_to builder, :invalid_discount?
+    assert_not_respond_to builder, :invalid_discount_code
+    assert_not_respond_to builder, :selected_address_id
   end
 
   private
 
   def build_session(discount_code: nil)
+    build_session_builder(discount_code: discount_code).create
+  end
+
+  def build_session_builder(discount_code: nil)
     Checkout::SessionBuilder.new(
       cart: @cart,
       user: nil,
@@ -85,6 +97,6 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
       datafast_session_id: nil,
       success_url: @success_url,
       cancel_url: @cancel_url
-    ).create
+    )
   end
 end

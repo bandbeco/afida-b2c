@@ -102,9 +102,13 @@ class AnalyticsHelperTest < ActionView::TestCase
   test "ecommerce_purchase_event includes new_customer flag" do
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
 
+    @order.stubs(:new_customer?).returns(true)
     result = ecommerce_purchase_event(@order)
+    assert_includes result, '"new_customer":true'
 
-    assert_includes result, %("new_customer":#{@order.new_customer?})
+    @order.stubs(:new_customer?).returns(false)
+    result = ecommerce_purchase_event(@order)
+    assert_includes result, '"new_customer":false'
 
     Rails.application.config.x.gtm_container_id = nil
   end
