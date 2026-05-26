@@ -8,124 +8,8 @@ class CheckoutsController < ApplicationController
 
   def create
     cart = Current.cart
-    # Eager load associations to prevent N+1 queries when building Stripe line items
-    cart_items = cart.cart_items.includes(CART_ITEM_INCLUDES)
-    line_items = cart_items.map do |item|
-      # For standard products with pack pricing: send packs as quantity
-      # For branded/configured products: send units as quantity
-      product = item.product
-
-      if item.sample?
-        # Sample items: free, quantity 1
-        quantity = 1
-        unit_amount = 0
-        product_name = "#{product.generated_title} (Sample)"
-      elsif item.configured?
-        # Unit-based pricing (branded products)
-        quantity = 1
-        unit_amount = (item.price.to_f * item.quantity * 100).round
-        units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
-        product_name = "#{product.generated_title} - #{item.configuration['size']} (#{units_formatted} units)"
-      elsif product.pac_size.blank? || product.pac_size.zero?
-        # Unit-based pricing (products without packs)
-        quantity = item.quantity
-        unit_amount = (item.price.to_f * 100).round
-        product_name = product.generated_title
-      else
-        # Pack-based pricing (standard products)
-        packs_needed = item.quantity
-        quantity = 1
-        unit_amount = (item.price.to_f * packs_needed * 100).round
-        packs_label = packs_needed == 1 ? "pack" : "packs"
-        product_name = "#{product.generated_title} (#{packs_needed} #{packs_label})"
-      end
-
-      {
-        quantity: quantity,
-        price_data: {
-          currency: "gbp",
-          product_data: {
-            name: product_name
-          },
-          unit_amount: unit_amount,
-          tax_behavior: "exclusive"
-        },
-        tax_rates: [ tax_rate.id ]
-      }
-    end
 
     begin
-      # Determine shipping options based on order type and subtotal:
-      # - Samples-only orders: Fixed sample delivery rate
-      # - Orders >= £100 subtotal: Free shipping
-      # - Orders < £100 subtotal: Standard shipping (£5)
-      shipping_options = if cart.only_samples?
-        [ Shipping.sample_only_shipping_option ]
-      else
-        Shipping.shipping_options_for_subtotal(cart.subtotal_amount)
-      end
-
-      session_params = {
-        payment_method_types: [ "card" ],
-        line_items: line_items,
-        mode: "payment",
-        shipping_address_collection: {
-          allowed_countries: Shipping::ALLOWED_COUNTRIES
-        },
-        shipping_options: shipping_options,
-        success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: cancel_checkout_url,
-        metadata: {
-          cart_id: cart.id.to_s,
-          discount_code: session[:discount_code],
-          datafast_visitor_id: cookies[:datafast_visitor_id],
-          datafast_session_id: cookies[:datafast_session_id]
-        }
-      }
-
-      # Apply discount coupon if present in session, otherwise allow customer to enter a promotion code
-      if session[:discount_code].present?
-        # Programmatic discount (e.g. email signup) - validate and apply directly
-        begin
-          Stripe::Coupon.retrieve(session[:discount_code])
-          session_params[:discounts] = [ { coupon: session[:discount_code] } ]
-        rescue Stripe::InvalidRequestError => e
-          # Coupon doesn't exist or is invalid - log and continue without discount
-          Rails.logger.warn("Invalid discount coupon '#{session[:discount_code]}': #{e.message}")
-          session.delete(:discount_code)
-          flash[:alert] = "Your discount code could not be applied. Please continue with your order."
-          # Fall back to allowing customer-entered promotion codes
-          session_params[:allow_promotion_codes] = true
-        end
-      else
-        # No programmatic discount - let customers enter promotion codes on checkout page
-        session_params[:allow_promotion_codes] = true
-      end
-
-      if Current.user
-        session_params[:client_reference_id] = Current.user.id
-
-        # If user selected an address, sync it to Stripe Customer for prefill
-        if params[:address_id].present?
-          address = Current.user.addresses.find_by(id: params[:address_id])
-          if address
-            # Sync address to Stripe Customer (creates customer if needed)
-            Current.user.sync_stripe_customer!(address: address)
-            session[:selected_address_id] = params[:address_id]
-
-            # Use Stripe Customer for address prefill
-            session_params[:customer] = Current.user.stripe_customer_id
-          else
-            # Address not found - fall back to email only
-            session_params[:customer_email] = Current.user.email_address
-          end
-        else
-          # User chose "Enter a different address" or has no addresses
-          # Use customer_email so Stripe doesn't prefill from existing Customer
-          session_params[:customer_email] = Current.user.email_address
-        end
-      end
-
       # Emit checkout.started event for funnel tracking
       Rails.event.notify("checkout.started",
         cart_id: cart.id,
@@ -133,10 +17,28 @@ class CheckoutsController < ApplicationController
         subtotal: cart.subtotal_amount
       )
 
-      session = Stripe::Checkout::Session.create(session_params)
+      builder = Checkout::SessionBuilder.new(
+        cart: cart,
+        user: Current.user,
+        address_id: params[:address_id],
+        discount_code: session[:discount_code],
+        datafast_visitor_id: cookies[:datafast_visitor_id],
+        datafast_session_id: cookies[:datafast_session_id],
+        success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
+        cancel_url: cancel_checkout_url
+      )
+      result = builder.create
 
-      redirect_to session.url, allow_other_host: true, status: :see_other
+      if result.invalid_discount?
+        session.delete(:discount_code)
+        flash[:alert] = "Your discount code could not be applied. Please continue with your order."
+      end
+
+      session[:selected_address_id] = result.selected_address_id if result.selected_address_id.present?
+
+      redirect_to result.session.url, allow_other_host: true, status: :see_other
     rescue Stripe::StripeError => e
+      session.delete(:discount_code) if defined?(builder) && builder&.invalid_discount?
       Rails.logger.error("Stripe error: #{e.message}")
       flash[:error] = e.message
       redirect_to cart_path
@@ -178,9 +80,7 @@ class CheckoutsController < ApplicationController
       # Preload associations for order item creation (prevents N+1 queries)
       cart.cart_items.includes(CART_ITEM_INCLUDES).load
 
-      # Create the order
-      customer_details = stripe_session.customer_details
-      order = create_order_from_stripe_session(stripe_session, cart)
+      order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: cart).create
 
       # Emit checkout.completed event
       Rails.event.notify("checkout.completed",
@@ -234,130 +134,5 @@ class CheckoutsController < ApplicationController
 
   def cancel
     redirect_to cart_path, notice: "Checkout cancelled."
-  end
-
-  private
-
-  def create_order_from_stripe_session(stripe_session, cart)
-    customer_details = stripe_session.customer_details
-
-    # Use Stripe session amounts as source of truth (handles discounts correctly)
-    subtotal = stripe_session.amount_subtotal / 100.0
-    vat_amount = (stripe_session.total_details&.amount_tax || 0) / 100.0
-    discount_amount = (stripe_session.total_details&.amount_discount || 0) / 100.0
-    shipping_cost = (stripe_session.shipping_cost&.amount_total || 0) / 100.0
-    total_amount = stripe_session.amount_total / 100.0
-
-    # Extract discount code: prefer metadata (programmatic discount), fall back to
-    # customer-entered promotion code from Stripe session
-    discount_code = stripe_session.metadata&.[]("discount_code")
-    if discount_code.blank?
-      discount_code = extract_promotion_code(stripe_session)
-    end
-
-    # Extract shipping address details
-    shipping_address = extract_shipping_address(stripe_session)
-
-    if [ shipping_address[:name], shipping_address[:line1], shipping_address[:city], shipping_address[:postal_code], shipping_address[:country] ].any?(&:blank?)
-      raise "Shipping details are required"
-    end
-
-    # Get user for order
-    user = User.find_by(id: stripe_session.client_reference_id)
-
-    # Create the order
-    order = Order.create!(
-      user: user,
-      organization: user&.organization,
-      placed_by_user: user&.organization_id? ? user : nil,
-      email: customer_details.email,
-      stripe_session_id: stripe_session.id,
-      status: "paid",
-      subtotal_amount: subtotal,
-      vat_amount: vat_amount,
-      shipping_amount: shipping_cost,
-      total_amount: total_amount,
-      discount_amount: discount_amount,
-      discount_code: discount_code.presence,
-      shipping_name: shipping_address[:name],
-      shipping_address_line1: shipping_address[:line1],
-      shipping_address_line2: shipping_address[:line2],
-      shipping_city: shipping_address[:city],
-      shipping_postal_code: shipping_address[:postal_code],
-      shipping_country: shipping_address[:country]
-    )
-
-    # Set initial branded order status if cart contains configured items
-    if cart.cart_items.any?(&:configured?)
-      order.update!(branded_order_status: "design_pending")
-    end
-
-    # Create order items from cart items
-    cart.cart_items.each do |cart_item|
-      OrderItem.create_from_cart_item(cart_item, order).save!
-    end
-
-    order
-  end
-
-  def extract_shipping_address(stripe_session)
-    # Use with_indifferent_access for reliable key access (Stripe returns symbol keys)
-    # Requires Stripe API Clover release (2025-03-31+) where shipping_details
-    # moved to collected_information.shipping_details
-    # https://docs.stripe.com/changelog/basil/2025-03-31/checkout-session-remove-shipping-details
-    session_hash = stripe_session.to_hash.with_indifferent_access
-
-    shipping = session_hash.dig(:collected_information, :shipping_details)
-    return {} unless shipping
-
-    shipping = shipping.with_indifferent_access if shipping.respond_to?(:with_indifferent_access)
-    address = shipping[:address]
-    return {} unless address
-
-    address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
-
-    {
-      name: shipping[:name],
-      line1: address[:line1],
-      line2: address[:line2],
-      city: address[:city],
-      postal_code: address[:postal_code],
-      country: address[:country]
-    }
-  end
-
-  def extract_promotion_code(stripe_session)
-    stripe_session
-      .total_details
-      &.breakdown
-      &.discounts
-      &.first
-      &.discount
-      &.promotion_code
-      &.code
-  rescue NoMethodError
-    nil
-  end
-
-  def tax_rate
-    @tax_rate ||= begin
-      # Try to find existing UK VAT tax rate to avoid creating duplicates
-      existing_rates = Stripe::TaxRate.list(active: true, limit: 100)
-      uk_vat_rate = existing_rates.data.find do |rate|
-        rate.percentage == 20.0 &&
-          rate.country == "GB" &&
-          rate.inclusive == false
-      end
-
-      # Use existing rate if found, otherwise create new one
-      uk_vat_rate || Stripe::TaxRate.create({
-        display_name: "VAT",
-        percentage: 20,
-        country: "GB",
-        jurisdiction: "United Kingdom",
-        description: "Value Added Tax",
-        inclusive: false
-      })
-    end
   end
 end
