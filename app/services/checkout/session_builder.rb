@@ -1,7 +1,5 @@
 module Checkout
   class SessionBuilder
-    CART_ITEM_INCLUDES = [ :product, { design_attachment: :blob } ].freeze
-
     Result = Struct.new(:session, :invalid_discount_code, :selected_address_id, keyword_init: true) do
       def invalid_discount?
         invalid_discount_code.present?
@@ -63,7 +61,7 @@ module Checkout
     end
 
     def line_items
-      cart.cart_items.includes(CART_ITEM_INCLUDES).map do |item|
+      cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).map do |item|
         {
           quantity: stripe_quantity(item),
           price_data: {

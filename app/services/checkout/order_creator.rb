@@ -9,7 +9,7 @@ module Checkout
       order = Order.create!(order_attributes)
 
       cart_items.each do |cart_item|
-        OrderItem.create_from_cart_item(cart_item, order).save!
+        OrderItem.build_from_cart_item(cart_item, order).save!
       end
 
       order
@@ -52,7 +52,7 @@ module Checkout
     end
 
     def cart_items
-      @cart_items ||= cart.cart_items.includes(:product, { design_attachment: :blob }).load
+      @cart_items ||= cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).load
     end
 
     def user

@@ -29,6 +29,9 @@ module Checkout
           rate.inclusive == false
       end
 
+      # Stripe has no uniqueness constraint for equivalent tax rates. The cache
+      # avoids repeated lookups after the first winner, accepting a small
+      # duplicate-create race window during a cold cache.
       uk_vat_rate || Stripe::TaxRate.create({
         display_name: "VAT",
         percentage: 20,
