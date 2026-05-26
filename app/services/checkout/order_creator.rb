@@ -20,7 +20,6 @@ module Checkout
     attr_reader :stripe_session, :cart
 
     def order_attributes
-      user = User.find_by(id: stripe_session.client_reference_id)
       shipping_address = extract_shipping_address
 
       if required_shipping_values(shipping_address).any?(&:blank?)
@@ -54,6 +53,12 @@ module Checkout
 
     def cart_items
       @cart_items ||= cart.cart_items.includes(:product, { design_attachment: :blob }).load
+    end
+
+    def user
+      return @user if defined?(@user)
+
+      @user = User.find_by(id: stripe_session.client_reference_id)
     end
 
     def required_shipping_values(shipping_address)
