@@ -21,6 +21,8 @@ module Checkout
 
     attr_reader :invalid_discount_code, :selected_address_id
 
+    # Mirrors Result#invalid_discount? so the controller can clean up session
+    # state even when Stripe::Checkout::Session.create raises after validation.
     def invalid_discount?
       invalid_discount_code.present?
     end
@@ -93,6 +95,8 @@ module Checkout
       elsif item.product.pac_size.blank? || item.product.pac_size.zero?
         (item.price.to_f * 100).round
       else
+        # Pack-priced items use one Stripe line item with the pack count folded
+        # into unit_amount, so Stripe's tax/discount math sees one subtotal.
         (item.price.to_f * item.quantity * 100).round
       end
     end

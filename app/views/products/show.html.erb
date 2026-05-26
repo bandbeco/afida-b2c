@@ -7,7 +7,7 @@
 %>
 
 <% content_for :title do %>
-<%= @product.meta_title.presence || @product.generated_meta_title %>
+<%= @product.meta_title.presence || "#{@product.generated_meta_title} | #{@product.category.name} | Afida" %>
 <% end %>
 
 <% content_for :meta_description do %>

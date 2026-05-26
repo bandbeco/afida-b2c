@@ -104,7 +104,7 @@ class AnalyticsHelperTest < ActionView::TestCase
 
     result = ecommerce_purchase_event(@order)
 
-    assert_includes result, '"new_customer"'
+    assert_includes result, %("new_customer":#{@order.new_customer?})
 
     Rails.application.config.x.gtm_container_id = nil
   end

@@ -8,6 +8,7 @@ class CheckoutsController < ApplicationController
 
   def create
     cart = Current.cart
+    builder = nil
 
     begin
       # Emit checkout.started event for funnel tracking
@@ -38,7 +39,7 @@ class CheckoutsController < ApplicationController
 
       redirect_to result.session.url, allow_other_host: true, status: :see_other
     rescue Stripe::StripeError => e
-      session.delete(:discount_code) if defined?(builder) && builder&.invalid_discount?
+      session.delete(:discount_code) if builder&.invalid_discount?
       Rails.logger.error("Stripe error: #{e.message}")
       flash[:error] = e.message
       redirect_to cart_path
