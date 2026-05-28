@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_140001) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_074026) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -354,6 +354,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_140001) do
     t.string "gtin"
     t.integer "height_in_mm"
     t.integer "length_in_mm"
+    t.string "manufacturer_sku"
     t.string "material"
     t.text "meta_description"
     t.string "meta_title"
@@ -381,6 +382,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_140001) do
     t.index ["category_id"], name: "index_products_on_category_id"
     t.index ["featured"], name: "index_products_on_featured"
     t.index ["gtin"], name: "index_products_on_gtin", unique: true, where: "(gtin IS NOT NULL)"
+    t.index ["manufacturer_sku"], name: "index_products_on_manufacturer_sku"
     t.index ["organization_id"], name: "index_products_on_organization_id"
     t.index ["product_family_id"], name: "index_products_on_product_family_id"
     t.index ["product_type"], name: "index_products_on_product_type"
