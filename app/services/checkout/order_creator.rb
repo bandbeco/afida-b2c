@@ -6,7 +6,12 @@ module Checkout
     end
 
     def create
-      order = Order.create!(order_attributes)
+      shipping_address = extract_shipping_address
+      if required_shipping_values(shipping_address).any?(&:blank?)
+        raise Checkout::MissingShippingDetails, "Shipping details are required"
+      end
+
+      order = Order.create!(order_attributes(shipping_address))
 
       cart_items.each do |cart_item|
         OrderItem.build_from_cart_item(cart_item, order).save!
@@ -19,13 +24,7 @@ module Checkout
 
     attr_reader :stripe_session, :cart
 
-    def order_attributes
-      shipping_address = extract_shipping_address
-
-      if required_shipping_values(shipping_address).any?(&:blank?)
-        raise Checkout::MissingShippingDetails, "Shipping details are required"
-      end
-
+    def order_attributes(shipping_address)
       attributes = {
         user: user,
         organization: user&.organization,
@@ -98,6 +97,8 @@ module Checkout
     end
 
     def extract_promotion_code
+      # Stripe discount objects should follow this shape. Unexpected method
+      # errors are allowed to surface so checkout success failures are visible.
       stripe_session
         .total_details
         &.breakdown
