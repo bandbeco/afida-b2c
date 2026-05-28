@@ -55,4 +55,13 @@ class Checkout::StripeTaxRateProviderTest < ActiveSupport::TestCase
     assert_equal existing_tax_rate, provider.tax_rate
     assert_equal existing_tax_rate, provider.tax_rate
   end
+
+  test "propagates Stripe API failures without caching a tax rate id" do
+    Stripe::TaxRate.expects(:list).raises(StripeErrors.api_connection_error)
+
+    assert_raises(Stripe::APIConnectionError) do
+      Checkout::StripeTaxRateProvider.new.tax_rate
+    end
+    assert_nil Rails.cache.read(Checkout::StripeTaxRateProvider::UK_VAT_RATE_ID_CACHE_KEY)
+  end
 end

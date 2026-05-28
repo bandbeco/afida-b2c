@@ -81,17 +81,37 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_not_respond_to builder, :selected_address_id
   end
 
+  test "uses selected saved address as Stripe customer for logged-in checkout" do
+    user = users(:one)
+    address = addresses(:office)
+    user.update!(stripe_customer_id: "cus_saved_address")
+    user.expects(:sync_stripe_customer!).with(address: address).once
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session_builder(user: user, address_id: address.id).create
+
+    assert_equal address.id, result.selected_address_id
+    assert_equal "cus_saved_address", captured_params[:customer]
+    assert_nil captured_params[:customer_email]
+  end
+
   private
 
   def build_session(discount_code: nil)
     build_session_builder(discount_code: discount_code).create
   end
 
-  def build_session_builder(discount_code: nil)
+  def build_session_builder(user: nil, address_id: nil, discount_code: nil)
     Checkout::SessionBuilder.new(
       cart: @cart,
-      user: nil,
-      address_id: nil,
+      user: user,
+      address_id: address_id,
       discount_code: discount_code,
       datafast_visitor_id: nil,
       datafast_session_id: nil,

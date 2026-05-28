@@ -75,9 +75,6 @@ class CheckoutsController < ApplicationController
         return redirect_to root_path
       end
 
-      # Preload associations for order item creation (prevents N+1 queries)
-      cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).load
-
       order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: cart).create
 
       # Emit checkout.completed event
@@ -126,6 +123,11 @@ class CheckoutsController < ApplicationController
       Rails.logger.error("Stripe error in checkout success: #{e.message}")
       Sentry.capture_exception(e, extra: { session_id: session_id })
       flash[:error] = "Unable to verify payment. Please contact support."
+      redirect_to cart_path
+    rescue Checkout::MissingShippingDetails => e
+      Rails.logger.warn("Missing shipping details in checkout success: #{e.message}")
+      Sentry.capture_exception(e, extra: { session_id: session_id })
+      flash[:error] = "Shipping details are required. Please try checkout again."
       redirect_to cart_path
     end
   end

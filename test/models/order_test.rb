@@ -505,6 +505,13 @@ class OrderTest < ActiveSupport::TestCase
 
   test "new_customer? returns false for logged-in user's second order" do
     user = users(:one)
+    Order.create!(@valid_attributes.merge(
+      user: user,
+      email: "first-user-order@example.com",
+      stripe_session_id: "sess_user_first",
+      order_number: nil,
+      status: "paid"
+    ))
     second = Order.create!(@valid_attributes.merge(
       user: user,
       email: "different-email@example.com",
@@ -514,6 +521,26 @@ class OrderTest < ActiveSupport::TestCase
     ))
 
     assert_not second.new_customer?
+  end
+
+  test "new_customer? returns false for logged-in user with prior guest order at same email" do
+    user = users(:one)
+    Order.create!(@valid_attributes.merge(
+      user: nil,
+      email: user.email_address,
+      stripe_session_id: "sess_guest_before_account",
+      order_number: nil,
+      status: "paid"
+    ))
+    logged_in_order = Order.create!(@valid_attributes.merge(
+      user: user,
+      email: user.email_address,
+      stripe_session_id: "sess_logged_in_after_guest",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert_not logged_in_order.new_customer?
   end
 
   test "new_customer? ignores pending and cancelled prior orders" do

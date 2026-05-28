@@ -39,10 +39,6 @@ class OrderItem < ApplicationRecord
     order_item
   end
 
-  def self.create_from_cart_item(cart_item, order)
-    build_from_cart_item(cart_item, order)
-  end
-
   # Calculates subtotal: price * quantity
   # For standard products: price = pack price, quantity = number of packs
   # For branded products: price = unit price, quantity = number of units

@@ -23,7 +23,7 @@ module Checkout
       shipping_address = extract_shipping_address
 
       if required_shipping_values(shipping_address).any?(&:blank?)
-        raise "Shipping details are required"
+        raise Checkout::MissingShippingDetails, "Shipping details are required"
       end
 
       attributes = {
@@ -106,8 +106,6 @@ module Checkout
         &.discount
         &.promotion_code
         &.code
-    rescue NoMethodError
-      nil
     end
   end
 end

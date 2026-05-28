@@ -73,7 +73,17 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
       shipping_address: { line1: nil, line2: "Flat 4", city: "London", postal_code: "SW1A 1AA", country: "GB" }
     )
 
-    assert_raises(RuntimeError, "Shipping details are required") do
+    error = assert_raises(Checkout::MissingShippingDetails) do
+      Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+    end
+    assert_equal "Shipping details are required", error.message
+  end
+
+  test "propagates unexpected Stripe promotion code shapes" do
+    stripe_session = build_stripe_session
+    stripe_session.total_details.stubs(:breakdown).raises(NoMethodError.new("unexpected shape"))
+
+    assert_raises(NoMethodError) do
       Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
     end
   end

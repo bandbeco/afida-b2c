@@ -236,6 +236,10 @@ class OrderItemTest < ActiveSupport::TestCase
     assert_equal cart_item.quantity, order_item.quantity
   end
 
+  test "does not expose create_from_cart_item alias because build result is unsaved" do
+    assert_not_respond_to OrderItem, :create_from_cart_item
+  end
+
   test "order item stores configuration from cart item" do
     cart_item = cart_items(:branded_configuration)
     order = orders(:acme_order)
