@@ -79,8 +79,9 @@ module Checkout
 
     def stripe_quantity(item)
       return 1 if item.sample? || item.configured?
-      return item.quantity if item.product.pac_size.blank? || item.product.pac_size.zero?
+      return item.quantity if unit_priced?(item)
 
+      # Pack-priced items fold pack count into unit_amount for one Stripe subtotal.
       1
     end
 
@@ -89,7 +90,7 @@ module Checkout
         0
       elsif item.configured?
         (item.price.to_f * item.quantity * 100).round
-      elsif item.product.pac_size.blank? || item.product.pac_size.zero?
+      elsif unit_priced?(item)
         (item.price.to_f * 100).round
       else
         # Pack-priced items use one Stripe line item with the pack count folded
@@ -106,12 +107,16 @@ module Checkout
       elsif item.configured?
         units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
         "#{product.generated_title} - #{item.configuration['size']} (#{units_formatted} units)"
-      elsif product.pac_size.blank? || product.pac_size.zero?
+      elsif unit_priced?(item)
         product.generated_title
       else
         packs_label = item.quantity == 1 ? "pack" : "packs"
         "#{product.generated_title} (#{item.quantity} #{packs_label})"
       end
+    end
+
+    def unit_priced?(item)
+      item.product.pac_size.blank? || item.product.pac_size.zero?
     end
 
     def shipping_options

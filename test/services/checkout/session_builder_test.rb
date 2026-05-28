@@ -56,6 +56,23 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_match "12oz (5,000 units)", line_item[:price_data][:product_data][:name]
   end
 
+  test "builds guest checkout session without customer details" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session
+
+    assert_nil result.selected_address_id
+    assert_nil captured_params[:customer]
+    assert_nil captured_params[:customer_email]
+    assert_nil captured_params[:client_reference_id]
+  end
+
   test "marks invalid session discount while still allowing customer promotion codes" do
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
     Stripe::Coupon.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such coupon", nil))

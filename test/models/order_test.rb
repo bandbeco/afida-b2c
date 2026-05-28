@@ -543,6 +543,45 @@ class OrderTest < ActiveSupport::TestCase
     assert_not logged_in_order.new_customer?
   end
 
+  test "new_customer? returns true for logged-in user when only a different guest email exists" do
+    user = users(:user_without_orders)
+    Order.create!(@valid_attributes.merge(
+      user: nil,
+      email: "other-guest@example.com",
+      stripe_session_id: "sess_other_guest_email",
+      order_number: nil,
+      status: "paid"
+    ))
+    logged_in_order = Order.create!(@valid_attributes.merge(
+      user: user,
+      email: user.email_address,
+      stripe_session_id: "sess_logged_in_new_email",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert logged_in_order.new_customer?
+  end
+
+  test "new_customer? treats matching email in another organization as returning for Google Ads" do
+    Order.create!(@valid_attributes.merge(
+      organization: organizations(:acme),
+      email: "shared-buyer@example.com",
+      stripe_session_id: "sess_org_a_buyer",
+      order_number: nil,
+      status: "paid"
+    ))
+    later = Order.create!(@valid_attributes.merge(
+      organization: organizations(:bobs_bakery),
+      email: "shared-buyer@example.com",
+      stripe_session_id: "sess_org_b_buyer",
+      order_number: nil,
+      status: "paid"
+    ))
+
+    assert_not later.new_customer?
+  end
+
   test "new_customer? ignores pending and cancelled prior orders" do
     Order.create!(@valid_attributes.merge(
       email: "abandoned@example.com",

@@ -5,6 +5,8 @@ class CheckoutsController < ApplicationController
 
   def create
     cart = Current.cart
+    # Kept outside the begin block so the rescue path can inspect builder state
+    # after Stripe raises during session creation.
     builder = nil
 
     begin
