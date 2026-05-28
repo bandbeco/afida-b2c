@@ -124,6 +124,17 @@ class Order < ApplicationRecord
     reorder_schedule_id.present?
   end
 
+  # Whether this is the customer's first completed purchase. Logged-in orders
+  # deliberately match by either user_id or email so guest purchases can be
+  # recognized after a customer creates or uses an account. This is a site-wide
+  # Google Ads customer signal, not an organization-scoped acquisition metric.
+  def new_customer?
+    scope = Order.where(status: %w[paid processing shipped delivered]).where.not(id: id)
+    scope = scope.where(user_id: user_id).or(scope.where(email: email)) if user_id.present?
+    scope = scope.where(email: email) if user_id.blank?
+    !scope.exists?
+  end
+
   private
 
   def generate_order_number

@@ -17,7 +17,7 @@ class OrderItem < ApplicationRecord
   scope :samples, -> { where(is_sample: true) }
   scope :non_samples, -> { where(is_sample: false) }
 
-  def self.create_from_cart_item(cart_item, order)
+  def self.build_from_cart_item(cart_item, order)
     order_item = new(
       order: order,
       product: cart_item.product,

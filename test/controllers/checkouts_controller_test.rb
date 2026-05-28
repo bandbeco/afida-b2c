@@ -570,6 +570,24 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil flash[:error]
   end
 
+  test "create clears invalid discount before handling later Stripe session errors" do
+    post email_subscriptions_path, params: { email: "invalid-discount@example.com" }
+    assert_equal "WELCOME5", session[:discount_code]
+
+    Stripe::Coupon.stubs(:retrieve).raises(
+      Stripe::InvalidRequestError.new("No such coupon", nil)
+    )
+    Stripe::Checkout::Session.stubs(:create).raises(
+      StripeErrors.api_error
+    )
+
+    post checkout_path
+
+    assert_nil session[:discount_code]
+    assert_redirected_to cart_path
+    assert_not_nil flash[:error]
+  end
+
   test "create handles Stripe invalid request errors" do
     Stripe::Checkout::Session.stubs(:create).raises(
       StripeErrors.invalid_request("Invalid line items")
@@ -619,7 +637,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "success validates required shipping details presence" do
+  test "success handles missing shipping details with checkout retry" do
     # Use the helper with nil line1 to test validation
     session = build_stripe_session(
       id: "sess_test_missing_address",
@@ -628,9 +646,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
-    assert_raises(RuntimeError, "Shipping details are required") do
+    assert_no_difference "Order.count" do
       get success_checkout_path, params: { session_id: session.id }
     end
+
+    assert_redirected_to cart_path
+    assert_match /Shipping details are required/, flash[:error]
   end
 
   test "create respects rate limiting" do

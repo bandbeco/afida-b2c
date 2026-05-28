@@ -224,11 +224,27 @@ class OrderItemTest < ActiveSupport::TestCase
   end
 
   # Configuration tests
+  test "build_from_cart_item returns an unsaved order item snapshot" do
+    cart_item = cart_items(:one)
+    order = orders(:one)
+
+    order_item = OrderItem.build_from_cart_item(cart_item, order)
+
+    assert_not order_item.persisted?
+    assert_equal order, order_item.order
+    assert_equal cart_item.product, order_item.product
+    assert_equal cart_item.quantity, order_item.quantity
+  end
+
+  test "does not expose create_from_cart_item alias because build result is unsaved" do
+    assert_not_respond_to OrderItem, :create_from_cart_item
+  end
+
   test "order item stores configuration from cart item" do
     cart_item = cart_items(:branded_configuration)
     order = orders(:acme_order)
 
-    order_item = OrderItem.create_from_cart_item(cart_item, order)
+    order_item = OrderItem.build_from_cart_item(cart_item, order)
 
     assert_equal cart_item.configuration["size"], order_item.configuration["size"]
     assert_equal cart_item.configuration["quantity"], order_item.configuration["quantity"]
@@ -255,7 +271,7 @@ class OrderItemTest < ActiveSupport::TestCase
       price: BigDecimal("12.07")
     )
 
-    order_item = OrderItem.create_from_cart_item(cart_item, @order)
+    order_item = OrderItem.build_from_cart_item(cart_item, @order)
 
     assert_equal 50, order_item.pac_size
   end

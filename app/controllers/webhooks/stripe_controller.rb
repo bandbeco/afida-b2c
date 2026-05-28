@@ -119,7 +119,7 @@ module Webhooks
 
         # Create order items from cart items
         cart.cart_items.includes(:product, design_attachment: :blob).each do |cart_item|
-          OrderItem.create_from_cart_item(cart_item, order).save!
+          OrderItem.build_from_cart_item(cart_item, order).save!
         end
 
         # Clear the cart after successful order creation

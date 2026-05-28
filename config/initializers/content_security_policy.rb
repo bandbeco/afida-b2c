@@ -35,6 +35,8 @@ Rails.application.configure do
                        "https://www.google-analytics.com",
                        "https://analytics.google.com",
                        "https://www.googletagmanager.com",
+                       "https://www.googleadservices.com",
+                       "https://googleads.g.doubleclick.net",
                        "https://datafa.st",
                        "https://*.sentry.io"
 
