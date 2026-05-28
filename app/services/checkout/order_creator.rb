@@ -11,13 +11,15 @@ module Checkout
         raise Checkout::MissingShippingDetails, "Shipping details are required"
       end
 
-      order = Order.create!(order_attributes(shipping_address))
+      ApplicationRecord.transaction do
+        order = Order.create!(order_attributes(shipping_address))
 
-      cart_items.each do |cart_item|
-        OrderItem.build_from_cart_item(cart_item, order).save!
+        cart_items.each do |cart_item|
+          OrderItem.build_from_cart_item(cart_item, order).save!
+        end
+
+        order
       end
-
-      order
     end
 
     private

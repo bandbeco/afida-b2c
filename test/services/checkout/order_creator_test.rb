@@ -79,6 +79,17 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal "Shipping details are required", error.message
   end
 
+  test "rolls back order when an order item cannot be saved" do
+    stripe_session = build_stripe_session(customer_email: "buyer@example.com")
+    OrderItem.any_instance.stubs(:save!).raises(ActiveRecord::RecordInvalid.new(OrderItem.new))
+
+    assert_no_difference [ "Order.count", "OrderItem.count" ] do
+      assert_raises(ActiveRecord::RecordInvalid) do
+        Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+      end
+    end
+  end
+
   test "propagates unexpected Stripe promotion code shapes" do
     stripe_session = build_stripe_session
     stripe_session.total_details.stubs(:breakdown).raises(NoMethodError.new("unexpected shape"))
