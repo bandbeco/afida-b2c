@@ -44,6 +44,11 @@ class DeliveryEstimate
 
   # The working day on which the order is dispatched. If placed on a working
   # day before the cutoff, that's today; otherwise the next working day.
+  #
+  # In the else branch we advance one day before rolling forward so we never
+  # dispatch on the placed-on day itself (it's either a non-working day or
+  # past the cutoff). roll_forward then snaps to the next business day, skipping
+  # any run of weekends/holidays, so the result is always a valid working day.
   def dispatch_date
     date = @placed_at.to_date
 

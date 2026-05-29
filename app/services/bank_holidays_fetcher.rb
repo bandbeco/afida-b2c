@@ -30,7 +30,10 @@ class BankHolidaysFetcher
     return log_failure("no events for #{DIVISION}") if events.blank?
 
     events.map { |event| Date.iso8601(event.fetch("date")) }
-  rescue HTTP::Error, JSON::ParserError, KeyError, ArgumentError => e
+  rescue HTTP::Error, JSON::ParserError, KeyError, Date::Error => e
+    # Date::Error (a subclass of ArgumentError) covers a malformed "date" value;
+    # KeyError covers a missing "date" key. Kept narrow so an unrelated bug isn't
+    # silently turned into a nil.
     log_failure("#{e.class}: #{e.message}")
   end
 

@@ -20,7 +20,9 @@ class BankHoliday < ApplicationRecord
       rows = (dates - existing).map do |date|
         { division: division, date: date, created_at: now, updated_at: now }
       end
-      insert_all(rows) if rows.any?
+      # Bang variant: the rows are known-new (filtered against existing), so any
+      # failure here is unexpected and should surface rather than be swallowed.
+      insert_all!(rows) if rows.any?
     end
   end
 end
