@@ -95,24 +95,23 @@ class GoogleCustomerReviewsHelperTest < ActionView::TestCase
 
   # estimated_delivery_date tests
 
-  test "estimated_delivery_date returns date 5 business days from order creation" do
+  test "estimated_delivery_date returns the next-working-day delivery date" do
     order = orders(:one)
-    # Freeze time to make test deterministic
-    travel_to Time.zone.local(2026, 3, 16, 12, 0, 0) do # Monday
+    travel_to Time.zone.local(2026, 3, 16, 12, 0, 0) do # Monday, before 2pm cutoff
       order.update_columns(created_at: Time.current)
       result = estimated_delivery_date(order)
-      # 5 business days from Monday = next Monday
-      assert_equal "2026-03-23", result
+      # Dispatched Monday, delivered Tuesday
+      assert_equal "2026-03-17", result
     end
   end
 
-  test "estimated_delivery_date skips weekends" do
+  test "estimated_delivery_date rolls weekend orders to the next working day" do
     order = orders(:one)
-    travel_to Time.zone.local(2026, 3, 19, 12, 0, 0) do # Thursday
+    travel_to Time.zone.local(2026, 3, 21, 12, 0, 0) do # Saturday
       order.update_columns(created_at: Time.current)
       result = estimated_delivery_date(order)
-      # Thu + 5 business days = Thu next week (skipping Sat/Sun)
-      assert_equal "2026-03-26", result
+      # Cutoff Monday, delivered Tuesday (no weekend delivery)
+      assert_equal "2026-03-24", result
     end
   end
 end

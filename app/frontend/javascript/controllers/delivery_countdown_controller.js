@@ -79,10 +79,14 @@ export default class extends Controller {
     return target
   }
 
-  // Get the delivery date (day after cutoff)
+  // Get the delivery date: the next working day after the cutoff.
+  // We don't deliver on weekends, so skip Saturday and Sunday.
   getDeliveryDate(cutoffTime) {
     const deliveryDate = new Date(cutoffTime)
     deliveryDate.setDate(deliveryDate.getDate() + 1)
+    while (deliveryDate.getDay() === 0 || deliveryDate.getDay() === 6) {
+      deliveryDate.setDate(deliveryDate.getDate() + 1)
+    }
     return deliveryDate
   }
 
