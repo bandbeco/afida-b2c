@@ -11,7 +11,6 @@
   <div class="max-w-4xl mx-auto">
 
     <%# Progress Steps with integrated thank you %>
-    <% delivery_estimate = DeliveryEstimate.for_order(@order) %>
     <div class="bg-white rounded-lg overflow-hidden mb-8 p-6">
       <ul class="steps steps-vertical sm:steps-horizontal w-full">
         <li class="step step-success" data-content="✓">
@@ -29,7 +28,7 @@
         <li class="step" data-content="3">
           <div class="text-left sm:text-center mt-2 sm:mt-0">
             <h4 class="text-gray-900">Delivery</h4>
-            <p class="text-sm text-gray-500">Expected <%= delivery_estimate.formatted %></p>
+            <p class="text-sm text-gray-500">Expected <%= DeliveryEstimate.format(@order.estimated_delivery_date) %></p>
           </div>
         </li>
       </ul>

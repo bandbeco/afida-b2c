@@ -163,6 +163,15 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_match @guest_order.display_number, response.body
   end
 
+  test "confirmation page shows the computed delivery date" do
+    sign_in @user_one
+    # Monday 1 June 2026, before the 2pm cutoff -> delivered Tuesday 2 June.
+    @order_one.update_columns(created_at: Time.zone.local(2026, 6, 1, 12, 0, 0))
+    get confirmation_order_url(@order_one)
+    assert_response :success
+    assert_match "Expected Tuesday, 2 June", response.body
+  end
+
   test "confirmation page fires GA4 only once" do
     sign_in @user_one
     assert_nil @order_one.ga4_purchase_tracked_at

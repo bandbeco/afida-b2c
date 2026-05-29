@@ -18,13 +18,15 @@ class WorkingDayCalendar
       build([])
     end
 
-    private
-
+    # Cached holiday dates, so callers (e.g. the product-page countdown) don't
+    # hit the database on every render. Shared with #current.
     def holiday_dates
       Rails.cache.fetch(CACHE_KEY, expires_in: CACHE_TTL) do
         BankHoliday.dates(BankHolidaysFetcher::DIVISION)
       end
     end
+
+    private
 
     def build(holidays)
       Business::Calendar.new(working_days: WORKING_DAYS, holidays: holidays)

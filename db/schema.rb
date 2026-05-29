@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_29_093828) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_29_095918) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -261,6 +261,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_093828) do
     t.decimal "discount_amount", precision: 10, scale: 2, default: "0.0", null: false
     t.string "discount_code"
     t.string "email", null: false
+    t.date "estimated_delivery_on"
     t.datetime "ga4_purchase_tracked_at"
     t.string "order_number", null: false
     t.bigint "organization_id"

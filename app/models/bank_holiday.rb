@@ -16,9 +16,11 @@ class BankHoliday < ApplicationRecord
     transaction do
       where(division: division).where.not(date: dates).delete_all
       existing = where(division: division).pluck(:date)
-      (dates - existing).each do |date|
-        create!(division: division, date: date)
+      now = Time.current
+      rows = (dates - existing).map do |date|
+        { division: division, date: date, created_at: now, updated_at: now }
       end
+      insert_all(rows) if rows.any?
     end
   end
 end

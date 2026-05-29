@@ -1,6 +1,12 @@
 require "test_helper"
 
 class WorkingDayCalendarTest < ActiveSupport::TestCase
+  setup do
+    # Holiday dates are cached; clear so each test sees its own data. No-op
+    # under null_store, but keeps the tests correct if the cache store changes.
+    Rails.cache.clear
+  end
+
   test "current returns a calendar where weekends are not business days" do
     calendar = WorkingDayCalendar.current
 

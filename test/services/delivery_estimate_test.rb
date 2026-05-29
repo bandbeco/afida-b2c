@@ -57,6 +57,15 @@ class DeliveryEstimateTest < ActiveSupport::TestCase
     assert_equal Date.new(2026, 4, 7), result
   end
 
+  test "skips a mid-week bank holiday between dispatch and delivery" do
+    # Christmas Day Thu 25 Dec 2025 and Boxing Day Fri 26 Dec 2025 are holidays.
+    # Wednesday 24 Dec 12:00 -> dispatch Wed -> delivery skips both holidays and
+    # the weekend -> Monday 29 Dec.
+    holidays = [ Date.new(2025, 12, 25), Date.new(2025, 12, 26) ]
+    result = estimate(Time.zone.local(2025, 12, 24, 12, 0, 0), holidays).delivery_date
+    assert_equal Date.new(2025, 12, 29), result
+  end
+
   test "cutoff is evaluated in UK local time during BST" do
     # 14:30 BST is after the 2pm cutoff (it is 13:30 UTC). Monday 1 June is BST.
     # After cutoff -> dispatch Tuesday -> delivery Wednesday.

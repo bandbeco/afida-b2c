@@ -13,8 +13,16 @@
 class DeliveryEstimate
   CUTOFF_HOUR = 14 # 2pm, evaluated in the app time zone (London)
 
+  # Display format for a delivery date, e.g. "Tuesday, 2 June".
+  DISPLAY_FORMAT = "%A, %-d %B"
+
   def self.for_order(order)
     new(order.created_at)
+  end
+
+  # Format a stored/computed delivery date for display.
+  def self.format(date)
+    date.strftime(DISPLAY_FORMAT)
   end
 
   def initialize(placed_at, calendar: WorkingDayCalendar.current)
@@ -29,7 +37,7 @@ class DeliveryEstimate
 
   # e.g. "Tuesday, 2 June"
   def formatted
-    delivery_date.strftime("%A, %-d %B")
+    self.class.format(delivery_date)
   end
 
   private

@@ -52,7 +52,7 @@ module ProductsHelper
   # only ever looks a few days ahead).
   def delivery_holidays_json
     today = Date.current
-    BankHoliday.dates(BankHolidaysFetcher::DIVISION)
+    WorkingDayCalendar.holiday_dates
       .select { |date| date >= today }
       .map(&:iso8601)
       .to_json

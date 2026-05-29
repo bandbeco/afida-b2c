@@ -69,8 +69,10 @@ merchantWidgetScript.addEventListener('load', function() {
   end
 
   # Estimated delivery date for the order, as the next-working-day promise
-  # shown elsewhere on the site. Returns ISO8601 (what GCR's opt-in expects).
+  # shown elsewhere on the site. Reads the date stamped on the order at purchase
+  # (falling back to a computed date for legacy orders). Returns ISO8601 (what
+  # GCR's opt-in expects).
   def estimated_delivery_date(order)
-    DeliveryEstimate.for_order(order).delivery_date.iso8601
+    order.estimated_delivery_date.iso8601
   end
 end
