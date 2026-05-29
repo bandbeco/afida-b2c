@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_12_074026) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_28_211126) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -372,6 +372,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_074026) do
     t.string "sku", null: false
     t.string "slug", limit: 255, null: false
     t.integer "stock_quantity", default: 0
+    t.string "supplier_sku"
     t.datetime "updated_at", null: false
     t.decimal "vat_rate", precision: 6, scale: 4
     t.integer "volume_in_ml"
@@ -388,6 +389,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_12_074026) do
     t.index ["product_type"], name: "index_products_on_product_type"
     t.index ["sample_eligible"], name: "index_products_on_sample_eligible"
     t.index ["slug"], name: "index_products_on_slug", unique: true
+    t.index ["supplier_sku"], name: "index_products_on_supplier_sku"
   end
 
   create_table "reorder_schedule_items", force: :cascade do |t|
