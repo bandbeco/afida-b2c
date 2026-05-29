@@ -7,9 +7,9 @@
 #
 # Working-day maths is delegated to a Business::Calendar (see
 # WorkingDayCalendar); the 2pm cutoff lives here because the calendar is
-# date-only. This mirrors the customer-facing countdown shown on the product
-# page (delivery_countdown_controller.js) so the promise stays consistent from
-# product page through to order confirmation.
+# date-only. This is the single source of truth for the delivery promise: the
+# product page (via cutoff_at + a dumb JS countdown) and the order confirmation
+# both derive their dates from here, so there is no client-side logic to drift.
 class DeliveryEstimate
   CUTOFF_HOUR = 14 # 2pm, evaluated in the app time zone (London)
 
@@ -33,6 +33,13 @@ class DeliveryEstimate
   # The date the order is expected to be delivered.
   def delivery_date
     @calendar.add_business_days(dispatch_date, 1)
+  end
+
+  # The 2pm cutoff instant the order is racing against: 2pm on the dispatch day.
+  # The product-page countdown ticks toward this; once it passes, a reload
+  # recomputes a later dispatch day.
+  def cutoff_at
+    dispatch_date.in_time_zone.change(hour: CUTOFF_HOUR)
   end
 
   # e.g. "Tuesday, 2 June"

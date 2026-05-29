@@ -59,6 +59,17 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show page renders the server-computed delivery date and cutoff timestamp" do
+    travel_to Time.zone.local(2026, 6, 1, 12, 0, 0) do # Monday, before 2pm cutoff
+      get product_url(@product.slug)
+      assert_response :success
+      # Delivery date is rendered server-side (next working day).
+      assert_match "Tuesday, 2 June", response.body
+      # Cutoff instant is passed to the countdown controller as a data attribute.
+      assert_match "data-delivery-countdown-cutoff-at-value=\"2026-06-01T14:00:00", response.body
+    end
+  end
+
   test "show page accepts variant_id parameter" do
     # With the new structure, Product IS the variant
     get product_url(@product.slug, variant_id: @product.id)

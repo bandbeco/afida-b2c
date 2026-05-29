@@ -81,4 +81,34 @@ class DeliveryEstimateTest < ActiveSupport::TestCase
     order.update_columns(created_at: Time.zone.local(2026, 6, 1, 12, 0, 0))
     assert_equal Date.new(2026, 6, 2), DeliveryEstimate.for_order(order).delivery_date
   end
+
+  # cutoff_at: the 2pm instant the live countdown ticks toward (2pm on the
+  # dispatch day, which is the day the order ships if placed in time).
+
+  test "cutoff_at is 2pm today when placed on a working day before cutoff" do
+    assert_equal Time.zone.local(2026, 6, 1, 14, 0, 0),
+                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0)).cutoff_at
+  end
+
+  test "cutoff_at rolls to the next working day's 2pm when past cutoff" do
+    # Monday 15:00 -> next cutoff is Tuesday 2pm
+    assert_equal Time.zone.local(2026, 6, 2, 14, 0, 0),
+                 estimate(Time.zone.local(2026, 6, 1, 15, 0, 0)).cutoff_at
+  end
+
+  test "cutoff_at skips the weekend" do
+    # Saturday -> next cutoff is Monday 2pm
+    assert_equal Time.zone.local(2026, 6, 8, 14, 0, 0),
+                 estimate(Time.zone.local(2026, 6, 6, 10, 0, 0)).cutoff_at
+  end
+
+  test "cutoff_at is the dispatch day, distinct from the delivery day" do
+    # Good Friday 3 Apr + Easter Monday 6 Apr are holidays. Thursday 2 Apr 12:00
+    # is a working day before cutoff, so the cutoff is Thursday 2pm even though
+    # delivery rolls all the way to Tuesday 7 Apr.
+    holidays = [ Date.new(2026, 4, 3), Date.new(2026, 4, 6) ]
+    est = estimate(Time.zone.local(2026, 4, 2, 12, 0, 0), holidays)
+    assert_equal Time.zone.local(2026, 4, 2, 14, 0, 0), est.cutoff_at
+    assert_equal Date.new(2026, 4, 7), est.delivery_date
+  end
 end
