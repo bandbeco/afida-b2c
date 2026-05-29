@@ -615,7 +615,7 @@ class ProductTest < ActiveSupport::TestCase
       name: "Coffee Cups"
     )
 
-    assert_equal "Vegware 8oz White Paper Coffee Cups", product.generated_title
+    assert_equal "Vegware White Paper Coffee Cups - 8oz", product.generated_title
   end
 
   test "generated_title omits blank attributes" do
@@ -654,7 +654,7 @@ class ProductTest < ActiveSupport::TestCase
       name: "Straws"
     )
 
-    assert_equal "6 x 200mm Natural Bamboo Pulp Straws", product.generated_title
+    assert_equal "Natural Bamboo Pulp Straws - 6 x 200mm", product.generated_title
   end
 
   test "generated_title skips empty strings" do
@@ -680,7 +680,7 @@ class ProductTest < ActiveSupport::TestCase
       name: "Pizza Boxes"
     )
 
-    assert_equal "16 inch / 406 x 406mm Kraft Pizza Boxes", product.generated_title
+    assert_equal "Kraft Pizza Boxes - 16 inch / 406 x 406mm", product.generated_title
   end
 
   test "generated_title deduplication is case-insensitive" do
@@ -717,7 +717,193 @@ class ProductTest < ActiveSupport::TestCase
       name: "Clamshell"
     )
 
-    assert_equal "12oz Bagasse Clamshell", product.generated_title
+    assert_equal "Bagasse Clamshell - 12oz", product.generated_title
+  end
+
+  test "generated_title derives size from volume when free-text size blank" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: 650,
+      colour: "White",
+      material: "Paper",
+      name: "Deli Container"
+    )
+
+    assert_equal "White Paper Deli Container - 650ml", product.generated_title
+  end
+
+  test "generated_title prefers free-text size over derived size" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: "8oz",
+      volume_in_ml: 650,
+      colour: nil,
+      material: nil,
+      name: "Deli Container"
+    )
+
+    assert_equal "Deli Container - 8oz", product.generated_title
+  end
+
+  test "generated_title derives LxWxH from linear dimensions" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: nil,
+      length_in_mm: 200,
+      width_in_mm: 200,
+      height_in_mm: 80,
+      colour: "Kraft",
+      material: "Kraft",
+      name: "Pizza Box"
+    )
+
+    assert_equal "Kraft Pizza Box - 200 x 200 x 80mm", product.generated_title
+  end
+
+  test "generated_title derives LxW when height absent" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: nil,
+      length_in_mm: 200,
+      width_in_mm: 150,
+      height_in_mm: nil,
+      colour: nil,
+      material: nil,
+      name: "Tray"
+    )
+
+    assert_equal "Tray - 200 x 150mm", product.generated_title
+  end
+
+  test "generated_title derives single dimension when only width present" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: nil,
+      length_in_mm: nil,
+      width_in_mm: 90,
+      height_in_mm: nil,
+      colour: nil,
+      material: nil,
+      name: "Lid"
+    )
+
+    assert_equal "Lid - 90mm", product.generated_title
+  end
+
+  test "generated_title falls back to weight when only weight present" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: nil,
+      length_in_mm: nil,
+      width_in_mm: nil,
+      height_in_mm: nil,
+      weight_in_g: 500,
+      colour: nil,
+      material: nil,
+      name: "Napkin Pack"
+    )
+
+    assert_equal "Napkin Pack - 500g", product.generated_title
+  end
+
+  test "generated_title prefers volume over linear dimensions" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: 1000,
+      length_in_mm: 200,
+      width_in_mm: 200,
+      colour: nil,
+      material: nil,
+      name: "Tub"
+    )
+
+    assert_equal "Tub - 1000ml", product.generated_title
+  end
+
+  test "generated_title omits size token when size and all dimensions blank" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: nil,
+      length_in_mm: nil,
+      width_in_mm: nil,
+      height_in_mm: nil,
+      weight_in_g: nil,
+      colour: "White",
+      material: nil,
+      name: "Coffee Cups"
+    )
+
+    assert_equal "White Coffee Cups", product.generated_title
+  end
+
+  test "generated_title ignores pac_size when deriving size" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: nil,
+      length_in_mm: nil,
+      width_in_mm: nil,
+      height_in_mm: nil,
+      weight_in_g: nil,
+      pac_size: 1000,
+      colour: nil,
+      material: nil,
+      name: "Mystery Item"
+    )
+
+    assert_equal "Mystery Item", product.generated_title
+  end
+
+  test "generated_title treats zero dimensions as absent" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      volume_in_ml: 0,
+      width_in_mm: 0,
+      weight_in_g: 0,
+      colour: nil,
+      material: nil,
+      name: "Empty Dims"
+    )
+
+    assert_equal "Empty Dims", product.generated_title
+  end
+
+  test "derived_size returns volume token in ml" do
+    product = products(:one)
+    product.update_columns(volume_in_ml: 330)
+
+    assert_equal "330ml", product.derived_size
+  end
+
+  test "derived_size returns nil when no dimensional data" do
+    product = products(:one)
+    product.update_columns(
+      volume_in_ml: nil,
+      length_in_mm: nil,
+      width_in_mm: nil,
+      height_in_mm: nil,
+      weight_in_g: nil
+    )
+
+    assert_nil product.derived_size
   end
 
   # ==========================================================================
@@ -751,7 +937,7 @@ class ProductTest < ActiveSupport::TestCase
       brand: "Vegware", size: "12oz", colour: "Kraft", material: "Paper",
       name: "Hot Cup", certifications: "Compostable"
     )
-    assert_equal "Vegware 12oz Kraft Paper Hot Cup, Compostable", product.generated_meta_title
+    assert_equal "Vegware Kraft Paper Hot Cup - 12oz, Compostable", product.generated_meta_title
   end
 
   test "generated_meta_title appends recyclable when compostable is absent" do
@@ -760,7 +946,7 @@ class ProductTest < ActiveSupport::TestCase
       brand: nil, size: "12oz", colour: "Clear", material: "rPET",
       name: "Smoothie Cup", certifications: "Recyclable, Food Safe"
     )
-    assert_equal "12oz Clear rPET Smoothie Cup, Recyclable", product.generated_meta_title
+    assert_equal "Clear rPET Smoothie Cup - 12oz, Recyclable", product.generated_meta_title
   end
 
   test "generated_meta_title prioritises compostable over recyclable" do
@@ -796,7 +982,7 @@ class ProductTest < ActiveSupport::TestCase
       brand: nil, size: "160mm", colour: nil, material: "Wood",
       name: "Compostable Cutlery Kit", certifications: "Compostable"
     )
-    assert_equal "160mm Wood Compostable Cutlery Kit", product.generated_meta_title
+    assert_equal "Wood Compostable Cutlery Kit - 160mm", product.generated_meta_title
   end
 
   test "generated_meta_title drops suffix when combined length exceeds 60 chars" do
@@ -806,8 +992,8 @@ class ProductTest < ActiveSupport::TestCase
       material: "Lined", name: "Compostable Takeaway Cup with Lid",
       certifications: "Recyclable"
     )
-    # Base: "12oz Kraft Aqueous Lined Compostable Takeaway Cup with Lid" = 58 chars
-    # With suffix: ", Recyclable" makes it 70 chars -> should drop suffix
+    # Base: "Kraft Aqueous Lined Compostable Takeaway Cup with Lid - 12oz" = 60 chars
+    # With suffix: ", Recyclable" pushes it past 60 -> should drop suffix
     assert_equal product.generated_title, product.generated_meta_title
   end
 
@@ -833,7 +1019,7 @@ class ProductTest < ActiveSupport::TestCase
       brand: nil, size: "8oz", colour: nil, material: "Paper",
       name: "Cold Cup", pac_size: 500, description_short: nil
     )
-    assert_equal "8oz Paper Cold Cup. Case of 500, free UK delivery over £100.",
+    assert_equal "Paper Cold Cup - 8oz. Case of 500, free UK delivery over £100.",
                  product.generated_meta_description
   end
 

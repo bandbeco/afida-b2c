@@ -228,13 +228,32 @@ class Product < ApplicationRecord
     display_name
   end
 
-  # Generated title from product attributes
-  # Combines brand, size, colour, material, and name into a descriptive title
-  # Example: "Vegware 12oz White Paper Coffee Cups"
-  # Deduplicates when colour and material are identical (e.g., "Kraft Kraft" -> "Kraft")
+  # Generated title from product attributes.
+  # Combines brand, colour, material, and name into a descriptive title, then
+  # appends the size after a dash. The size token is the free-text size when
+  # present, otherwise a value derived from the dimension columns.
+  # Example: "Vegware White Paper Coffee Cups - 12oz"
+  # Deduplicates when colour and material are identical (e.g. "Kraft Kraft" -> "Kraft")
   def generated_title
-    parts = [ brand, size, colour, material, name ].compact_blank.uniq(&:downcase)
-    parts.join(" ")
+    base = [ brand, colour, material, name ].compact_blank.uniq(&:downcase).join(" ")
+    token = size.presence || derived_size
+    token.present? ? "#{base} - #{token}" : base
+  end
+
+  # Human-readable size token derived from the dimension columns, used by
+  # generated_title when the free-text size is blank. Prefers volume, then the
+  # present linear dimensions (LxWxH), then weight. Returns nil when no
+  # dimensional data exists. pac_size is a pack quantity, not a physical size, so
+  # it is intentionally excluded.
+  def derived_size
+    return "#{volume_in_ml}ml" if volume_in_ml.to_i.positive?
+
+    linear = [ length_in_mm, width_in_mm, height_in_mm ].select { |d| d.to_i.positive? }
+    return "#{linear.join(' x ')}mm" if linear.any?
+
+    return "#{weight_in_g}g" if weight_in_g.to_i.positive?
+
+    nil
   end
 
   META_TITLE_BENEFIT_PRIORITY = [ "Compostable", "Recyclable", "Biodegradable", "Plastic Free" ].freeze
