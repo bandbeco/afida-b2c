@@ -46,6 +46,18 @@ module ProductsHelper
     end
   end
 
+  # Upcoming UK bank holidays as a JSON array of "YYYY-MM-DD" strings, for the
+  # product-page delivery countdown so its date skips holidays like the
+  # server-side DeliveryEstimate does. Only future dates are sent (the countdown
+  # only ever looks a few days ahead).
+  def delivery_holidays_json
+    today = Date.current
+    BankHoliday.dates(BankHolidaysFetcher::DIVISION)
+      .select { |date| date >= today }
+      .map(&:iso8601)
+      .to_json
+  end
+
   # Calculate the maximum volume discount percentage for branded products
   # Compares first tier (base price) to last tier within each size, returns the max
   def max_volume_discount_percentage(product)

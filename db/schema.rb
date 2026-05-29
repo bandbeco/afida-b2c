@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_28_211126) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_29_093828) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,6 +60,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_28_211126) do
     t.index ["user_id", "line1", "postcode"], name: "index_addresses_on_user_line1_postcode"
     t.index ["user_id"], name: "index_addresses_on_user_id"
     t.index ["user_id"], name: "index_addresses_on_user_id_where_default", unique: true, where: "(\"default\" = true)"
+  end
+
+  create_table "bank_holidays", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.string "division", default: "england-and-wales", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.index ["division", "date"], name: "index_bank_holidays_on_division_and_date", unique: true
   end
 
   create_table "blog_categories", force: :cascade do |t|

@@ -6,6 +6,7 @@ import { Controller } from "@hotwired/stimulus"
  */
 export default class extends Controller {
   static targets = ["countdown", "deliveryDate"]
+  static values = { holidays: Array }
 
   connect() {
     this.update()
@@ -51,43 +52,38 @@ export default class extends Controller {
   // Get the next 2pm cutoff time
   getNext2pmCutoff(now) {
     const target = new Date(now)
-    const day = now.getDay()
-    const hours = now.getHours()
 
-    // If it's a weekday and before 2pm, cutoff is today at 2pm
-    if (day >= 1 && day <= 5 && hours < 14) {
+    // If today is a working day and we're before 2pm, cutoff is today at 2pm.
+    if (this.isWorkingDay(now) && now.getHours() < 14) {
       target.setHours(14, 0, 0, 0)
       return target
     }
 
-    // Otherwise, find the next weekday
-    let daysToAdd = 1
-
-    if (day === 5) {
-      // Friday after 2pm -> Monday
-      daysToAdd = 3
-    } else if (day === 6) {
-      // Saturday -> Monday
-      daysToAdd = 2
-    } else if (day === 0) {
-      // Sunday -> Monday
-      daysToAdd = 1
-    }
-
-    target.setDate(target.getDate() + daysToAdd)
+    // Otherwise, the cutoff is 2pm on the next working day.
+    do {
+      target.setDate(target.getDate() + 1)
+    } while (!this.isWorkingDay(target))
     target.setHours(14, 0, 0, 0)
     return target
   }
 
-  // Get the delivery date: the next working day after the cutoff.
-  // We don't deliver on weekends, so skip Saturday and Sunday.
+  // Get the delivery date: the next working day after the cutoff. We don't
+  // deliver on weekends or UK bank holidays, so skip those.
   getDeliveryDate(cutoffTime) {
     const deliveryDate = new Date(cutoffTime)
-    deliveryDate.setDate(deliveryDate.getDate() + 1)
-    while (deliveryDate.getDay() === 0 || deliveryDate.getDay() === 6) {
+    do {
       deliveryDate.setDate(deliveryDate.getDate() + 1)
-    }
+    } while (!this.isWorkingDay(deliveryDate))
     return deliveryDate
+  }
+
+  // A working day is a weekday that isn't a bank holiday.
+  isWorkingDay(date) {
+    const day = date.getDay()
+    if (day === 0 || day === 6) return false
+
+    const iso = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`
+    return !this.holidaysValue.includes(iso)
   }
 
   // Format date as "Tuesday, 14 January"

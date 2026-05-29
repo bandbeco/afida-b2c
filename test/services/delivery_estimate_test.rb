@@ -2,53 +2,69 @@ require "test_helper"
 
 class DeliveryEstimateTest < ActiveSupport::TestCase
   # Cutoff is 2pm. Order before cutoff on a working day ships that day for
-  # next-working-day delivery. Weekends are skipped (no Sat/Sun delivery).
+  # next-working-day delivery. Weekends and bank holidays are skipped.
+
+  # Weekend-only calendar (no bank holidays) for the baseline cases.
+  def calendar(holidays = [])
+    Business::Calendar.new(working_days: %w[mon tue wed thu fri], holidays: holidays)
+  end
+
+  def estimate(time, holidays = [])
+    DeliveryEstimate.new(time, calendar: calendar(holidays))
+  end
 
   test "weekday before 2pm delivers next working day" do
-    # Monday 12:00 -> cutoff today (Mon) -> delivery Tuesday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 1, 12, 0, 0))
-    assert_equal Date.new(2026, 6, 2), estimate.delivery_date
+    # Monday 12:00 -> dispatch Mon -> delivery Tuesday
+    assert_equal Date.new(2026, 6, 2), estimate(Time.zone.local(2026, 6, 1, 12, 0, 0)).delivery_date
   end
 
   test "weekday after 2pm delivers the working day after next" do
-    # Monday 15:00 -> cutoff Tuesday -> delivery Wednesday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 1, 15, 0, 0))
-    assert_equal Date.new(2026, 6, 3), estimate.delivery_date
+    # Monday 15:00 -> dispatch Tuesday -> delivery Wednesday
+    assert_equal Date.new(2026, 6, 3), estimate(Time.zone.local(2026, 6, 1, 15, 0, 0)).delivery_date
   end
 
   test "weekday exactly at 2pm has missed the cutoff" do
-    # Monday 14:00 -> cutoff is missed -> cutoff Tuesday -> delivery Wednesday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 1, 14, 0, 0))
-    assert_equal Date.new(2026, 6, 3), estimate.delivery_date
+    # Monday 14:00 -> cutoff missed -> dispatch Tuesday -> delivery Wednesday
+    assert_equal Date.new(2026, 6, 3), estimate(Time.zone.local(2026, 6, 1, 14, 0, 0)).delivery_date
   end
 
   test "friday before 2pm delivers monday (skips weekend)" do
-    # Friday 12:00 -> cutoff Fri -> delivery Monday, not Saturday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 5, 12, 0, 0))
-    assert_equal Date.new(2026, 6, 8), estimate.delivery_date
+    # Friday 12:00 -> dispatch Fri -> delivery Monday, not Saturday
+    assert_equal Date.new(2026, 6, 8), estimate(Time.zone.local(2026, 6, 5, 12, 0, 0)).delivery_date
   end
 
   test "friday after 2pm delivers tuesday" do
-    # Friday 15:00 -> cutoff Monday -> delivery Tuesday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 5, 15, 0, 0))
-    assert_equal Date.new(2026, 6, 9), estimate.delivery_date
+    # Friday 15:00 -> dispatch Monday -> delivery Tuesday
+    assert_equal Date.new(2026, 6, 9), estimate(Time.zone.local(2026, 6, 5, 15, 0, 0)).delivery_date
   end
 
   test "saturday delivers tuesday" do
-    # Saturday -> cutoff Monday -> delivery Tuesday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 6, 10, 0, 0))
-    assert_equal Date.new(2026, 6, 9), estimate.delivery_date
+    # Saturday -> dispatch Monday -> delivery Tuesday
+    assert_equal Date.new(2026, 6, 9), estimate(Time.zone.local(2026, 6, 6, 10, 0, 0)).delivery_date
   end
 
   test "sunday delivers tuesday" do
-    # Sunday -> cutoff Monday -> delivery Tuesday
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 7, 10, 0, 0))
-    assert_equal Date.new(2026, 6, 9), estimate.delivery_date
+    # Sunday -> dispatch Monday -> delivery Tuesday
+    assert_equal Date.new(2026, 6, 9), estimate(Time.zone.local(2026, 6, 7, 10, 0, 0)).delivery_date
+  end
+
+  test "skips bank holidays between dispatch and delivery" do
+    # Good Friday 2026-04-03 and Easter Monday 2026-04-06 are holidays.
+    # Thursday 2 Apr 12:00 -> dispatch Thu -> delivery skips Good Friday,
+    # the weekend, and Easter Monday -> Tuesday 7 Apr.
+    holidays = [ Date.new(2026, 4, 3), Date.new(2026, 4, 6) ]
+    result = estimate(Time.zone.local(2026, 4, 2, 12, 0, 0), holidays).delivery_date
+    assert_equal Date.new(2026, 4, 7), result
+  end
+
+  test "cutoff is evaluated in UK local time during BST" do
+    # 14:30 BST is after the 2pm cutoff (it is 13:30 UTC). Monday 1 June is BST.
+    # After cutoff -> dispatch Tuesday -> delivery Wednesday.
+    assert_equal Date.new(2026, 6, 3), estimate(Time.zone.local(2026, 6, 1, 14, 30, 0)).delivery_date
   end
 
   test "formatted renders day, date and month" do
-    estimate = DeliveryEstimate.new(Time.zone.local(2026, 6, 1, 12, 0, 0))
-    assert_equal "Tuesday, 2 June", estimate.formatted
+    assert_equal "Tuesday, 2 June", estimate(Time.zone.local(2026, 6, 1, 12, 0, 0)).formatted
   end
 
   test "for_order builds from the order's created_at" do

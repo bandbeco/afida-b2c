@@ -104,6 +104,9 @@ gem "reverse_markdown", "~> 3.0"
 
 gem "http", "~> 6.0"
 
+# Working-day / business-day date maths (UK bank holidays)
+gem "business", "~> 2.3"
+
 gem "webmock", "~> 3.26", group: :test
 
 # Structured logging to Logtail (Better Stack)
