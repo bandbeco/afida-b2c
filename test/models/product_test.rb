@@ -720,8 +720,6 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal "Bagasse Clamshell - 12oz", product.generated_title
   end
 
-  # Derived-size tests: when free-text size is blank, the size token is derived
-  # from the dimension columns and appended in parentheses.
   test "generated_title derives size from volume when free-text size blank" do
     product = products(:one)
     product.update_columns(
