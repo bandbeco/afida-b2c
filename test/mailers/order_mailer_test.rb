@@ -39,6 +39,15 @@ class OrderMailerTest < ActionMailer::TestCase
     assert_match @order.shipping_name, email.body.encoded
   end
 
+  test "confirmation_email does not promise a shipping-notification email" do
+    email = OrderMailer.with(order: @order).confirmation_email
+    body = email.body.encoded
+
+    assert_no_match(/another email when it ships/i, body)
+    assert_no_match(/notify you when your order ships/i, body)
+    assert_no_match(/notify you again when your order has shipped/i, body)
+  end
+
   test "confirmation_email has both HTML and text parts" do
     email = OrderMailer.with(order: @order).confirmation_email
 
