@@ -22,4 +22,14 @@ class WorkingDayCalendarTest < ActiveSupport::TestCase
 
     assert_not calendar.business_day?(Date.new(2026, 4, 3))
   end
+
+  test "current degrades to a weekend-only calendar when holiday lookup fails" do
+    BankHoliday.stubs(:dates).raises(ActiveRecord::StatementInvalid, "boom")
+
+    calendar = WorkingDayCalendar.current
+
+    # Weekends still excluded; weekdays still business days. No raise, no holidays.
+    assert calendar.business_day?(Date.new(2026, 4, 3))      # would be a holiday if loaded
+    assert_not calendar.business_day?(Date.new(2026, 6, 6))  # Saturday
+  end
 end

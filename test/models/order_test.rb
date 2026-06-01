@@ -104,6 +104,11 @@ class OrderTest < ActiveSupport::TestCase
     assert_equal Date.new(2026, 6, 2), @order.estimated_delivery_date
   end
 
+  test "formatted_delivery_date renders the delivery date for display" do
+    @order.update_columns(estimated_delivery_on: Date.new(2026, 6, 2))
+    assert_equal "Tuesday, 2 June", @order.formatted_delivery_date
+  end
+
   # Method tests
   test "items_count returns sum of order item quantities" do
     # Check actual fixture data

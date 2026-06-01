@@ -85,6 +85,11 @@ class Order < ApplicationRecord
     estimated_delivery_on || DeliveryEstimate.for_order(self).delivery_date
   end
 
+  # The promised delivery date formatted for display, e.g. "Tuesday, 2 June".
+  def formatted_delivery_date
+    DeliveryEstimate.format(estimated_delivery_date)
+  end
+
   def b2b_order?
     organization_id.present?
   end
