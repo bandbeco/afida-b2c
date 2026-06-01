@@ -34,6 +34,10 @@ class ProductsController < ApplicationController
 
     @category = @product.category
 
+    # Delivery promise shown next to the buy box, computed server-side so the
+    # product page and order confirmation share one source of truth.
+    @delivery_estimate = DeliveryEstimate.new(Time.current)
+
     # Compatible products (e.g., lids for cups) - filtered by matching size
     @compatible_products = helpers.matching_lids_for_cup_product(@product)
                                   .select(&:active?)

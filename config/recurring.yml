@@ -19,3 +19,7 @@ production:
     class: ExpirePendingOrdersJob
     queue: default
     schedule: at 6am every day
+  refresh_bank_holidays:
+    class: RefreshBankHolidaysJob
+    queue: default
+    schedule: at 4am every day

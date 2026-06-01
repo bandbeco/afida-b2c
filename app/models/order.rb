@@ -37,6 +37,7 @@ class Order < ApplicationRecord
   }, prefix: true, validate: { allow_nil: true }
 
   before_validation :generate_order_number, on: :create
+  before_create :set_estimated_delivery_on
 
   scope :recent, -> { order(created_at: :desc) }
   scope :for_organization, ->(org) { where(organization: org) }
@@ -76,6 +77,17 @@ class Order < ApplicationRecord
 
   def display_number
     "##{order_number}"
+  end
+
+  # The promised delivery date. Stamped at creation (see set_estimated_delivery_on);
+  # falls back to computing from created_at for legacy orders predating the column.
+  def estimated_delivery_date
+    estimated_delivery_on || DeliveryEstimate.for_order(self).delivery_date
+  end
+
+  # The promised delivery date formatted for display, e.g. "Tuesday, 2 June".
+  def formatted_delivery_date
+    DeliveryEstimate.format(estimated_delivery_date)
   end
 
   def b2b_order?
@@ -152,5 +164,15 @@ class Order < ApplicationRecord
         break
       end
     end
+  end
+
+  # Freeze the delivery promise at purchase time, so the confirmation page (and
+  # the GCR survey date) always show what the customer was actually told, even
+  # if the cutoff rules or holiday calendar change later. created_at isn't set
+  # yet in before_create, so compute from the current time.
+  def set_estimated_delivery_on
+    return if estimated_delivery_on.present?
+
+    self.estimated_delivery_on = DeliveryEstimate.new(Time.current).delivery_date
   end
 end

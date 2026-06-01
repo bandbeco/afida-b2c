@@ -113,6 +113,7 @@ GEM
     bullet (8.1.1)
       activesupport (>= 3.0.0)
       uniform_notifier (~> 1.11)
+    business (2.3.0)
     capybara (3.40.0)
       addressable
       matrix
@@ -514,6 +515,7 @@ DEPENDENCIES
   bootsnap
   brakeman
   bullet
+  business (~> 2.3)
   capybara
   caxlsx (~> 4.4)
   caxlsx_rails (~> 0.7)

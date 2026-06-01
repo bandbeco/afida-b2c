@@ -78,6 +78,37 @@ class OrderTest < ActiveSupport::TestCase
     assert_not @order.pending?
   end
 
+  # Estimated delivery tests
+  test "stamps estimated_delivery_on at creation" do
+    travel_to Time.zone.local(2026, 6, 1, 12, 0, 0) do # Monday, before cutoff
+      order = Order.create!(@valid_attributes)
+      assert_equal Date.new(2026, 6, 2), order.estimated_delivery_on
+    end
+  end
+
+  test "does not overwrite an explicitly set estimated_delivery_on" do
+    travel_to Time.zone.local(2026, 6, 1, 12, 0, 0) do
+      order = Order.create!(@valid_attributes.merge(estimated_delivery_on: Date.new(2026, 6, 10)))
+      assert_equal Date.new(2026, 6, 10), order.estimated_delivery_on
+    end
+  end
+
+  test "estimated_delivery_date returns the stored value" do
+    @order.update_columns(estimated_delivery_on: Date.new(2026, 6, 2))
+    assert_equal Date.new(2026, 6, 2), @order.estimated_delivery_date
+  end
+
+  test "estimated_delivery_date falls back to computing for legacy orders" do
+    # Legacy order created before the column existed.
+    @order.update_columns(estimated_delivery_on: nil, created_at: Time.zone.local(2026, 6, 1, 12, 0, 0))
+    assert_equal Date.new(2026, 6, 2), @order.estimated_delivery_date
+  end
+
+  test "formatted_delivery_date renders the delivery date for display" do
+    @order.update_columns(estimated_delivery_on: Date.new(2026, 6, 2))
+    assert_equal "Tuesday, 2 June", @order.formatted_delivery_date
+  end
+
   # Method tests
   test "items_count returns sum of order item quantities" do
     # Check actual fixture data

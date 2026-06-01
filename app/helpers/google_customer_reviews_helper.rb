@@ -68,16 +68,11 @@ merchantWidgetScript.addEventListener('load', function() {
     ])
   end
 
-  # Calculates estimated delivery date: 5 business days from order creation.
+  # Estimated delivery date for the order, as the next-working-day promise
+  # shown elsewhere on the site. Reads the date stamped on the order at purchase
+  # (falling back to a computed date for legacy orders). Returns ISO8601 (what
+  # GCR's opt-in expects).
   def estimated_delivery_date(order)
-    date = order.created_at.to_date
-    business_days = 0
-
-    while business_days < 5
-      date += 1.day
-      business_days += 1 unless date.saturday? || date.sunday?
-    end
-
-    date.iso8601
+    order.estimated_delivery_date.iso8601
   end
 end

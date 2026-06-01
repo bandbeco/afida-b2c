@@ -98,3 +98,15 @@ if products_without_photos.any?
     puts "  - #{product.generated_title}: #{product.sku}"
   end
 end
+
+# UK bank holidays for the delivery promise. Populated from GOV.UK so a fresh
+# deploy isn't cold-empty; the daily RefreshBankHolidaysJob keeps it current.
+puts ""
+puts "Loading UK bank holidays..."
+dates = BankHolidaysFetcher.fetch
+if dates
+  BankHoliday.replace_division(BankHolidaysFetcher::DIVISION, dates)
+  puts "  Loaded #{dates.size} bank holidays for #{BankHolidaysFetcher::DIVISION}"
+else
+  puts "  Could not fetch bank holidays (will retry via RefreshBankHolidaysJob)"
+end
