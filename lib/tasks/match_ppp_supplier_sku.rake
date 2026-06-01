@@ -14,7 +14,7 @@ namespace :ppp do
     page = 1
     loop do
       resp = HTTP.timeout(30).headers(accept: "application/json")
-                 .get(api_base, params: { per_page: 100, page: page, _fields: "sku,name,prices" })
+                 .get(api_base, params: { per_page: 100, page: page, _fields: "sku,name,prices,images" })
       batch = JSON.parse(resp.to_s)
       break if !batch.is_a?(Array) || batch.empty?
 
@@ -26,7 +26,8 @@ namespace :ppp do
         # case price = top of range when present, else the single price
         range = prices["price_range"]
         kase = range && range["max_amount"] ? range["max_amount"].to_f / div : pack
-        api << { sku: p["sku"].to_s, name: p["name"].to_s, pack: pack, case: kase }
+        image = (p["images"] || []).first&.dig("src")
+        api << { sku: p["sku"].to_s, name: p["name"].to_s, pack: pack, case: kase, image: image }
       end
       page += 1
       break if page > 12 # safety backstop
@@ -45,6 +46,9 @@ namespace :ppp do
                         .where.not(brand: [ nil, "" ])
     puts "Candidate products (no supplier_sku, branded): #{candidates.count}"
 
+    use_images = ENV["IMAGES"] == "1"
+    img_cache = {} # url -> dhash (or nil if unfetchable)
+
     rows = candidates.map do |p|
       tiers = (p.pricing_tiers || []).map { |t| [ t["quantity"].to_i, t["price"].to_f ] }.sort
       pack = tiers.first&.last
@@ -53,10 +57,35 @@ namespace :ppp do
 
       scored = api.map { |a| score_candidate(title, pack, kase, a) }
                   .sort_by { |h| -h[:total] }
+
+      # --- Optional image refinement: among the top text/price candidates, prefer the one
+      # whose PPP photo matches the production photo (low perceptual-hash distance). ---
+      img_distance = nil
+      if use_images && scored.first && scored.first[:total] >= 5
+        prod_hash = product_dhash(p)
+        if prod_hash
+          top = scored.first(4).select { |h| h[:api][:image] }
+          ranked = top.map do |h|
+            url = h[:api][:image]
+            ah = (img_cache[url] ||= url_dhash(url))
+            dist = ah ? hamming(prod_hash, ah) : 99
+            h.merge(img_dist: dist)
+          end.sort_by { |h| h[:img_dist] }
+          # If a clearly-matching image exists (<=12) and it beats the text-best, adopt it.
+          if ranked.first && ranked.first[:img_dist] <= 12
+            chosen = ranked.first
+            img_distance = chosen[:img_dist]
+            scored = [ chosen ] + (scored - [ chosen ])
+          end
+        end
+      end
+
       best = scored.first
       second = scored[1]
       margin = best[:total] - (second ? second[:total] : 0)
-      tier = if best[:total] >= 9 && margin >= 2 && !best[:size_conflict] && !best[:colour_conflict]
+      # An image confirmation (<=10) promotes confidence even if text margin is thin.
+      img_confirmed = img_distance && img_distance <= 10
+      tier = if (best[:total] >= 9 && margin >= 2 && !best[:size_conflict] && !best[:colour_conflict]) || img_confirmed
                "auto"
       elsif best[:total] >= 5
                "review"
@@ -73,6 +102,7 @@ namespace :ppp do
         ppp_pack: best[:total] >= 5 ? best[:api][:pack] : "",
         ppp_case: best[:total] >= 5 ? best[:api][:case] : "",
         total: best[:total], text: best[:text], price_bonus: best[:price_bonus],
+        img_dist: img_distance || "",
         margin: margin, tier: tier,
         alt_ppp_sku: (second && second[:total] >= 5) ? second[:api][:sku] : ""
       }
@@ -126,6 +156,56 @@ def price_bonus(your_pack, your_case, api_pack, api_case)
     bonus += 1 if !r.between?(0.85, 1.20) && r.between?(0.6, 1.6)
   end
   bonus
+end
+
+# --- Perceptual hashing (dHash) for image-based disambiguation ---
+# Images are the same source photo at different sizes, so a resize-invariant
+# perceptual hash + Hamming distance separates same-product (<=~10) from different (>=~16).
+require "open3"
+require "tempfile"
+
+def dhash_from_blob(bytes)
+  return nil if bytes.nil? || bytes.empty?
+  Tempfile.create([ "ppimg", ".img" ]) do |f|
+    f.binmode
+    f.write(bytes)
+    f.flush
+    out, _err, st = Open3.capture3("magick", f.path, "-resize", "9x8!",
+                                   "-colorspace", "Gray", "-depth", "8", "GRAY:-")
+    return nil unless st.success?
+    px = out.bytes
+    return nil if px.size < 72
+    bits = +""
+    8.times do |row|
+      8.times do |col|
+        bits << (px[row * 9 + col] < px[row * 9 + col + 1] ? "1" : "0")
+      end
+    end
+    bits
+  end
+rescue StandardError
+  nil
+end
+
+def url_dhash(url)
+  return nil if url.to_s.empty?
+  resp = HTTP.timeout(20).follow.get(url)
+  return nil unless resp.status.success?
+  dhash_from_blob(resp.to_s)
+rescue StandardError
+  nil
+end
+
+def product_dhash(product)
+  return nil unless product.respond_to?(:product_photo) && product.product_photo.attached?
+  dhash_from_blob(product.product_photo.download)
+rescue StandardError
+  nil
+end
+
+def hamming(a, b)
+  return 99 if a.nil? || b.nil? || a.length != b.length
+  a.chars.zip(b.chars).count { |x, y| x != y }
 end
 
 def score_candidate(title, your_pack, your_case, api_product)
