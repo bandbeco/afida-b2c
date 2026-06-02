@@ -178,6 +178,21 @@ class PricingHelperTest < ActionView::TestCase
     assert_includes result, "500 units"
   end
 
+  test "format_quantity_display returns 1 unit for sample items" do
+    # Samples always ship as a single unit regardless of pack pricing
+    item = OpenStruct.new(
+      sample?: true,
+      pack_priced?: true,
+      pac_size: 1000,
+      quantity: 1
+    )
+
+    result = format_quantity_display(item)
+
+    assert_equal "1 unit", result
+    assert_not_includes result, "pack"
+  end
+
   test "format_quantity_display formats large numbers with delimiters" do
     # quantity = 60 packs, pac_size = 500 => 30,000 units
     item = OpenStruct.new(

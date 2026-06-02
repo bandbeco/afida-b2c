@@ -203,6 +203,23 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     refute_includes result, "pack"
   end
 
+  test "format_quantity_display returns 1 unit for sample items" do
+    # Samples always ship as a single unit, regardless of pack pricing
+    sample_item = OrderItem.new(
+      price: 0.00,
+      pac_size: 1000,
+      quantity: 1,
+      is_sample: true,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+    result = generator.send(:format_quantity_display, sample_item)
+
+    assert_equal "1 unit", result
+    refute_includes result, "pack"
+  end
+
   test "format_quantity_display uses singular pack for 1 pack" do
     # 1 pack of 500 = 500 units
     item = OrderItem.new(

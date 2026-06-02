@@ -20,6 +20,9 @@ module PricingHelper
   # @param item [CartItem, OrderItem] an item responding to pack_priced?, pac_size, quantity
   # @return [String] formatted quantity display string
   def format_quantity_display(item)
+    # Samples always ship as a single unit, regardless of the product's pack pricing
+    return "1 unit" if item.sample?
+
     if item.pack_priced?
       # quantity is number of packs, calculate total units
       packs = item.quantity
