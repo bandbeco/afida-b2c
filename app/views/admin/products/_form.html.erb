@@ -186,6 +186,9 @@
             { include_blank: "Select a subcategory…" },
             class: "select select-bordered" %>
 
+      <%= form.label :supplier_sku, "Supplier SKU", class: "label text-base" %>
+      <%= form.text_field :supplier_sku, class: "input w-full", placeholder: "e.g. SUP-12345" %>
+
       <%= form.label :product_photo, "Product Photo", class: "label text-base" %>
       <%= turbo_frame_tag "product_photo_#{form.object.id}" do %>
         <div>

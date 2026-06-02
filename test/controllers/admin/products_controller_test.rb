@@ -107,6 +107,23 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 250, @product.volume_in_ml
   end
 
+  test "edit form includes supplier_sku input field" do
+    get edit_admin_product_path(@product), headers: @headers
+
+    assert_response :success
+    assert_select "input[name='product[supplier_sku]']"
+  end
+
+  test "update permits supplier_sku parameter" do
+    patch admin_product_path(@product), params: {
+      product: { supplier_sku: "SUP-12345" }
+    }, headers: @headers
+
+    assert_response :redirect
+    @product.reload
+    assert_equal "SUP-12345", @product.supplier_sku
+  end
+
   test "update permits certifications parameter" do
     patch admin_product_path(@product), params: {
       product: { certifications: "Compostable, Recyclable, FSC" }

@@ -254,6 +254,7 @@ module Admin
         :colour,
         :material,
         :sku,
+        :supplier_sku,
         :description_short,
         :description_standard,
         :description_detailed,
