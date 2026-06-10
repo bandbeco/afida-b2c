@@ -269,6 +269,7 @@ module Admin
         :meta_image,
         :pac_size,
         :price,
+        :cost,
         :length_in_mm,
         :height_in_mm,
         :width_in_mm,

@@ -109,6 +109,9 @@
       <%= form.label :price, "Price (£)", class: "label text-base" %>
       <%= form.number_field :price, class: "input w-full", step: 0.01, min: 0.01, placeholder: "e.g. 29.99" %>
 
+      <%= form.label :cost, "Cost (£)", class: "label text-base" %>
+      <%= form.number_field :cost, class: "input w-full", step: 0.01, min: 0, placeholder: "e.g. 14.50" %>
+
       <%= form.label :pac_size, "Pack Size", class: "label text-base" %>
       <%= form.number_field :pac_size, class: "input w-full", step: 1, min: 1, placeholder: "e.g. 50" %>
     </div>

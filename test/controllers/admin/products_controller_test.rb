@@ -63,6 +63,26 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=checkbox][name='product[sample_eligible]']"
   end
 
+  test "edit form includes cost input field" do
+    get edit_admin_product_path(@product), headers: @headers
+
+    assert_response :success
+    assert_select "input[name='product[cost]']"
+  end
+
+  test "update permits cost parameter" do
+    patch admin_product_path(@product), params: {
+      product: {
+        name: @product.name,
+        cost: "12.34"
+      }
+    }, headers: @headers
+
+    assert_response :redirect
+    @product.reload
+    assert_equal 12.34, @product.cost
+  end
+
   test "edit form includes all dimension input fields" do
     get edit_admin_product_path(@product), headers: @headers
 

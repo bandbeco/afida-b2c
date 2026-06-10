@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_29_095918) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_10_102411) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -354,6 +354,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_29_095918) do
     t.bigint "category_id"
     t.string "certifications"
     t.string "colour"
+    t.decimal "cost", precision: 10, scale: 2
     t.datetime "created_at", null: false
     t.integer "depth_in_mm"
     t.text "description_detailed"
