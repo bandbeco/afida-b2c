@@ -265,6 +265,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "success enqueues a Telegram notification for the new order" do
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    order = Order.last
+    assert_enqueued_with(job: TelegramOrderNotificationJob, args: [ order.id ])
+  end
+
   test "success redirects to confirmation page with token" do
     session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 

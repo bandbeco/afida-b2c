@@ -135,6 +135,9 @@ module Webhooks
       OrderMailer.with(order: order).confirmation_email.deliver_later
       OrderMailer.with(order: order).ops_confirmation_email.deliver_later
 
+      # Notify the team in Telegram that a new order has been placed
+      TelegramOrderNotificationJob.perform_later(order.id)
+
       # Track purchase server-side via GA4 Measurement Protocol
       # This ensures the purchase is recorded even if the client-side event never fires
       Ga4MeasurementProtocolService.track_purchase(order)
