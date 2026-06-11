@@ -1,14 +1,21 @@
 <!doctype html>
-
-<html lang="en">
+<html lang="en-GB">
 
   <head>
 
-    <title>The page you were looking for doesn’t exist (404 Not found)</title>
+    <title>Page not found (404) — Afida</title>
 
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, width=device-width">
     <meta name="robots" content="noindex, nofollow">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500&display=swap" rel="stylesheet">
 
     <style>
 
@@ -22,74 +29,195 @@
 
       html {
         font-size: 16px;
+        -webkit-text-size-adjust: 100%;
       }
 
       body {
-        background: #FFF;
-        color: #261B23;
-        display: grid;
-        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Aptos, Roboto, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-        font-size: clamp(1rem, 2.5vw, 2rem);
-        -webkit-font-smoothing: antialiased;
-        font-style: normal;
+        background: #ffffff;
+        color: #261b23;
+        font-family: 'Fredoka', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
         font-weight: 400;
-        letter-spacing: -0.0025em;
-        line-height: 1.4;
+        line-height: 1.5;
         min-height: 100vh;
-        place-items: center;
+        display: flex;
+        flex-direction: column;
+        -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
-        -webkit-text-size-adjust: 100%;
       }
 
       a {
         color: inherit;
-        font-weight: 700;
-        text-decoration: underline;
-        text-underline-offset: 0.0925em;
+        text-decoration: none;
       }
 
-      b, strong {
-        font-weight: 700;
+      /* Top bar with logo */
+      .topbar {
+        border-bottom: 1px solid #eceaeb;
+        padding: 1.25rem 1.5rem;
+        display: flex;
+        justify-content: center;
       }
 
-      i, em {
-        font-style: italic;
+      .topbar a {
+        display: inline-flex;
       }
 
+      .topbar svg {
+        height: 38px;
+        width: auto;
+      }
+
+      /* Main hero */
       main {
-        display: grid;
-        gap: 1em;
-        padding: 2em;
-        place-items: center;
+        flex: 1 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         text-align: center;
+        padding: 3rem 1.5rem 4rem;
+        width: min(100%, 56rem);
+        margin: 0 auto;
       }
 
-      main header {
-        width: min(100%, 12em);
+      .code {
+        font-size: clamp(4.5rem, 18vw, 9rem);
+        line-height: 1;
+        font-weight: 500;
+        color: #79ebc0;
+        letter-spacing: -0.02em;
       }
 
-      main header svg {
-        height: auto;
-        max-width: 100%;
+      h1 {
+        font-size: clamp(1.5rem, 4vw, 2.25rem);
+        font-weight: 500;
+        margin-top: 0.75rem;
+        letter-spacing: -0.01em;
+      }
+
+      .lede {
+        font-size: clamp(1rem, 2.2vw, 1.125rem);
+        color: #574d54;
+        max-width: 34rem;
+        margin: 0.875rem auto 0;
+      }
+
+      /* CTA buttons */
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        justify-content: center;
+        margin-top: 2rem;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 9999px;
+        padding: 0.75rem 1.75rem;
+        font-size: 1rem;
+        font-weight: 500;
+        font-family: inherit;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: background-color 0.15s ease, border-color 0.15s ease;
+        border: 1px solid transparent;
+      }
+
+      .btn-primary {
+        background-color: #79ebc0;
+        border-color: #79ebc0;
+        color: #000000;
+      }
+
+      .btn-primary:hover {
+        background-color: #5fd9a8;
+        border-color: #5fd9a8;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        border-color: #d6d2d4;
+        color: #261b23;
+      }
+
+      .btn-outline:hover {
+        background-color: #f5f4f4;
+      }
+
+      /* Category links */
+      .browse {
+        margin-top: 3.5rem;
         width: 100%;
       }
 
-      main article {
-        width: min(100%, 30em);
+      .browse h2 {
+        font-size: 0.8125rem;
+        font-weight: 400;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #8a8086;
       }
 
-      main article p {
-        font-size: 75%;
+      .cat-grid {
+        margin-top: 1.25rem;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
       }
 
-      main article br {
-
-        display: none;
-
-        @media(min-width: 48em) {
-          display: inline;
+      @media (min-width: 40em) {
+        .cat-grid {
+          grid-template-columns: repeat(4, minmax(0, 1fr));
         }
+      }
 
+      .cat-grid a {
+        display: block;
+        border: 1px solid #eceaeb;
+        border-radius: 0.875rem;
+        padding: 0.875rem 1rem;
+        font-size: 0.9375rem;
+        color: #261b23;
+        background: #ffffff;
+        transition: border-color 0.15s ease, background-color 0.15s ease;
+      }
+
+      .cat-grid a:hover {
+        border-color: #79ebc0;
+        background: #f3fdf8;
+      }
+
+      /* Help links */
+      .help {
+        margin-top: 2.5rem;
+        font-size: 0.9375rem;
+        color: #574d54;
+      }
+
+      .help a {
+        color: #261b23;
+        text-decoration: underline;
+        text-underline-offset: 2px;
+      }
+
+      .help a:hover {
+        color: #000000;
+      }
+
+      .help .sep {
+        color: #cfcacd;
+        margin: 0 0.5rem;
+      }
+
+      footer {
+        flex-shrink: 0;
+        text-align: center;
+        padding: 1.5rem;
+        font-size: 0.8125rem;
+        color: #8a8086;
+        border-top: 1px solid #eceaeb;
       }
 
     </style>
@@ -100,14 +228,58 @@
 
     <!-- This file lives in public/404.html -->
 
+    <header class="topbar">
+      <a href="/" aria-label="Afida home">
+        <svg viewBox="0 0 456.039 149.71" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Afida">
+          <path d="M452.69 13.31C447.42 4.51 437.31.06 422.63.06h-38.64c-5.73-.35-14.64 1.5-22.65 8.72-5.76-5.8-14.66-8.74-26.57-8.74H181.6c-5.91-.36-15.19 1.62-23.38 9.39C152.5 3.2 143.4.04 131.06.04H92.42c-8.51-.51-24.01 3.79-33.18 23.33L0 149.7h174.96l34.03.01h74.28l8.32-.01 65.25.01h45.61l50.41-110.69c3.29-6.47 5.15-16.88-.14-25.71Z" fill="#000000"/>
+          <path d="M130.79 14.03H91.6S79.49 12.6 71.65 29.3L21.77 135.69h34.41l24.64-51.31H91.2l-23.21 51.31h33.6l46.83-102.82s10.08-18.83-17.61-18.83Zm-29.32 47.65H91.09l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"/>
+          <path d="M198.89 61.68h-18.63l9.64-20.24h28.28l14.2-27.4h-51.61s-12.11-1.43-19.95 15.27L110.94 135.7h34.41l24.64-51.31h18.22l10.69-22.7Z" fill="#79ebc0"/>
+          <path d="M422.35 14.05h-39.19s-12.11-1.43-19.95 15.27l-49.88 106.39h34.41l24.64-51.31h10.38l-23.2 51.29h33.6l46.82-102.81s10.08-18.83-17.61-18.83Zm-29.32 47.64h-10.38l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"/>
+          <path fill="#79ebc0" d="m262 37.26.67.31 3.45 1.58 11.45-25.12h-7.99l-10.08 22.1 2.5 1.13z"/>
+          <path d="M254.35 50.8c-3.4-5.07-4.19-11.73-1.47-17.69l8.7-19.07h-19.72L181.8 135.7h17.63v.02h16.45v-.02l39.72-83.26c-.44-.52-.85-1.07-1.23-1.63Z" fill="#79ebc0"/>
+          <path d="m314.33 115.81 37.77-82.94s10.08-18.83-17.61-18.83h-33l-15.5 34.17c-2.01 4.42-5.58 7.62-9.75 9.31-2.36.95-4.91 1.42-7.49 1.32l-36.7 76.85v.02h8.9v-.02h42.04c19.93 0 28.5-14.04 30.73-18.52l.62-1.36Zm-33.65 0h-11.26l25.51-54.13 13.1-27.79h10.59l-37.94 81.92Z" fill="#79ebc0"/>
+          <path fill="#79ebc0" d="m279.37 45.19 12-26.33 2.2-4.83h-8l-12.82 28.14 6.62 3.02z"/>
+        </svg>
+      </a>
+    </header>
+
     <main>
-      <header>
-        <svg height="172" viewBox="0 0 480 172" width="480" xmlns="http://www.w3.org/2000/svg"><path d="m124.48 3.00509-45.6889 100.02991h26.2239v-28.1168h38.119v28.1168h21.628v35.145h-21.628v30.82h-37.308v-30.82h-72.1833v-31.901l50.2851-103.27391zm115.583 168.69891c-40.822 0-64.884-35.146-64.884-85.7015 0-50.5554 24.062-85.700907 64.884-85.700907 40.823 0 64.884 35.145507 64.884 85.700907 0 50.5555-24.061 85.7015-64.884 85.7015zm0-133.2831c-17.572 0-22.709 21.8984-22.709 47.5816 0 25.6835 5.137 47.5815 22.709 47.5815 17.303 0 22.71-21.898 22.71-47.5815 0-25.6832-5.407-47.5816-22.71-47.5816zm165.328-35.41581-45.689 100.02991h26.224v-28.1168h38.119v28.1168h21.628v35.145h-21.628v30.82h-37.308v-30.82h-72.184v-31.901l50.285-103.27391z" fill="#f0eff0"/><path d="m157.758 68.9967v34.0033h-7.199l-14.233-19.8814v19.8814h-8.584v-34.0033h8.307l13.125 18.7184v-18.7184zm28.454 21.5428c0 7.6978-5.15 13.0145-12.737 13.0145-7.532 0-12.738-5.3167-12.738-13.0145s5.206-13.0143 12.738-13.0143c7.587 0 12.737 5.3165 12.737 13.0143zm-8.528 0c0-3.4336-1.496-5.8703-4.209-5.8703-2.659 0-4.154 2.4367-4.154 5.8703s1.495 5.8149 4.154 5.8149c2.713 0 4.209-2.3813 4.209-5.8149zm13.184 3.8766v-9.5807h-3.655v-6.7564h3.655v-6.8671h8.584v6.8671h5.205v6.7564h-5.205v8.307c0 1.9383.941 2.769 2.658 2.769.941 0 1.994-.2216 2.769-.5538v7.3654c-.997.443-2.88.775-4.818.775-5.87 0-9.193-2.769-9.193-9.0819zm37.027 8.5839h-8.806v-34.0033h23.924v7.6978h-15.118v6.7564h13.9v7.5316h-13.9zm41.876-12.4605c0 7.6978-5.15 13.0145-12.737 13.0145-7.532 0-12.738-5.3167-12.738-13.0145s5.206-13.0143 12.738-13.0143c7.587 0 12.737 5.3165 12.737 13.0143zm-8.529 0c0-3.4336-1.495-5.8703-4.208-5.8703-2.659 0-4.154 2.4367-4.154 5.8703s1.495 5.8149 4.154 5.8149c2.713 0 4.208-2.3813 4.208-5.8149zm35.337-12.4605v24.921h-8.695v-2.16c-1.329 1.551-3.821 2.714-6.646 2.714-5.482 0-8.75-3.5999-8.75-9.1379v-16.3371h8.64v14.288c0 2.1045.997 3.5997 3.212 3.5997 1.606 0 3.101-1.0522 3.544-2.769v-15.1187zm4.076 24.921v-24.921h8.694v2.1598c1.385-1.5506 3.822-2.7136 6.701-2.7136 5.538 0 8.806 3.5997 8.806 9.1377v16.3371h-8.639v-14.2327c0-2.049-1.053-3.5443-3.268-3.5443-1.717 0-3.156.9969-3.6 2.7136v15.0634zm44.113 0v-1.994c-1.163 1.329-3.6 2.548-6.147 2.548-7.2 0-11.132-5.8151-11.132-13.0145s3.932-13.0143 11.132-13.0143c2.547 0 4.984 1.2184 6.147 2.5475v-13.0697h8.695v35.997zm0-9.1931v-6.5902c-.665-1.3291-2.16-2.326-3.821-2.326-2.991 0-4.763 2.4368-4.763 5.6488s1.772 5.5934 4.763 5.5934c1.717 0 3.156-.9415 3.821-2.326z" fill="#d30001"/></svg>
-      </header>
-      <article>
-        <p><strong>Well, this is awkward.</strong> This page doesn't exist. Maybe it composted itself. <a href="/">Head back to the homepage</a> — the packaging is still there, we promise.</p>
-      </article>
+      <div class="code">404</div>
+      <h1>This page packed up and left</h1>
+      <p class="lede">We couldn't find the page you were after. It may have moved, sold out, or never existed. The good news: our full range of catering disposables is just a click away.</p>
+
+      <div class="actions">
+        <a class="btn btn-primary" href="/">Back to homepage</a>
+        <a class="btn btn-outline" href="/shop">Browse all products</a>
+      </div>
+
+      <nav class="browse" aria-label="Shop by category">
+        <h2>Shop by category</h2>
+        <div class="cat-grid">
+          <a href="/categories/cups-and-drinks">Cups &amp; Drinks</a>
+          <a href="/categories/hot-food">Hot Food</a>
+          <a href="/categories/tableware">Tableware</a>
+          <a href="/categories/bags-and-wraps">Bags &amp; Wraps</a>
+          <a href="/categories/cold-food-and-salads">Cold Food &amp; Salads</a>
+          <a href="/categories/supplies-and-essentials">Supplies &amp; Essentials</a>
+          <a href="/branded-products">Branded Products</a>
+          <a href="/samples">Free Samples</a>
+        </div>
+      </nav>
+
+      <p class="help">
+        Still stuck?
+        <a href="/contact">Contact us</a>
+        <span class="sep">·</span>
+        <a href="/delivery-returns">Delivery &amp; returns</a>
+        <span class="sep">·</span>
+        <a href="/faqs">FAQs</a>
+      </p>
     </main>
+
+    <footer>
+      &copy; Afida. Eco-friendly catering disposables, delivered next working day.
+    </footer>
 
   </body>
 
