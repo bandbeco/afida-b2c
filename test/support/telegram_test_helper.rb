@@ -53,15 +53,16 @@ module TelegramTestHelper
     assert_not_requested :post, TELEGRAM_ENDPOINT
   end
 
-  # Sets up Telegram credentials for testing
+  # Sets up Telegram credentials for testing. Stubs the notifier's own
+  # credential readers rather than Rails.application.credentials.dig, so
+  # unrelated credential reads during the test are unaffected.
   def stub_telegram_credentials(bot_token: TELEGRAM_BOT_TOKEN, chat_id: TELEGRAM_CHAT_ID)
-    Rails.application.credentials.stubs(:dig).with(:telegram, :bot_token).returns(bot_token)
-    Rails.application.credentials.stubs(:dig).with(:telegram, :chat_id).returns(chat_id)
+    TelegramNotifier.any_instance.stubs(:bot_token).returns(bot_token)
+    TelegramNotifier.any_instance.stubs(:chat_id).returns(chat_id)
   end
 
   # Clears Telegram credentials (simulates unconfigured state)
   def stub_telegram_credentials_missing
-    Rails.application.credentials.stubs(:dig).with(:telegram, :bot_token).returns(nil)
-    Rails.application.credentials.stubs(:dig).with(:telegram, :chat_id).returns(nil)
+    stub_telegram_credentials(bot_token: nil, chat_id: nil)
   end
 end

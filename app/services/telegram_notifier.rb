@@ -19,6 +19,7 @@ class TelegramNotifier
   API_BASE = "https://api.telegram.org"
   TIMEOUT_SECONDS = 5
   MAX_MESSAGE_LENGTH = 4096
+  MAX_ITEM_LINES = 25
 
   class << self
     # Notifies the group chat that a new order has been placed.
@@ -69,7 +70,7 @@ class TelegramNotifier
       chat_id: chat_id,
       text: build_message,
       parse_mode: "HTML",
-      disable_web_page_preview: true
+      link_preview_options: { is_disabled: true }
     }
   end
 
@@ -86,16 +87,27 @@ class TelegramNotifier
 
     if items.any?
       lines << ""
-      items.each do |item|
+      items.first(MAX_ITEM_LINES).each do |item|
         suffix = item.sample? ? " (Sample)" : ""
         lines << "• #{item.quantity}× #{esc(item.product_name)}#{suffix}"
+      end
+      if items.size > MAX_ITEM_LINES
+        lines << "… and #{items.size - MAX_ITEM_LINES} more"
       end
     end
 
     lines << ""
     lines << "🔗 #{esc(admin_url)}"
 
-    lines.join("\n").first(MAX_MESSAGE_LENGTH)
+    truncate_message(lines.join("\n"))
+  end
+
+  # Telegram rejects messages whose HTML doesn't parse, so a hard slice must
+  # not leave a partial entity (e.g. "&amp;" cut to "&am") at the end.
+  def truncate_message(text)
+    return text if text.length <= MAX_MESSAGE_LENGTH
+
+    text.first(MAX_MESSAGE_LENGTH).sub(/&[a-zA-Z#0-9]*\z/, "")
   end
 
   def customer_name
@@ -138,7 +150,6 @@ class TelegramNotifier
   end
 
   def log_error(message)
-    # Use info level to ensure visibility in production logs
-    Rails.logger.info("[Telegram] FAILED order='#{@order&.id}' error='#{message}'")
+    Rails.logger.error("[Telegram] FAILED order='#{@order&.id}' error='#{message}'")
   end
 end

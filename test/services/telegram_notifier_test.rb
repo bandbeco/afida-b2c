@@ -119,6 +119,47 @@ class TelegramNotifierTest < ActiveSupport::TestCase
     end
   end
 
+  test "truncation never cuts an HTML entity in half" do
+    stub_telegram_send_message
+    item = @order.order_items.first
+    item.update!(product_name: "&" * 3000)
+
+    TelegramNotifier.notify_new_order(@order)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      text = JSON.parse(req.body)["text"]
+      text.length <= TelegramNotifier::MAX_MESSAGE_LENGTH && !text.match?(/&[a-zA-Z#0-9]*\z/)
+    end
+  end
+
+  test "caps the number of item lines and reports the remainder" do
+    stub_telegram_send_message
+    @order.order_items.destroy_all
+    35.times do |i|
+      @order.order_items.create!(product: products(:one), product_name: "Item #{i}", product_sku: "SKU#{i}", price: 1, quantity: 1, line_total: 1)
+    end
+
+    TelegramNotifier.notify_new_order(@order.reload)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      text = JSON.parse(req.body)["text"]
+      item_lines = text.lines.count { |line| line.start_with?("•") }
+      text.include?("35 line items") &&
+        item_lines == TelegramNotifier::MAX_ITEM_LINES &&
+        text.include?("and #{35 - TelegramNotifier::MAX_ITEM_LINES} more")
+    end
+  end
+
+  test "disables link previews" do
+    stub_telegram_send_message
+
+    TelegramNotifier.notify_new_order(@order)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      JSON.parse(req.body).dig("link_preview_options", "is_disabled") == true
+    end
+  end
+
   test "sends a valid message for an order with no items" do
     stub_telegram_send_message
     @order.order_items.destroy_all
