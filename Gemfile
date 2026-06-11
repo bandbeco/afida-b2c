@@ -39,6 +39,8 @@ gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
+# Vips backend for image_processing; no longer a dependency of image_processing 2.x
+gem "ruby-vips", "~> 2.2"
 gem "aws-sdk-s3", require: false
 
 # Stripe gem for payments
