@@ -118,12 +118,12 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
     end
   end
 
-  test "confirm! sends order confirmation email" do
+  test "confirm! sends order confirmation emails (customer + internal ops copy)" do
     mock_successful_payment
 
     service = PendingOrderConfirmationService.new(@pending_order)
 
-    assert_enqueued_emails 1 do
+    assert_enqueued_emails 2 do
       service.confirm!
     end
   end

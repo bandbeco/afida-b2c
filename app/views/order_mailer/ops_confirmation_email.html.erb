@@ -1,0 +1,81 @@
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td style="padding: 20px 30px 10px 30px;">
+      <h1 style="font-size: 22px; font-weight: 600; color: #111827; margin: 0;">New order to fulfil</h1>
+      <p style="color: #374151; font-size: 16px; margin-top: 10px;">
+        Order <strong style="color: #111827;">#<%= @order.order_number %></strong>
+        &middot; <%= @order.created_at.strftime("%-d %b %Y, %H:%M") %>
+      </p>
+      <a href="<%= admin_order_url(@order) %>" target="_blank" style="display: inline-block; background-color: #76e9bf; color: #000000; padding: 10px 24px; margin-top: 15px; border-radius: 8px; text-decoration: none; font-weight: 500;">
+        Open in Admin
+      </a>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding: 20px 30px 0 30px;">
+      <h2 style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Items to pick</h2>
+      <table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 16px;">
+        <% @order.order_items.each do |item| %>
+          <tr>
+            <td style="padding-bottom: 16px; vertical-align: top;">
+              <p style="font-size: 16px; color: #111827; margin: 0; font-weight: 600;">
+                <%= item.quantity %>x <%= item.product_name %>
+                <% if item.sample? %>
+                  <span style="color: #059669; font-weight: 500; font-size: 14px;">(Sample)</span>
+                <% end %>
+              </p>
+              <p style="font-size: 14px; color: #6b7280; margin: 4px 0 0 0; font-family: monospace;">
+                SKU: <%= order_item_sku_label(item) %>
+              </p>
+            </td>
+            <td align="right" style="padding-bottom: 16px; vertical-align: top;">
+              <p style="font-size: 16px; color: #111827; margin: 0;"><%= item.sample? ? "FREE" : number_to_currency(item.line_total, unit: "£") %></p>
+            </td>
+          </tr>
+        <% end %>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding: 10px 30px;">
+      <table cellspacing="0" cellpadding="0" border="0" width="100%" style="border-top: 2px solid #e5e7eb; padding-top: 16px;">
+        <tr>
+          <td><p style="font-size: 16px; color: #374151; margin: 0;">Subtotal</p></td>
+          <td align="right"><p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(@order.subtotal_amount, unit: "£") %></p></td>
+        </tr>
+        <tr>
+          <td style="padding-top: 8px;"><p style="font-size: 16px; color: #374151; margin: 0;">Shipping</p></td>
+          <td align="right" style="padding-top: 8px;"><p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(@order.shipping_amount, unit: "£") %></p></td>
+        </tr>
+        <tr>
+          <td style="padding-top: 8px;"><p style="font-size: 16px; color: #374151; margin: 0;">VAT (20%)</p></td>
+          <td align="right" style="padding-top: 8px;"><p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(@order.vat_amount, unit: "£") %></p></td>
+        </tr>
+        <tr style="font-weight: 600;">
+          <td style="padding-top: 12px;"><p style="font-size: 18px; color: #111827; margin: 0;">Total</p></td>
+          <td align="right" style="padding-top: 12px;"><p style="font-size: 18px; color: #111827; margin: 0;"><%= number_to_currency(@order.total_amount, unit: "£") %></p></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <tr>
+    <td style="padding: 20px 30px;">
+      <h2 style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Ship to</h2>
+      <p style="font-size: 15px; color: #374151; margin: 16px 0 0 0; line-height: 1.6;">
+        <%= @order.shipping_name %><br>
+        <%= @order.shipping_address_line1 %><br>
+        <% if @order.shipping_address_line2.present? %>
+          <%= @order.shipping_address_line2 %><br>
+        <% end %>
+        <%= @order.shipping_city %>, <%= @order.shipping_postal_code %><br>
+        <%= @order.shipping_country %>
+      </p>
+      <p style="font-size: 15px; color: #374151; margin: 12px 0 0 0;">
+        Email: <a href="mailto:<%= @order.email %>" style="color: #111827;"><%= @order.email %></a>
+      </p>
+    </td>
+  </tr>
+</table>

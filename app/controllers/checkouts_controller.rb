@@ -99,8 +99,9 @@ class CheckoutsController < ApplicationController
       # Clear the cart after successful order creation
       cart.cart_items.destroy_all
 
-      # Send order confirmation email
+      # Send order confirmation email (customer + internal ops copy)
       OrderMailer.with(order: order).confirmation_email.deliver_later
+      OrderMailer.with(order: order).ops_confirmation_email.deliver_later
 
       # Store in session for immediate access (proves ownership for guest checkout)
       session[:recent_order_id] = order.id

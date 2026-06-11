@@ -157,6 +157,7 @@ class PendingOrderConfirmationService
 
   def send_confirmation_email(order)
     OrderMailer.with(order: order).confirmation_email.deliver_later
+    OrderMailer.with(order: order).ops_confirmation_email.deliver_later
   end
 
   def emit_charge_failed_event(error_message)

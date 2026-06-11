@@ -1,0 +1,28 @@
+NEW ORDER TO FULFIL
+===================
+
+Order #<%= @order.order_number %> - <%= @order.created_at.strftime("%-d %b %Y, %H:%M") %>
+
+Open in Admin: <%= admin_order_url(@order) %>
+
+ITEMS TO PICK
+-------------
+<% @order.order_items.each do |item| %>
+<%= item.quantity %>x <%= item.product_name %><%= item.sample? ? " (Sample)" : "" %> - <%= item.sample? ? "FREE" : number_to_currency(item.line_total, unit: "£") %>
+  SKU: <%= order_item_sku_label(item) %>
+<% end %>
+
+Subtotal: <%= number_to_currency(@order.subtotal_amount, unit: "£") %>
+Shipping: <%= number_to_currency(@order.shipping_amount, unit: "£") %>
+VAT (20%): <%= number_to_currency(@order.vat_amount, unit: "£") %>
+Total: <%= number_to_currency(@order.total_amount, unit: "£") %>
+
+SHIP TO
+-------
+<%= @order.shipping_name %>
+<%= @order.shipping_address_line1 %>
+<% if @order.shipping_address_line2.present? %><%= @order.shipping_address_line2 %>
+<% end %><%= @order.shipping_city %>, <%= @order.shipping_postal_code %>
+<%= @order.shipping_country %>
+
+Email: <%= @order.email %>

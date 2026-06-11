@@ -5,6 +5,7 @@
 one:
   name: "Product 1"
   sku: "BUBL-POP-11"
+  supplier_sku: "SUP-R300S-VW"
   description_short: "Short description 1"
   description_standard: "Standard description 1 with a bit more detail"
   description_detailed: "Detailed description 1 with comprehensive information about the product and its features"

@@ -131,8 +131,9 @@ module Webhooks
         Rails.logger.warn("[Stripe Webhook] Order #{order.id} created without line items - cart not found (cart_id: #{cart_id.inspect})")
       end
 
-      # Send confirmation email
+      # Send confirmation email (customer + internal ops copy)
       OrderMailer.with(order: order).confirmation_email.deliver_later
+      OrderMailer.with(order: order).ops_confirmation_email.deliver_later
 
       # Track purchase server-side via GA4 Measurement Protocol
       # This ensures the purchase is recorded even if the client-side event never fires

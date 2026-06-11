@@ -1,6 +1,8 @@
 require "test_helper"
 
 class OrderMailerTest < ActionMailer::TestCase
+  include Rails.application.routes.url_helpers
+
   setup do
     @order = orders(:one)
   end
@@ -19,12 +21,6 @@ class OrderMailerTest < ActionMailer::TestCase
     email = OrderMailer.with(order: @order).confirmation_email
 
     assert_equal "Your Order ##{@order.order_number} is Confirmed!", email.subject
-  end
-
-  test "confirmation_email includes BCC to orders email" do
-    email = OrderMailer.with(order: @order).confirmation_email
-
-    assert_includes email.bcc, "orders@afida.com"
   end
 
   test "confirmation_email body includes order number" do
@@ -160,5 +156,96 @@ class OrderMailerTest < ActionMailer::TestCase
     # Should have no PDF attachment
     pdf_attachment = email.attachments.find { |a| a.content_type.include?("application/pdf") }
     assert_nil pdf_attachment, "Email should not have PDF attachment when generation fails"
+  end
+
+  # --- Customer email no longer BCCs ops ---
+
+  test "confirmation_email no longer BCCs the ops address" do
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    assert_empty Array(email.bcc), "Customer confirmation should not BCC ops anymore"
+  end
+
+  # --- Internal ops confirmation email ---
+
+  test "ops_confirmation_email is sent to the ops address only" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    assert_equal [ "orders@afida.com" ], email.to
+    assert_empty Array(email.bcc)
+  end
+
+  test "ops_confirmation_email subject is ops-flavored with order number and customer name" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    assert_equal "[OPS] Order ##{@order.order_number} - #{@order.shipping_name}", email.subject
+  end
+
+  test "ops_confirmation_email includes our SKU and supplier SKU in parentheses" do
+    product = products(:one)
+    assert product.supplier_sku.present?, "Fixture product should have a supplier SKU"
+
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+    body = email.body.encoded
+
+    assert_match product.sku, body
+    assert_match "(#{product.supplier_sku})", body
+  end
+
+  test "ops_confirmation_email includes the full shipping address" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+    body = email.body.encoded
+
+    assert_match @order.shipping_name, body
+    assert_match @order.shipping_address_line1, body
+    assert_match @order.shipping_city, body
+    assert_match @order.shipping_postal_code, body
+    assert_match @order.email, body
+  end
+
+  test "ops_confirmation_email links to the admin order page" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    assert_match admin_order_url(@order, host: "example.com"), email.body.encoded
+  end
+
+  test "ops_confirmation_email drops customer pleasantries" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+    body = email.body.encoded
+
+    assert_no_match(/Thanks for choosing Afida/i, body)
+    assert_no_match(/View Your Order/i, body)
+  end
+
+  test "ops_confirmation_email includes order total" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    total = sprintf("%.2f", @order.total_amount)
+    assert_match total, email.body.encoded
+  end
+
+  test "ops_confirmation_email has both HTML and text parts" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") } || email
+    html_part = content_part.parts.find { |p| p.content_type.include?("text/html") }
+    text_part = content_part.parts.find { |p| p.content_type.include?("text/plain") }
+
+    assert_not_nil html_part, "Should have HTML part"
+    assert_not_nil text_part, "Should have text part"
+  end
+
+  test "ops_confirmation_email can be delivered" do
+    assert_emails 1 do
+      OrderMailer.with(order: @order).ops_confirmation_email.deliver_now
+    end
+  end
+
+  test "ops_confirmation_email renders when a line item's product is unavailable" do
+    OrderItem.any_instance.stubs(:product).returns(nil)
+
+    assert_nothing_raised do
+      OrderMailer.with(order: @order).ops_confirmation_email.deliver_now
+    end
   end
 end
