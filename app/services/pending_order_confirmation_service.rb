@@ -158,6 +158,9 @@ class PendingOrderConfirmationService
   def send_confirmation_email(order)
     OrderMailer.with(order: order).confirmation_email.deliver_later
     OrderMailer.with(order: order).ops_confirmation_email.deliver_later
+
+    # Notify the team in Telegram that a new order has been placed
+    TelegramOrderNotificationJob.perform_later(order.id)
   end
 
   def emit_charge_failed_event(error_message)

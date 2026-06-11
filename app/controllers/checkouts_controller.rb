@@ -103,6 +103,9 @@ class CheckoutsController < ApplicationController
       OrderMailer.with(order: order).confirmation_email.deliver_later
       OrderMailer.with(order: order).ops_confirmation_email.deliver_later
 
+      # Notify the team in Telegram that a new order has been placed
+      TelegramOrderNotificationJob.perform_later(order.id)
+
       # Store in session for immediate access (proves ownership for guest checkout)
       session[:recent_order_id] = order.id
 

@@ -128,6 +128,18 @@ class PendingOrderConfirmationServiceTest < ActiveSupport::TestCase
     end
   end
 
+  test "confirm! enqueues a Telegram notification for the new order" do
+    mock_successful_payment
+
+    service = PendingOrderConfirmationService.new(@pending_order)
+
+    result = nil
+    assert_enqueued_with(job: TelegramOrderNotificationJob) do
+      result = service.confirm!
+    end
+    assert_equal result.order.id, enqueued_jobs.find { |j| j[:job] == TelegramOrderNotificationJob }[:args].first
+  end
+
   test "confirm! stores stripe payment intent id on order" do
     mock_successful_payment
 

@@ -41,7 +41,9 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     stub_stripe_webhook_construct_event(event)
 
     assert_no_difference "Order.count" do
-      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+      assert_no_enqueued_jobs only: TelegramOrderNotificationJob do
+        post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+      end
     end
 
     assert_response :ok
@@ -110,6 +112,9 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
 
     # Verify cart was cleared
     assert_equal 0, cart.reload.cart_items.count
+
+    # Telegram notification enqueued for the new order
+    assert_enqueued_with(job: TelegramOrderNotificationJob, args: [ order.id ])
   end
 
   test "creates order without order items when cart_id is missing from metadata" do
