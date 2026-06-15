@@ -22,4 +22,21 @@ class WhatsappButtonTest < ActionDispatch::IntegrationTest
     # Inline SVG glyph is present inside the link.
     assert_select "a[href^='https://wa.me/447595119603'] svg"
   end
+
+  test "product page lifts the WhatsApp button above the mobile add-to-cart bar" do
+    get product_path(products(:one).slug)
+
+    assert_response :success
+    # The lift class is applied so the button clears the mobile sticky add-to-cart bar.
+    assert_select "a[href^='https://wa.me/447595119603'].max-md\\:bottom-24"
+  end
+
+  test "non-product pages do not apply the lift class" do
+    get root_path
+
+    assert_response :success
+    assert_select "a[href^='https://wa.me/447595119603']"
+    assert_select "a[href^='https://wa.me/447595119603'].max-md\\:bottom-24", false,
+      "homepage should not lift the WhatsApp button (no add-to-cart bar there)"
+  end
 end
