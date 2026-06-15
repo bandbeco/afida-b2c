@@ -92,7 +92,8 @@ Create `app/views/shared/_whatsapp_button.html.erb` with the exact content below
   mobile sticky add-to-cart bar so the two never overlap on phones.
 %>
 <% lift_class = content_for?(:whatsapp_lift) ? "max-md:bottom-24" : "" %>
-<a href="https://wa.me/447595119603?text=<%= url_encode("Hi Afida, I have a question about") %>"
+<a href="https://wa.me/447595119603?text=<%= url_encode("Hi Afida") %>"
+   <%# NOTE: Task 2b replaces this literal with a `message` variable built from a base + optional suffix %>
    target="_blank"
    rel="noopener"
    aria-label="Chat with us on WhatsApp"
@@ -222,15 +223,18 @@ git commit -m "Lift WhatsApp button above mobile add-to-cart bar on product page
 
 ### Task 2b: Prefill the WhatsApp message with product name + SKU on product pages
 
-Added after initial review: on a product page the generic message ("...question about")
-trails off. Append the product name and SKU so the lead arrives with context, e.g.
-"Hi Afida, I have a question about the 8oz White Single Wall Cups (CUP-8OZ-WHT)". Generic
-pages are unchanged.
+Added after initial review. Two related decisions came out of that review:
+1. The base message must not assume the sender's intent (they may have a question, a
+   compliment, an order chase). So the generic message is the bare greeting `Hi Afida`.
+2. On a product page, give the lead context by referencing the product as a topic (not an
+   intent), using `re:`. Result: `Hi Afida, re: <name> (<SKU>)`, e.g.
+   "Hi Afida, re: 8oz White Single Wall Cups (CUP-8OZ-WHT)".
 
 **Mechanism:** a second `content_for(:whatsapp_message_suffix)` hook. The partial builds
-the message as the base string plus the suffix when present; the product show page sets
-the suffix to `"the #{@product.generated_title} (#{@product.sku})"`. (`generated_title`
-and `sku` are the same attributes the show page already renders.)
+the message as the base string (`Hi Afida`) plus the suffix when present, appended FLUSH
+(the suffix carries its own leading `, `). The product show page sets the suffix to
+`", re: #{@product.generated_title} (#{@product.sku})"`. (`generated_title` and `sku` are
+the same attributes the show page already renders.)
 
 **Files:**
 - Modify: `app/views/shared/_whatsapp_button.html.erb`
@@ -249,7 +253,7 @@ mixed in, so reference `ERB::Util.url_encode` (what the view helper delegates to
 
     assert_response :success
 
-    expected_message = "Hi Afida, I have a question about the #{product.generated_title} (#{product.sku})"
+    expected_message = "Hi Afida, re: #{product.generated_title} (#{product.sku})"
     expected_href = "https://wa.me/447595119603?text=#{ERB::Util.url_encode(expected_message)}"
 
     assert_select "a[href=?]", expected_href do |links|
@@ -269,9 +273,11 @@ In `app/views/shared/_whatsapp_button.html.erb`, in the leading ERB block, after
 `button_classes`, build the message and use it in the href:
 
 ```erb
-  message = "Hi Afida, I have a question about"
-  message = "#{message} #{content_for(:whatsapp_message_suffix).to_s.strip}" if content_for?(:whatsapp_message_suffix)
+  message = "Hi Afida"
+  message = "#{message}#{content_for(:whatsapp_message_suffix)}" if content_for?(:whatsapp_message_suffix)
 ```
+
+Then change the href to use `message` instead of the literal from Task 1:
 
 ```erb
 <a href="https://wa.me/447595119603?text=<%= url_encode(message) %>"
@@ -283,7 +289,7 @@ In `app/views/products/show.html.erb`, after the `content_for :whatsapp_lift` li
 
 ```erb
 <%# Prefill the WhatsApp message with this product's name and SKU so the lead arrives with context %>
-<% content_for :whatsapp_message_suffix, "the #{@product.generated_title} (#{@product.sku})" %>
+<% content_for :whatsapp_message_suffix, ", re: #{@product.generated_title} (#{@product.sku})" %>
 ```
 
 - [ ] **Step 5: Run to verify it passes**
@@ -370,7 +376,7 @@ git commit -m "Guard against WhatsApp button leaking into admin area"
 ## Self-review notes (coverage against spec)
 
 - Round 64px green button, white glyph, shadow, hover scale — Task 1 partial.
-- `wa.me/447595119603` + prefilled `Hi Afida, I have a question about`, new tab, `rel=noopener`, `aria-label` — Task 1 markup + Task 1 test.
+- `wa.me/447595119603` + prefilled `Hi Afida` (generic) / `Hi Afida, re: <name> (<SKU>)` (product), new tab, `rel=noopener`, `aria-label` — Task 1 + Task 2b markup + tests.
 - Inline SVG (single source of truth, no separate file) — Task 1 partial.
 - Rendered once in storefront layout, admin untouched — Task 1 + Task 3.
 - Product-page lift above the mobile add-to-cart bar via `content_for` flag, absent elsewhere — Task 2.
