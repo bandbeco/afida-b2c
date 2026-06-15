@@ -18,7 +18,7 @@
 <% content_for :whatsapp_lift, true %>
 
 <%# Prefill the WhatsApp message with this product's name and SKU so the lead arrives with context %>
-<% content_for :whatsapp_message_suffix, "the #{@product.generated_title} (#{@product.sku})" %>
+<% content_for :whatsapp_message_suffix, ", re: #{@product.generated_title} (#{@product.sku})" %>
 
 <% if @product&.primary_photo&.attached? %>
   <% content_for :og_image, rails_storage_proxy_url(@product.primary_photo.variant(resize_to_limit: [1200, 630])) %>

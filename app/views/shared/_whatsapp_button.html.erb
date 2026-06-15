@@ -6,8 +6,9 @@
   mobile sticky add-to-cart bar so the two never overlap on phones.
 
   A page can enrich the prefilled message by setting content_for(:whatsapp_message_suffix);
-  e.g. the product page appends "the <product name> (<sku>)" so the lead arrives with
-  context. Without a suffix the message is the generic base below.
+  e.g. the product page appends ", re: <product name> (<sku>)" so the lead arrives with
+  context. The suffix is appended flush (it carries its own leading punctuation/space).
+  Without a suffix the message is the bare, intent-neutral greeting below.
 %>
 <% lift_class = "max-md:bottom-24" if content_for?(:whatsapp_lift) %>
 <%
@@ -17,8 +18,8 @@
     lift_class
   ].compact.join(" ")
 
-  message = "Hi Afida, I have a question about"
-  message = "#{message} #{content_for(:whatsapp_message_suffix).to_s.strip}" if content_for?(:whatsapp_message_suffix)
+  message = "Hi Afida"
+  message = "#{message}#{content_for(:whatsapp_message_suffix)}" if content_for?(:whatsapp_message_suffix)
 %>
 <a href="https://wa.me/447595119603?text=<%= url_encode(message) %>"
    target="_blank"

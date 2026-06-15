@@ -7,8 +7,9 @@ class WhatsappButtonTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     # The wa.me link to the business number with the prefilled message (URL-encoded).
+    # Generic pages use a neutral greeting that assumes no particular intent.
     assert_select "a[href=?]",
-      "https://wa.me/447595119603?text=Hi%20Afida%2C%20I%20have%20a%20question%20about" do |links|
+      "https://wa.me/447595119603?text=Hi%20Afida" do |links|
       assert_equal 1, links.size, "expected exactly one WhatsApp button on the page"
     end
 
@@ -37,7 +38,7 @@ class WhatsappButtonTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
-    expected_message = "Hi Afida, I have a question about the #{product.generated_title} (#{product.sku})"
+    expected_message = "Hi Afida, re: #{product.generated_title} (#{product.sku})"
     expected_href = "https://wa.me/447595119603?text=#{ERB::Util.url_encode(expected_message)}"
 
     assert_select "a[href=?]", expected_href do |links|
