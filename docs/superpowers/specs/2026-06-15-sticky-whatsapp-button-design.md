@@ -18,7 +18,8 @@ circle pinned to the bottom-right corner, visible on all devices.
 
 In scope:
 - A new shared partial rendered once in the storefront layout.
-- A new inline WhatsApp glyph SVG asset.
+- A WhatsApp glyph SVG, inlined directly into the partial (the inline markup is the
+  single source of truth; no standalone `.svg` file is created).
 - Collision avoidance with the existing mobile sticky add-to-cart bar on product pages.
 
 Out of scope:
@@ -46,12 +47,11 @@ Markup:
   - `title="Chat with us on WhatsApp"` for desktop hover.
 - Inline white WhatsApp glyph SVG (see asset below).
 
-### Asset: `app/frontend/images/graphics/whatsapp.svg`
+### WhatsApp glyph SVG
 
-The white WhatsApp glyph, inlined into the partial (consistent with the other graphics
-in `app/frontend/images/graphics/`). Inlining avoids an extra network request and lets
-the glyph inherit the white colour directly. The SVG `fill` is white so it reads against
-the green circle.
+The white WhatsApp glyph is written inline in the partial itself (not saved as a separate
+file). Inlining avoids an extra network request and lets the glyph render the white fill
+directly. The SVG `fill` is white so it reads against the green circle.
 
 ## Appearance
 
