@@ -39,4 +39,20 @@ class WhatsappButtonTest < ActionDispatch::IntegrationTest
     assert_select "a[href^='https://wa.me/447595119603'].max-md\\:bottom-24", false,
       "homepage should not lift the WhatsApp button (no add-to-cart bar there)"
   end
+
+  test "admin pages do not render the WhatsApp button" do
+    sign_in_as(users(:acme_admin))
+    get admin_path
+
+    assert_response :success
+    assert_select "a[href^='https://wa.me/447595119603']", false,
+      "the WhatsApp button must not appear in the admin area"
+  end
+
+  private
+
+  def sign_in_as(user)
+    post session_path, params: { email_address: user.email_address, password: "password" }
+    follow_redirect!
+  end
 end

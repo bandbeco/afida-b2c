@@ -234,7 +234,7 @@ Add this test inside `class WhatsappButtonTest`:
 ```ruby
   test "admin pages do not render the WhatsApp button" do
     sign_in_as(users(:acme_admin))
-    get admin_root_path
+    get admin_path # /admin index (admin/products#index); helper is admin_path, not admin_root_path
 
     assert_response :success
     assert_select "a[href^='https://wa.me/447595119603']", false,
@@ -242,14 +242,23 @@ Add this test inside `class WhatsappButtonTest`:
   end
 ```
 
-- [ ] **Step 2: Verify the admin sign-in helper and route exist**
+- [ ] **Step 2: Verify the admin sign-in helper and route**
 
-Confirm `sign_in_as` and the `acme_admin` fixture are available (other tests use them, e.g. `test/integration/admin_order_pricing_display_test.rb`), and that `admin_root_path` resolves:
+`sign_in_as` is NOT a shared helper — each test file defines its own. Add the private helper to this test file (shown above), copied from the established pattern in `test/integration/admin_order_pricing_display_test.rb:59`:
 
-Run: `bin/rails runner "puts Rails.application.routes.url_helpers.admin_root_path"`
-Expected: prints `/admin` (or the configured admin root path).
+```ruby
+  private
 
-If `admin_root_path` does not exist, substitute the admin index route used by the existing admin tests (open `test/integration/admin_order_pricing_display_test.rb` and reuse a working `get admin_*_path` such as `admin_orders_path`). Use whichever admin GET route returns `:success` after `sign_in_as`.
+  def sign_in_as(user)
+    post session_path, params: { email_address: user.email_address, password: "password" }
+    follow_redirect!
+  end
+```
+
+The `acme_admin` fixture has `role: admin` and password `"password"`. The admin index route's helper is `admin_path` (route: `GET /admin → admin/products#index`), NOT `admin_root_path`. Confirm with:
+
+Run: `bin/rails runner "puts Rails.application.routes.url_helpers.admin_path"`
+Expected: prints `/admin`.
 
 - [ ] **Step 3: Run the test to verify it passes**
 
