@@ -12,7 +12,11 @@ circle pinned to the bottom-right corner, visible on all devices.
 ## Business details
 
 - **WhatsApp number:** +44 7595 119603 (international, no `+`/spaces/leading-zero: `447595119603`)
-- **Prefilled message:** `Hi Afida, I have a question about`
+- **Prefilled message (generic pages):** `Hi Afida, I have a question about`
+- **Prefilled message (product pages):** `Hi Afida, I have a question about the <product name> (<SKU>)` — the product
+  page enriches the base message with the product's `generated_title` and `sku` so the
+  lead arrives with context. Implemented via `content_for(:whatsapp_message_suffix)`,
+  which the partial appends to the base message.
 
 ## Scope
 
@@ -41,6 +45,10 @@ Markup:
     - The `text` parameter is the URL-encoded prefilled message. Build it with a Rails
       helper (e.g. `CGI.escape` / `url_encode`) rather than hand-encoding, so the
       message text stays readable in the template and encoding is correct.
+    - The message is the base string by default. If a page sets
+      `content_for(:whatsapp_message_suffix)`, the partial appends it to the base so the
+      message becomes context-specific. The product show page sets the suffix to
+      `"the #{@product.generated_title} (#{@product.sku})"`.
   - `target="_blank"` and `rel="noopener"` — opens the WhatsApp app/web client in a new
     context without navigating away from the shop.
   - `aria-label="Chat with us on WhatsApp"` for screen readers.

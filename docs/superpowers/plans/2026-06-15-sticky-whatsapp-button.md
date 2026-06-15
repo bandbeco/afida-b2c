@@ -220,6 +220,87 @@ git commit -m "Lift WhatsApp button above mobile add-to-cart bar on product page
 
 ---
 
+### Task 2b: Prefill the WhatsApp message with product name + SKU on product pages
+
+Added after initial review: on a product page the generic message ("...question about")
+trails off. Append the product name and SKU so the lead arrives with context, e.g.
+"Hi Afida, I have a question about the 8oz White Single Wall Cups (CUP-8OZ-WHT)". Generic
+pages are unchanged.
+
+**Mechanism:** a second `content_for(:whatsapp_message_suffix)` hook. The partial builds
+the message as the base string plus the suffix when present; the product show page sets
+the suffix to `"the #{@product.generated_title} (#{@product.sku})"`. (`generated_title`
+and `sku` are the same attributes the show page already renders.)
+
+**Files:**
+- Modify: `app/views/shared/_whatsapp_button.html.erb`
+- Modify: `app/views/products/show.html.erb`
+- Test: `test/integration/whatsapp_button_test.rb`
+
+- [ ] **Step 1: Write the failing test**
+
+Add inside `class WhatsappButtonTest`. Note: in an integration test `url_encode` is not
+mixed in, so reference `ERB::Util.url_encode` (what the view helper delegates to):
+
+```ruby
+  test "product page prefills the WhatsApp message with the product name and SKU" do
+    product = products(:one)
+    get product_path(product.slug)
+
+    assert_response :success
+
+    expected_message = "Hi Afida, I have a question about the #{product.generated_title} (#{product.sku})"
+    expected_href = "https://wa.me/447595119603?text=#{ERB::Util.url_encode(expected_message)}"
+
+    assert_select "a[href=?]", expected_href do |links|
+      assert_equal 1, links.size, "expected the product-specific WhatsApp link"
+    end
+  end
+```
+
+- [ ] **Step 2: Run to verify it fails**
+
+Run: `bin/rails test test/integration/whatsapp_button_test.rb`
+Expected: the new test FAILS (product page still renders the generic message).
+
+- [ ] **Step 3: Build the message from base + optional suffix in the partial**
+
+In `app/views/shared/_whatsapp_button.html.erb`, in the leading ERB block, after
+`button_classes`, build the message and use it in the href:
+
+```erb
+  message = "Hi Afida, I have a question about"
+  message = "#{message} #{content_for(:whatsapp_message_suffix).to_s.strip}" if content_for?(:whatsapp_message_suffix)
+```
+
+```erb
+<a href="https://wa.me/447595119603?text=<%= url_encode(message) %>"
+```
+
+- [ ] **Step 4: Set the suffix on the product show page**
+
+In `app/views/products/show.html.erb`, after the `content_for :whatsapp_lift` line, add:
+
+```erb
+<%# Prefill the WhatsApp message with this product's name and SKU so the lead arrives with context %>
+<% content_for :whatsapp_message_suffix, "the #{@product.generated_title} (#{@product.sku})" %>
+```
+
+- [ ] **Step 5: Run to verify it passes**
+
+Run: `bin/rails test test/integration/whatsapp_button_test.rb`
+Expected: PASS. The homepage test (which asserts the exact generic href) must still pass,
+proving non-product pages are unaffected.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add app/views/shared/_whatsapp_button.html.erb app/views/products/show.html.erb test/integration/whatsapp_button_test.rb
+git commit -m "Prefill WhatsApp message with product name and SKU on product pages"
+```
+
+---
+
 ### Task 3: Confirm the button is absent from the admin layout
 
 This task adds a guard test so a future change that moves the render into a shared admin-and-storefront partial doesn't accidentally surface the button in admin. The admin layout is a separate file and is not modified.

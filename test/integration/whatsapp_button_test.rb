@@ -31,6 +31,20 @@ class WhatsappButtonTest < ActionDispatch::IntegrationTest
     assert_select "a[href^='https://wa.me/447595119603'].max-md\\:bottom-24"
   end
 
+  test "product page prefills the WhatsApp message with the product name and SKU" do
+    product = products(:one)
+    get product_path(product.slug)
+
+    assert_response :success
+
+    expected_message = "Hi Afida, I have a question about the #{product.generated_title} (#{product.sku})"
+    expected_href = "https://wa.me/447595119603?text=#{ERB::Util.url_encode(expected_message)}"
+
+    assert_select "a[href=?]", expected_href do |links|
+      assert_equal 1, links.size, "expected the product-specific WhatsApp link"
+    end
+  end
+
   test "non-product pages do not apply the lift class" do
     get root_path
 
