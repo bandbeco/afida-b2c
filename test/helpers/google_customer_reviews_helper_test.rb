@@ -10,11 +10,13 @@ class GoogleCustomerReviewsHelperTest < ActionView::TestCase
 
   test "gcr_configured? returns false when merchant_id is nil" do
     @gcr_merchant_id = nil
+    @gcr_merchant_id_loaded = true # bypass the credentials read so nil stands
     refute gcr_configured?
   end
 
   test "gcr_configured? returns false when merchant_id is blank" do
     @gcr_merchant_id = ""
+    @gcr_merchant_id_loaded = true # bypass the credentials read so blank stands
     refute gcr_configured?
   end
 
@@ -30,6 +32,7 @@ class GoogleCustomerReviewsHelperTest < ActionView::TestCase
 
   test "gcr_survey_opt_in returns empty string when not configured" do
     @gcr_merchant_id = nil
+    @gcr_merchant_id_loaded = true # bypass the credentials read so nil stands
     order = orders(:one)
     assert_equal "", gcr_survey_opt_in(order)
   end
@@ -71,27 +74,9 @@ class GoogleCustomerReviewsHelperTest < ActionView::TestCase
     assert_includes result, "lang: 'en-GB'"
   end
 
-  # gcr_store_widget tests
-
-  test "gcr_store_widget returns empty string when not configured" do
-    @gcr_merchant_id = nil
-    assert_equal "", gcr_store_widget
-  end
-
-  test "gcr_store_widget renders widget script when configured" do
-    @gcr_merchant_id = 12345678
-    result = gcr_store_widget
-
-    assert_includes result, "merchantwidget.js"
-    assert_includes result, "merchantwidget.start"
-  end
-
-  test "gcr_store_widget defaults to RIGHT_BOTTOM position" do
-    @gcr_merchant_id = 12345678
-    result = gcr_store_widget
-
-    assert_includes result, "RIGHT_BOTTOM"
-  end
+  # The sitewide store badge is intentionally not rendered: it adds no value to
+  # Google Shopping ad seller ratings (those come from the confirmation-page
+  # survey) and it collided with the floating WhatsApp button bottom-right.
 
   # estimated_delivery_date tests
 
