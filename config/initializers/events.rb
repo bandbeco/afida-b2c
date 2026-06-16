@@ -6,6 +6,10 @@
 # When Logtail is configured, these logs are sent to Better Stack
 # for structured querying and debugging.
 #
+# The DatafastSubscriber routes events to DataFast analytics goals.
+# The KlaviyoSubscriber routes signup/order events to Klaviyo (marketing ESP).
+# Both no-op gracefully until their API keys are configured in credentials.
+#
 # Usage in controllers/services/jobs:
 #   Rails.event.notify("order.placed",
 #     order_id: order.id,
@@ -19,4 +23,5 @@
 Rails.application.config.after_initialize do
   Rails.event.subscribe(EventLogSubscriber.new)
   Rails.event.subscribe(DatafastSubscriber.new)
+  Rails.event.subscribe(KlaviyoSubscriber.new)
 end
