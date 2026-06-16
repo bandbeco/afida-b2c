@@ -46,6 +46,19 @@ class WhatsappButtonTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "special characters in the product name are URL-encoded exactly once" do
+    product = products(:one)
+    Product.any_instance.stubs(:generated_title).returns("Cups & Lids")
+    get product_path(product.slug)
+
+    assert_response :success
+
+    href = response.body[/href="(https:\/\/wa\.me\/[^"]*)"/, 1]
+    # The ampersand must encode to %26 (raw &), not %26amp%3B (the HTML-escaped &amp;).
+    assert_includes href, "Cups%20%26%20Lids", "expected single URL-encoding of '&'"
+    refute_includes href, "%26amp%3B", "message must not be HTML-escaped before URL-encoding"
+  end
+
   test "non-product pages do not apply the lift class" do
     get root_path
 

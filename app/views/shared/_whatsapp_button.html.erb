@@ -19,7 +19,11 @@
   ].compact.join(" ")
 
   message = "Hi Afida"
-  message = "#{message}#{content_for(:whatsapp_message_suffix)}" if content_for?(:whatsapp_message_suffix)
+  if content_for?(:whatsapp_message_suffix)
+    # content_for stores an HTML-escaped SafeBuffer; unescape so url_encode runs on the
+    # raw text exactly once (otherwise "&" would become %26amp%3B instead of %26).
+    message += CGI.unescapeHTML(content_for(:whatsapp_message_suffix).to_str)
+  end
 %>
 <a href="https://wa.me/447595119603?text=<%= url_encode(message) %>"
    target="_blank"
