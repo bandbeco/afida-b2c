@@ -53,6 +53,11 @@ Markup:
       (the suffix carries its own leading punctuation/space) so the message becomes
       context-specific. The product show page sets the suffix to
       `", re: #{@product.generated_title} (#{@product.sku})"`.
+    - `content_for` stores an HTML-escaped `SafeBuffer`, so the partial `CGI.unescapeHTML`s
+      the suffix before URL-encoding the whole message. This ensures special characters
+      (e.g. `&` in a product name) are percent-encoded exactly once (`%26`), not
+      double-encoded (`%26amp%3B`). The final `url_encode` still neutralises any
+      attribute-breaking characters, so there is no XSS surface.
   - `target="_blank"` and `rel="noopener"` — opens the WhatsApp app/web client in a new
     context without navigating away from the shop.
   - `aria-label="Chat with us on WhatsApp"` for screen readers.
