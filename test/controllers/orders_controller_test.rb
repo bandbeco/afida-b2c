@@ -18,6 +18,28 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     }
   end
 
+  # Runs the block with the GCR merchant_id credential forced to `value`, while
+  # every other credentials.dig call still returns its real value. This keeps the
+  # test independent of the environment: the shared credentials are decryptable
+  # locally (so merchant_id is present) but NOT in CI (no master key, so dig
+  # returns nil), which would otherwise make this test pass locally and fail in CI.
+  #
+  # Implemented by redefining #dig on the credentials singleton rather than via
+  # Mocha, because Mocha cannot compute a return value from the call arguments
+  # (its .returns block is lazy and does not receive them), so a delegating stub
+  # is not expressible there.
+  def with_gcr_merchant_id(value)
+    creds = Rails.application.credentials
+    real_dig = creds.method(:dig)
+    singleton = creds.singleton_class
+    singleton.send(:define_method, :dig) do |*args|
+      args == [ :google_customer_reviews, :merchant_id ] ? value : real_dig.call(*args)
+    end
+    yield
+  ensure
+    singleton.send(:remove_method, :dig)
+  end
+
   # GET /orders (index)
   test "index requires authentication" do
     get orders_url
@@ -212,14 +234,24 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "confirmation page renders the GCR survey opt-in when merchant_id is configured" do
-    sign_in @user_one
+    with_gcr_merchant_id(12345678) do
+      sign_in @user_one
+      get confirmation_order_url(@order_one)
+    end
 
-    get confirmation_order_url(@order_one)
     assert_response :success
-    # The survey opt-in renders on the confirmation page (the store badge stays
-    # off). With google_customer_reviews.merchant_id present in credentials, the
-    # opt-in JavaScript should be on the page.
+    # The survey opt-in renders on the confirmation page (the store badge stays off).
     assert_match(/surveyoptin/, response.body)
+  end
+
+  test "confirmation page omits the GCR survey when merchant_id is not configured" do
+    with_gcr_merchant_id(nil) do
+      sign_in @user_one
+      get confirmation_order_url(@order_one)
+    end
+
+    assert_response :success
+    refute_match(/surveyoptin/, response.body)
   end
 
   test "confirmation page denied without authorization" do
