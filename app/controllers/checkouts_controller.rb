@@ -109,7 +109,9 @@ class CheckoutsController < ApplicationController
       # Store in session for immediate access (proves ownership for guest checkout)
       session[:recent_order_id] = order.id
 
-      # Emit discount claimed event if order used a discount code
+      # Emit discount claimed event if order used a discount code.
+      # KlaviyoSubscriber resolves the customer email from order_id (Rails.event
+      # filters payload[:email] to "[FILTERED]"), so order_id is the contract here.
       if session[:discount_code].present?
         Rails.event.notify("email_signup.discount_claimed",
           email: order.email,

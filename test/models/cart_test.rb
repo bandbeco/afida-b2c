@@ -353,4 +353,28 @@ class CartTest < ActiveSupport::TestCase
 
     assert_not cart.at_sample_limit?
   end
+
+  # --- signed recovery token (cross-device abandoned-cart links) ---
+
+  test "find_by_recovery_token round-trips a cart's signed recovery token" do
+    assert_equal @cart, Cart.find_by_recovery_token(@cart.signed_recovery_token)
+  end
+
+  test "find_by_recovery_token returns nil for a garbage token" do
+    assert_nil Cart.find_by_recovery_token("not-a-real-token")
+  end
+
+  test "find_by_recovery_token rejects a token signed for a different purpose" do
+    # An order's access token must not be replayable as a cart recovery token.
+    order_token = orders(:one).signed_access_token
+
+    assert_nil Cart.find_by_recovery_token(order_token)
+  end
+
+  test "recovery_url is an absolute url pointing at the cart resume route" do
+    url = @cart.recovery_url
+
+    assert url.start_with?("http"), "expected an absolute url, got #{url.inspect}"
+    assert_includes url, "/cart/resume"
+  end
 end

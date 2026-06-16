@@ -38,13 +38,33 @@ class EmailSubscriptionsController < ApplicationController
       # Store discount code in session (only if not already present)
       session[:discount_code] ||= welcome_discount_code
 
-      # Emit event for tracking email signup funnel
+      # Emit event for tracking email signup funnel.
+      # subscription_id lets subscribers resolve the real email: Rails.event filters
+      # payload keys matching config.filter_parameters, and :email matches as a
+      # substring, so both :email AND any key containing "email" arrive "[FILTERED]".
+      # subscription_id is deliberately named without "email" so it survives.
       Rails.event.notify("email_signup.completed",
         email: @email,
+        subscription_id: @subscription.id,
         source: @subscription.source,
         discount_eligible: true,
         new_subscription: @subscription.previously_new_record?
       )
+
+      # Abandoned-cart trigger. The visitor's email and their cart contents coexist
+      # in this request (Current.cart is set by ApplicationController's
+      # set_current_cart). Klaviyo owns the delay/suppression Flow; we only emit
+      # the intent, and only for a cart worth recovering. Sample-only carts are
+      # excluded (zero value), mirroring how order.placed treats sample requests.
+      cart = Current.cart
+      if cart && cart.cart_items.any? && !cart.only_samples?
+        Rails.event.notify("cart.checkout_initiated",
+          cart_id: cart.id,
+          email: @email,
+          subscription_id: @subscription.id,
+          source: @subscription.source
+        )
+      end
 
       render_success
     else

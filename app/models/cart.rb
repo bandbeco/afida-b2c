@@ -116,4 +116,38 @@ class Cart < ApplicationRecord
   def at_sample_limit?
     sample_count >= SAMPLE_LIMIT
   end
+
+  # Signed, expiring token for cross-device cart recovery (abandoned-cart emails).
+  # Mirrors Order#signed_access_token; a distinct purpose ("cart_recovery") means
+  # an order access token can never be replayed as a cart recovery token.
+  def signed_recovery_token
+    to_sgid(expires_in: 30.days, for: "cart_recovery").to_s
+  end
+
+  # Absolute URL that re-binds the recipient's session to this cart (see
+  # CartsController#resume). Passes the Action Mailer host explicitly so the URL
+  # resolves whether built in a request or not; the route helper also falls back
+  # to routes.default_url_options if the mailer host is absent.
+  def recovery_url
+    Rails.application.routes.url_helpers.resume_cart_url(token: signed_recovery_token, **url_options)
+  end
+
+  # Resolves a cart from a recovery token, or nil if the token is missing,
+  # malformed, expired, signed for another purpose, or the cart no longer exists.
+  def self.find_by_recovery_token(token)
+    GlobalID::Locator.locate_signed(token, for: "cart_recovery")
+  rescue ActiveRecord::RecordNotFound, ActiveSupport::MessageVerifier::InvalidSignature
+    nil
+  end
+
+  private
+
+  # Action Mailer's host, configured in every environment. recovery_url runs
+  # inline in KlaviyoSubscriber (a synchronous Rails.event subscriber), so a nil
+  # here would propagate into the emitting request; in practice resume_cart_url
+  # falls back to routes.default_url_options (also set in every environment), so
+  # a missing mailer host degrades to that host rather than a hostless URL.
+  def url_options
+    Rails.application.config.action_mailer.default_url_options
+  end
 end
