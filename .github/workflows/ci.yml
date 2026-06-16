@@ -77,7 +77,7 @@ jobs:
 
     steps:
       - name: Install packages
-        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev pkg-config google-chrome-stable
+        run: sudo apt-get update && sudo apt-get install --no-install-recommends -y build-essential git libpq-dev libyaml-dev libvips pkg-config google-chrome-stable
 
       - name: Checkout code
         uses: actions/checkout@v6
@@ -107,6 +107,10 @@ jobs:
           RAILS_ENV: test
           DATABASE_URL: postgres://postgres:postgres@localhost:5432
           VITE_RUBY_AUTO_BUILD: false
+          # Decrypts config/credentials/test.yml.enc (fake values only). This is
+          # the TEST credentials key, NOT the production master key, so no real
+          # secrets are exposed to CI. Stored as the RAILS_TEST_KEY secret.
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_TEST_KEY }}
           # REDIS_URL: redis://localhost:6379/0
         run: bin/rails db:test:prepare test
 

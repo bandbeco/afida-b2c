@@ -47,27 +47,6 @@ window.___gcfg = {
     end
   end
 
-  # Renders the Google Merchant store widget (shows store rating badge).
-  # Can be placed on any page; typically in the layout.
-  def gcr_store_widget
-    return "" unless gcr_configured?
-
-    safe_join([
-      content_tag(:script, nil,
-        id: "merchantWidgetScript",
-        src: "https://www.gstatic.com/shopping/merchant/merchantwidget.js",
-        defer: "defer"
-      ),
-      content_tag(:script, %(
-merchantWidgetScript.addEventListener('load', function() {
-  merchantwidget.start({
-    position: 'RIGHT_BOTTOM'
-  });
-});
-      ).html_safe)
-    ])
-  end
-
   # Estimated delivery date for the order, as the next-working-day promise
   # shown elsewhere on the site. Reads the date stamped on the order at purchase
   # (falling back to a computed date for legacy orders). Returns ISO8601 (what
