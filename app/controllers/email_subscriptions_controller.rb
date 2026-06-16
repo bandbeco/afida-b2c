@@ -38,9 +38,14 @@ class EmailSubscriptionsController < ApplicationController
       # Store discount code in session (only if not already present)
       session[:discount_code] ||= welcome_discount_code
 
-      # Emit event for tracking email signup funnel
+      # Emit event for tracking email signup funnel.
+      # subscription_id lets subscribers resolve the real email: Rails.event filters
+      # payload keys matching config.filter_parameters, and :email matches as a
+      # substring, so both :email AND any key containing "email" arrive "[FILTERED]".
+      # subscription_id is deliberately named without "email" so it survives.
       Rails.event.notify("email_signup.completed",
         email: @email,
+        subscription_id: @subscription.id,
         source: @subscription.source,
         discount_eligible: true,
         new_subscription: @subscription.previously_new_record?
@@ -56,6 +61,7 @@ class EmailSubscriptionsController < ApplicationController
         Rails.event.notify("cart.checkout_initiated",
           cart_id: cart.id,
           email: @email,
+          subscription_id: @subscription.id,
           source: @subscription.source
         )
       end

@@ -17,6 +17,13 @@
 # cart delay and suppression ("Placed Order zero times") live in a Klaviyo Flow,
 # so no scheduling or suppression logic lives here.
 #
+# Email handling: Rails.event filters payload values whose keys match
+# config.filter_parameters (by substring), and :email is one of them, so
+# payload[:email] arrives as "[FILTERED]". Every handler therefore resolves the
+# real address from a record (EmailSubscription via subscription_id, or Order via
+# order_id), never from the payload. The id key avoids the "email" substring so
+# the filter does not redact it too.
+#
 # Like DatafastSubscriber, this only enqueues background jobs; it never performs
 # network I/O inline and never raises into the emitting business code.
 #
@@ -43,7 +50,7 @@ class KlaviyoSubscriber
   private
 
   def handle_signup(payload)
-    email = payload[:email]
+    email = subscription_email(payload)
     return if email.blank?
 
     # NOTE: payload[:discount_eligible] is deliberately not forwarded. The emitter
@@ -53,20 +60,21 @@ class KlaviyoSubscriber
   end
 
   def handle_discount_claimed(payload)
-    email = payload[:email]
-    return if email.blank?
+    order = Order.find_by(id: payload[:order_id])
+    return if order.nil? || order.email.blank?
 
-    track("Claimed Discount", email, { discount_code: payload[:discount_code] }.compact)
+    track("Claimed Discount", order.email, { discount_code: payload[:discount_code] }.compact)
   end
 
-  # Abandoned-cart trigger. The email is known (the visitor typed it into the
-  # discount-signup form) and Current.cart was populated in the same request, so
-  # the emitter handed us cart_id + email. We reload the cart for its line items
-  # (one query, products eager-loaded) and send Klaviyo a "Started Checkout"
-  # metric with the cart total as value, plus a signed cross-device recovery link.
-  # Klaviyo's Flow owns the delay and the "Placed Order zero times" suppression.
+  # Abandoned-cart trigger. The discount-signup flow emits this once an email is
+  # known and Current.cart has items. We resolve the email from the EmailSubscription
+  # (payload[:email] is filtered out by Rails.event) and reload the cart for its
+  # line items (one query, products eager-loaded), then send Klaviyo a "Started
+  # Checkout" metric with the cart total as value plus a signed cross-device
+  # recovery link. Klaviyo's Flow owns the delay and "Placed Order zero times"
+  # suppression.
   def handle_checkout_initiated(payload)
-    email = payload[:email]
+    email = subscription_email(payload)
     return if email.blank?
 
     cart = Cart.find_by(id: payload[:cart_id])
@@ -138,6 +146,16 @@ class KlaviyoSubscriber
     args = { metric: metric, email: email, properties: properties }
     args[:value] = value unless value.nil?
     KlaviyoEventJob.perform_later("track", **args)
+  end
+
+  # Resolves the profile email from the EmailSubscription record rather than the
+  # payload: Rails.event filters :email (it is in config.filter_parameters), so
+  # payload[:email] arrives as "[FILTERED]". Mirrors how handle_order_placed reads
+  # Order#email from order_id instead of trusting the payload. The id key is
+  # "subscription_id" (not "email_subscription_id") because the filter matches by
+  # substring and would otherwise redact any key containing "email" too.
+  def subscription_email(payload)
+    EmailSubscription.find_by(id: payload[:subscription_id])&.email
   end
 
   # Klaviyo profiles use separate first/last name fields. shipping_name is a

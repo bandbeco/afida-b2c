@@ -9,13 +9,18 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
 
   # --- email_signup.completed ---
 
+  # The subscriber resolves the email from the EmailSubscription (Rails.event
+  # filters :email out of the payload), so tests pass subscription_id and assert
+  # the fixture's address, not the filtered payload value.
   test "email_signup.completed enqueues a Subscribed track job with source" do
+    subscription = email_subscriptions(:claimed_discount)
     event = build_event("email_signup.completed",
-      payload: { email: "buyer@cafe.co.uk", source: "cart_discount", discount_eligible: true })
+      payload: { email: "[FILTERED]", subscription_id: subscription.id,
+                 source: "cart_discount", discount_eligible: true })
 
     assert_enqueued_with(
       job: KlaviyoEventJob,
-      args: [ "track", { metric: "Subscribed", email: "buyer@cafe.co.uk",
+      args: [ "track", { metric: "Subscribed", email: subscription.email,
                          properties: { source: "cart_discount" } } ]
     ) do
       @subscriber.emit(event)
@@ -25,8 +30,9 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
   test "email_signup.completed does not forward the always-true discount_eligible flag" do
     # The emitter always sends discount_eligible: true (ineligible signups bail
     # out before the event fires), so it carries no segmentation signal in Klaviyo.
+    subscription = email_subscriptions(:claimed_discount)
     event = build_event("email_signup.completed",
-      payload: { email: "buyer@cafe.co.uk", source: "cart_discount", discount_eligible: true })
+      payload: { subscription_id: subscription.id, source: "cart_discount", discount_eligible: true })
 
     @subscriber.emit(event)
 
@@ -34,8 +40,9 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     assert_not_includes track[:properties].keys, :discount_eligible
   end
 
-  test "email_signup.completed does not enqueue when email is blank" do
-    event = build_event("email_signup.completed", payload: { email: "", source: "cart_discount" })
+  test "email_signup.completed does not enqueue when the subscription cannot be found" do
+    event = build_event("email_signup.completed",
+      payload: { subscription_id: 0, source: "cart_discount" })
 
     assert_no_enqueued_jobs do
       @subscriber.emit(event)
@@ -45,21 +52,22 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
   # --- email_signup.discount_claimed ---
 
   test "email_signup.discount_claimed enqueues a Claimed Discount track job" do
+    order = orders(:one)
     event = build_event("email_signup.discount_claimed",
-      payload: { email: "buyer@cafe.co.uk", order_id: 99, discount_code: "WELCOME5" })
+      payload: { email: "[FILTERED]", order_id: order.id, discount_code: "WELCOME5" })
 
     assert_enqueued_with(
       job: KlaviyoEventJob,
-      args: [ "track", { metric: "Claimed Discount", email: "buyer@cafe.co.uk",
+      args: [ "track", { metric: "Claimed Discount", email: order.email,
                          properties: { discount_code: "WELCOME5" } } ]
     ) do
       @subscriber.emit(event)
     end
   end
 
-  test "email_signup.discount_claimed does not enqueue when email is blank" do
+  test "email_signup.discount_claimed does not enqueue when the order cannot be found" do
     event = build_event("email_signup.discount_claimed",
-      payload: { email: "", order_id: 99, discount_code: "WELCOME5" })
+      payload: { order_id: 0, discount_code: "WELCOME5" })
 
     assert_no_enqueued_jobs do
       @subscriber.emit(event)
@@ -188,23 +196,26 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
 
   test "cart.checkout_initiated enqueues a Started Checkout track job with the cart total as value" do
     cart = carts(:one) # cart_items(:one): product :one, quantity 2, price 10
+    subscription = email_subscriptions(:claimed_discount)
 
     @subscriber.emit(build_event("cart.checkout_initiated",
-      payload: { cart_id: cart.id, email: "buyer@cafe.co.uk", source: "cart_discount" }))
+      payload: { cart_id: cart.id, email: "[FILTERED]",
+                 subscription_id: subscription.id, source: "cart_discount" }))
 
     track = enqueued_klaviyo_job("track")
     assert track, "expected a track job to be enqueued"
     assert_equal "Started Checkout", track[:metric]
-    assert_equal "buyer@cafe.co.uk", track[:email]
+    assert_equal subscription.email, track[:email]
     assert_in_delta cart.total_amount.to_f, track[:value], 0.001
   end
 
   test "cart.checkout_initiated properties carry item_count, line_items_count, items and checkout_url" do
     cart = carts(:one)
     item = cart_items(:one)
+    subscription = email_subscriptions(:claimed_discount)
 
     @subscriber.emit(build_event("cart.checkout_initiated",
-      payload: { cart_id: cart.id, email: "buyer@cafe.co.uk", source: "cart_discount" }))
+      payload: { cart_id: cart.id, subscription_id: subscription.id, source: "cart_discount" }))
 
     props = enqueued_klaviyo_job("track")[:properties]
     assert_equal cart.items_count, props[:item_count]
@@ -227,37 +238,41 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
       )
       cart.cart_items.create!(product: product, quantity: 1, price: product.price)
     end
+    subscription = email_subscriptions(:claimed_discount)
 
     @subscriber.emit(build_event("cart.checkout_initiated",
-      payload: { cart_id: cart.id, email: "buyer@cafe.co.uk", source: "cart_discount" }))
+      payload: { cart_id: cart.id, subscription_id: subscription.id, source: "cart_discount" }))
 
     props = enqueued_klaviyo_job("track")[:properties]
     assert_equal KlaviyoSubscriber::MAX_ITEMS_IN_PAYLOAD, props[:items].length
     assert_equal 21, props[:line_items_count]
   end
 
-  test "cart.checkout_initiated does not enqueue when email is blank" do
+  test "cart.checkout_initiated does not enqueue when the subscription cannot be found" do
     cart = carts(:one)
 
     assert_no_enqueued_jobs do
       @subscriber.emit(build_event("cart.checkout_initiated",
-        payload: { cart_id: cart.id, email: "", source: "cart_discount" }))
+        payload: { cart_id: cart.id, subscription_id: 0, source: "cart_discount" }))
     end
   end
 
   test "cart.checkout_initiated does nothing when the cart cannot be found" do
+    subscription = email_subscriptions(:claimed_discount)
+
     assert_no_enqueued_jobs do
       @subscriber.emit(build_event("cart.checkout_initiated",
-        payload: { cart_id: 0, email: "buyer@cafe.co.uk" }))
+        payload: { cart_id: 0, subscription_id: subscription.id }))
     end
   end
 
   test "cart.checkout_initiated does not enqueue when the cart has no items" do
     empty = Cart.create!
+    subscription = email_subscriptions(:claimed_discount)
 
     assert_no_enqueued_jobs do
       @subscriber.emit(build_event("cart.checkout_initiated",
-        payload: { cart_id: empty.id, email: "buyer@cafe.co.uk" }))
+        payload: { cart_id: empty.id, subscription_id: subscription.id }))
     end
   end
 

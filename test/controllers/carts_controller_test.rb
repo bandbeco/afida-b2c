@@ -82,6 +82,22 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_equal guest_cart.id, session[:cart_id]
   end
 
+  test "resume overrides an existing guest session cart with the one in the token" do
+    # The realistic cross-device case: the visitor lands first (auto-created
+    # empty cart in their session), then clicks the recovery link for a different,
+    # earlier cart. Resume should re-bind the session to the token's cart.
+    get cart_url
+    other_cart_id = session[:cart_id]
+    recovered_cart = Cart.create!
+    recovered_cart.cart_items.create!(product: products(:single_wall_8oz_white), quantity: 1, price: 10)
+
+    get resume_cart_url(token: recovered_cart.signed_recovery_token)
+
+    assert_redirected_to cart_path
+    assert_equal recovered_cart.id, session[:cart_id]
+    assert_not_equal other_cart_id, session[:cart_id]
+  end
+
   test "resume redirects to cart and leaves the session untouched for an invalid token" do
     get cart_url # establishes a guest cart in the session
     original_cart_id = session[:cart_id]

@@ -209,6 +209,25 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Closes the loop the filtered-payload tests above leave open: although :email
+  # reads "[FILTERED]" in the captured event, the real (typed + downcased) address
+  # must reach the Klaviyo job unredacted. KlaviyoSubscriber resolves it from the
+  # EmailSubscription rather than the filtered payload, and runs inline during the
+  # request. We stub perform_later (the test queue adapter is async, so it does not
+  # populate enqueued_jobs) and assert the Started Checkout call carries the address.
+  test "the typed email reaches the Started Checkout job unfiltered and downcased" do
+    add_item_to_session_cart
+
+    KlaviyoEventJob.expects(:perform_later)
+      .with("track", has_entries(metric: "Started Checkout", email: "mixedcase@example.com"))
+      .once
+    # Other events in the request (Subscribed) also enqueue; allow them.
+    KlaviyoEventJob.stubs(:perform_later)
+      .with("track", Not(has_entry(metric: "Started Checkout")))
+
+    post email_subscriptions_path, params: { email: "MixedCase@Example.com" }
+  end
+
   test "does not emit cart.checkout_initiated when the cart is empty" do
     assert_no_event_reported("cart.checkout_initiated") do
       post email_subscriptions_path, params: { email: "empty-cart@example.com" }
