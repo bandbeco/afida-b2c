@@ -15,6 +15,20 @@ class CartsController < ApplicationController
     )
   end
 
+  # GET /cart/resume?token=...
+  # Restores an abandoned cart from a signed recovery link (e.g. a Klaviyo
+  # abandoned-cart email) by re-binding the visitor's session to it, then shows
+  # the cart. Only guest carts are re-bound: a user-owned cart belongs to an
+  # account and is loaded via Current.user, so we never let a link hijack it.
+  # An invalid/expired/missing token simply falls through to the session's own
+  # cart, so a bad link never errors or leaks another cart.
+  def resume
+    cart = Cart.find_by_recovery_token(params[:token])
+    session[:cart_id] = cart.id if cart&.guest_cart?
+
+    redirect_to cart_path
+  end
+
   def destroy
     @cart.destroy
     redirect_to root_path, notice: "Cart was successfully destroyed."

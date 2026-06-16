@@ -71,6 +71,39 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_match product.category.name, response.body
   end
 
+  # GET /cart/resume?token=... (cross-device abandoned-cart recovery)
+  test "resume re-binds the guest session to the cart in a valid token and redirects to cart" do
+    guest_cart = Cart.create!
+    guest_cart.cart_items.create!(product: products(:single_wall_8oz_white), quantity: 1, price: 10)
+
+    get resume_cart_url(token: guest_cart.signed_recovery_token)
+
+    assert_redirected_to cart_path
+    assert_equal guest_cart.id, session[:cart_id]
+  end
+
+  test "resume redirects to cart and leaves the session untouched for an invalid token" do
+    get cart_url # establishes a guest cart in the session
+    original_cart_id = session[:cart_id]
+
+    get resume_cart_url(token: "not-a-real-token")
+
+    assert_redirected_to cart_path
+    assert_equal original_cart_id, session[:cart_id]
+  end
+
+  test "resume does not bind a user-owned cart into a guest session (no hijack)" do
+    get cart_url
+    original_cart_id = session[:cart_id]
+    user_cart = Cart.create!(user: users(:one))
+
+    get resume_cart_url(token: user_cart.signed_recovery_token)
+
+    assert_redirected_to cart_path
+    assert_equal original_cart_id, session[:cart_id]
+    assert_not_equal user_cart.id, session[:cart_id]
+  end
+
   private
 
   def sign_in_as(user)

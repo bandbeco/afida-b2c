@@ -5,13 +5,17 @@
 # Event → Klaviyo:
 #   email_signup.completed        → "Subscribed" event (+ source)
 #   email_signup.discount_claimed → "Claimed Discount" event
+#   cart.checkout_initiated       → "Started Checkout" event (with cart total as value)
 #   order.placed (normal/mixed)   → profile upsert (is_business, name) + "Placed Order" (with value)
 #   order.placed (sample-only)    → profile upsert + "Requested Sample" (no value, not a purchase)
 #
 # checkout.started is intentionally NOT handled here: it carries no email at the
 # point of emission (the customer enters their email on Stripe's hosted page),
-# so there is no profile to attach. Abandoned-cart capture is a separate flow
-# that triggers only once an email is known.
+# so there is no profile to attach. Abandoned-cart capture rides on
+# cart.checkout_initiated instead, which the discount-signup flow emits once an
+# email IS known. Like order.placed, the cart is reloaded by id; the abandoned-
+# cart delay and suppression ("Placed Order zero times") live in a Klaviyo Flow,
+# so no scheduling or suppression logic lives here.
 #
 # Like DatafastSubscriber, this only enqueues background jobs; it never performs
 # network I/O inline and never raises into the emitting business code.
@@ -25,6 +29,8 @@ class KlaviyoSubscriber
       handle_signup(event[:payload] || {})
     when "email_signup.discount_claimed"
       handle_discount_claimed(event[:payload] || {})
+    when "cart.checkout_initiated"
+      handle_checkout_initiated(event[:payload] || {})
     when "order.placed"
       handle_order_placed(event[:payload] || {})
     end
@@ -47,6 +53,34 @@ class KlaviyoSubscriber
     return if email.blank?
 
     track("Claimed Discount", email, { discount_code: payload[:discount_code] }.compact)
+  end
+
+  # Abandoned-cart trigger. The email is known (the visitor typed it into the
+  # discount-signup form) and Current.cart was populated in the same request, so
+  # the emitter handed us cart_id + email. We reload the cart for its line items
+  # (one query, products eager-loaded) and send Klaviyo a "Started Checkout"
+  # metric with the cart total as value, plus a signed cross-device recovery link.
+  # Klaviyo's Flow owns the delay and the "Placed Order zero times" suppression.
+  def handle_checkout_initiated(payload)
+    email = payload[:email]
+    return if email.blank?
+
+    cart = Cart.find_by(id: payload[:cart_id])
+    return unless cart
+
+    items = cart.cart_items.includes(:product).map do |item|
+      { name: item.product.name, quantity: item.quantity, price: item.price.to_f }
+    end
+    return if items.empty?
+
+    properties = {
+      item_count: cart.items_count,
+      line_items_count: cart.line_items_count,
+      items: items,
+      checkout_url: cart.recovery_url
+    }
+
+    track("Started Checkout", email, properties, value: cart.total_amount.to_f)
   end
 
   def handle_order_placed(payload)

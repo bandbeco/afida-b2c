@@ -130,6 +130,7 @@ Rails.application.routes.draw do
   resources :email_address_verifications, only: [ :show, :create ], param: :token
 
   resource :cart, only: [ :show, :destroy ] do
+    get :resume # GET /cart/resume?token=... — restore an abandoned cart from a recovery link
     resources :cart_items, only: [ :create, :update, :destroy ], path_names: { edit: "" }
   end
 

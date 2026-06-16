@@ -175,7 +175,89 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # =============================================================================
+  # Abandoned-cart trigger (cart.checkout_initiated)
+  # =============================================================================
+
+  # Note: Rails.event runs payloads through config.filter_parameters, and :email
+  # is a filtered key, so the captured email reads "[FILTERED]" here. The email's
+  # fidelity (typed + downcased, used as the Klaviyo profile) is asserted in the
+  # subscriber tests, which receive the raw payload. At this boundary we assert
+  # the event fires for the right cart with the right source.
+  test "emits cart.checkout_initiated on successful signup when the cart has items" do
+    cart = add_item_to_session_cart
+
+    assert_event_reported("cart.checkout_initiated",
+      payload: {
+        cart_id: cart.id,
+        source: "cart_discount"
+      }
+    ) do
+      post email_subscriptions_path, params: { email: "abandon-test@example.com" }
+    end
+  end
+
+  test "cart.checkout_initiated carries an integer cart_id" do
+    add_item_to_session_cart
+
+    assert_event_reported("cart.checkout_initiated",
+      payload: {
+        cart_id: ->(v) { v.is_a?(Integer) }
+      }
+    ) do
+      post email_subscriptions_path, params: { email: "MixedCase@Example.com" }
+    end
+  end
+
+  test "does not emit cart.checkout_initiated when the cart is empty" do
+    assert_no_event_reported("cart.checkout_initiated") do
+      post email_subscriptions_path, params: { email: "empty-cart@example.com" }
+    end
+  end
+
+  test "does not emit cart.checkout_initiated for a sample-only cart" do
+    cart = add_item_to_session_cart
+    cart.cart_items.update_all(is_sample: true, price: 0)
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post email_subscriptions_path, params: { email: "samples-only@example.com" }
+    end
+  end
+
+  test "does not emit cart.checkout_initiated when the email already claimed the discount" do
+    add_item_to_session_cart
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post email_subscriptions_path, params: { email: "claimed@example.com" }
+    end
+  end
+
+  test "does not emit cart.checkout_initiated when the email has previous orders" do
+    add_item_to_session_cart
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post email_subscriptions_path, params: { email: "user1@example.com" }
+    end
+  end
+
+  test "does not emit cart.checkout_initiated for an invalid email" do
+    add_item_to_session_cart
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post email_subscriptions_path, params: { email: "not-an-email" }
+    end
+  end
+
   private
+
+  # Adds a standard product to the guest cart bound to this integration session,
+  # then returns the cart. Subsequent requests in the same test reuse session[:cart_id].
+  def add_item_to_session_cart
+    post cart_cart_items_path, params: {
+      cart_item: { sku: products(:single_wall_8oz_white).sku, quantity: 1 }
+    }
+    CartItem.last.cart
+  end
 
   def sign_in_as(user)
     post session_path, params: {

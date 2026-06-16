@@ -184,6 +184,65 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     end
   end
 
+  # --- cart.checkout_initiated (abandoned-cart trigger) ---
+
+  test "cart.checkout_initiated enqueues a Started Checkout track job with the cart total as value" do
+    cart = carts(:one) # cart_items(:one): product :one, quantity 2, price 10
+
+    @subscriber.emit(build_event("cart.checkout_initiated",
+      payload: { cart_id: cart.id, email: "buyer@cafe.co.uk", source: "cart_discount" }))
+
+    track = enqueued_klaviyo_job("track")
+    assert track, "expected a track job to be enqueued"
+    assert_equal "Started Checkout", track[:metric]
+    assert_equal "buyer@cafe.co.uk", track[:email]
+    assert_in_delta cart.total_amount.to_f, track[:value], 0.001
+  end
+
+  test "cart.checkout_initiated properties carry item_count, line_items_count, items and checkout_url" do
+    cart = carts(:one)
+    item = cart_items(:one)
+
+    @subscriber.emit(build_event("cart.checkout_initiated",
+      payload: { cart_id: cart.id, email: "buyer@cafe.co.uk", source: "cart_discount" }))
+
+    props = enqueued_klaviyo_job("track")[:properties]
+    assert_equal cart.items_count, props[:item_count]
+    assert_equal cart.line_items_count, props[:line_items_count]
+    assert props[:checkout_url].present?, "expected a recovery checkout_url"
+
+    assert_equal 1, props[:items].length
+    line = props[:items].first.symbolize_keys
+    assert_equal item.product.name, line[:name]
+    assert_equal item.quantity, line[:quantity]
+    assert_in_delta item.price.to_f, line[:price], 0.001
+  end
+
+  test "cart.checkout_initiated does not enqueue when email is blank" do
+    cart = carts(:one)
+
+    assert_no_enqueued_jobs do
+      @subscriber.emit(build_event("cart.checkout_initiated",
+        payload: { cart_id: cart.id, email: "", source: "cart_discount" }))
+    end
+  end
+
+  test "cart.checkout_initiated does nothing when the cart cannot be found" do
+    assert_no_enqueued_jobs do
+      @subscriber.emit(build_event("cart.checkout_initiated",
+        payload: { cart_id: 0, email: "buyer@cafe.co.uk" }))
+    end
+  end
+
+  test "cart.checkout_initiated does not enqueue when the cart has no items" do
+    empty = Cart.create!
+
+    assert_no_enqueued_jobs do
+      @subscriber.emit(build_event("cart.checkout_initiated",
+        payload: { cart_id: empty.id, email: "buyer@cafe.co.uk" }))
+    end
+  end
+
   private
 
   def build_event(name, payload: {})

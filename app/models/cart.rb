@@ -116,4 +116,33 @@ class Cart < ApplicationRecord
   def at_sample_limit?
     sample_count >= SAMPLE_LIMIT
   end
+
+  # Signed, expiring token for cross-device cart recovery (abandoned-cart emails).
+  # Mirrors Order#signed_access_token; a distinct purpose ("cart_recovery") means
+  # an order access token can never be replayed as a cart recovery token.
+  def signed_recovery_token
+    to_sgid(expires_in: 30.days, for: "cart_recovery").to_s
+  end
+
+  # Absolute URL that re-binds the recipient's session to this cart (see
+  # CartsController#resume). Built from the Action Mailer host, which is
+  # configured in every environment, so it resolves without a request context
+  # (the abandoned-cart event is processed in a background job).
+  def recovery_url
+    Rails.application.routes.url_helpers.resume_cart_url(token: signed_recovery_token, **url_options)
+  end
+
+  # Resolves a cart from a recovery token, or nil if the token is missing,
+  # malformed, expired, signed for another purpose, or the cart no longer exists.
+  def self.find_by_recovery_token(token)
+    GlobalID::Locator.locate_signed(token, for: "cart_recovery")
+  rescue ActiveRecord::RecordNotFound, ActiveSupport::MessageVerifier::InvalidSignature
+    nil
+  end
+
+  private
+
+  def url_options
+    Rails.application.config.action_mailer.default_url_options || {}
+  end
 end
