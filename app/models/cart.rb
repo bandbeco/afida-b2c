@@ -142,7 +142,10 @@ class Cart < ApplicationRecord
 
   private
 
+  # Action Mailer's host is configured in every environment, so an absent value
+  # means a misconfiguration. Surface that as a failed (retryable) job rather than
+  # silently emailing a hostless, broken recovery link.
   def url_options
-    Rails.application.config.action_mailer.default_url_options || {}
+    Rails.application.config.action_mailer.default_url_options
   end
 end

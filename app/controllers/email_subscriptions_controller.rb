@@ -52,7 +52,7 @@ class EmailSubscriptionsController < ApplicationController
       # the intent, and only for a cart worth recovering. Sample-only carts are
       # excluded (zero value), mirroring how order.placed treats sample requests.
       cart = Current.cart
-      if cart&.cart_items&.any? && !cart.only_samples?
+      if cart && cart.cart_items.any? && !cart.only_samples?
         Rails.event.notify("cart.checkout_initiated",
           cart_id: cart.id,
           email: @email,

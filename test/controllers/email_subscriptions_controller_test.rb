@@ -256,7 +256,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     post cart_cart_items_path, params: {
       cart_item: { sku: products(:single_wall_8oz_white).sku, quantity: 1 }
     }
-    CartItem.last.cart
+    Cart.find(session[:cart_id])
   end
 
   def sign_in_as(user)
