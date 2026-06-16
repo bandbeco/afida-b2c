@@ -26,6 +26,8 @@ class KlaviyoService
   EVENTS_ENDPOINT = "#{BASE_URL}/events"
   PROFILE_ENDPOINT = "#{BASE_URL}/profile-import"
   # Klaviyo pins behaviour to a dated API revision via the Revision header.
+  # Bump deliberately and re-test against the changelog when upgrading:
+  # https://developers.klaviyo.com/en/docs/api_versioning_and_deprecation_policy
   API_REVISION = "2024-10-15"
   TIMEOUT_SECONDS = 5
 
@@ -77,7 +79,8 @@ class KlaviyoService
       log_error("#{context} rejected #{response.status}: #{response.body}")
       false
     end
-  rescue HTTP::Error, HTTP::TimeoutError => e
+  rescue HTTP::Error => e
+    # HTTP::TimeoutError inherits from HTTP::Error, so this covers timeouts too.
     log_error("HTTP error on #{context}: #{e.class} - #{e.message}")
     false
   rescue StandardError => e
@@ -98,7 +101,7 @@ class KlaviyoService
 
   def event_payload(metric, email, properties, value)
     attributes = {
-      properties: properties.presence || {},
+      properties: properties || {},
       metric: {
         data: { type: "metric", attributes: { name: metric } }
       },
@@ -134,7 +137,9 @@ class KlaviyoService
   end
 
   def log_error(message)
-    # info level to ensure visibility in production logs, matching DatafastService.
-    Rails.logger.info("[Klaviyo] FAILED #{message}")
+    # warn level so failures surface to severity-filtered alerting (Better Stack),
+    # which info-level logs would slip past. These are non-fatal: the caller still
+    # returns false and the customer flow is unaffected.
+    Rails.logger.warn("[Klaviyo] FAILED #{message}")
   end
 end

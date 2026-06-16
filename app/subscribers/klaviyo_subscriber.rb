@@ -49,10 +49,16 @@ class KlaviyoSubscriber
   end
 
   def handle_order_placed(payload)
+    # One indexed primary-key lookup in the request thread. The order.placed
+    # payload only carries order_id, and Klaviyo needs the order's attributes
+    # (email, name, b2b/sample flags, total). Cheap and bounded; the network
+    # I/O is deferred to the enqueued job.
     order = Order.find_by(id: payload[:order_id])
     return unless order
 
-    first_name, last_name = split_name(order.shipping_name)
+    # For B2B orders shipping_name is often a company name, so splitting it into
+    # first/last produces nonsense. Leave the name fields blank for businesses.
+    first_name, last_name = order.b2b_order? ? [ nil, nil ] : split_name(order.shipping_name)
 
     KlaviyoEventJob.perform_later(
       "upsert_profile",

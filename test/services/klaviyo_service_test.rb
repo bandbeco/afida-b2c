@@ -138,4 +138,30 @@ class KlaviyoServiceTest < ActiveSupport::TestCase
     assert_not KlaviyoService.upsert_profile(email: "buyer@cafe.co.uk")
     assert_not_requested :post, KlaviyoTestHelper::KLAVIYO_PROFILE_ENDPOINT
   end
+
+  test "upsert_profile returns false on API error response without raising" do
+    stub_request(:post, KlaviyoTestHelper::KLAVIYO_PROFILE_ENDPOINT)
+      .to_return(status: 400, body: { errors: [ { detail: "bad" } ] }.to_json)
+
+    assert_nothing_raised do
+      assert_not KlaviyoService.upsert_profile(email: "buyer@cafe.co.uk")
+    end
+  end
+
+  test "upsert_profile returns false on timeout without raising" do
+    stub_request(:post, KlaviyoTestHelper::KLAVIYO_PROFILE_ENDPOINT).to_timeout
+
+    assert_nothing_raised do
+      assert_not KlaviyoService.upsert_profile(email: "buyer@cafe.co.uk")
+    end
+  end
+
+  test "upsert_profile returns false on network error without raising" do
+    stub_request(:post, KlaviyoTestHelper::KLAVIYO_PROFILE_ENDPOINT)
+      .to_raise(HTTP::ConnectionError.new("Connection refused"))
+
+    assert_nothing_raised do
+      assert_not KlaviyoService.upsert_profile(email: "buyer@cafe.co.uk")
+    end
+  end
 end

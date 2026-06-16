@@ -45,6 +45,15 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     end
   end
 
+  test "email_signup.discount_claimed does not enqueue when email is blank" do
+    event = build_event("email_signup.discount_claimed",
+      payload: { email: "", order_id: 99, discount_code: "WELCOME5" })
+
+    assert_no_enqueued_jobs do
+      @subscriber.emit(event)
+    end
+  end
+
   # --- order.placed ---
 
   test "order.placed enqueues a profile upsert and a Placed Order track job" do
@@ -80,6 +89,18 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     assert upsert, "expected an upsert_profile job to be enqueued"
     assert_equal order.email, upsert[:email]
     assert_equal true, upsert[:properties][:is_business]
+  end
+
+  test "order.placed does not split the shipping name into first/last for B2B orders" do
+    # shipping_name on a B2B order is often a company name, so splitting it into
+    # first/last produces nonsense. Leave both nil for business profiles.
+    order = orders(:acme_order)
+
+    @subscriber.emit(build_event("order.placed", payload: { order_id: order.id }))
+
+    upsert = enqueued_klaviyo_job("upsert_profile")
+    assert_nil upsert[:first_name]
+    assert_nil upsert[:last_name]
   end
 
   test "order.placed track job carries the order value" do
