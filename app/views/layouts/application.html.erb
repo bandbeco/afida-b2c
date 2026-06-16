@@ -12,6 +12,9 @@
       src="https://datafa.st/js/script.js">
     </script>
 
+    <%# Klaviyo onsite (forms + visitor tracking) %>
+    <%= render "layouts/klaviyo" %>
+
     <%# Robots directive: block indexing on staging, opt into large previews and full snippets on production %>
     <% if request.host.include?("staging.afida.com") %>
       <meta name="robots" content="noindex, nofollow">
