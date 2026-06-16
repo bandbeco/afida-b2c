@@ -23,6 +23,10 @@
 # Usage (registered in config/initializers/events.rb):
 #   Rails.event.subscribe(KlaviyoSubscriber.new)
 class KlaviyoSubscriber
+  # Most line items to serialize into a "Started Checkout" payload (see
+  # handle_checkout_initiated).
+  MAX_ITEMS_IN_PAYLOAD = 20
+
   def emit(event)
     case event[:name]
     when "email_signup.completed"
@@ -68,7 +72,12 @@ class KlaviyoSubscriber
     cart = Cart.find_by(id: payload[:cart_id])
     return unless cart
 
-    items = cart.cart_items.includes(:product).map do |item|
+    # Cap the serialized line items: they ride in both the Klaviyo payload and the
+    # persisted Solid Queue job args, and a large B2B cart has many lines. The
+    # email template rarely renders more, and item_count/line_items_count still
+    # carry the true totals.
+    line_items = cart.cart_items.includes(:product).limit(MAX_ITEMS_IN_PAYLOAD)
+    items = line_items.map do |item|
       { name: item.product.name, quantity: item.quantity, price: item.price.to_f }
     end
     return if items.empty?

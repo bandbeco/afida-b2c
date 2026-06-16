@@ -218,6 +218,24 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     assert_in_delta item.price.to_f, line[:price], 0.001
   end
 
+  test "cart.checkout_initiated caps the items array but reports the true line_items_count" do
+    cart = Cart.create!
+    21.times do |i|
+      product = Product.create!(
+        category: categories(:cups), name: "Cap Test #{i}",
+        sku: "CAP-TEST-#{i}", price: 5.00, pac_size: 50, active: true
+      )
+      cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+    end
+
+    @subscriber.emit(build_event("cart.checkout_initiated",
+      payload: { cart_id: cart.id, email: "buyer@cafe.co.uk", source: "cart_discount" }))
+
+    props = enqueued_klaviyo_job("track")[:properties]
+    assert_equal KlaviyoSubscriber::MAX_ITEMS_IN_PAYLOAD, props[:items].length
+    assert_equal 21, props[:line_items_count]
+  end
+
   test "cart.checkout_initiated does not enqueue when email is blank" do
     cart = carts(:one)
 

@@ -125,9 +125,9 @@ class Cart < ApplicationRecord
   end
 
   # Absolute URL that re-binds the recipient's session to this cart (see
-  # CartsController#resume). Built from the Action Mailer host, which is
-  # configured in every environment, so it resolves without a request context
-  # (the abandoned-cart event is processed in a background job).
+  # CartsController#resume). Passes the Action Mailer host explicitly so the URL
+  # resolves whether built in a request or not; the route helper also falls back
+  # to routes.default_url_options if the mailer host is absent.
   def recovery_url
     Rails.application.routes.url_helpers.resume_cart_url(token: signed_recovery_token, **url_options)
   end
@@ -142,9 +142,11 @@ class Cart < ApplicationRecord
 
   private
 
-  # Action Mailer's host is configured in every environment, so an absent value
-  # means a misconfiguration. Surface that as a failed (retryable) job rather than
-  # silently emailing a hostless, broken recovery link.
+  # Action Mailer's host, configured in every environment. recovery_url runs
+  # inline in KlaviyoSubscriber (a synchronous Rails.event subscriber), so a nil
+  # here would propagate into the emitting request; in practice resume_cart_url
+  # falls back to routes.default_url_options (also set in every environment), so
+  # a missing mailer host degrades to that host rather than a hostless URL.
   def url_options
     Rails.application.config.action_mailer.default_url_options
   end
