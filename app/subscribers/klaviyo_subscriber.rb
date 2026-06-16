@@ -30,7 +30,7 @@
 # Usage (registered in config/initializers/events.rb):
 #   Rails.event.subscribe(KlaviyoSubscriber.new)
 class KlaviyoSubscriber
-  # Most line items to serialize into a "Started Checkout" payload (see
+  # Maximum line items to serialize into a "Started Checkout" payload (see
   # handle_checkout_initiated).
   MAX_ITEMS_IN_PAYLOAD = 20
 
