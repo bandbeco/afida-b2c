@@ -3,9 +3,10 @@
 # Subscribes to Rails.event events and routes them to Klaviyo (marketing ESP).
 #
 # Event → Klaviyo:
-#   email_signup.completed        → "Subscribed" event (+ source/eligibility props)
+#   email_signup.completed        → "Subscribed" event (+ source)
 #   email_signup.discount_claimed → "Claimed Discount" event
-#   order.placed                  → profile upsert (is_business, name) + "Placed Order" event
+#   order.placed (normal/mixed)   → profile upsert (is_business, name) + "Placed Order" (with value)
+#   order.placed (sample-only)    → profile upsert + "Requested Sample" (no value, not a purchase)
 #
 # checkout.started is intentionally NOT handled here: it carries no email at the
 # point of emission (the customer enters their email on Stripe's hosted page),
@@ -35,10 +36,10 @@ class KlaviyoSubscriber
     email = payload[:email]
     return if email.blank?
 
-    properties = { source: payload[:source] }
-    properties[:discount_eligible] = payload[:discount_eligible] unless payload[:discount_eligible].nil?
-
-    track("Subscribed", email, properties.compact)
+    # NOTE: payload[:discount_eligible] is deliberately not forwarded. The emitter
+    # always sends it as true (ineligible signups bail out before the event fires),
+    # so it carries no segmentation signal in Klaviyo. source IS meaningful.
+    track("Subscribed", email, { source: payload[:source] }.compact)
   end
 
   def handle_discount_claimed(payload)
@@ -60,6 +61,8 @@ class KlaviyoSubscriber
     # first/last produces nonsense. Leave the name fields blank for businesses.
     first_name, last_name = order.b2b_order? ? [ nil, nil ] : split_name(order.shipping_name)
 
+    sample_request = order.sample_request?
+
     KlaviyoEventJob.perform_later(
       "upsert_profile",
       email: order.email,
@@ -67,18 +70,25 @@ class KlaviyoSubscriber
       last_name: last_name,
       properties: {
         is_business: order.b2b_order?,
-        sample_request: order.sample_request?
+        sample_request: sample_request
       }
     )
 
-    track("Placed Order", order.email,
-      {
-        order_number: order.order_number,
-        item_count: order.items_count,
-        is_business: order.b2b_order?,
-        sample_request: order.sample_request?
-      },
-      value: order.total_amount.to_f)
+    properties = {
+      order_number: order.order_number,
+      item_count: order.items_count,
+      is_business: order.b2b_order?,
+      sample_request: sample_request
+    }
+
+    if sample_request
+      # A sample-only order is a free trial, not a purchase. Use a distinct metric
+      # and omit value so the order total (shipping only) never counts as revenue
+      # in Klaviyo's Placed Order reporting.
+      track("Requested Sample", order.email, properties)
+    else
+      track("Placed Order", order.email, properties, value: order.total_amount.to_f)
+    end
   end
 
   def track(metric, email, properties, value: nil)

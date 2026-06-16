@@ -16,10 +16,22 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     assert_enqueued_with(
       job: KlaviyoEventJob,
       args: [ "track", { metric: "Subscribed", email: "buyer@cafe.co.uk",
-                         properties: { source: "cart_discount", discount_eligible: true } } ]
+                         properties: { source: "cart_discount" } } ]
     ) do
       @subscriber.emit(event)
     end
+  end
+
+  test "email_signup.completed does not forward the always-true discount_eligible flag" do
+    # The emitter always sends discount_eligible: true (ineligible signups bail
+    # out before the event fires), so it carries no segmentation signal in Klaviyo.
+    event = build_event("email_signup.completed",
+      payload: { email: "buyer@cafe.co.uk", source: "cart_discount", discount_eligible: true })
+
+    @subscriber.emit(event)
+
+    track = enqueued_klaviyo_job("track")
+    assert_not_includes track[:properties].keys, :discount_eligible
   end
 
   test "email_signup.completed does not enqueue when email is blank" do
@@ -103,7 +115,7 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     assert_nil upsert[:last_name]
   end
 
-  test "order.placed track job carries the order value" do
+  test "order.placed fires a Placed Order event with value for a normal (non-sample) order" do
     order = orders(:one)
 
     @subscriber.emit(build_event("order.placed", payload: { order_id: order.id }))
@@ -112,6 +124,37 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     assert track, "expected a track job to be enqueued"
     assert_equal "Placed Order", track[:metric]
     assert_equal order.email, track[:email]
+    assert_equal order.total_amount.to_f, track[:value]
+  end
+
+  test "order.placed fires a Requested Sample event (not Placed Order) for a sample-only order" do
+    order = orders(:sample_only_order)
+    assert order.sample_request?, "fixture sanity: sample_only_order must be a sample request"
+
+    @subscriber.emit(build_event("order.placed", payload: { order_id: order.id }))
+
+    track = enqueued_klaviyo_job("track")
+    assert_equal "Requested Sample", track[:metric]
+    assert_equal order.email, track[:email]
+  end
+
+  test "Requested Sample event carries no monetary value so it does not pollute revenue reporting" do
+    order = orders(:sample_only_order)
+
+    @subscriber.emit(build_event("order.placed", payload: { order_id: order.id }))
+
+    track = enqueued_klaviyo_job("track")
+    assert_not_includes track.keys, :value
+  end
+
+  test "order.placed treats a mixed sample+paid order as a Placed Order with value" do
+    order = orders(:mixed_order)
+    assert_not order.sample_request?, "fixture sanity: mixed_order has paid items, not a sample request"
+
+    @subscriber.emit(build_event("order.placed", payload: { order_id: order.id }))
+
+    track = enqueued_klaviyo_job("track")
+    assert_equal "Placed Order", track[:metric]
     assert_equal order.total_amount.to_f, track[:value]
   end
 
