@@ -912,6 +912,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # fired the trigger; suppress the duplicate from checkout.
     Current.stubs(:user).returns(@user)
     post email_subscriptions_path, params: { email: "noorders@example.com" }
+    assert session[:discount_code].present?, "setup: discount code should be in session"
+    # With a code in session, checkout validates the coupon against Stripe; stub it.
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME5"))
     stub_stripe_session_create
 
     assert_no_event_reported("cart.checkout_initiated") do
