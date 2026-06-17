@@ -26,6 +26,9 @@ class CheckoutsController < ApplicationController
       # excluded (zero value), mirroring order.placed's sample handling.
       # The discount_code de-dupe is session-scoped, so a cross-device form-then-
       # checkout can still fire twice; Klaviyo's Flow dedupes the actual send.
+      # Fires before SessionBuilder by design (like checkout.started above): a
+      # later Stripe failure still counts as intent, and the Flow's "Placed Order
+      # zero times" filter suppresses the email if they never complete.
       if Current.user && cart.cart_items.any? && !cart.only_samples? && session[:discount_code].blank?
         Rails.event.notify("cart.checkout_initiated",
           cart_id: cart.id,

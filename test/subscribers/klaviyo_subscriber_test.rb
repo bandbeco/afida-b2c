@@ -282,6 +282,15 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     end
   end
 
+  test "cart.checkout_initiated does not enqueue when neither subscription_id nor user_id is present" do
+    cart = carts(:one)
+
+    assert_no_enqueued_jobs do
+      @subscriber.emit(build_event("cart.checkout_initiated",
+        payload: { cart_id: cart.id, source: "checkout" }))
+    end
+  end
+
   test "cart.checkout_initiated does nothing when the cart cannot be found" do
     subscription = email_subscriptions(:claimed_discount)
 
