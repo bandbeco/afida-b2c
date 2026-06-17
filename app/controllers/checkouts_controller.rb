@@ -24,6 +24,8 @@ class CheckoutsController < ApplicationController
       # is filtered). Skip when a discount code is set: the form already fired the
       # trigger this session, and we don't want a duplicate. Sample-only carts are
       # excluded (zero value), mirroring order.placed's sample handling.
+      # The discount_code de-dupe is session-scoped, so a cross-device form-then-
+      # checkout can still fire twice; Klaviyo's Flow dedupes the actual send.
       if Current.user && cart.cart_items.any? && !cart.only_samples? && session[:discount_code].blank?
         Rails.event.notify("cart.checkout_initiated",
           cart_id: cart.id,

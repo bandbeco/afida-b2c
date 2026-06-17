@@ -932,6 +932,18 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "does not emit cart.checkout_initiated for a logged-in user with an empty cart" do
+    # only_samples? is false for an empty cart, so the explicit cart_items.any?
+    # guard is what blocks this; assert it directly rather than rely on it.
+    Current.stubs(:user).returns(@user)
+    @cart.cart_items.destroy_all
+    stub_stripe_session_create
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post checkout_path
+    end
+  end
+
   test "emits checkout.completed event on successful payment verification" do
     session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
