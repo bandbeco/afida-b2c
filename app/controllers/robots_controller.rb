@@ -1,5 +1,7 @@
 class RobotsController < ApplicationController
   allow_unauthenticated_access
+  # Crawler-only text endpoint: no visitor to attribute, so don't emit a tracking cookie.
+  skip_before_action :ensure_datafast_visitor_id
 
   def show
     respond_to do |format|

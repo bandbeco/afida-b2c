@@ -18,6 +18,12 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Disallow: /admin/"
   end
 
+  test "does not set a datafast_visitor_id tracking cookie" do
+    get "/robots.txt"
+    assert_nil cookies[:datafast_visitor_id],
+      "crawler-only endpoint should not emit a visitor tracking cookie"
+  end
+
   test "robots txt includes explicit AI crawler allow rules" do
     get "/robots.txt"
     assert_includes response.body, "User-agent: GPTBot"
