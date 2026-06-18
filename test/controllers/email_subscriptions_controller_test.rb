@@ -36,7 +36,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
-    assert_equal "WELCOME5", session[:discount_code]
+    assert_equal "WELCOME10", session[:discount_code]
   end
 
   test "successful signup does not store discount code if already present" do
@@ -50,7 +50,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
 
     # Second subscription should be created (email list capture)
     # but session should still have original discount code
-    assert_equal "WELCOME5", session[:discount_code]
+    assert_equal "WELCOME10", session[:discount_code]
   end
 
   # =============================================================================
@@ -66,7 +66,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
       post email_subscriptions_path, params: { email: user.email_address }
     end
 
-    assert_equal "WELCOME5", session[:discount_code]
+    assert_equal "WELCOME10", session[:discount_code]
   end
 
   test "logged-in user submitting email with previous orders gets not eligible response" do
@@ -116,7 +116,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, 'turbo-stream action="replace" target="discount-signup"'
-    assert_equal "WELCOME5", session[:discount_code]
+    assert_equal "WELCOME10", session[:discount_code]
 
     # Verify discount_claimed_at was set on existing record
     subscription.reload

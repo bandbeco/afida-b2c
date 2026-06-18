@@ -21,7 +21,7 @@
 <%# Update discount savings if a discount is active %>
 <% if session[:discount_code].present? && Current.cart.subtotal_amount.positive? %>
   <%= turbo_stream.update "discount_savings" do %>
-    <%= number_to_currency(Current.cart.subtotal_amount * 0.05, unit: "£") %>
+    <%= number_to_currency(welcome_discount_savings(Current.cart), unit: "£") %>
   <% end %>
 <% end %>
 

@@ -1,4 +1,28 @@
 module CartsHelper
+  # Single source of truth for the first-order ("welcome") discount.
+  #
+  # The actual money is taken by a Stripe coupon (see
+  # EmailSubscriptionsController#welcome_discount_code); this percentage only
+  # drives the on-site copy and the "you'll save £X" estimate. Keep the two in
+  # sync: if you change this, point the Stripe coupon at the same percentage.
+  WELCOME_DISCOUNT_PERCENTAGE = 10
+
+  # The discount as a whole number for copy, e.g. "Get 10% off".
+  def welcome_discount_percentage
+    WELCOME_DISCOUNT_PERCENTAGE
+  end
+
+  # The discount as a fraction for arithmetic, e.g. subtotal * 0.10.
+  def welcome_discount_rate
+    WELCOME_DISCOUNT_PERCENTAGE / 100.0
+  end
+
+  # Estimated saving on a cart's subtotal at the welcome rate. The real discount
+  # is computed by Stripe at checkout; this is the indicative figure we show.
+  def welcome_discount_savings(cart)
+    cart.subtotal_amount * welcome_discount_rate
+  end
+
   # Determine if the discount signup form should be shown
   #
   # Returns true if:
