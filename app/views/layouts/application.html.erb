@@ -5,10 +5,15 @@
     <%= render "layouts/google_tag_manager" %>
 
     <%# Datafast Analytics %>
+    <%# data-disable-payments: we attribute payments server-side via Stripe
+        Checkout metadata (datafast_visitor_id). Without this flag, the script
+        would ALSO auto-detect the payment from the ?session_id= success URL,
+        double-counting revenue. Manual window.datafast("payment") still works. %>
     <script
       defer
       data-website-id="dfid_1CWdt0k6kD3HqR911G1Im"
       data-domain="afida.com"
+      data-disable-payments="true"
       src="https://datafa.st/js/script.js">
     </script>
 

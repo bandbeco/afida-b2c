@@ -109,6 +109,16 @@ class DatafastSubscriberTest < ActiveJob::TestCase
     end
   end
 
+  test "logs a warning when a mapped event is dropped for a blank visitor_id" do
+    event = build_event("checkout.completed",
+      payload: { order_id: 1 },
+      context: { datafast_visitor_id: nil })
+
+    Rails.logger.expects(:warn).with(regexp_matches(/datafast/i)).at_least_once
+
+    @subscriber.emit(event)
+  end
+
   test "ignores unmapped events" do
     event = build_event("order.placed",
       payload: { order_id: 1 })

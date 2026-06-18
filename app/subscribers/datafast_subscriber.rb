@@ -31,7 +31,12 @@ class DatafastSubscriber
     return unless goal_name
 
     visitor_id = event.dig(:context, :datafast_visitor_id)
-    return if visitor_id.blank?
+    if visitor_id.blank?
+      # Should not happen now that EventContext guarantees the cookie, but log
+      # instead of dropping silently so a regression can't make us blind again.
+      Rails.logger.warn("[datafast] dropping #{goal_name}: blank visitor_id in event context")
+      return
+    end
 
     metadata = build_metadata(event[:name], event[:payload])
 
