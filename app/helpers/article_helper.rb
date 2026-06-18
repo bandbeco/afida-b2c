@@ -40,6 +40,28 @@ module ArticleHelper
     data.to_json
   end
 
+  # Resolve a blog post's target collection/category slugs into commercial
+  # links for the "Shop our range" CTA.
+  #
+  # Collections are listed first, then categories, each in the slug order the
+  # editor specified. Slugs that don't resolve to a live record are dropped
+  # silently (no broken links). Nested categories use their nested path via
+  # category_browse_path.
+  #
+  # @param blog_post [BlogPost]
+  # @return [Array<Hash>] e.g. [{ name: "Coffee Shop Essentials", path: "/collections/coffee-shop-essentials" }]
+  def blog_post_shop_links(blog_post)
+    collection_links(blog_post.target_collection_slugs) +
+      category_links(blog_post.target_category_slugs)
+  end
+
+  # The free-shipping threshold formatted for display (e.g. "£100"), sourced
+  # from Shipping::FREE_SHIPPING_THRESHOLD so the CTA copy never drifts from
+  # the real (env-overridable) checkout threshold.
+  def free_shipping_threshold_label
+    number_to_currency(Shipping::FREE_SHIPPING_THRESHOLD, unit: "£", precision: 0)
+  end
+
   # Render markdown to HTML using Redcarpet with XSS protection
   def render_markdown(markdown_text)
     return "" if markdown_text.blank?
@@ -74,6 +96,33 @@ module ArticleHelper
   end
 
   private
+
+  # Resolve collection slugs to { name, path } hashes, preserving slug order.
+  def collection_links(slugs)
+    return [] if slugs.blank?
+
+    by_slug = Collection.where(slug: slugs).index_by(&:slug)
+    slugs.filter_map do |slug|
+      collection = by_slug[slug]
+      next unless collection
+
+      { name: collection.name, path: collection_path(collection) }
+    end
+  end
+
+  # Resolve category slugs to { name, path } hashes, preserving slug order.
+  # Uses category_browse_path so nested subcategories get their nested URL.
+  def category_links(slugs)
+    return [] if slugs.blank?
+
+    by_slug = Category.where(slug: slugs).includes(:parent).index_by(&:slug)
+    slugs.filter_map do |slug|
+      category = by_slug[slug]
+      next unless category
+
+      { name: category.name, path: category_browse_path(category) }
+    end
+  end
 
   # Strip dangerous HTML elements AND their contents from text.
   # Used to pre-process markdown before rendering.

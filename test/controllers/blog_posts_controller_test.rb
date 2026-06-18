@@ -260,4 +260,105 @@ class BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "FAQPage"
     assert_includes response.body, "Are PLA cups really compostable?"
   end
+
+  # ==========================================================================
+  # Show Action - Shop CTA (commercial internal links from target slugs)
+  #
+  # Collection/category NAMES leak site-wide via the nav/mega-menu, so these
+  # assertions are scoped to the CTA section ([data-shop-cta]) and check the
+  # actual link href + text inside it, not bare substrings of the page body.
+  # ==========================================================================
+
+  test "show renders a shop CTA section on a legacy markdown post with target slugs" do
+    post = blog_posts(:shop_cta_post)
+    get blog_post_url(post)
+
+    assert_response :success
+    assert_not post.structured?, "fixture must be a legacy (non-structured) post"
+    assert_select "[data-shop-cta]", count: 1
+    assert_select "[data-shop-cta]", text: /Shop our range/
+  end
+
+  test "show shop CTA links to the target collection by its path" do
+    post = blog_posts(:shop_cta_post)
+    collection = collections(:coffee_shop_essentials)
+    get blog_post_url(post)
+
+    assert_response :success
+    assert_select "[data-shop-cta] a[href=?]", collection_path(collection), text: collection.name
+  end
+
+  test "show shop CTA links to a nested subcategory using its nested path" do
+    post = blog_posts(:shop_cta_post)
+    child = categories(:child_hot_cups)
+    get blog_post_url(post)
+
+    assert_response :success
+    # nested categories must use /categories/:parent_slug/:child_slug
+    assert_select "[data-shop-cta] a[href=?]",
+                  category_subcategory_path(child.parent.slug, child.slug),
+                  text: child.name
+  end
+
+  test "show shop CTA links to a top-level category using its flat path" do
+    post = blog_posts(:shop_cta_post)
+    top_level = categories(:cups)
+    get blog_post_url(post)
+
+    assert_response :success
+    assert_nil top_level.parent
+    assert_select "[data-shop-cta] a[href=?]", category_path(top_level)
+  end
+
+  test "show renders no shop CTA when all target slugs are unresolved" do
+    post = blog_posts(:shop_cta_unresolved_post)
+    get blog_post_url(post)
+
+    assert_response :success
+    assert_select "[data-shop-cta]", count: 0
+    assert_not_includes response.body, "does-not-exist"
+  end
+
+  test "show renders no shop CTA when post has no target slugs" do
+    get blog_post_url(@published_post)
+
+    assert_response :success
+    assert_equal [], @published_post.target_collection_slugs
+    assert_equal [], @published_post.target_category_slugs
+    assert_select "[data-shop-cta]", count: 0
+  end
+
+  test "show renders the shop CTA for a structured post too" do
+    structured = blog_posts(:structured_post)
+    structured.update!(target_collection_slugs: [ collections(:vegware).slug ])
+    get blog_post_url(structured)
+
+    assert_response :success
+    assert structured.structured?
+    assert_select "[data-shop-cta] a[href=?]", collection_path(collections(:vegware))
+  end
+
+  test "show shop CTA renders collection and category links together in one section" do
+    post = blog_posts(:shop_cta_post)
+    collection = collections(:coffee_shop_essentials)
+    child = categories(:child_hot_cups)
+    top_level = categories(:cups)
+    get blog_post_url(post)
+
+    assert_response :success
+    # All three resolved targets appear as links inside the single CTA section.
+    assert_select "[data-shop-cta]", count: 1
+    assert_select "[data-shop-cta] a", count: 3
+    assert_select "[data-shop-cta] a[href=?]", collection_path(collection)
+    assert_select "[data-shop-cta] a[href=?]", category_subcategory_path(child.parent.slug, child.slug)
+    assert_select "[data-shop-cta] a[href=?]", category_path(top_level)
+  end
+
+  test "show shop CTA copy reflects the free-shipping threshold" do
+    post = blog_posts(:shop_cta_post)
+    get blog_post_url(post)
+
+    assert_response :success
+    assert_select "[data-shop-cta]", text: /Free UK delivery on orders over £100/
+  end
 end

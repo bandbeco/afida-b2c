@@ -139,3 +139,39 @@ partially_structured_post:
   blog_category: guides
   intro: "Compostable packaging is gaining traction across the UK food service industry."
   conclusion: "Making the switch is easier than you think."
+
+# Legacy markdown post (NOT structured) carrying commercial target slugs.
+# Proves the shop CTA renders on legacy posts, which structured? excludes.
+# References fixtures: collection coffee_shop_essentials; nested category
+# child_hot_cups (parent cups-and-drinks); top-level category cups.
+shop_cta_post:
+  title: "Startup Costs for a Coffee Shop"
+  slug: "startup-costs-for-coffee-shop"
+  body: |
+    # Startup Costs for a Coffee Shop
+
+    Opening a cafe means budgeting for equipment, fit-out, and consumables.
+
+    This guide breaks down the real numbers.
+  excerpt: "What it really costs to open a coffee shop in the UK."
+  published: true
+  published_at: <%= 4.days.ago %>
+  blog_category: guides
+  target_collection_slugs: <%= ["coffee-shop-essentials"].to_json %>
+  target_category_slugs: <%= ["hot-cups", "cups"].to_json %>
+
+# Legacy markdown post with a target slug that does not resolve to any record.
+# Proves unresolved slugs are silently dropped (no broken link, no CTA).
+shop_cta_unresolved_post:
+  title: "A Post With No Real Targets"
+  slug: "post-with-no-real-targets"
+  body: |
+    # No Real Targets
+
+    This post points at slugs that do not exist.
+  excerpt: "Edge case for unresolved target slugs."
+  published: true
+  published_at: <%= 5.days.ago %>
+  blog_category: guides
+  target_collection_slugs: <%= ["does-not-exist-collection"].to_json %>
+  target_category_slugs: <%= ["does-not-exist-category"].to_json %>

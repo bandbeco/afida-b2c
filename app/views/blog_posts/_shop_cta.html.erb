@@ -1,0 +1,18 @@
+<%# Commercial "Shop our range" CTA for a blog post. %>
+<%# Driven by the post's target_collection_slugs / target_category_slugs. %>
+<%# Renders nothing when no slugs resolve to a live collection/category. %>
+<% links = blog_post_shop_links(blog_post) %>
+<% if links.any? %>
+  <section data-shop-cta class="mb-10 rounded-lg bg-gray-50 p-6 md:p-8">
+    <h2 class="text-xl md:text-2xl text-gray-900 mb-2">Shop our range</h2>
+    <p class="text-gray-700 leading-relaxed mb-4">
+      Browse the products covered in this guide. Free UK delivery on orders over <%= free_shipping_threshold_label %>.
+    </p>
+    <div class="flex flex-wrap gap-3">
+      <% links.each do |link| %>
+        <%= link_to link[:name], link[:path],
+              class: "inline-block px-5 py-2.5 text-sm text-gray-900 bg-primary rounded-lg hover:bg-primary-focus transition-colors" %>
+      <% end %>
+    </div>
+  </section>
+<% end %>

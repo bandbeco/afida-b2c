@@ -85,6 +85,11 @@
     </article>
   <% end %>
 
+  <%# Commercial CTA — renders for both structured and legacy posts %>
+  <div class="mt-12">
+    <%= render "blog_posts/shop_cta", blog_post: @blog_post %>
+  </div>
+
   <!-- Article Footer -->
   <footer class="mt-16 pt-8 border-t border-gray-200">
     <div class="flex items-center justify-between">
