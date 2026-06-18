@@ -257,6 +257,40 @@ class KlaviyoSubscriberTest < ActiveJob::TestCase
     end
   end
 
+  # Logged-in users have no EmailSubscription; the trigger fires from
+  # CheckoutsController#create and carries user_id instead, which the subscriber
+  # resolves to User#email_address (the payload email is filtered out, as ever).
+  test "cart.checkout_initiated resolves the email from user_id for a logged-in user" do
+    cart = carts(:one)
+    user = users(:one)
+
+    @subscriber.emit(build_event("cart.checkout_initiated",
+      payload: { cart_id: cart.id, email: "[FILTERED]", user_id: user.id, source: "checkout" }))
+
+    track = enqueued_klaviyo_job("track")
+    assert track, "expected a track job to be enqueued"
+    assert_equal "Started Checkout", track[:metric]
+    assert_equal user.email_address, track[:email]
+  end
+
+  test "cart.checkout_initiated does not enqueue when the user cannot be found" do
+    cart = carts(:one)
+
+    assert_no_enqueued_jobs do
+      @subscriber.emit(build_event("cart.checkout_initiated",
+        payload: { cart_id: cart.id, user_id: 0, source: "checkout" }))
+    end
+  end
+
+  test "cart.checkout_initiated does not enqueue when neither subscription_id nor user_id is present" do
+    cart = carts(:one)
+
+    assert_no_enqueued_jobs do
+      @subscriber.emit(build_event("cart.checkout_initiated",
+        payload: { cart_id: cart.id, source: "checkout" }))
+    end
+  end
+
   test "cart.checkout_initiated does nothing when the cart cannot be found" do
     subscription = email_subscriptions(:claimed_discount)
 

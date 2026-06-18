@@ -17,6 +17,26 @@ class CheckoutsController < ApplicationController
         subtotal: cart.subtotal_amount
       )
 
+      # Abandoned-cart trigger for logged-in users. Guests fire this from the
+      # discount-signup form; logged-in users have no such form moment (repeat
+      # customers never see it), so we fire here where Current.user and the cart
+      # coexist. KlaviyoSubscriber resolves the email from user_id (payload[:email]
+      # is filtered). Skip when a discount code is set: the form already fired the
+      # trigger this session, and we don't want a duplicate. Sample-only carts are
+      # excluded (zero value), mirroring order.placed's sample handling.
+      # The discount_code de-dupe is session-scoped, so a cross-device form-then-
+      # checkout can still fire twice; Klaviyo's Flow dedupes the actual send.
+      # Fires before SessionBuilder by design (like checkout.started above): a
+      # later Stripe failure still counts as intent, and the Flow's "Placed Order
+      # zero times" filter suppresses the email if they never complete.
+      if Current.user && cart.cart_items.any? && !cart.only_samples? && session[:discount_code].blank?
+        Rails.event.notify("cart.checkout_initiated",
+          cart_id: cart.id,
+          user_id: Current.user.id,
+          source: "checkout"
+        )
+      end
+
       builder = Checkout::SessionBuilder.new(
         cart: cart,
         user: Current.user,

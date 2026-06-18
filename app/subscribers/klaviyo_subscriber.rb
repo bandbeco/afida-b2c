@@ -12,17 +12,19 @@
 # checkout.started is intentionally NOT handled here: it carries no email at the
 # point of emission (the customer enters their email on Stripe's hosted page),
 # so there is no profile to attach. Abandoned-cart capture rides on
-# cart.checkout_initiated instead, which the discount-signup flow emits once an
-# email IS known. Like order.placed, the cart is reloaded by id; the abandoned-
-# cart delay and suppression ("Placed Order zero times") live in a Klaviyo Flow,
-# so no scheduling or suppression logic lives here.
+# cart.checkout_initiated instead, emitted once an email IS known: the
+# discount-signup flow emits it for guests (carrying subscription_id), and
+# CheckoutsController emits it for logged-in users (carrying user_id). Like
+# order.placed, the cart is reloaded by id; the abandoned-cart delay and
+# suppression ("Placed Order zero times") live in a Klaviyo Flow, so no
+# scheduling or suppression logic lives here.
 #
 # Email handling: Rails.event filters payload values whose keys match
 # config.filter_parameters (by substring), and :email is one of them, so
 # payload[:email] arrives as "[FILTERED]". Every handler therefore resolves the
-# real address from a record (EmailSubscription via subscription_id, or Order via
-# order_id), never from the payload. The id key avoids the "email" substring so
-# the filter does not redact it too.
+# real address from a record (EmailSubscription via subscription_id, User via
+# user_id, or Order via order_id), never from the payload. The id keys avoid the
+# "email" substring so the filter does not redact them too.
 #
 # Like DatafastSubscriber, this only enqueues background jobs; it never performs
 # network I/O inline and never raises into the emitting business code.
@@ -50,7 +52,7 @@ class KlaviyoSubscriber
   private
 
   def handle_signup(payload)
-    email = subscription_email(payload)
+    email = resolve_email(payload)
     return if email.blank?
 
     # NOTE: payload[:discount_eligible] is deliberately not forwarded. The emitter
@@ -74,7 +76,7 @@ class KlaviyoSubscriber
   # recovery link. Klaviyo's Flow owns the delay and "Placed Order zero times"
   # suppression.
   def handle_checkout_initiated(payload)
-    email = subscription_email(payload)
+    email = resolve_email(payload)
     return if email.blank?
 
     cart = Cart.find_by(id: payload[:cart_id])
@@ -148,14 +150,18 @@ class KlaviyoSubscriber
     KlaviyoEventJob.perform_later("track", **args)
   end
 
-  # Resolves the profile email from the EmailSubscription record rather than the
-  # payload: Rails.event filters :email (it is in config.filter_parameters), so
-  # payload[:email] arrives as "[FILTERED]". Mirrors how handle_order_placed reads
-  # Order#email from order_id instead of trusting the payload. The id key is
-  # "subscription_id" (not "email_subscription_id") because the filter matches by
-  # substring and would otherwise redact any key containing "email" too.
-  def subscription_email(payload)
-    EmailSubscription.find_by(id: payload[:subscription_id])&.email
+  # Resolves the profile email from a record rather than the payload: Rails.event
+  # filters :email (it is in config.filter_parameters), so payload[:email] arrives
+  # as "[FILTERED]". Guests carry subscription_id (the discount-signup flow);
+  # logged-in users carry user_id (the checkout flow). Mirrors how
+  # handle_order_placed reads Order#email from order_id. The id keys avoid the
+  # "email" substring, which the filter matches and would otherwise redact too.
+  def resolve_email(payload)
+    if payload[:subscription_id]
+      EmailSubscription.find_by(id: payload[:subscription_id])&.email
+    elsif payload[:user_id]
+      User.find_by(id: payload[:user_id])&.email_address
+    end
   end
 
   # Klaviyo profiles use separate first/last name fields. shipping_name is a

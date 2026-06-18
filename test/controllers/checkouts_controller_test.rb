@@ -876,6 +876,74 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_response :see_other
   end
 
+  # --- cart.checkout_initiated for logged-in users (abandoned-cart trigger) ---
+  #
+  # Guests fire this from the discount-signup form; logged-in users (whose email
+  # we already know) fire it here, where Current.user and Current.cart coexist.
+  # The payload carries user_id (not the filtered email); KlaviyoSubscriber
+  # resolves User#email_address from it. Klaviyo's Flow owns delay/suppression.
+  test "emits cart.checkout_initiated with user_id for a logged-in user with a paid cart" do
+    Current.stubs(:user).returns(@user)
+    stub_stripe_session_create
+
+    assert_event_reported("cart.checkout_initiated",
+      payload: {
+        cart_id: @cart.id,
+        user_id: @user.id,
+        source: "checkout"
+      }
+    ) do
+      post checkout_path
+    end
+  end
+
+  test "does not emit cart.checkout_initiated for a guest checkout" do
+    # No Current.user stub: a guest reaching checkout has no known email here.
+    Current.stubs(:user).returns(nil)
+    stub_stripe_session_create
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post checkout_path
+    end
+  end
+
+  test "does not emit cart.checkout_initiated when a discount code is already in the session" do
+    # The visitor already signed up via the discount form this session, which
+    # fired the trigger; suppress the duplicate from checkout.
+    Current.stubs(:user).returns(@user)
+    post email_subscriptions_path, params: { email: "noorders@example.com" }
+    assert session[:discount_code].present?, "setup: discount code should be in session"
+    # With a code in session, checkout validates the coupon against Stripe; stub it.
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME5"))
+    stub_stripe_session_create
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post checkout_path
+    end
+  end
+
+  test "does not emit cart.checkout_initiated for a logged-in user with a sample-only cart" do
+    Current.stubs(:user).returns(@user)
+    @cart.cart_items.update_all(is_sample: true, price: 0)
+    stub_stripe_session_create
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post checkout_path
+    end
+  end
+
+  test "does not emit cart.checkout_initiated for a logged-in user with an empty cart" do
+    # only_samples? is false for an empty cart, so the explicit cart_items.any?
+    # guard is what blocks this; assert it directly rather than rely on it.
+    Current.stubs(:user).returns(@user)
+    @cart.cart_items.destroy_all
+    stub_stripe_session_create
+
+    assert_no_event_reported("cart.checkout_initiated") do
+      post checkout_path
+    end
+  end
+
   test "emits checkout.completed event on successful payment verification" do
     session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
