@@ -21,4 +21,10 @@ class SitemapsControllerTest < ActionDispatch::IntegrationTest
     errors = doc.errors
     assert_empty errors, "Sitemap XML has errors: #{errors.map(&:message).join(', ')}"
   end
+
+  test "does not set a datafast_visitor_id tracking cookie" do
+    get sitemap_url(format: :xml)
+    assert_nil cookies[:datafast_visitor_id],
+      "crawler-only endpoint should not emit a visitor tracking cookie"
+  end
 end
