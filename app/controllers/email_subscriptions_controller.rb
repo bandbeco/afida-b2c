@@ -84,7 +84,7 @@ class EmailSubscriptionsController < ApplicationController
   end
 
   def welcome_discount_code
-    Rails.application.credentials.dig(:stripe, :welcome_coupon) || "WELCOME5"
+    Rails.application.credentials.dig(:stripe, :welcome_coupon) || "WELCOME10"
   end
 
   def render_success
