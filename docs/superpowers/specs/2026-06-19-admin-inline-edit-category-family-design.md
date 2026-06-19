@@ -19,8 +19,14 @@ Family inline, with the change saved immediately, on both desktop and mobile.
 
 ### Data model
 - `Product belongs_to :product_family, optional: true` (`app/models/product.rb:29`).
-  FK column `products.product_family_id` is nullable; no presence validation.
+  FK column `products.product_family_id` is nullable; **no presence validation** —
+  family is genuinely optional and may be `nil`.
 - `Product belongs_to :category` (category inline-edit already exists on the index).
+  **Category is required and constrained**: `validates :category, presence: true`
+  (`app/models/product.rb:171`) and `validate :category_must_be_subcategory`
+  (`:172`). A product must always have a category, and it must be a subcategory
+  (not a top-level/parent category). This asymmetry with family drives the design:
+  the Category select offers **no blank option**, the Family select does.
 - `ProductFamily has_many :products, dependent: :nullify`
   (`app/models/product_family.rb:2`). No counter cache. `ProductFamily` has `name`
   and a generated `slug`; `to_param` returns the slug.
@@ -112,8 +118,13 @@ existing `form` controller, wired the 37signals way.
    The selected value persisting is the confirmation.
 6. **Family dropdown: alphabetical + a blank "— None —" option** so a product can be
    un-assigned (valid: FK is optional). Blank persists as `nil`.
-7. **Reuse the existing `form` Stimulus controller**; write no new JS.
-8. **No family-management UI** (no index/create/rename/delete of families). Family
+7. **Category dropdown: NO blank option** (category is required). Parents render as
+   non-selectable `<optgroup>` labels and only subcategories are real options, so the
+   UI cannot produce an invalid (blank or top-level) category. Model validations and
+   the controller's existing `unprocessable_entity` branch remain as a non-UI
+   backstop (e.g. for hand-crafted requests).
+8. **Reuse the existing `form` Stimulus controller**; write no new JS.
+9. **No family-management UI** (no index/create/rename/delete of families). Family
    creation/renaming stays console-managed.
 
 ## Design
@@ -144,16 +155,30 @@ lines 222-224):
 ### Controller (`app/controllers/admin/products_controller.rb`)
 - **`set_product` `only:` list (line 3):** remove `inline_edit_category`; keep
   `update_category`; **add `update_family`**.
-- **Remove** the `inline_edit_category` action (lines 176-180).
-- **Rewrite `update_category`** to re-render the single-state frame partial:
+- **Remove** the `inline_edit_category` GET action (lines 177-180); its only job
+  was to render the edit state of the old toggle, which no longer exists.
+- **Simplify `update_category`** to re-render the single-state frame partial, but
+  KEEP it validation-aware (category is required + subcategory-constrained, so the
+  update can genuinely fail and must surface 422):
   ```ruby
   # PATCH /admin/products/:id/update_category
   def update_category
-    @product.update(category_id: params.dig(:product, :category_id).presence)
-    render partial: "inline_category", locals: { product: @product }
+    if @product.update(category_id: params.dig(:product, :category_id))
+      render partial: "inline_category", locals: { product: @product }
+    else
+      render partial: "inline_category", locals: { product: @product }, status: :unprocessable_entity
+    end
   end
   ```
-- **Add `update_family`**, symmetric:
+  - **No `.presence`** on `category_id`: blanking is not a valid operation for a
+    required field, and the UI never offers a blank option (see Views). If a blank
+    arrives anyway (non-UI request), the model's `presence` validation rejects it and
+    the `else` branch returns 422 with the frame re-rendered showing the still-saved
+    value. This preserves the existing
+    `update_category with invalid category returns unprocessable entity` test
+    (`test/controllers/admin/products_controller_test.rb:192`).
+- **Add `update_family`** — family is optional, so blank means "un-assign" and the
+  update cannot fail validation at this layer:
   ```ruby
   # PATCH /admin/products/:id/update_family
   def update_family
@@ -161,14 +186,10 @@ lines 222-224):
     render partial: "inline_family", locals: { product: @product }
   end
   ```
-- `.presence` maps the blank option to `nil` (un-assign). `params.dig` avoids a
-  `NoMethodError` if `params[:product]` is absent.
-- These actions set a single attribute directly (like the old `update_category`), so
+  - `.presence` maps the blank "— None —" option to `nil` (un-assign).
+- `params.dig` avoids a `NoMethodError` if `params[:product]` is absent.
+- Both actions set a single attribute directly (like the old `update_category`), so
   no `product_params` change is needed.
-- The update cannot fail model validation here (category and family are
-  unconstrained at this layer), so re-rendering the frame is acceptable on both
-  paths; no separate error partial is introduced. (A future `unprocessable_entity`
-  branch can re-render the same partial if validations are added.)
 
 ### Views
 
@@ -186,14 +207,18 @@ lines 222-224):
             },
             product.category_id
           ),
-          { include_blank: "—" },
+          {},
           class: "select select-bordered select-sm",
           data: { action: "change->form#submit" } %>
   <% end %>
 <% end %>
 ```
-This removes the dependency on `@categories` (previously set by `inline_edit_category`);
-options are computed in the partial as the index/edit form already do.
+- **No `include_blank`**: category is required, every product already has one, so the
+  select always has a valid preselected value and offers no empty option. Parents are
+  `<optgroup>` labels (not selectable). Result: the UI cannot submit a blank or a
+  top-level category.
+- Removes the dependency on `@categories` (previously set by `inline_edit_category`);
+  options are computed in the partial as the index/edit form already do.
 
 **2. `app/views/admin/products/_inline_family.html.erb` (new, mirror)**
 ```erb
@@ -233,16 +258,24 @@ options are computed in the partial as the index/edit form already do.
 3. Action updates the one attribute and re-renders that frame's partial → the frame
    swaps in place, select reflecting the saved value. No page reload; other cells
    untouched.
-4. Selecting the blank option saves `nil` (un-assign).
+4. Selecting the Family "— None —" option saves `nil` (un-assign). The Category
+   select has no blank option, so it always submits a valid subcategory id.
 
 ### Error handling
 - `params.dig(:product, <key>)` guards a missing `product` param.
-- Update cannot fail model validation at this layer; the frame re-renders with the
-  persisted value regardless.
-- A since-deleted family/category simply won't be an option; submitting an unknown id
-  would set an FK with no matching record. `belongs_to optional: true` (family) allows
-  this; no category presence/association validation was observed. Options are
-  server-rendered per request, so risk is low. No extra guarding in v1.
+- **Category** is validated (`presence` + subcategory). The UI cannot produce an
+  invalid value (no blank option; parents non-selectable), but `update_category`
+  keeps the `if/else` and returns **422** with the frame re-rendered (showing the
+  still-saved value) for any non-UI request that submits a blank or top-level id.
+  This is a real, reachable branch only outside the dropdown, and it preserves the
+  existing unprocessable-entity test.
+- **Family** is optional, so `update_family` cannot fail this validation; the frame
+  always re-renders with the persisted value. Blank → `nil` (un-assign).
+- A since-deleted family/category simply won't be an option; a hand-crafted request
+  with an unknown id would, for family, set an FK with no matching record
+  (`belongs_to optional: true` allows it) and, for category, be rejected by the
+  presence/subcategory validation. Options are server-rendered per request, so risk
+  is low. No extra guarding in v1.
 
 ## Out of scope (explicitly not building)
 - No `Admin::ProductFamilies` index/create/edit/delete UI. Families stay
@@ -260,34 +293,53 @@ Test-driven, Minitest + fixtures. Existing assets:
 `test/controllers/admin/products_controller_test.rb` (signs in `users(:acme_admin)`
 in `setup`), `test/fixtures/product_families.yml` (families incl. `single_wall_cups`,
 `branded_cups`, `lids`, `straws`), `test/fixtures/products.yml` (products assigned to
-families, e.g. `single_wall_8oz_white` → `single_wall_cups`).
+families, e.g. `single_wall_8oz_white` → `single_wall_cups`),
+`test/fixtures/users.yml` (non-admin fixtures: `users(:consumer)` has `role: nil`,
+`users(:acme_member)` has `role: "member"`; both `admin? == false`).
+`test/fixtures/categories.yml` has subcategories (e.g. `child_hot_cups`) and
+top-level categories (e.g. `parent_cups_and_drinks`).
+
+**Existing tests that MUST be reconciled** (`products_controller_test.rb:173-201`):
+- `test "inline_edit_category returns success and renders select"` (line 173) —
+  **DELETE.** It `get`s `inline_edit_category_admin_product_path`, a route this
+  feature removes; it would otherwise raise on path-helper resolution.
+- `test "update_category updates product category"` (line 180) — **KEEP** (still
+  valid; the happy path still returns success and reassigns). Our new "reassign"
+  test below would duplicate it, so do NOT add a separate one — extend/rename this if
+  needed.
+- `test "update_category with invalid category returns unprocessable entity"`
+  (line 192) — **KEEP.** The validation-aware `update_category` still returns 422 for
+  a top-level category id. This is why `update_category` retains its `if/else`.
 
 Write failing tests first, then implement:
 
 **Controller tests (`products_controller_test.rb`)**
 1. `PATCH update_family` reassigns a product to a different family —
-   `params: { product: { product_family_id: <id> } }`; assert
-   `product.reload.product_family` is the new family; response success; body
-   contains the family frame id / re-rendered select.
+   `params: { product: { product_family_id: product_families(:branded_cups).id } }`;
+   assert `product.reload.product_family` is the new family; response success.
 2. `PATCH update_family` with blank id un-assigns —
    `params: { product: { product_family_id: "" } }`; assert
-   `product.reload.product_family_id` is `nil`.
-3. `PATCH update_category` reassigns category (regression of the rewritten action) —
-   assert `product.reload.category` changed; frame re-rendered.
-4. `PATCH update_category` with blank id — confirm the intended behaviour of the
-   `.presence` change (sets category to `nil`); if category should remain required,
-   adjust this test to assert the desired handling.
-5. **Auth:** `update_family` and `update_category` require admin. The file's `setup`
-   signs in an admin and has no non-admin example; add a test that does not sign in
-   (or signs in a non-admin) and asserts `assert_redirected_to root_path`. Confirm a
-   non-admin fixture exists; if not, create one or test the signed-out case.
+   `product.reload.product_family_id` is `nil`; response success.
+3. (Covered by existing line-180 test — do not duplicate.) Category happy-path
+   reassignment already tested.
+4. (Covered by existing line-192 test — do not duplicate.) Invalid category → 422
+   already tested; it remains green because `update_category` keeps `if/else`.
+5. **Auth:** `update_family` (and, as a regression guard, `update_category`) require
+   admin. Add a test that signs in `users(:consumer)` (non-admin) — or omits sign-in
+   — and asserts `assert_redirected_to root_path` (per
+   `Admin::ApplicationController#require_admin`).
 6. (Optional) Assert the removed `inline_edit_category` route no longer resolves.
 
-**View/integration (optional but recommended)**
+**View/integration (recommended)**
 7. Index renders a Family select and a Category select per product row, each
-   pre-selected to current value, in both desktop and mobile markup. A request test
-   asserting the body contains the two frame ids (`product_<id>_family`,
-   `product_<id>_category`) and the selected option is sufficient.
+   pre-selected to current value, in both desktop and mobile markup. Assert the body
+   contains `select[name='product[product_family_id]']` and
+   `select[name='product[category_id]']`, the two frame ids
+   (`product_<id>_family`, `product_<id>_category`), and the auto-submit wiring
+   (`data-action="change->form#submit"` on the selects, `data-controller="form"` on
+   the forms) so the 37signals wiring in the acceptance criteria is actually covered.
+   Also assert the Category select has **no** blank option and the Family select
+   **does** (`— None —`).
 
 ## Acceptance criteria
 - On the admin products index (desktop table and mobile cards), each product row
@@ -296,8 +348,15 @@ Write failing tests first, then implement:
   and the select reflects it after the Turbo frame re-render.
 - Changing the Family select immediately saves the new family; choosing "— None —"
   removes the product from its family.
-- No Edit/Save/Cancel buttons remain for Category; both controls behave identically.
+- No Edit/Save/Cancel buttons remain for Category; the two controls behave
+  identically except that Category offers no blank option (required) and Family
+  offers "— None —" (optional).
+- The Category select cannot submit a blank or top-level category (no blank option;
+  parents are non-selectable optgroups). The model validations and the
+  `update_category` 422 branch remain as a non-UI backstop.
 - `data-controller="form"` sits on the form and `data-action="change->form#submit"`
   on the select (37signals wiring), reusing the existing `form` controller.
+- The existing `inline_edit_category` GET test is removed; the `update_category`
+  happy-path and unprocessable-entity tests remain green.
 - The product **edit** page is unchanged.
 - No regression to the index search, sorting, toggles, or reorder.
