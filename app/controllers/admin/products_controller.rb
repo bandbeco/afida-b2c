@@ -184,6 +184,8 @@ module Admin
 
     # PATCH /admin/products/:id/update_family
     def update_family
+      # Family is optional and the select only yields a valid family id or blank,
+      # so there's no user-reachable invalid value to branch on (unlike update_category).
       @product.update(product_family_id: params.dig(:product, :product_family_id).presence)
       render partial: "inline_family", locals: { product: @product }
     end
