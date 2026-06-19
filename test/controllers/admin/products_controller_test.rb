@@ -193,6 +193,68 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  # Inline family editing tests
+
+  test "update_family reassigns product to a different family" do
+    product = products(:single_wall_8oz_white)
+    new_family = product_families(:branded_double_wall)
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: new_family.id }
+    }, headers: @headers
+
+    assert_response :success
+    assert_equal new_family.id, product.reload.product_family_id
+  end
+
+  test "update_family with blank id un-assigns the family" do
+    product = products(:single_wall_8oz_white)
+    assert_not_nil product.product_family_id, "fixture should start with a family"
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: "" }
+    }, headers: @headers
+
+    assert_response :success
+    assert_nil product.reload.product_family_id
+  end
+
+  test "update_family renders the family turbo frame" do
+    product = products(:single_wall_8oz_white)
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: product_families(:paper_lids).id }
+    }, headers: @headers
+
+    assert_select "turbo-frame#product_#{product.id}_family"
+    assert_select "select[name='product[product_family_id]']"
+  end
+
+  test "update_family requires admin" do
+    sign_in_as(users(:consumer))
+    product = products(:single_wall_8oz_white)
+    original_family_id = product.product_family_id
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: product_families(:branded_double_wall).id }
+    }, headers: @headers
+
+    assert_redirected_to root_path
+    assert_equal original_family_id, product.reload.product_family_id
+  end
+
+  test "update_category requires admin" do
+    sign_in_as(users(:consumer))
+    original_category_id = @product.category_id
+
+    patch update_category_admin_product_path(@product), params: {
+      product: { category_id: categories(:child_hot_cups).id }
+    }, headers: @headers
+
+    assert_redirected_to root_path
+    assert_equal original_category_id, @product.reload.category_id
+  end
+
   # Inline boolean toggle tests
 
   test "toggle_boolean enables active on product" do
