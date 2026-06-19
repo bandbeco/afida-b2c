@@ -255,6 +255,25 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_equal original_category_id, @product.reload.category_id
   end
 
+  test "index renders inline category and family auto-submit selects" do
+    product = products(:single_wall_8oz_white)
+
+    get admin_products_path, headers: @headers
+    assert_response :success
+
+    # Both selects present, scoped to the product's frames, wired to auto-submit
+    assert_select "turbo-frame#product_#{product.id}_category form[data-controller='form']" do
+      assert_select "select[name='product[category_id]'][data-action='change->form#submit']"
+    end
+    assert_select "turbo-frame#product_#{product.id}_family form[data-controller='form']" do
+      assert_select "select[name='product[product_family_id]'][data-action='change->form#submit']"
+    end
+
+    # Category has NO blank option; Family HAS a blank "— None —" option
+    assert_select "turbo-frame#product_#{product.id}_category select option[value='']", count: 0
+    assert_select "turbo-frame#product_#{product.id}_family select option[value='']", text: "— None —"
+  end
+
   # Inline boolean toggle tests
 
   test "toggle_boolean enables active on product" do
