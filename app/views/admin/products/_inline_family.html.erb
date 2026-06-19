@@ -4,7 +4,7 @@
                 method: :patch,
                 data: { controller: "form", turbo_frame: "product_#{product.id}_family" } do |f| %>
     <%= f.select :product_family_id,
-          options_from_collection_for_select(ProductFamily.order(:name), :id, :name, product.product_family_id),
+          options_for_select(family_options, product.product_family_id),
           { include_blank: "— None —" },
           class: "select select-bordered select-sm w-full",
           data: { action: "change->form#submit" } %>

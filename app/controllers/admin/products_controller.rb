@@ -4,12 +4,12 @@ module Admin
 
     # GET /products
     def index
-      @products = Product.unscoped
+      products = Product.unscoped.includes(:category, :product_family)
 
       # Search
       if params[:search].present?
         search_term = "%#{params[:search]}%"
-        @products = @products.where(
+        products = products.where(
           "name ILIKE :term OR sku ILIKE :term OR colour ILIKE :term OR material ILIKE :term OR size ILIKE :term",
           term: search_term
         )
@@ -19,10 +19,17 @@ module Admin
       sort_column = %w[name sku active featured sample_eligible price pac_size].include?(params[:sort]) ? params[:sort] : "name"
       sort_direction = %w[asc desc].include?(params[:direction]) ? params[:direction] : "asc"
 
-      @products = @products.order("#{sort_column} #{sort_direction}")
+      products = products.order("#{sort_column} #{sort_direction}")
+
+      @pagy, @products = pagy(products)
 
       @sort_column = sort_column
       @sort_direction = sort_direction
+
+      # Page-invariant option lists for the inline Category/Family selects.
+      # Built once here so the row partials don't re-query them per product.
+      @category_options = grouped_category_options
+      @family_options = ProductFamily.order(:name).pluck(:name, :id)
     end
 
     # GET /products/1
@@ -175,10 +182,11 @@ module Admin
 
     # PATCH /admin/products/:id/update_category
     def update_category
+      locals = { product: @product, category_options: grouped_category_options }
       if @product.update(category_id: params.dig(:product, :category_id))
-        render partial: "inline_category", locals: { product: @product }
+        render partial: "inline_category", locals: locals
       else
-        render partial: "inline_category", locals: { product: @product }, status: :unprocessable_entity
+        render partial: "inline_category", locals: locals, status: :unprocessable_entity
       end
     end
 
@@ -187,7 +195,8 @@ module Admin
       # Family is optional and the select only yields a valid family id or blank,
       # so there's no user-reachable invalid value to branch on (unlike update_category).
       @product.update(product_family_id: params.dig(:product, :product_family_id).presence)
-      render partial: "inline_family", locals: { product: @product }
+      render partial: "inline_family",
+             locals: { product: @product, family_options: ProductFamily.order(:name).pluck(:name, :id) }
     end
 
     TOGGLEABLE_FIELDS = %w[active featured sample_eligible].freeze
@@ -241,6 +250,14 @@ module Admin
     # Use callbacks to share common setup or constraints between actions.
     def set_product
       @product = Product.unscoped.find_by!(slug: params.expect(:id))
+    end
+
+    # Grouped options for the inline category select: top-level categories as
+    # optgroups, their subcategories as the selectable options.
+    def grouped_category_options
+      Category.top_level.includes(:children).order(:position).map do |parent|
+        [ parent.name, parent.children.sort_by(&:position).map { |sub| [ sub.name, sub.id ] } ]
+      end
     end
 
     # Only allow a list of trusted parameters through.

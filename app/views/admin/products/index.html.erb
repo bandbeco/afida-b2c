@@ -65,10 +65,10 @@
                 <%= product.generated_title %>
               </td>
               <td>
-                <%= render "inline_category", product: product %>
+                <%= render "inline_category", product: product, category_options: @category_options %>
               </td>
               <td>
-                <%= render "inline_family", product: product %>
+                <%= render "inline_family", product: product, family_options: @family_options %>
               </td>
               <td>
                 <%= number_to_currency(product.price, unit: "£") %>
@@ -119,10 +119,10 @@
                   <span class="text-xs font-medium"><%= number_to_currency(product.price, unit: "£") %></span>
                 </div>
                 <div class="mt-1">
-                  <%= render "inline_category", product: product %>
+                  <%= render "inline_category", product: product, category_options: @category_options %>
                 </div>
                 <div class="mt-1">
-                  <%= render "inline_family", product: product %>
+                  <%= render "inline_family", product: product, family_options: @family_options %>
                 </div>
               </div>
               <div class="flex gap-1 shrink-0">
@@ -167,6 +167,15 @@
     <% if @products.empty? %>
       <div class="text-center py-8 text-base-content/70">
         <p>No products found.</p>
+      </div>
+    <% else %>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+        <p class="text-sm text-base-content/70">
+          Showing <%= @pagy.from %>–<%= @pagy.to %> of <%= @pagy.count %> products
+        </p>
+        <% if @pagy.pages > 1 %>
+          <%== @pagy.series_nav %>
+        <% end %>
       </div>
     <% end %>
   <% end %>

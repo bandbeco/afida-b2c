@@ -13,6 +13,15 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     post session_url, params: { email_address: user.email_address, password: "password" }, headers: @headers
   end
 
+  def count_queries(&block)
+    count = 0
+    counter = ->(*, payload) {
+      count += 1 unless payload[:name] == "SCHEMA" || payload[:sql] =~ /\A\s*(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE|SET )/i
+    }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &block)
+    count
+  end
+
   test "should destroy product_photo attachment" do
     # Attach a product photo
     file = fixture_file_upload("test_image.png", "image/png")
@@ -286,6 +295,30 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
 
     # Active stays.
     assert_select "thead th", text: "Active", count: 1
+  end
+
+  test "index paginates to at most 50 products per page" do
+    assert_operator Product.unscoped.count, :>, 50, "fixtures should exceed one page"
+
+    get admin_products_path, headers: @headers
+    assert_response :success
+
+    # Desktop table renders one <tr> per product in <tbody>; cap is Pagy's limit.
+    assert_select "tbody tr", maximum: 50
+    # A pagination nav is rendered when there is more than one page.
+    assert_select "nav.pagy"
+  end
+
+  test "index renders without a per-row query explosion" do
+    get admin_products_path, headers: @headers # warm caches/eager-load
+
+    # The category-options and family-options lists are page-invariant, so the
+    # whole index must stay flat in query count, not scale with the row count.
+    count = count_queries do
+      get admin_products_path, headers: @headers
+    end
+    assert_operator count, :<, 40,
+      "index issued #{count} SQL queries; expected a flat, row-count-independent total"
   end
 
   # Inline boolean toggle tests
