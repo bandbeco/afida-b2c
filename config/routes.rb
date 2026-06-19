@@ -220,8 +220,8 @@ Rails.application.routes.draw do
         get :order
       end
       member do
-        get :inline_edit_category
         patch :update_category
+        patch :update_family
         patch :toggle_boolean
         patch :move_higher
         patch :move_lower

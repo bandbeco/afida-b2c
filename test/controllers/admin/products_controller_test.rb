@@ -170,13 +170,6 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
 
   # Inline category editing tests
 
-  test "inline_edit_category returns success and renders select" do
-    get inline_edit_category_admin_product_path(@product), headers: @headers
-
-    assert_response :success
-    assert_select "select[name='product[category_id]']"
-  end
-
   test "update_category updates product category" do
     new_category = categories(:child_hot_cups)
 
