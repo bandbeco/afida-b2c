@@ -53,12 +53,8 @@
             <th><%= sort_link("Title", "name") %></th>
             <th>Category</th>
             <th>Family</th>
-            <th><%= sort_link("SKU", "sku") %></th>
             <th><%= sort_link("Price", "price") %></th>
-            <th><%= sort_link("Pack Size", "pac_size") %></th>
             <th><%= sort_link("Active", "active") %></th>
-            <th><%= sort_link("Featured", "featured") %></th>
-            <th><%= sort_link("Samples", "sample_eligible") %></th>
             <th></th>
           </tr>
         </thead>
@@ -75,15 +71,9 @@
                 <%= render "inline_family", product: product %>
               </td>
               <td>
-                <span class="font-mono text-sm"><%= product.sku %></span>
-              </td>
-              <td>
                 <%= number_to_currency(product.price, unit: "£") %>
               </td>
-              <td><%= number_with_delimiter(product.pac_size) %></td>
               <td><%= render "inline_toggle", product: product, field: "active" %></td>
-              <td><%= render "inline_toggle", product: product, field: "featured" %></td>
-              <td><%= render "inline_toggle", product: product, field: "sample_eligible" %></td>
               <td>
                 <div class="flex gap-1">
                   <%# View on storefront %>

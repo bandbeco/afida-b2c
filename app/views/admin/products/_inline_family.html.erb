@@ -6,7 +6,7 @@
     <%= f.select :product_family_id,
           options_from_collection_for_select(ProductFamily.order(:name), :id, :name, product.product_family_id),
           { include_blank: "— None —" },
-          class: "select select-bordered select-sm",
+          class: "select select-bordered select-sm w-full",
           data: { action: "change->form#submit" } %>
   <% end %>
 <% end %>

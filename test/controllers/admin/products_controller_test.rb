@@ -274,6 +274,20 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#product_#{product.id}_family select option[value='']", text: "— None —"
   end
 
+  test "index drops SKU, Pack Size, Featured, and Samples columns from the desktop table" do
+    get admin_products_path, headers: @headers
+    assert_response :success
+
+    # Dropped to make room for the Category/Family selects and reduce clutter.
+    assert_select "thead th", text: "SKU", count: 0
+    assert_select "thead th", text: "Pack Size", count: 0
+    assert_select "thead th", text: "Featured", count: 0
+    assert_select "thead th", text: "Samples", count: 0
+
+    # Active stays.
+    assert_select "thead th", text: "Active", count: 1
+  end
+
   # Inline boolean toggle tests
 
   test "toggle_boolean enables active on product" do
