@@ -1,0 +1,12 @@
+<%= turbo_frame_tag "product_#{product.id}_family" do %>
+  <%= form_with model: [:admin, product],
+                url: update_family_admin_product_path(product),
+                method: :patch,
+                data: { controller: "form", turbo_frame: "product_#{product.id}_family" } do |f| %>
+    <%= f.select :product_family_id,
+          options_for_select(family_options, product.product_family_id),
+          { include_blank: "— None —" },
+          class: "select select-bordered select-sm w-full",
+          data: { action: "change->form#submit" } %>
+  <% end %>
+<% end %>

@@ -52,12 +52,9 @@
           <tr>
             <th><%= sort_link("Title", "name") %></th>
             <th>Category</th>
-            <th><%= sort_link("SKU", "sku") %></th>
+            <th>Family</th>
             <th><%= sort_link("Price", "price") %></th>
-            <th><%= sort_link("Pack Size", "pac_size") %></th>
             <th><%= sort_link("Active", "active") %></th>
-            <th><%= sort_link("Featured", "featured") %></th>
-            <th><%= sort_link("Samples", "sample_eligible") %></th>
             <th></th>
           </tr>
         </thead>
@@ -68,18 +65,15 @@
                 <%= product.generated_title %>
               </td>
               <td>
-                <%= render "inline_category", product: product, editing: false %>
+                <%= render "inline_category", product: product, category_options: @category_options %>
               </td>
               <td>
-                <span class="font-mono text-sm"><%= product.sku %></span>
+                <%= render "inline_family", product: product, family_options: @family_options %>
               </td>
               <td>
                 <%= number_to_currency(product.price, unit: "£") %>
               </td>
-              <td><%= number_with_delimiter(product.pac_size) %></td>
               <td><%= render "inline_toggle", product: product, field: "active" %></td>
-              <td><%= render "inline_toggle", product: product, field: "featured" %></td>
-              <td><%= render "inline_toggle", product: product, field: "sample_eligible" %></td>
               <td>
                 <div class="flex gap-1">
                   <%# View on storefront %>
@@ -125,7 +119,10 @@
                   <span class="text-xs font-medium"><%= number_to_currency(product.price, unit: "£") %></span>
                 </div>
                 <div class="mt-1">
-                  <%= render "inline_category", product: product, editing: false %>
+                  <%= render "inline_category", product: product, category_options: @category_options %>
+                </div>
+                <div class="mt-1">
+                  <%= render "inline_family", product: product, family_options: @family_options %>
                 </div>
               </div>
               <div class="flex gap-1 shrink-0">
@@ -170,6 +167,15 @@
     <% if @products.empty? %>
       <div class="text-center py-8 text-base-content/70">
         <p>No products found.</p>
+      </div>
+    <% else %>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+        <p class="text-sm text-base-content/70">
+          Showing <%= @pagy.from %>–<%= @pagy.to %> of <%= @pagy.count %> products
+        </p>
+        <% if @pagy.pages > 1 %>
+          <%== @pagy.series_nav %>
+        <% end %>
       </div>
     <% end %>
   <% end %>

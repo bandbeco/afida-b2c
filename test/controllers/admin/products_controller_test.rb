@@ -13,6 +13,15 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     post session_url, params: { email_address: user.email_address, password: "password" }, headers: @headers
   end
 
+  def count_queries(&block)
+    count = 0
+    counter = ->(*, payload) {
+      count += 1 unless payload[:name] == "SCHEMA" || payload[:sql] =~ /\A\s*(BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE|SET )/i
+    }
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &block)
+    count
+  end
+
   test "should destroy product_photo attachment" do
     # Attach a product photo
     file = fixture_file_upload("test_image.png", "image/png")
@@ -170,13 +179,6 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
 
   # Inline category editing tests
 
-  test "inline_edit_category returns success and renders select" do
-    get inline_edit_category_admin_product_path(@product), headers: @headers
-
-    assert_response :success
-    assert_select "select[name='product[category_id]']"
-  end
-
   test "update_category updates product category" do
     new_category = categories(:child_hot_cups)
 
@@ -198,6 +200,125 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     }, headers: @headers
 
     assert_response :unprocessable_entity
+  end
+
+  # Inline family editing tests
+
+  test "update_family reassigns product to a different family" do
+    product = products(:single_wall_8oz_white)
+    new_family = product_families(:branded_double_wall)
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: new_family.id }
+    }, headers: @headers
+
+    assert_response :success
+    assert_equal new_family.id, product.reload.product_family_id
+  end
+
+  test "update_family with blank id un-assigns the family" do
+    product = products(:single_wall_8oz_white)
+    assert_not_nil product.product_family_id, "fixture should start with a family"
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: "" }
+    }, headers: @headers
+
+    assert_response :success
+    assert_nil product.reload.product_family_id
+  end
+
+  test "update_family renders the family turbo frame" do
+    product = products(:single_wall_8oz_white)
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: product_families(:paper_lids).id }
+    }, headers: @headers
+
+    assert_select "turbo-frame#product_#{product.id}_family"
+    assert_select "select[name='product[product_family_id]']"
+  end
+
+  test "update_family requires admin" do
+    sign_in_as(users(:consumer))
+    product = products(:single_wall_8oz_white)
+    original_family_id = product.product_family_id
+
+    patch update_family_admin_product_path(product), params: {
+      product: { product_family_id: product_families(:branded_double_wall).id }
+    }, headers: @headers
+
+    assert_redirected_to root_path
+    assert_equal original_family_id, product.reload.product_family_id
+  end
+
+  test "update_category requires admin" do
+    sign_in_as(users(:consumer))
+    original_category_id = @product.category_id
+
+    patch update_category_admin_product_path(@product), params: {
+      product: { category_id: categories(:child_hot_cups).id }
+    }, headers: @headers
+
+    assert_redirected_to root_path
+    assert_equal original_category_id, @product.reload.category_id
+  end
+
+  test "index renders inline category and family auto-submit selects" do
+    product = products(:single_wall_8oz_white)
+
+    get admin_products_path, headers: @headers
+    assert_response :success
+
+    # Both selects present, scoped to the product's frames, wired to auto-submit
+    assert_select "turbo-frame#product_#{product.id}_category form[data-controller='form']" do
+      assert_select "select[name='product[category_id]'][data-action='change->form#submit']"
+    end
+    assert_select "turbo-frame#product_#{product.id}_family form[data-controller='form']" do
+      assert_select "select[name='product[product_family_id]'][data-action='change->form#submit']"
+    end
+
+    # Category has NO blank option; Family HAS a blank "— None —" option
+    assert_select "turbo-frame#product_#{product.id}_category select option[value='']", count: 0
+    assert_select "turbo-frame#product_#{product.id}_family select option[value='']", text: "— None —"
+  end
+
+  test "index drops SKU, Pack Size, Featured, and Samples columns from the desktop table" do
+    get admin_products_path, headers: @headers
+    assert_response :success
+
+    # Dropped to make room for the Category/Family selects and reduce clutter.
+    assert_select "thead th", text: "SKU", count: 0
+    assert_select "thead th", text: "Pack Size", count: 0
+    assert_select "thead th", text: "Featured", count: 0
+    assert_select "thead th", text: "Samples", count: 0
+
+    # Active stays.
+    assert_select "thead th", text: "Active", count: 1
+  end
+
+  test "index paginates to at most 50 products per page" do
+    assert_operator Product.unscoped.count, :>, 50, "fixtures should exceed one page"
+
+    get admin_products_path, headers: @headers
+    assert_response :success
+
+    # Desktop table renders one <tr> per product in <tbody>; cap is Pagy's limit.
+    assert_select "tbody tr", maximum: 50
+    # A pagination nav is rendered when there is more than one page.
+    assert_select "nav.pagy"
+  end
+
+  test "index renders without a per-row query explosion" do
+    get admin_products_path, headers: @headers # warm caches/eager-load
+
+    # The category-options and family-options lists are page-invariant, so the
+    # whole index must stay flat in query count, not scale with the row count.
+    count = count_queries do
+      get admin_products_path, headers: @headers
+    end
+    assert_operator count, :<, 40,
+      "index issued #{count} SQL queries; expected a flat, row-count-independent total"
   end
 
   # Inline boolean toggle tests
