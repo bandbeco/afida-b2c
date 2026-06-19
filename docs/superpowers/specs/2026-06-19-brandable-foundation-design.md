@@ -99,7 +99,7 @@ This seam splits into two distinct kinds of work:
 
 **Interface:** each of Stripe, Datafast, Telegram, BetterStack, Klaviyo, and Outrank reads its credentials from per-instance configuration. When an integration's credentials are absent, it **cleanly no-ops** — no error, no fallback to Afida's accounts.
 
-**Depends on:** nothing.
+**Depends on:** the deploy substrate (§2.0) to resolve which instance's credentials to load.
 
 **Done when:** Afida, with its keys present, behaves exactly as today; a keyless instance boots and functions with all integrations silently disabled.
 
