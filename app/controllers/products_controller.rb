@@ -16,9 +16,6 @@ class ProductsController < ApplicationController
   end
 
   def show
-    # Check if this is for modal display
-    @in_modal = params[:modal] == "true"
-
     @product = Product.active
                       .includes(:category, :product_family,
                                 compatible_lids: [
