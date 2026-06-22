@@ -220,6 +220,9 @@
             { include_blank: "Select a subcategory…" },
             class: "select select-bordered" %>
 
+      <%= form.label :sku, "SKU", class: "label text-base" %>
+      <%= form.text_field :sku, class: "input w-full", placeholder: "e.g. VEG-CUP-DW-12" %>
+
       <%= form.label :supplier_sku, "Supplier SKU", class: "label text-base" %>
       <%= form.text_field :supplier_sku, class: "input w-full", placeholder: "e.g. SUP-12345" %>
 

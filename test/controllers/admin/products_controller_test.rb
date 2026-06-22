@@ -435,4 +435,31 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_select "form"
   end
+
+  # SKU is required (model presence + DB NOT NULL) but nothing generates it, so
+  # the admin form must expose an editable SKU field for products to be creatable.
+  test "new form exposes an editable sku field" do
+    get new_admin_product_path, headers: @headers
+
+    assert_response :success
+    assert_select "input[name='product[sku]']"
+  end
+
+  test "create succeeds when a sku is provided" do
+    subcategory = categories(:child_cold_cups)
+
+    assert_difference -> { Product.unscoped.count }, 1 do
+      post admin_products_path, params: {
+        product: {
+          name: "New Cold Cup",
+          sku: "TEST-NEW-COLD-CUP",
+          price: "9.99",
+          category_id: subcategory.id
+        }
+      }, headers: @headers
+    end
+
+    assert_redirected_to admin_products_path
+    assert_equal "TEST-NEW-COLD-CUP", Product.unscoped.find_by(sku: "TEST-NEW-COLD-CUP").sku
+  end
 end
