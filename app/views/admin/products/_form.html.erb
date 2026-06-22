@@ -63,7 +63,9 @@
       </div>
 
       <div>
-        <%= form.label :name, "Name (required)", class: "label text-base" %>
+        <%= form.label :name, class: "label text-base" do %>
+          Name <span class="text-error required-marker" aria-hidden="true">*</span>
+        <% end %>
         <%= form.text_field :name,
                             class: "input w-full",
                             required: true,
@@ -134,7 +136,9 @@
     <legend class="fieldset-legend text-2xl font-medium">Pricing</legend>
 
     <div class="grid grid-cols-2 gap-y-4 py-4">
-      <%= form.label :price, "Price (£)", class: "label text-base" %>
+      <%= form.label :price, class: "label text-base" do %>
+        Price (£) <span class="text-error required-marker" aria-hidden="true">*</span>
+      <% end %>
       <%= form.number_field :price, class: "input w-full", step: 0.01, min: 0.01, placeholder: "e.g. 29.99" %>
 
       <%= form.label :cost, "Cost (£)", class: "label text-base" %>
@@ -209,7 +213,9 @@
     <legend class="fieldset-legend text-2xl font-medium">Details</legend>
 
     <div class="grid grid-cols-2 gap-y-4 py-4">
-      <%= form.label :category, class: "label text-base" %>
+      <%= form.label :category_id, class: "label text-base" do %>
+        Category <span class="text-error required-marker" aria-hidden="true">*</span>
+      <% end %>
       <%= form.select :category_id,
             grouped_options_for_select(
               Category.top_level.includes(:children).order(:position).map { |parent|
@@ -220,7 +226,9 @@
             { include_blank: "Select a subcategory…" },
             class: "select select-bordered" %>
 
-      <%= form.label :sku, "SKU", class: "label text-base" %>
+      <%= form.label :sku, class: "label text-base" do %>
+        SKU <span class="text-error required-marker" aria-hidden="true">*</span>
+      <% end %>
       <%= form.text_field :sku, class: "input w-full", placeholder: "e.g. VEG-CUP-DW-12" %>
 
       <%= form.label :supplier_sku, "Supplier SKU", class: "label text-base" %>

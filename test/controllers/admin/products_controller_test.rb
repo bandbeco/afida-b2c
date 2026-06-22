@@ -462,4 +462,21 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_products_path
     assert_equal "TEST-NEW-COLD-CUP", Product.unscoped.find_by(sku: "TEST-NEW-COLD-CUP").sku
   end
+
+  test "new form marks required fields and leaves optional fields unmarked" do
+    get new_admin_product_path, headers: @headers
+
+    assert_response :success
+
+    # The unconditionally-required, user-facing fields: name, sku, price, category.
+    # category's label points at the category_id select.
+    %w[product_name product_sku product_price product_category_id].each do |label_for|
+      assert_select "label[for='#{label_for}'] .required-marker", 1,
+                    "expected the #{label_for} label to carry a required marker"
+    end
+
+    # A representative optional field must not be marked.
+    assert_select "label[for='product_supplier_sku'] .required-marker", false,
+                  "supplier_sku is optional and must not be marked required"
+  end
 end
