@@ -218,6 +218,7 @@ Rails.application.routes.draw do
     resources :products do
       collection do
         get :order
+        post :preview_title
       end
       member do
         patch :update_category

@@ -12,7 +12,9 @@
   <% end %>
 
   <%# Title Builder Section - Shows how fields combine into generated_title %>
-  <fieldset class="fieldset mt-8" data-controller="title-preview">
+  <fieldset class="fieldset mt-8"
+            data-controller="title-preview"
+            data-title-preview-url-value="<%= preview_title_admin_products_path %>">
     <legend class="fieldset-legend text-2xl font-medium">Title Builder</legend>
 
     <div class="grid grid-cols-2 gap-4 py-4">
@@ -73,9 +75,35 @@
       </div>
     </div>
 
+    <%# Size-driving dimension fields, mirrored here for convenience. The real,
+        submitting inputs live in Specifications; these carry no name (so they
+        never double-submit) and field-sync keeps the two copies in step. Editing
+        a mirror updates the live preview via title-preview#update. Order matches
+        derived_size's preference: linear (L x W x H), then volume, then weight. %>
+    <div class="grid grid-cols-3 gap-4 pb-4">
+      <% [
+           [ :length_in_mm, "Length (mm)", "e.g. 254" ],
+           [ :width_in_mm, "Width (mm)", "e.g. 90" ],
+           [ :height_in_mm, "Height (mm)", "e.g. 120" ],
+           [ :volume_in_ml, "Volume (ml)", "e.g. 250" ],
+           [ :weight_in_g, "Weight (g)", "e.g. 450" ]
+         ].each do |attr, label_text, placeholder| %>
+        <div>
+          <%= label_tag nil, label_text, class: "label text-base" %>
+          <%= tag.input type: "number", min: 0, value: product.public_send(attr),
+                        class: "input w-full", placeholder: placeholder,
+                        data: {
+                          controller: "field-sync",
+                          field_sync_source_value: "product_#{attr}",
+                          action: "input->field-sync#push input->title-preview#update"
+                        } %>
+        </div>
+      <% end %>
+    </div>
+
     <div class="bg-base-200 border border-base-300 rounded-lg p-4 mt-2">
       <div class="text-sm text-base-content/70 mb-1">Generated Title</div>
-      <div class="text-lg font-medium" data-title-preview-target="preview">
+      <div id="title-preview" class="text-lg font-medium">
         <%= product.generated_title.presence || "Enter product details above" %>
       </div>
     </div>
@@ -142,6 +170,9 @@
 
     <h3 class="text-lg font-medium mt-4 mb-2">Dimensions</h3>
     <div class="grid grid-cols-2 gap-y-4 py-4">
+      <%# These are the real, submitting dimension inputs. The size-driving ones
+          (length/width/height/volume/weight) are also mirrored in the Title
+          Builder section above; field-sync keeps the two copies in step. %>
       <%= form.label :length_in_mm, "Length (mm)", class: "label text-base" %>
       <%= form.number_field :length_in_mm, class: "input w-full", min: 0, placeholder: "e.g. 254" %>
 
