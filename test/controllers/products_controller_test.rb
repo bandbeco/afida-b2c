@@ -271,6 +271,19 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "meta[property='product:price:amount'][content='#{first_tier_price}']"
   end
 
+  test "show renders per-unit price and savings badge on tiered pricing cards" do
+    product = products(:single_wall_8oz_white)
+    assert product.pricing_tiers.present?, "Fixture should have pricing tiers"
+
+    get product_url(product.slug)
+
+    assert_response :success
+    # Per-unit price column appears for each tier
+    assert_match(%r{/unit}, response.body)
+    # Volume tiers show a savings badge versus the first tier
+    assert_match(/save \d+%/, response.body)
+  end
+
   test "show OG price meta tag uses product price for non-tiered products" do
     product = products(:paper_straws)
     assert product.pricing_tiers.blank?, "Fixture should not have pricing tiers"

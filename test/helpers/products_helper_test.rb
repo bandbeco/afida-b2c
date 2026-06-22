@@ -166,4 +166,66 @@ class ProductsHelperTest < ActionView::TestCase
 
     assert_nil result
   end
+
+  # pricing_tier_breakdown tests
+
+  test "pricing_tier_breakdown returns empty array for blank tiers" do
+    assert_equal [], pricing_tier_breakdown(nil)
+    assert_equal [], pricing_tier_breakdown([])
+  end
+
+  test "pricing_tier_breakdown computes per-unit price from price and quantity" do
+    tiers = [
+      { "quantity" => 1_000, "price" => "6.69" },
+      { "quantity" => 10_000, "price" => "19.61" }
+    ]
+
+    result = pricing_tier_breakdown(tiers)
+
+    assert_in_delta 0.00669, result[0][:price_per_unit], 0.000001
+    assert_in_delta 0.001961, result[1][:price_per_unit], 0.000001
+  end
+
+  test "pricing_tier_breakdown sets nil savings for the first (cheapest-per-unit baseline) tier" do
+    tiers = [
+      { "quantity" => 1_000, "price" => "6.69" },
+      { "quantity" => 10_000, "price" => "19.61" }
+    ]
+
+    result = pricing_tier_breakdown(tiers)
+
+    assert_nil result[0][:savings_percent]
+  end
+
+  test "pricing_tier_breakdown computes savings percent relative to first tier per-unit price" do
+    tiers = [
+      { "quantity" => 1_000, "price" => "6.69" },
+      { "quantity" => 10_000, "price" => "19.61" }
+    ]
+
+    result = pricing_tier_breakdown(tiers)
+
+    # base per-unit 0.00669, tier2 per-unit 0.001961 -> ~71% saving
+    assert_equal 71, result[1][:savings_percent]
+  end
+
+  test "pricing_tier_breakdown omits savings when there is no positive saving" do
+    tiers = [
+      { "quantity" => 100, "price" => "10.00" },
+      { "quantity" => 200, "price" => "20.00" } # same per-unit price
+    ]
+
+    result = pricing_tier_breakdown(tiers)
+
+    assert_nil result[1][:savings_percent]
+  end
+
+  test "pricing_tier_breakdown preserves original quantity and price" do
+    tiers = [ { "quantity" => 1_000, "price" => "6.69" } ]
+
+    result = pricing_tier_breakdown(tiers)
+
+    assert_equal 1_000, result[0][:quantity]
+    assert_equal BigDecimal("6.69"), result[0][:price]
+  end
 end

@@ -46,6 +46,43 @@ module ProductsHelper
     end
   end
 
+  # Annotates each pricing tier with its per-unit price and the saving (%)
+  # versus the first tier's per-unit price. Mirrors the branded configurator's
+  # "£X.XXX/unit · save N%" treatment.
+  #
+  # For tiered products, tier["quantity"] is the number of units in the case and
+  # tier["price"] is the price for the whole case, so per-unit = price / quantity.
+  # Savings are measured against the first tier (the entry-level option, which
+  # therefore has no badge). Returns nil savings when there is no positive saving.
+  def pricing_tier_breakdown(tiers)
+    return [] if tiers.blank?
+
+    base_per_unit = nil
+
+    tiers.map.with_index do |tier, index|
+      quantity = tier["quantity"].to_i
+      price = BigDecimal(tier["price"].to_s)
+      per_unit = quantity.positive? ? price / quantity : price
+
+      base_per_unit = per_unit if index.zero?
+
+      savings_percent =
+        if index.zero? || base_per_unit.nil? || base_per_unit.zero?
+          nil
+        else
+          pct = ((base_per_unit - per_unit) / base_per_unit * 100).round
+          pct.positive? ? pct : nil
+        end
+
+      {
+        quantity: quantity,
+        price: price,
+        price_per_unit: per_unit,
+        savings_percent: savings_percent
+      }
+    end
+  end
+
   # Calculate the maximum volume discount percentage for branded products
   # Compares first tier (base price) to last tier within each size, returns the max
   def max_volume_discount_percentage(product)

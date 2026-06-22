@@ -38,11 +38,10 @@ export default class extends Controller {
   }
 
   connect() {
-    // Auto-select the first tier (largest quantity = best value)
-    // Tiers are sorted ascending by quantity, so last = case, first = pack
-    // Select the first one by default (smallest/cheapest option)
+    // Tiers are sorted ascending by quantity, so last = largest case.
+    // Pre-select the largest quantity option (best value) by default.
     if (this.tierCardTargets.length > 0) {
-      this.selectTierCard(this.tierCardTargets[0])
+      this.selectTierCard(this.tierCardTargets[this.tierCardTargets.length - 1])
     }
   }
 

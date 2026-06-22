@@ -176,20 +176,33 @@
             <div class="mt-6">
               <label class="block text-lg font-medium mb-3">Select option</label>
               <div class="flex flex-col gap-3" role="listbox" aria-label="Select pack size">
-                <% @product.pricing_tiers.each do |tier| %>
-                  <div class="border border-gray-200 bg-white rounded-xl px-4 py-3 cursor-pointer hover:border-primary transition grid grid-cols-[1fr_auto] gap-3 items-center"
+                <% pricing_tier_breakdown(@product.pricing_tiers).each do |tier| %>
+                  <div class="border border-gray-200 bg-white rounded-xl px-3 sm:px-4 py-3 cursor-pointer hover:border-primary transition flex items-center gap-2 sm:gap-3"
                        data-pricing-tier-target="tierCard"
-                       data-tier-price="<%= tier["price"] %>"
-                       data-tier-quantity="<%= tier["quantity"] %>"
+                       data-tier-price="<%= tier[:price] %>"
+                       data-tier-quantity="<%= tier[:quantity] %>"
                        data-action="click->pricing-tier#selectTier keydown->pricing-tier#handleCardKeydown"
                        role="option"
                        aria-selected="false"
                        tabindex="0">
-                    <div>
-                      <span class="font-medium"><%= tier["quantity"] >= 100 ? "Case" : "Pack" %> of <%= number_with_delimiter(tier["quantity"]) %></span>
+                    <%# Column 1: Pack / case size %>
+                    <div class="font-medium whitespace-nowrap flex-1 min-w-0">
+                      <%= tier[:quantity] >= 100 ? "Case" : "Pack" %> of <%= number_with_delimiter(tier[:quantity]) %>
                     </div>
-                    <div class="text-right font-medium">
-                      <%= number_to_currency(tier["price"].to_f) %>
+
+                    <%# Column 2: Unit price %>
+                    <div class="text-gray-400 whitespace-nowrap shrink-0">
+                      <%= number_to_currency(tier[:price_per_unit], precision: 3) %>/unit
+                    </div>
+
+                    <%# Column 3: Savings badge %>
+                    <div class="text-success text-sm font-medium whitespace-nowrap shrink-0 <%= "invisible" if tier[:savings_percent].blank? %>">
+                      <% if tier[:savings_percent].present? %>save <%= tier[:savings_percent] %>%<% end %>
+                    </div>
+
+                    <%# Column 4: Total price %>
+                    <div class="font-medium text-right whitespace-nowrap shrink-0">
+                      <%= number_to_currency(tier[:price]) %>
                     </div>
                   </div>
                 <% end %>
