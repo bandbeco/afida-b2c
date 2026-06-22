@@ -227,7 +227,7 @@
       <%= turbo_frame_tag "product_photo_#{form.object.id}" do %>
         <div>
           <%= form.file_field :product_photo, accept: 'image/*', class: "file-input file-input-bordered" %>
-          <% if form.object.product_photo.attached? %>
+          <% if form.object.product_photo.attached? && form.object.product_photo.blob.persisted? %>
             <div class="mt-4 relative inline-block">
               <%= image_tag form.object.product_photo.variant(resize_to_limit: [200, 200]), class: "rounded shadow" %>
               <%= link_to product_photo_admin_product_path(form.object),
@@ -260,7 +260,7 @@
       <%= turbo_frame_tag "lifestyle_photo_#{form.object.id}" do %>
         <div>
           <%= form.file_field :lifestyle_photo, accept: 'image/*', class: "file-input file-input-bordered" %>
-          <% if form.object.lifestyle_photo.attached? %>
+          <% if form.object.lifestyle_photo.attached? && form.object.lifestyle_photo.blob.persisted? %>
             <div class="mt-4 relative inline-block">
               <%= image_tag form.object.lifestyle_photo.variant(resize_to_limit: [200, 200]), class: "rounded shadow" %>
               <%= link_to lifestyle_photo_admin_product_path(form.object),

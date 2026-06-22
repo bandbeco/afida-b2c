@@ -410,4 +410,29 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
   end
+
+  # Regression: a failed create re-renders the form with the uploaded photo still
+  # held in memory on the unsaved Product. The form preview must not try to build a
+  # URL for the in-memory blob (ActiveStorage raises "Cannot get a signed_id for a
+  # new record" on an unpersisted blob), which previously turned the validation
+  # error into a 500.
+  test "create with photo but invalid data re-renders form without raising" do
+    subcategory = categories(:child_cold_cups)
+
+    assert_no_difference -> { Product.unscoped.count } do
+      post admin_products_path, params: {
+        product: {
+          name: "Invalid Product With Photo",
+          # sku is required and left blank, so the save fails and :new is re-rendered
+          sku: "",
+          price: "9.99",
+          category_id: subcategory.id,
+          product_photo: fixture_file_upload("test_image.png", "image/png")
+        }
+      }, headers: @headers
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "form"
+  end
 end
