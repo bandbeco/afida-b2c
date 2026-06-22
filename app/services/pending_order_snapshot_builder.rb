@@ -50,7 +50,7 @@ class PendingOrderSnapshotBuilder
   def self.build_snapshot(available_items, unavailable_items)
     subtotal = available_items.sum { |item| item["line_total"].to_d }
     vat = subtotal * VAT_RATE
-    shipping = subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : (Shipping::STANDARD_COST / 100.0)
+    shipping = subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : Shipping.standard_cost_in_pounds
     total = subtotal + vat + shipping
 
     {

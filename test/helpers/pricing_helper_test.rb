@@ -130,6 +130,16 @@ class PricingHelperTest < ActionView::TestCase
     assert_not_includes result, "/ unit"
   end
 
+  # Tests for delivery_price_display
+
+  test "delivery_price_display renders the standard shipping cost as a GBP string" do
+    assert_equal "£6.99", delivery_price_display
+  end
+
+  test "delivery_price_display derives from Shipping::STANDARD_COST" do
+    assert_equal Shipping.formatted_standard_cost, delivery_price_display
+  end
+
   # Tests for format_quantity_display
   # New model: quantity = packs for standard products, units for branded
 

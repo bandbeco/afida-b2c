@@ -151,8 +151,7 @@ module CollectionsHelper
     return sample_pack.description if sample_pack.description.present?
 
     product_count = products&.size || 5
-    shipping_cost = number_to_currency(Shipping::STANDARD_COST / 100.0)
-    "Request your free #{sample_pack.name} sample pack. #{product_count} curated products delivered for just #{shipping_cost}. Try before you buy with Afida."
+    "Request your free #{sample_pack.name} sample pack. #{product_count} curated products delivered for just #{delivery_price_display}. Try before you buy with Afida."
   end
 
   VEGWARE_FILTER_METAS = {

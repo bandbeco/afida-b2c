@@ -13,6 +13,15 @@ module PricingHelper
     end
   end
 
+  # The standard delivery price, formatted for display (e.g. "£6.99").
+  # Single source of truth: Shipping::STANDARD_COST. Use this everywhere a
+  # delivery price is shown so display text can never drift from the charge.
+  #
+  # @return [String] formatted delivery price, e.g. "£6.99"
+  def delivery_price_display
+    Shipping.formatted_standard_cost
+  end
+
   # Formats quantity display for cart items and order items
   # Pack-priced items: "30 packs (15,000 units)" - quantity IS packs, units = quantity * pac_size
   # Unit-priced items: "5,000 units" - quantity IS units

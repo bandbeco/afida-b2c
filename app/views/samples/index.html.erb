@@ -1,5 +1,5 @@
 <% content_for :title, "Request Free Product Samples | Afida" %>
-<% content_for :meta_description, "Request up to #{sample_limit} free samples of eco-friendly packaging supplies. Try cups, lids, and containers before bulk ordering. UK delivery #{number_to_currency(Shipping::STANDARD_COST / 100.0)}." %>
+<% content_for :meta_description, "Request up to #{sample_limit} free samples of eco-friendly packaging supplies. Try cups, lids, and containers before bulk ordering. UK delivery #{delivery_price_display}." %>
 
 <%= content_for :head do %>
   <script type="application/ld+json">
@@ -12,7 +12,7 @@
           "name": "How do I request samples?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Browse our sample collection, select up to #{sample_limit} products you'd like to try, and proceed to checkout. Samples are completely free - you only pay £7.50 for delivery."
+            "text": "Browse our sample collection, select up to #{sample_limit} products you'd like to try, and proceed to checkout. Samples are completely free - you only pay #{delivery_price_display} for delivery."
           }
         },
         {
@@ -28,7 +28,7 @@
           "name": "Is there a cost for samples?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The samples themselves are completely free. You only need to cover the delivery cost of #{number_to_currency(Shipping::STANDARD_COST / 100.0)}. If you add samples to a regular order, they ship free with your purchase."
+            "text": "The samples themselves are completely free. You only need to cover the delivery cost of #{delivery_price_display}. If you add samples to a regular order, they ship free with your purchase."
           }
         }
       ]
@@ -58,7 +58,7 @@
             <div class="text-6xl mb-3 text-secondary">2</div>
             <h3 class="mb-2">Checkout</h3>
             <p class="text-sm text-base-content/70">
-              Free samples. £7.50 delivery. We're generous, not insane.
+              Free samples. <%= delivery_price_display %> delivery. We're generous, not insane.
             </p>
           </div>
           <div class="text-center">

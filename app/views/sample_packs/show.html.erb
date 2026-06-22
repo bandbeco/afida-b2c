@@ -63,7 +63,7 @@
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
-                <span class="text-sm text-neutral-700">Just <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> delivery</span>
+                <span class="text-sm text-neutral-700">Just <%= delivery_price_display %> delivery</span>
               </div>
               <div class="flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -84,7 +84,7 @@
                   </svg>
                   Order Your Free Samples
                 <% end %>
-                <p class="text-sm text-neutral-500">Samples free, just pay <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> shipping</p>
+                <p class="text-sm text-neutral-500">Samples free, just pay <%= delivery_price_display %> shipping</p>
               </div>
             </div>
 
@@ -180,7 +180,7 @@
             <div class="w-16 h-16 rounded-full bg-secondary/10 text-secondary flex items-center justify-center mx-auto mb-4">
               <span class="text-2xl">2</span>
             </div>
-            <h3 class="mb-2">Pay <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> Delivery</h3>
+            <h3 class="mb-2">Pay <%= delivery_price_display %> Delivery</h3>
             <p class="text-sm text-base-content/70">
               Samples are completely free. You only cover the shipping cost.
             </p>
@@ -209,7 +209,7 @@
       <div class="max-w-2xl mx-auto text-center">
         <h2 class="mb-4">Ready to Try Before You Buy?</h2>
         <p class="text-base-content/70 mb-8">
-          Get your free <%= @sample_pack.name %> samples delivered for just <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %>. No commitment, no pressure.
+          Get your free <%= @sample_pack.name %> samples delivered for just <%= delivery_price_display %>. No commitment, no pressure.
         </p>
 
         <%= button_to request_pack_sample_pack_path(slug: @sample_pack.slug),
@@ -220,7 +220,7 @@
           </svg>
           Order Your Free Samples
         <% end %>
-        <p class="text-sm text-base-content/50 mt-2">Samples free, just pay <%= number_to_currency(Shipping::STANDARD_COST / 100.0) %> shipping</p>
+        <p class="text-sm text-base-content/50 mt-2">Samples free, just pay <%= delivery_price_display %> shipping</p>
       </div>
     </div>
   </section>

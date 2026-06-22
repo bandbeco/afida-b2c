@@ -18,6 +18,17 @@ class Shipping
   # Currency
   CURRENCY = "gbp"
 
+  # Standard shipping cost in pounds, e.g. 6.99. Single conversion point from
+  # the pence-denominated STANDARD_COST so display code never repeats the maths.
+  def self.standard_cost_in_pounds
+    STANDARD_COST / 100.0
+  end
+
+  # Standard shipping cost formatted as a GBP string, e.g. "£6.99".
+  def self.formatted_standard_cost
+    ActiveSupport::NumberHelper.number_to_currency(standard_cost_in_pounds, unit: "£")
+  end
+
   # Get shipping options based on cart subtotal (excluding VAT)
   # - Orders >= £100: Free shipping only
   # - Orders < £100: Standard shipping only

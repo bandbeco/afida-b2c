@@ -9,6 +9,14 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal BigDecimal("100"), Shipping::FREE_SHIPPING_THRESHOLD
   end
 
+  test "standard_cost_in_pounds converts STANDARD_COST pence to pounds" do
+    assert_equal 6.99, Shipping.standard_cost_in_pounds
+  end
+
+  test "formatted_standard_cost renders STANDARD_COST as a GBP string" do
+    assert_equal "£6.99", Shipping.formatted_standard_cost
+  end
+
   test "ALLOWED_COUNTRIES includes only GB" do
     assert_equal %w[GB], Shipping::ALLOWED_COUNTRIES
   end
