@@ -1,6 +1,6 @@
 <% content_for :title, "Delivery & Returns | Afida" %>
 
-<% content_for :meta_description, "Free next working day delivery on orders over £100. Learn about our delivery options, returns policy, and how to arrange a return at Afida." %>
+<% content_for :meta_description, "Free next working day delivery on orders over #{free_shipping_threshold_display}. Learn about our delivery options, returns policy, and how to arrange a return at Afida." %>
 
 <div class="bg-gray-50 min-h-screen">
   <!-- Header -->
@@ -21,7 +21,7 @@
           </svg>
         </div>
         <h3 class="text-gray-900 mb-1">Free Delivery</h3>
-        <p class="text-sm text-gray-600">On orders over £100 (ex. VAT)</p>
+        <p class="text-sm text-gray-600">On orders over <%= free_shipping_threshold_display %> (ex. VAT)</p>
       </div>
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm text-center">
         <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -66,7 +66,7 @@
         <div class="space-y-6">
           <div>
             <h3 class="font-medium text-gray-900 mb-2">Free Next Working Day Delivery</h3>
-            <p class="text-gray-600 text-sm">We provide free next working day delivery for all orders over £100 (excluding VAT). Simply place your order by 2pm, Monday to Friday, to take advantage of next working day delivery.</p>
+            <p class="text-gray-600 text-sm">We provide free next working day delivery for all orders over <%= free_shipping_threshold_display %> (excluding VAT). Simply place your order by 2pm, Monday to Friday, to take advantage of next working day delivery.</p>
             <p class="text-gray-500 text-sm mt-2 italic">Please note that delivery times may be slightly longer during peak periods.</p>
           </div>
 
@@ -83,12 +83,12 @@
                 </thead>
                 <tbody class="text-gray-600">
                   <tr class="border-b border-gray-100">
-                    <td class="py-3 pr-4">Over £100 (ex. VAT)</td>
+                    <td class="py-3 pr-4">Over <%= free_shipping_threshold_display %> (ex. VAT)</td>
                     <td class="py-3 pr-4">Next working day</td>
                     <td class="py-3 font-medium text-primary">Free</td>
                   </tr>
                   <tr>
-                    <td class="py-3 pr-4">Under £100 (ex. VAT)</td>
+                    <td class="py-3 pr-4">Under <%= free_shipping_threshold_display %> (ex. VAT)</td>
                     <td class="py-3 pr-4">Next working day</td>
                     <td class="py-3"><%= delivery_price_display %></td>
                   </tr>

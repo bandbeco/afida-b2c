@@ -1,6 +1,6 @@
 <% content_for :title, "Vegware Compostable Packaging | Plant-Based Cups, Containers & More | Afida" %>
 
-<% content_for :meta_description, "Shop Vegware compostable packaging at Afida. Plant-based cups, containers, cutlery and more. EN 13432 certified. Free delivery over £100. Next-day dispatch before 2pm." %>
+<% content_for :meta_description, "Shop Vegware compostable packaging at Afida. Plant-based cups, containers, cutlery and more. EN 13432 certified. Free delivery over #{free_shipping_threshold_display}. Next-day dispatch before 2pm." %>
 
 <% content_for :og_tags_custom, true %>
 <% content_for :twitter_tags_custom, true %>
@@ -68,7 +68,7 @@
           "name": "Can I get free delivery?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes! Orders over £100 (excl. VAT) qualify for free standard delivery across the UK mainland."
+            "text": "Yes! Orders over #{free_shipping_threshold_display} (excl. VAT) qualify for free standard delivery across the UK mainland."
           }
         },
         {
@@ -147,7 +147,7 @@
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-[#00a86b] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
-                  <span class="text-sm text-neutral-700">Free delivery over £100</span>
+                  <span class="text-sm text-neutral-700">Free delivery over <%= free_shipping_threshold_display %></span>
                 </div>
               </div>
 
@@ -355,7 +355,7 @@
               <input type="radio" name="vegware-faq" />
               <div class="collapse-title text-lg">Can I get free delivery?</div>
               <div class="collapse-content">
-                <p class="text-base-content/70">Yes! Orders over £100 (excl. VAT) qualify for free standard delivery across the UK mainland.</p>
+                <p class="text-base-content/70">Yes! Orders over <%= free_shipping_threshold_display %> (excl. VAT) qualify for free standard delivery across the UK mainland.</p>
               </div>
             </div>
 

@@ -199,7 +199,7 @@ class GoogleMerchantFeedGenerator
     # Extended description
     quality = " Premium quality that your customers will notice - sturdy construction."
     business = " Available in bulk packs for business use with competitive wholesale pricing."
-    shipping = " Free UK shipping on orders over £50."
+    shipping = " Free UK shipping on orders over #{Shipping.formatted_free_shipping_threshold}."
 
     # Combine (ensure first 160 chars have essential info)
     first_part = intro + material_info + eco_info

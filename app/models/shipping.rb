@@ -29,6 +29,12 @@ class Shipping
     ActiveSupport::NumberHelper.number_to_currency(standard_cost_in_pounds, unit: "£")
   end
 
+  # Free-shipping threshold formatted as a whole-pound GBP string, e.g. "£100".
+  # The threshold is always a round figure, so no decimals.
+  def self.formatted_free_shipping_threshold
+    ActiveSupport::NumberHelper.number_to_currency(FREE_SHIPPING_THRESHOLD, unit: "£", precision: 0)
+  end
+
   # Get shipping options based on cart subtotal (excluding VAT)
   # - Orders >= £100: Free shipping only
   # - Orders < £100: Standard shipping only

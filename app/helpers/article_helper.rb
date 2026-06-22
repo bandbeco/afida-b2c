@@ -55,13 +55,6 @@ module ArticleHelper
       category_links(blog_post.target_category_slugs)
   end
 
-  # The free-shipping threshold formatted for display (e.g. "£100"), sourced
-  # from Shipping::FREE_SHIPPING_THRESHOLD so the CTA copy never drifts from
-  # the real (env-overridable) checkout threshold.
-  def free_shipping_threshold_label
-    number_to_currency(Shipping::FREE_SHIPPING_THRESHOLD, unit: "£", precision: 0)
-  end
-
   # Render markdown to HTML using Redcarpet with XSS protection
   def render_markdown(markdown_text)
     return "" if markdown_text.blank?

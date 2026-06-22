@@ -149,23 +149,4 @@ class ArticleHelperTest < ActionView::TestCase
     assert_equal collection.name, links.first[:name]
     assert_equal 2, links.length
   end
-
-  # ==========================================================================
-  # free_shipping_threshold_label - formatted free-shipping threshold
-  # ==========================================================================
-
-  test "free_shipping_threshold_label formats the threshold as whole pounds" do
-    assert_equal "£100", free_shipping_threshold_label
-  end
-
-  test "free_shipping_threshold_label derives from Shipping::FREE_SHIPPING_THRESHOLD" do
-    original = Shipping::FREE_SHIPPING_THRESHOLD
-    Shipping.send(:remove_const, :FREE_SHIPPING_THRESHOLD)
-    Shipping.const_set(:FREE_SHIPPING_THRESHOLD, BigDecimal("150"))
-
-    assert_equal "£150", free_shipping_threshold_label
-  ensure
-    Shipping.send(:remove_const, :FREE_SHIPPING_THRESHOLD)
-    Shipping.const_set(:FREE_SHIPPING_THRESHOLD, original)
-  end
 end

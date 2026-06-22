@@ -42,4 +42,11 @@ module ApplicationHelper
       product_path(product)
     end
   end
+
+  # The free-shipping threshold formatted for display (e.g. "£100"), sourced
+  # from Shipping::FREE_SHIPPING_THRESHOLD so copy never drifts from the real
+  # (env-overridable) checkout threshold.
+  def free_shipping_threshold_display
+    Shipping.formatted_free_shipping_threshold
+  end
 end

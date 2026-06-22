@@ -17,6 +17,10 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal "£6.99", Shipping.formatted_standard_cost
   end
 
+  test "formatted_free_shipping_threshold renders FREE_SHIPPING_THRESHOLD as a whole-pound GBP string" do
+    assert_equal "£100", Shipping.formatted_free_shipping_threshold
+  end
+
   test "ALLOWED_COUNTRIES includes only GB" do
     assert_equal %w[GB], Shipping::ALLOWED_COUNTRIES
   end

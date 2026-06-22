@@ -30,7 +30,7 @@ class PriceListPdf < Prawn::Document
   FONT_BOLD = FONT_DIR.join("Fredoka-Medium.ttf").to_s
 
   # Branding content
-  VALUE_PROPOSITIONS = "Free UK delivery over £100 \u2022 Low MOQs \u2022 48-hour delivery"
+  VALUE_PROPOSITIONS = "Free UK delivery over #{Shipping.formatted_free_shipping_threshold} \u2022 Low MOQs \u2022 48-hour delivery"
   CONTACT_INFO = "afida.com  \u2022  hello@afida.com  \u2022  0203 302 7719"
 
   def initialize(products, filter_description)

@@ -44,7 +44,6 @@ const lazyControllers = {
   "faq-search": () => import("../javascript/controllers/faq_search_controller"),
   "header-search": () => import("../javascript/controllers/header_search_controller"),
   "search-modal": () => import("../javascript/controllers/search_modal_controller"),
-  "addon": () => import("../javascript/controllers/addon_controller"),
   "nested-form": () => import("../javascript/controllers/nested_form_controller"),
   "character-counter": () => import("../javascript/controllers/character_counter_controller"),
   "quick-add-modal": () => import("../javascript/controllers/quick_add_modal_controller"),

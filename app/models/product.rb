@@ -290,9 +290,9 @@ class Product < ApplicationRecord
   # the meta never starts with "Case of …".
   def generated_meta_description
     delivery_fragment = if pac_size.present? && pac_size.to_i > 0
-      "Case of #{pac_size}, free UK delivery over £100."
+      "Case of #{pac_size}, free UK delivery over #{Shipping.formatted_free_shipping_threshold}."
     else
-      "Free UK delivery over £100."
+      "Free UK delivery over #{Shipping.formatted_free_shipping_threshold}."
     end
 
     fitted = fitted_description_short(delivery_fragment)
