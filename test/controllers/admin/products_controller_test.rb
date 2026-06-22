@@ -366,4 +366,48 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
   end
+
+  # Title preview tests — the preview must be server-rendered from
+  # Product#generated_title so it can never drift from the persisted title.
+
+  test "preview_title renders the generated title from submitted form values" do
+    post preview_title_admin_products_path, params: {
+      product: { brand: "Vegware", colour: "White", material: "Paper", name: "Coffee Cups", size: "12oz" }
+    }, headers: @headers.merge("Accept" => "text/vnd.turbo-stream.html")
+
+    assert_response :success
+    assert_select "turbo-stream[action=update][target=title-preview]" do
+      assert_select "template", text: /Vegware White Paper Coffee Cups - 12oz/
+    end
+  end
+
+  test "preview_title derives the size token from dimensions when size is blank" do
+    post preview_title_admin_products_path, params: {
+      product: { name: "Flexy Pint Glasses to Brim", length_in_mm: 200, width_in_mm: 300 }
+    }, headers: @headers.merge("Accept" => "text/vnd.turbo-stream.html")
+
+    assert_response :success
+    assert_select "turbo-stream[action=update][target=title-preview] template",
+                  text: /Flexy Pint Glasses to Brim - 200 x 300mm/
+  end
+
+  test "preview_title falls back to placeholder when no details are present" do
+    post preview_title_admin_products_path, params: {
+      product: { name: "" }
+    }, headers: @headers.merge("Accept" => "text/vnd.turbo-stream.html")
+
+    assert_response :success
+    assert_select "turbo-stream[action=update][target=title-preview] template",
+                  text: /Enter product details above/
+  end
+
+  test "preview_title requires admin" do
+    sign_in_as(users(:consumer))
+
+    post preview_title_admin_products_path, params: {
+      product: { name: "Sneaky" }
+    }, headers: @headers.merge("Accept" => "text/vnd.turbo-stream.html")
+
+    assert_redirected_to root_path
+  end
 end

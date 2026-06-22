@@ -1,31 +1,58 @@
 import { Controller } from "@hotwired/stimulus"
 
+// Live preview for the admin Title Builder. Posts the current form values to
+// Admin::ProductsController#preview_title, which renders Product#generated_title
+// and Turbo-Streams it into the preview target. The server is the single source
+// of truth, so the preview can never drift from the persisted title (it also
+// gets derived_size from the dimension fields for free).
 export default class extends Controller {
-  static targets = ["brand", "size", "colour", "material", "name", "preview"]
+  static values = { url: String }
+
+  // Fields the preview endpoint reads (mirrors preview_params on the server):
+  // the title fields plus the dimension columns derived_size falls back to.
+  static FIELDS = [
+    "product[brand]",
+    "product[size]",
+    "product[colour]",
+    "product[material]",
+    "product[name]",
+    "product[length_in_mm]",
+    "product[width_in_mm]",
+    "product[height_in_mm]",
+    "product[weight_in_g]",
+    "product[volume_in_ml]"
+  ]
 
   connect() {
     this.update()
   }
 
   update() {
-    const parts = [
-      this.brandTarget.value.trim(),
-      this.sizeTarget.value.trim(),
-      this.colourTarget.value.trim(),
-      this.materialTarget.value.trim(),
-      this.nameTarget.value.trim()
-    ].filter(Boolean)
+    clearTimeout(this.timeout)
+    this.timeout = setTimeout(() => this.fetchPreview(), 250)
+  }
 
-    // Deduplicate case-insensitively (mirrors Ruby's uniq(&:downcase))
-    const seen = new Set()
-    const unique = parts.filter(part => {
-      const lower = part.toLowerCase()
-      if (seen.has(lower)) return false
-      seen.add(lower)
-      return true
+  async fetchPreview() {
+    const form = this.element.closest("form")
+    if (!form) return
+
+    const body = new URLSearchParams()
+    for (const name of this.constructor.FIELDS) {
+      const field = form.elements[name]
+      if (field) body.append(name, field.value)
+    }
+
+    const response = await fetch(this.urlValue, {
+      method: "POST",
+      headers: {
+        Accept: "text/vnd.turbo-stream.html",
+        "X-CSRF-Token": document.querySelector("meta[name='csrf-token']")?.content
+      },
+      body
     })
 
-    const title = unique.join(" ")
-    this.previewTarget.textContent = title || "Enter product details above"
+    if (response.ok) {
+      Turbo.renderStreamMessage(await response.text())
+    }
   }
 }

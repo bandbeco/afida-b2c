@@ -180,6 +180,15 @@ module Admin
       end
     end
 
+    # POST /admin/products/preview_title
+    # Live preview for the Title Builder. Renders Product#generated_title from
+    # the submitted form values so the preview can never drift from the title
+    # that will actually be persisted (single source of truth in the model).
+    def preview_title
+      @generated_title = Product.new(preview_params).generated_title
+      render :preview_title
+    end
+
     # PATCH /admin/products/:id/update_category
     def update_category
       locals = { product: @product, category_options: grouped_category_options }
@@ -250,6 +259,16 @@ module Admin
     # Use callbacks to share common setup or constraints between actions.
     def set_product
       @product = Product.unscoped.find_by!(slug: params.expect(:id))
+    end
+
+    # Subset of product_params used to build a transient Product for the title
+    # preview: the fields generated_title reads, plus the dimension columns that
+    # derived_size falls back to when free-text size is blank.
+    def preview_params
+      params.fetch(:product, {}).permit(
+        :brand, :size, :colour, :material, :name,
+        :length_in_mm, :width_in_mm, :height_in_mm, :weight_in_g, :volume_in_ml
+      )
     end
 
     # Grouped options for the inline category select: top-level categories as

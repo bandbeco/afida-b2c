@@ -59,6 +59,7 @@ const lazyControllers = {
   "save-address-prompt": () => import("../javascript/controllers/save_address_prompt_controller"),
   "order-summary-toggle": () => import("../javascript/controllers/order_summary_toggle_controller"),
   "title-preview": () => import("../javascript/controllers/title_preview_controller"),
+  "field-sync": () => import("../javascript/controllers/field_sync_controller"),
   "delivery-countdown": () => import("../javascript/controllers/delivery_countdown_controller"),
   "discount-signup": () => import("../javascript/controllers/discount_signup_controller"),
   "mobile-menu": () => import("../javascript/controllers/mobile_menu_controller"),
