@@ -68,7 +68,7 @@
     <h2 class="text-lg mb-4">Items in Scheduled Reorder</h2>
 
     <div class="divide-y divide-base-200">
-      <% @schedule.reorder_schedule_items.includes(:product).each do |item| %>
+      <% @schedule.reorder_schedule_items.each do |item| %>
         <div class="py-4 flex justify-between items-center">
           <div class="flex items-center gap-4">
             <% if item.product&.primary_photo&.attached? %>

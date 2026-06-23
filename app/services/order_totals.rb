@@ -64,13 +64,15 @@ class OrderTotals
   end
 
   def result
-    vat = self.vat
-    shipping = self.shipping
+    # Compute each component once; total reuses both, so locals avoid recomputing
+    # vat and shipping a second time.
+    vat_amount = vat
+    shipping_amount = shipping
     Result.new(
       subtotal: @subtotal,
-      vat: vat,
-      shipping: shipping,
-      total: @subtotal + vat + (shipping || 0)
+      vat: vat_amount,
+      shipping: shipping_amount,
+      total: @subtotal + vat_amount + (shipping_amount || 0)
     )
   end
 
@@ -84,7 +86,7 @@ class OrderTotals
   def shipping
     return nil if @shipping_stance == :deferred
 
-    @subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? BigDecimal(0) : standard_cost
+    @subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? BigDecimal("0") : standard_cost
   end
 
   def standard_cost

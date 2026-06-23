@@ -52,7 +52,11 @@ class PendingOrderSnapshotBuilder
   # — a frozen snapshot has its shipping fixed at order time.
   def self.build_snapshot(available_items, unavailable_items)
     subtotal = available_items.sum { |item| item["line_total"].to_d }
-    totals = OrderTotals.for(subtotal, shipping: :charged)
+    # .rounded so the persisted total is the sum of the 2dp components, not a
+    # rounded sum of full-precision ones. Identical output for penny-precise
+    # subtotals under 20% VAT, but makes the consistency explicit rather than
+    # incidental to the current rate.
+    totals = OrderTotals.for(subtotal, shipping: :charged).rounded
 
     {
       "items" => available_items,

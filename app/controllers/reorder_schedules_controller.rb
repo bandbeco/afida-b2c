@@ -153,7 +153,11 @@ class ReorderSchedulesController < ApplicationController
   end
 
   def set_schedule
-    @schedule = Current.user.reorder_schedules.find(params[:id])
+    # Eager-load items (and their products) so the show page can both list them
+    # and compute totals (reorder_schedule_totals) without a second query.
+    @schedule = Current.user.reorder_schedules
+                            .includes(reorder_schedule_items: :product)
+                            .find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to reorder_schedules_path, alert: "Schedule not found"
   end

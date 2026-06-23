@@ -98,6 +98,17 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal expected_total, snapshot["total"]
   end
 
+  test "persisted total equals the sum of the persisted subtotal, vat and shipping" do
+    # The snapshot freezes money as 2dp strings via OrderTotals#rounded, so the
+    # stored total must reconcile with the stored parts rather than being a rounded
+    # sum of full-precision figures. Guards the consistency the rate currently
+    # makes incidental.
+    snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
+
+    parts = snapshot["subtotal"].to_d + snapshot["vat"].to_d + snapshot["shipping"].to_d
+    assert_equal snapshot["total"].to_d, parts
+  end
+
   test "build marks inactive variant as unavailable" do
     @product.update!(active: false)
 
