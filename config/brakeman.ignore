@@ -15,8 +15,12 @@
     {
       "fingerprint": "83b4ea229edd36788f3905d90a67f8f46a65ca3d5f7cfb7f23ef6a2fc756b7a4",
       "note": "False positive: JSON-LD structured data output via .to_json inside script tag (blog_categories/show)"
+    },
+    {
+      "fingerprint": "a7e078c119a010d362c0dfa64a5c4c27e79304b4bad8baf90216c21144b7546b",
+      "note": "False positive: JSON-LD structured data output via .to_json inside script tag (branded_products/show); to_json escapes </script> via escape_html_entities_in_json, verified by branded_products_controller_test"
     }
   ],
-  "updated": "2026-04-10",
+  "updated": "2026-06-23",
   "brakeman_version": "8.0.4"
 }
