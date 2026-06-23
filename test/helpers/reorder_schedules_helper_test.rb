@@ -61,4 +61,22 @@ class ReorderSchedulesHelperTest < ActionView::TestCase
     assert_includes result, "·"
     assert_match(/\d+ items? · £/, result)
   end
+
+  # reorder_schedule_totals: the schedule preview's order totals, computed through
+  # OrderTotals (:deferred) so the VAT/total formula matches the cart instead of
+  # the view hardcoding `subtotal * 0.2`.
+
+  test "reorder_schedule_totals sums schedule items into a deferred subtotal" do
+    schedule = reorder_schedules(:active_monthly)
+    schedule.reorder_schedule_items.destroy_all
+    schedule.reorder_schedule_items.create!(product: products(:one), price: 50.00, quantity: 2)
+    schedule.reload
+
+    totals = reorder_schedule_totals(schedule)
+
+    assert_equal BigDecimal("100.00"), totals.subtotal
+    assert_equal BigDecimal("20.00"), totals.vat
+    assert_nil totals.shipping # deferred — shipping shown as "calculated at checkout"
+    assert_equal BigDecimal("120.00"), totals.total
+  end
 end

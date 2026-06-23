@@ -46,19 +46,20 @@ class PendingOrderSnapshotBuilder
     build_snapshot(available_items, [])
   end
 
-  # Shared logic for building the final snapshot hash
+  # Shared logic for building the final snapshot hash. The order-totals formula
+  # (VAT + free-shipping rule) lives in OrderTotals; this builder owns summing the
+  # snapshot lines into a subtotal and freezing the money as 2dp strings. :charged
+  # — a frozen snapshot has its shipping fixed at order time.
   def self.build_snapshot(available_items, unavailable_items)
     subtotal = available_items.sum { |item| item["line_total"].to_d }
-    vat = subtotal * VAT_RATE
-    shipping = subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? 0 : Shipping.standard_cost_in_pounds
-    total = subtotal + vat + shipping
+    totals = OrderTotals.for(subtotal, shipping: :charged)
 
     {
       "items" => available_items,
-      "subtotal" => format_amount(subtotal),
-      "vat" => format_amount(vat),
-      "shipping" => format_amount(shipping),
-      "total" => format_amount(total),
+      "subtotal" => format_amount(totals.subtotal),
+      "vat" => format_amount(totals.vat),
+      "shipping" => format_amount(totals.shipping),
+      "total" => format_amount(totals.total),
       "unavailable_items" => unavailable_items
     }
   end

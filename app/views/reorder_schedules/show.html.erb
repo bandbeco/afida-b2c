@@ -96,18 +96,16 @@
       <% end %>
     </div>
 
-    <%# Order totals %>
-    <% subtotal = @schedule.reorder_schedule_items.sum { |i| i.price * i.quantity } %>
-    <% vat = subtotal * 0.2 %>
-    <% total = subtotal + vat %>
+    <%# Order totals (VAT/total via OrderTotals; shipping deferred to checkout) %>
+    <% totals = reorder_schedule_totals(@schedule) %>
     <div class="border-t border-base-200 mt-4 pt-4 space-y-2">
       <div class="flex justify-between text-sm">
         <span class="text-base-content/70">Subtotal</span>
-        <span><%= number_to_currency(subtotal, unit: '£') %></span>
+        <span><%= number_to_currency(totals.subtotal, unit: '£') %></span>
       </div>
       <div class="flex justify-between text-sm">
         <span class="text-base-content/70">VAT (20%)</span>
-        <span><%= number_to_currency(vat, unit: '£') %></span>
+        <span><%= number_to_currency(totals.vat, unit: '£') %></span>
       </div>
       <div class="flex justify-between text-sm">
         <span class="text-base-content/70">Shipping</span>
@@ -115,7 +113,7 @@
       </div>
       <div class="flex justify-between text-lg pt-2 border-t border-base-200">
         <span>Total</span>
-        <span><%= number_to_currency(total, unit: '£') %></span>
+        <span><%= number_to_currency(totals.total, unit: '£') %></span>
       </div>
     </div>
   </div>
