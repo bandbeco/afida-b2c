@@ -70,9 +70,24 @@ class BrandedProductPricingServiceTest < ActiveSupport::TestCase
   test "available sizes returns all sizes for product" do
     sizes = @service.available_sizes
 
+    assert_includes sizes, "6oz"
     assert_includes sizes, "8oz"
     assert_includes sizes, "12oz"
     assert_includes sizes, "16oz"
+  end
+
+  test "available sizes are sorted numerically so 6oz precedes 8oz" do
+    sizes = @service.available_sizes
+
+    assert_equal [ "6oz", "8oz", "12oz", "16oz" ], sizes
+  end
+
+  test "calculates price for 6oz configuration" do
+    result = @service.calculate(size: "6oz", quantity: 1000)
+
+    assert result.success?
+    assert_equal 0.30, result.price_per_unit
+    assert_equal 300.00, result.total_price
   end
 
   test "available quantities returns all tiers for size" do

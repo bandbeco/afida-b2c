@@ -1,3 +1,11 @@
+# Double Wall 6oz pricing
+dw_6oz_1000:
+  product: branded_template_variant
+  size: 6oz
+  quantity_tier: 1000
+  price_per_unit: 0.30
+  case_quantity: 500
+
 # Double Wall 8oz pricing
 dw_8oz_1000:
   product: branded_template_variant

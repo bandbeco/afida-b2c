@@ -21,6 +21,12 @@ templates = [
     sort: 1,
     case_qty: 500,
     pricing: [
+      { size: "6oz", quantity: 1000, price: 0.30 },
+      { size: "6oz", quantity: 2000, price: 0.25 },
+      { size: "6oz", quantity: 5000, price: 0.18 },
+      { size: "6oz", quantity: 10000, price: 0.15 },
+      { size: "6oz", quantity: 20000, price: 0.11 },
+      { size: "6oz", quantity: 30000, price: 0.10 },
       { size: "8oz", quantity: 1000, price: 0.30 },
       { size: "8oz", quantity: 2000, price: 0.25 },
       { size: "8oz", quantity: 5000, price: 0.18 },
