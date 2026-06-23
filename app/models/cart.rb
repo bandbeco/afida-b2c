@@ -50,15 +50,17 @@ class Cart < ApplicationRecord
   end
 
   # Calculate VAT at UK rate (20%)
-  # Uses global VAT_RATE constant from config/initializers/vat.rb
+  # Delegates to OrderTotals, the single home for the order-totals formula. The
+  # cart takes the :deferred shipping stance: shipping is added later at checkout
+  # via Stripe, so it carries no shipping line here.
   def vat_amount
-    subtotal_amount * VAT_RATE
+    cart_totals.vat
   end
 
-  # Final total including VAT
-  # Note: Shipping cost is added separately at checkout via Stripe
+  # Final total including VAT (no shipping; see vat_amount).
+  # Note: Shipping cost is added separately at checkout via Stripe.
   def total_amount
-    subtotal_amount + vat_amount
+    cart_totals.total
   end
 
   # Check if this is a guest cart (not associated with a user)
@@ -72,6 +74,7 @@ class Cart < ApplicationRecord
     @items_count = nil
     @line_items_count = nil
     @subtotal_amount = nil
+    @cart_totals = nil
     @sample_product_ids = nil
     @regular_product_ids = nil
     super
@@ -141,6 +144,13 @@ class Cart < ApplicationRecord
   end
 
   private
+
+  # The cart's order totals, computed once per request. Memoized like
+  # subtotal_amount (and cleared in reload) so vat_amount and total_amount don't
+  # each recompute. :deferred — the cart never shows a shipping line.
+  def cart_totals
+    @cart_totals ||= OrderTotals.for(subtotal_amount, shipping: :deferred)
+  end
 
   # Action Mailer's host, configured in every environment. recovery_url runs
   # inline in KlaviyoSubscriber (a synchronous Rails.event subscriber), so a nil

@@ -76,6 +76,35 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Schedule not found", flash[:alert]
   end
 
+  test "show eager-loads items so listing and totals share one query" do
+    sign_in(@user)
+    schedule = create_schedule_with_items(@user, count: 3)
+
+    queries = capture_table_queries("reorder_schedule_items") do
+      get reorder_schedule_url(schedule)
+    end
+
+    assert_response :success
+    # The view lists items and reorder_schedule_totals sums them; both read the
+    # eager-loaded association, so the items table is hit once, not per read.
+    assert_equal 1, queries,
+      "expected reorder_schedule_items to be loaded once, got #{queries} queries"
+  end
+
+  test "pause does not eager-load items or products" do
+    sign_in(@user)
+    schedule = create_schedule_with_items(@user, count: 3)
+
+    item_queries = capture_table_queries("reorder_schedule_items") do
+      patch pause_reorder_schedule_url(schedule)
+    end
+
+    # pause only flips status and redirects; it never touches items or products,
+    # so set_schedule does a plain find with no items/products JOIN.
+    assert_equal 0, item_queries,
+      "pause should not load reorder_schedule_items, got #{item_queries} queries"
+  end
+
   # ==========================================================================
   # Setup Flow
   # ==========================================================================
@@ -668,5 +697,25 @@ class ReorderSchedulesControllerTest < ActionDispatch::IntegrationTest
       price: product_variant.price
     )
     schedule
+  end
+
+  # A schedule with `count` items, each on a distinct active product, so a missing
+  # eager-load shows up as per-item product queries (an N+1) rather than one JOIN.
+  def create_schedule_with_items(user, count: 3)
+    schedule = create_schedule_for(user)
+    Product.where(active: true).limit(count).each do |product|
+      schedule.reorder_schedule_items.create!(product: product, quantity: 2, price: product.price)
+    end
+    schedule
+  end
+
+  # Counts sql.active_record events whose SQL references the given table.
+  def capture_table_queries(table, &block)
+    count = 0
+    counter = ->(_name, _start, _finish, _id, payload) do
+      count += 1 if payload[:sql]&.include?(%("#{table}"))
+    end
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &block)
+    count
   end
 end

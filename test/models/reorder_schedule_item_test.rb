@@ -149,4 +149,22 @@ class ReorderScheduleItemTest < ActiveSupport::TestCase
     assert_equal original_price + 5.00, @item.current_price
     assert_equal original_price, @item.price # stored price unchanged
   end
+
+  # ==========================================================================
+  # Subtotal
+  # ==========================================================================
+
+  test "subtotal_amount is stored price times quantity" do
+    @item.price = 12.50
+    @item.quantity = 3
+
+    assert_equal 37.50, @item.subtotal_amount
+  end
+
+  test "subtotal_amount uses the stored price, not the current product price" do
+    @item.save!
+    @product.update!(price: @item.price + 10.00)
+
+    assert_equal @item.price * @item.quantity, @item.subtotal_amount
+  end
 end

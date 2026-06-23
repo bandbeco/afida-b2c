@@ -98,6 +98,17 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal expected_total, snapshot["total"]
   end
 
+  test "persisted total equals the sum of the persisted subtotal, vat and shipping" do
+    # The snapshot freezes money as 2dp strings via OrderTotals#rounded, so the
+    # stored total must reconcile with the stored parts rather than being a rounded
+    # sum of full-precision figures. Guards the consistency the rate currently
+    # makes incidental.
+    snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
+
+    parts = snapshot["subtotal"].to_d + snapshot["vat"].to_d + snapshot["shipping"].to_d
+    assert_equal snapshot["total"].to_d, parts
+  end
+
   test "build marks inactive variant as unavailable" do
     @product.update!(active: false)
 
@@ -252,6 +263,14 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "10.12", PendingOrderSnapshotBuilder.format_amount(10.125)
     assert_equal "10.12", PendingOrderSnapshotBuilder.format_amount(10.124)
     assert_equal "10.13", PendingOrderSnapshotBuilder.format_amount(10.126)
+  end
+
+  test "format_amount raises a clear error on nil instead of a TypeError" do
+    # A snapshot always uses the :charged stance, so shipping is never nil here.
+    # Guard the contract explicitly: a nil amount is a caller bug (a :deferred
+    # result reaching the snapshot), not money to format.
+    error = assert_raises(ArgumentError) { PendingOrderSnapshotBuilder.format_amount(nil) }
+    assert_match(/nil/, error.message)
   end
 
   # ==========================================================================

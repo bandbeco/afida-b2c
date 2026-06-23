@@ -58,6 +58,12 @@ class ReorderSchedule < ApplicationRecord
     update!(status: :cancelled, cancelled_at: Time.current)
   end
 
+  # Sum of the schedule's line items (mirrors Cart#subtotal_amount). The order-totals
+  # formula (VAT, shipping) lives in OrderTotals; this owns only the aggregation.
+  def subtotal_amount
+    reorder_schedule_items.sum(&:subtotal_amount)
+  end
+
   private
 
   def items_being_modified?
