@@ -69,6 +69,12 @@ class PendingOrderSnapshotBuilder
   end
 
   def self.format_amount(amount)
+    # A snapshot is always built from a :charged OrderTotals result, so every
+    # component (including shipping) is non-nil. A nil here means a :deferred
+    # result reached the snapshot — a caller bug, not money to format. Fail loudly
+    # rather than raising an opaque TypeError from sprintf.
+    raise ArgumentError, "cannot format a nil amount (a :deferred result has no shipping line)" if amount.nil?
+
     "%.2f" % amount
   end
 

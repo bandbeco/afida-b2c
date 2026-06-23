@@ -290,4 +290,24 @@ class ReorderScheduleTest < ActiveSupport::TestCase
 
     assert_equal Date.current + 3.months, @schedule.next_scheduled_date
   end
+
+  # ==========================================================================
+  # Subtotal
+  # ==========================================================================
+
+  test "subtotal_amount sums each item's price times quantity" do
+    schedule = reorder_schedules(:active_monthly)
+    schedule.reorder_schedule_items.destroy_all
+    schedule.reorder_schedule_items.create!(product: products(:one), price: 50.00, quantity: 2)
+    schedule.reorder_schedule_items.create!(product: products(:two), price: 10.00, quantity: 3)
+    schedule.reload
+
+    assert_equal 130.00, schedule.subtotal_amount
+  end
+
+  test "subtotal_amount is zero with no items" do
+    @schedule.save!
+
+    assert_equal 0, @schedule.subtotal_amount
+  end
 end

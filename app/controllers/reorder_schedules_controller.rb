@@ -2,6 +2,7 @@
 
 class ReorderSchedulesController < ApplicationController
   before_action :set_schedule, only: [ :show, :edit, :update, :pause, :resume, :skip_next, :destroy ]
+  before_action :eager_load_schedule_items, only: :show
   before_action :set_order, only: [ :setup, :create ]
 
   # GET /reorder_schedules
@@ -153,13 +154,18 @@ class ReorderSchedulesController < ApplicationController
   end
 
   def set_schedule
-    # Eager-load items (and their products) so the show page can both list them
-    # and compute totals (reorder_schedule_totals) without a second query.
-    @schedule = Current.user.reorder_schedules
-                            .includes(reorder_schedule_items: :product)
-                            .find(params[:id])
+    @schedule = Current.user.reorder_schedules.find(params[:id])
   rescue ActiveRecord::RecordNotFound
     redirect_to reorder_schedules_path, alert: "Schedule not found"
+  end
+
+  # Only the show page lists items and computes totals (reorder_schedule_totals),
+  # so only it pays for eager-loading them. The other actions (edit/update/pause/
+  # resume/skip_next/destroy) don't touch items, so set_schedule does a plain find.
+  def eager_load_schedule_items
+    @schedule = Current.user.reorder_schedules
+                            .includes(reorder_schedule_items: :product)
+                            .find(@schedule.id)
   end
 
   def set_order

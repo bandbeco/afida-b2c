@@ -15,4 +15,10 @@ class ReorderScheduleItem < ApplicationRecord
   def current_price
     product.price
   end
+
+  # Line total at the stored price (mirrors CartItem#subtotal_amount). The stored
+  # price is frozen at setup time, so this is independent of later product changes.
+  def subtotal_amount
+    price * quantity
+  end
 end

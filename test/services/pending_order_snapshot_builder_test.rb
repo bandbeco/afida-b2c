@@ -265,6 +265,14 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "10.13", PendingOrderSnapshotBuilder.format_amount(10.126)
   end
 
+  test "format_amount raises a clear error on nil instead of a TypeError" do
+    # A snapshot always uses the :charged stance, so shipping is never nil here.
+    # Guard the contract explicitly: a nil amount is a caller bug (a :deferred
+    # result reaching the snapshot), not money to format.
+    error = assert_raises(ArgumentError) { PendingOrderSnapshotBuilder.format_amount(nil) }
+    assert_match(/nil/, error.message)
+  end
+
   # ==========================================================================
   # Consistency: Both methods produce same totals
   # ==========================================================================
