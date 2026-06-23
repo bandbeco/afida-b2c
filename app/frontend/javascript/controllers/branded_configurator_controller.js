@@ -53,6 +53,7 @@ export default class extends Controller {
     this.calculatedPrice = null
     this.isProcessing = false
     this.dimensionSelections = {}
+    this.isLoadingFromUrl = false
     this.updateAddToCartButton()
 
     // Check for URL parameters and pre-select configuration
@@ -65,6 +66,15 @@ export default class extends Controller {
   }
 
   loadFromUrlParams() {
+    // While replaying the URL's pre-selected configuration, the synthetic
+    // clicks below call selectSize/selectQuantity, which call updateUrl().
+    // updateUrl() runs history.replaceState, which (when fired during connect,
+    // including Turbo's restore-from-cache visits) corrupts the history entry
+    // ↔ snapshot association Turbo relies on and breaks the Back/Forward
+    // buttons. Suppress the URL writes while we're only mirroring the URL we
+    // already loaded.
+    this.isLoadingFromUrl = true
+
     const params = new URLSearchParams(window.location.search)
 
     if (this.isMultiDimension) {
@@ -88,20 +98,22 @@ export default class extends Controller {
       })
 
       // Pre-select quantity if all dimensions were set
-      if (allPresent) {
-        const quantityParam = params.get('quantity')
-        if (quantityParam) {
-          // Quantity cards are built dynamically, so wait for them
-          setTimeout(() => {
-            const quantity = parseInt(quantityParam)
-            const quantityCard = this.quantityOptionTargets.find(el =>
-              parseInt(el.dataset.quantity) === quantity
-            )
-            if (quantityCard) {
-              quantityCard.click()
-            }
-          }, 100)
-        }
+      const quantityParam = allPresent ? params.get('quantity') : null
+      if (quantityParam) {
+        // Quantity cards are built dynamically, so wait for them
+        setTimeout(() => {
+          const quantity = parseInt(quantityParam)
+          const quantityCard = this.quantityOptionTargets.find(el =>
+            parseInt(el.dataset.quantity) === quantity
+          )
+          if (quantityCard) {
+            quantityCard.click()
+          }
+          // Replay complete: resume writing the URL on real user input.
+          this.isLoadingFromUrl = false
+        }, 100)
+      } else {
+        this.isLoadingFromUrl = false
       }
     } else {
       // Single-dimension: existing behavior
@@ -127,6 +139,9 @@ export default class extends Controller {
           quantityCard.click()
         }
       }
+
+      // Replay complete: resume writing the URL on real user input.
+      this.isLoadingFromUrl = false
     }
   }
 
@@ -759,6 +774,10 @@ export default class extends Controller {
   }
 
   updateUrl() {
+    // Skip while replaying the URL's pre-selected configuration on load.
+    // Writing history.replaceState during connect breaks Back/Forward.
+    if (this.isLoadingFromUrl) return
+
     const params = new URLSearchParams(window.location.search)
 
     if (this.isMultiDimension) {
