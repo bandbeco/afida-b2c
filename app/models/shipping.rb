@@ -18,6 +18,12 @@ class Shipping
   # Currency
   CURRENCY = "gbp"
 
+  # Stripe's preset tax code for shipping fees. Setting it (with an exclusive
+  # tax_behavior) on a shipping rate makes Stripe charge the line-item VAT rate on
+  # the delivery charge too, so VAT applies to subtotal + shipping (UK VAT applies
+  # to delivery). Mirror this in OrderTotals, which displays the same figure.
+  SHIPPING_TAX_CODE = "txcd_92010001"
+
   # Standard shipping cost in pounds, e.g. 6.99. Single conversion point from
   # the pence-denominated STANDARD_COST so display code never repeats the maths.
   def self.standard_cost_in_pounds
@@ -55,6 +61,8 @@ class Shipping
           currency: CURRENCY
         },
         display_name: "Standard Shipping",
+        tax_behavior: "exclusive",
+        tax_code: SHIPPING_TAX_CODE,
         delivery_estimate: {
           minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
           maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }
@@ -72,6 +80,8 @@ class Shipping
           currency: CURRENCY
         },
         display_name: "Free Shipping",
+        tax_behavior: "exclusive",
+        tax_code: SHIPPING_TAX_CODE,
         delivery_estimate: {
           minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
           maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }
@@ -90,6 +100,8 @@ class Shipping
           currency: CURRENCY
         },
         display_name: "Standard Shipping",
+        tax_behavior: "exclusive",
+        tax_code: SHIPPING_TAX_CODE,
         delivery_estimate: {
           minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
           maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }

@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 # Single source of truth for the order-totals formula: given a subtotal, apply the
-# VAT rate and the free-shipping rule to produce {subtotal, vat, shipping, total}.
+# free-shipping rule and the VAT rate to produce {subtotal, vat, shipping, total}.
+# VAT is charged on subtotal + shipping (UK VAT applies to delivery charges), so it
+# is computed after shipping is resolved.
 #
 # This formula used to be re-derived in three places that drifted apart — Cart, the
 # pending-order snapshot builder, and a reorder view that hardcoded `subtotal * 0.2`.
@@ -11,9 +13,11 @@
 #
 # Shipping stance (see CONTEXT.md):
 #   :deferred — shipping not known yet (cart, reorder preview). No shipping line;
-#               total = subtotal + vat. The cart shows "calculated at checkout".
+#               VAT is on the subtotal alone and total = subtotal + vat. The cart
+#               shows "calculated at checkout".
 #   :charged  — shipping fixed at order time (snapshot). Free at/above the
-#               free-shipping threshold, otherwise the standard cost; total includes it.
+#               free-shipping threshold, otherwise the standard cost; VAT is charged
+#               on subtotal + shipping and total includes both.
 #
 # Components are full-precision BigDecimals so display callers can round once, at the
 # view, via number_to_currency (unchanged behaviour). Callers that must persist money
@@ -64,10 +68,10 @@ class OrderTotals
   end
 
   def result
-    # Compute each component once; total reuses both, so locals avoid recomputing
-    # vat and shipping a second time.
-    vat_amount = vat
+    # Compute shipping first; VAT is charged on subtotal + shipping, so vat reuses
+    # it. total reuses both, so the locals avoid recomputing either a second time.
     shipping_amount = shipping
+    vat_amount = vat(shipping_amount)
     Result.new(
       subtotal: @subtotal,
       vat: vat_amount,
@@ -78,8 +82,10 @@ class OrderTotals
 
   private
 
-  def vat
-    @subtotal * BigDecimal(VAT_RATE.to_s)
+  # VAT applies to the subtotal plus any charged shipping. When shipping is
+  # deferred (nil) or free (0), this is just the subtotal.
+  def vat(shipping_amount)
+    (@subtotal + (shipping_amount || 0)) * BigDecimal(VAT_RATE.to_s)
   end
 
   # nil when deferred (no shipping line yet); 0 or the standard cost when charged.

@@ -61,11 +61,15 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     assert_equal "20.00", snapshot["subtotal"]
   end
 
-  test "build calculates VAT at 20%" do
+  test "build calculates VAT at 20% on subtotal plus shipping" do
     snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
 
-    # VAT on £20 subtotal = £4
-    assert_equal "4.00", snapshot["vat"]
+    # Charged shipping is taxable, so VAT = (subtotal + shipping) * rate:
+    # (20.00 + 6.99) * 0.2 = 5.398 -> 5.40
+    shipping = Shipping::STANDARD_COST / 100.0
+    expected_vat = "%.2f" % ((20.00 + shipping) * VAT_RATE)
+    assert_equal expected_vat, snapshot["vat"]
+    assert_equal "5.40", snapshot["vat"]
   end
 
   test "build includes shipping for orders under threshold" do
@@ -91,8 +95,8 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     snapshot = PendingOrderSnapshotBuilder.new(@schedule).build
 
     subtotal = 20.00
-    vat = subtotal * VAT_RATE
     shipping = Shipping::STANDARD_COST / 100.0
+    vat = (subtotal + shipping) * VAT_RATE # shipping is taxable
     expected_total = "%.2f" % (subtotal + vat + shipping)
 
     assert_equal expected_total, snapshot["total"]

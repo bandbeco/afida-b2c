@@ -173,8 +173,11 @@ class CreatePendingOrdersJobTest < ActiveJob::TestCase
 
     # subtotal = 2 * 10.00 = 20.00
     assert_equal "20.00", snapshot["subtotal"]
-    # vat = 20% of 20.00 = 4.00
-    assert_equal "4.00", snapshot["vat"]
+    # Charged shipping is taxable, so vat = 20% of (subtotal + shipping):
+    # (20.00 + 6.99) * 0.2 = 5.398 -> 5.40
+    shipping = Shipping::STANDARD_COST / 100.0
+    assert_equal "%.2f" % ((20.00 + shipping) * VAT_RATE), snapshot["vat"]
+    assert_equal "5.40", snapshot["vat"]
     assert snapshot["total"].present?
 
     # Restore

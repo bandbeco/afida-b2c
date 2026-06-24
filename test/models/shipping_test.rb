@@ -59,6 +59,13 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal Shipping::STANDARD_MAX_DAYS, option[:shipping_rate_data][:delivery_estimate][:maximum][:value]
   end
 
+  test "standard_shipping_option is marked taxable so Stripe charges VAT on shipping" do
+    option = Shipping.standard_shipping_option
+
+    assert_equal "exclusive", option[:shipping_rate_data][:tax_behavior]
+    assert_equal Shipping::SHIPPING_TAX_CODE, option[:shipping_rate_data][:tax_code]
+  end
+
   test "free_shipping_option returns correct structure" do
     option = Shipping.free_shipping_option
 
@@ -66,6 +73,20 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal 0, option[:shipping_rate_data][:fixed_amount][:amount]
     assert_equal "gbp", option[:shipping_rate_data][:fixed_amount][:currency]
     assert_equal "Free Shipping", option[:shipping_rate_data][:display_name]
+  end
+
+  test "free_shipping_option is marked taxable (VAT on zero shipping is still zero)" do
+    option = Shipping.free_shipping_option
+
+    assert_equal "exclusive", option[:shipping_rate_data][:tax_behavior]
+    assert_equal Shipping::SHIPPING_TAX_CODE, option[:shipping_rate_data][:tax_code]
+  end
+
+  test "sample_only_shipping_option is marked taxable so Stripe charges VAT on shipping" do
+    option = Shipping.sample_only_shipping_option
+
+    assert_equal "exclusive", option[:shipping_rate_data][:tax_behavior]
+    assert_equal Shipping::SHIPPING_TAX_CODE, option[:shipping_rate_data][:tax_code]
   end
 
   test "sample_only_shipping_option uses same cost as standard shipping" do
