@@ -11,6 +11,14 @@ class CheckoutsController < ApplicationController
 
   def create
     cart = Current.cart
+
+    # Refuse to build a session for an empty cart. With no items the subtotal is 0,
+    # which is below the free-shipping threshold, so a shipping line would still be
+    # added - producing a shipping-only Checkout Session that could be charged.
+    if cart.blank? || cart.cart_items.empty?
+      return redirect_to cart_path, alert: "Your cart is empty."
+    end
+
     # Kept outside the begin block so the rescue path can inspect builder state
     # after Stripe raises during session creation.
     builder = nil

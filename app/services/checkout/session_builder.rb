@@ -63,11 +63,11 @@ module Checkout
     # Shipping rides as a line item (not a shipping_option) so that under manual
     # tax rates Stripe applies VAT to the delivery charge too.
     #
-    # The shipping line is prepended, not appended: Stripe::Checkout::Session
-    # .retrieve returns only the first 10 line_items by default, so for a cart
-    # with 10+ products an appended shipping line would fall off page 1 and
-    # SessionAmounts would record shipping as £0 with an inflated subtotal. As
-    # the first item it is always on page 1.
+    # The shipping line is prepended as a best-effort optimisation: Stripe's
+    # retrieve returns only the first 10 line_items (and does not promise an
+    # order), so keeping shipping early makes it likely to land on the embedded
+    # page and spare SessionAmounts an extra pagination call. Correctness does
+    # not depend on it - SessionAmounts pages through all line items when needed.
     def line_items
       items = product_line_items
       items.unshift(shipping_line_item) if shipping_line_item

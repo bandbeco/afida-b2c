@@ -1015,6 +1015,19 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "create rejects an empty cart without building a Stripe session" do
+    # An empty cart has subtotal 0, which is below the free-shipping threshold, so
+    # building a session would add a shipping line and create a shipping-only
+    # Checkout Session that could be charged. Reject before reaching Stripe.
+    @cart.cart_items.destroy_all
+    Stripe::Checkout::Session.expects(:create).never
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert_match /cart is empty/i, flash[:alert]
+  end
+
   test "does not emit cart.checkout_initiated for a logged-in user with an empty cart" do
     # only_samples? is false for an empty cart, so the explicit cart_items.any?
     # guard is what blocks this; assert it directly rather than rely on it.

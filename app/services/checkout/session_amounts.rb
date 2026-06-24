@@ -94,8 +94,29 @@ module Checkout
       (@session.shipping_cost&.amount_total || 0).to_i
     end
 
+    # All line items for the session. Stripe returns at most 10 expanded line
+    # items in the embedded list and does not promise an order, so when the list
+    # reports has_more we page through every line item via the dedicated endpoint
+    # (retrieve does not auto-paginate). Otherwise the shipping line can sit on a
+    # later page and be missed, recording shipping as £0. The embedded first page
+    # is used as-is when it is complete, so the common case makes no extra call.
     def line_items
-      @session.line_items&.data || []
+      return @line_items if defined?(@line_items)
+
+      embedded = @session.line_items
+      @line_items =
+        if embedded.respond_to?(:has_more) && embedded.has_more
+          all_line_items
+        else
+          embedded&.data || []
+        end
+    end
+
+    def all_line_items
+      Stripe::Checkout::Session
+        .list_line_items(@session.id, expand: [ "data.price.product" ])
+        .auto_paging_each
+        .to_a
     end
 
     def amount_subtotal

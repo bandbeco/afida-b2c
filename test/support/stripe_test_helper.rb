@@ -102,9 +102,11 @@ module StripeTestHelper
       breakdown: breakdown
     )
 
-    # Build line_items response (for webhook expansion)
+    # Build line_items response (for webhook expansion). has_more models Stripe's
+    # pagination: the expanded list returns at most 10 items, so SessionAmounts
+    # must page through the rest when has_more is true.
     line_items_data = overrides[:line_items_data] || []
-    line_items = stub(data: line_items_data)
+    line_items = stub(data: line_items_data, has_more: overrides[:line_items_has_more] || false)
 
     # amount_subtotal is post-discount and pre-tax. With shipping sent as a line
     # item it INCLUDES shipping; the legacy shipping_cost path adds it on top.
