@@ -10,23 +10,28 @@ require "test_helper"
 # This is the test that would have caught the earlier tax_code-on-shipping_options
 # no-op automatically.
 #
-# Uses the sk_test_ secret key from the test-env Rails credentials
-# (credentials.stripe.secret_key), so it runs wherever that key decrypts - no
-# extra setup. Skipped only when no test key is available (e.g. CI without the
-# credentials key) or the key is not a test key, so the normal suite and CI stay
-# unaffected. Run it with:
+# Live integration test against Stripe's TEST API. These make REAL network calls,
+# so they are OPT-IN only: set LIVE_STRIPE_TESTS=1 and run them in isolation.
 #
-#   bin/rails test test/integration/stripe_live_checkout_test.rb
+#   LIVE_STRIPE_TESTS=1 bin/rails test test/integration/stripe_live_checkout_test.rb
 #
-# It makes real network calls and may create a UK VAT TaxRate in the test account
-# on first run (Stripe has no uniqueness constraint, so reruns reuse it via the
-# provider's lookup).
+# They are deliberately excluded from the normal suite and CI: the suite loads the
+# webmock gem, which globally disables real HTTP once any webmock test runs, so
+# live tests cannot run alongside it. The opt-in flag (never set in CI) keeps the
+# suite green; the secret key still comes from credentials.stripe.secret_key, so
+# no key env var is needed. The run may create a UK VAT TaxRate in the test
+# account on first use (reused on reruns via the provider's lookup).
 class StripeLiveCheckoutTest < ActionDispatch::IntegrationTest
   setup do
+    skip "set LIVE_STRIPE_TESTS=1 to run live Stripe tests in isolation" unless ENV["LIVE_STRIPE_TESTS"] == "1"
+
     @test_key = Rails.application.credentials.dig(:stripe, :secret_key)
     skip "no Stripe test key in credentials.stripe.secret_key" if @test_key.blank?
     # Guard: only ever hit Stripe's test mode, never a live account.
     skip "refusing to run live Stripe tests with a non-test key" unless @test_key.start_with?("sk_test_")
+
+    # If webmock loaded (it blocks real HTTP), permit live connections for these.
+    WebMock.allow_net_connect! if defined?(WebMock)
 
     @original_api_key = Stripe.api_key
     Stripe.api_key = @test_key
@@ -43,6 +48,7 @@ class StripeLiveCheckoutTest < ActionDispatch::IntegrationTest
       nil
     end
     Stripe.api_key = @original_api_key if defined?(@original_api_key)
+    WebMock.disable_net_connect! if defined?(WebMock)
   end
 
   test "Stripe charges VAT on subtotal + shipping for a sub-threshold cart" do
