@@ -51,9 +51,18 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal "true", item[:price_data][:product_data][:metadata][:shipping_line]
   end
 
-  test "shipping_line_item has a human-readable product name" do
+  test "LINE_ITEM_FLAG is built from the exposed key/value the reader references" do
+    # SessionAmounts identifies the shipping line via Shipping::LINE_ITEM_FLAG_KEY /
+    # _VALUE; this pins that the written flag uses exactly those, so the writer and
+    # reader cannot silently desync.
+    assert_equal({ Shipping::LINE_ITEM_FLAG_KEY.to_sym => Shipping::LINE_ITEM_FLAG_VALUE }, Shipping::LINE_ITEM_FLAG)
+  end
+
+  test "shipping_line_item names the delivery promise so the Stripe modal shows it" do
+    # Line items can't carry a delivery_estimate (the old shipping_options did),
+    # so the next-working-day promise is surfaced in the line item's name instead.
     item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
 
-    assert_equal "Shipping", item[:price_data][:product_data][:name]
+    assert_equal "Shipping (next working day)", item[:price_data][:product_data][:name]
   end
 end

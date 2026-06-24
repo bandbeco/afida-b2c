@@ -46,7 +46,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil captured_params
-    assert_equal "gbp", captured_params[:line_items].first[:price_data][:currency]
+    assert captured_params[:line_items].all? { |li| li[:price_data][:currency] == "gbp" }
     assert_equal "card", captured_params[:payment_method_types].first
     assert_equal "payment", captured_params[:mode]
   end
@@ -159,8 +159,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     post checkout_path
 
-    # Should reuse existing tax rate
-    assert_equal "txr_existing_123", captured_params[:line_items].first[:tax_rates].first
+    # Should reuse existing tax rate on the product line (the shipping line is
+    # prepended, so select by content rather than position).
+    product_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) != "true"
+    end
+    assert_equal "txr_existing_123", product_line[:tax_rates].first
   end
 
   # ============================================================================
@@ -350,6 +354,34 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to cart_path
     assert_match /Payment was not completed/, flash[:error]
+  end
+
+  test "success creates a zero-total order for a no_payment_required session" do
+    # A 100%-off coupon (or any discount covering the whole order, including the
+    # taxed shipping line) makes Stripe complete the session with payment_status
+    # "no_payment_required" and amount_total 0 - never "paid". The order must
+    # still be created and fulfilled.
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      client_reference_id: @user.id,
+      payment_status: "no_payment_required",
+      amount_subtotal: 0,
+      amount_tax: 0,
+      amount_total: 0
+    )
+
+    assert_difference "Order.count", 1 do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    order = Order.last
+    assert_equal "buyer@example.com", order.email
+    assert_equal session.id, order.stripe_session_id
+    assert_equal "paid", order.status
+    assert_equal 0, order.total_amount
+    # Token carries a timestamp, so match the confirmation path rather than rebuild it.
+    assert_response :redirect
+    assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
   end
 
   test "success handles invalid session_id" do
@@ -862,8 +894,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil captured_params
-    # Sample line items should have unit_amount of 0
-    assert_equal 0, captured_params[:line_items].first[:price_data][:unit_amount]
+    # Sample line items should have unit_amount of 0. Select the product line by
+    # content: the shipping line is prepended, so it is no longer at index 0.
+    sample_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) != "true"
+    end
+    assert_equal 0, sample_line[:price_data][:unit_amount]
   end
 
   test "mixed cart (samples + paid) appends a taxed shipping line item" do

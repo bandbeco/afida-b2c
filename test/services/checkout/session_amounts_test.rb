@@ -137,6 +137,27 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
     assert_equal 0.0, amounts.shipping
   end
 
+  test "raises when a line item's product is unexpanded, rather than silently recording zero shipping" do
+    # If a caller retrieves the session without expand: line_items.data.price.product,
+    # Stripe returns price.product as a String id. The shipping line then cannot be
+    # identified, and shipping would silently fold into the subtotal as £0. That is a
+    # caller bug (a missing expand), so fail loud instead of corrupting the amounts.
+    unexpanded = stub(
+      amount_subtotal: 2699,
+      price: stub(product: "prod_unexpanded_id")
+    )
+    session = build_stripe_session(
+      amount_subtotal: 2699,
+      amount_tax: 540,
+      amount_total: 3239,
+      line_items_data: [ unexpanded ]
+    )
+
+    assert_raises(Checkout::SessionAmounts::UnexpandedLineItemError) do
+      Checkout::SessionAmounts.from(session)
+    end
+  end
+
   test "falls back to legacy shipping_cost when a session predates line-item shipping" do
     # Sessions created before this change carried shipping via shipping_options, so
     # they have a populated shipping_cost and NO shipping line item, and their

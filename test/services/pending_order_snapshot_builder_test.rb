@@ -69,7 +69,6 @@ class PendingOrderSnapshotBuilderTest < ActiveSupport::TestCase
     shipping = Shipping::STANDARD_COST / 100.0
     expected_vat = "%.2f" % ((20.00 + shipping) * VAT_RATE)
     assert_equal expected_vat, snapshot["vat"]
-    assert_equal "5.40", snapshot["vat"]
   end
 
   test "build includes shipping for orders under threshold" do

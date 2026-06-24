@@ -25,7 +25,11 @@ module Checkout
   Amounts = Data.define(:subtotal, :vat, :shipping, :total, :discount)
 
   class SessionAmounts
-    SHIPPING_LINE_FLAG = "shipping_line"
+    # Raised when a line item carries a price but its product is unexpanded (a
+    # String id), which means the caller forgot expand: line_items.data.price.product.
+    # Without the expanded product the shipping line cannot be identified, so we
+    # fail loud rather than silently recording £0 shipping and an inflated subtotal.
+    class UnexpandedLineItemError < StandardError; end
 
     def self.from(session)
       new(session).amounts
@@ -70,11 +74,20 @@ module Checkout
     # The shipping line is identified by its expanded product metadata, set when
     # the session is built, so a renamed display label or a product coincidentally
     # named "Shipping" never matches.
+    #
+    # A String product means price.product was returned as a bare id (the caller
+    # omitted the nested expand); raise so the missing expand is caught rather than
+    # silently treating the shipping line as a product. Items with no price at all
+    # (e.g. the webhook's bare stubs) are tolerated and simply don't match.
     def shipping_line?(item)
-      product = item.price&.product if item.respond_to?(:price)
+      return false unless item.respond_to?(:price)
+
+      product = item.price&.product
+      raise UnexpandedLineItemError, "line item product not expanded (id: #{product})" if product.is_a?(String)
       return false unless product.respond_to?(:[])
 
-      product["metadata"]&.[](SHIPPING_LINE_FLAG) == "true"
+      # Reference the writer's flag so a rename can't silently desync the two.
+      product["metadata"]&.[](Shipping::LINE_ITEM_FLAG_KEY) == Shipping::LINE_ITEM_FLAG_VALUE
     end
 
     def legacy_shipping_cost

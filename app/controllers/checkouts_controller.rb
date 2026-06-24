@@ -3,6 +3,12 @@ class CheckoutsController < ApplicationController
   before_action :resume_session
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to cart_path, alert: "Too many checkout attempts. Please wait before trying again." }
 
+  # Stripe completes a payment-mode session as "paid" normally, or
+  # "no_payment_required" when a discount (e.g. a 100%-off coupon) brings the
+  # total to 0. Both are successful completions and must yield an order; only
+  # "unpaid" should be rejected.
+  COMPLETED_PAYMENT_STATUSES = %w[paid no_payment_required].freeze
+
   def create
     cart = Current.cart
     # Kept outside the begin block so the rescue path can inspect builder state
@@ -79,7 +85,7 @@ class CheckoutsController < ApplicationController
         expand: [ "collected_information", "line_items.data.price.product" ]
       )
 
-      unless stripe_session.payment_status == "paid"
+      unless COMPLETED_PAYMENT_STATUSES.include?(stripe_session.payment_status)
         flash[:error] = "Payment was not completed successfully"
         return redirect_to cart_path
       end

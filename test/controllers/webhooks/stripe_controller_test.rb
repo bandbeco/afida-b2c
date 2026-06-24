@@ -71,6 +71,39 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "creates order for a no_payment_required (fully discounted) checkout session" do
+    # A 100%-off coupon zeroes amount_total, so Stripe sets payment_status to
+    # "no_payment_required" rather than "paid". The webhook fallback must still
+    # create the order (these orders fire no payment_intent, so the webhook is
+    # the only reliable signal).
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 2, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_no_payment_required",
+      payment_status: "no_payment_required",
+      metadata: { cart_id: cart.id.to_s },
+      amount_subtotal: 0,
+      amount_tax: 0,
+      amount_total: 0
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+
+    order = Order.find_by(stripe_session_id: "sess_no_payment_required")
+    assert_not_nil order
+    assert_equal 0, order.total_amount
+    assert_equal 1, order.order_items.count
+  end
+
   test "creates order with order items when cart_id is in metadata" do
     # Create a guest cart with items (simulating what would exist when redirect fails)
     cart = Cart.create!

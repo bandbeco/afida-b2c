@@ -18,7 +18,11 @@ class Shipping
 
   # Product metadata flag set on the shipping line item so the completed session
   # can identify it on read-back (SessionAmounts) regardless of display name.
-  LINE_ITEM_FLAG = { shipping_line: "true" }.freeze
+  # The key/value are exposed so the reader can reference them instead of
+  # re-declaring the literal string, which would silently desync on a rename.
+  LINE_ITEM_FLAG_KEY = "shipping_line"
+  LINE_ITEM_FLAG_VALUE = "true"
+  LINE_ITEM_FLAG = { LINE_ITEM_FLAG_KEY.to_sym => LINE_ITEM_FLAG_VALUE }.freeze
 
   # Standard shipping cost in pounds, e.g. 6.99. Single conversion point from
   # the pence-denominated STANDARD_COST so display code never repeats the maths.
@@ -53,7 +57,10 @@ class Shipping
         unit_amount: STANDARD_COST,
         tax_behavior: "exclusive",
         product_data: {
-          name: "Shipping",
+          # Line items can't carry a delivery_estimate the way the old
+          # shipping_options did, so the next-working-day promise rides in the
+          # name to keep it visible in the Stripe Checkout modal.
+          name: "Shipping (next working day)",
           metadata: LINE_ITEM_FLAG
         }
       },

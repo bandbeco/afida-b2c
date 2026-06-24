@@ -62,9 +62,15 @@ module Checkout
     # Product line items plus, unless shipping is free, the taxed shipping line.
     # Shipping rides as a line item (not a shipping_option) so that under manual
     # tax rates Stripe applies VAT to the delivery charge too.
+    #
+    # The shipping line is prepended, not appended: Stripe::Checkout::Session
+    # .retrieve returns only the first 10 line_items by default, so for a cart
+    # with 10+ products an appended shipping line would fall off page 1 and
+    # SessionAmounts would record shipping as £0 with an inflated subtotal. As
+    # the first item it is always on page 1.
     def line_items
       items = product_line_items
-      items << shipping_line_item if shipping_line_item
+      items.unshift(shipping_line_item) if shipping_line_item
       items
     end
 
@@ -141,6 +147,15 @@ module Checkout
     end
 
     def apply_discount(session_params)
+      # Samples are free, so a samples-only order pays only shipping. Refuse all
+      # discounts (both a supplied code and Stripe-entered promo codes) so a coupon
+      # can never reduce or zero that shipping charge. A supplied code is reported
+      # as not applied via the return value, mirroring the invalid-coupon path.
+      if cart.only_samples?
+        session_params[:metadata].delete(:discount_code)
+        return discount_code.presence
+      end
+
       if discount_code.present?
         apply_session_discount(session_params)
       else

@@ -49,7 +49,9 @@ module Webhooks
 
     def handle_checkout_completed(event)
       session = event.data.object
-      return unless session.payment_status == "paid"
+      # "paid" or, for a fully-discounted (0-total) order, "no_payment_required".
+      # See CheckoutsController::COMPLETED_PAYMENT_STATUSES.
+      return unless CheckoutsController::COMPLETED_PAYMENT_STATUSES.include?(session.payment_status)
 
       # Check if order already exists (created by success redirect)
       existing_order = Order.find_by(stripe_session_id: session.id)
