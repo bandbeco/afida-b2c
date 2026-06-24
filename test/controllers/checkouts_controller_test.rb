@@ -110,7 +110,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_includes captured_params[:shipping_address_collection][:allowed_countries], "GB"
   end
 
-  test "create includes shipping options from Shipping module" do
+  test "create appends a taxed shipping line item instead of shipping options" do
     captured_params = nil
     session = build_stripe_session
     Stripe::Checkout::Session.stubs(:create).with do |params|
@@ -120,12 +120,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     post checkout_path
 
-    # Shipping module returns 1 option based on subtotal:
-    # - Orders < £100: Standard Shipping
-    # - Orders >= £100: Free Shipping
-    assert_not_empty captured_params[:shipping_options]
-    assert_equal 1, captured_params[:shipping_options].length
-    assert_equal "Standard Shipping", captured_params[:shipping_options].first[:shipping_rate_data][:display_name]
+    # Shipping rides as a taxed line item (manual tax rates only tax line items),
+    # not a shipping_option. The £20 cart is under the free-shipping threshold.
+    assert_nil captured_params[:shipping_options]
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+    end
+    assert shipping_line, "expected a taxed shipping line item"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
+    assert_equal "exclusive", shipping_line[:price_data][:tax_behavior]
   end
 
   test "create includes success and cancel URLs" do
@@ -207,13 +210,18 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "GB", order.shipping_country
   end
 
-  test "success calculates order totals from Stripe session amounts" do
+  test "success calculates order totals from Stripe session amounts, taxing shipping" do
+    # Shipping is a taxed line item: amount_subtotal includes it (2000 + 500) and
+    # amount_tax is VAT on both: 2500 * 0.2 = 500.
     session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
-      amount_subtotal: 2000,      # £20.00
-      amount_tax: 400,            # £4.00
-      shipping_amount_total: 500, # £5.00
-      amount_total: 2900          # £29.00
+      amount_subtotal: 2500,
+      amount_tax: 500,
+      amount_total: 3000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
 
     assert_difference "Order.count", 1 do
@@ -222,9 +230,29 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     order = Order.last
     assert_equal 20.0, order.subtotal_amount.to_f
-    assert_equal 4.0, order.vat_amount.to_f
+    assert_equal 5.0, order.vat_amount.to_f
     assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 29.0, order.total_amount.to_f
+    assert_equal 30.0, order.total_amount.to_f
+  end
+
+  test "success expands nested line item product so shipping is identifiable" do
+    session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2500,
+      amount_tax: 500,
+      amount_total: 3000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
+    )
+    Stripe::Checkout::Session.expects(:retrieve).with do |args|
+      args[:expand] == [ "collected_information", "line_items.data.price.product" ]
+    end.returns(session)
+
+    assert_difference "Order.count", 1 do
+      get success_checkout_path, params: { session_id: session.id }
+    end
   end
 
   test "success creates order items from cart items" do
@@ -376,17 +404,21 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # ============================================================================
 
   test "success uses Stripe session amounts as source of truth for order totals" do
-    # Cart has subtotal £20 (2 items × £10), but Stripe session reflects
-    # a discount: subtotal £19 (post-discount), tax £3.80, shipping £5, total £27.80
+    # Cart has subtotal £20 (2 items × £10), but Stripe reflects a discount.
+    # Shipping is a taxed line item, so amount_subtotal includes it (1900 + 500)
+    # and amount_tax is VAT on both: 2400 * 0.2 = 480.
     session = build_stripe_session(
       id: "sess_discount_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1900,    # £19.00 post-discount
-      amount_tax: 380,          # £3.80
-      shipping_amount_total: 500, # £5.00
-      amount_total: 2780,       # £27.80
-      amount_discount: 100      # £1.00 discount
+      amount_subtotal: 2400,    # products £19 (post-discount) + shipping £5
+      amount_tax: 480,          # £4.80
+      amount_total: 2880,       # £28.80
+      amount_discount: 100,     # £1.00 discount
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1900),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -395,9 +427,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     order = Order.last
     # Order should use Stripe amounts, NOT cart-calculated amounts
     assert_equal 19.0, order.subtotal_amount.to_f
-    assert_equal 3.80, order.vat_amount.to_f
+    assert_equal 4.80, order.vat_amount.to_f
     assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 27.80, order.total_amount.to_f
+    assert_equal 28.80, order.total_amount.to_f
     assert_equal 1.0, order.discount_amount.to_f
   end
 
@@ -406,12 +438,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_discount_code_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1900,
-      amount_tax: 380,
-      shipping_amount_total: 500,
-      amount_total: 2780,
+      amount_subtotal: 2400,
+      amount_tax: 480,
+      amount_total: 2880,
       amount_discount: 100,
-      metadata: { discount_code: "WELCOME5" }
+      metadata: { discount_code: "WELCOME5" },
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1900),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -426,11 +461,14 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_no_discount_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 2000,
-      amount_tax: 400,
-      shipping_amount_total: 500,
-      amount_total: 2900,
-      amount_discount: 0
+      amount_subtotal: 2500,
+      amount_tax: 500,
+      amount_total: 3000,
+      amount_discount: 0,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -506,13 +544,16 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_promo_code_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1800,
-      amount_tax: 360,
-      shipping_amount_total: 500,
-      amount_total: 2660,
+      amount_subtotal: 2300,
+      amount_tax: 460,
+      amount_total: 2760,
       amount_discount: 200,
       metadata: {},
-      promotion_code: "SUMMER20"
+      promotion_code: "SUMMER20",
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1800),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -528,13 +569,16 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_metadata_priority",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1800,
-      amount_tax: 360,
-      shipping_amount_total: 500,
-      amount_total: 2660,
+      amount_subtotal: 2300,
+      amount_tax: 460,
+      amount_total: 2760,
       amount_discount: 200,
       metadata: { discount_code: "WELCOME5" },
-      promotion_code: "SUMMER20"
+      promotion_code: "SUMMER20",
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1800),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -765,7 +809,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # SAMPLES-ONLY CHECKOUT TESTS
   # ============================================================================
 
-  test "samples-only cart uses Standard Shipping option" do
+  test "samples-only cart appends a taxed shipping line item" do
     # Create samples-only cart
     @cart.cart_items.destroy_all
     sample_variant = products(:sample_cup_8oz)
@@ -788,11 +832,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_response :see_other
     assert_not_nil captured_params
 
-    # Should have single Standard Shipping option (same as orders < £100)
-    assert_equal 1, captured_params[:shipping_options].length
-    shipping_option = captured_params[:shipping_options].first
-    assert_equal "Standard Shipping", shipping_option[:shipping_rate_data][:display_name]
-    assert_equal Shipping::STANDARD_COST, shipping_option[:shipping_rate_data][:fixed_amount][:amount]
+    # Samples-only carts still pay (taxed) shipping; it rides as a line item.
+    assert_nil captured_params[:shipping_options]
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+    end
+    assert shipping_line, "expected a taxed shipping line item"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
   end
 
   test "samples-only cart line items have zero unit_amount" do
@@ -820,7 +866,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, captured_params[:line_items].first[:price_data][:unit_amount]
   end
 
-  test "mixed cart (samples + paid) uses standard shipping options" do
+  test "mixed cart (samples + paid) appends a taxed shipping line item" do
     # Add sample to existing cart (which already has paid items)
     sample_variant = products(:sample_cup_8oz)
     @cart.cart_items.create!(
@@ -840,12 +886,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil captured_params
-    # Mixed cart uses subtotal-based shipping:
-    # - Orders < £100: Standard Shipping
-    # - Orders >= £100: Free Shipping
-    # Test cart has ~£20 subtotal, so should get Standard Shipping
-    assert_equal 1, captured_params[:shipping_options].length
-    assert_equal "Standard Shipping", captured_params[:shipping_options].first[:shipping_rate_data][:display_name]
+    # Mixed cart, ~£20 subtotal (under the £100 threshold), so shipping is charged
+    # as a taxed line item.
+    assert_nil captured_params[:shipping_options]
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+    end
+    assert shipping_line, "expected a taxed shipping line item"
   end
 
   # ============================================================================

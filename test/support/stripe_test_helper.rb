@@ -40,7 +40,10 @@ module StripeTestHelper
     shipping_name = overrides[:shipping_name] || overrides[:customer_name] || "Test Customer"
     customer_email = overrides[:customer_email] || "test@example.com"
     customer_name = overrides[:customer_name] || "Test Customer"
-    shipping_amount = overrides[:shipping_amount_total] || 500
+    # shipping_cost is only present for LEGACY sessions (shipping via
+    # shipping_options). New sessions carry shipping as a line item, so default to
+    # absent and only populate when a test explicitly passes shipping_amount_total.
+    legacy_shipping_amount = overrides[:shipping_amount_total]
 
     # Build nested stub objects
     address = stub(
@@ -66,9 +69,7 @@ module StripeTestHelper
       address: address
     )
 
-    shipping_cost = stub(
-      amount_total: shipping_amount
-    )
+    shipping_cost = legacy_shipping_amount ? stub(amount_total: legacy_shipping_amount) : nil
 
     # Build setup_intent for setup mode sessions
     setup_intent = nil
@@ -105,9 +106,10 @@ module StripeTestHelper
     line_items_data = overrides[:line_items_data] || []
     line_items = stub(data: line_items_data)
 
-    # Calculate amount_subtotal (post-discount, pre-tax, pre-shipping) and amount_total
+    # amount_subtotal is post-discount and pre-tax. With shipping sent as a line
+    # item it INCLUDES shipping; the legacy shipping_cost path adds it on top.
     amount_subtotal = overrides[:amount_subtotal] || (overrides[:subtotal] || 0)
-    amount_total = overrides[:amount_total] || (amount_subtotal + tax_amount + shipping_amount)
+    amount_total = overrides[:amount_total] || (amount_subtotal + tax_amount + legacy_shipping_amount.to_i)
 
     # Build the full hash representation (used by controller's to_hash call)
     session_hash = {
@@ -125,13 +127,11 @@ module StripeTestHelper
           address: address_hash
         }
       },
-      shipping_cost: {
-        amount_total: shipping_amount
-      },
       client_reference_id: overrides[:client_reference_id],
       line_items: overrides[:line_items] || [],
       metadata: overrides[:metadata] || {}
     }
+    session_hash[:shipping_cost] = { amount_total: legacy_shipping_amount } if legacy_shipping_amount
 
     # Build metadata as a hash-like object to support bracket access (metadata["key"])
     # Stripe gem v18 no longer supports method_missing for missing metadata keys
@@ -154,6 +154,36 @@ module StripeTestHelper
       setup_intent: setup_intent,
       metadata: metadata_stub,
       to_hash: session_hash
+    )
+  end
+
+  # Build a mock expanded Stripe line item for a SHIPPING charge. The production
+  # code identifies the shipping line by product.metadata["shipping_line"] == "true"
+  # (set on the price_data when the session is built), so the stub mirrors that:
+  # an expanded price.product carrying that metadata. amount_subtotal is the
+  # post-discount, pre-tax pence figure SessionAmounts reads.
+  def stripe_shipping_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Shipping")
+    tax = amount_tax || (amount_subtotal * 0.2).round
+    stub(
+      amount_subtotal: amount_subtotal,
+      amount_tax: tax,
+      amount_total: amount_total || (amount_subtotal + tax),
+      price: stub(product: Stripe::StripeObject.construct_from("metadata" => { "shipping_line" => "true" })),
+      description: name
+    )
+  end
+
+  # Build a mock expanded Stripe line item for a PRODUCT (non-shipping). Its
+  # product metadata has no shipping_line flag, so SessionAmounts treats it as
+  # part of the subtotal.
+  def stripe_product_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Test Product")
+    tax = amount_tax || (amount_subtotal * 0.2).round
+    stub(
+      amount_subtotal: amount_subtotal,
+      amount_tax: tax,
+      amount_total: amount_total || (amount_subtotal + tax),
+      price: stub(product: Stripe::StripeObject.construct_from("metadata" => {})),
+      description: name
     )
   end
 

@@ -76,7 +76,7 @@ class CheckoutsController < ApplicationController
     begin
       stripe_session = Stripe::Checkout::Session.retrieve(
         id: session_id,
-        expand: [ "collected_information" ]
+        expand: [ "collected_information", "line_items.data.price.product" ]
       )
 
       unless stripe_session.payment_status == "paid"

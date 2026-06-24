@@ -90,6 +90,77 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_not captured_params[:metadata].key?(:discount_code)
   end
 
+  test "appends a taxed shipping line item for sub-threshold carts" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+    end
+    assert shipping_line, "expected a shipping line item"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
+    assert_equal "exclusive", shipping_line[:price_data][:tax_behavior]
+    assert_equal 1, shipping_line[:tax_rates].length
+  end
+
+  test "omits the shipping line item when the subtotal qualifies for free shipping" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 150.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+    end
+    assert_nil shipping_line, "expected no shipping line item for free shipping"
+    assert_equal 1, captured_params[:line_items].length
+  end
+
+  test "appends a taxed shipping line item for a samples-only cart" do
+    @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+    end
+    assert shipping_line, "expected a shipping line item for samples-only cart"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
+  end
+
+  test "does not send shipping_options to Stripe but still collects the address" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    assert_nil captured_params[:shipping_options]
+    assert captured_params[:shipping_address_collection]
+  end
+
   test "does not expose intermediate checkout state readers" do
     builder = build_session_builder(discount_code: "WELCOME5")
 

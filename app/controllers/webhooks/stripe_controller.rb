@@ -62,10 +62,11 @@ module Webhooks
       # We need to create the order from the webhook
       Rails.logger.info("[Stripe Webhook] Creating order for session #{session.id} (redirect missed)")
 
-      # Retrieve full session with expanded data
+      # Retrieve full session with expanded data. The nested price.product is
+      # needed so SessionAmounts can identify the shipping line by its metadata.
       full_session = Stripe::Checkout::Session.retrieve(
         id: session.id,
-        expand: [ "collected_information", "line_items" ]
+        expand: [ "collected_information", "line_items.data.price.product" ]
       )
 
       # Extract shipping address
@@ -78,12 +79,15 @@ module Webhooks
       cart_id = full_session.metadata&.[]("cart_id")
       cart = Cart.find_by(id: cart_id) if cart_id.present?
 
-      # Use Stripe session amounts as source of truth (handles discounts correctly)
-      subtotal = full_session.amount_subtotal / 100.0
-      vat_amount = (full_session.total_details&.amount_tax || 0) / 100.0
-      discount_amount = (full_session.total_details&.amount_discount || 0) / 100.0
-      shipping_amount = (full_session.shipping_cost&.amount_total || 0) / 100.0
-      total_amount = full_session.amount_total / 100.0
+      # Use Stripe session amounts as source of truth (handles discounts
+      # correctly). SessionAmounts splits shipping back out of the subtotal, since
+      # shipping now rides as a taxed line item rather than a shipping_option.
+      amounts = Checkout::SessionAmounts.from(full_session)
+      subtotal = amounts.subtotal
+      vat_amount = amounts.vat
+      discount_amount = amounts.discount
+      shipping_amount = amounts.shipping
+      total_amount = amounts.total
       discount_code = full_session.metadata&.[]("discount_code")
       if discount_code.blank?
         discount_code = extract_promotion_code(full_session)

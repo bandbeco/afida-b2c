@@ -1,7 +1,13 @@
 require "test_helper"
 
 class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
+  include StripeTestHelper
+
   setup do
+    # Building the checkout session resolves the UK VAT tax rate; stub it so these
+    # tests never reach the live Stripe API (the cache is null_store in test).
+    stub_stripe_tax_rate_list
+
     @user = users(:one)
     @address = addresses(:office)
     @product_variant = products(:one)

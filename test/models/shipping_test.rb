@@ -25,89 +25,35 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal %w[GB], Shipping::ALLOWED_COUNTRIES
   end
 
-  test "shipping_options_for_subtotal returns free shipping for orders >= £100" do
-    options = Shipping.shipping_options_for_subtotal(BigDecimal("100"))
+  # ==========================================================================
+  # shipping_line_item — shipping is charged as a taxed Stripe line item so that,
+  # under manual tax rates, Stripe applies VAT to the delivery charge too.
+  # ==========================================================================
 
-    assert_equal 1, options.length
-    assert_equal 0, options.first[:shipping_rate_data][:fixed_amount][:amount]
-    assert_equal "Free Shipping", options.first[:shipping_rate_data][:display_name]
+  test "shipping_line_item charges STANDARD_COST in the configured currency" do
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
+
+    assert_equal 1, item[:quantity]
+    assert_equal Shipping::STANDARD_COST, item[:price_data][:unit_amount]
+    assert_equal Shipping::CURRENCY, item[:price_data][:currency]
   end
 
-  test "shipping_options_for_subtotal returns free shipping for orders > £100" do
-    options = Shipping.shipping_options_for_subtotal(BigDecimal("150"))
+  test "shipping_line_item is taxed exclusively at the given VAT rate" do
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
 
-    assert_equal 0, options.first[:shipping_rate_data][:fixed_amount][:amount]
-    assert_equal "Free Shipping", options.first[:shipping_rate_data][:display_name]
+    assert_equal "exclusive", item[:price_data][:tax_behavior]
+    assert_equal [ "txr_123" ], item[:tax_rates]
   end
 
-  test "shipping_options_for_subtotal returns standard shipping for orders < £100" do
-    options = Shipping.shipping_options_for_subtotal(BigDecimal("99.99"))
+  test "shipping_line_item carries product metadata that identifies it on read-back" do
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
 
-    assert_equal 1, options.length
-    assert_equal 699, options.first[:shipping_rate_data][:fixed_amount][:amount]
-    assert_equal "Standard Shipping", options.first[:shipping_rate_data][:display_name]
+    assert_equal "true", item[:price_data][:product_data][:metadata][:shipping_line]
   end
 
-  test "standard_shipping_option returns correct structure" do
-    option = Shipping.standard_shipping_option
+  test "shipping_line_item has a human-readable product name" do
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
 
-    assert_equal "fixed_amount", option[:shipping_rate_data][:type]
-    assert_equal 699, option[:shipping_rate_data][:fixed_amount][:amount]
-    assert_equal "gbp", option[:shipping_rate_data][:fixed_amount][:currency]
-    assert_equal "Standard Shipping", option[:shipping_rate_data][:display_name]
-    assert_equal Shipping::STANDARD_MIN_DAYS, option[:shipping_rate_data][:delivery_estimate][:minimum][:value]
-    assert_equal Shipping::STANDARD_MAX_DAYS, option[:shipping_rate_data][:delivery_estimate][:maximum][:value]
-  end
-
-  test "standard_shipping_option is marked taxable so Stripe charges VAT on shipping" do
-    option = Shipping.standard_shipping_option
-
-    assert_equal "exclusive", option[:shipping_rate_data][:tax_behavior]
-    assert_equal Shipping::SHIPPING_TAX_CODE, option[:shipping_rate_data][:tax_code]
-  end
-
-  test "free_shipping_option returns correct structure" do
-    option = Shipping.free_shipping_option
-
-    assert_equal "fixed_amount", option[:shipping_rate_data][:type]
-    assert_equal 0, option[:shipping_rate_data][:fixed_amount][:amount]
-    assert_equal "gbp", option[:shipping_rate_data][:fixed_amount][:currency]
-    assert_equal "Free Shipping", option[:shipping_rate_data][:display_name]
-  end
-
-  test "free_shipping_option is marked taxable (VAT on zero shipping is still zero)" do
-    option = Shipping.free_shipping_option
-
-    assert_equal "exclusive", option[:shipping_rate_data][:tax_behavior]
-    assert_equal Shipping::SHIPPING_TAX_CODE, option[:shipping_rate_data][:tax_code]
-  end
-
-  test "sample_only_shipping_option is marked taxable so Stripe charges VAT on shipping" do
-    option = Shipping.sample_only_shipping_option
-
-    assert_equal "exclusive", option[:shipping_rate_data][:tax_behavior]
-    assert_equal Shipping::SHIPPING_TAX_CODE, option[:shipping_rate_data][:tax_code]
-  end
-
-  test "sample_only_shipping_option uses same cost as standard shipping" do
-    sample_option = Shipping.sample_only_shipping_option
-    standard_option = Shipping.standard_shipping_option
-
-    assert_equal standard_option[:shipping_rate_data][:fixed_amount][:amount],
-                 sample_option[:shipping_rate_data][:fixed_amount][:amount]
-  end
-
-  test "sample_only_shipping_option uses same delivery estimate as standard shipping" do
-    sample_option = Shipping.sample_only_shipping_option
-    standard_option = Shipping.standard_shipping_option
-
-    assert_equal standard_option[:shipping_rate_data][:delivery_estimate],
-                 sample_option[:shipping_rate_data][:delivery_estimate]
-  end
-
-  test "sample_only_shipping_option displays as Standard Shipping" do
-    option = Shipping.sample_only_shipping_option
-
-    assert_equal "Standard Shipping", option[:shipping_rate_data][:display_name]
+    assert_equal "Shipping", item[:price_data][:product_data][:name]
   end
 end

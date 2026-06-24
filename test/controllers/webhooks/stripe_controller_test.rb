@@ -208,15 +208,20 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     product = products(:one)
     cart.cart_items.create!(product: product, quantity: 2, price: product.price)
 
+    # Shipping is a taxed line item: amount_subtotal includes it (1900 + 500) and
+    # amount_tax is VAT on both: 2400 * 0.2 = 480.
     session = build_stripe_session(
       id: "sess_webhook_discount",
       payment_status: "paid",
       metadata: { cart_id: cart.id.to_s, discount_code: "WELCOME5" },
-      amount_subtotal: 1900,
-      amount_tax: 380,
-      shipping_amount_total: 500,
-      amount_total: 2780,
-      amount_discount: 100
+      amount_subtotal: 2400,
+      amount_tax: 480,
+      amount_total: 2880,
+      amount_discount: 100,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1900),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
 
     event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
@@ -229,11 +234,36 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
 
     order = Order.find_by(stripe_session_id: "sess_webhook_discount")
     assert_equal 19.0, order.subtotal_amount.to_f
-    assert_equal 3.80, order.vat_amount.to_f
+    assert_equal 4.80, order.vat_amount.to_f
     assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 27.80, order.total_amount.to_f
+    assert_equal 28.80, order.total_amount.to_f
     assert_equal 1.0, order.discount_amount.to_f
     assert_equal "WELCOME5", order.discount_code
+  end
+
+  test "expands nested line item product so the shipping line is identifiable" do
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    session = build_stripe_session(
+      id: "sess_webhook_expand",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s },
+      amount_subtotal: 1000,
+      amount_tax: 200,
+      amount_total: 1200,
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 1000) ]
+    )
+
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.expects(:retrieve).with do |args|
+      args[:expand] == [ "collected_information", "line_items.data.price.product" ]
+    end.returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
   end
 
   # ============================================================================
@@ -249,12 +279,15 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
       id: "sess_webhook_promo_code",
       payment_status: "paid",
       metadata: { cart_id: cart.id.to_s },
-      amount_subtotal: 1800,
-      amount_tax: 360,
-      shipping_amount_total: 500,
-      amount_total: 2660,
+      amount_subtotal: 2300,
+      amount_tax: 460,
+      amount_total: 2760,
       amount_discount: 200,
-      promotion_code: "SUMMER20"
+      promotion_code: "SUMMER20",
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1800),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
 
     event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)

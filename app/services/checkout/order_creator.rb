@@ -27,6 +27,7 @@ module Checkout
     attr_reader :stripe_session, :cart
 
     def order_attributes(shipping_address)
+      amounts = Checkout::SessionAmounts.from(stripe_session)
       attributes = {
         user: user,
         organization: user&.organization,
@@ -34,11 +35,11 @@ module Checkout
         email: stripe_session.customer_details.email,
         stripe_session_id: stripe_session.id,
         status: "paid",
-        subtotal_amount: stripe_session.amount_subtotal / 100.0,
-        vat_amount: (stripe_session.total_details&.amount_tax || 0) / 100.0,
-        shipping_amount: (stripe_session.shipping_cost&.amount_total || 0) / 100.0,
-        total_amount: stripe_session.amount_total / 100.0,
-        discount_amount: (stripe_session.total_details&.amount_discount || 0) / 100.0,
+        subtotal_amount: amounts.subtotal,
+        vat_amount: amounts.vat,
+        shipping_amount: amounts.shipping,
+        total_amount: amounts.total,
+        discount_amount: amounts.discount,
         discount_code: discount_code.presence,
         shipping_name: shipping_address[:name],
         shipping_address_line1: shipping_address[:line1],
