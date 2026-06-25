@@ -7,6 +7,10 @@ module Webhooks
     # retries, instead of swallowing it as 200 and losing a paid order.
     class RetryableWebhookError < StandardError; end
 
+    # Raised when the session can never produce a valid order (e.g. no shipping
+    # details), so `create` returns 200 and Stripe does NOT retry a doomed payload.
+    class PermanentlyInvalidSessionError < StandardError; end
+
     def create
       payload = request.body.read
       sig_header = request.env["HTTP_STRIPE_SIGNATURE"]
@@ -80,6 +84,15 @@ module Webhooks
 
       # Extract shipping address
       shipping = extract_shipping_address(full_session)
+
+      # Guard the permanent failure upstream (as OrderCreator does on the success
+      # path): a completed session with no shipping_details would build an order with
+      # nil required shipping fields and raise RecordInvalid. That can never succeed
+      # on retry, so fail it as permanent here rather than letting it look like a
+      # transient (retryable) RecordInvalid from an item rollback.
+      if required_shipping_values(shipping).any?(&:blank?)
+        raise PermanentlyInvalidSessionError, "session #{full_session.id} has no shipping details"
+      end
 
       # Get user if client_reference_id was set
       user = User.find_by(id: full_session.client_reference_id)
@@ -178,6 +191,16 @@ module Webhooks
 
       Rails.logger.info("[Stripe Webhook] Order already created concurrently for session #{session.id}")
       Rails.event.notify("webhook.processed", event_type: event.type, stripe_event_id: event.id)
+    rescue PermanentlyInvalidSessionError => e
+      # The session itself can never produce a valid order (e.g. a completed session
+      # carrying no shipping_details, so the required shipping fields would be nil).
+      # Retrying the identical payload can never succeed, so capture it for
+      # investigation and return 200 to stop Stripe retrying for 72h and flooding
+      # Sentry. Detected upstream (before Order.create!) so it is never confused with
+      # a transient item-level RecordInvalid that rolls the transaction back.
+      Rails.logger.error("[Stripe Webhook] Session permanently invalid for #{session.id}: #{e.message}")
+      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
+      Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
     rescue => e
       Rails.logger.error("[Stripe Webhook] Error creating order: #{e.message}")
       Rails.logger.error(e.backtrace.first(10).join("\n"))
@@ -215,6 +238,19 @@ module Webhooks
         postal_code: address[:postal_code],
         country: address[:country]
       }
+    end
+
+    # The shipping fields Order validates for presence. Mirrors
+    # Checkout::OrderCreator#required_shipping_values so both order-creation paths
+    # treat a session with no shipping details as a permanent failure.
+    def required_shipping_values(shipping)
+      [
+        shipping[:name],
+        shipping[:line1],
+        shipping[:city],
+        shipping[:postal_code],
+        shipping[:country]
+      ]
     end
 
     def extract_promotion_code(stripe_session)

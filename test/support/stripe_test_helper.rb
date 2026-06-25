@@ -108,7 +108,8 @@ module StripeTestHelper
     line_items_data = overrides[:line_items_data] || []
     line_items = stub(data: line_items_data, has_more: overrides[:line_items_has_more] || false)
 
-    # amount_subtotal is post-discount and pre-tax. With shipping sent as a line
+    # amount_subtotal is pre-discount and pre-tax (verified against the live API:
+    # amount_total = amount_subtotal + tax - discount). With shipping sent as a line
     # item it INCLUDES shipping; the legacy shipping_cost path adds it on top.
     amount_subtotal = overrides[:amount_subtotal] || (overrides[:subtotal] || 0)
     amount_total = overrides[:amount_total] || (amount_subtotal + tax_amount + legacy_shipping_amount.to_i)
@@ -168,7 +169,7 @@ module StripeTestHelper
   # (it takes VAT from the session-level total_details.amount_tax); they're stubbed
   # only for realism, so overriding them does not affect a VAT assertion.
   def stripe_shipping_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Shipping", id: "li_ship")
-    tax = amount_tax || (amount_subtotal * 0.2).round
+    tax = amount_tax || (amount_subtotal * VAT_RATE).round
     stub(
       id: id,
       amount_subtotal: amount_subtotal,
@@ -184,7 +185,7 @@ module StripeTestHelper
   # part of the subtotal. As with the shipping stub, amount_tax/amount_total are
   # not read by SessionAmounts (VAT comes from session total_details.amount_tax).
   def stripe_product_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Test Product", id: "li_prod")
-    tax = amount_tax || (amount_subtotal * 0.2).round
+    tax = amount_tax || (amount_subtotal * VAT_RATE).round
     stub(
       id: id,
       amount_subtotal: amount_subtotal,

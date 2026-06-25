@@ -78,6 +78,62 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "returns 200 without retrying when the session permanently fails Order validation" do
+    # A completed session whose collected_information carries no shipping_details
+    # (so all five required shipping fields are nil) makes Order.create! raise
+    # RecordInvalid. That is a PERMANENT failure - retrying the identical payload
+    # can never succeed - so we must capture it for investigation and return 200 so
+    # Stripe stops retrying, rather than looping for 72h and flooding Sentry. (The
+    # success path can't hit this: OrderCreator guards missing shipping upstream as
+    # MissingShippingDetails; the webhook calls Order.create! directly.)
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    session = build_stripe_session(
+      id: "sess_webhook_invalid", payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }, amount_subtotal: 1000, amount_tax: 200, amount_total: 1200,
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 1000) ]
+    )
+    # Drop the shipping details from the hash the webhook reads, so the order is
+    # built with nil shipping fields and fails presence validation.
+    hash_without_shipping = session.to_hash.merge(collected_information: {})
+    session.stubs(:to_hash).returns(hash_without_shipping)
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    Sentry.expects(:capture_exception).at_least_once
+
+    assert_no_difference "Order.count" do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    # 200, not 5xx: a permanently-invalid session must not trigger Stripe retries.
+    assert_response :ok
+    assert_nil Order.find_by(stripe_session_id: "sess_webhook_invalid")
+  end
+
+  test "emits webhook.failed when a session permanently fails Order validation" do
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    session = build_stripe_session(
+      id: "sess_webhook_invalid_event", payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }, amount_subtotal: 1000, amount_tax: 200, amount_total: 1200,
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 1000) ]
+    )
+    hash_without_shipping = session.to_hash.merge(collected_information: {})
+    session.stubs(:to_hash).returns(hash_without_shipping)
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+    Sentry.stubs(:capture_exception)
+
+    assert_event_reported("webhook.failed") do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+  end
+
   test "returns 5xx so Stripe retries when order creation hits a transient error" do
     # A transient failure (DB blip, Stripe error) must NOT be swallowed as 200 -
     # that would lose a paid order with no retry. Re-raise so Stripe retries.
