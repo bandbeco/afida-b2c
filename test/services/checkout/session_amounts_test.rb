@@ -179,6 +179,34 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
     assert_equal 6.99, amounts.shipping
   end
 
+  test "pages from the start when the embedded list reports has_more but is empty" do
+    # Defensive: if Stripe ever returns an expanded list with has_more true but an
+    # empty data array, page_one.last is nil. We must not call nil.id; instead list
+    # line items from the start (no starting_after) so the shipping line is still
+    # found rather than crashing order creation.
+    product = stripe_product_line_item(amount_subtotal: 2000, id: "li_a")
+    shipping = stripe_shipping_line_item(amount_subtotal: 699, id: "li_b")
+
+    session = build_stripe_session(
+      id: "sess_empty_haspage",
+      amount_subtotal: 2699,
+      amount_tax: 540,
+      amount_total: 3239,
+      line_items_data: [],
+      line_items_has_more: true
+    )
+
+    # No starting_after, because there is no embedded boundary item to page after.
+    Stripe::Checkout::Session.stubs(:list_line_items)
+      .with("sess_empty_haspage", has_entries(expand: [ "data.price.product" ]))
+      .returns(stub(auto_paging_each: [ product, shipping ].each))
+
+    amounts = Checkout::SessionAmounts.from(session)
+
+    assert_equal 20.0, amounts.subtotal
+    assert_equal 6.99, amounts.shipping
+  end
+
   test "propagates a Stripe error during pagination instead of silently recording zero shipping" do
     # A transient Stripe error while paging a >10-item cart must surface to the
     # caller's handler (the success path rescues it; the webhook lets Stripe retry),

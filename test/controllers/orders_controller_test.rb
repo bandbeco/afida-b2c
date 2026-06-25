@@ -233,6 +233,29 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     refute_match(/Discount/, response.body)
   end
 
+  test "show page shows discount line item when discount was applied" do
+    # subtotal_amount is persisted GROSS (pre-discount), so without a discount line
+    # the summary's Subtotal + VAT + Shipping would not reconcile to Total.
+    @order_one.update!(discount_amount: 3.57, discount_code: "WELCOME5")
+
+    sign_in @user_one
+    get order_url(@order_one)
+
+    assert_response :success
+    assert_match "Discount (WELCOME5)", response.body
+    assert_match "-£3.57", response.body
+  end
+
+  test "show page hides discount row when no discount was applied" do
+    @order_one.update!(discount_amount: 0, discount_code: nil)
+
+    sign_in @user_one
+    get order_url(@order_one)
+
+    assert_response :success
+    refute_match(/Discount/, response.body)
+  end
+
   test "confirmation page renders the GCR survey opt-in when merchant_id is configured" do
     with_gcr_merchant_id(12345678) do
       sign_in @user_one

@@ -116,11 +116,15 @@ module Checkout
 
     # The line items after the embedded first page, fetched via the dedicated
     # endpoint (retrieve does not auto-paginate). starting_after avoids re-fetching
-    # the page Stripe already returned. A Stripe error propagates to the caller's
+    # the page Stripe already returned. If the embedded page was empty (has_more true
+    # but no data, a defensive edge), there is no boundary item, so list from the
+    # start instead of dereferencing nil. A Stripe error propagates to the caller's
     # handler rather than being treated as "no shipping line".
     def line_items_after(last_embedded_item)
+      params = { expand: [ "data.price.product" ] }
+      params[:starting_after] = last_embedded_item.id if last_embedded_item
       Stripe::Checkout::Session
-        .list_line_items(@session.id, expand: [ "data.price.product" ], starting_after: last_embedded_item.id)
+        .list_line_items(@session.id, **params)
         .auto_paging_each
         .to_a
     end

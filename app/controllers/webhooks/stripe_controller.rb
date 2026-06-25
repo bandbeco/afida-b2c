@@ -191,13 +191,18 @@ module Webhooks
 
       Rails.logger.info("[Stripe Webhook] Order already created concurrently for session #{session.id}")
       Rails.event.notify("webhook.processed", event_type: event.type, stripe_event_id: event.id)
-    rescue PermanentlyInvalidSessionError => e
-      # The session itself can never produce a valid order (e.g. a completed session
-      # carrying no shipping_details, so the required shipping fields would be nil).
-      # Retrying the identical payload can never succeed, so capture it for
-      # investigation and return 200 to stop Stripe retrying for 72h and flooding
-      # Sentry. Detected upstream (before Order.create!) so it is never confused with
-      # a transient item-level RecordInvalid that rolls the transaction back.
+    rescue PermanentlyInvalidSessionError, Checkout::SessionAmounts::UnexpandedLineItemError => e
+      # The session can never produce a valid order on retry, for one of two reasons:
+      #   - PermanentlyInvalidSessionError: a completed session carrying no
+      #     shipping_details, so the required shipping fields would be nil.
+      #   - UnexpandedLineItemError: a dropped expand (programmer error) means the
+      #     shipping line can't be identified; the same payload will fail identically.
+      # Either way retrying can never succeed, so capture it for investigation and
+      # return 200 to stop Stripe retrying for 72h and flooding Sentry. Both are
+      # raised before/while deriving amounts, never from a transient item-level
+      # RecordInvalid that rolls the transaction back (that path stays retryable).
+      # The success controller rescues UnexpandedLineItemError the same way, so the
+      # two order-creation paths don't diverge on this error.
       Rails.logger.error("[Stripe Webhook] Session permanently invalid for #{session.id}: #{e.message}")
       Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
       Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)

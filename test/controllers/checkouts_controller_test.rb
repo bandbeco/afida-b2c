@@ -362,6 +362,28 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{/orders/#{racing_order.id}/confirmation\?token=}, response.location
   end
 
+  test "success does not 422 a paid customer when an order item fails validation" do
+    # A non-race RecordInvalid (e.g. an OrderItem validation fails inside
+    # OrderCreator's transaction, rolling back the order) must not surface as a 422
+    # to someone who has already paid. Capture it and redirect gracefully - the
+    # webhook fallback still creates the order - rather than re-raising.
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+    # No order exists for this session, and create raises a validation error that is
+    # NOT the uniqueness race.
+    Order.stubs(:find_by).with(stripe_session_id: session.id).returns(nil)
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(
+      ActiveRecord::RecordInvalid.new(Order.new)
+    )
+    Sentry.expects(:capture_exception).at_least_once
+
+    assert_no_difference "Order.count" do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    assert_redirected_to cart_path
+    assert_match /Unable to verify payment/, flash[:error]
+  end
+
   test "success handles missing session_id parameter" do
     get success_checkout_path
 

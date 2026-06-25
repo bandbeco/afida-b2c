@@ -134,6 +134,33 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "returns 200 without retrying when SessionAmounts raises UnexpandedLineItemError" do
+    # A dropped expand is a deterministic programmer error: retrying the identical
+    # payload can never succeed, so (like the success path) capture it and return 200
+    # rather than letting Stripe retry for 72h. The success controller already
+    # rescues this exact error gracefully; the webhook must not diverge.
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    session = build_stripe_session(
+      id: "sess_webhook_unexpanded", payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }, amount_subtotal: 1000, amount_tax: 200, amount_total: 1200
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+    Checkout::SessionAmounts.stubs(:from)
+      .raises(Checkout::SessionAmounts::UnexpandedLineItemError.new("line item product not expanded"))
+
+    Sentry.expects(:capture_exception).at_least_once
+
+    assert_no_difference "Order.count" do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+    assert_nil Order.find_by(stripe_session_id: "sess_webhook_unexpanded")
+  end
+
   test "returns 5xx so Stripe retries when order creation hits a transient error" do
     # A transient failure (DB blip, Stripe error) must NOT be swallowed as 200 -
     # that would lose a paid order with no retry. Re-raise so Stripe retries.

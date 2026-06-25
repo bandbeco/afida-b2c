@@ -26,7 +26,7 @@ class ShippingTest < ActiveSupport::TestCase
   end
 
   # ==========================================================================
-  # shipping_line_item — shipping is charged as a taxed Stripe line item so that,
+  # shipping_line_item: shipping is charged as a taxed Stripe line item so that,
   # under manual tax rates, Stripe applies VAT to the delivery charge too.
   # ==========================================================================
 

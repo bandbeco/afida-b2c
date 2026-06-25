@@ -84,7 +84,7 @@ class OrderTotalsTest < ActiveSupport::TestCase
   end
 
   test "charged vat is the configured rate applied to subtotal plus shipping, unrounded" do
-    # (33.33 + 6.99) * 0.2 = 8.064 — full precision, not yet rounded to pennies.
+    # (33.33 + 6.99) * 0.2 = 8.064, full precision, not yet rounded to pennies.
     totals = OrderTotals.for(BigDecimal("33.33"), shipping: :charged)
 
     assert_equal (BigDecimal("33.33") + STANDARD_COST) * BigDecimal(VAT_RATE.to_s), totals.vat
