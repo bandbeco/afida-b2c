@@ -8,15 +8,19 @@
 #
 # VAT calculation:
 # - UK VAT rate of 20% (VAT_RATE = 0.2)
-# - VAT calculated on subtotal (sum of all cart items)
-# - Final total = subtotal + VAT
+# - Shipping is previewed the same way checkout charges it: free at/above the
+#   free-shipping threshold, otherwise STANDARD_COST. VAT is levied on
+#   subtotal + shipping (UK VAT applies to delivery), so the preview's VAT and
+#   total match what Stripe charges. An empty cart ships nothing and stays at 0.
+# - Final total = subtotal + shipping + VAT
 #
 # Usage:
 #   Current.cart              # Access current cart (guest or user)
 #   cart.items_count          # Total quantity of all items
 #   cart.subtotal_amount      # Sum before VAT
-#   cart.vat_amount           # 20% VAT on subtotal
-#   cart.total_amount         # Final total with VAT
+#   cart.shipping_amount      # Charged shipping (0 when free, nil when empty)
+#   cart.vat_amount           # 20% VAT on subtotal + shipping
+#   cart.total_amount         # Final total with shipping and VAT
 #
 class Cart < ApplicationRecord
   SAMPLE_LIMIT = 5
@@ -49,16 +53,22 @@ class Cart < ApplicationRecord
     @subtotal_amount ||= cart_items.includes(:product).sum(&:subtotal_amount)
   end
 
-  # Calculate VAT at UK rate (20%)
-  # Delegates to OrderTotals, the single home for the order-totals formula. The
-  # cart takes the :deferred shipping stance: shipping is added later at checkout
-  # via Stripe, so it carries no shipping line here.
+  # Shipping the cart will be charged at checkout: 0 at/above the free-shipping
+  # threshold, STANDARD_COST below it, and nil for an empty cart (nothing to
+  # ship). Delegates to OrderTotals so this mirrors SessionBuilder's rule exactly.
+  def shipping_amount
+    cart_totals.shipping
+  end
+
+  # Calculate VAT at UK rate (20%) on subtotal + shipping. Delegates to
+  # OrderTotals, the single home for the order-totals formula. The cart takes the
+  # :charged stance so VAT and total match the Stripe charge (which taxes the
+  # delivery line). An empty cart falls back to :deferred and so carries no VAT.
   def vat_amount
     cart_totals.vat
   end
 
-  # Final total including VAT (no shipping; see vat_amount).
-  # Note: Shipping cost is added separately at checkout via Stripe.
+  # Final total including shipping and VAT, matching what Stripe charges.
   def total_amount
     cart_totals.total
   end
@@ -147,9 +157,12 @@ class Cart < ApplicationRecord
 
   # The cart's order totals, computed once per request. Memoized like
   # subtotal_amount (and cleared in reload) so vat_amount and total_amount don't
-  # each recompute. :deferred — the cart never shows a shipping line.
+  # each recompute. :charged once the cart has items, so the previewed shipping,
+  # VAT and total match the Stripe charge; :deferred for an empty cart, which has
+  # nothing to ship and so shows no shipping line (and a £0 total).
   def cart_totals
-    @cart_totals ||= OrderTotals.for(subtotal_amount, shipping: :deferred)
+    stance = cart_items.empty? ? :deferred : :charged
+    @cart_totals ||= OrderTotals.for(subtotal_amount, shipping: stance)
   end
 
   # Action Mailer's host, configured in every environment. recovery_url runs

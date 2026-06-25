@@ -36,14 +36,16 @@
           <h2 class="text-lg sm:text-2xl mb-3 sm:mb-6">Cart Summary</h2>
 
           <div class="flex justify-between mb-2 text-sm sm:text-base text-gray-700">
-            <span>Shipping</span>
-            <span>Calculate at checkout</span>
-          </div>
-
-          <div class="flex justify-between mb-2 text-sm sm:text-base text-gray-700">
             <span>Subtotal</span>
             <span id="subtotal">
               <%= number_to_currency(Current.cart.subtotal_amount) %>
+            </span>
+          </div>
+
+          <div class="flex justify-between mb-2 text-sm sm:text-base text-gray-700">
+            <span>Shipping</span>
+            <span id="shipping">
+              <%= cart_shipping_display(Current.cart) %>
             </span>
           </div>
 

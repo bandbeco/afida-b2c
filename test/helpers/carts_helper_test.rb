@@ -20,4 +20,26 @@ class CartsHelperTest < ActionView::TestCase
                     welcome_discount_savings(cart),
                     0.0001
   end
+
+  # =============================================================================
+  # cart_shipping_display: the cart preview's shipping line
+  # =============================================================================
+
+  test "cart_shipping_display shows the currency amount when shipping is charged" do
+    cart = Struct.new(:shipping_amount).new(BigDecimal("6.99"))
+
+    assert_equal number_to_currency(BigDecimal("6.99")), cart_shipping_display(cart)
+  end
+
+  test "cart_shipping_display shows Free when shipping is zero" do
+    cart = Struct.new(:shipping_amount).new(BigDecimal("0"))
+
+    assert_equal "Free", cart_shipping_display(cart)
+  end
+
+  test "cart_shipping_display falls back to Calculate at checkout when shipping is unknown" do
+    cart = Struct.new(:shipping_amount).new(nil)
+
+    assert_equal "Calculate at checkout", cart_shipping_display(cart)
+  end
 end

@@ -71,6 +71,36 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_match product.category.name, response.body
   end
 
+  # Cart preview shipping line: matches what Stripe charges (see Cart#shipping_amount)
+  test "cart page shows the charged shipping amount below the free-shipping threshold" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    # products(:one) is £10/pack; one pack keeps the cart under the £100 threshold.
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    get cart_url
+    assert_response :success
+    assert_select "#shipping", text: /#{Regexp.escape(Shipping.formatted_standard_cost)}/
+  end
+
+  test "cart page shows Free shipping at or above the free-shipping threshold" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    over_threshold = Product.create!(
+      category: categories(:cups),
+      name: "Bulk pack",
+      sku: "TEST-CART-OVER-THRESHOLD",
+      price: Shipping::FREE_SHIPPING_THRESHOLD + 1,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: over_threshold, quantity: 1, price: over_threshold.price)
+
+    get cart_url
+    assert_response :success
+    assert_select "#shipping", text: /Free/
+  end
+
   # GET /cart/resume?token=... (cross-device abandoned-cart recovery)
   test "resume re-binds the guest session to the cart in a valid token and redirects to cart" do
     guest_cart = Cart.create!

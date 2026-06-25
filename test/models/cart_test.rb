@@ -18,13 +18,34 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 0, @empty_cart.subtotal_amount
   end
 
-  test "vat_amount calculates 20% VAT on subtotal" do
-    assert_equal 4.0, @cart.vat_amount
-    assert_equal 0, @empty_cart.vat_amount
+  # The cart preview charges shipping the same way checkout does (the :charged
+  # stance): a sub-threshold subtotal pays STANDARD_COST and VAT is levied on
+  # subtotal + shipping, so the preview's VAT/Total match what Stripe charges.
+  # Cart :one has a £20 subtotal (below the £100 free-shipping threshold).
+  test "shipping_amount charges the standard cost below the free-shipping threshold" do
+    assert_equal Shipping.standard_cost_in_pounds, @cart.shipping_amount
   end
 
-  test "total_amount includes subtotal plus VAT" do
-    assert_equal 24.0, @cart.total_amount
+  test "vat_amount is 20% of subtotal plus shipping below the threshold" do
+    # (20.00 + 6.99) * 0.2 = 5.398, full precision (rounded once at the view).
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    assert_equal((BigDecimal("20.0") + cost) * BigDecimal(VAT_RATE.to_s), @cart.vat_amount)
+    assert_equal BigDecimal("5.398"), @cart.vat_amount
+  end
+
+  test "total_amount includes subtotal, shipping, and VAT below the threshold" do
+    # 20.00 + 6.99 + 5.398 = 32.388
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    expected = BigDecimal("20.0") + cost + (BigDecimal("20.0") + cost) * BigDecimal(VAT_RATE.to_s)
+    assert_equal expected, @cart.total_amount
+    assert_equal BigDecimal("32.388"), @cart.total_amount
+  end
+
+  # An empty cart ships nothing, so it stays at zero across the board rather than
+  # showing a phantom shipping charge.
+  test "empty cart has no shipping, VAT, or total" do
+    assert_nil @empty_cart.shipping_amount
+    assert_equal 0, @empty_cart.vat_amount
     assert_equal 0, @empty_cart.total_amount
   end
 
@@ -162,8 +183,10 @@ class CartTest < ActiveSupport::TestCase
       price: variant.price
     )
 
-    # Should calculate: 2 packs × £100 = £200
+    # Should calculate: 2 packs × £100 = £200, which is at/above the £100
+    # threshold, so shipping is free and VAT is on the subtotal alone.
     assert_equal 200.00, cart.subtotal_amount
+    assert_equal 0, cart.shipping_amount
     assert_equal 40.00, cart.vat_amount  # 20% of £200
     assert_equal 240.00, cart.total_amount
   end
@@ -205,10 +228,28 @@ class CartTest < ActiveSupport::TestCase
       price: variant2.price
     )
 
-    # Total: £100 + £240 = £340
+    # Total: £100 + £240 = £340, above the threshold, so shipping is free.
     assert_equal 340.00, cart.subtotal_amount
+    assert_equal 0, cart.shipping_amount
     assert_equal 68.00, cart.vat_amount  # 20% of £340
     assert_equal 408.00, cart.total_amount
+  end
+
+  test "shipping_amount is free at or above the free-shipping threshold" do
+    cart = Cart.create
+    variant = Product.create!(
+      category: categories(:cups),
+      name: "Threshold pack",
+      sku: "TEST-CART-FREE-SHIP",
+      price: Shipping::FREE_SHIPPING_THRESHOLD,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+
+    assert_equal 0, cart.shipping_amount
+    # VAT is on the subtotal alone when shipping is free.
+    assert_equal Shipping::FREE_SHIPPING_THRESHOLD * BigDecimal(VAT_RATE.to_s), cart.vat_amount
   end
 
   # Sample tracking tests

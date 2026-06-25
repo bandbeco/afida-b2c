@@ -63,6 +63,11 @@
       </div>
 
       <div class="flex justify-between items-center mb-4">
+        <span class="font-medium">Shipping</span>
+        <span><%= cart_shipping_display(Current.cart) %></span>
+      </div>
+
+      <div class="flex justify-between items-center mb-4">
         <span class="font-medium">VAT <%= VAT_RATE * 100 %>%</span>
         <span><%= number_to_currency(Current.cart.vat_amount) %></span>
       </div>

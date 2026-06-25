@@ -26,6 +26,12 @@
   <%= number_to_currency(Current.cart.subtotal_amount) %>
 <% end %>
 
+<%# Shipping can flip (e.g. a quantity change crossing the free-shipping
+    threshold), so refresh it alongside the other totals. %>
+<%= turbo_stream.update "shipping" do %>
+  <%= cart_shipping_display(Current.cart) %>
+<% end %>
+
 <%= turbo_stream.update "grand_total" do %>
   <%= number_to_currency(Current.cart.total_amount) %>
 <% end %>

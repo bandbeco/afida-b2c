@@ -23,6 +23,17 @@ module CartsHelper
     cart.subtotal_amount * welcome_discount_rate
   end
 
+  # The cart preview's shipping line. The cart charges shipping the same way
+  # checkout does, so this shows "Free" at/above the free-shipping threshold, the
+  # currency amount below it, and "Calculate at checkout" only for an empty cart
+  # (shipping_amount is nil) which never actually renders the summary.
+  def cart_shipping_display(cart)
+    shipping = cart.shipping_amount
+    return "Calculate at checkout" if shipping.nil?
+
+    shipping.zero? ? "Free" : number_to_currency(shipping)
+  end
+
   # Determine if the discount signup form should be shown
   #
   # Returns true if:
