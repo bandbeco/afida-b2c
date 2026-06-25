@@ -1,0 +1,17 @@
+{
+  "slug": "sushi-restaurants",
+  "name": "Sushi Restaurants",
+  "audience": "Sushi bar owners, Japanese restaurant operators, sushi delivery businesses",
+  "pain_points": [
+    "Presentation is paramount — packaging must showcase the product",
+    "Sushi platters need compartmentalised trays with clear lids",
+    "Soy sauce sachets and chopsticks add to per-order packaging cost",
+    "Cold chain integrity means packaging must maintain freshness"
+  ],
+  "top_products": ["cold-food-and-salads", "tableware", "bags-and-wraps", "supplies-and-essentials"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (fish, soy, sesame)", "Food hygiene rating display requirements"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

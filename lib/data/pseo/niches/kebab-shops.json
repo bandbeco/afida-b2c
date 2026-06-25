@@ -1,0 +1,17 @@
+{
+  "slug": "kebab-shops",
+  "name": "Kebab Shops",
+  "audience": "Kebab shop owners, late-night takeaway operators, döner and shish businesses",
+  "pain_points": [
+    "Need packaging that handles hot, saucy food without leaking",
+    "Late-night trade means high-volume, fast-paced service",
+    "Polystyrene ban is forcing a switch to more expensive alternatives",
+    "Pitta wraps and salad boxes need different container types"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "cold-food-and-salads", "napkins"],
+  "compliance_concerns": ["Single-use plastics ban — polystyrene containers", "Calorie labelling regulations for larger chains"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (2,000–6,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "medium"
+}

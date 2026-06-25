@@ -1,0 +1,17 @@
+{
+  "slug": "dessert-cafes",
+  "name": "Dessert Cafés",
+  "audience": "Dessert café owners, waffles and crepes businesses, late-night dessert spots",
+  "pain_points": [
+    "Instagram-worthy presentation drives packaging choices",
+    "Sticky, saucy desserts need leak-proof containers",
+    "Late-night trade means high weekend volumes",
+    "Wide variety of dessert types requires multiple packaging formats"
+  ],
+  "top_products": ["cold-food-and-salads", "cups-and-lids", "napkins", "tableware"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (nuts, dairy, gluten)", "HFSS display restrictions for high-sugar products"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–4,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

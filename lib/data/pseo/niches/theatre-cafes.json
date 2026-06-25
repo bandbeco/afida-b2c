@@ -1,0 +1,17 @@
+{
+  "slug": "theatre-cafes",
+  "name": "Theatre Cafés",
+  "audience": "Theatre café and bar managers, performing arts venue caterers, interval refreshment operators",
+  "pain_points": [
+    "Interval service must be lightning fast — 15 minutes to serve hundreds",
+    "Ice cream tubs and pre-poured drinks dominate interval trade",
+    "Premium venue feel demands quality packaging, not cheap disposables",
+    "Matinee and evening shows create two distinct service peaks per day"
+  ],
+  "top_products": ["cups-and-lids", "cold-food-and-salads", "napkins", "tableware"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "Natasha's Law allergen labelling for pre-packed snacks"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "medium"
+}

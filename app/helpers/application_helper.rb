@@ -18,6 +18,16 @@ module ApplicationHelper
     CLIENT_LOGOS
   end
 
+  # Find a client logo file by client name (case-insensitive fuzzy match)
+  # Used by PSEO pages to show relevant client logos
+  def find_client_logo(client_name)
+    normalized = client_name.downcase.gsub(/[^a-z0-9]/, "")
+    CLIENT_LOGOS.find do |logo|
+      logo_name = logo.split(".").first.tr("-", "").downcase
+      logo_name.include?(normalized) || normalized.include?(logo_name)
+    end
+  end
+
   def category_icon_path(category)
     icon_mapping = {
       "cups-and-lids" => "images/graphics/cold-cups.svg",

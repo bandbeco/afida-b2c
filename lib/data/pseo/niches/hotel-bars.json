@@ -1,0 +1,17 @@
+{
+  "slug": "hotel-bars",
+  "name": "Hotel Bars",
+  "audience": "Hotel bar managers, boutique hotel cocktail bar operators, hotel lounge managers",
+  "pain_points": [
+    "Cocktail straws and stirrers must now be non-plastic alternatives",
+    "Napkins and coasters are high-volume consumables at bar service",
+    "Room service drinks need spill-proof cups and lids",
+    "Premium feel is essential — cheap packaging undermines the hotel brand"
+  ],
+  "top_products": ["cups-and-lids", "straws", "napkins", "supplies-and-essentials"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "Licensing Act requirements for food service at bars"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (2,000–8,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

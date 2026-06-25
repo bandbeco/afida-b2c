@@ -1,0 +1,17 @@
+{
+  "slug": "coffee-shops",
+  "name": "Coffee Shops",
+  "audience": "Independent café owners, small coffee shop chains, barista-led businesses",
+  "pain_points": [
+    "High cup volume = packaging is a significant cost line",
+    "Customer pressure to go eco / ditch single-use plastic",
+    "Branding matters — cups are walking adverts",
+    "Storage space is limited in most café back-of-house"
+  ],
+  "top_products": ["cups-and-lids", "straws", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "HFSS display restrictions for food"],
+  "order_frequency": "Monthly or bi-monthly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

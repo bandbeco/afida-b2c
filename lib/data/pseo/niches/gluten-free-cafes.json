@@ -1,0 +1,17 @@
+{
+  "slug": "gluten-free-cafes",
+  "name": "Gluten-Free Cafés",
+  "audience": "Gluten-free café owners, coeliac-friendly bakery operators, free-from food businesses",
+  "pain_points": [
+    "Cross-contamination risk means dedicated packaging storage is essential",
+    "Allergen labelling is the single most critical compliance concern",
+    "Customers pay premium prices and expect premium packaging to match",
+    "Niche market means smaller volumes but highly loyal repeat customers"
+  ],
+  "top_products": ["cold-food-and-salads", "bags-and-wraps", "cups-and-lids", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (gluten-free claims must be substantiated)", "Food Information Regulations — 'free from' labelling rules"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–2,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

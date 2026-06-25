@@ -1,0 +1,17 @@
+{
+  "slug": "hospital-cafeterias",
+  "name": "Hospital Cafeterias",
+  "audience": "NHS trust catering managers, private hospital food service operators, hospital café franchisees",
+  "pain_points": [
+    "24/7 operation means constant packaging consumption",
+    "NHS procurement frameworks add bureaucracy to purchasing",
+    "Hygiene standards are exceptionally high — sealed packaging preferred",
+    "Staff, visitors, and patients all have different needs and budgets"
+  ],
+  "top_products": ["hot-food", "cups-and-lids", "cold-food-and-salads", "tableware"],
+  "compliance_concerns": ["NHS sustainability targets (net zero by 2040)", "Natasha's Law allergen labelling", "CQC food safety requirements"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Large (10,000–25,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "low"
+}

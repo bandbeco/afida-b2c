@@ -1,0 +1,17 @@
+{
+  "slug": "chinese-takeaways",
+  "name": "Chinese Takeaways",
+  "audience": "Chinese takeaway owners, Cantonese restaurant operators, family-run Chinese food businesses",
+  "pain_points": [
+    "Iconic containers are expected but sustainability rules are changing",
+    "Soy sauce, prawn crackers, and sides all need separate packaging",
+    "Leak-proof containers are essential for saucy dishes",
+    "High delivery volumes on Friday and Saturday nights strain stock"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "tableware", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (soy, shellfish, sesame)", "Single-use plastics ban — polystyrene containers"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (3,000–10,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "medium"
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "hotel-restaurants",
+  "name": "Hotel Restaurants",
+  "audience": "Hotel F&B managers, boutique hotel restaurant operators, hotel chain catering directors",
+  "pain_points": [
+    "Room service packaging must feel premium and keep food warm",
+    "Breakfast buffets need a range of disposable options for busy mornings",
+    "Conference and event catering requires bulk disposable tableware",
+    "Brand consistency across packaging reinforces hotel identity"
+  ],
+  "top_products": ["hot-food", "tableware", "cups-and-lids", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for buffet items", "Tourism sector sustainability certifications (Green Tourism)"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium-large (5,000–20,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

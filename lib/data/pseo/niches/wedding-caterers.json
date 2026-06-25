@@ -1,0 +1,17 @@
+{
+  "slug": "wedding-caterers",
+  "name": "Wedding Caterers",
+  "audience": "Wedding catering companies, bespoke event caterers, bridal food service providers",
+  "pain_points": [
+    "Every wedding is different — packaging needs vary per event",
+    "Presentation must be immaculate for the most photographed meal of the year",
+    "Canape trays, dessert boxes, and favour packaging all needed",
+    "Seasonal peaks (May–September) require advance bulk ordering"
+  ],
+  "top_products": ["tableware", "cold-food-and-salads", "napkins", "bags-and-wraps"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed canapés", "Food safety for outdoor and marquee events"],
+  "order_frequency": "Seasonal (monthly during peak season)",
+  "avg_order_size": "Medium (2,000–8,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}

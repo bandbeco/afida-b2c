@@ -1,0 +1,17 @@
+{
+  "slug": "street-food-stalls",
+  "name": "Street Food Stalls",
+  "audience": "Street food vendors, pop-up food stall operators, weekend market food traders",
+  "pain_points": [
+    "No running water at most pitches — wet wipes and napkins are essential",
+    "Packaging must be easy to eat from while standing or walking",
+    "Events often require compostable-only packaging",
+    "Unpredictable footfall makes ordering the right quantity difficult"
+  ],
+  "top_products": ["hot-food", "napkins", "bags-and-wraps", "tableware"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed items", "Event-specific compostable packaging mandates"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–3,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}

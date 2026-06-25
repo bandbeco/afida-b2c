@@ -1,0 +1,17 @@
+{
+  "slug": "ice-cream-parlours",
+  "name": "Ice Cream Parlours",
+  "audience": "Ice cream shop owners, gelato and soft-serve operators, seaside parlour businesses",
+  "pain_points": [
+    "Seasonal trade means demand spikes massively in summer",
+    "Tubs, cones, and cups all need different packaging solutions",
+    "Spoons must now be non-plastic — wooden or paper alternatives required",
+    "Takeaway pints and family tubs need secure, insulated packaging"
+  ],
+  "top_products": ["cups-and-lids", "tableware", "napkins", "supplies-and-essentials"],
+  "compliance_concerns": ["Single-use plastics ban — plastic spoons and stirrers", "Natasha's Law allergen labelling (dairy, nuts)"],
+  "order_frequency": "Monthly (seasonal peaks in summer)",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

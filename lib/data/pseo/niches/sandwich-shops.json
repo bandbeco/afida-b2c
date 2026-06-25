@@ -1,0 +1,17 @@
+{
+  "slug": "sandwich-shops",
+  "name": "Sandwich Shops",
+  "audience": "Independent sandwich shop owners, lunch trade specialists, meal deal providers",
+  "pain_points": [
+    "Lunchtime rush means pre-packing sandwiches — Natasha's Law compliance is critical",
+    "Sandwich wedge containers must display the product attractively",
+    "Meal deal combos (sandwich + drink + snack) need coordinated packaging",
+    "Margins are tight on lunch trade — every penny on packaging matters"
+  ],
+  "top_products": ["cold-food-and-salads", "bags-and-wraps", "cups-and-lids", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed sandwiches", "HFSS display restrictions for meal deals"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium (2,000–8,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "medium"
+}

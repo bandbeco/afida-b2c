@@ -1,0 +1,17 @@
+{
+  "slug": "chicken-shop-franchises",
+  "name": "Chicken Shop Franchises",
+  "audience": "Fried chicken franchise operators, chicken shop chain managers, branded chicken restaurant owners",
+  "pain_points": [
+    "Grease-proof packaging is essential — fried food saturates cheap materials",
+    "Bucket and box packaging for sharing meals is a unique format requirement",
+    "High delivery volumes through apps demand tamper-evident packaging",
+    "Sides (fries, coleslaw, beans) each need separate containers"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "cups-and-lids", "napkins"],
+  "compliance_concerns": ["Calorie labelling for chains with 250+ employees", "HFSS advertising restrictions for high-fat products"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Very large (20,000–80,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "high"
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "pizza-franchises",
+  "name": "Pizza Franchises",
+  "audience": "Pizza franchise operators, multi-site pizza delivery managers, branded pizza chain owners",
+  "pain_points": [
+    "Pizza boxes are the highest-volume single packaging item by far",
+    "Franchisor branding requirements dictate box design and print specs",
+    "Delivery logistics demand sturdy, stackable boxes that resist grease",
+    "Side orders, dips, and desserts all need additional packaging formats"
+  ],
+  "top_products": ["pizza-boxes", "hot-food", "bags-and-wraps", "cups-and-lids"],
+  "compliance_concerns": ["Calorie labelling for chains with 250+ employees", "Natasha's Law allergen labelling for pre-packed sides"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Very large (30,000–100,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

@@ -1,0 +1,17 @@
+{
+  "slug": "meal-prep-businesses",
+  "name": "Meal Prep Businesses",
+  "audience": "Meal prep entrepreneurs, fitness meal delivery operators, weekly meal plan companies",
+  "pain_points": [
+    "Microwave-safe and freezer-safe containers are non-negotiable",
+    "Hundreds of identical containers needed weekly — consistency matters",
+    "Labelling with macros, ingredients, and allergens on every container",
+    "Containers must stack neatly for fridge storage by the customer"
+  ],
+  "top_products": ["hot-food", "cold-food-and-salads", "supplies-and-essentials", "bags-and-wraps"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for every pre-packed meal", "Food Information Regulations (nutritional info, ingredients)"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium-large (5,000–15,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

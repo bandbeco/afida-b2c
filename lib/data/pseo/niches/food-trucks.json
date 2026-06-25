@@ -1,0 +1,17 @@
+{
+  "slug": "food-trucks",
+  "name": "Food Trucks",
+  "audience": "Food truck operators, mobile catering businesses, street food entrepreneurs",
+  "pain_points": [
+    "Extremely limited storage space — packaging must be compact and stackable",
+    "Everything is takeaway — no dine-in means 100% packaging dependency",
+    "Must cater to different events with varying customer volumes",
+    "Weather exposure means packaging must hold up in wind and rain"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "napkins", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed items", "Street trading licence requirements vary by council"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small-medium (1,000–4,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

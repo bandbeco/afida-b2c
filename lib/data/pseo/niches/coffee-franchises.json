@@ -1,0 +1,17 @@
+{
+  "slug": "coffee-franchises",
+  "name": "Coffee Franchises",
+  "audience": "Coffee franchise operators, multi-site café chain managers, branded coffee shop owners",
+  "pain_points": [
+    "Brand compliance requires specific cup designs and sizes across all locations",
+    "Huge cup volumes make even small per-unit savings significant",
+    "Latte levy discussions make reusable cup schemes a consideration",
+    "Seasonal promotional cups (Christmas, summer) require advance planning"
+  ],
+  "top_products": ["cups-and-lids", "straws", "napkins", "cold-food-and-salads"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "Potential latte levy / disposable cup charge", "Calorie labelling for chains with 250+ employees"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Very large (30,000–100,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

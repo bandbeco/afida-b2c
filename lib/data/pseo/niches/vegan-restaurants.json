@@ -1,0 +1,17 @@
+{
+  "slug": "vegan-restaurants",
+  "name": "Vegan Restaurants",
+  "audience": "Vegan restaurant owners, plant-based café operators, fully vegan food businesses",
+  "pain_points": [
+    "Packaging must be fully plant-based — no animal-derived materials allowed",
+    "Customers are extremely eco-conscious and will call out greenwashing",
+    "Compostable certification (e.g. EN 13432) is often expected, not optional",
+    "Takeaway salad bowls and cold food containers are high-volume items"
+  ],
+  "top_products": ["cold-food-and-salads", "hot-food", "cups-and-lids", "bags-and-wraps"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (soy, nuts, sesame common in vegan food)", "Compostable packaging certification claims must be substantiated"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

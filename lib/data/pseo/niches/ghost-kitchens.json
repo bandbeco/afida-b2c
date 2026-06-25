@@ -1,0 +1,17 @@
+{
+  "slug": "ghost-kitchens",
+  "name": "Ghost Kitchens",
+  "audience": "Ghost kitchen operators, virtual restaurant owners, delivery-only kitchen businesses",
+  "pain_points": [
+    "100% delivery means packaging IS the customer experience",
+    "Multiple brands operating from one kitchen need distinct packaging",
+    "Delivery app ratings depend on food arriving in perfect condition",
+    "No dine-in revenue to subsidise packaging costs"
+  ],
+  "top_products": ["hot-food", "cold-food-and-salads", "bags-and-wraps", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for all delivered meals", "Food hygiene rating display on delivery platforms"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium-large (5,000–20,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

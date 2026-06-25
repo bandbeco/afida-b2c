@@ -1,0 +1,17 @@
+{
+  "slug": "burger-restaurants",
+  "name": "Burger Restaurants",
+  "audience": "Independent burger joints, smash burger businesses, gourmet burger restaurants",
+  "pain_points": [
+    "Burger wraps and clamshells must keep food warm without going soggy",
+    "Fries packaging needs grease-proof liners",
+    "High delivery volume through Deliveroo/Uber Eats demands reliable packaging",
+    "Branded packaging is a key differentiator in a crowded market"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "cups-and-lids", "napkins"],
+  "compliance_concerns": ["Calorie labelling for businesses with 250+ employees", "Natasha's Law allergen labelling for pre-packed items"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (3,000–8,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

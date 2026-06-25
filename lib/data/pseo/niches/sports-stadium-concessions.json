@@ -1,0 +1,17 @@
+{
+  "slug": "sports-stadium-concessions",
+  "name": "Sports Stadium Concessions",
+  "audience": "Stadium catering managers, sports venue food operators, matchday concession stand teams",
+  "pain_points": [
+    "Extreme volume spikes on matchdays — tens of thousands served in 90 minutes",
+    "Speed of service is critical so packaging must be pre-assembled or easy to open",
+    "Pies, burgers, and hot dogs need packaging that fans can eat from in their seats",
+    "Club branding on cups and food packaging is a revenue opportunity"
+  ],
+  "top_products": ["hot-food", "cups-and-lids", "napkins", "bags-and-wraps"],
+  "compliance_concerns": ["Licensing Act requirements for alcohol service", "Natasha's Law allergen labelling for pre-packed pies"],
+  "order_frequency": "Weekly (matchday schedule)",
+  "avg_order_size": "Very large (30,000–100,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

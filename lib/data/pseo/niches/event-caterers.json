@@ -1,0 +1,17 @@
+{
+  "slug": "event-caterers",
+  "name": "Event Caterers",
+  "audience": "Corporate event caterers, large-scale catering companies, conference food service providers",
+  "pain_points": [
+    "Large orders needed quickly for one-off events",
+    "Different events demand different packaging — buffets, boxed lunches, finger food",
+    "Clients increasingly specify compostable or plastic-free packaging in tenders",
+    "Leftover stock from over-ordering ties up cash"
+  ],
+  "top_products": ["tableware", "hot-food", "cold-food-and-salads", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for boxed meals", "Health and safety requirements for large-scale events"],
+  "order_frequency": "Weekly (during event season)",
+  "avg_order_size": "Large (10,000–50,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}
