@@ -162,6 +162,25 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     assert_match(/\d+/, google_category.text, "Google product category should be a taxonomy ID")
   end
 
+  # After Tariq's slug rename these slugs no longer exist; the taxonomy map must
+  # use the current slugs so products keep resolving to a Google taxonomy ID.
+  test "GOOGLE_TAXONOMY_MAP uses current category slugs, not renamed ones" do
+    keys = GoogleMerchantFeedGenerator::GOOGLE_TAXONOMY_MAP.keys
+
+    {
+      "cold-cups" => "cold-cups-and-lids",
+      "cups-and-drinks" => "cups-and-accessories",
+      "hot-food" => "food-containers",
+      "deli-pots" => "deli-containers",
+      "plates-and-trays" => "plates-and-bowls"
+    }.each do |old_slug, new_slug|
+      refute_includes keys, old_slug,
+        "GOOGLE_TAXONOMY_MAP still references removed slug '#{old_slug}' (renamed to '#{new_slug}')"
+      assert_includes keys, new_slug,
+        "GOOGLE_TAXONOMY_MAP is missing current slug '#{new_slug}'"
+    end
+  end
+
   test "optimized description has first 160 chars with key info" do
     product = products(:one)
     attach_product_photo(product)

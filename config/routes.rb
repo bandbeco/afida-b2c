@@ -18,13 +18,13 @@ Rails.application.routes.draw do
   # =============================================================================
 
   # Legacy category redirects — chained through to final new URLs
-  get "/category/cold-cups-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/hot-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/hot-cup-extras", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/cold-cups-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/hot-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/hot-cup-extras", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/napkins", to: redirect(status: 301) { |_params, req| "/categories/tableware/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/hot-food/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/category/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/food-containers/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/category/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/food-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/supplies-and-essentials#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/category/all-products", to: redirect(status: 301) { |_params, req| "/shop#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
@@ -41,7 +41,7 @@ Rails.application.routes.draw do
   get "/blank-3", to: redirect(status: 301, path: "/")
 
   # Legacy Wix /collections/* (only the one URL we've seen 404 in GSC)
-  get "/collections/paper-straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/collections/paper-straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
   # Legacy Wix /product-page/* — map known SKUs to current product slugs
   get "/product-page/12oz-340ml-double-wall-ripple-paper-hot-cup", to: redirect(status: 301) { |_params, req| "/products/ripple-wall-coffee-cups-12oz-340ml-kraft-paper#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
@@ -99,17 +99,19 @@ Rails.application.routes.draw do
     end
   end
   # Category routes — old flat slugs redirect 301 to new URLs (PRD Section 8)
-  get "/categories/cups-and-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/ice-cream-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/ice-cream-cups#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  # NOTE: /categories/food-containers is intentionally NOT redirected — it is the
+  # current slug of a real top-level category (formerly "hot-food"), so it must
+  # render directly. A redirect here would shadow the live category page.
+  get "/categories/cups-and-lids", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/ice-cream-cups", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories/ice-cream-cups#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/categories/napkins", to: redirect(status: 301) { |_params, req| "/categories/tableware/napkins#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/hot-food/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-drinks/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/pizza-boxes", to: redirect(status: 301) { |_params, req| "/categories/food-containers/pizza-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/straws", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories/straws#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/takeaway-containers", to: redirect(status: 301) { |_params, req| "/categories/food-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/categories/takeaway-extras", to: redirect(status: 301) { |_params, req| "/categories/supplies-and-essentials#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/plates-trays", to: redirect(status: 301) { |_params, req| "/categories/tableware/plates-and-trays#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/bagasse-eco-range", to: redirect(status: 301) { |_params, req| "/categories/hot-food/bagasse-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/takeaway-boxes", to: redirect(status: 301) { |_params, req| "/categories/hot-food/takeaway-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
-  get "/categories/food-containers", to: redirect(status: 301) { |_params, req| "/categories/hot-food/food-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/plates-trays", to: redirect(status: 301) { |_params, req| "/categories/tableware/plates-and-bowls#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/bagasse-eco-range", to: redirect(status: 301) { |_params, req| "/categories/food-containers/bagasse-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/takeaway-boxes", to: redirect(status: 301) { |_params, req| "/categories/food-containers/takeaway-boxes#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/categories/cutlery", to: redirect(status: 301) { |_params, req| "/categories/tableware/cutlery#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "/categories/bags", to: redirect(status: 301) { |_params, req| "/categories/bags-and-wraps/bags#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 

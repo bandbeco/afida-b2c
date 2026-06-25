@@ -3,15 +3,18 @@ module CategoriesHelper
   # Map category slugs to their SVG icon paths
   # These icons are used in the category nav bar and samples page
   CATEGORY_ICONS = {
-    # Top-level parent categories (new hierarchy)
-    "cups-and-drinks" => "images/graphics/cold-cups.svg",
-    "hot-food" => "images/graphics/kraft-food-containers.svg",
+    # Top-level parent categories (current slugs)
+    "cups-and-accessories" => "images/graphics/cold-cups.svg",
+    "food-containers" => "images/graphics/kraft-food-containers.svg",
     "cold-food-and-salads" => "images/graphics/box.svg",
     "tableware" => "images/graphics/napkins.svg",
     "bags-and-wraps" => "images/graphics/take-away-extras.svg",
     "supplies-and-essentials" => "images/graphics/box.svg",
     "branded-packaging" => "images/graphics/box.svg",
     "vegware" => "images/graphics/box.svg",
+    # Legacy parent slugs (pre-rename — kept for any cached/old URLs)
+    "cups-and-drinks" => "images/graphics/cold-cups.svg",
+    "hot-food" => "images/graphics/kraft-food-containers.svg",
     # Legacy/subcategory slugs (still used on subcategory pages, samples page, etc.)
     "cups-and-lids" => "images/graphics/cold-cups.svg",
     "ice-cream-cups" => "images/graphics/ice-cream-cups.svg",
@@ -40,28 +43,28 @@ module CategoriesHelper
   # Maps category slugs to arrays of related category slugs
   # Used to improve internal linking and cross-selling
   RELATED_CATEGORIES = {
-    # Cups & Drinks subcategories
+    # Cups & Accessories subcategories
     "hot-cups" => %w[cup-lids cup-accessories napkins],
-    "cold-cups" => %w[cup-lids straws napkins],
-    "cup-lids" => %w[hot-cups cold-cups cup-accessories],
-    "cup-accessories" => %w[cup-lids hot-cups cold-cups],
-    "ice-cream-cups" => %w[napkins cutlery cold-cups],
-    "straws" => %w[cold-cups cup-lids napkins],
-    # Hot Food subcategories
+    "cold-cups-and-lids" => %w[cup-lids straws napkins],
+    "cup-lids" => %w[hot-cups cold-cups-and-lids cup-accessories],
+    "cup-accessories" => %w[cup-lids hot-cups cold-cups-and-lids],
+    "ice-cream-cups" => %w[napkins cutlery cold-cups-and-lids],
+    "straws" => %w[cold-cups-and-lids cup-lids napkins],
+    # Food Containers subcategories
     "pizza-boxes" => %w[napkins greaseproof-and-wraps bags],
     "takeaway-boxes" => %w[napkins cutlery bags],
-    "food-containers" => %w[napkins cutlery bags],
+    "food-containers-and-lids" => %w[napkins cutlery bags],
     "soup-containers" => %w[napkins cutlery hot-cups],
     "bagasse-containers" => %w[napkins cutlery greaseproof-and-wraps],
     # Cold Food & Salads subcategories
-    "salad-boxes" => %w[napkins cutlery deli-pots],
+    "salad-boxes" => %w[napkins cutlery deli-containers],
     "sandwich-and-wrap-boxes" => %w[napkins bags greaseproof-and-wraps],
-    "deli-pots" => %w[salad-boxes napkins cutlery],
+    "deli-containers" => %w[salad-boxes napkins cutlery],
     # Tableware subcategories
-    "plates-and-trays" => %w[napkins cutlery aluminium-containers],
-    "cutlery" => %w[napkins plates-and-trays takeaway-boxes],
-    "napkins" => %w[cutlery plates-and-trays hot-cups],
-    "aluminium-containers" => %w[plates-and-trays napkins greaseproof-and-wraps],
+    "plates-and-bowls" => %w[napkins cutlery aluminium-containers],
+    "cutlery" => %w[napkins plates-and-bowls takeaway-boxes],
+    "napkins" => %w[cutlery plates-and-bowls hot-cups],
+    "aluminium-containers" => %w[plates-and-bowls napkins greaseproof-and-wraps],
     # Bags & Wraps subcategories
     "bags" => %w[greaseproof-and-wraps napkins labels-and-stickers],
     "greaseproof-and-wraps" => %w[bags napkins natureflex-bags],
@@ -105,7 +108,7 @@ module CategoriesHelper
   # Returns the browse path for a category, using nested URLs for subcategories
   #
   # @param category [Category] Category object
-  # @return [String] URL path like /categories/hot-food or /categories/hot-food/pizza-boxes
+  # @return [String] URL path like /categories/food-containers or /categories/food-containers/pizza-boxes
   def category_browse_path(category)
     if category.parent.present?
       category_subcategory_path(category.parent.slug, category.slug)
@@ -127,28 +130,28 @@ module CategoriesHelper
   # These help AI search engines understand what the page answers
   CATEGORY_QUESTION_HEADINGS = {
     # Top-level parents
-    "cups-and-drinks" => "What eco-friendly cups and drinks packaging does Afida offer?",
-    "hot-food" => "What eco-friendly hot food packaging does Afida offer?",
+    "cups-and-accessories" => "What eco-friendly cups and drinks packaging does Afida offer?",
+    "food-containers" => "What eco-friendly food containers does Afida offer?",
     "cold-food-and-salads" => "What eco-friendly cold food and salad packaging does Afida offer?",
     "tableware" => "What eco-friendly tableware does Afida offer?",
     "bags-and-wraps" => "What eco-friendly bags and wraps does Afida offer?",
     "supplies-and-essentials" => "What catering supplies and essentials does Afida offer?",
     # Subcategories
     "hot-cups" => "What eco-friendly hot cups does Afida offer?",
-    "cold-cups" => "What eco-friendly cold cups does Afida offer?",
+    "cold-cups-and-lids" => "What eco-friendly cold cups does Afida offer?",
     "cup-lids" => "What cup lids does Afida offer?",
     "cup-accessories" => "What cup accessories does Afida offer?",
     "ice-cream-cups" => "What eco-friendly ice cream cups does Afida offer?",
     "straws" => "What eco-friendly straws does Afida offer?",
     "pizza-boxes" => "What eco-friendly pizza boxes does Afida offer?",
     "takeaway-boxes" => "What eco-friendly takeaway boxes does Afida offer?",
-    "food-containers" => "What eco-friendly food containers does Afida offer?",
+    "food-containers-and-lids" => "What eco-friendly food containers and lids does Afida offer?",
     "soup-containers" => "What eco-friendly soup containers does Afida offer?",
     "bagasse-containers" => "What compostable bagasse containers does Afida offer?",
     "salad-boxes" => "What eco-friendly salad boxes does Afida offer?",
     "sandwich-and-wrap-boxes" => "What eco-friendly sandwich and wrap boxes does Afida offer?",
-    "deli-pots" => "What eco-friendly deli pots does Afida offer?",
-    "plates-and-trays" => "What eco-friendly plates and trays does Afida offer?",
+    "deli-containers" => "What eco-friendly deli containers does Afida offer?",
+    "plates-and-bowls" => "What eco-friendly plates and bowls does Afida offer?",
     "cutlery" => "What eco-friendly cutlery does Afida offer?",
     "napkins" => "What eco-friendly napkins does Afida offer?",
     "aluminium-containers" => "What aluminium containers does Afida offer?",

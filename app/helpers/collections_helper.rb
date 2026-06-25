@@ -155,7 +155,7 @@ module CollectionsHelper
   end
 
   VEGWARE_FILTER_METAS = {
-    "cups-and-drinks" => {
+    "cups-and-accessories" => {
       title: "Vegware Cups & Drinks | Compostable Coffee Cups",
       description: "Vegware compostable cups for hot drinks, cold drinks and smoothies. Single and double-wall paper cups, PLA cold cups and lids in 4-16oz sizes."
     },
@@ -171,7 +171,7 @@ module CollectionsHelper
       title: "Vegware Cold Food & Salads | Compostable Boxes",
       description: "Vegware compostable salad boxes, deli pots and cold food containers. PLA-lined kraft and clear bioplastic options for grab-and-go and meal prep."
     },
-    "hot-food" => {
+    "food-containers" => {
       title: "Vegware Hot Food | Compostable Soup & Hot Boxes",
       description: "Vegware compostable hot food containers, soup pots and PLA-lined boxes. Heat-stable, leakproof packaging for restaurants, takeaways and delivery service."
     },

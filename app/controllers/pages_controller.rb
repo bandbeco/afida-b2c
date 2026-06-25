@@ -15,10 +15,10 @@ class PagesController < ApplicationController
   # Google's index after the category restructure. Redirect single-slug filter
   # URLs to the new category pages to recover link equity.
   LEGACY_CATEGORY_FILTER_REDIRECTS = {
-    "cups-and-lids" => "/categories/cups-and-drinks",
-    "ice-cream-cups" => "/categories/cups-and-drinks/ice-cream-cups",
+    "cups-and-lids" => "/categories/cups-and-accessories",
+    "ice-cream-cups" => "/categories/cups-and-accessories/ice-cream-cups",
     "napkins" => "/categories/tableware/napkins",
-    "pizza-boxes" => "/categories/hot-food/pizza-boxes"
+    "pizza-boxes" => "/categories/food-containers/pizza-boxes"
   }.freeze
 
   def shop

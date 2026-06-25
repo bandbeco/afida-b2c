@@ -38,10 +38,12 @@ cutlery:
   slug: "cutlery"
   position: 8
 
-# Parent/child fixtures for hierarchy tests
+# Parent/child fixtures for hierarchy tests.
+# Display name kept as "Cups & Drinks" (asserted by Vegware tests); slug uses the
+# current production value "cups-and-accessories" (Tariq renamed it from "cups-and-drinks").
 parent_cups_and_drinks:
   name: "Cups & Drinks"
-  slug: "cups-and-drinks"
+  slug: "cups-and-accessories"
   position: 9
 
 child_hot_cups:
@@ -56,9 +58,12 @@ child_cold_cups:
   parent: parent_cups_and_drinks
   position: 2
 
+# Top-level category formerly named "Hot Food"; Tariq renamed its slug to
+# "food-containers" in production. Fixtures mirror the current slugs so the
+# Vegware-filter and redirect-collision guards stay meaningful.
 parent_hot_food:
-  name: "Hot Food"
-  slug: "hot-food"
+  name: "Food Containers"
+  slug: "food-containers"
   position: 10
 
 child_pizza_boxes:

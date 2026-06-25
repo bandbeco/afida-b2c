@@ -45,16 +45,16 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
   # PRD Section 8: 301 Redirects Required
   # =========================================================================
 
-  test "redirects /categories/cups-and-lids to /categories/cups-and-drinks" do
+  test "redirects /categories/cups-and-lids to /categories/cups-and-accessories" do
     get "/categories/cups-and-lids"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
   end
 
-  test "redirects /categories/ice-cream-cups to /categories/cups-and-drinks/ice-cream-cups" do
+  test "redirects /categories/ice-cream-cups to /categories/cups-and-accessories/ice-cream-cups" do
     get "/categories/ice-cream-cups"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks/ice-cream-cups"
+    assert_redirected_to "/categories/cups-and-accessories/ice-cream-cups"
   end
 
   test "redirects /categories/napkins to /categories/tableware/napkins" do
@@ -63,22 +63,22 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
     assert_redirected_to "/categories/tableware/napkins"
   end
 
-  test "redirects /categories/pizza-boxes to /categories/hot-food/pizza-boxes" do
+  test "redirects /categories/pizza-boxes to /categories/food-containers/pizza-boxes" do
     get "/categories/pizza-boxes"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food/pizza-boxes"
+    assert_redirected_to "/categories/food-containers/pizza-boxes"
   end
 
-  test "redirects /categories/straws to /categories/cups-and-drinks/straws" do
+  test "redirects /categories/straws to /categories/cups-and-accessories/straws" do
     get "/categories/straws"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks/straws"
+    assert_redirected_to "/categories/cups-and-accessories/straws"
   end
 
-  test "redirects /categories/takeaway-containers to /categories/hot-food" do
+  test "redirects /categories/takeaway-containers to /categories/food-containers" do
     get "/categories/takeaway-containers"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food"
+    assert_redirected_to "/categories/food-containers"
   end
 
   test "redirects /categories/takeaway-extras to /categories/supplies-and-essentials" do
@@ -87,28 +87,33 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
     assert_redirected_to "/categories/supplies-and-essentials"
   end
 
-  test "redirects /categories/plates-trays to /categories/tableware/plates-and-trays" do
+  test "redirects /categories/plates-trays to /categories/tableware/plates-and-bowls" do
     get "/categories/plates-trays"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/tableware/plates-and-trays"
+    assert_redirected_to "/categories/tableware/plates-and-bowls"
   end
 
-  test "redirects /categories/bagasse-eco-range to /categories/hot-food/bagasse-containers" do
+  test "redirects /categories/bagasse-eco-range to /categories/food-containers/bagasse-containers" do
     get "/categories/bagasse-eco-range"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food/bagasse-containers"
+    assert_redirected_to "/categories/food-containers/bagasse-containers"
   end
 
-  test "redirects /categories/takeaway-boxes to /categories/hot-food/takeaway-boxes" do
+  test "redirects /categories/takeaway-boxes to /categories/food-containers/takeaway-boxes" do
     get "/categories/takeaway-boxes"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food/takeaway-boxes"
+    assert_redirected_to "/categories/food-containers/takeaway-boxes"
   end
 
-  test "redirects /categories/food-containers to /categories/hot-food/food-containers" do
+  # /categories/food-containers must NOT redirect — it is the live slug of the
+  # top-level category formerly known as "hot-food", so it must render directly.
+  test "does not redirect /categories/food-containers (live top-level category slug)" do
+    food_containers = categories(:parent_hot_food)
+    assert_equal "food-containers", food_containers.slug
+
     get "/categories/food-containers"
-    assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food/food-containers"
+    assert_response :success
+    assert_match food_containers.name, response.body
   end
 
   test "redirects /categories/cutlery to /categories/tableware/cutlery" do
@@ -126,7 +131,7 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
   test "old category redirects preserve query parameters" do
     get "/categories/ice-cream-cups?utm_source=google"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks/ice-cream-cups?utm_source=google"
+    assert_redirected_to "/categories/cups-and-accessories/ice-cream-cups?utm_source=google"
   end
 
   # =========================================================================
@@ -144,19 +149,19 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
   test "legacy /category/pizza-boxes redirects to new nested URL" do
     get "/category/pizza-boxes"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food/pizza-boxes"
+    assert_redirected_to "/categories/food-containers/pizza-boxes"
   end
 
   test "legacy /category/straws redirects to new nested URL" do
     get "/category/straws"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks/straws"
+    assert_redirected_to "/categories/cups-and-accessories/straws"
   end
 
   test "legacy /category/takeaway-containers redirects to new parent URL" do
     get "/category/takeaway-containers"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food"
+    assert_redirected_to "/categories/food-containers"
   end
 
   test "legacy /category/takeaway-extras redirects to new parent URL" do
@@ -165,22 +170,22 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
     assert_redirected_to "/categories/supplies-and-essentials"
   end
 
-  test "legacy /category/cold-cups-lids redirects to cups-and-drinks" do
+  test "legacy /category/cold-cups-lids redirects to cups-and-accessories" do
     get "/category/cold-cups-lids"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
   end
 
-  test "legacy /category/hot-cups redirects to cups-and-drinks" do
+  test "legacy /category/hot-cups redirects to cups-and-accessories" do
     get "/category/hot-cups"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
   end
 
-  test "legacy /category/hot-cup-extras redirects to cups-and-drinks" do
+  test "legacy /category/hot-cup-extras redirects to cups-and-accessories" do
     get "/category/hot-cup-extras"
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
   end
 
   test "legacy /category/all-products still redirects to shop" do

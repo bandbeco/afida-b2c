@@ -175,14 +175,14 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get shop_path, params: { categories: [ "cups-and-lids" ] }
 
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
   end
 
   test "shop page 301 redirects legacy ice-cream-cups filter to new subcategory" do
     get shop_path, params: { categories: [ "ice-cream-cups" ] }
 
     assert_response :moved_permanently
-    assert_redirected_to "/categories/cups-and-drinks/ice-cream-cups"
+    assert_redirected_to "/categories/cups-and-accessories/ice-cream-cups"
   end
 
   test "shop page 301 redirects legacy napkins filter to new subcategory" do
@@ -196,7 +196,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     get shop_path, params: { categories: [ "pizza-boxes" ] }
 
     assert_response :moved_permanently
-    assert_redirected_to "/categories/hot-food/pizza-boxes"
+    assert_redirected_to "/categories/food-containers/pizza-boxes"
   end
 
   test "shop page does not redirect when legacy slug matches an existing category" do

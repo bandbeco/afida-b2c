@@ -2,7 +2,7 @@ require "test_helper"
 
 class CollectionsHelperTest < ActionView::TestCase
   test "vegware_filter_meta_title returns curated title for known sub-collection" do
-    category = Category.new(name: "Cups & Drinks", slug: "cups-and-drinks")
+    category = Category.new(name: "Cups & Accessories", slug: "cups-and-accessories")
     result = vegware_filter_meta_title(category)
     assert_equal "Vegware Cups & Drinks | Compostable Coffee Cups | Afida", result
   end
@@ -25,8 +25,8 @@ class CollectionsHelperTest < ActionView::TestCase
     assert_equal "Vegware Unknown Thing | Eco-Friendly Packaging | Afida", result
   end
 
-  test "vegware_filter_meta_description returns curated copy for cups-and-drinks" do
-    category = Category.new(name: "Cups & Drinks", slug: "cups-and-drinks")
+  test "vegware_filter_meta_description returns curated copy for cups-and-accessories" do
+    category = Category.new(name: "Cups & Accessories", slug: "cups-and-accessories")
     result = vegware_filter_meta_description(category)
     assert_includes result.downcase, "vegware"
     assert_includes result.downcase, "cups"
@@ -58,8 +58,8 @@ class CollectionsHelperTest < ActionView::TestCase
     assert result.length <= 160
   end
 
-  test "vegware_filter_meta_description returns curated copy for hot-food" do
-    category = Category.new(name: "Hot Food", slug: "hot-food")
+  test "vegware_filter_meta_description returns curated copy for food-containers" do
+    category = Category.new(name: "Food Containers", slug: "food-containers")
     result = vegware_filter_meta_description(category)
     assert_includes result.downcase, "hot food"
     refute_includes result, "Browse our range of"
@@ -78,7 +78,7 @@ class CollectionsHelperTest < ActionView::TestCase
   end
 
   test "vegware_filter_meta_description curated copies are unique across sub-collections" do
-    slugs = %w[cups-and-drinks tableware bags-and-wraps cold-food-and-salads hot-food supplies-and-essentials]
+    slugs = %w[cups-and-accessories tableware bags-and-wraps cold-food-and-salads food-containers supplies-and-essentials]
     descriptions = slugs.map do |slug|
       category = Category.new(name: slug.titleize, slug: slug)
       vegware_filter_meta_description(category)
