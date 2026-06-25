@@ -2,16 +2,15 @@
 
 require "test_helper"
 
-# Live integration test against Stripe's TEST API. It creates a REAL Checkout
-# Session (no money moves; test mode) and asserts what Stripe ACTUALLY computes
-# for tax, which is the one thing stubs cannot tell us: that under our MANUAL tax
-# rates, shipping sent as a taxed line item is genuinely charged VAT.
+# Live integration test against Stripe's TEST API. It creates REAL Checkout
+# Sessions (no money moves; test mode) and asserts what Stripe ACTUALLY computes -
+# the things stubs cannot tell us: that under our MANUAL tax rates shipping sent as
+# a taxed line item is genuinely charged VAT, and how amount_subtotal behaves under
+# a discount. This is the test that would have caught the earlier
+# tax_code-on-shipping_options no-op automatically.
 #
-# This is the test that would have caught the earlier tax_code-on-shipping_options
-# no-op automatically.
-#
-# Live integration test against Stripe's TEST API. These make REAL network calls,
-# so they are OPT-IN only: set LIVE_STRIPE_TESTS=1 and run them in isolation.
+# These make REAL network calls, so they are OPT-IN only: set LIVE_STRIPE_TESTS=1
+# and run them in isolation.
 #
 #   LIVE_STRIPE_TESTS=1 bin/rails test test/integration/stripe_live_checkout_test.rb
 #
@@ -151,6 +150,38 @@ class StripeLiveCheckoutTest < ActionDispatch::IntegrationTest
     assert_equal 0, session.amount_total,
       "a 100%-off coupon should zero the whole order, including the shipping line"
     assert_equal 0, session.total_details.amount_tax
+  end
+
+  test "SessionAmounts splits subtotal and shipping correctly under a partial whole-order discount" do
+    # The discriminating test: a 50%-off coupon. SessionAmounts derives the
+    # products subtotal as amount_subtotal - shipping_line.amount_subtotal, which
+    # is only correct if BOTH are on the same basis (pre- or post-discount). A
+    # partial discount makes pre- and post-discount values differ, so this asserts,
+    # against the real Stripe API, what the formula actually produces. The expected
+    # values assume Stripe's documented behaviour: amount_subtotal is PRE-discount
+    # (amount_total = amount_subtotal + tax - discount), so the split yields the
+    # gross figures and the discount is carried separately.
+    coupon = Stripe::Coupon.create(percent_off: 50, duration: "once", name: "Live Test 50% Off")
+    (@created_coupon_ids ||= []) << coupon.id
+
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 4, price: 10.00) # £40 goods + £6.99 shipping
+
+    result = build_session(cart, discount_code: coupon.id)
+    session = Stripe::Checkout::Session.retrieve(
+      id: result.session.id,
+      expand: [ "line_items.data.price.product", "total_details" ]
+    )
+
+    amounts = Checkout::SessionAmounts.from(session)
+    diagnostic = "raw amount_subtotal=#{session.amount_subtotal} amount_discount=#{session.total_details.amount_discount} amount_total=#{session.amount_total}"
+
+    assert_equal 40.0, amounts.subtotal, "products subtotal should be the gross £40 (pre-discount). #{diagnostic}"
+    assert_equal 6.99, amounts.shipping, "shipping should be the gross £6.99 (pre-discount). #{diagnostic}"
+    # Sanity: the persisted figures reconcile to what Stripe will charge.
+    assert_equal (session.amount_total / 100.0).round(2),
+                 (amounts.subtotal + amounts.shipping + amounts.vat - amounts.discount).round(2),
+                 "subtotal + shipping + vat - discount must equal the charged total. #{diagnostic}"
   end
 
   private

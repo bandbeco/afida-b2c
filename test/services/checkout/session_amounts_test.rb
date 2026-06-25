@@ -8,8 +8,9 @@ require "test_helper"
 # Shipping is sent as a taxed LINE ITEM (manual tax rates do not tax
 # shipping_options), so the session's amount_subtotal now INCLUDES shipping. To
 # recover the products-only subtotal we find the shipping line by its product
-# metadata and subtract its own post-discount amount_subtotal. VAT (amount_tax)
-# already spans products + shipping, which is the whole point of the change.
+# metadata and subtract its own amount_subtotal. Both are PRE-discount (verified
+# against the live API), so the split yields gross figures and the discount is
+# carried separately. VAT (amount_tax) already spans products + shipping.
 class Checkout::SessionAmountsTest < ActiveSupport::TestCase
   include StripeTestHelper
 
@@ -72,24 +73,29 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
     assert_equal 144.0, amounts.total
   end
 
-  test "uses the shipping line's own post-discount subtotal under a whole-order discount" do
-    # A 20% off-everything coupon: shipping 6.99 -> 5.59 (rounded) post-discount.
+  test "splits the gross shipping line out of the subtotal under a whole-order discount" do
+    # Verified against the real Stripe API (see stripe_live_checkout_test 50%-off
+    # case): amount_subtotal and each line's amount_subtotal are PRE-discount, and
+    # amount_total = amount_subtotal + tax - discount. So a 20%-off coupon on £20
+    # goods + £6.99 shipping leaves the line items at their gross values and carries
+    # the discount separately; SessionAmounts reports the gross subtotal/shipping.
     session = build_stripe_session(
-      amount_subtotal: 2159, # products 1600 + shipping 559
-      amount_tax: 432,
-      amount_total: 2591,
-      amount_discount: 540,
+      amount_subtotal: 2699, # gross: products 2000 + shipping 699 (pre-discount)
+      amount_tax: 432,       # 20% of the post-discount net (2699 - 540)
+      amount_discount: 540,  # 20% of 2699
+      amount_total: 2591,    # 2699 + 432 - 540
       line_items_data: [
-        stripe_product_line_item(amount_subtotal: 1600),
-        stripe_shipping_line_item(amount_subtotal: 559)
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 699)
       ]
     )
 
     amounts = Checkout::SessionAmounts.from(session)
 
-    assert_equal 16.0, amounts.subtotal
-    assert_equal 5.59, amounts.shipping
+    assert_equal 20.0, amounts.subtotal
+    assert_equal 6.99, amounts.shipping
     assert_equal 5.40, amounts.discount
+    assert_equal 25.91, amounts.total
   end
 
   test "identifies the shipping line by product metadata, not by name" do

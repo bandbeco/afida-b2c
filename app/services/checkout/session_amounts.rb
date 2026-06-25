@@ -10,9 +10,10 @@ module Checkout
   # not tax shipping_options), so Stripe's amount_subtotal now INCLUDES shipping
   # and shipping_cost is no longer populated. To recover the products-only
   # subtotal we locate the shipping line by its product metadata and subtract its
-  # own post-discount amount_subtotal; reading each line's own figure is what
-  # makes whole-order and product-only discounts reconcile without us
-  # re-allocating the discount. amount_tax already spans products + shipping.
+  # own amount_subtotal. Both figures are PRE-discount (verified against the live
+  # API: amount_total = amount_subtotal + amount_tax - amount_discount), so the
+  # split yields the gross products subtotal and gross shipping, with the discount
+  # carried separately. amount_tax already spans products + shipping.
   #
   # Callers must expand the session with "line_items.data.price.product" so the
   # metadata is present; without it the shipping line cannot be identified.
