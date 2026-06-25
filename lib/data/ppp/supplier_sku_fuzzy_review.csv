@@ -1,0 +1,308 @@
+production_sku,current_title,proposed_ppp_sku,proposed_ppp_name,your_pack,your_case,ppp_pack,ppp_case,total,text,price_bonus,margin,tier,alt_ppp_sku,collision
+VEG-BAG,Vegware Glassine Bag With NatureFlex Window - 100 x 50 x 250mm,"","",,65.63,"","",4,1,3,1,no-match,"",""
+VEG-DEL-HG-12,Vegware PLA Hinged Lid Deli Container - 124 x 142 x 55mm,"","",30.01,79.85,"","",4,-2,6,0,no-match,"",""
+VEG-DEL-RD-12,Vegware PLA Round Deli Container - 118 x 54mm,"","",12.11,79.09,"","",4,0,4,0,no-match,"",""
+VEG-DEL-FL-32,Vegware PLA 185-Series Flat Lid - 15mm,"","",33.29,65.14,"","",4,0,4,0,no-match,"",""
+VEG-DEL-HG-8,Vegware PLA Hinged Lid Deli Container - 105 x 122 x 50mm,"","",26.94,66.06,"","",4,-2,6,0,no-match,"",""
+VEG-GP-300-WH,Vegware White Greaseproof Sheet Bakery - 300 x 400mm,"","",,48.2,"","",4,3,1,0,no-match,"",""
+VEG-GP-300-WH-2,Vegware White Greaseproof Sheet Grill - 300 x 400mm,"","",,48.2,"","",4,1,3,0,no-match,"",""
+VEG-BGT-BW-12-2,Vegware Bagasse Tall Bowl - 152 x 152 x 48mm,"","",6.49,27.72,"","",4,-2,6,1,no-match,"",""
+VEG-CTL-FK-4,Vegware Paper Fork - 157 x 31mm,"","",6.97,31.62,"","",4,1,3,0,no-match,"",""
+VEG-CTL-KN,Vegware Paper Knife - 157 x 26mm,"","",6.97,31.62,"","",4,1,3,0,no-match,"",""
+VEG-CTL-SP-2,Vegware Paper Spoon - 157 x 35 x 7mm,"","",6.97,31.62,"","",4,0,4,0,no-match,"",""
+VEG-DEL-BW-32,"Vegware PLA Food Bowl, 185-Series - 80 x 185 x 85mm","","",45.26,92.55,"","",4,-2,6,0,no-match,"",""
+VEG-BGP-CS-5,Vegware Bagasse Clamshell - 155 x 228 x 74mm,"","",17.64,31.77,"","",4,1,3,0,no-match,"",""
+VEG-BAG-3,Vegware Paper Therma Bag - 297 x 127 x 50mm,"","",,61.2,"","",3,0,3,0,no-match,"",""
+VEG-BAG-4,Vegware Paper Therma Bag - 360 x 100 x 51mm,"","",,60.65,"","",3,0,3,0,no-match,"",""
+VEG-BAG-5,Vegware Paper Therma Bag - 236 x 164 x 76mm,"","",,74.16,"","",3,0,3,0,no-match,"",""
+VEG-BAG-2,Vegware Paper Therma Pouch - 203 x 51 x 230mm,"","",,77.75,"","",3,0,3,0,no-match,"",""
+VEG-BGT-PL-3,Vegware Bagasse Plate - 178 x 178 x 17mm,"","",,27.62,"","",3,0,3,0,no-match,"",""
+VEG-CUP-DW-8-GN,"Vegware Double Wall Hot Takeaway Cup, 79 Series Green Tree - 8oz",VDW-8-GT,"Vegware 8oz Double Wall Hot Takeaway Cup, 79 Series &#8211; Green Tree Compostable",7.26,49.1,6.66,45.05,22,16,6,1,review,LV-8-GT,""
+VEG-BGG-12,Vegware Gourmet Dipping Base - 12oz / 360ml,V3-GBCC,Vegware 12oz / 360ml Gourmet Dipping Base Compostable,11.97,62.56,10.98,57.39,17,11,6,1,review,V3-GB12,""
+VEG-SPC-16-2,"Vegware Soup Container, 115 Series - 16oz",SC-G16,"Vegware 16oz Soup Container, 115 Series &#8211; Green Tree Compostable",6.9,51.89,6.33,48.59,16,10,6,0,review,SC-16,DUP
+VEG-SPC-8-2,"Vegware Soup Container, 90 Series - 8oz",SC-G08,"Vegware 8oz Soup Container, 90 Series &#8211; Green Tree Compostable",8.07,64.75,7.4,58.21,16,10,6,0,review,SC-08,DUP
+VEG-SPC-10,"Vegware Soup Container, 90 Series - 10oz",SC-G10,"Vegware 10oz Soup Container, 90 Series &#8211; Green Tree Compostable",8.07,67.13,8.1,62.85,16,10,6,0,review,SC-10,DUP
+VEG-CC-20-3,"Vegware PLA Plain Cold Cup, 96 Series - 20oz",R600,"Vegware 20oz PLA Plain Cold Cup, 96 Series Compostable",17.15,159.88,15.73,146.68,15,9,6,1,review,R600CE-VW,DUP
+VEG-STR-CK-6-BK-2,Vegware Black Paper Cocktail Straw - 6mm x 150mm,PS06C-BLK,"Vegware Cocktail Black 6mm Paper Straw, 5.5in Recyclable/Compostable",11.91,98.09,10.93,89.99,15,9,6,1,review,PS06H-BLK,""
+VEG-STR-6-BK-3,Vegware Black Paper Highball Straw - 6mm x 200mm,PS06H-BLK,"Vegware Highball Black 6mm Paper Straw, 7.8in Recyclable/Compostable",12.67,105.39,11.62,96.69,15,9,6,1,review,PS06C-BLK,""
+VEG-CC-16-3,"Vegware PLA Plain Cold Cup, 96 Series - 16oz",R500CE,"Vegware 16oz PLA Plain Cold Cup, 96 Series Compostable",14.86,143.86,13.63,131.98,15,9,6,1,review,R500CE-VW,DUP
+VEG-CC-16-4,"Vegware PLA Cold Cup, 96 Series - 16oz",R500CE,"Vegware 16oz PLA Plain Cold Cup, 96 Series Compostable",14.9,143.86,13.63,131.98,14,8,6,0,review,R500CE-VW,DUP
+VEG-CC-9-7,"Vegware PLA Cold Cup, 96 Series - 9oz",R300S-VW,"Vegware 9oz PLA Cold Cup, 96 Series Compostable",10.61,99.34,9.73,91.14,14,8,6,0,review,R300S,""
+VEG-CC-9-GN,"Vegware PLA Cold Cup, 96 Series- Green Tree - 9oz",R300S,"Vegware 9oz PLA Plain Cold Cup, 96 Series Compostable",10.76,99.34,9.73,91.14,14,8,6,0,review,R300S-VW,""
+VEG-CC-DL-2,"Vegware PLA Dome Lid, NO HOLE (Fits 76 Series) - 80 x 32mm",C76D-NH,"Vegware PLA Dome Lid, NO HOLE (Fits 76 Series) Compostable",6.08,50.48,5.58,46.31,14,8,6,1,review,C76F-NH,""
+VEG-CC-DL-3,"Vegware PLA Dome Lid, STRAW SLOT (Fits 76 Series) - 80 x 80 x 32mm",C76D-CH,"Vegware PLA Dome Lid, STRAW SLOT (Fits 76 Series) Compostable",6.08,50.48,5.58,46.31,14,8,6,1,review,C76F-CH,""
+VEG-CC-FL-3,"Vegware PLA Flat Lid, NO HOLE (Fits 76 Series) - 80 x 80 x 20mm",C76F-NH,"Vegware PLA Flat Lid, NO HOLE (Fits 76 Series) Compostable",5.74,49.51,5.27,45.42,14,8,6,1,review,C76D-NH,""
+VEG-CC-FL-4,"Vegware PLA Flat Lid, STRAW SLOT (Fits 76 Series) - 80 x 80 x 20mm",C76F-CH,"Vegware PLA Flat Lid, STRAW SLOT (Fits 76 Series) Compostable",5.74,49.51,5.27,45.42,14,8,6,1,review,C76D-CH,""
+VEG-CC-20-4,"Vegware PLA Cold Cup, 96 Series - 20oz",R600,"Vegware 20oz PLA Plain Cold Cup, 96 Series Compostable",17.13,159.88,15.73,146.68,14,8,6,0,review,R600CE-VW,DUP
+VEG-CC-9-6,"Vegware PLA Cold Cup, 76 Series - 9oz",R280Y,"Vegware 9oz PLA Plain Cold Cup, 76 Series Compostable",9.46,85.85,8.63,78.76,14,8,6,0,review,R280-VW,""
+VEG-CNT-RC-16-BK,Vegware Black Rectangular Food Container - 16oz,SBC-16,Vegware 16oz Rectangular Black Food Container Compostable,,45.16,41.43,41.43,13,10,3,1,review,RBC-16,""
+VEG-BWL-RD-24-BK,Vegware Black Round Food Container - 24oz,RBC-24,Vegware 24oz Round Black Food Container Compostable,,47.21,43.31,43.31,13,10,3,1,review,SBC-24,""
+VEG-CNT-RC-24-BK,Vegware Black Rectangular Food Container - 24oz,SBC-24,Vegware 24oz Rectangular Black Food Container Compostable,,49.2,45.14,45.14,13,10,3,1,review,RBC-24,""
+VEG-CNT-RC-34-BK,Vegware Black Rectangular Food Container - 34oz,SBC-34,Vegware 34oz Rectangular Black Food Container Compostable,,54.67,50.16,50.16,13,10,3,1,review,RBC-34,DUP
+VEG-BWL-RD-34-BK,Vegware Black Round Food Container - 34oz,RBC-34,Vegware 34oz Round Black Food Container Compostable,,51.14,46.92,46.92,13,10,3,1,review,SBC-34,""
+VEG-BGT-OV,Vegware Bagasse Oval Plate - 10in,P020,Vegware 10in Oval Bagasse Plate Compostable,10.66,44.36,9.78,40.7,13,7,6,1,review,P005,""
+VEG-BGT-BW-12,Vegware Bagasse Wide Bowl - 12oz,L043,Vegware 12oz Wide Bagasse Bowl Recyclable/Compostable,6.49,27.72,5.95,25.43,13,7,6,1,review,L003,""
+VEG-BAG-WH-3,Vegware White Kraft Flat Bag - 8 x 8,WB0808B,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),,11.29,10.36,10.36,12,9,3,1,review,WB1212B,DUP
+VEG-CUP-DW-16-BK,Vegware Black Double Wall Takeaway Cup - 16oz,VDW-B16,Vegware 16oz Black Double Wall Takeaway Cup,,57.68,52.92,52.92,12,9,3,0,review,D04004,""
+VEG-BGG-12-2,Vegware Gourmet Base - 12oz / 340ml,V3-GB12,Vegware 12oz / 360ml Gourmet Base Compostable,11.16,61.38,10.24,56.31,12,6,6,0,review,V3-GBCC,""
+VEG-CNT-SQ-16-KR,Vegware Kraft Square Food Container - 16oz,RKC-16,Vegware 16oz/500ml Round Kraft Food Container,,45.16,38.41,38.41,12,9,3,1,review,D45024,DUP
+VEG-BWL-BW-26-KR,"Vegware Kraft Lined Food Bowl, 185 Series - 172 x 185 x 48mm",RSC-48K,"Vegware 48oz PLA-lined Kraft paper food bowl, 185 Series Compostable (Case of 300)",,71.74,79.99,79.99,12,9,3,0,review,RSC-26K-case,DUP
+VEG-BWL-BW-26,"Vegware PLA Lined Food Bowl, 185 Series - 172 x 185 x 48mm",RSC-32,"Vegware 32oz PLA-Lined Paper Food Bowl, 185 Series Compostable",25.0,71.74,25.84,73.98,12,6,6,0,review,RSC-48,DUP
+VEG-BWL-BW-32-KR,"Vegware Kraft Lined Food Bowl, 185 Series - 163 x 185 x 63mm",RSC-48K,"Vegware 48oz PLA-lined Kraft paper food bowl, 185 Series Compostable (Case of 300)",,80.64,79.99,79.99,12,9,3,0,review,RSC-32K-case,DUP
+VEG-BWL-BW-32,"Vegware PLA Lined Food Bowl, 185 Series - 185 x 185 x 63mm",RSC-48,"Vegware 48oz PLA-Lined Paper Food Bowl, 185 Series Compostable",28.17,80.64,28.27,79.99,12,6,6,0,review,RSC-32,""
+VEG-BWL-BW-48-KR,"Vegware Kraft Lined Food Bowl, 185 Series - 185 x 185 x 82mm",RSC-48K,"Vegware 48oz PLA-lined Kraft paper food bowl, 185 Series Compostable (Case of 300)",,87.19,79.99,79.99,12,9,3,0,review,RSC-32K-case,DUP
+VEG-BWL-BW-48,"Vegware PLA Lined Food Bowl, 185 Series - 82mm",RSC-32,"Vegware 32oz PLA-Lined Paper Food Bowl, 185 Series Compostable",30.81,87.19,25.84,73.98,12,6,6,0,review,RSC-48,DUP
+VEG-SPC-5,Vegware PLA Dome Cold Lid (Fits 115 Series) - 90 x 90 x 42mm,VL115D,Vegware Dome PLA Cold Lid (Fits 115 Series) Recyclable/Compostable,10.68,47.57,9.8,43.64,12,6,6,1,review,V115F,""
+VEG-SPC-4,Vegware PLA Flat Cold Lid (Fits 115 Series) - 115 x 115 x 13mm,V115F,Vegware Flat PLA Cold Lid (Fits 115 Series) Recyclable/Compostable,10.73,46.61,9.84,42.76,12,6,6,1,review,VL115D,""
+VEG-SPC-6,Vegware PLA Dome Cold Lid (fits 90 Series) - 90 x 90 x 42mm,VL90D,Vegware Dome PLA Cold Lid (fits 90 Series) Recyclable/Compostable,6.09,54.43,5.59,49.94,12,6,6,1,review,V90F,""
+VEG-LID-4,Vegware White CPLA Hot Cup Lid (Fits 79 Series) - 72 x 72 x 10mm,VLID79S,Vegware CPLA Hot Cup Lid (Fits 79 Series) Compostable,7.79,65.23,7.15,59.84,11,5,6,0,review,LV-8,""
+VEG-CC-12-3,"Vegware Paper Takeaway Cold Cup, 89-Series - 12oz",CV-S12,"Vegware 12oz Takeaway Paper Cold Cup, 89-Series Compostable",12.16,98.65,11.16,90.5,11,5,6,1,review,R360CE-VW,""
+VEG-CC-16-2,"Vegware Paper Takeaway Cold Cup, 89-Series - 16oz",CV-S16,"Vegware 16oz Takeaway Paper Cold Cup, 89-Series Compostable",15.66,115.26,14.37,105.74,11,5,6,1,review,R500CE,""
+VEG-CC-20-2,"Vegware Paper Takeaway Cold Cup, 89-Series - 20oz",CV-S20,"Vegware 20oz Takeaway paper cold cup, 89-Series Compostable",15.61,132.39,14.32,121.46,11,5,6,1,review,R600CE-VW,""
+VEG-CC-5,"Vegware PLA Plain Cold Cup, 76 Series - 46 x 76 x 63mm",R150Y,"Vegware 5oz PLA Plain Cold Cup, 76 Series Compostable",5.94,115.87,5.45,106.3,11,5,6,1,review,R150Y-VW,DUP
+VEG-CUP-DW-8,Vegware Feel Good Double Wall Hot Cup - 8oz,VDW-FG08,Vegware 8oz Feel Good double wall hot cup Compostable,,41.09,37.7,37.7,11,8,3,1,review,VDW-FS08,""
+VEG-MFB-HG-3,Vegware Microflute Hinged Window Hot Box - 4in,MFWB-6X5,Vegware 6 x 4in Microflute Hinged Window Hot Box – Compostable,,86.85,79.68,79.68,11,8,3,1,review,MFB-6X5,DUP
+VEG-MFB-TY,Vegware Microflute Food Tray - 8 x 6in,MFT-8X6,Vegware 8 x 6in Microflute Food Tray – Compostable,,45.97,42.17,42.17,11,8,3,1,review,MFT-6X6,""
+VEG-BWL,"Vegware PLA Lined Lid with Vents, 185 Series - 185 x 185 x 16mm",VLID185PK,"Vegware PLA Lined Kraft Paper Lid with Vents, 185 Series Compostable",26.68,81.06,28.96,73.98,11,5,6,0,review,VLID185P,DUP
+VEG-MFB-HG,Vegware Microflute Hinged Window Hot Box - 5in,MFWB-8X5,Vegware 8 x 5in Microflute Hinged Window Hot Box – Compostable,,86.07,78.96,78.96,11,8,3,1,review,MFB-8X5,DUP
+VEG-MFB-TY-2,Vegware Microflute Food Tray - 6 x 6in,MFT-6X6,Vegware 6 x 6in Microflute Food Tray – Compostable,,47.96,44.0,44.0,11,8,3,1,review,MFT-8X6,""
+VEG-CUP-DW-12,Vegware Feel Good Double Wall Hot Cup - 12oz,VDW-FG12,Vegware 12oz Feel Good double wall hot cup Compostable,,47.96,44.0,44.0,11,8,3,1,review,VDW-FS12,""
+VEG-LID-8-WH-3,Vegware White Fibre Hot Cup Lid - 80mm / 8oz,BLID79,Vegware 8oz White Moulded Fibre Hot Cup Lid Compostable (Case of 1000),,33.78,30.99,30.99,11,8,3,1,review,D01022,""
+VEG-CC-10,"Vegware Paper Cold Cup, 89-Series - 10oz",LV-FG10,"Vegware 10oz Single Wall Feel Good Takeaway Hot Cup, 89 Series Compostable",9.57,79.61,9.63,79.04,11,5,6,0,review,CV-S10,DUP
+VEG-CUP-DW-16,Vegware Feel Good Double Wall Hot Cup - 16oz,VDW-FG16,Vegware 16oz Feel Good double wall hot cup Compostable,,49.7,45.6,45.6,11,8,3,1,review,VDW-FS16,""
+VEG-LID-3,Vegware CPLA Hot Cup Lid (Fits 89 Series) - 72 x 72 x 10mm,VLID89SB,Vegware Black CPLA Hot Cup Lid (Fits 89 Series) Compostable,7.94,69.57,7.44,62.98,11,5,6,0,review,VLID89S,DUP
+VEG-MFB-HG-6,Vegware Microflute Hinged Hot Box - 6in,MFB-6X6,Vegware 6 x 6in Microflute Hinged Hot Box – Compostable,,60.09,55.13,55.13,10,7,3,0,review,MFWB-6X6,""
+VEG-MFB-HG-5,Vegware Microflute Hinged Hot Box - 4in,MFWB-6X5,Vegware 6 x 4in Microflute Hinged Window Hot Box – Compostable,,89.4,79.68,79.68,10,7,3,0,review,MFB-6X5,DUP
+VEG-MFB-HG-7,Vegware Microflute Hinged Hot Box - 5in,MFWB-8X5,Vegware 8 x 5in Microflute Hinged Window Hot Box – Compostable,,79.6,78.96,78.96,10,7,3,0,review,MFB-8X5,DUP
+VEG-HCX-SV,Vegware Large Sleeve Fits 89 Series Cup - 16oz,44940,Vegware Large sleeve &#8211; fits 89 series cup Compostable (Case of 2000),,34.11,31.29,31.29,10,7,3,1,review,VDW-W16,""
+VEG-CC-FL,Vegware Fibre 89-Series Nourish Flat Lid STRAW SLOT - 94 x 10mm,BLID89F-CH,Vegware 89-Series Nourish Moulded Fibre Flat Lid – STRAW SLOT,,47.64,43.71,43.71,9,6,3,1,review,PS10-GS,""
+VEG-DEL-BW-24,"Vegware PLA Food Bowl, 185-Series",RB-32,"Vegware 32oz PLA food bowl, 185-Series Compostable",40.68,82.57,41.52,84.91,9,3,6,0,review,RB-24,""
+VEG-BGG-5,Vegware Bagasse Lid (Size 4) - 225 x 210 x 22mm,V4-GLB,Vegware Compostable Bagasse Lid (Size 4),12.18,60.1,11.17,55.14,9,3,6,1,review,V5-GLB,DUP
+VEG-BAG-KR-5,Vegware Kraft Flat Bag - 254 x 254mm,WB1010B,Vegware Recycled White Kraft Flat Bag 10 x 10 Recyclable/Compostable (Case of 1000),,14.44,14.06,14.06,8,5,3,2,review,WB0808B,DUP
+VEG-CNT-SQ-KR,Vegware Kraft Square Lid Food Container Lid - 173 x 121 x 25mm,SLID-7X5P,"Vegware Rectangle Kraft Paper Lid – Food Container Lid, Compostable",,58.6,53.76,53.76,8,5,3,1,review,SKC-16,DUP
+VEG-IC-6,Vegware Ice Cream Pot (90‑Series) - 6 oz,IC-06,Vegware 6 oz Ice Cream Pot (90‑Series) Compostable,,61.09,56.05,56.05,8,5,3,1,review,SC-06,""
+VEG-BGG-4,Vegware PLA Lid (Size 4) - 199 x 185 x 25mm,V4-GLC,Vegware Compostable PLA Lid (Size 4),23.4,127.52,21.47,116.99,8,2,6,1,review,V5-GLC,DUP
+VEG-CC,Vegware PLA Combo Lid 96-Series Cold Cup Lid - 99 x 70 x 24mm,C96B-PP,Vegware PLA Combo Lid 96-Series – Compostable Cold Cup Lid,6.69,53.52,6.14,49.1,8,2,6,2,review,VLID62S,""
+VEG-POT-5,Vegware PLA Cold Portion Pot - 5oz,R150Y,"Vegware 5oz PLA Plain Cold Cup, 76 Series Compostable",4.72,80.66,5.45,106.3,8,4,4,2,review,R150Y-VW,DUP
+VEG-GP-275-2,Vegware Unbleached Greaseproof Sheet - 350 x 225mm,VGGSH2-GT,Vegware 350 x 225mm Greaseproof Sheet &#8211; Green Tree Compostable (Case of 1000),,22.82,30.41,30.41,8,7,1,0,review,VGGSH2-,DUP
+VEG-BAG-KR-7,Vegware Kraft Flat Bag - 178 x 178mm,WB0808B,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),,8.99,10.36,10.36,8,5,3,2,review,WB1010B,DUP
+VEG-DEL-HG-32,Vegware PLA Hinged Lid Deli Container - 168 x 185 x 65mm,VWST65-,Vegware Standard 65mm Kraft Sandwich Wedge Compostable (Case of 500),52.94,81.75,69.17,69.17,8,4,4,3,review,SLID-7X5P,DUP
+VEG-BGG,Vegware PLA Lid (Size 5) - 199 x 185 x 25mm,V5-GLC,Vegware Compostable PLA lid (Size 5),29.55,161.56,27.11,148.22,8,2,6,5,review,"",DUP
+VEG-BAG-KR-4,Vegware Kraft Flat Bag - 305 x 305mm,WB0808B,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),,10.67,10.36,10.36,8,5,3,2,review,WB1010B,DUP
+VEG-BAG-KR-6,Vegware Kraft Flat Bag - 203 x 203mm,WB0808B,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),,11.94,10.36,10.36,8,5,3,2,review,WB1010B,DUP
+VEG-BGT-PL-2,Vegware Bagasse Plate - 9in,P006-SR,Vegware 9in Source-Reduced Bagasse Plate Recyclable/Compostable,10.28,42.74,8.52,35.3,8,6,2,0,review,VB09-3,""
+VEG-SPC,Vegware Paper 115-Series Flat Hot Lid - 115 x 115 x 16mm,VLID115P,Vegware 115-Series Flat Paper Hot Lid Compostable,6.2,52.61,5.69,48.27,8,2,6,2,review,C96B-PP,""
+VEG-SPC-2,Vegware Paper 90-Series Flat Hot Lid - 90 x 90 x 16mm,VLID90P,Vegware 90-Series Flat Paper Hot Lid Compostable,7.65,70.78,7.02,64.94,8,2,6,2,review,VLID62S,""
+VEG-HCX-NT,"Vegware Stevia Natural Sweetener Sticks, Wrap",VSTEV-case-,"Vegware Stevia Natural Sweetener Sticks, Compostable Wrap (Case of 1000)",,35.54,32.61,32.61,8,5,3,4,review,"",""
+VEG-CTL-SP-115,Vegware Paper Teaspoon - 115mm,VP-SP4.5,Vegware 4.5in / 115mm Paper Teaspoon Compostable (Case of 1000),,22.13,20.3,20.3,8,5,3,5,review,"",""
+VEG-CTL-SP,Vegware Tutti Frutti Ice Cream Spoon,VP-SP3.5C,Vegware Compostable Tutti Frutti Ice Cream Spoon (CASE OF 2000),,50.3,46.15,46.15,8,5,3,2,review,VP-SP3.5,DUP
+VEG-BGP-CS-3,Vegware Bagasse Clamshell - 6in,B003,Vegware 6in Bagasse Burger Box Recyclable Compostable,,49.4,13.25,55.76,8,5,3,1,review,MFT-6X6,DUP
+VEG-PLT-3,Vegware Platter Box Quarter Insert,VWQUARTIN-,Vegware Platter Box Quarter Insert Compostable (Case of 50),,21.47,19.7,19.7,7,4,3,3,review,"",""
+VEG-LID-6,Vegware CPLA 62-Series Hot Cup Lid - 65 x 15mm,VLID62S,Vegware 62-Series CPLA Hot Cup Lid Compostable,6.95,68.04,6.38,62.42,7,1,6,1,review,VLID90P,DUP
+VEG-DEL-HG-16,Vegware PLA Hinged Lid Deli Container - 123 x 142 x 65mm,VWST65-,Vegware Standard 65mm Kraft Sandwich Wedge Compostable (Case of 500),33.22,79.56,69.17,69.17,7,4,3,3,review,"",DUP
+VEG-LID-2,Vegware Paper 79-Series Takeaway Hot Cup Lid - 16mm,VLID79P,Vegware 79-Series Paper Takeaway Hot Cup Lid Compostable,8.93,61.16,8.19,56.11,7,1,6,1,review,VLID89P,""
+VEG-LID,Vegware Paper 89-Series Takeaway Hot Cup Lid - 89 x 10mm,PS10-GS,"Vegware Jumbissimo Green Stripe 10mm Paper Straw, 7.8in Recyclable/Compostable",,64.06,6.12,53.67,7,4,3,3,review,"",DUP
+VEG-CC-PN-3,Vegware Paper Pint-to-Brim Cup 89-Series - 57 x 90 x 160mm,PINTP1,Vegware Pint-to-Brim Paper Cup – UKCA Marked 89-Series,,134.42,123.32,123.32,7,4,3,1,review,PINT1,DUP
+VEG-BOX-22,Vegware Medium Window Salad Box,01VWPASTA-case-,Vegware 22oz Medium Window Salad Box Compostable (Case of 300),,91.0,83.49,83.49,7,4,3,2,review,MFWB-6X5,""
+VEG-BOX-32,Vegware Large Window Salad Box,01VWSALAD-case-,Vegware 32oz Large Window Salad Box Compostable (Case of 300),,119.08,109.25,109.25,7,4,3,3,review,"",""
+VEG-DEL-4-2,Vegware PLA No 2 Sushi Combo,VSU-02-case-,Vegware No 2 PLA Sushi Combo 17.5 x 12.5 x 4cm Compostable (Case of 300),,73.86,67.76,67.76,7,4,3,2,review,1670-,""
+VEG-DEL-4,Vegware PLA No 4 Sushi Combo,VSU-04-case-,Vegware No 4 PLA Sushi Combo 24.5 x 15 x 4cm Compostable (Case of 300),,134.66,123.54,123.54,7,4,3,3,review,"",""
+VEG-IC-4-5,Vegware Soup/Gelato Pot - 62 x 75 x 49mm,VLID62S,Vegware 62-Series CPLA Hot Cup Lid Compostable,7.29,66.04,6.38,62.42,7,1,6,1,review,VLID79P,DUP
+VEG-BGT-SQ-3,Vegware Bagasse Square Plate - 160 x 160 x 15mm,V3-GLB,Vegware Size 3 Bagasse Gourmet Lid Compostable,7.66,33.09,7.91,37.86,7,1,6,3,review,"",DUP
+VEG-BGT-PL-RD,Vegware Bagasse Source-Reduced Plate - 225 x 225 x 19mm,V3-GLB,Vegware Size 3 Bagasse Gourmet Lid Compostable,9.29,38.48,7.91,37.86,7,1,6,2,review,P006-SR,DUP
+VEG-PLT-4,Vegware Large Platter Box and Insert,VWPLATL-,Vegware Large platter box and insert Compostable (Case of 25),,57.52,52.77,52.77,7,4,3,3,review,"",""
+VEG-PLT-2,Vegware Platter Box Eighth Insert,VWEIGHTIN-,Vegware Platter Box Eighth Insert Compostable (Case of 50),,19.09,17.51,17.51,7,4,3,1,review,VWQUARTIN-,""
+VEG-CNT-RC-BK,Vegware Black Paper Rectangular Lid,SBC-34,Vegware 34oz Rectangular Black Food Container Compostable,,58.6,50.16,50.16,7,4,3,0,review,SLID-7X5BP,DUP
+VEG-BWL-RD-KR,Vegware Kraft Round Lid - 7mm,RLID150BP,"Vegware Round Kraft Black Paper Lid, 150-Series Compostable",,59.22,54.33,54.33,7,4,3,0,review,RLID150P,DUP
+VEG-SAN-CP,Vegware PLA 2-compartment Sandwich Sofa - 151 x 103 x 64mm,VSOFA2,Vegware 2-compartment PLA Sandwich Sofa Compostable (Case of 250),,38.14,34.99,34.99,7,4,3,4,review,"",""
+VEG-SUN-RD-45,Vegware Round Write-On Sticker,VRST45W-case-,"Vegware 45mm Round Write-On Compostable Sticker (Case of 1,000)",,16.8,15.41,15.41,7,4,3,2,review,VRST45-GT-case-,DUP
+VEG-PLT-5,Vegware Platter Box Half Insert,VWHALFIN-,Vegware Platter Box Half Insert Compostable (Case of 50),,28.37,26.03,26.03,7,4,3,2,review,ETGCP27,""
+VEG-BOX-5-3,Vegware No 3 Kraft Takeaway Boxes - 1800ml,V5-GB60,Vegware Compostable Gourmet Base – 60oz / 1800ml (Fits Lid 5),,76.18,16.59,89.28,7,4,3,1,review,VWWTT,DUP
+VEG-BGG-18,Vegware Gourmet Dipping Base - 195 x 180 x 40mm,V5-GLB,Vegware Gourmet Bagasse Lid (Size 5) Compostable,15.03,76.67,13.35,65.67,7,1,6,2,review,V3-GLC,DUP
+VEG-BAG-6,Vegware Glassine Bag With NatureFlex Window,VGLW6-,Vegware 6&#215;2.5x10in Glassine Bag With NatureFlex Window Compostable (Case of 500),,43.06,39.5,39.5,7,4,3,2,review,VGLW4,""
+VEG-CTL-FK,Vegware Paper Knife and Fork Kit - 207 x 58mm,VP-KFWN,Vegware Compostable paper knife and fork kit  (Case of 250),,34.17,31.35,31.35,6,3,3,2,review,"",""
+VEG-CTL-FK-3,Vegware Wood Knife and Fork Kit - 216 x 55 x 10mm,VT-KFWN,Vegware Compostable Wooden Knife and Fork Kit (Case of 250),,21.56,19.78,19.78,6,3,3,2,review,"",""
+VEG-CTL-SP-90,Vegware Paper Ice Cream Spoon - 89mm,VP-SP3.5C,Vegware Compostable Tutti Frutti Ice Cream Spoon (CASE OF 2000),,50.3,46.15,46.15,6,3,3,1,review,IC-06,DUP
+VEG-DEL-RD-24,Vegware PLA Round Deli Container - 118 x 110mm,V4-GLC,Vegware Compostable PLA Lid (Size 4),21.82,107.9,21.47,116.99,6,0,6,2,review,"",DUP
+VEG-DEL-RD-32,Vegware PLA Round Deli Container - 118 x 140mm,V5-GLC,Vegware Compostable PLA lid (Size 5),29.64,138.38,27.11,148.22,6,0,6,2,review,"",DUP
+VEG-BGP-2,Vegware Bagasse Lunch Box - 207 x 240 x 69mm,LF&#038;CBOX,Large Bagasse Food Box – Compostable,30.85,46.14,36.0,36.0,6,2,4,1,review,ETG10CB4,""
+VEG-DEL-RD-8,Vegware PLA Round Deli Container - 118 x 39mm,V4-GLB,Vegware Compostable Bagasse Lid (Size 4),9.85,64.08,11.17,55.14,6,0,6,0,review,VLID89P,DUP
+VEG-CC-PN-5,Vegware PLA Pint to Brim Cup - 145mm,PINTP1,Vegware Pint-to-Brim Paper Cup – UKCA Marked 89-Series,,130.18,123.32,123.32,6,3,3,0,review,PINT1,DUP
+VEG-BGG-6,Vegware Window Lid (Size 4),V4-GLW-case-,Vegware Compostable Window Lid (Size 4),,227.22,208.46,208.46,6,3,3,1,review,V5-GLW-case-,""
+VEG-CC-3,Vegware PLA Sipping Lid Fits 96-Series - 96 x 96 x 35mm,C96F-SP,Vegware PLA sipping lid fits 96-Series Compostable (Case of 1000),,67.68,62.09,62.09,6,3,3,3,review,"",""
+VEG-GP-350-GN,Vegware Greaseproof Green Tree - 380 x 275mm,VGKSH4,Vegware 380 x 275mm Unbleached Greaseproof Sheet Compostable (Case of 500),,48.59,24.45,24.45,6,6,0,1,review,VGKSH3,DUP
+VEG-DEL-RD-16,Vegware PLA Round Deli Container - 118 x 77mm,V3-GLC,Vegware Size 3 PLA Gourmet Lid Compostable,18.7,92.27,17.23,93.59,6,0,6,2,review,"",DUP
+VEG-HCX-WH,"Vegware White Fairtrade Sugar Sticks, Wrap",P10002,8oz White PP Sip-Thru Hot Cup Lid (Case of 1000),,19.87,19.69,19.69,6,3,3,0,review,P10003,""
+VEG-POT-5-KR-2,Vegware Kraft Portion Pot - 5oz,RLID150P,Vegware Round Kraft Paper Lid (Case of 300),,64.7,54.33,54.33,6,3,3,0,review,VWWTT,""
+VEG-DEL-HG-24,Vegware PLA Hinged Lid Deli Container - 147 x 165 x 65mm,VWST65-,Vegware Standard 65mm Kraft Sandwich Wedge Compostable (Case of 500),47.02,83.22,69.17,69.17,6,4,2,1,review,SLID-7X5P,DUP
+VEG-BOX-5-2,Vegware No 5 Kraft Takeaway Boxes - 1050ml,RKC-34,Vegware 34 oz Round Kraft Food Container (Case of 300),,49.89,46.92,46.92,6,3,3,0,review,RLID150BP,""
+VEG-BOX-5-4,Vegware No 2 Kraft Takeaway Boxes - 1500mm,VWWTT,Vegware Tortilla / Wrap Kraft Carton Compostable (Case of 500),,84.62,74.3,74.3,6,3,3,1,review,SB2,DUP
+VEG-DEL-HG-48,Vegware PLA Hinged Lid Deli Container - 182 x 200 x 75mm,VWST75,Vegware Deep Fill 75mm Kraft Sandwich Wedge Compostable (Case of 500),61.48,103.94,79.56,79.56,6,4,2,1,review,VHC-04-case-,""
+VEG-BAG-KR,Vegware Kraft Window Bag - 254 x 254mm,SLID-7X5P,"Vegware Rectangle Kraft Paper Lid – Food Container Lid, Compostable",,55.74,53.76,53.76,6,3,3,0,review,RLID150P,DUP
+VEG-HCX-CR-5,Vegware 2-Cup Handled Carrier,VHC-02-case-,Vegware 2-Cup Handled Carrier Recyclable/Compostable (Case of 250),,72.94,66.92,66.92,6,3,3,1,review,VHC-04-case-,""
+VEG-GP-225-GN,Vegware Greaseproof Sheet Green Tree - 355 x 250mm,VGGSH2-GT,Vegware 350 x 225mm Greaseproof Sheet &#8211; Green Tree Compostable (Case of 1000),,33.15,30.41,30.41,6,3,3,3,review,"",DUP
+VEG-HCX-CR-4,Vegware 4-Cup Handled Carrier,VHC-04-case-,Vegware 4-Cup Handled Carrier Recyclable/Compostable (Case of 200),,76.07,69.79,69.79,6,3,3,1,review,VHC-02-case-,""
+VEG-SAN-SW-75-KR,Vegware Kraft Deep Fill Sandwich Wedge - 125 x 75 x 125mm,VWWTT,Vegware Tortilla / Wrap Kraft Carton Compostable (Case of 500),,86.72,74.3,74.3,6,3,3,1,review,VWBLMT,DUP
+VEG-HCX-BR,"Vegware Brown Fairtrade Sugar Sticks, Wrap",BOX031A,12in Brown Kraft Pizza Box Recyclable/Compostable (Case of 100),,24.32,26.0,26.0,6,3,3,0,review,PLA373,""
+VEG-HCX-CR,Vegware Splittable Card Cup Carrier - 192 x 210 x 58mm,VCC-04SP,Vegware Splittable card cup carrier Compostable/Recyclable (Case of 130),,49.92,45.8,45.8,6,3,3,3,review,"",""
+VEG-PLT-6,Vegware Regular Platter Box - 2cm,VWPLATS-,Vegware Regular platter box Compostable (Case of 50),,79.38,72.83,72.83,6,3,3,3,review,"",""
+VEG-BGG-3,Vegware Window Lid (Size 5),V5-GLW-case-,Vegware Compostable Window Lid (Size 5),,208.92,191.67,191.67,6,3,3,1,review,V4-GLW-case-,""
+VEG-BAG-KR-2,Vegware Kraft Window Bag - 216 x 216mm,SKC-24,Vegware 24 oz / 750 ml Square Kraft Food Container (Case of 300),,43.12,45.14,45.14,6,3,3,0,review,SKC-16,""
+VEG-BOX,Vegware Large Carry Pack,VWCPL-,Vegware Large Carry Pack Compostable (Case of 125),,86.96,79.78,79.78,5,2,3,2,review,"",""
+VEG-BOX-2,Vegware Standard Carry Pack,VWCPS-,Vegware Standard Carry Pack Compostable (Case of 125),,65.75,60.32,60.32,5,2,3,1,review,"",""
+VEG-BGT-RC,Vegware Bagasse Rectangular Plate - 260 x 130 x 20mm,V3-GLB,Vegware Size 3 Bagasse Gourmet Lid Compostable,9.8,41.98,7.91,37.86,5,1,4,0,review,V4-GLB,DUP
+VEG-BGT-SQ-2,Vegware Bagasse Square Plate - 200 x 200 x 15mm,V3-GLB,Vegware Size 3 Bagasse Gourmet Lid Compostable,9.9,43.15,7.91,37.86,5,1,4,0,review,V4-GLB,DUP
+VEG-SUN-RD-45-2,Vegware Round Sticker,VRST45W-case-,"Vegware 45mm Round Write-On Compostable Sticker (Case of 1,000)",,16.8,15.41,15.41,5,2,3,0,review,VRST45-GT-case-,DUP
+VEG-GP-225,Vegware Greaseproof Sheet,VGGSH2-,Vegware 350 x 225mm Greaseproof Sheet Compostable (Case of 1920),,32.11,29.46,29.46,5,2,3,0,review,VGGSH2-GT,""
+VEG-SUN-CR,Vegware Compostable Medium Carrier,VCB-2-case-,Vegware Medium Compostable Carrier (Case of 500),,94.97,87.13,87.13,5,2,3,1,review,"",""
+VEG-BGT-SQ,Vegware Bagasse Square Plate - 260 x 260 x 20mm,V5-GLB,Vegware Gourmet Bagasse Lid (Size 5) Compostable,17.37,67.86,13.35,65.67,5,1,4,1,review,"",DUP
+VEG-CTL-3,Vegware Paper Cutlery Kit - 206 x 60mm,VP-KFSWN,Vegware Compostable Paper Cutlery Kit (Case of 250),,40.88,37.5,37.5,5,2,3,2,review,"",""
+VEG-CTL-10,Vegware Wood Cutlery Kit - 216 x 57 x 15mm,VT-KFSWN,Vegware Compostable Wooden Cutlery Kit (Case of 250),,24.81,22.76,22.76,5,2,3,2,review,"",""
+VEG-CTL-FK-2,"Vegware Wood Fork, Wrapped - 214 x 37 x 6mm",VT-FK6W-case,"Vegware Compostable wooden fork, wrapped (Case of 500)",,27.24,24.99,24.99,5,2,3,0,review,6W200X20X250,""
+VEG-BAG-7,Vegware Ovenable Wrap,VOW-GP1-case-,Vegware Ovenable Wrap 11 x 13.5 x 8in Compostable (Case of 500),,95.84,87.93,87.93,5,2,3,2,review,"",""
+VEG-SPC-24-GN,"Vegware Soup Container, 115 Series Green Tree - 24oz",SC-G24,"Vegware 24oz Soup Container, 115 Series &#8211; Green Tree Compostable",7.44,56.22,6.83,51.58,22,16,6,4,auto,SC-G16,""
+VEG-CUP-SW-16-KR,"Vegware Brown Kraft Single Wall Takeaway Hot Cup, 89 Series - 16oz",KV-16,"Vegware 16oz Single Wall Brown (Kraft) Takeaway Hot Cup, 89 Series Compostable",9.6,76.11,8.81,69.83,22,16,6,4,auto,KV-12,""
+VEG-CUP-DW-12-GN-2,"Vegware Double Wall Hot Takeaway Cup, 89 Series Green Tree - 12oz",VDW-12-GT,"Vegware 12oz Double Wall Hot Takeaway Cup, 89 Series &#8211; Green Tree Recyclable/Compostable",7.63,56.66,7.0,51.98,22,16,6,3,auto,LV-12-GT,""
+VEG-CUP-DW-12-GN,"Vegware Double Wall Hot Takeaway Cup, 89 Series Green Britain - 12oz",VDW-12GB,"Vegware 12oz Double Wall Hot Takeaway Cup, 89 Series &#8211; Green Britain Compostable",7.63,76.85,7.0,70.5,22,16,6,4,auto,LV-12-GT,""
+VEG-CUP-SW-12-KR,"Vegware Brown Kraft Single Wall Takeaway Hot Cup, 89 Series - 12oz",KV-12,"Vegware 12oz Single Wall Brown (Kraft) Takeaway Hot Cup, 89 Series Compostable",8.77,84.44,8.05,77.47,22,16,6,4,auto,KV-10,""
+VEG-CUP-SW-12-GN,"Vegware Single Wall Hot Cup, 89 Series Green Tree - 12oz",LV-12-GT,"Vegware 12oz Single Wall Hot Cup, 89 Series &#8211; Green Tree Compostable",9.03,93.13,8.28,85.44,22,16,6,4,auto,LV-16-GT,""
+VEG-CUP-SW-16-GN,"Vegware Single Wall Hot Cup, 89 Series Green Tree - 16oz",LV-16-GT,"Vegware 16oz Single Wall Hot Cup, 89 Series &#8211; Green Tree Compostable",9.6,98.09,8.81,89.99,22,16,6,4,auto,LV-12-GT,""
+VEG-CUP-SW-4-GN,"Vegware Single Wall Hot Cup, 62 Series Green Tree - 4oz",LV-4-GT,"Vegware 4oz Single Wall Hot Cup, 62 Series &#8211; Green Tree Compostable",4.4,45.16,4.04,41.43,22,16,6,9,auto,LV-FG04,""
+VEG-CUP-SW-8-KR,"Vegware Brown Kraft Single Wall Takeaway Hot Cup, 79 Series - 8oz",KV-8,"Vegware 8oz Single Wall Brown (Kraft) Takeaway Hot Cup, 79 Series Compostable",7.32,70.98,6.72,65.12,22,16,6,3,auto,VDW-8,""
+VEG-CUP-SW-8-GN,"Vegware Single Wall Hot Cup, 79 Series Green Tree - 8oz",LV-8-GT,"Vegware 8oz Single Wall Hot Cup, 79 Series &#8211; Green Tree Compostable",6.91,58.24,6.34,53.43,22,16,6,3,auto,VDW-8-GT,""
+VEG-SPC-8-GN,"Vegware Soup Container, 90 Series Green Tree - 8oz",SC-G08,"Vegware 8oz Soup Container, 90 Series &#8211; Green Tree Compostable",8.07,63.45,7.4,58.21,22,16,6,4,auto,SC-G10,DUP
+VEG-CUP-SW-10-KR,"Vegware Brown Kraft Single Wall Takeaway Hot Cup, 89 Series - 10oz",KV-10,"Vegware 10oz Single Wall Brown (Kraft) Takeaway Hot Cup, 89 Series Compostable",8.32,86.15,7.63,79.04,22,16,6,4,auto,KV-12,""
+VEG-CUP-SW-4-KR,"Vegware Brown Kraft Single Wall Takeaway Hot Cup, 62 Series - 4oz",KV-4,"Vegware 4oz Single Wall Brown (Kraft) Takeaway Hot Cup, 62 Series Compostable",4.45,45.16,4.08,41.43,22,16,6,9,auto,LV-4,""
+VEG-CUP-SW-6-KR,"Vegware Brown Kraft Single Wall Takeaway Hot Cup, 72 Series - 6oz",KV-6,"Vegware 6oz Single Wall Brown (Kraft) Takeaway Hot Cup, 72 Series Compostable",6.38,57.03,5.85,52.32,22,16,6,10,auto,LV-FG06,""
+VEG-SPC-10-GN,"Vegware Soup Container, 90 Series Green Tree - 10oz",SC-G10,"Vegware 10oz Soup Container, 90 Series &#8211; Green Tree Compostable",8.83,68.51,8.1,62.85,22,16,6,4,auto,SC-G08,DUP
+VEG-SPC-12-GN,"Vegware Soup Container, 115 Series Green Tree - 12oz",SC-G12,"Vegware 12oz Soup Container, 115 Series &#8211; Green Tree Compostable",5.97,47.21,5.48,43.31,22,16,6,4,auto,SC-G24,""
+VEG-SPC-16-GN,"Vegware Soup Container, 115 Series Green Tree - 16oz",SC-G16,"Vegware 16oz Soup Container, 115 Series &#8211; Green Tree Compostable",6.9,52.96,6.33,48.59,22,16,6,4,auto,SC-G24,DUP
+VEG-CUP-SW-6-GN,"Vegware Single Wall Hot Cup, 72 Series Green Tree - 6oz",LV-6-GT,"Vegware 6oz Single Wall Hot Cup, 72 Series &#8211; Green Tree Compostable",5.73,57.03,5.26,52.32,22,16,6,9,auto,KV-6,""
+VEG-CUP-SW-16-WH,"Vegware White Single Wall Takeaway Hot Cup, 89 Series - 16oz",LV-16,"Vegware 16oz Single Wall White Takeaway Hot Cup, 89 Series Compostable",9.6,98.09,8.81,89.99,19,13,6,6,auto,LV-16-GT,""
+VEG-CUP-SW-12-WH,"Vegware White Single Wall Takeaway Hot Cup, 89 Series - 12oz",LV-12,"Vegware 12oz Single Wall White Takeaway Hot Cup, 89 Series Compostable",9.06,86.92,8.31,79.74,19,13,6,3,auto,LV-FG12,""
+VEG-CUP-SW-6-WH-2,"Vegware White Single Wall Takeaway Hot Cup, 72 Series - 6oz",LV-6,"Vegware 6oz Single Wall White Takeaway Hot Cup, 72 Series Compostable",5.24,57.03,4.81,52.32,19,13,6,4,auto,LV-6S,""
+VEG-CUP-SW-4-WH,"Vegware White Single Wall Takeaway Hot Cup, 62 Series - 4oz",LV-4,"Vegware 4oz Single Wall White Takeaway Hot Cup, 62 Series Compostable",4.4,45.16,4.04,41.43,19,13,6,6,auto,LV-4-GT,""
+VEG-CUP-SW-6-WH,"Vegware White Single Wall Hot Cup, 79 Series - 6oz",LV-6S,"Vegware 6oz Single Wall White Hot Cup, 79 Series Compostable",5.9,57.03,5.41,52.32,19,13,6,4,auto,LV-8,""
+VEG-CUP-DW-8-KR-2,"Vegware Kraft Double Wall Hot Takeaway Cup, 79 Series - 8oz",VDW-8,"Vegware 8oz Double Wall Brown (Kraft) Hot Takeaway Cup, 79 Series Recyclable/Compostable",7.26,49.1,6.66,45.05,19,13,6,3,auto,KV-8,""
+VEG-CUP-SW-8-WH,"Vegware White Single Wall Takeaway Hot Cup, 79 Series - 8oz",LV-8,"Vegware 8oz Single Wall White Takeaway Hot Cup, 79 Series Compostable",6.91,70.98,6.34,65.12,19,13,6,6,auto,KV-8,""
+VEG-CUP-SW-20-WH,"Vegware White Single Wall Takeaway Hot Cup, 89 Series - 20oz",LV-20,"Vegware 20oz Single Wall White Takeaway Hot Cup, 89 Series Compostable",11.46,87.47,10.51,80.25,19,13,6,6,auto,LV-12,""
+VEG-CUP-DW-10-KR,Vegware Brown Kraft Double Wall Hot Cup 89-Series - 10 oz,VDW-10,Vegware 10 oz Double Wall Brown Kraft Hot Cup 89-Series – Compostable,5.78,45.78,5.3,42.0,19,13,6,6,auto,VDW-FG10,""
+VEG-BGG-42,Vegware Gourmet Base (Fits Lid 5) - 42oz / 1200ml,V5-GB42,Vegware Compostable Gourmet Base – 42oz / 1200ml (Fits Lid 5),17.13,85.04,15.72,78.02,18,12,6,11,auto,SQR-40,""
+VEG-BGG-60,Vegware Gourmet Base (Fits Lid 5) - 60oz / 1800ml,V5-GB60,Vegware Compostable Gourmet Base – 60oz / 1800ml (Fits Lid 5),18.08,97.32,16.59,89.28,18,12,6,11,auto,V3-GLC,DUP
+VEG-CUP-SW-10,"Vegware Single Wall Feel Good Takeaway Hot Cup, 89 Series - 10oz",LV-FG10,"Vegware 10oz Single Wall Feel Good Takeaway Hot Cup, 89 Series Compostable",10.5,86.15,9.63,79.04,18,12,6,4,auto,KV-10,DUP
+VEG-CUP-SW-12,"Vegware Single Wall Feel Good Takeaway Hot Cup, 89 Series - 12oz",LV-FG12,"Vegware 12oz Single Wall Feel Good Takeaway Hot Cup, 89 Series Compostable",11.24,80.18,10.31,73.56,18,12,6,4,auto,LV-12,""
+VEG-CUP-SW-4,"Vegware Single Wall Feel Good Takeaway Hot Cup, 62 Series - 4oz",LV-FG04,"Vegware 4oz Single Wall Feel Good Takeaway Hot Cup, 62 Series Compostable",9.85,45.16,9.04,41.43,18,12,6,5,auto,LV-4,""
+VEG-CUP-SW-8,"Vegware Single Wall Feel Good Takeaway Hot Cup, 79 Series - 8oz",LV-FG08,"Vegware 8oz Single Wall Feel Good Takeaway Hot Cup, 79 Series Compostable",10.18,59.67,9.34,54.74,18,12,6,4,auto,KV-8,""
+VEG-NAP-33-GN,Vegware 1-Ply Dispenser Napkin Green Tree - 33cm,1D6000-GT,Vegware 33cm 1-Ply Dispenser Napkin &#8211; Green Tree Recyclable/Compostable (Case of 4000),,54.53,50.03,50.03,17,14,3,8,auto,1D6000,""
+VEG-CUP-DW-12-WH-2,"Vegware White Double Wall Takeaway Hot Cup, 89 Series - 12oz",VDW-W12,"Vegware 12oz Double Wall White Takeaway Hot Cup, 89 Series, Compostable (Case of 500)",,55.92,51.3,51.3,16,13,3,3,auto,LV-12,""
+VEG-BGG-16,Vegware Gourmet Base - 16oz / 500ml,V3-GB16,Vegware 16oz / 500ml Gourmet Base Compostable,13.12,72.46,12.04,66.48,16,10,6,8,auto,KV-16,""
+VEG-BGP-SQ,Vegware Bagasse Square 3-Comp Lunch Box - 9in,VB09-3,Vegware 9in Square 3-Comp Bagasse Lunch Box Compostable,25.85,46.85,23.72,42.98,16,10,6,10,auto,P006-SR,""
+VEG-NAP-33-WH,Vegware White 2-Ply Napkin - 33cm,9002/226,Vegware 33cm 2-Ply White Napkin Compostable,9.68,41.17,8.88,37.77,16,10,6,6,auto,202000/333,""
+VEG-STR-9-GN,Vegware White / Green Paper Bubble Tea Stripe Straw - 12mm x 230mm,PS12-GS,Vegware Bubble Tea Green Stripe 12 mm Paper Straw 9″ – Compostable,13.07,74.61,11.99,68.45,16,10,6,10,auto,PLA372,""
+VEG-STR-10-GN,Vegware Paper Jumbissimo Green Stripe Straw - 10mm x 210mm,PS10-GS,"Vegware Jumbissimo Green Stripe 10mm Paper Straw, 7.8in Recyclable/Compostable",6.67,58.5,6.12,53.67,16,10,6,10,auto,C96B-PP,DUP
+VEG-STR-6-GN,Vegware Paper Standard Green Stripe Straw - 6mm,PS06-GS,"Vegware Standard Green Stripe 6mm Paper Straw, 7.8in Recyclable/Compostable",13.47,111.95,12.36,102.71,16,10,6,8,auto,PS06H-BLK,""
+VEG-CUP-DW-16-WH,"Vegware White Double Wall Takeaway Hot Cup, 89 Series - 16oz",VDW-W16,"Vegware 16oz Double Wall White Takeaway Hot Cup, 89 Series, Compostable (Case of 500)",,58.26,53.45,53.45,16,13,3,3,auto,LV-16,""
+VEG-SPC-12,"Vegware Soup Container, 115 Series - 12oz",SC-12,"Vegware 12oz Soup Container, 115 Series Compostable",8.07,46.26,7.4,42.44,16,10,6,2,auto,SC-G12,""
+VEG-SPC-6-2,"Vegware Soup Container, 90 Series - 6oz",SC-06,"Vegware 6oz Soup Container, 90 Series Recyclable/Compostable",7.78,73.35,7.14,67.29,16,10,6,4,auto,SC-10,""
+VEG-CUP-DW-8-WH-2,"Vegware White Double Wall Takeaway Hot Cup, 79 Series - 8oz",VDW-W08,"Vegware 8oz Double Wall White Takeaway Hot Cup, 79 Series, Compostable (Case of 500)",,49.68,45.58,45.58,16,13,3,3,auto,LV-8,""
+VEG-SPC-32,Vegware Soup Container 115 Series - 32oz,SC-32,Vegware 32oz Soup Container 115 Series Compostable,8.55,67.33,7.84,61.77,16,10,6,6,auto,SC-12,""
+VEG-CUP-DW-10,Vegware Feel Good Double Wall Hot Cup 89-Series - 10 oz,VDW-FG10,Vegware 10 oz Feel Good Double Wall Hot Cup 89-Series – Compostable,5.78,45.78,5.3,42.0,15,9,6,2,auto,VDW-10,""
+VEG-CUP-DW-12-4,"Vegware Gallery Design Double Wall Hot Takeaway Cup, 89-Series - 12oz",VDW-A12,"Vegware 12oz Gallery Design Double Wall Hot Takeaway Cup, 89-Series Compostable",8.38,66.9,7.69,61.38,15,9,6,2,auto,VDW-12GB,""
+VEG-CUP-DW-16-3,"Vegware Gallery Design Double Wall Hot Takeaway Cup, 89-Series - 16oz",VDW-A16,"Vegware 16oz Gallery Design Double Wall Hot Takeaway Cup, 89-Series Compostable",10.62,63.22,9.74,58.0,15,9,6,5,auto,V3-GB16,""
+VEG-CUP-DW-8-4,"Vegware Gallery Design Double Wall Hot Takeaway Cup, 79-series - 8oz",VDW-A08,"Vegware 8oz Gallery Design Double Wall Hot Takeaway Cup, 79-series Compostable",7.97,64.58,7.31,59.25,15,9,6,3,auto,LV-FG08,""
+VEG-NAP-33,Vegware 1-Ply Unbleached Dispenser Napkin (2 Free Dispensers) - 33cm,1D6000,Vegware 33cm 1-Ply Unbleached Dispenser Napkin (2 free dispensers) Compostable,,76.47,5.99,66.99,15,12,3,6,auto,1D6000-GT,""
+VEG-DEL-RD-32-2,Vegware PLA Round Deli Outside-Fit Lid (Fits Deli) - 32oz,VDC-120H,Vegware PLA Round Deli Outside-Fit Lid (Fits 8-32oz Deli) Compostable,8.68,43.95,7.96,40.32,15,9,6,6,auto,VKD-193L,""
+VEG-BGP-SQ-RD,Vegware Source Reduced Square Lunch Box - 8in,VB08-SR,Vegware 8in Source Reduced Square Lunch Box Compostable,25.85,37.4,23.72,34.31,15,9,6,2,auto,VB08,""
+VEG-CC-12-GN,"Vegware PLA Cold Cup, 96 Series Green Tree - 12oz",R360CE-VW,"Vegware 12oz PLA Cold Cup, 96 Series Compostable",12.07,125.18,11.07,114.84,14,8,6,2,auto,LV-12-GT,DUP
+VEG-CC-5-2,"Vegware PLA Cold Cup, 76 Series - 5oz",R150Y-VW,"Vegware 5oz PLA Cold Cup, 76 Series Compostable",6.64,115.87,6.09,106.3,14,8,6,2,auto,R150Y,DUP
+VEG-CC-5-GN,"Vegware PLA Cold Cup, 76 Series Green Tree - 5oz",R150Y-VW,"Vegware 5oz PLA Cold Cup, 76 Series Compostable",6.56,115.87,6.09,106.3,14,8,6,2,auto,R150Y,DUP
+VEG-CC-7,"Vegware PLA Cold Cup, 76 Series - 7oz",R200-VW,"Vegware 7oz PLA Cold Cup, 76 Series Compostable",8.21,67.65,7.53,62.06,14,8,6,4,auto,R280Y,""
+VEG-LID-BK,Vegware Black CPLA Hot Cup Lid (Fits 89 Series) - 79 x 79 x 10mm,VLID89SB,Vegware Black CPLA Hot Cup Lid (Fits 89 Series) Compostable,8.11,68.65,7.44,62.98,14,8,6,3,auto,VLID89S,DUP
+VEG-CC-FL-2,"Vegware PLA Flat Lid, STRAW SLOT (Fits 96 Series) - 80 x 80 x 20mm",C96F-CH,"Vegware PLA Flat Lid, STRAW SLOT (Fits 96 Series) Compostable",11.51,44.76,10.56,41.06,14,8,6,2,auto,C96F-NH,""
+VEG-BWL-KR,"Vegware Kraft Lined Lid with Vents, 185 Series - 185 x 185 x 16mm",VLID185PK,"Vegware PLA Lined Kraft Paper Lid with Vents, 185 Series Compostable",31.57,80.64,28.96,73.98,14,8,6,4,auto,RSC-48,DUP
+VEG-NAP-24,Vegware Kraft 2-Ply Unbleached Napkin - 24cm,2S4000/332,Vegware 24cm 2-Ply Unbleached Napkin Compostable,8.55,56.1,7.84,51.47,14,8,6,8,auto,RLID150P,""
+VEG-NAP-33-2,Vegware 2-Ply Unbleached Napkin - 33cm,202000/333,Vegware 33cm 2-Ply Unbleached Napkin Compostable,5.43,45.06,4.98,41.34,14,8,6,2,auto,1D6000,""
+VEG-NAP-40,Vegware Kraft 2-Ply Unbleached Napkin - 40cm,2L2000/334,Vegware 40cm 2-Ply Unbleached Napkin Compostable,7.15,55.79,6.56,51.18,14,8,6,8,auto,RKC-34,""
+VEG-BGT-PL-RD-2,Vegware Bagasse Source-Reduced Plate - 7in,P010-SR,Vegware 7in Source-Reduced Bagasse Plate Compostable,5.72,24.87,5.25,22.82,14,8,6,5,auto,P010-SRNW,""
+VEG-CC-DL,"Vegware PLA Dome Lid, STRAW SLOT (Fits 96 Series) - 80 x 80 x 32mm",C96D-OH,"Vegware PLA Dome Lid, STRAW SLOT (Fits 96 Series) Compostable",6.33,54.95,5.81,50.41,14,8,6,2,auto,C96D-NH,""
+VEG-CUP-SW-6,"Vegware Single Wall Feel Good Takeaway Hot Cup, 72 Series - 16oz",LV-FG06,"Vegware 6oz Single Wall Feel Good Takeaway Hot Cup, 72 Series Compostable",10.13,45.54,9.81,45.68,14,8,6,4,auto,KV-16,""
+VEG-DEL-FL,"Vegware PLA Flat Lid, NO HOLE (Fits 96 Series) - 80 x 80 x 20mm",C96F-NH,"Vegware PLA Flat Lid, NO HOLE (Fits 96 Series) Compostable",11.51,44.76,10.56,41.06,14,8,6,2,auto,C96F-CH,""
+VEG-POT-1-2,Vegware PLA Portion Pot Lid (fits 0. Pot) - 1oz,VWPL1,Vegware PLA Portion Pot Lid (fits 0.5-1oz pot) Compostable,4.32,65.92,3.96,60.48,14,8,6,4,auto,VWPP1,""
+VEG-BGP-SQ-2,Vegware Bagasse Square Lunch Box - 8in,VB08,Vegware 8in square Bagasse Lunch Box Recyclable Compostable,28.71,41.53,26.34,38.1,14,8,6,2,auto,VB09R,""
+VEG-CC-12-5,"Vegware PLA Cold Cup, 96 Series - 12oz",R360CE-VW,"Vegware 12oz PLA Cold Cup, 96 Series Compostable",12.07,125.18,11.07,114.84,14,8,6,3,auto,BEL-12,DUP
+VEG-LID-BK-2,Vegware Black CPLA Hot Cup Lid (Fits 79 Series) - 79 x 79 x 10mm,VLID79SB,Vegware Black CPLA Hot Cup Lid (Fits 79 Series) Compostable,6.55,65.23,6.01,59.84,14,8,6,3,auto,VLID79S,""
+VEG-BWL-RD-16-KR,Vegware Kraft Round Food Container - 16oz,RKC-16,Vegware 16oz/500ml Round Kraft Food Container,,41.87,38.41,38.41,13,10,3,2,auto,D45024,DUP
+VEG-DEL-10,"Vegware PLA Bella Pot, 96-Series - 10oz",BEL-10,"Vegware 10oz PLA Bella pot, 96-Series Compostable",13.39,119.65,12.28,109.77,13,7,6,7,auto,LV-FG10,""
+VEG-BWL-RD-16-BK,Vegware Black Round Food Container - 500ml,RBC-16,Vegware 16oz / 500ml Round Black Food Container Compostable,,41.87,38.41,38.41,13,10,3,6,auto,RKC-16,""
+VEG-DEL-16,"Vegware PLA Bella Pot, 96-Series - 16oz",BEL-16,"Vegware 16oz PLA Bella pot, 96-Series Compostable",17.57,156.27,16.12,143.37,13,7,6,4,auto,R500CE,""
+VEG-POT-5-KR,Vegware Kraft Portion Pot Lid - 2.5oz,VWPLK2.5,Vegware 2.5oz Kraft Paper Portion Pot Lid Compostable,,45.12,41.39,41.39,13,10,3,2,auto,VWPPK2.5,""
+VEG-BWL-RD-24-KR,Vegware Kraft Round Food Container - 24oz,RKC-24,Vegware 24oz/750ml Round Kraft Food Container,,47.21,43.31,43.31,13,10,3,4,auto,RKC-34,DUP
+VEG-SPC-7,Vegware CPLA Flat Opaque Hot Lid (Fits 115 Series) - 90 x 10mm,VLID115S,Vegware Flat CPLA Opaque Hot Lid (Fits 115 Series) Recyclable/Compostable,14.0,52.68,12.84,48.33,13,7,6,5,auto,V115F,""
+VEG-SPC-9,Vegware CPLA Flat Opaque Hot Lid (Fits 90 Series) - 90 x 10mm,VLID90S,Vegware Flat CPLA Opaque Hot Lid (Fits 90 Series) Recyclable/Compostable,9.15,56.14,8.39,51.5,13,7,6,3,auto,SC-G10,""
+VEG-BGT-BW-14,Vegware Bagasse Wide Bowl - 14oz,L044,Vegware 14oz Wide Bagasse Bowl Recyclable/Compostable,8.02,34.27,7.36,31.44,13,7,6,6,auto,V3-GLB,""
+VEG-STR-8-GN,Vegware Paper Jumbo Green Stripe Straw - 8mm,PS08-GSL,"Vegware Jumbo Green Stripe 8mm Paper Straw, 7.8in Recyclable/Compostable (Case of 3000)",,80.18,73.56,73.56,13,10,3,8,auto,10202.04,""
+VEG-POT-4-3,Vegware PLA Portion Pot Lid (fits Pot) - 4oz,CF736,Vegware PLA Portion Pot Lid (fits 2-4oz pot) Compostable,6.41,62.15,5.88,57.02,13,7,6,2,auto,SC-04,""
+VEG-SUN-RD-45-GN,Vegware Round Sticker Green Tree (Roll of 1000),VRST45-GT-case-,Vegware 45mm Round Sticker &#8211; Green Tree Compostable (Roll of 1000),,16.8,15.41,15.41,13,10,3,6,auto,VGGSH2-GT,""
+VEG-SAN-SW-65-KR,Vegware Kraft Standard Sandwich Wedge - 65mm,VWST65-,Vegware Standard 65mm Kraft Sandwich Wedge Compostable (Case of 500),,75.4,69.17,69.17,13,10,3,7,auto,VWWTT,DUP
+VEG-DEL-12,"Vegware PLA Bella Pot, 96-Series - 12oz",BEL-12,"Vegware 12oz PLA Bella pot, 96-Series Compostable",15.04,134.14,13.8,123.06,13,7,6,4,auto,R360CE-VW,""
+VEG-DEL-8,"Vegware PLA Bella Pot, 96-Series - 8oz",BEL-08,"Vegware 8oz PLA Bella pot, 96-Series Compostable",11.72,105.1,10.75,96.42,13,7,6,8,auto,CF-DC-08,""
+VEG-BGP-BG-3,Vegware Bagasse Burger Box - 5in,B005,Vegware 5in Bagasse Burger Box Recyclable Compostable,9.92,38.08,9.1,34.94,13,7,6,3,auto,VWRP-10,""
+VEG-BGP-BG-2,Vegware Bagasse Burger Box - 6in,B003,Vegware 6in Bagasse Burger Box Recyclable Compostable,14.44,60.78,13.25,55.76,13,7,6,2,auto,HW-B003,DUP
+VEG-BGP-CS-4,Vegware Bagasse 2-Compartment Clamshell - 6in,B002,Vegware 9x6in 2-Compartment Bagasse Clamshell Compostable,21.95,38.48,20.14,35.3,13,7,6,2,auto,HW-VA-SH89,""
+VEG-BGP-CS,Vegware Bagasse Heavyweight Clamshell - 6in,HW-VA-SH89,Vegware 9x6in Heavyweight Bagasse Clamshell Compostable,25.42,43.16,23.32,39.6,12,6,6,3,auto,VB12-case-,""
+VEG-CUP-DW-12-BK,Vegware Black Double Wall Takeaway Cup - 12oz,VDW-B12,Vegware 12oz Black Double Wall Takeaway Cup,,54.09,49.62,49.62,12,9,3,2,auto,D04003,""
+VEG-CNT-SQ-24-KR,Vegware Kraft Square Food Container - 24oz,RKC-24,Vegware 24oz/750ml Round Kraft Food Container,,49.2,43.31,43.31,12,9,3,3,auto,SKC-24,DUP
+VEG-CUP-DW-8-BK,Vegware Black Double Wall Takeaway Cup - 8oz,VDW-B08,Vegware 8oz Black Double Wall Takeaway Cup,,46.87,43.0,43.0,12,9,3,2,auto,D04002,""
+VEG-BGT-PL,Vegware Bagasse Plate - 10in,P005,Vegware 10in Bagasse Plate Compostable,12.89,53.98,11.83,49.52,12,6,6,2,auto,VPSQ-10,""
+VEG-POT-1-3,Vegware PLA Cold Portion Pot - 1oz,VWPP1,Vegware 1oz PLA Cold Portion Pot Compostable,4.79,107.16,4.39,98.31,12,6,6,5,auto,VWPL1,""
+VEG-POT-1-KR,Vegware Kraft Portion Pot Lid - 1oz,VWPLK1,Vegware 1oz Kraft Paper Portion Pot Lid Compostable,,36.68,33.65,33.65,12,9,3,2,auto,VWPPK1,""
+VEG-POT-2-4,Vegware PLA Cold Portion Pot - 2oz,CF7057,Vegware 2oz PLA Cold Portion Pot Compostable,7.04,67.22,6.46,61.67,12,6,6,6,auto,VLID62S,""
+VEG-POT-3,Vegware PLA Cold Portion Pot - 3oz,CF7056,Vegware 3oz PLA Cold Portion Pot Compostable,7.75,74.97,7.11,68.78,12,6,6,6,auto,VLID90P,""
+VEG-CNT-RC-34-KR,Vegware Kraft Rectangular Food Container - 34oz,SKC-34,Vegware 34 oz Rectangular Kraft Food Container – Compostable,,54.67,50.16,50.16,12,9,3,4,auto,SLID-7X5P,DUP
+VEG-BGG-22,Vegware Bagasse Gourmet Base (Fits Size 4 Lids) - 650ml,V4-GB22,Vegware Gourmet Base – 22oz / 650ml Compostable,12.64,60.19,11.6,55.22,12,6,6,2,auto,V3-GB22,""
+VEG-POT-4-4,Vegware PLA Cold Portion Pot - 4oz,CF7054,Vegware 4oz PLA Cold Portion Pot Compostable,8.76,86.28,8.04,79.16,12,6,6,4,auto,CF736,""
+VEG-SPC-3,Vegware PLA Flat Cold Lid (Fits 90 Series) - 115 x 115 x 13mm,V90F,Vegware Flat PLA Cold Lid (Fits 90 Series) Compostable,6.99,63.71,6.41,58.45,12,6,6,2,auto,SC-G10,""
+VEG-BGT-PL-4,Vegware Bagasse Plate - 6in,SL-P006,Vegware 6in Bagasse Plate Compostable,11.1,41.42,10.18,38.0,12,6,6,4,auto,VPSQ-06,""
+VEG-SUN-8,Vegware 10L Completely Liner - 430 x 430 x 470mm,VBL-10,Vegware 10L Completely Compostable Liner,5.28,125.36,4.84,115.01,12,6,6,9,auto,"",""
+VEG-SUN-3,Vegware 140L Completely Liner - 860 x 860 x 1300mm,VBL-140,Vegware 140L Completely Compostable Liner,13.56,124.13,12.44,113.88,12,6,6,8,auto,"",""
+VEG-SUN-2,Vegware 240L Completely Liner - 1130 x 1130 x 1390mm,VBL-240,Vegware 240L Completely Compostable Liner,18.9,122.76,17.34,112.62,12,6,6,6,auto,V4-GLC,""
+VEG-SUN-7,Vegware 25L Completely Liner - 580 x 580 x 600mm,VBL-25,Vegware 25L Completely Compostable Liner,10.53,120.92,9.66,110.94,12,6,6,9,auto,"",""
+VEG-GP-400-CL,Vegware Clear PLA Sheet - 300 x 400mm,VGNSH2,Vegware 300 x 400mm Clear PLA Sheet Compostable (Case of 1000),,113.99,104.58,104.58,12,9,3,9,auto,"",""
+VEG-SUN-6,Vegware 30L Completely Liner - 560 x 560 x 700mm,VBS-30,Vegware 30L Completely Compostable Liner,11.82,107.76,10.84,98.86,12,6,6,8,auto,"",""
+VEG-SUN-5,Vegware 70L Completely Liner - 720 x 720 x 930mm,VBS-70,Vegware 70L Completely Compostable Liner,16.18,122.72,14.84,112.59,12,6,6,8,auto,"",""
+VEG-SUN-4,Vegware 80L Completely Liner - 810 x 810 x 1040mm,VBL-80,Vegware 80L Completely Compostable Liner,18.9,108.65,17.34,99.68,12,6,6,6,auto,V3-GLC,""
+VEG-SUN-9,Vegware 8L Completely Liner - 380 x 400mm,VBL-08,Vegware 8L Completely Compostable Liner,4.19,115.66,3.84,106.11,12,6,6,5,auto,VGNSH2,""
+VEG-BGG-22-2,Vegware Bagasse Gourmet Base (Fits Size 3 Lids) - 650ml,V3-GB22,Vegware 22oz / 650ml Gourmet Base Compostable,14.13,80.28,12.96,73.65,12,6,6,4,auto,V4-GB22,""
+VEG-POT-1-KR-2,Vegware Kraft Portion Pot - 1oz,VWPPK1,Vegware 1oz Kraft Paper Portion Pot Compostable,,50.89,46.69,46.69,12,9,3,2,auto,VWPLK1,""
+VEG-BGG-32,Vegware Gourmet Base - 1000ml,V4-GB32,Vegware 32oz / 1000ml Gourmet Base Compostable,16.43,89.57,15.07,82.17,12,6,6,5,auto,V3-GLC,""
+VEG-BGP-CS-2,Vegware Bagasse Heavyweight Clamshell - 5in,HW-B001,Vegware 7x5in Heavyweight Bagasse Clamshell Compostable,19.82,70.49,18.18,64.67,12,6,6,5,auto,MFWB-8X5,DUP
+VEG-BAG-WH-2,Vegware White Kraft Flat Bag - 10 x 10,WB1010B,Vegware Recycled White Kraft Flat Bag 10 x 10 Recyclable/Compostable (Case of 1000),,15.33,14.06,14.06,12,9,3,3,auto,WB1212B,DUP
+VEG-BAG-WH-4,Vegware White Kraft Flat Bag - 178 x 178mm,WB0808B,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),,9.11,10.36,10.36,11,8,3,2,auto,WB1010B,DUP
+VEG-BWL-RD-34-KR,Vegware Kraft Round Food Container - 34oz,SKC-34,Vegware 34 oz Rectangular Kraft Food Container – Compostable,,51.14,50.16,50.16,11,8,3,2,auto,RKC-34,DUP
+VEG-DEL-DL,"Vegware PLA Dome Lid, NO HOLE (Fits 96 Series) - 80 x 32mm",C96D-NH,"Vegware PLA Dome Lid, NO HOLE (Fits 96 Series) Compostable",6.33,6.33,5.81,50.41,11,8,3,2,auto,C96D-OH,""
+VEG-BWL-RD-BK,"Vegware Black Kraft Round Lid, 150-Series",RLID150BP,"Vegware Round Kraft Black Paper Lid, 150-Series Compostable",,59.22,54.33,54.33,11,8,3,4,auto,RLID150P,DUP
+VEG-BAG-WH,Vegware White Kraft Flat Bag - 305 x 305mm,WB0808B,Vegware Recycled White Kraft Flat Bag 8 x 8 Recyclable/Compostable (Case of 1000),,11.55,10.36,10.36,11,8,3,2,auto,WB1010B,DUP
+VEG-MFB-HG-4,Vegware Microflute Hinged Window Hot Box - 3in,MFWB-5X3,Vegware 5 x 3in Microflute Hinged Window Hot Box – Compostable,,104.51,95.88,95.88,11,8,3,8,auto,"",""
+VEG-MFB-HG-2,Vegware Microflute Hinged Window Hot Box - 6in,MFWB-6X6,Vegware 6 x 6in Microflute Hinged Window Hot Box – Compostable,,69.95,64.17,64.17,11,8,3,3,auto,HW-B003,""
+VEG-GP-275,Vegware Unbleached Greaseproof Sheet - 380 x 275mm,VGKSH4,Vegware 380 x 275mm Unbleached Greaseproof Sheet Compostable (Case of 500),,26.65,24.45,24.45,11,8,3,3,auto,VGKSH3,DUP
+VEG-HCX-ST-2,Vegware Wood Stirrer - 5.5 inch,G01005,Vegware 5.5in Wooden Stirrer Recyclable/Compostable,6.69,19.61,6.14,17.99,11,5,6,6,auto,PS06C-BLK,""
+VEG-GP-BG-330-GN,Vegware Burger Wrap Green Tree,VBWRP-GT-,Vegware Burger Wrap (258 x 330mm) &#8211; Green Tree Compostable (Case of 960),,46.43,42.6,42.6,11,8,3,2,auto,VDW-12-GT,""
+VEG-LID-16-WH-2,Vegware White Fibre Hot Cup Lid - 90mm / 16oz,BLID89,Vegware 12/16oz White Moulded Fibre Hot Cup Lid Compostable (Case of 1000),,37.33,34.25,34.25,11,8,3,3,auto,VDW-W16,""
+VEG-BGP-BG,Vegware Bagasse Heavyweight Burger Box - 5in,HW-B001,Vegware 7x5in Heavyweight Bagasse Clamshell Compostable,19.51,69.03,18.18,64.67,11,5,6,3,auto,MFB-8X5,DUP
+VEG-BGP-CS-7,Vegware Bagasse Clamshell - 5in,B001NW,Vegware 7x5in Bagasse Clamshell Recyclable Compostable,13.46,56.53,12.35,51.86,11,5,6,2,auto,HW-B001,""
+VEG-LID-5,Vegware CPLA Hot Cup Lid (Fits 72 Series) - 72 x 72 x 10mm,VLID72-A1,Vegware CPLA Hot Cup Lid (Fits 72 Series) Compostable,7.64,70.76,7.01,64.92,11,5,6,5,auto,VLID62S,""
+VEG-BGP-CS-6,Vegware Bagasse Clamshell - 7in,VW-BP7,Vegware 7x7in Bagasse Clamshell Compostable,17.22,74.84,15.8,68.66,11,5,6,5,auto,P010-SRNW,""
+VEG-CC-7-2,Vegware PLA Water Cup - 7oz,VWC-07,Vegware 7oz PLA Water Cup Compostable,10.61,88.88,9.73,81.54,11,5,6,5,auto,R200-VW,""
+VEG-BGG-8,Vegware Bagasse Size 3 Gourmet Lid - 210 x 150 x 22mm,V3-GLB,Vegware Size 3 Bagasse Gourmet Lid Compostable,8.62,41.27,7.91,37.86,10,4,6,5,auto,V5-GLB,DUP
+VEG-HCX-SV-2,Vegware Small Sleeve Fits 79 Series Cup,44931P,Vegware Small Sleeve &#8211; Fits 79 Series Cup Recyclable/Compostable (Case of 1000),,32.72,30.02,30.02,10,7,3,3,auto,VDW-FS08,""
+VEG-BGP-TY,Vegware Bagasse Medium Chip Tray - 5in,VW-C2,Vegware Medium Bagasse Chip Tray 7x5in Compostable,,34.08,31.27,31.27,10,7,3,2,auto,B005,""
+VEG-IC-4,Vegware Ice Cream Pot - 4oz,IC-04,Vegware 4oz Ice Cream Pot,,55.76,51.16,51.16,10,7,3,2,auto,CF736,""
+VEG-GP-350-2,Vegware Greaseproof Sheet - 430 x 350mm,VGGSH3,Vegware 430 x 350mm Greaseproof Sheet Compostable (Case of 960),,32.11,29.46,29.46,10,7,3,3,auto,VGKSH4-GT,""
+VEG-GP-BG-330,Vegware Burger Wrap - 258 x 330mm,VBWRP,Vegware Burger Wrap &#8211; 258 x 330mm Compostable (Case of 960),,35.84,32.88,32.88,10,7,3,2,auto,VBWRP-GT-,""
+VEG-BGG-2,Vegware Bagasse Gourmet Lid (Size 5) - 280 x 180 x 22mm,V5-GLB,Vegware Gourmet Bagasse Lid (Size 5) Compostable,14.55,71.58,13.35,65.67,10,4,6,6,auto,"",DUP
+VEG-CC-2,Vegware Fibre 89-Series Nourish Dome Cold Cup Lid STRAW SLOT - 94 x 37mm,BLID89D-CH,Vegware 89-Series Nourish Fibre Dome Cold Cup Lid – STRAW SLOT,,54.04,49.58,49.58,9,6,3,3,auto,BLID89F-CH,""
+VEG-BGG-7,Vegware PLA Size 3 Gourmet Lid - 195 x 133 x 25mm,V3-GLC,Vegware Size 3 PLA Gourmet Lid Compostable,18.78,102.01,17.23,93.59,9,3,6,2,auto,V4-GLC,DUP
+VEG-IC-3,Vegware Ice Cream Pot - 3 oz,IC-03,Vegware 3oz Ice Cream Pot Compostable,,55.49,50.91,50.91,9,6,3,3,auto,IC-06,""
+VEG-SAN-SW-KR-2,Vegware Kraft Bloomer Sandwich Carton - 70 x 125 x 70mm,VWBLMT,Vegware Bloomer Sandwich Kraft Carton Compostable (Case of 500),,127.22,116.72,116.72,9,6,3,5,auto,"",""
+VEG-SAN-TR-KR,Vegware Kraft Tortilla / Wrap Carton - 50 x 95 x 135mm,VWWTT,Vegware Tortilla / Wrap Kraft Carton Compostable (Case of 500),,80.99,74.3,74.3,9,6,3,4,auto,VWBLMT,DUP
+
