@@ -49,6 +49,56 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "returns 200 without erroring when it loses the create race (order already committed)" do
+    # The success redirect committed the order in the window after the webhook's
+    # find_by check, so create! hits the unique index. That is benign - the order
+    # exists - so return 200 and do not ask Stripe to retry.
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    session = build_stripe_session(
+      id: "sess_webhook_race", payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }, amount_total: 1699, amount_tax: 283
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+    # The competing order exists by the time we re-check in the rescue.
+    Order.stubs(:find_by).with(stripe_session_id: "sess_webhook_race").returns(nil).then.returns(
+      Order.create!(
+        email: "r@e.com", stripe_session_id: "sess_webhook_race", status: "paid",
+        subtotal_amount: 10, vat_amount: 2, shipping_amount: 6.99, total_amount: 18.99,
+        shipping_name: "R", shipping_address_line1: "1", shipping_city: "L",
+        shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+      )
+    )
+    Order.stubs(:create!).raises(ActiveRecord::RecordNotUnique.new("duplicate key"))
+
+    post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+
+    assert_response :ok
+  end
+
+  test "returns 5xx so Stripe retries when order creation hits a transient error" do
+    # A transient failure (DB blip, Stripe error) must NOT be swallowed as 200 -
+    # that would lose a paid order with no retry. Re-raise so Stripe retries.
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    session = build_stripe_session(
+      id: "sess_webhook_transient", payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s }, amount_total: 1699, amount_tax: 283
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+    Order.stubs(:create!).raises(ActiveRecord::StatementInvalid.new("connection reset"))
+
+    assert_no_difference "Order.count" do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :internal_server_error
+  end
+
   test "handles unhandled event types gracefully" do
     session = build_stripe_session
     event = build_stripe_webhook_event(type: "payment_intent.succeeded", data_object: session)
@@ -148,6 +198,36 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
 
     # Telegram notification enqueued for the new order
     assert_enqueued_with(job: TelegramOrderNotificationJob, args: [ order.id ])
+  end
+
+  test "rolls back the order when an order item fails, leaving no item-less paid order" do
+    # The order and its items must be created atomically: a mid-loop OrderItem
+    # failure must not leave a committed paid order with missing items.
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 2, price: products(:one).price)
+
+    session = build_stripe_session(
+      id: "sess_item_fails",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s },
+      amount_total: 3500,
+      amount_tax: 500
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    # Force item creation to fail after the order row would be created.
+    OrderItem.any_instance.stubs(:save!).raises(ActiveRecord::RecordInvalid.new(OrderItem.new))
+
+    assert_no_difference "Order.count" do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    # The transaction rolls back (no item-less order) and the error is re-raised so
+    # Stripe retries rather than silently losing the paid order.
+    assert_response :internal_server_error
+    assert_nil Order.find_by(stripe_session_id: "sess_item_fails")
   end
 
   test "creates order without order items when cart_id is missing from metadata" do
@@ -407,8 +487,8 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
       post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
     end
 
-    # Should still return OK (to prevent Stripe retries)
-    assert_response :ok
+    # Returns 5xx so Stripe retries rather than silently losing the paid order.
+    assert_response :internal_server_error
   end
 
   # ============================================================================

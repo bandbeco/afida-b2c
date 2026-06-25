@@ -124,7 +124,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # not a shipping_option. The £20 cart is under the free-shipping threshold.
     assert_nil captured_params[:shipping_options]
     shipping_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
     assert shipping_line, "expected a taxed shipping line item"
     assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
@@ -162,7 +162,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Should reuse existing tax rate on the product line (the shipping line is
     # prepended, so select by content rather than position).
     product_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) != "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
     end
     assert_equal "txr_existing_123", product_line[:tax_rates].first
   end
@@ -335,6 +335,33 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{/orders/#{first_order.id}/confirmation\?token=}, response.location
   end
 
+  test "success redirects to the existing order when it loses the create race to the webhook" do
+    # TOCTOU: the find_by check passes (no order yet), then the webhook commits the
+    # order microseconds before OrderCreator runs, so create! hits the unique
+    # stripe_session_id index. The paying customer must be redirected to the
+    # existing order's confirmation, not shown a 500.
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+
+    # The order the webhook commits during the TOCTOU window.
+    racing_order = Order.create!(
+      user: @user, email: "buyer@example.com", stripe_session_id: session.id, status: "paid",
+      subtotal_amount: 20, vat_amount: 4, shipping_amount: 0, total_amount: 24,
+      shipping_name: "Buyer", shipping_address_line1: "1 St", shipping_city: "London",
+      shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+    )
+    # find_by sees nothing on the guard check, but the order exists by the time the
+    # rescue re-checks; OrderCreator hits the unique index in between.
+    Order.stubs(:find_by).with(stripe_session_id: session.id).returns(nil).then.returns(racing_order)
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(
+      ActiveRecord::RecordNotUnique.new("duplicate key value violates unique constraint")
+    )
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    assert_response :redirect
+    assert_match %r{/orders/#{racing_order.id}/confirmation\?token=}, response.location
+  end
+
   test "success handles missing session_id parameter" do
     get success_checkout_path
 
@@ -390,6 +417,23 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     )
 
     get success_checkout_path, params: { session_id: "sess_invalid_12345" }
+
+    assert_redirected_to cart_path
+    assert_match /Unable to verify payment/, flash[:error]
+  end
+
+  test "success handles an unexpanded-line-item error gracefully instead of 500ing" do
+    # If a future change drops the line_items.data.price.product expand,
+    # SessionAmounts raises UnexpandedLineItemError. The paying customer must get a
+    # graceful redirect (the webhook still creates the order), not a 500.
+    stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+    Checkout::SessionAmounts.stubs(:from).raises(
+      Checkout::SessionAmounts::UnexpandedLineItemError.new("line item product not expanded")
+    )
+
+    assert_no_difference "Order.count" do
+      get success_checkout_path, params: { session_id: "sess_unexpanded" }
+    end
 
     assert_redirected_to cart_path
     assert_match /Unable to verify payment/, flash[:error]
@@ -867,7 +911,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Samples-only carts still pay (taxed) shipping; it rides as a line item.
     assert_nil captured_params[:shipping_options]
     shipping_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
     assert shipping_line, "expected a taxed shipping line item"
     assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
@@ -897,7 +941,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Sample line items should have unit_amount of 0. Select the product line by
     # content: the shipping line is prepended, so it is no longer at index 0.
     sample_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) != "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
     end
     assert_equal 0, sample_line[:price_data][:unit_amount]
   end
@@ -926,7 +970,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # as a taxed line item.
     assert_nil captured_params[:shipping_options]
     shipping_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
     assert shipping_line, "expected a taxed shipping line item"
   end

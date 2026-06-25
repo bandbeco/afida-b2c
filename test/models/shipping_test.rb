@@ -48,14 +48,15 @@ class ShippingTest < ActiveSupport::TestCase
   test "shipping_line_item carries product metadata that identifies it on read-back" do
     item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
 
-    assert_equal "true", item[:price_data][:product_data][:metadata][:shipping_line]
+    assert_equal "true", item[:price_data][:product_data][:metadata]["shipping_line"]
   end
 
-  test "LINE_ITEM_FLAG is built from the exposed key/value the reader references" do
+  test "LINE_ITEM_FLAG is keyed by the exposed string key the reader references" do
     # SessionAmounts identifies the shipping line via Shipping::LINE_ITEM_FLAG_KEY /
-    # _VALUE; this pins that the written flag uses exactly those, so the writer and
-    # reader cannot silently desync.
-    assert_equal({ Shipping::LINE_ITEM_FLAG_KEY.to_sym => Shipping::LINE_ITEM_FLAG_VALUE }, Shipping::LINE_ITEM_FLAG)
+    # _VALUE; pin that the written flag is keyed by exactly that string, so looking
+    # it up by the key works and the writer and reader cannot silently desync.
+    assert_equal({ Shipping::LINE_ITEM_FLAG_KEY => Shipping::LINE_ITEM_FLAG_VALUE }, Shipping::LINE_ITEM_FLAG)
+    assert_equal Shipping::LINE_ITEM_FLAG_VALUE, Shipping::LINE_ITEM_FLAG[Shipping::LINE_ITEM_FLAG_KEY]
   end
 
   test "shipping_line_item names the delivery promise so the Stripe modal shows it" do

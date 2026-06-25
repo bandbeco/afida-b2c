@@ -32,11 +32,16 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
     assert_equal 32.39, amounts.total
   end
 
-  test "reconciles: subtotal + shipping + vat - discount == total" do
+  test "reconciles: subtotal + shipping + vat - discount == total, with a discount applied" do
+    # Use a discounted session so the - discount term is actually exercised (a
+    # zero-discount fixture would pass regardless of whether it belongs). Stripe's
+    # amount_subtotal is pre-discount, so subtotal/shipping are gross and the
+    # discount is subtracted exactly once to reach the total.
     session = build_stripe_session(
-      amount_subtotal: 2699,
+      amount_subtotal: 2699,  # gross: products 2000 + shipping 699 (pre-discount)
       amount_tax: 540,
-      amount_total: 3239,
+      amount_discount: 500,
+      amount_total: 2739,     # 2699 + 540 - 500
       line_items_data: [
         stripe_product_line_item(amount_subtotal: 2000),
         stripe_shipping_line_item(amount_subtotal: 699)
@@ -45,6 +50,7 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
 
     amounts = Checkout::SessionAmounts.from(session)
 
+    assert_equal 5.0, amounts.discount, "the discount term must be non-zero to exercise the invariant"
     assert_equal amounts.total,
                  (amounts.subtotal + amounts.shipping + amounts.vat - amounts.discount).round(2)
   end
@@ -142,8 +148,8 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
     # creation order, so the shipping line can sit on a later page. SessionAmounts
     # must paginate (Stripe does not auto-paginate retrieve) to find it; otherwise
     # shipping records as £0 and stays folded into the subtotal.
-    page_one_product = stripe_product_line_item(amount_subtotal: 2000)
-    shipping_on_page_two = stripe_shipping_line_item(amount_subtotal: 699)
+    page_one_product = stripe_product_line_item(amount_subtotal: 2000, id: "li_page1")
+    shipping_on_page_two = stripe_shipping_line_item(amount_subtotal: 699, id: "li_page2")
 
     session = build_stripe_session(
       id: "sess_paginated",
@@ -154,17 +160,37 @@ class Checkout::SessionAmountsTest < ActiveSupport::TestCase
       line_items_has_more: true
     )
 
-    # The full set is fetched via the paginated line-items endpoint, which the SDK
-    # exposes as a ListObject with auto_paging_each across all pages.
-    all_items = [ page_one_product, shipping_on_page_two ]
+    # Only the items AFTER the embedded first page are fetched (starting_after the
+    # last embedded id), then combined with the embedded page - so the first page
+    # Stripe already returned is not re-fetched.
     Stripe::Checkout::Session.stubs(:list_line_items)
-      .with("sess_paginated", has_entries(expand: [ "data.price.product" ]))
-      .returns(stub(auto_paging_each: all_items.each))
+      .with("sess_paginated", has_entries(expand: [ "data.price.product" ], starting_after: "li_page1"))
+      .returns(stub(auto_paging_each: [ shipping_on_page_two ].each))
 
     amounts = Checkout::SessionAmounts.from(session)
 
     assert_equal 20.0, amounts.subtotal
     assert_equal 6.99, amounts.shipping
+  end
+
+  test "propagates a Stripe error during pagination instead of silently recording zero shipping" do
+    # A transient Stripe error while paging a >10-item cart must surface to the
+    # caller's handler (the success path rescues it; the webhook lets Stripe retry),
+    # not be swallowed into a £0-shipping order.
+    page_one_product = stripe_product_line_item(amount_subtotal: 2000, id: "li_page1")
+    session = build_stripe_session(
+      id: "sess_pagination_error",
+      amount_subtotal: 2699,
+      amount_tax: 540,
+      amount_total: 3239,
+      line_items_data: [ page_one_product ],
+      line_items_has_more: true
+    )
+    Stripe::Checkout::Session.stubs(:list_line_items).raises(Stripe::APIError.new("boom"))
+
+    assert_raises(Stripe::StripeError) do
+      Checkout::SessionAmounts.from(session)
+    end
   end
 
   test "raises when a line item's product is unexpanded, rather than silently recording zero shipping" do

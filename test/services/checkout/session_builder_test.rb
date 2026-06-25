@@ -136,7 +136,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     build_session
 
     shipping_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
     assert shipping_line, "expected a shipping line item"
     assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
@@ -173,7 +173,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     build_session
 
     first_line = captured_params[:line_items].first
-    assert_equal "true", first_line.dig(:price_data, :product_data, :metadata, :shipping_line),
+    assert_equal "true", first_line.dig(:price_data, :product_data, :metadata, "shipping_line"),
       "shipping line item must be first so it is never paginated off page 1"
   end
 
@@ -189,7 +189,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     build_session
 
     shipping_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
     assert_nil shipping_line, "expected no shipping line item for free shipping"
     assert_equal 1, captured_params[:line_items].length
@@ -207,7 +207,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     build_session
 
     shipping_line = captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) == "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
     assert shipping_line, "expected a shipping line item for samples-only cart"
     assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
@@ -262,7 +262,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
   # tests must select the product line by content rather than by position.
   def product_line_item(captured_params)
     captured_params[:line_items].find do |li|
-      li.dig(:price_data, :product_data, :metadata, :shipping_line) != "true"
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
     end
   end
 

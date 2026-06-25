@@ -104,17 +104,22 @@ module Checkout
       return @line_items if defined?(@line_items)
 
       embedded = @session.line_items
+      page_one = embedded&.data || []
       @line_items =
         if embedded.respond_to?(:has_more) && embedded.has_more
-          all_line_items
+          page_one + line_items_after(page_one.last)
         else
-          embedded&.data || []
+          page_one
         end
     end
 
-    def all_line_items
+    # The line items after the embedded first page, fetched via the dedicated
+    # endpoint (retrieve does not auto-paginate). starting_after avoids re-fetching
+    # the page Stripe already returned. A Stripe error propagates to the caller's
+    # handler rather than being treated as "no shipping line".
+    def line_items_after(last_embedded_item)
       Stripe::Checkout::Session
-        .list_line_items(@session.id, expand: [ "data.price.product" ])
+        .list_line_items(@session.id, expand: [ "data.price.product" ], starting_after: last_embedded_item.id)
         .auto_paging_each
         .to_a
     end

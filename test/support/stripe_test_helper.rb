@@ -164,9 +164,10 @@ module StripeTestHelper
   # (set on the price_data when the session is built), so the stub mirrors that:
   # an expanded price.product carrying that metadata. amount_subtotal is the
   # post-discount, pre-tax pence figure SessionAmounts reads.
-  def stripe_shipping_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Shipping")
+  def stripe_shipping_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Shipping", id: "li_ship")
     tax = amount_tax || (amount_subtotal * 0.2).round
     stub(
+      id: id,
       amount_subtotal: amount_subtotal,
       amount_tax: tax,
       amount_total: amount_total || (amount_subtotal + tax),
@@ -178,9 +179,10 @@ module StripeTestHelper
   # Build a mock expanded Stripe line item for a PRODUCT (non-shipping). Its
   # product metadata has no shipping_line flag, so SessionAmounts treats it as
   # part of the subtotal.
-  def stripe_product_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Test Product")
+  def stripe_product_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Test Product", id: "li_prod")
     tax = amount_tax || (amount_subtotal * 0.2).round
     stub(
+      id: id,
       amount_subtotal: amount_subtotal,
       amount_tax: tax,
       amount_total: amount_total || (amount_subtotal + tax),

@@ -48,6 +48,9 @@ class StripeLiveCheckoutTest < ActionDispatch::IntegrationTest
       nil
     end
     Stripe.api_key = @original_api_key if defined?(@original_api_key)
+    # The session build cached a test-account txr_test_ id; clear it so a later
+    # checkout in this process never sends it to the production Stripe API.
+    Rails.cache.delete(Checkout::StripeTaxRateProvider::UK_VAT_RATE_ID_CACHE_KEY)
     WebMock.disable_net_connect! if defined?(WebMock)
   end
 

@@ -22,7 +22,9 @@ class Shipping
   # re-declaring the literal string, which would silently desync on a rename.
   LINE_ITEM_FLAG_KEY = "shipping_line"
   LINE_ITEM_FLAG_VALUE = "true"
-  LINE_ITEM_FLAG = { LINE_ITEM_FLAG_KEY.to_sym => LINE_ITEM_FLAG_VALUE }.freeze
+  # String key (Stripe serialises it as a string on the wire either way) so the
+  # in-memory hash matches how SessionAmounts reads it back: LINE_ITEM_FLAG[KEY].
+  LINE_ITEM_FLAG = { LINE_ITEM_FLAG_KEY => LINE_ITEM_FLAG_VALUE }.freeze
 
   # Standard shipping cost in pounds, e.g. 6.99. Single conversion point from
   # the pence-denominated STANDARD_COST so display code never repeats the maths.
