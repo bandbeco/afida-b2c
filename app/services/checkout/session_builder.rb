@@ -164,7 +164,21 @@ module Checkout
       end
     end
 
+    # The session carries the Stripe coupon id (the single source of truth in
+    # credentials). Resolve it to the coupon's customer-facing promotion code, apply
+    # that promotion code, and rewrite the metadata to the promotion code's name so
+    # the order records the recognizable code (e.g. "WELCOME10") rather than the
+    # opaque coupon id. Stripe is the only source of the name, so nothing is
+    # hardcoded. A coupon with no active promotion code falls back to applying the
+    # coupon by id directly (and records the id, since there is no friendlier name).
     def apply_session_discount(session_params)
+      promotion_code = Stripe::PromotionCode.list(coupon: discount_code, active: true, limit: 1).data.first
+      if promotion_code
+        session_params[:discounts] = [ { promotion_code: promotion_code.id } ]
+        session_params[:metadata][:discount_code] = promotion_code.code
+        return nil
+      end
+
       Stripe::Coupon.retrieve(discount_code)
       session_params[:discounts] = [ { coupon: discount_code } ]
       nil

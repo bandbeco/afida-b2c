@@ -73,8 +73,33 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_nil captured_params[:client_reference_id]
   end
 
+  test "resolves the coupon id to its promotion code, applies it, and records the code name" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    # The session carries the coupon id; SessionBuilder looks up the coupon's
+    # promotion code, applies it, and rewrites the metadata to the promotion code's
+    # customer-facing name so the order records "WELCOME10" rather than the coupon id.
+    Stripe::PromotionCode.stubs(:list)
+      .with(has_entries(coupon: "coupon_abc"))
+      .returns(stub(data: [ stub(id: "promo_welcome", code: "WELCOME10") ]))
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session(discount_code: "coupon_abc")
+
+    assert_not result.invalid_discount?
+    assert_equal [ { promotion_code: "promo_welcome" } ], captured_params[:discounts]
+    assert_nil captured_params[:allow_promotion_codes]
+    assert_equal "WELCOME10", captured_params[:metadata][:discount_code]
+  end
+
   test "marks invalid session discount while still allowing customer promotion codes" do
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    # No promotion code for the coupon, and the raw-coupon-id fallback also misses.
+    Stripe::PromotionCode.stubs(:list).returns(stub(data: []))
     Stripe::Coupon.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such coupon", nil))
 
     captured_params = nil
@@ -94,6 +119,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     # Samples are free; a samples-only order pays only shipping. A coupon would
     # discount (or zero) that shipping, so discounts are refused entirely.
     @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+    Stripe::PromotionCode.expects(:list).never
     Stripe::Coupon.expects(:retrieve).never
 
     captured_params = nil

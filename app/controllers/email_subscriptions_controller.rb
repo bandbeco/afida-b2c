@@ -87,8 +87,13 @@ class EmailSubscriptionsController < ApplicationController
     email.match?(URI::MailTo::EMAIL_REGEXP)
   end
 
+  # The welcome discount the session carries: the Stripe coupon id (the single
+  # source of truth in credentials). SessionBuilder resolves this id to its
+  # customer-facing promotion code at checkout, applies it, and records that
+  # human-readable code (e.g. "WELCOME10") on the order, so no promo-code name is
+  # hardcoded here.
   def welcome_discount_code
-    Rails.application.credentials.dig(:stripe, :welcome_coupon) || "WELCOME10"
+    Rails.application.credentials.dig(:stripe, :welcome_coupon)
   end
 
   def render_success

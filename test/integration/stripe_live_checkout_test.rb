@@ -184,6 +184,34 @@ class StripeLiveCheckoutTest < ActionDispatch::IntegrationTest
                  "subtotal + shipping + vat - discount must equal the charged total. #{diagnostic}"
   end
 
+  test "a coupon id resolves to its promotion code, applying the discount and recording the code name" do
+    # The welcome flow stores the Stripe coupon id (from credentials), not a code
+    # name. SessionBuilder must resolve that id to the coupon's promotion code,
+    # apply it (so the discount actually lands on the session), and record the
+    # promotion code's customer-facing name. Proven against the real API because the
+    # resolution (PromotionCode.list(coupon:) -> discounts[promotion_code]) and the
+    # actual discounting are exactly what stubs cannot vouch for.
+    coupon = Stripe::Coupon.create(percent_off: 25, duration: "once", name: "Live Test Promo Coupon")
+    (@created_coupon_ids ||= []) << coupon.id
+    code = "LIVETESTPROMO#{coupon.id}"
+    Stripe::PromotionCode.create(code: code, promotion: { type: "coupon", coupon: coupon.id })
+
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 4, price: 10.00) # £40 + £6.99 shipping
+
+    result = build_session(cart, discount_code: coupon.id)
+    session = Stripe::Checkout::Session.retrieve(
+      id: result.session.id,
+      expand: [ "total_details" ]
+    )
+
+    assert_not result.invalid_discount?, "the coupon id should resolve to a promotion code and apply"
+    assert_equal code, session.metadata["discount_code"],
+      "the order metadata must record the promotion code's name, not the coupon id"
+    assert session.total_details.amount_discount.positive?,
+      "resolving the coupon to its promotion code must actually discount the session"
+  end
+
   private
 
   def build_session(cart, discount_code: nil)

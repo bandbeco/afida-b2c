@@ -21,11 +21,26 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     stub_stripe_tax_rate_list
   end
 
-  # The welcome coupon id the app applies, read from the test credentials so the
-  # assertions track the actual vault value (CI decrypts test.yml.enc via
-  # RAILS_TEST_KEY, so this is the same in CI and locally).
+  # The welcome coupon id the app stores in the session, read from the test
+  # credentials so the assertions track the actual vault value (CI decrypts
+  # test.yml.enc via RAILS_TEST_KEY, so this is the same in CI and locally).
   def welcome_coupon_id
     Rails.application.credentials.dig(:stripe, :welcome_coupon)
+  end
+
+  # The fake Stripe promotion-code id and customer-facing code SessionBuilder
+  # resolves the welcome coupon id to, before applying discounts:[{promotion_code:}]
+  # and recording the code name on the order. Stubbed so checkout tests do not hit
+  # the Stripe API.
+  WELCOME_PROMOTION_CODE_ID = "promo_test_welcome"
+  WELCOME_PROMOTION_CODE = "WELCOME10"
+
+  # Stub the promotion-code lookup SessionBuilder performs for the welcome coupon,
+  # returning a single active promotion code carrying its id and customer-facing code.
+  def stub_welcome_promotion_code
+    Stripe::PromotionCode.stubs(:list)
+      .with(has_entries(coupon: welcome_coupon_id))
+      .returns(stub(data: [ stub(id: WELCOME_PROMOTION_CODE_ID, code: WELCOME_PROMOTION_CODE) ]))
   end
 
   # ============================================================================
@@ -629,7 +644,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Set discount code in session via email subscription
     post email_subscriptions_path, params: { email: "promo-test@example.com" }
 
-    Stripe::Coupon.stubs(:retrieve).returns(stub(id: welcome_coupon_id))
+    stub_welcome_promotion_code
 
     captured_params = nil
     stripe_session = build_stripe_session
@@ -641,7 +656,28 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_nil captured_params[:allow_promotion_codes]
-    assert_equal [ { coupon: welcome_coupon_id } ], captured_params[:discounts]
+    # The welcome coupon id resolves to its promotion code, so the promotion code
+    # (not a raw coupon) is what Stripe applies.
+    assert_equal [ { promotion_code: WELCOME_PROMOTION_CODE_ID } ], captured_params[:discounts]
+  end
+
+  test "create records the resolved human-readable code in the session metadata" do
+    post email_subscriptions_path, params: { email: "metadata-code@example.com" }
+    assert_equal welcome_coupon_id, session[:discount_code]
+    stub_welcome_promotion_code
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    post checkout_path
+
+    # The order's discount_code comes from this metadata. SessionBuilder rewrites it
+    # from the opaque coupon id to the resolved promotion code (WELCOME10), so the
+    # order records the human-readable code.
+    assert_equal WELCOME_PROMOTION_CODE, captured_params[:metadata][:discount_code]
   end
 
   test "success extracts discount code from Stripe promotion code when customer enters code" do
@@ -732,6 +768,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post email_subscriptions_path, params: { email: "invalid-discount@example.com" }
     assert_equal welcome_coupon_id, session[:discount_code]
 
+    # No matching promotion code, and the raw-coupon-id fallback also misses, so the
+    # code is treated as invalid (the cleanup path under test).
+    Stripe::PromotionCode.stubs(:list).returns(stub(data: []))
     Stripe::Coupon.stubs(:retrieve).raises(
       Stripe::InvalidRequestError.new("No such coupon", nil)
     )
@@ -1069,8 +1108,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     Current.stubs(:user).returns(@user)
     post email_subscriptions_path, params: { email: "noorders@example.com" }
     assert session[:discount_code].present?, "setup: discount code should be in session"
-    # With a code in session, checkout validates the coupon against Stripe; stub it.
-    Stripe::Coupon.stubs(:retrieve).returns(stub(id: welcome_coupon_id))
+    # With a code in session, checkout resolves the welcome promo code against Stripe; stub it.
+    stub_welcome_promotion_code
     stub_stripe_session_create
 
     assert_no_event_reported("cart.checkout_initiated") do
@@ -1159,8 +1198,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post email_subscriptions_path, params: { email: "discount-test@example.com" }
     assert_equal welcome_coupon_id, session[:discount_code]
 
-    # Stub Stripe to return a valid coupon
-    Stripe::Coupon.stubs(:retrieve).returns(stub(id: welcome_coupon_id))
+    # Stub Stripe to resolve the welcome promo code
+    stub_welcome_promotion_code
 
     session = stub_stripe_session_retrieve(
       customer_email: "discount-test@example.com",

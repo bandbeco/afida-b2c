@@ -3,7 +3,9 @@ require "test_helper"
 class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
   # The welcome coupon id the app stores in the session, read from the test
   # credentials so the assertions track the actual vault value (CI decrypts
-  # test.yml.enc via RAILS_TEST_KEY, so this is the same in CI and locally).
+  # test.yml.enc via RAILS_TEST_KEY, so this is the same in CI and locally). The
+  # session carries the coupon id; SessionBuilder resolves it to the customer-facing
+  # promotion code (and records that name on the order) only when calling Stripe.
   def welcome_coupon_id
     Rails.application.credentials.dig(:stripe, :welcome_coupon)
   end
