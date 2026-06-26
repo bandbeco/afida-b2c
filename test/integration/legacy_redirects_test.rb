@@ -150,6 +150,32 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_equal 301, response.status
   end
 
+  # Discontinued product slugs (active:false → 404) redirected to live equivalents
+  # Surfaced in GSC "Not found (404)" report 2026-06-26.
+  test "redirects discontinued cutlery-kit-3-in-1 to the live like-for-like product" do
+    get "/products/cutlery-kit-3-in-1"
+    assert_redirected_to "/products/cutlery-kit-3-in-1-2"
+    assert_equal 301, response.status
+  end
+
+  test "redirects discontinued greaseproof-green-tree to the greaseproof category" do
+    get "/products/greaseproof-green-tree"
+    assert_redirected_to "/categories/bags-and-wraps/greaseproof-and-wraps"
+    assert_equal 301, response.status
+  end
+
+  test "preserves query parameters on discontinued product redirect" do
+    get "/products/cutlery-kit-3-in-1?utm_source=google"
+    assert_redirected_to "/products/cutlery-kit-3-in-1-2?utm_source=google"
+  end
+
+  # Legacy Wix blog URL that never existed on the Rails site → closest live guide
+  test "redirects legacy /blog/choose-right-coffee-cup-size to the paper coffee cups guide" do
+    get "/blog/choose-right-coffee-cup-size"
+    assert_redirected_to "/blog/paper-coffee-cups"
+    assert_equal 301, response.status
+  end
+
   # Catch-all for unmapped /product-page/* paths (sends to shop)
   test "unmapped /product-page paths fall back to /shop" do
     get "/product-page/some-deleted-old-product"

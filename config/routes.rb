@@ -55,6 +55,16 @@ Rails.application.routes.draw do
   # Must come after the specific product-page redirects above
   get "/product-page/*path", to: redirect(status: 301) { "/shop" }
 
+  # Discontinued product slugs (active:false → 404) redirected to live equivalents.
+  # Surfaced in GSC "Not found (404)" report 2026-06-26. Must precede `resources
+  # :products` so they win over products#show (which would 404 the inactive record).
+  get "/products/cutlery-kit-3-in-1", to: redirect(status: 301) { |_params, req| "/products/cutlery-kit-3-in-1-2#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/products/greaseproof-green-tree", to: redirect(status: 301) { |_params, req| "/categories/bags-and-wraps/greaseproof-and-wraps#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
+  # Legacy Wix blog URL that never existed on the Rails site → closest live guide.
+  # Must precede `resources :blog_posts`.
+  get "/blog/choose-right-coffee-cup-size", to: redirect(status: 301) { |_params, req| "/blog/paper-coffee-cups#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
   get "shop", to: "pages#shop"
   get "search", to: "search#index"
   get "branding", to: "pages#branding"
