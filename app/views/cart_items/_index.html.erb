@@ -42,14 +42,15 @@
             </span>
           </div>
 
-          <%= render "cart_items/discount_line", cart: Current.cart %>
-
           <div class="flex justify-between mb-2 text-sm sm:text-base text-gray-700">
             <span>Shipping</span>
             <span id="shipping">
               <%= cart_shipping_display(Current.cart) %>
             </span>
           </div>
+
+          <%# Placed after Shipping so the discount visibly applies to subtotal + shipping (the coupon is whole-order). %>
+          <%= render "cart_items/discount_line", cart: Current.cart %>
 
           <div class="flex justify-between mb-2 text-sm sm:text-base text-gray-700">
             <span>VAT <%= VAT_RATE * 100 %>%</span>

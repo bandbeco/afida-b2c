@@ -62,17 +62,18 @@
         <span><%= number_to_currency(Current.cart.subtotal_amount) %></span>
       </div>
 
+      <div class="flex justify-between items-center mb-4">
+        <span class="font-medium">Shipping</span>
+        <span><%= cart_shipping_display(Current.cart) %></span>
+      </div>
+
+      <%# Placed after Shipping so the discount visibly applies to subtotal + shipping (the coupon is whole-order). %>
       <% if cart_has_discount?(Current.cart) %>
         <div class="flex justify-between items-center mb-4 text-success">
           <span class="font-medium">Discount (<%= welcome_discount_percentage %>%)</span>
           <span><%= cart_discount_display(Current.cart) %></span>
         </div>
       <% end %>
-
-      <div class="flex justify-between items-center mb-4">
-        <span class="font-medium">Shipping</span>
-        <span><%= cart_shipping_display(Current.cart) %></span>
-      </div>
 
       <div class="flex justify-between items-center mb-4">
         <span class="font-medium">VAT <%= VAT_RATE * 100 %>%</span>
