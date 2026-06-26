@@ -2,21 +2,21 @@ require "test_helper"
 
 class LegacyRedirectsTest < ActionDispatch::IntegrationTest
   # Legacy /category/* redirects — chained through to final new URLs
-  test "redirects legacy cold-cups-lids to cups-and-drinks" do
+  test "redirects legacy cold-cups-lids to cups-and-accessories" do
     get "/category/cold-cups-lids"
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
     assert_equal 301, response.status
   end
 
-  test "redirects legacy hot-cups to cups-and-drinks" do
+  test "redirects legacy hot-cups to cups-and-accessories" do
     get "/category/hot-cups"
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
     assert_equal 301, response.status
   end
 
-  test "redirects legacy hot-cup-extras to cups-and-drinks" do
+  test "redirects legacy hot-cup-extras to cups-and-accessories" do
     get "/category/hot-cup-extras"
-    assert_redirected_to "/categories/cups-and-drinks"
+    assert_redirected_to "/categories/cups-and-accessories"
     assert_equal 301, response.status
   end
 
@@ -26,21 +26,21 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     assert_equal 301, response.status
   end
 
-  test "redirects legacy pizza-boxes to hot-food/pizza-boxes" do
+  test "redirects legacy pizza-boxes to food-containers/pizza-boxes" do
     get "/category/pizza-boxes"
-    assert_redirected_to "/categories/hot-food/pizza-boxes"
+    assert_redirected_to "/categories/food-containers/pizza-boxes"
     assert_equal 301, response.status
   end
 
-  test "redirects legacy straws to cups-and-drinks/straws" do
+  test "redirects legacy straws to cups-and-accessories/straws" do
     get "/category/straws"
-    assert_redirected_to "/categories/cups-and-drinks/straws"
+    assert_redirected_to "/categories/cups-and-accessories/straws"
     assert_equal 301, response.status
   end
 
-  test "redirects legacy takeaway-containers to hot-food" do
+  test "redirects legacy takeaway-containers to food-containers" do
     get "/category/takeaway-containers"
-    assert_redirected_to "/categories/hot-food"
+    assert_redirected_to "/categories/food-containers"
     assert_equal 301, response.status
   end
 
@@ -66,7 +66,7 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
   # Query parameter preservation
   test "preserves query parameters on legacy redirect" do
     get "/category/hot-cups?utm_source=google&utm_campaign=test"
-    assert_redirected_to "/categories/cups-and-drinks?utm_source=google&utm_campaign=test"
+    assert_redirected_to "/categories/cups-and-accessories?utm_source=google&utm_campaign=test"
   end
 
   # New pages
@@ -109,7 +109,7 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
   # Legacy Wix collection
   test "redirects legacy /collections/paper-straws to straws category" do
     get "/collections/paper-straws"
-    assert_redirected_to "/categories/cups-and-drinks/straws"
+    assert_redirected_to "/categories/cups-and-accessories/straws"
     assert_equal 301, response.status
   end
 

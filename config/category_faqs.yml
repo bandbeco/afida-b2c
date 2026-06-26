@@ -4,7 +4,7 @@
 
 # === Top-level parent categories ===
 
-cups-and-drinks:
+cups-and-accessories:
   - question: "What types of eco-friendly cups does Afida offer?"
     answer: "Afida offers single wall, double wall, and ripple wall paper hot cups from 4oz to 16oz, PLA-lined cold cups for smoothies and iced drinks, and paper ice cream cups from 4oz to 10oz. All our cups are made from sustainably sourced materials."
   - question: "Do you sell cup lids and accessories?"
@@ -12,7 +12,7 @@ cups-and-drinks:
   - question: "Are your cups compostable?"
     answer: "Our paper cups are lined with PLA (a plant-based material) rather than traditional plastic, making them commercially compostable. Check with your local waste processor for composting availability in your area."
 
-hot-food:
+food-containers:
   - question: "What hot food packaging does Afida supply?"
     answer: "We supply kraft pizza boxes in sizes from 7 to 16 inch, takeaway burger and chip boxes, food containers with lids, paper soup cups, and compostable bagasse clamshells. All designed to keep food warm and secure during delivery."
   - question: "Is your hot food packaging microwave-safe?"
@@ -62,7 +62,7 @@ hot-cups:
   - question: "Can I get my logo printed on paper cups?"
     answer: "Yes — we offer [custom branded cups](/branding) with your logo, colours, and design printed directly onto the cup. Perfect for building brand recognition with every takeaway coffee."
 
-cold-cups:
+cold-cups-and-lids:
   - question: "What are cold cups made from?"
     answer: "Our cold cups are made from PET or PLA-lined paper. PLA is a plant-based material that provides a clear, durable finish for cold drinks like smoothies, iced coffees, and juices."
   - question: "What sizes of cold cups do you offer?"
@@ -104,7 +104,7 @@ takeaway-boxes:
   - question: "Are your takeaway boxes grease-resistant?"
     answer: "Yes — our kraft takeaway boxes are designed to handle greasy foods like burgers, chips, and fried chicken. Bagasse boxes are naturally grease-resistant without any additional coatings."
 
-food-containers:
+food-containers-and-lids:
   - question: "What sizes of food containers do you offer?"
     answer: "Our food containers range from 1oz portion pots for sauces and dressings up to 32oz deli containers for salads and meal prep. Available in paper, PLA, and bagasse materials."
   - question: "Do your food containers come with lids?"
@@ -134,13 +134,13 @@ sandwich-and-wrap-boxes:
   - question: "What sandwich packaging formats do you offer?"
     answer: "We stock kraft sandwich wedges (for triangle-cut sandwiches), tortilla wrap boxes, and baguette boxes. All in natural kraft with compostable windows."
 
-deli-pots:
+deli-containers:
   - question: "What are deli pots used for?"
     answer: "Deli pots are small portion containers ideal for sauces, dressings, dips, chutney, coleslaw, and dessert samples. Available in sizes from 1oz to 4oz with secure snap-fit lids."
   - question: "Are your deli pots compostable?"
     answer: "We offer deli pots in both PLA (commercially compostable) and standard materials. Check individual product descriptions for the compostability of each option."
 
-plates-and-trays:
+plates-and-bowls:
   - question: "What types of disposable plates do you offer?"
     answer: "We offer palm leaf plates with a natural elegant finish, bagasse plates for everyday catering, paper plates, and platter boxes for buffets and corporate events. All biodegradable and compostable."
   - question: "Are palm leaf plates suitable for hot food?"

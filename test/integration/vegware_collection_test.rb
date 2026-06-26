@@ -119,7 +119,7 @@ class VegwareCollectionTest < ActionDispatch::IntegrationTest
 
   test "vegware category filter URL uses collection slug and category slug" do
     url = category_filter_collection_url(@vegware.slug, @parent_cups_and_drinks.slug)
-    assert_includes url, "/collections/vegware/cups-and-drinks"
+    assert_includes url, "/collections/vegware/cups-and-accessories"
   end
 
   # ==========================================================================

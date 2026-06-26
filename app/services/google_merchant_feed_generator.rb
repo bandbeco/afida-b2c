@@ -2,30 +2,30 @@ class GoogleMerchantFeedGenerator
   # Google Product Taxonomy IDs mapped to category slugs
   # Full taxonomy: https://www.google.com/basepages/producttype/taxonomy-with-ids.en-GB.txt
   GOOGLE_TAXONOMY_MAP = {
-    # Cups & Drinks
+    # Cups & Accessories
     "hot-cups" => "2951",          # Food Service > Cups (Disposable)
-    "cold-cups" => "2951",         # Food Service > Cups (Disposable)
+    "cold-cups-and-lids" => "2951", # Food Service > Cups (Disposable)
     "cup-lids" => "2951",          # Food Service > Cups (Disposable)
     "cup-accessories" => "2951",   # Food Service > Cups (Disposable)
     "ice-cream-cups" => "2951",    # Food Service > Cups (Disposable)
     "straws" => "4216",            # Food Service > Straws
-    "cups-and-drinks" => "2951",   # Food Service > Cups (Disposable)
-    # Hot Food
-    "food-containers" => "4005",   # Food Service > Food Containers (Disposable)
+    "cups-and-accessories" => "2951", # Food Service > Cups (Disposable)
+    # Food Containers
+    "food-containers-and-lids" => "4005", # Food Service > Food Containers (Disposable)
     "takeaway-boxes" => "4005",    # Food Service > Food Containers (Disposable)
     "soup-containers" => "4005",   # Food Service > Food Containers (Disposable)
     "pizza-boxes" => "4005",       # Food Service > Food Containers (Disposable)
     "bagasse-containers" => "4005", # Food Service > Food Containers (Disposable)
-    "hot-food" => "4005",          # Food Service > Food Containers (Disposable)
+    "food-containers" => "4005",   # Food Service > Food Containers (Disposable) — top-level parent
     # Cold Food & Salads
     "salad-boxes" => "4005",       # Food Service > Food Containers (Disposable)
-    "deli-pots" => "4005",         # Food Service > Food Containers (Disposable)
+    "deli-containers" => "4005",   # Food Service > Food Containers (Disposable)
     "sandwich-and-wrap-boxes" => "4005", # Food Service > Food Containers (Disposable)
     "cold-food-and-salads" => "4005",    # Food Service > Food Containers (Disposable)
     # Tableware
     "cutlery" => "4004",           # Food Service > Cutlery (Disposable)
     "napkins" => "4003",           # Food Service > Napkins (Disposable)
-    "plates-and-trays" => "4002",  # Food Service > Plates (Disposable)
+    "plates-and-bowls" => "4002",  # Food Service > Plates (Disposable)
     "aluminium-containers" => "4005", # Food Service > Food Containers (Disposable)
     "tableware" => "4002",         # Food Service > Plates (Disposable)
     # Bags & Wraps
