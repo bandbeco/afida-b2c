@@ -7,7 +7,7 @@ module Checkout
 
     def create
       shipping_address = extract_shipping_address
-      if required_shipping_values(shipping_address).any?(&:blank?)
+      if Order.required_shipping_values(shipping_address).any?(&:blank?)
         raise Checkout::MissingShippingDetails, "Shipping details are required"
       end
 
@@ -61,16 +61,6 @@ module Checkout
       return @user if defined?(@user)
 
       @user = User.find_by(id: stripe_session.client_reference_id)
-    end
-
-    def required_shipping_values(shipping_address)
-      [
-        shipping_address[:name],
-        shipping_address[:line1],
-        shipping_address[:city],
-        shipping_address[:postal_code],
-        shipping_address[:country]
-      ]
     end
 
     def discount_code

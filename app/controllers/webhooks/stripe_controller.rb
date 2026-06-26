@@ -90,7 +90,7 @@ module Webhooks
       # nil required shipping fields and raise RecordInvalid. That can never succeed
       # on retry, so fail it as permanent here rather than letting it look like a
       # transient (retryable) RecordInvalid from an item rollback.
-      if required_shipping_values(shipping).any?(&:blank?)
+      if Order.required_shipping_values(shipping).any?(&:blank?)
         raise PermanentlyInvalidSessionError, "session #{full_session.id} has no shipping details"
       end
 
@@ -243,19 +243,6 @@ module Webhooks
         postal_code: address[:postal_code],
         country: address[:country]
       }
-    end
-
-    # The shipping fields Order validates for presence. Mirrors
-    # Checkout::OrderCreator#required_shipping_values so both order-creation paths
-    # treat a session with no shipping details as a permanent failure.
-    def required_shipping_values(shipping)
-      [
-        shipping[:name],
-        shipping[:line1],
-        shipping[:city],
-        shipping[:postal_code],
-        shipping[:country]
-      ]
     end
 
     def extract_promotion_code(stripe_session)
