@@ -4,8 +4,9 @@
     total) so the 10% off appears immediately, without a full page reload.
 
     Mirrors the totals refreshed in cart_items/update.turbo_stream.erb so the two
-    entry points to a changed cart stay in sync. Subtotal and Shipping are
-    unaffected by a subtotal-only discount, so they are not re-rendered. %>
+    entry points to a changed cart stay in sync. The discount is whole-order, but
+    it only adds the discount line and lowers VAT/total; the Subtotal and Shipping
+    line values themselves don't change, so they are not re-rendered. %>
 <%= turbo_stream.replace "discount-signup",
       partial: "email_subscriptions/success",
       locals: { cart: cart } %>

@@ -114,6 +114,22 @@ class CartTest < ActiveSupport::TestCase
     assert_equal BigDecimal("29.1492"), @cart.total_amount
   end
 
+  # Regression: the discount rate is injected by the controller from the session,
+  # not loaded from the DB, so a reload (which the CartItem sample-limit validator
+  # triggers via cart.reload.at_sample_limit?) must NOT wipe it. Otherwise a
+  # customer with the welcome discount who adds a sample sees the discount vanish
+  # from the cart preview until the next full page load.
+  test "reload preserves the injected discount_rate" do
+    @cart.discount_rate = 0.10
+    @cart.total_amount # memoize totals at the discounted rate
+
+    @cart.reload
+
+    assert_equal 0.10, @cart.discount_rate
+    assert_equal BigDecimal("2.699"), @cart.discount_amount
+    assert_equal BigDecimal("29.1492"), @cart.total_amount
+  end
+
   test "items_count is memoized within request" do
     # First call caches the value
     count1 = @cart.items_count

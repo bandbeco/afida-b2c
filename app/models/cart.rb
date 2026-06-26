@@ -70,10 +70,10 @@ class Cart < ApplicationRecord
     @subtotal_amount ||= cart_items.includes(:product).sum(&:subtotal_amount)
   end
 
-  # The welcome discount in money: the discount rate applied to the subtotal only
-  # (the coupon does not discount shipping), matching what the Stripe coupon takes.
-  # Zero when no discount is active. Delegates to OrderTotals so the cart preview's
-  # discount line, VAT and total all come from one formula.
+  # The welcome discount in money: the rate applied to the whole order
+  # (subtotal + shipping), matching the plain Stripe percent_off coupon (no
+  # applies_to restriction). Zero when no discount is active. Delegates to
+  # OrderTotals so the cart preview's discount line, VAT and total share one formula.
   def discount_amount
     cart_totals.discount
   end
@@ -104,13 +104,19 @@ class Cart < ApplicationRecord
   end
 
   # Clear memoized values when cart items change
-  # Call this after adding/updating/removing cart items
+  # Call this after adding/updating/removing cart items.
+  #
+  # @discount_rate is deliberately NOT reset: it is injected by the controller
+  # from the session coupon, not loaded from the DB, so a reload (a DB refresh)
+  # can't change it. Clearing it here wiped the active welcome discount whenever
+  # the CartItem sample-limit validator calls cart.reload mid-request, making the
+  # discount vanish from the Turbo Stream cart preview. @cart_totals is still
+  # cleared, so totals recompute against the preserved rate.
   def reload(*)
     @items_count = nil
     @line_items_count = nil
     @subtotal_amount = nil
     @cart_totals = nil
-    @discount_rate = nil
     @sample_product_ids = nil
     @regular_product_ids = nil
     super
@@ -187,8 +193,13 @@ class Cart < ApplicationRecord
   # VAT and total match the Stripe charge; :deferred for an empty cart, which has
   # nothing to ship and so shows no shipping line (and a £0 total).
   def cart_totals
-    stance = cart_items.empty? ? :deferred : :charged
-    @cart_totals ||= OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: discount_rate || 0)
+    # ||= wraps the whole body so the cart_items.empty? query only fires on the
+    # first call per request; later calls (this backs four public methods) reuse
+    # the memoized result.
+    @cart_totals ||= begin
+      stance = cart_items.empty? ? :deferred : :charged
+      OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: discount_rate || 0)
+    end
   end
 
   # Action Mailer's host, configured in every environment. recovery_url runs

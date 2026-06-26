@@ -574,6 +574,30 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_nil cart_item.calculated_price
   end
 
+  # Regression: adding a sample re-renders the drawer cart summary. The sample
+  # validator calls cart.reload, which used to wipe the session-injected discount
+  # rate, so the welcome discount vanished from the summary (wrong VAT/total)
+  # until a full page load. The discount must survive the sample add.
+  test "adding a sample keeps the welcome discount in the cart summary" do
+    # A paid item so the cart has a discountable subtotal.
+    post cart_cart_items_path, params: {
+      cart_item: { sku: @product_variant.sku, quantity: 1 }
+    }
+    # Claim the welcome discount, which stores the code in the session.
+    post email_subscriptions_path, params: { email: "sample-discount@example.com" }
+
+    post cart_cart_items_path, params: {
+      product_id: products(:sample_cup_8oz).id,
+      sample: true
+    }, headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    # The drawer summary (re-rendered by create_sample.turbo_stream) must still
+    # show the discount line rather than dropping it to zero.
+    assert_match "Discount", @response.body
+    assert_match(/-\s*£/, @response.body)
+  end
+
   # Sample Cart Items Tests
   test "adds sample to cart with price zero" do
     sample_variant = products(:sample_cup_8oz)
