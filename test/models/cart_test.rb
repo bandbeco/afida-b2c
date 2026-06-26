@@ -53,6 +53,67 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 0.2, VAT_RATE
   end
 
+  # --- welcome discount (whole-order, matching the Stripe coupon) ---
+  # The cart has no discount until the controller injects the rate (it lives in the
+  # session, not on the model). The welcome coupon is a plain Stripe percent_off with
+  # no applies_to restriction, so it discounts the WHOLE order: products AND the
+  # (taxed) shipping line. discount_amount is therefore a percentage of
+  # subtotal + shipping, and the VAT/total drop to match what Stripe charges.
+
+  test "discount_amount is zero by default" do
+    assert_equal 0, @cart.discount_amount
+  end
+
+  test "discount_amount applies the injected rate to subtotal plus shipping" do
+    # cart :one subtotal is £20, shipping £6.99 (below threshold). 10% of 26.99 = 2.699.
+    @cart.discount_rate = 0.10
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+
+    assert_equal (BigDecimal("20.0") + cost) * BigDecimal("0.1"), @cart.discount_amount
+    assert_equal BigDecimal("2.699"), @cart.discount_amount
+  end
+
+  test "an injected discount reduces VAT and total but leaves subtotal and shipping" do
+    # subtotal 20, shipping 6.99 (below threshold). Whole-order discount = 10% of
+    # 26.99 = 2.699. VAT base = 26.99 - 2.699 = 24.291 -> VAT 4.8582;
+    # total = 24.291 + 4.8582 = 29.1492.
+    @cart.discount_rate = 0.10
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+
+    assert_equal BigDecimal("20.0"), @cart.subtotal_amount
+    assert_equal cost, @cart.shipping_amount
+    assert_equal BigDecimal("4.8582"), @cart.vat_amount
+    assert_equal BigDecimal("29.1492"), @cart.total_amount
+  end
+
+  test "an injected discount never reintroduces shipping below the threshold" do
+    # An above-threshold cart ships free; a discount that drops the discounted
+    # subtotal below the threshold must not bring the shipping charge back.
+    cart = Cart.create
+    variant = Product.create!(
+      category: categories(:cups),
+      name: "Threshold pack",
+      sku: "TEST-CART-DISCOUNT-FREE-SHIP",
+      price: Shipping::FREE_SHIPPING_THRESHOLD,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+    cart.discount_rate = 0.10
+
+    assert_equal 0, cart.shipping_amount
+  end
+
+  test "setting discount_rate after totals are memoized recomputes them" do
+    # Reading totals first memoizes them at the zero-discount rate; setting the rate
+    # must invalidate that so the discount is reflected.
+    @cart.total_amount # memoize at 0% discount
+    @cart.discount_rate = 0.10
+
+    assert_equal BigDecimal("2.699"), @cart.discount_amount
+    assert_equal BigDecimal("29.1492"), @cart.total_amount
+  end
+
   test "items_count is memoized within request" do
     # First call caches the value
     count1 = @cart.items_count

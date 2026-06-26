@@ -1,0 +1,23 @@
+<%# The Turbo Stream response when a visitor claims the welcome discount on the
+    cart page. It always swaps the signup box for the success confirmation; when
+    the cart has items it also refreshes the Cart Summary (discount line, VAT and
+    total) so the 10% off appears immediately, without a full page reload.
+
+    Mirrors the totals refreshed in cart_items/update.turbo_stream.erb so the two
+    entry points to a changed cart stay in sync. Subtotal and Shipping are
+    unaffected by a subtotal-only discount, so they are not re-rendered. %>
+<%= turbo_stream.replace "discount-signup",
+      partial: "email_subscriptions/success",
+      locals: { cart: cart } %>
+
+<% if cart && cart.cart_items.any? %>
+  <%= turbo_stream.replace "discount_line", partial: "cart_items/discount_line", locals: { cart: cart } %>
+
+  <%= turbo_stream.update "vat" do %>
+    <%= number_to_currency(cart.vat_amount) %>
+  <% end %>
+
+  <%= turbo_stream.update "grand_total" do %>
+    <%= number_to_currency(cart.total_amount) %>
+  <% end %>
+<% end %>

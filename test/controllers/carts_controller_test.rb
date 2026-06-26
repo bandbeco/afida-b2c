@@ -101,6 +101,31 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#shipping", text: /Free/
   end
 
+  # Cart summary discount line: shown only when a coupon is active in the session
+  test "cart page shows the discount line when a welcome code is in the session" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    # Claim the welcome discount, which stores the code in the session.
+    post email_subscriptions_path, params: { email: "cart-discount-test@example.com" }
+
+    get cart_url
+    assert_response :success
+    assert_select "#discount_line", text: /Discount/
+    assert_select "#discount_amount", text: /-/
+  end
+
+  test "cart page omits the discount line when no code is in the session" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    get cart_url
+    assert_response :success
+    # The row element is always present, but it carries no discount content.
+    assert_select "#discount_amount", count: 0
+  end
+
   # GET /cart/resume?token=... (cross-device abandoned-cart recovery)
   test "resume re-binds the guest session to the cart in a valid token and redirects to cart" do
     guest_cart = Cart.create!

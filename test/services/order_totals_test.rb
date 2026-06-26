@@ -71,6 +71,79 @@ class OrderTotalsTest < ActiveSupport::TestCase
   end
 
   # ==========================================================================
+  # discount: a whole-order reduction (the welcome coupon)
+  # ==========================================================================
+  #
+  # The welcome coupon is a plain Stripe percent_off coupon with no applies_to
+  # restriction, so it discounts the WHOLE order: products AND the (taxed) shipping
+  # line. Stripe accounts for it as amount_total = amount_subtotal + amount_tax -
+  # amount_discount, where amount_subtotal includes shipping and amount_tax is on the
+  # post-discount amount. The discount is passed as a RATE (e.g. 0.10) and applied to
+  # subtotal + shipping after shipping is resolved, so the preview matches the charge.
+
+  test "discount rate defaults to zero so existing callers are unaffected" do
+    with_default = OrderTotals.for(BigDecimal("20.00"), shipping: :deferred)
+    explicit_zero = OrderTotals.for(BigDecimal("20.00"), shipping: :deferred, discount_rate: BigDecimal("0"))
+
+    assert_equal BigDecimal("0"), with_default.discount
+    assert_equal explicit_zero.total, with_default.total
+  end
+
+  test "deferred discount reduces the vat base and the total but not the subtotal line" do
+    # No shipping line when deferred, so the whole-order base is just the subtotal:
+    # discount 10% of 20 = 2 -> VAT on (20 - 2) = 3.60, total = 18 + 3.60 = 21.60.
+    totals = OrderTotals.for(BigDecimal("20.00"), shipping: :deferred, discount_rate: BigDecimal("0.10"))
+
+    assert_equal BigDecimal("20.00"), totals.subtotal
+    assert_equal BigDecimal("2.00"), totals.discount
+    assert_equal BigDecimal("3.60"), totals.vat
+    assert_nil totals.shipping
+    assert_equal BigDecimal("21.60"), totals.total
+  end
+
+  test "charged discount reduces the whole order including shipping, then vat is on the remainder" do
+    # subtotal 20 (< threshold so shipping 6.99). Whole-order discount applies to
+    # subtotal + shipping: 10% of (20 + 6.99) = 2.699. VAT base = 26.99 - 2.699 =
+    # 24.291 -> VAT = 4.8582; total = 24.291 + 4.8582 = 29.1492.
+    totals = OrderTotals.for(BigDecimal("20.00"), shipping: :charged, discount_rate: BigDecimal("0.10"))
+
+    gross = BigDecimal("20.00") + STANDARD_COST
+    assert_equal STANDARD_COST, totals.shipping
+    assert_equal gross * BigDecimal("0.10"), totals.discount
+    assert_equal BigDecimal("2.699"), totals.discount
+    assert_equal (gross - totals.discount) * BigDecimal(VAT_RATE.to_s), totals.vat
+    assert_equal BigDecimal("4.8582"), totals.vat
+    assert_equal (gross - totals.discount) + totals.vat, totals.total
+    assert_equal BigDecimal("29.1492"), totals.total
+  end
+
+  test "charged discount with free shipping discounts the subtotal alone (shipping is zero)" do
+    # Above threshold so shipping is 0; the whole-order base is just the subtotal.
+    # 10% of 104 = 10.40; VAT base = 104 - 10.40 = 93.60 -> VAT 18.72.
+    totals = OrderTotals.for(BigDecimal("104.00"), shipping: :charged, discount_rate: BigDecimal("0.10"))
+
+    assert_equal BigDecimal("0"), totals.shipping
+    assert_equal BigDecimal("10.40"), totals.discount
+    assert_equal BigDecimal("18.72"), totals.vat
+    assert_equal BigDecimal("93.60") + BigDecimal("18.72"), totals.total
+  end
+
+  test "the discount does not move the free-shipping threshold (it keys off the gross subtotal)" do
+    # Gross subtotal is exactly the threshold, so shipping is free even though the
+    # discounted subtotal dips below it. The discount must not re-introduce shipping.
+    totals = OrderTotals.for(THRESHOLD, shipping: :charged, discount_rate: BigDecimal("0.10"))
+
+    assert_equal BigDecimal("0"), totals.shipping
+  end
+
+  test "rounded carries the discount through at two decimal places" do
+    # 10% of (33.33 + 6.99) = 4.032 -> rounds to 4.03.
+    rounded = OrderTotals.for(BigDecimal("33.33"), shipping: :charged, discount_rate: BigDecimal("0.10")).rounded
+
+    assert_equal BigDecimal("4.03"), rounded.discount
+  end
+
+  # ==========================================================================
   # VAT rate
   # ==========================================================================
 

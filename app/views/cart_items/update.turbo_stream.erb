@@ -26,6 +26,11 @@
   <%= number_to_currency(Current.cart.subtotal_amount) %>
 <% end %>
 
+<%# The discount is a percentage of subtotal + shipping, so a quantity change (or a
+    shipping flip) moves its amount. Replace the whole line so its visibility and
+    value both stay current. %>
+<%= turbo_stream.replace "discount_line", partial: "cart_items/discount_line", locals: { cart: Current.cart } %>
+
 <%# Shipping can flip (e.g. a quantity change crossing the free-shipping
     threshold), so refresh it alongside the other totals. %>
 <%= turbo_stream.update "shipping" do %>

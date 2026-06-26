@@ -1,6 +1,13 @@
 require "test_helper"
 
 class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
+  # The welcome coupon id the app stores in the session, read from the test
+  # credentials so the assertions track the actual vault value (CI decrypts
+  # test.yml.enc via RAILS_TEST_KEY, so this is the same in CI and locally).
+  def welcome_coupon_id
+    Rails.application.credentials.dig(:stripe, :welcome_coupon)
+  end
+
   # =============================================================================
   # T011: Successful Signup Tests (US1)
   # =============================================================================
@@ -26,6 +33,37 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'turbo-stream action="replace" target="discount-signup"'
   end
 
+  # When the cart has items, claiming the discount must refresh the cart summary
+  # in the same response so the discount line, VAT and total appear without a
+  # full page reload (the form submits via Turbo). It keys off the freshly stored
+  # session code, so the cart has to be given the discount rate before rendering.
+  test "successful signup refreshes the cart summary with the discount" do
+    add_item_to_session_cart
+
+    post email_subscriptions_path,
+         params: { email: "summary-refresh@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=discount_line]" do
+      assert_select "#discount_amount", text: /-/
+    end
+    assert_select "turbo-stream[action=update][target=vat]"
+    assert_select "turbo-stream[action=update][target=grand_total]"
+  end
+
+  test "successful signup does not refresh the cart summary when the cart is empty" do
+    # No items, so there is no summary on screen to update; only the signup box
+    # is replaced. Avoids targeting cart-summary ids that are not in the DOM.
+    post email_subscriptions_path,
+         params: { email: "empty-summary@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_select "turbo-stream[target=discount_line]", count: 0
+    assert_select "turbo-stream[target=grand_total]", count: 0
+  end
+
   # =============================================================================
   # T012: Session Discount Code Storage Tests (US1)
   # =============================================================================
@@ -36,7 +74,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
-    assert_equal "WELCOME10", session[:discount_code]
+    assert_equal welcome_coupon_id, session[:discount_code]
   end
 
   test "successful signup does not store discount code if already present" do
@@ -50,7 +88,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
 
     # Second subscription should be created (email list capture)
     # but session should still have original discount code
-    assert_equal "WELCOME10", session[:discount_code]
+    assert_equal welcome_coupon_id, session[:discount_code]
   end
 
   # =============================================================================
@@ -66,7 +104,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
       post email_subscriptions_path, params: { email: user.email_address }
     end
 
-    assert_equal "WELCOME10", session[:discount_code]
+    assert_equal welcome_coupon_id, session[:discount_code]
   end
 
   test "logged-in user submitting email with previous orders gets not eligible response" do
@@ -116,7 +154,7 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, 'turbo-stream action="replace" target="discount-signup"'
-    assert_equal "WELCOME10", session[:discount_code]
+    assert_equal welcome_coupon_id, session[:discount_code]
 
     # Verify discount_claimed_at was set on existing record
     subscription.reload

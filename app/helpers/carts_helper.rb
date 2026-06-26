@@ -17,10 +17,13 @@ module CartsHelper
     WELCOME_DISCOUNT_PERCENTAGE / 100.0
   end
 
-  # Estimated saving on a cart's subtotal at the welcome rate. The real discount
-  # is computed by Stripe at checkout; this is the indicative figure we show.
+  # The saving shown in the "you'll save £X" copy. The welcome coupon is a whole-order
+  # Stripe percent_off (subtotal + shipping), so the saving is the cart's own
+  # discount_amount, computed once by OrderTotals. Callers show this only when the
+  # discount is active (the rate is injected), so discount_amount is the real figure
+  # and the success-box copy stays in lockstep with the cart-summary discount line.
   def welcome_discount_savings(cart)
-    cart.subtotal_amount * welcome_discount_rate
+    cart.discount_amount
   end
 
   # The cart preview's shipping line. The cart charges shipping the same way
@@ -32,6 +35,18 @@ module CartsHelper
     return "Calculate at checkout" if shipping.nil?
 
     shipping.zero? ? "Free" : number_to_currency(shipping)
+  end
+
+  # Whether the cart carries a discount worth showing a line for. Guards the
+  # discount row so it appears only when a coupon is actually reducing the total.
+  def cart_has_discount?(cart)
+    cart.discount_amount.positive?
+  end
+
+  # The cart preview's discount line: the discount as a negative currency amount,
+  # e.g. "-£2.00". Shown between Subtotal and Shipping when cart_has_discount?.
+  def cart_discount_display(cart)
+    "-#{number_to_currency(cart.discount_amount, unit: '£')}"
   end
 
   # Determine if the discount signup form should be shown

@@ -62,6 +62,13 @@
         <span><%= number_to_currency(Current.cart.subtotal_amount) %></span>
       </div>
 
+      <% if cart_has_discount?(Current.cart) %>
+        <div class="flex justify-between items-center mb-4 text-success">
+          <span class="font-medium">Discount (<%= welcome_discount_percentage %>%)</span>
+          <span><%= cart_discount_display(Current.cart) %></span>
+        </div>
+      <% end %>
+
       <div class="flex justify-between items-center mb-4">
         <span class="font-medium">Shipping</span>
         <span><%= cart_shipping_display(Current.cart) %></span>

@@ -47,5 +47,16 @@ class ApplicationController < ActionController::Base
       Current.cart = Cart.create
       session[:cart_id] = Current.cart.id if Current.cart&.persisted?
     end
+
+    apply_session_discount_to_cart
+  end
+
+  # The welcome coupon code is held in the session; inject its rate onto the cart so
+  # the cart preview's discount line, VAT and total match what Stripe will charge.
+  # No code means no discount (the rate defaults to zero on the cart).
+  def apply_session_discount_to_cart
+    return unless Current.cart && session[:discount_code].present?
+
+    Current.cart.discount_rate = CartsHelper::WELCOME_DISCOUNT_PERCENTAGE / 100.0
   end
 end

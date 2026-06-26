@@ -12,15 +12,21 @@
 #   free-shipping threshold, otherwise STANDARD_COST. VAT is levied on
 #   subtotal + shipping (UK VAT applies to delivery), so the preview's VAT and
 #   total match what Stripe charges. An empty cart ships nothing and stays at 0.
-# - Final total = subtotal + shipping + VAT
+# - An optional welcome discount (the rate injected by the controller from the
+#   session coupon) is a plain Stripe percent_off coupon with no applies_to
+#   restriction, so it reduces the WHOLE order: subtotal AND the taxed shipping
+#   line. It lowers the VAT base and the total to match the Stripe charge, but never
+#   the free-shipping decision (which keys off the gross subtotal).
+# - Final total = (subtotal + shipping - discount) + VAT
 #
 # Usage:
 #   Current.cart              # Access current cart (guest or user)
 #   cart.items_count          # Total quantity of all items
 #   cart.subtotal_amount      # Sum before VAT
+#   cart.discount_amount      # Welcome discount on subtotal + shipping (0 when none)
 #   cart.shipping_amount      # Charged shipping (0 when free, nil when empty)
-#   cart.vat_amount           # 20% VAT on subtotal + shipping
-#   cart.total_amount         # Final total with shipping and VAT
+#   cart.vat_amount           # 20% VAT on (subtotal + shipping - discount)
+#   cart.total_amount         # Final total with discount, shipping and VAT
 #
 class Cart < ApplicationRecord
   SAMPLE_LIMIT = 5
@@ -29,6 +35,17 @@ class Cart < ApplicationRecord
 
   has_many :cart_items, dependent: :destroy
   has_many :products, through: :cart_items
+
+  # The active discount as a fraction of the subtotal (e.g. 0.10 for the welcome
+  # coupon). The coupon code lives in the session, not on the cart, so the
+  # controller injects the rate; it defaults to 0 (no discount). Assigning it
+  # clears the memoized totals so vat_amount/total_amount pick the discount up.
+  attr_reader :discount_rate
+
+  def discount_rate=(rate)
+    @discount_rate = rate
+    @cart_totals = nil
+  end
 
   # Total quantity of all items in cart (sum of quantities, not distinct items)
   # e.g., 4 of the same SKU = 4, not 1
@@ -51,6 +68,14 @@ class Cart < ApplicationRecord
   # Memoized to prevent repeated calculations within same request
   def subtotal_amount
     @subtotal_amount ||= cart_items.includes(:product).sum(&:subtotal_amount)
+  end
+
+  # The welcome discount in money: the discount rate applied to the subtotal only
+  # (the coupon does not discount shipping), matching what the Stripe coupon takes.
+  # Zero when no discount is active. Delegates to OrderTotals so the cart preview's
+  # discount line, VAT and total all come from one formula.
+  def discount_amount
+    cart_totals.discount
   end
 
   # Shipping the cart will be charged at checkout: 0 at/above the free-shipping
@@ -85,6 +110,7 @@ class Cart < ApplicationRecord
     @line_items_count = nil
     @subtotal_amount = nil
     @cart_totals = nil
+    @discount_rate = nil
     @sample_product_ids = nil
     @regular_product_ids = nil
     super
@@ -162,7 +188,7 @@ class Cart < ApplicationRecord
   # nothing to ship and so shows no shipping line (and a £0 total).
   def cart_totals
     stance = cart_items.empty? ? :deferred : :charged
-    @cart_totals ||= OrderTotals.for(subtotal_amount, shipping: stance)
+    @cart_totals ||= OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: discount_rate || 0)
   end
 
   # Action Mailer's host, configured in every environment. recovery_url runs
