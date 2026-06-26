@@ -12,6 +12,16 @@ module OrdersHelper
     end
   end
 
+  # The order-totals summary as an ordered list of display lines, the single
+  # source of truth shared by every order surface (storefront pages, admin page,
+  # confirmation emails, and the PDF). Delegates to OrderSummary so the line
+  # order, labels, money format and discount-visibility rule live in one place;
+  # this view-layer wrapper exists so templates can call a helper. See
+  # OrderSummary for the shape of each line.
+  def order_summary_lines(order)
+    OrderSummary.lines(order)
+  end
+
   # Our SKU for an order item, with the supplier SKU appended in parentheses when
   # known, e.g. "VEG-CC-9-7 (R300S-VW)". Used in internal ops views so admins can
   # cross-reference our catalogue against a supplier's. Prefers the SKU snapshot

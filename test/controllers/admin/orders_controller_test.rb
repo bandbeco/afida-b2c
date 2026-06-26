@@ -97,6 +97,25 @@ class Admin::OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_select "span.bg-primary", text: /SAMPLE/
   end
 
+  # The admin order summary renders via OrderSummary (shared with the storefront
+  # pages, emails and PDF), so a discounted order shows the Discount line and a
+  # plain order omits it. Previously the admin page had no discount line at all.
+  test "show renders the discount line for a discounted order" do
+    @regular_order.update!(discount_amount: 2.50, discount_code: "WELCOME10")
+    get admin_order_path(@regular_order), headers: @headers
+
+    assert_response :success
+    assert_select "span", text: "Discount (WELCOME10)"
+    assert_select "span", text: "-£2.50"
+  end
+
+  test "show omits the discount line for an order without a discount" do
+    get admin_order_path(@regular_order), headers: @headers # default zero discount
+
+    assert_response :success
+    assert_select "span", text: /Discount/, count: 0
+  end
+
   test "show displays effective sample SKU for sample items" do
     get admin_order_path(@sample_only_order), headers: @headers
 

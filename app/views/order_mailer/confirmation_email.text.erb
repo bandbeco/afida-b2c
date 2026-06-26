@@ -10,10 +10,9 @@ ORDER SUMMARY
 <%= item.quantity %>x <%= item.product_name %><%= item.sample? ? " (Sample)" : "" %> - <%= item.sample? ? "FREE" : number_to_currency(item.line_total, unit: "£") %>
 <% end %>
 
-Subtotal: <%= number_to_currency(@order.subtotal_amount, unit: "£") %>
-Shipping: <%= number_to_currency(@order.shipping_amount, unit: "£") %>
-VAT (20%): <%= number_to_currency(@order.vat_amount, unit: "£") %>
-Total: <%= number_to_currency(@order.total_amount, unit: "£") %>
+<% order_summary_lines(@order).each do |line| -%>
+<%= line[:label] %>: <%= line[:amount] %>
+<% end -%>
 
 You can view your order details here: <%= order_url(@order, token: @order.signed_access_token) %>
 

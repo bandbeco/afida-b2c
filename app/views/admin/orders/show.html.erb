@@ -106,28 +106,24 @@
         <div class="card-body p-4 sm:p-6">
           <h2 class="card-title text-lg mb-4">Order Summary</h2>
 
+          <%# Lines, order, labels, money format and the discount rule come from
+              OrdersHelper#order_summary_lines (shared with the storefront pages and
+              the emails); this view only supplies the admin (DaisyUI) markup. %>
           <div class="space-y-3">
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/70">Subtotal</span>
-              <span>£<%= number_with_precision(@order.subtotal_amount, precision: 2) %></span>
-            </div>
-
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/70">VAT (20%)</span>
-              <span>£<%= number_with_precision(@order.vat_amount, precision: 2) %></span>
-            </div>
-
-            <div class="flex justify-between text-sm">
-              <span class="text-base-content/70">Shipping</span>
-              <span>£<%= number_with_precision(@order.shipping_amount, precision: 2) %></span>
-            </div>
-
-            <div class="divider my-2"></div>
-
-            <div class="flex justify-between">
-              <span class="font-semibold">Total</span>
-              <span class="font-bold">£<%= number_with_precision(@order.total_amount, precision: 2) %></span>
-            </div>
+            <% order_summary_lines(@order).each do |line| %>
+              <% if line[:kind] == :total %>
+                <div class="divider my-2"></div>
+                <div class="flex justify-between">
+                  <span>Total</span>
+                  <span><%= line[:amount] %></span>
+                </div>
+              <% else %>
+                <div class="flex justify-between text-sm">
+                  <span class="text-base-content/70"><%= line[:label] %></span>
+                  <span class="<%= "text-success" if line[:negative] %>"><%= line[:amount] %></span>
+                </div>
+              <% end %>
+            <% end %>
           </div>
         </div>
       </div>

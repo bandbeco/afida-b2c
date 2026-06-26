@@ -42,23 +42,24 @@
 
   <tr>
     <td style="padding: 20px 30px;">
+      <%# Lines, order, labels, amounts and the discount rule come from
+          OrdersHelper#order_summary_lines (shared with the storefront pages, the
+          admin page and the ops email); this template only supplies email-safe
+          inline-styled rows. %>
       <table cellspacing="0" cellpadding="0" border="0" width="100%" style="border-top: 2px solid #e5e7eb; padding-top: 20px;">
-        <tr>
-          <td><p style="font-size: 16px; color: #374151; margin: 0;">Subtotal</p></td>
-          <td align="right"><p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(@order.subtotal_amount, unit: "£") %></p></td>
-        </tr>
-        <tr>
-          <td style="padding-top: 8px;"><p style="font-size: 16px; color: #374151; margin: 0;">Shipping</p></td>
-          <td align="right" style="padding-top: 8px;"><p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(@order.shipping_amount, unit: "£") %></p></td>
-        </tr>
-        <tr>
-          <td style="padding-top: 8px;"><p style="font-size: 16px; color: #374151; margin: 0;">VAT (20%)</p></td>
-          <td align="right" style="padding-top: 8px;"><p style="font-size: 16px; color: #111827; margin: 0;"><%= number_to_currency(@order.vat_amount, unit: "£") %></p></td>
-        </tr>
-        <tr style="font-weight: 600;">
-          <td style="padding-top: 15px;"><p style="font-size: 18px; color: #111827; margin: 0;">Total</p></td>
-          <td align="right" style="padding-top: 15px;"><p style="font-size: 18px; color: #111827; margin: 0;"><%= number_to_currency(@order.total_amount, unit: "£") %></p></td>
-        </tr>
+        <% order_summary_lines(@order).each do |line| %>
+          <% if line[:kind] == :total %>
+            <tr style="font-weight: 600;">
+              <td style="padding-top: 15px;"><p style="font-size: 18px; color: #111827; margin: 0;"><%= line[:label] %></p></td>
+              <td align="right" style="padding-top: 15px;"><p style="font-size: 18px; color: #111827; margin: 0;"><%= line[:amount] %></p></td>
+            </tr>
+          <% else %>
+            <tr>
+              <td style="padding-top: 8px;"><p style="font-size: 16px; color: #374151; margin: 0;"><%= line[:label] %></p></td>
+              <td align="right" style="padding-top: 8px;"><p style="font-size: 16px; color: <%= line[:negative] ? "#059669" : "#111827" %>; margin: 0;"><%= line[:amount] %></p></td>
+            </tr>
+          <% end %>
+        <% end %>
       </table>
     </td>
   </tr>

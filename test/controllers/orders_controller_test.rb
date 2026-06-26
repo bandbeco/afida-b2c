@@ -64,6 +64,27 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", /Order #/
   end
 
+  # The order summary renders via OrderSummary, so a discounted order shows the
+  # Discount line (with code, as a negative) between Shipping and VAT; a plain
+  # order omits it. Keeps the page in sync with the emails, PDF and admin page.
+  test "show renders the discount line for a discounted order" do
+    @order_one.update!(discount_amount: 2.50, discount_code: "WELCOME10")
+    sign_in @user_one
+    get order_url(@order_one)
+
+    assert_response :success
+    assert_select "span", text: "Discount (WELCOME10)"
+    assert_select "span", text: "-£2.50"
+  end
+
+  test "show omits the discount line for an order without a discount" do
+    sign_in @user_one
+    get order_url(@order_one) # default zero discount
+
+    assert_response :success
+    assert_select "span", text: /Discount/, count: 0
+  end
+
   # T013: User viewing another user's order (denied)
   test "show redirects when accessing another user's order" do
     sign_in @user_one

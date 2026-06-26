@@ -65,6 +65,49 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  # The price summary is driven by OrderSummary, so a discounted order must add a
+  # Discount row without overflowing the (now dynamically sized) summary box.
+  # OrderSummary owns the line content/order; here we just guard PDF rendering.
+  test "generates pdf for a discounted order without raising" do
+    @order.update!(
+      subtotal_amount: 85.70,
+      shipping_amount: 6.99,
+      discount_amount: 9.27,
+      discount_code: "WELCOME10",
+      vat_amount: 16.68,
+      total_amount: 100.10
+    )
+    @order.order_items.create!(
+      product: products(:one),
+      product_name: "Discounted Product",
+      product_sku: "DISC-TEST",
+      price: 85.70,
+      pac_size: nil,
+      quantity: 1,
+      line_total: 85.70,
+      configuration: {}
+    )
+
+    generator = OrderPdfGenerator.new(@order)
+
+    assert_nothing_raised do
+      pdf_data = generator.generate
+      assert pdf_data.present?
+    end
+  end
+
+  # add_summary_row accepts a pre-formatted amount and a negative flag (used for
+  # the discount). It must render either branch without raising.
+  test "add_summary_row renders negative and positive rows" do
+    generator = OrderPdfGenerator.new(@order)
+    pdf = Prawn::Document.new
+
+    assert_nothing_raised do
+      generator.send(:add_summary_row, pdf, "Discount (WELCOME10)", "-£9.27", negative: true)
+      generator.send(:add_summary_row, pdf, "Subtotal", "£85.70")
+    end
+  end
+
   # Pack pricing display tests
   test "format_price_display returns pack format for pack-priced items" do
     pack_item = OrderItem.new(
