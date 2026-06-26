@@ -1,7 +1,13 @@
 require "test_helper"
 
 class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
+  include StripeTestHelper
+
   setup do
+    # Building the checkout session resolves the UK VAT tax rate; stub it so these
+    # tests never reach the live Stripe API (the cache is null_store in test).
+    stub_stripe_tax_rate_list
+
     @user = users(:one)
     @address = addresses(:office)
     @product_variant = products(:one)
@@ -11,11 +17,15 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     @captured_customer_create_params = nil
     @captured_customer_update_params = nil
 
-    # Create a cart with items
     sign_in_as(@user)
-    post cart_cart_items_path, params: {
-      cart_item: { product_id: @product_variant.id, quantity: 1 }
-    }
+
+    # Give the controller a deterministic, non-empty cart. users(:one) has more
+    # than one fixture cart, so the real find_or_create_by(user:) resolves to an
+    # arbitrary (possibly empty) one; stub it so these address-prefill tests
+    # exercise checkout with a known cart rather than cart resolution.
+    @cart = Cart.create!(user: @user)
+    @cart.cart_items.create!(product: @product_variant, quantity: 1, price: 10.00)
+    Current.stubs(:cart).returns(@cart)
   end
 
   test "checkout with address_id creates Stripe Customer and uses it" do
@@ -155,11 +165,8 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
 
   test "guest checkout does not store address selection" do
     sign_out
-
-    # Create a guest cart with items
-    post cart_cart_items_path, params: {
-      cart_item: { product_id: @product_variant.id, quantity: 1 }
-    }
+    # The stubbed @cart (from setup) stands in as the non-empty cart; signed out,
+    # Current.user is nil so no customer/address is attached - which is the point.
 
     mock_session = stub(url: "https://checkout.stripe.com/test/sess_guest")
     Stripe::Checkout::Session.stubs(:create).returns(mock_session)

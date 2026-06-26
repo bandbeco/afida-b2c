@@ -3,6 +3,14 @@ module Webhooks
     allow_unauthenticated_access
     skip_forgery_protection
 
+    # Wraps a transient order-creation failure so `create` returns 5xx and Stripe
+    # retries, instead of swallowing it as 200 and losing a paid order.
+    class RetryableWebhookError < StandardError; end
+
+    # Raised when the session can never produce a valid order (e.g. no shipping
+    # details), so `create` returns 200 and Stripe does NOT retry a doomed payload.
+    class PermanentlyInvalidSessionError < StandardError; end
+
     def create
       payload = request.body.read
       sig_header = request.env["HTTP_STRIPE_SIGNATURE"]
@@ -34,6 +42,10 @@ module Webhooks
 
       handle_event(event)
       head :ok
+    rescue RetryableWebhookError
+      # A transient failure while handling the event. Return 5xx so Stripe retries
+      # rather than silently dropping a paid order. Already logged/Sentry'd below.
+      head :internal_server_error
     end
 
     private
@@ -49,7 +61,8 @@ module Webhooks
 
     def handle_checkout_completed(event)
       session = event.data.object
-      return unless session.payment_status == "paid"
+      # "paid" or, for a fully-discounted (0-total) order, "no_payment_required".
+      return unless Checkout::COMPLETED_PAYMENT_STATUSES.include?(session.payment_status)
 
       # Check if order already exists (created by success redirect)
       existing_order = Order.find_by(stripe_session_id: session.id)
@@ -62,14 +75,24 @@ module Webhooks
       # We need to create the order from the webhook
       Rails.logger.info("[Stripe Webhook] Creating order for session #{session.id} (redirect missed)")
 
-      # Retrieve full session with expanded data
+      # Retrieve full session with expanded data. The nested price.product is
+      # needed so SessionAmounts can identify the shipping line by its metadata.
       full_session = Stripe::Checkout::Session.retrieve(
         id: session.id,
-        expand: [ "collected_information", "line_items" ]
+        expand: [ "collected_information", "line_items.data.price.product" ]
       )
 
       # Extract shipping address
-      shipping = extract_shipping_address(full_session)
+      shipping = Checkout::SessionDetails.shipping_address(full_session)
+
+      # Guard the permanent failure upstream (as OrderCreator does on the success
+      # path): a completed session with no shipping_details would build an order with
+      # nil required shipping fields and raise RecordInvalid. That can never succeed
+      # on retry, so fail it as permanent here rather than letting it look like a
+      # transient (retryable) RecordInvalid from an item rollback.
+      if Order.required_shipping_values(shipping).any?(&:blank?)
+        raise PermanentlyInvalidSessionError, "session #{full_session.id} has no shipping details"
+      end
 
       # Get user if client_reference_id was set
       user = User.find_by(id: full_session.client_reference_id)
@@ -78,57 +101,58 @@ module Webhooks
       cart_id = full_session.metadata&.[]("cart_id")
       cart = Cart.find_by(id: cart_id) if cart_id.present?
 
-      # Use Stripe session amounts as source of truth (handles discounts correctly)
-      subtotal = full_session.amount_subtotal / 100.0
-      vat_amount = (full_session.total_details&.amount_tax || 0) / 100.0
-      discount_amount = (full_session.total_details&.amount_discount || 0) / 100.0
-      shipping_amount = (full_session.shipping_cost&.amount_total || 0) / 100.0
-      total_amount = full_session.amount_total / 100.0
+      # Use Stripe session amounts as source of truth (handles discounts
+      # correctly). SessionAmounts splits shipping back out of the subtotal, since
+      # shipping now rides as a taxed line item rather than a shipping_option.
+      amounts = Checkout::SessionAmounts.from(full_session)
+      subtotal = amounts.subtotal
+      vat_amount = amounts.vat
+      discount_amount = amounts.discount
+      shipping_amount = amounts.shipping
+      total_amount = amounts.total
       discount_code = full_session.metadata&.[]("discount_code")
       if discount_code.blank?
-        discount_code = extract_promotion_code(full_session)
+        discount_code = webhook_promotion_code(full_session)
       end
 
-      order = Order.create!(
-        user: user,
-        organization: user&.organization,
-        placed_by_user: user&.organization_id? ? user : nil,
-        email: full_session.customer_details&.email,
-        stripe_session_id: full_session.id,
-        status: "paid",
-        subtotal_amount: subtotal,
-        vat_amount: vat_amount,
-        shipping_amount: shipping_amount,
-        total_amount: total_amount,
-        discount_amount: discount_amount,
-        discount_code: discount_code.presence,
-        shipping_name: shipping[:name],
-        shipping_address_line1: shipping[:line1],
-        shipping_address_line2: shipping[:line2],
-        shipping_city: shipping[:city],
-        shipping_postal_code: shipping[:postal_code],
-        shipping_country: shipping[:country]
-      )
+      # Create the order and its items atomically: a mid-loop item failure must
+      # not leave a committed paid order with missing items. Cart clearing stays
+      # in the transaction so it only happens once the items are safely persisted.
+      order = ApplicationRecord.transaction do
+        new_order = Order.create!(
+          user: user,
+          organization: user&.organization,
+          placed_by_user: user&.organization_id? ? user : nil,
+          email: full_session.customer_details&.email,
+          stripe_session_id: full_session.id,
+          status: "paid",
+          subtotal_amount: subtotal,
+          vat_amount: vat_amount,
+          shipping_amount: shipping_amount,
+          total_amount: total_amount,
+          discount_amount: discount_amount,
+          discount_code: discount_code.presence,
+          branded_order_status: (cart&.cart_items&.any?(&:configured?) ? "design_pending" : nil),
+          shipping_name: shipping[:name],
+          shipping_address_line1: shipping[:line1],
+          shipping_address_line2: shipping[:line2],
+          shipping_city: shipping[:city],
+          shipping_postal_code: shipping[:postal_code],
+          shipping_country: shipping[:country]
+        )
 
-      # Create order items from cart if available
-      if cart&.cart_items&.any?
-        # Set branded order status if cart contains configured items
-        if cart.cart_items.any?(&:configured?)
-          order.update!(branded_order_status: "design_pending")
+        if cart&.cart_items&.any?
+          cart.cart_items.includes(:product, design_attachment: :blob).each do |cart_item|
+            OrderItem.build_from_cart_item(cart_item, new_order).save!
+          end
+          cart.cart_items.destroy_all
+          Rails.logger.info("[Stripe Webhook] Order #{new_order.id} created with #{new_order.order_items.count} items from cart")
+        else
+          # No cart available - order items cannot be created
+          Rails.logger.warn("[Stripe Webhook] Order #{new_order.id} created without line items - cart not found (cart_id: #{cart_id.inspect})")
         end
 
-        # Create order items from cart items
-        cart.cart_items.includes(:product, design_attachment: :blob).each do |cart_item|
-          OrderItem.build_from_cart_item(cart_item, order).save!
-        end
-
-        # Clear the cart after successful order creation
-        cart.cart_items.destroy_all
-
-        Rails.logger.info("[Stripe Webhook] Order #{order.id} created with #{order.order_items.count} items from cart")
-      else
-        # No cart available - order items cannot be created
-        Rails.logger.warn("[Stripe Webhook] Order #{order.id} created without line items - cart not found (cart_id: #{cart_id.inspect})")
+        new_order
       end
 
       # Send confirmation email (customer + internal ops copy)
@@ -154,52 +178,59 @@ module Webhooks
         stripe_event_id: event.id,
         order_id: order.id
       )
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
+      # Lost the create race: the success redirect committed the order in the window
+      # after our find_by check. Benign and idempotent - the order exists - so log
+      # and return 200 (no Stripe retry needed). If no order exists, this was a real
+      # failure (e.g. an item rolled the transaction back), so treat it as retryable.
+      unless Order.exists?(stripe_session_id: session.id)
+        Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
+        Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
+        raise RetryableWebhookError, e.message
+      end
+
+      Rails.logger.info("[Stripe Webhook] Order already created concurrently for session #{session.id}")
+      Rails.event.notify("webhook.processed", event_type: event.type, stripe_event_id: event.id)
+    rescue PermanentlyInvalidSessionError, Checkout::SessionAmounts::UnexpandedLineItemError => e
+      # The session can never produce a valid order on retry, for one of two reasons:
+      #   - PermanentlyInvalidSessionError: a completed session carrying no
+      #     shipping_details, so the required shipping fields would be nil.
+      #   - UnexpandedLineItemError: a dropped expand (programmer error) means the
+      #     shipping line can't be identified; the same payload will fail identically.
+      # Either way retrying can never succeed, so capture it for investigation and
+      # return 200 to stop Stripe retrying for 72h and flooding Sentry. Both are
+      # raised before/while deriving amounts, never from a transient item-level
+      # RecordInvalid that rolls the transaction back (that path stays retryable).
+      # The success controller rescues UnexpandedLineItemError the same way, so the
+      # two order-creation paths don't diverge on this error.
+      Rails.logger.error("[Stripe Webhook] Session permanently invalid for #{session.id}: #{e.message}")
+      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
+      Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
     rescue => e
       Rails.logger.error("[Stripe Webhook] Error creating order: #{e.message}")
       Rails.logger.error(e.backtrace.first(10).join("\n"))
       Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
 
-      # Emit webhook.failed event for debugging
       Rails.event.notify("webhook.failed",
         event_type: event.type,
         stripe_event_id: event.id,
         error: e.message
       )
 
-      # Don't re-raise - we still return 200 to prevent Stripe retries
-      # The error is logged for manual investigation
+      # Signal the controller to return 5xx so Stripe retries the event. A transient
+      # failure (DB blip, Stripe error) must not be swallowed as 200 - that would
+      # lose a paid order with no retry. The race (handled above) is the only case
+      # where returning 200 on an exception is correct.
+      raise RetryableWebhookError, e.message
     end
 
-    def extract_shipping_address(stripe_session)
-      session_hash = stripe_session.to_hash.with_indifferent_access
-      shipping = session_hash.dig(:collected_information, :shipping_details)
-      return {} unless shipping
-
-      shipping = shipping.with_indifferent_access if shipping.respond_to?(:with_indifferent_access)
-      address = shipping[:address]
-      return {} unless address
-
-      address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
-
-      {
-        name: shipping[:name],
-        line1: address[:line1],
-        line2: address[:line2],
-        city: address[:city],
-        postal_code: address[:postal_code],
-        country: address[:country]
-      }
-    end
-
-    def extract_promotion_code(stripe_session)
-      stripe_session
-        .total_details
-        &.breakdown
-        &.discounts
-        &.first
-        &.discount
-        &.promotion_code
-        &.code
+    # The Stripe-entered promotion code, or nil. Unlike OrderCreator (which lets an
+    # unexpected discount shape surface), the webhook swallows a NoMethodError: a
+    # malformed cosmetic field must not fail an already-paid order and trigger 72h of
+    # Stripe retries. The traversal itself lives in Checkout::SessionDetails so the
+    # two paths read the session identically.
+    def webhook_promotion_code(stripe_session)
+      Checkout::SessionDetails.promotion_code(stripe_session)
     rescue NoMethodError
       nil
     end

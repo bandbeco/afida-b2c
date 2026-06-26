@@ -18,18 +18,179 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 0, @empty_cart.subtotal_amount
   end
 
-  test "vat_amount calculates 20% VAT on subtotal" do
-    assert_equal 4.0, @cart.vat_amount
-    assert_equal 0, @empty_cart.vat_amount
+  # The cart preview charges shipping the same way checkout does (the :charged
+  # stance): a sub-threshold subtotal pays STANDARD_COST and VAT is levied on
+  # subtotal + shipping, so the preview's VAT/Total match what Stripe charges.
+  # Cart :one has a £20 subtotal (below the £100 free-shipping threshold).
+  test "shipping_amount charges the standard cost below the free-shipping threshold" do
+    assert_equal Shipping.standard_cost_in_pounds, @cart.shipping_amount
   end
 
-  test "total_amount includes subtotal plus VAT" do
-    assert_equal 24.0, @cart.total_amount
+  test "vat_amount is 20% of subtotal plus shipping below the threshold" do
+    # (20.00 + 6.99) * 0.2 = 5.398, full precision (rounded once at the view).
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    assert_equal((BigDecimal("20.0") + cost) * BigDecimal(VAT_RATE.to_s), @cart.vat_amount)
+    assert_equal BigDecimal("5.398"), @cart.vat_amount
+  end
+
+  test "total_amount includes subtotal, shipping, and VAT below the threshold" do
+    # 20.00 + 6.99 + 5.398 = 32.388
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    expected = BigDecimal("20.0") + cost + (BigDecimal("20.0") + cost) * BigDecimal(VAT_RATE.to_s)
+    assert_equal expected, @cart.total_amount
+    assert_equal BigDecimal("32.388"), @cart.total_amount
+  end
+
+  # An empty cart ships nothing, so it stays at zero across the board rather than
+  # showing a phantom shipping charge.
+  test "empty cart has no shipping, VAT, or total" do
+    assert_nil @empty_cart.shipping_amount
+    assert_equal 0, @empty_cart.vat_amount
     assert_equal 0, @empty_cart.total_amount
   end
 
   test "VAT_RATE constant is set to 20%" do
     assert_equal 0.2, VAT_RATE
+  end
+
+  # --- welcome discount (whole-order, matching the Stripe coupon) ---
+  # The cart has no discount until the controller injects the rate (it lives in the
+  # session, not on the model). The welcome coupon is a plain Stripe percent_off with
+  # no applies_to restriction, so it discounts the WHOLE order: products AND the
+  # (taxed) shipping line. discount_amount is therefore a percentage of
+  # subtotal + shipping, and the VAT/total drop to match what Stripe charges.
+
+  test "discount_amount is zero by default" do
+    assert_equal 0, @cart.discount_amount
+  end
+
+  test "discount_amount applies the injected rate to subtotal plus shipping" do
+    # cart :one subtotal is £20, shipping £6.99 (below threshold). 10% of 26.99 = 2.699.
+    @cart.discount_rate = 0.10
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+
+    assert_equal (BigDecimal("20.0") + cost) * BigDecimal("0.1"), @cart.discount_amount
+    assert_equal BigDecimal("2.699"), @cart.discount_amount
+  end
+
+  test "an injected discount reduces VAT and total but leaves subtotal and shipping" do
+    # subtotal 20, shipping 6.99 (below threshold). Whole-order discount = 10% of
+    # 26.99 = 2.699. VAT base = 26.99 - 2.699 = 24.291 -> VAT 4.8582;
+    # total = 24.291 + 4.8582 = 29.1492.
+    @cart.discount_rate = 0.10
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+
+    assert_equal BigDecimal("20.0"), @cart.subtotal_amount
+    assert_equal cost, @cart.shipping_amount
+    assert_equal BigDecimal("4.8582"), @cart.vat_amount
+    assert_equal BigDecimal("29.1492"), @cart.total_amount
+  end
+
+  test "an injected discount never reintroduces shipping below the threshold" do
+    # An above-threshold cart ships free; a discount that drops the discounted
+    # subtotal below the threshold must not bring the shipping charge back.
+    cart = Cart.create
+    variant = Product.create!(
+      category: categories(:cups),
+      name: "Threshold pack",
+      sku: "TEST-CART-DISCOUNT-FREE-SHIP",
+      price: Shipping::FREE_SHIPPING_THRESHOLD,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+    cart.discount_rate = 0.10
+
+    assert_equal 0, cart.shipping_amount
+  end
+
+  # A samples-only cart pays only shipping (samples are free), and SessionBuilder
+  # refuses every discount for such a cart so a coupon can't reduce that shipping
+  # charge. The preview must mirror that: an injected rate must NOT discount the
+  # shipping line, otherwise the cart promises a discount Stripe will not apply.
+  test "an injected discount is ignored for a samples-only cart" do
+    cart = Cart.create
+    cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+    cart.discount_rate = 0.10
+
+    assert cart.only_samples?
+    assert_equal 0, cart.discount_amount
+    # Shipping is still charged in full, and VAT/total carry no discount.
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    assert_equal cost, cart.shipping_amount
+    assert_equal cost * BigDecimal(VAT_RATE.to_s), cart.vat_amount
+    assert_equal cost + cost * BigDecimal(VAT_RATE.to_s), cart.total_amount
+  end
+
+  # The cart summary shows Subtotal/Shipping/Discount/VAT each rounded to the penny
+  # (number_to_currency rounds at the view). If the Total is derived from the
+  # full-precision figures it can round to a different penny than the sum of the
+  # lines above it (and than Stripe, which rounds per line). display_total_amount is
+  # the sum of the 2dp-rounded components, so the Total always reconciles with the
+  # visible lines and with the charge.
+  test "display_total_amount equals the sum of the rounded summary lines" do
+    cart = Cart.create
+    # £85.70 subtotal + £6.99 shipping, 10% welcome coupon: the figures from the
+    # original bug. Full-precision total 100.1052 would render as £100.11, but the
+    # rounded lines (85.70 + 6.99 - 9.27 + 16.68) sum to £100.10, matching Stripe.
+    variant = Product.create!(
+      category: categories(:cups),
+      name: "Penny pack",
+      sku: "TEST-CART-DISPLAY-TOTAL",
+      price: BigDecimal("85.70"),
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+    cart.discount_rate = 0.10
+
+    rounded_lines = cart.subtotal_amount.round(2) +
+                    cart.shipping_amount.round(2) -
+                    cart.discount_amount.round(2) +
+                    cart.vat_amount.round(2)
+
+    assert_equal BigDecimal("100.10"), rounded_lines
+    assert_equal BigDecimal("100.10"), cart.display_total_amount
+    # The full-precision total still rounds to a different penny, which is the bug
+    # display_total_amount exists to avoid showing as the Total line.
+    assert_equal BigDecimal("100.11"), cart.total_amount.round(2)
+  end
+
+  test "display_total_amount matches the rounded total when there is no rounding drift" do
+    # cart :one: £20 + £6.99 shipping, no discount. 20 + 6.99 + 5.40 (5.398->5.40) =
+    # 32.39, and the full-precision total 32.388 also rounds to 32.39, so they agree.
+    assert_equal @cart.total_amount.round(2), @cart.display_total_amount
+    assert_equal BigDecimal("32.39"), @cart.display_total_amount
+  end
+
+  test "display_total_amount is zero for an empty cart" do
+    assert_equal 0, @empty_cart.display_total_amount
+  end
+
+  test "setting discount_rate after totals are memoized recomputes them" do
+    # Reading totals first memoizes them at the zero-discount rate; setting the rate
+    # must invalidate that so the discount is reflected.
+    @cart.total_amount # memoize at 0% discount
+    @cart.discount_rate = 0.10
+
+    assert_equal BigDecimal("2.699"), @cart.discount_amount
+    assert_equal BigDecimal("29.1492"), @cart.total_amount
+  end
+
+  # Regression: the discount rate is injected by the controller from the session,
+  # not loaded from the DB, so a reload (which the CartItem sample-limit validator
+  # triggers via cart.reload.at_sample_limit?) must NOT wipe it. Otherwise a
+  # customer with the welcome discount who adds a sample sees the discount vanish
+  # from the cart preview until the next full page load.
+  test "reload preserves the injected discount_rate" do
+    @cart.discount_rate = 0.10
+    @cart.total_amount # memoize totals at the discounted rate
+
+    @cart.reload
+
+    assert_equal 0.10, @cart.discount_rate
+    assert_equal BigDecimal("2.699"), @cart.discount_amount
+    assert_equal BigDecimal("29.1492"), @cart.total_amount
   end
 
   test "items_count is memoized within request" do
@@ -162,8 +323,10 @@ class CartTest < ActiveSupport::TestCase
       price: variant.price
     )
 
-    # Should calculate: 2 packs × £100 = £200
+    # Should calculate: 2 packs × £100 = £200, which is at/above the £100
+    # threshold, so shipping is free and VAT is on the subtotal alone.
     assert_equal 200.00, cart.subtotal_amount
+    assert_equal 0, cart.shipping_amount
     assert_equal 40.00, cart.vat_amount  # 20% of £200
     assert_equal 240.00, cart.total_amount
   end
@@ -205,10 +368,28 @@ class CartTest < ActiveSupport::TestCase
       price: variant2.price
     )
 
-    # Total: £100 + £240 = £340
+    # Total: £100 + £240 = £340, above the threshold, so shipping is free.
     assert_equal 340.00, cart.subtotal_amount
+    assert_equal 0, cart.shipping_amount
     assert_equal 68.00, cart.vat_amount  # 20% of £340
     assert_equal 408.00, cart.total_amount
+  end
+
+  test "shipping_amount is free at or above the free-shipping threshold" do
+    cart = Cart.create
+    variant = Product.create!(
+      category: categories(:cups),
+      name: "Threshold pack",
+      sku: "TEST-CART-FREE-SHIP",
+      price: Shipping::FREE_SHIPPING_THRESHOLD,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+
+    assert_equal 0, cart.shipping_amount
+    # VAT is on the subtotal alone when shipping is free.
+    assert_equal Shipping::FREE_SHIPPING_THRESHOLD * BigDecimal(VAT_RATE.to_s), cart.vat_amount
   end
 
   # Sample tracking tests

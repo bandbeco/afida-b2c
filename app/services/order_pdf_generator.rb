@@ -232,15 +232,27 @@ class OrderPdfGenerator
   def add_price_summary(pdf)
     summary_width = 220
 
-    pdf.bounding_box([ pdf.bounds.width - summary_width, pdf.cursor ], width: summary_width, height: 120) do
+    # Lines, order, labels and the discount rule come from OrderSummary (shared
+    # with the storefront pages, the admin page and the confirmation emails) so
+    # the PDF can never drift. The amounts are already GBP-formatted there.
+    lines = OrderSummary.lines(@order)
+    detail_lines = lines.reject { |l| l[:kind] == :total }
+    total_line = lines.find { |l| l[:kind] == :total }
+
+    # Size the box from the row count so an optional discount row never overflows:
+    # each detail row is 18pt, plus the divider gap (13pt) and the total row (~22pt).
+    inner_height = detail_lines.size * 18 + 35
+    box_height = inner_height + 20
+
+    pdf.bounding_box([ pdf.bounds.width - summary_width, pdf.cursor ], width: summary_width, height: box_height + 10) do
       # Background box
       pdf.fill_color LIGHT_GRAY
-      pdf.fill_rounded_rectangle([ 0, pdf.cursor ], summary_width, 110, 6)
+      pdf.fill_rounded_rectangle([ 0, pdf.cursor ], summary_width, box_height, 6)
 
-      pdf.bounding_box([ 15, pdf.cursor - 15 ], width: summary_width - 30, height: 90) do
-        add_summary_row(pdf, "Subtotal", @order.subtotal_amount)
-        add_summary_row(pdf, "VAT (20%)", @order.vat_amount)
-        add_summary_row(pdf, "Shipping", @order.shipping_amount)
+      pdf.bounding_box([ 15, pdf.cursor - 15 ], width: summary_width - 30, height: inner_height) do
+        detail_lines.each do |line|
+          add_summary_row(pdf, line[:label], line[:amount], negative: line[:negative])
+        end
 
         pdf.move_down 5
         pdf.stroke_color BORDER_GRAY
@@ -249,9 +261,9 @@ class OrderPdfGenerator
 
         # Total row - emphasized
         pdf.fill_color TEXT_DARK
-        pdf.text_box "Total", at: [ 0, pdf.cursor ], width: 80, size: 12, style: :bold
+        pdf.text_box total_line[:label], at: [ 0, pdf.cursor ], width: 80, size: 12, style: :bold
         pdf.fill_color PRIMARY_DARK
-        pdf.text_box format_currency(@order.total_amount),
+        pdf.text_box total_line[:amount],
           at: [ 80, pdf.cursor ], width: summary_width - 110, size: 14, style: :bold, align: :right
       end
     end
@@ -259,11 +271,14 @@ class OrderPdfGenerator
     pdf.fill_color TEXT_DARK
   end
 
-  def add_summary_row(pdf, label, amount)
+  # Renders one summary row. amount is already GBP-formatted (incl. the leading
+  # "-" for the discount). A negative (discount) amount is drawn in the brand mint
+  # to read as a saving, since Prawn has no themed "success" colour.
+  def add_summary_row(pdf, label, amount, negative: false)
     pdf.fill_color TEXT_GRAY
     pdf.text_box label, at: [ 0, pdf.cursor ], width: 100, size: 10
-    pdf.fill_color TEXT_DARK
-    pdf.text_box format_currency(amount), at: [ 100, pdf.cursor ], width: 90, size: 10, align: :right
+    pdf.fill_color(negative ? PRIMARY_DARK : TEXT_DARK)
+    pdf.text_box amount, at: [ 100, pdf.cursor ], width: 90, size: 10, align: :right
     pdf.move_down 18
   end
 

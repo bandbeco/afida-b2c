@@ -12,10 +12,9 @@ ITEMS TO PICK
   SKU: <%= order_item_sku_label(item) %>
 <% end %>
 
-Subtotal: <%= number_to_currency(@order.subtotal_amount, unit: "£") %>
-Shipping: <%= number_to_currency(@order.shipping_amount, unit: "£") %>
-VAT (20%): <%= number_to_currency(@order.vat_amount, unit: "£") %>
-Total: <%= number_to_currency(@order.total_amount, unit: "£") %>
+<% order_summary_lines(@order).each do |line| -%>
+<%= line[:label] %>: <%= line[:amount] %>
+<% end -%>
 
 SHIP TO
 -------

@@ -1,0 +1,12 @@
+<%# The Turbo Stream response when a visitor claims the welcome discount on the
+    cart page. It always swaps the signup box for the success confirmation; when the
+    cart has items it also replaces the whole Cart Summary so the discount line, VAT
+    and total update together (sourced from CartSummary, the same lines the cart page
+    and drawer render), without a full page reload. %>
+<%= turbo_stream.replace "discount-signup",
+      partial: "email_subscriptions/success",
+      locals: { cart: cart } %>
+
+<% if cart && cart.cart_items.any? %>
+  <%= turbo_stream.replace "cart_summary", partial: "cart_items/summary", locals: { cart: cart } %>
+<% end %>

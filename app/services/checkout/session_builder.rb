@@ -48,7 +48,6 @@ module Checkout
         shipping_address_collection: {
           allowed_countries: Shipping::ALLOWED_COUNTRIES
         },
-        shipping_options: shipping_options,
         success_url: success_url,
         cancel_url: cancel_url,
         metadata: {
@@ -60,7 +59,22 @@ module Checkout
       }
     end
 
+    # Product line items plus, unless shipping is free, the taxed shipping line.
+    # Shipping rides as a line item (not a shipping_option) so that under manual
+    # tax rates Stripe applies VAT to the delivery charge too.
+    #
+    # The shipping line is prepended as a best-effort optimisation: Stripe's
+    # retrieve returns only the first 10 line_items (and does not promise an
+    # order), so keeping shipping early makes it likely to land on the embedded
+    # page and spare SessionAmounts an extra pagination call. Correctness does
+    # not depend on it - SessionAmounts pages through all line items when needed.
     def line_items
+      items = product_line_items
+      items.unshift(shipping_line_item) if shipping_line_item
+      items
+    end
+
+    def product_line_items
       cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).map do |item|
         {
           quantity: stripe_quantity(item),
@@ -119,15 +133,29 @@ module Checkout
       item.product.pac_size.blank? || item.product.pac_size.zero?
     end
 
-    def shipping_options
-      if cart.only_samples?
-        [ Shipping.sample_only_shipping_option ]
-      else
-        Shipping.shipping_options_for_subtotal(cart.subtotal_amount)
-      end
+    # The taxed shipping line item, or nil when the order ships free. Keyed off the
+    # subtotal vs the free-shipping threshold, the same rule OrderTotals uses for
+    # the displayed totals. Samples-only carts have a £0 subtotal (samples are
+    # free), which is below the threshold, so they correctly still pay shipping.
+    def shipping_line_item
+      return @shipping_line_item if defined?(@shipping_line_item)
+
+      @shipping_line_item =
+        if cart.subtotal_amount < Shipping::FREE_SHIPPING_THRESHOLD
+          Shipping.shipping_line_item(tax_rate_id: tax_rate.id)
+        end
     end
 
     def apply_discount(session_params)
+      # Samples are free, so a samples-only order pays only shipping. Refuse all
+      # discounts (both a supplied code and Stripe-entered promo codes) so a coupon
+      # can never reduce or zero that shipping charge. A supplied code is reported
+      # as not applied via the return value, mirroring the invalid-coupon path.
+      if cart.only_samples?
+        session_params[:metadata].delete(:discount_code)
+        return discount_code.presence
+      end
+
       if discount_code.present?
         apply_session_discount(session_params)
       else

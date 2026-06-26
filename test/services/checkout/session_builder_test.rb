@@ -21,7 +21,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     build_session
 
-    line_item = captured_params[:line_items].first
+    line_item = product_line_item(captured_params)
     assert_equal 1, line_item[:quantity]
     assert_equal 9000, line_item[:price_data][:unit_amount]
     assert_match "(2 packs)", line_item[:price_data][:product_data][:name]
@@ -50,7 +50,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     build_session
 
-    line_item = captured_params[:line_items].first
+    line_item = product_line_item(captured_params)
     assert_equal 1, line_item[:quantity]
     assert_equal 100_000, line_item[:price_data][:unit_amount]
     assert_match "12oz (5,000 units)", line_item[:price_data][:product_data][:name]
@@ -90,6 +90,144 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_not captured_params[:metadata].key?(:discount_code)
   end
 
+  test "does not apply a discount code to a samples-only cart" do
+    # Samples are free; a samples-only order pays only shipping. A coupon would
+    # discount (or zero) that shipping, so discounts are refused entirely.
+    @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+    Stripe::Coupon.expects(:retrieve).never
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session(discount_code: "WELCOME5")
+
+    assert_nil captured_params[:discounts], "no coupon should be applied to a samples-only cart"
+    assert_not captured_params[:metadata].key?(:discount_code)
+    assert result.invalid_discount?, "the discount should be reported as not applied"
+  end
+
+  test "does not allow customer promotion codes on a samples-only cart" do
+    @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    assert_not_equal true, captured_params[:allow_promotion_codes],
+      "samples-only carts must not let customers enter a promo code at Stripe"
+  end
+
+  test "appends a taxed shipping line item for sub-threshold carts" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+    assert shipping_line, "expected a shipping line item"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
+    assert_equal "exclusive", shipping_line[:price_data][:tax_behavior]
+    assert_equal 1, shipping_line[:tax_rates].length
+  end
+
+  test "puts the shipping line item first so it survives Stripe's 10-item line_items pagination" do
+    # Stripe::Checkout::Session.retrieve returns only the first 10 line_items by
+    # default. SessionAmounts must find the shipping line on page 1, so it has to
+    # be created first - otherwise a cart with 10+ products drops it and records
+    # shipping as £0 with an inflated subtotal.
+    # 11 distinct products (carts allow one line per product) kept cheap so the
+    # subtotal stays under the £100 free-shipping threshold while still exceeding
+    # Stripe's 10-item page size.
+    11.times do |i|
+      product = Product.create!(
+        name: "Bulk Product #{i}",
+        sku: "BULK-#{i}",
+        slug: "bulk-product-#{i}",
+        category: categories(:one),
+        price: 1.00,
+        product_type: "standard"
+      )
+      @cart.cart_items.create!(product: product, quantity: 1, price: 1.00)
+    end
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    first_line = captured_params[:line_items].first
+    assert_equal "true", first_line.dig(:price_data, :product_data, :metadata, "shipping_line"),
+      "shipping line item must be first so it is never paginated off page 1"
+  end
+
+  test "omits the shipping line item when the subtotal qualifies for free shipping" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 150.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+    assert_nil shipping_line, "expected no shipping line item for free shipping"
+    assert_equal 1, captured_params[:line_items].length
+  end
+
+  test "appends a taxed shipping line item for a samples-only cart" do
+    @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+    assert shipping_line, "expected a shipping line item for samples-only cart"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
+  end
+
+  test "does not send shipping_options to Stripe but still collects the address" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    assert_nil captured_params[:shipping_options]
+    assert captured_params[:shipping_address_collection]
+  end
+
   test "does not expose intermediate checkout state readers" do
     builder = build_session_builder(discount_code: "WELCOME5")
 
@@ -119,6 +257,14 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
   end
 
   private
+
+  # The first non-shipping line item. The shipping line is now prepended, so
+  # tests must select the product line by content rather than by position.
+  def product_line_item(captured_params)
+    captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
+    end
+  end
 
   def build_session(discount_code: nil)
     build_session_builder(discount_code: discount_code).create

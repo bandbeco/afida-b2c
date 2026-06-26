@@ -95,6 +95,29 @@ class OrderMailerTest < ActionMailer::TestCase
     assert_match total, email.body.encoded
   end
 
+  # The discount must appear on the customer email (it previously did not, so a
+  # coupon order showed a Total that didn't reconcile with subtotal+shipping+VAT).
+  # Both the HTML and text parts render via OrderSummary, so both must carry it.
+  test "confirmation_email shows the discount line when the order has a discount" do
+    @order.update!(discount_amount: 9.27, discount_code: "WELCOME10")
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    # The PDF attachment wraps the multipart/alternative, so reach the parts via it.
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") } || email
+    %w[text/html text/plain].each do |type|
+      part = content_part.parts.find { |p| p.content_type.include?(type) }
+      assert_match "Discount (WELCOME10)", part.body.to_s, "#{type} part missing discount label"
+      assert_match "-£9.27", part.body.to_s, "#{type} part missing negative discount amount"
+    end
+  end
+
+  test "confirmation_email omits the discount line when there is no discount" do
+    # orders(:one) has the default zero discount_amount.
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    assert_no_match(/Discount/, email.body.encoded)
+  end
+
   test "confirmation_email can be delivered" do
     assert_nothing_raised do
       OrderMailer.with(order: @order).confirmation_email.deliver_now
@@ -222,6 +245,20 @@ class OrderMailerTest < ActionMailer::TestCase
 
     total = sprintf("%.2f", @order.total_amount)
     assert_match total, email.body.encoded
+  end
+
+  # The ops email must also show the discount so staff can see why the total is
+  # lower than subtotal + shipping + VAT. Both parts render via OrderSummary.
+  test "ops_confirmation_email shows the discount line when the order has a discount" do
+    @order.update!(discount_amount: 9.27, discount_code: "WELCOME10")
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") } || email
+    %w[text/html text/plain].each do |type|
+      part = content_part.parts.find { |p| p.content_type.include?(type) }
+      assert_match "Discount (WELCOME10)", part.body.to_s, "#{type} part missing discount label"
+      assert_match "-£9.27", part.body.to_s, "#{type} part missing negative discount amount"
+    end
   end
 
   test "ops_confirmation_email has both HTML and text parts" do

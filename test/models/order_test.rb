@@ -646,4 +646,19 @@ class OrderTest < ActiveSupport::TestCase
 
     assert order.new_customer?
   end
+
+  # Shared by both order-creation paths (Checkout::OrderCreator and the Stripe
+  # webhook) so they treat a session with no shipping details identically. Pulls
+  # the five required keys off a shipping-details hash for a presence check.
+  test "required_shipping_values returns the five required shipping fields in order" do
+    shipping = { name: "Jane", line1: "1 St", city: "London", postal_code: "SW1A 1AA", country: "GB", line2: "Flat 2" }
+
+    assert_equal [ "Jane", "1 St", "London", "SW1A 1AA", "GB" ], Order.required_shipping_values(shipping)
+  end
+
+  test "required_shipping_values surfaces a blank when a required field is missing" do
+    shipping = { name: "Jane", line1: "1 St", city: "London", postal_code: "SW1A 1AA" } # no country
+
+    assert Order.required_shipping_values(shipping).any?(&:blank?)
+  end
 end

@@ -5,6 +5,14 @@ class CheckoutsController < ApplicationController
 
   def create
     cart = Current.cart
+
+    # Refuse to build a session for an empty cart. With no items the subtotal is 0,
+    # which is below the free-shipping threshold, so a shipping line would still be
+    # added - producing a shipping-only Checkout Session that could be charged.
+    if cart.blank? || cart.cart_items.empty?
+      return redirect_to cart_path, alert: "Your cart is empty."
+    end
+
     # Kept outside the begin block so the rescue path can inspect builder state
     # after Stripe raises during session creation.
     builder = nil
@@ -76,10 +84,10 @@ class CheckoutsController < ApplicationController
     begin
       stripe_session = Stripe::Checkout::Session.retrieve(
         id: session_id,
-        expand: [ "collected_information" ]
+        expand: [ "collected_information", "line_items.data.price.product" ]
       )
 
-      unless stripe_session.payment_status == "paid"
+      unless Checkout::COMPLETED_PAYMENT_STATUSES.include?(stripe_session.payment_status)
         flash[:error] = "Payment was not completed successfully"
         return redirect_to cart_path
       end
@@ -147,6 +155,34 @@ class CheckoutsController < ApplicationController
       redirect_to confirmation_order_path(order, token: order.signed_access_token),
                   status: :see_other
 
+    rescue ActiveRecord::RecordNotUnique => e
+      # Lost the create race: the webhook committed the order for this session in the
+      # window after our find_by check, so create! hit the unique stripe_session_id
+      # index. Redirect to that order rather than 500 the paying customer. If no order
+      # exists, the constraint fired for some other reason - a genuine inconsistency -
+      # so surface it.
+      existing_order = Order.find_by(stripe_session_id: session_id)
+      raise e unless existing_order
+
+      redirect_to confirmation_order_path(existing_order, token: existing_order.signed_access_token),
+                  status: :see_other
+    rescue ActiveRecord::RecordInvalid => e
+      # If the order exists, this is the model-level uniqueness validation firing
+      # before the DB constraint - the same benign race as above, so redirect to it.
+      existing_order = Order.find_by(stripe_session_id: session_id)
+      if existing_order
+        redirect_to confirmation_order_path(existing_order, token: existing_order.signed_access_token),
+                    status: :see_other
+      else
+        # Otherwise a different validation rejected the order (e.g. an OrderItem
+        # failed inside OrderCreator's transaction, rolling it back). The customer
+        # has already paid, so never 422 them: capture for investigation and redirect
+        # gracefully. The webhook fallback still creates the order.
+        Rails.logger.error("Order validation failed in checkout success: #{e.message}")
+        Sentry.capture_exception(e, extra: { session_id: session_id })
+        flash[:error] = "Unable to verify payment. Please contact support."
+        redirect_to cart_path
+      end
     rescue Stripe::StripeError => e
       Rails.logger.error("Stripe error in checkout success: #{e.message}")
       Sentry.capture_exception(e, extra: { session_id: session_id })
@@ -156,6 +192,13 @@ class CheckoutsController < ApplicationController
       Rails.logger.warn("Missing shipping details in checkout success: #{e.message}")
       Sentry.capture_exception(e, extra: { session_id: session_id })
       flash[:error] = "Shipping details are required. Please try checkout again."
+      redirect_to cart_path
+    rescue Checkout::SessionAmounts::UnexpandedLineItemError => e
+      # Programmer error (a dropped expand): don't 500 the paid customer. The
+      # webhook fallback still creates the order; surface for investigation.
+      Rails.logger.error("Unexpanded line item in checkout success: #{e.message}")
+      Sentry.capture_exception(e, extra: { session_id: session_id })
+      flash[:error] = "Unable to verify payment. Please contact support."
       redirect_to cart_path
     end
   end

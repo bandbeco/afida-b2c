@@ -1,0 +1,23 @@
+<%# Storefront order-totals summary, shared by the customer order page
+    (orders/show) and the post-checkout confirmation (orders/confirmation) so the
+    two stay identical. The line list, order, labels, money format and the
+    discount-visibility rule come from OrdersHelper#order_summary_lines (the single
+    source of truth shared with the emails and the admin page); this partial only
+    supplies the storefront markup. Pass the order as `order`. %>
+<div class="p-6 space-y-4">
+  <% order_summary_lines(order).each do |line| %>
+    <% if line[:kind] == :total %>
+      <div class="border-t pt-4">
+        <div class="flex justify-between">
+          <span class="text-lg text-gray-900"><%= line[:label] %></span>
+          <span class="text-lg text-gray-900"><%= line[:amount] %></span>
+        </div>
+      </div>
+    <% else %>
+      <div class="flex justify-between">
+        <span class="text-gray-600"><%= line[:label] %></span>
+        <span class="<%= line[:negative] ? "text-success" : "text-gray-900" %>"><%= line[:amount] %></span>
+      </div>
+    <% end %>
+  <% end %>
+</div>

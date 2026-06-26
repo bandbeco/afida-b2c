@@ -71,6 +71,62 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_match product.category.name, response.body
   end
 
+  # Cart preview shipping line: matches what Stripe charges (see Cart#shipping_amount)
+  test "cart page shows the charged shipping amount below the free-shipping threshold" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    # products(:one) is £10/pack; one pack keeps the cart under the £100 threshold.
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    get cart_url
+    assert_response :success
+    assert_select "#shipping", text: /#{Regexp.escape(Shipping.formatted_standard_cost)}/
+  end
+
+  test "cart page shows Free shipping at or above the free-shipping threshold" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    over_threshold = Product.create!(
+      category: categories(:cups),
+      name: "Bulk pack",
+      sku: "TEST-CART-OVER-THRESHOLD",
+      price: Shipping::FREE_SHIPPING_THRESHOLD + 1,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: over_threshold, quantity: 1, price: over_threshold.price)
+
+    get cart_url
+    assert_response :success
+    assert_select "#shipping", text: /Free/
+  end
+
+  # Cart summary discount line: shown only when a coupon is active in the session
+  test "cart page shows the discount line when a welcome code is in the session" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    # Claim the welcome discount, which stores the code in the session.
+    post email_subscriptions_path, params: { email: "cart-discount-test@example.com" }
+
+    get cart_url
+    assert_response :success
+    # The discount line is rendered inside the summary, with its negative amount.
+    assert_select "#cart_summary", text: /Discount/
+    assert_select "#discount_amount", text: /-/
+  end
+
+  test "cart page omits the discount line when no code is in the session" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    get cart_url
+    assert_response :success
+    # CartSummary omits the discount line entirely when no discount is active.
+    assert_select "#discount_amount", count: 0
+  end
+
   # GET /cart/resume?token=... (cross-device abandoned-cart recovery)
   test "resume re-binds the guest session to the cart in a valid token and redirects to cart" do
     guest_cart = Cart.create!

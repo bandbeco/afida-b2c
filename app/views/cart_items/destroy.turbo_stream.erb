@@ -6,24 +6,8 @@
   <%= render partial: "shared/cart_counter", locals: { cart_items_count: Current.cart.items_count } %>
 <% end %>
 
-<%= turbo_stream.update "vat" do %>
-  <%= number_to_currency(Current.cart.vat_amount) %>
-<% end %>
-
-<%= turbo_stream.update "subtotal" do %>
-  <%= number_to_currency(Current.cart.subtotal_amount) %>
-<% end %>
-
-<%= turbo_stream.update "grand_total" do %>
-  <%= number_to_currency(Current.cart.total_amount) %>
-<% end %>
-
-<%# Update discount savings if a discount is active %>
-<% if session[:discount_code].present? && Current.cart.subtotal_amount.positive? %>
-  <%= turbo_stream.update "discount_savings" do %>
-    <%= number_to_currency(welcome_discount_savings(Current.cart), unit: "£") %>
-  <% end %>
-<% end %>
+<%# The whole #cart frame (summary and the discount-savings success box included) is
+    re-rendered above, so the totals refresh with it; no per-line updates needed. %>
 
 <%# GA4 E-commerce: remove_from_cart event %>
 <%= turbo_stream.append_all "head" do %>

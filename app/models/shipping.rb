@@ -4,10 +4,8 @@
 # To change shipping costs, update the values below and restart the server
 
 class Shipping
-  # Standard shipping option (used for orders < £100 and samples-only orders)
+  # Standard shipping cost (charged for orders < £100 and samples-only orders)
   STANDARD_COST = ENV.fetch("STANDARD_SHIPPING_COST", "699").to_i  # £6.99
-  STANDARD_MIN_DAYS = 1
-  STANDARD_MAX_DAYS = 1
 
   # Allowed shipping countries (ISO 3166-1 alpha-2 codes)
   ALLOWED_COUNTRIES = %w[GB].freeze
@@ -17,6 +15,16 @@ class Shipping
 
   # Currency
   CURRENCY = "gbp"
+
+  # Product metadata flag set on the shipping line item so the completed session
+  # can identify it on read-back (SessionAmounts) regardless of display name.
+  # The key/value are exposed so the reader can reference them instead of
+  # re-declaring the literal string, which would silently desync on a rename.
+  LINE_ITEM_FLAG_KEY = "shipping_line"
+  LINE_ITEM_FLAG_VALUE = "true"
+  # String key (Stripe serialises it as a string on the wire either way) so the
+  # in-memory hash matches how SessionAmounts reads it back: LINE_ITEM_FLAG[KEY].
+  LINE_ITEM_FLAG = { LINE_ITEM_FLAG_KEY => LINE_ITEM_FLAG_VALUE }.freeze
 
   # Standard shipping cost in pounds, e.g. 6.99. Single conversion point from
   # the pence-denominated STANDARD_COST so display code never repeats the maths.
@@ -35,66 +43,30 @@ class Shipping
     ActiveSupport::NumberHelper.number_to_currency(FREE_SHIPPING_THRESHOLD, unit: "£", precision: 0)
   end
 
-  # Get shipping options based on cart subtotal (excluding VAT)
-  # - Orders >= £100: Free shipping only
-  # - Orders < £100: Standard shipping only
-  def self.shipping_options_for_subtotal(subtotal)
-    if subtotal >= FREE_SHIPPING_THRESHOLD
-      [ free_shipping_option ]
-    else
-      [ standard_shipping_option ]
-    end
-  end
-
-  def self.standard_shipping_option
+  # A Stripe Checkout line item for the standard shipping charge, carrying the UK
+  # VAT tax rate. Shipping is a line item (not a shipping_option) because manual
+  # tax rates only tax line items, so this is what makes Stripe apply VAT to the
+  # delivery charge. The product metadata lets SessionAmounts find this line when
+  # splitting the persisted order amounts back out.
+  #
+  # The free-shipping / samples decision lives with the caller (SessionBuilder),
+  # which knows the cart; this builder always charges STANDARD_COST.
+  def self.shipping_line_item(tax_rate_id:)
     {
-      shipping_rate_data: {
-        type: "fixed_amount",
-        fixed_amount: {
-          amount: STANDARD_COST,
-          currency: CURRENCY
-        },
-        display_name: "Standard Shipping",
-        delivery_estimate: {
-          minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
-          maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }
+      quantity: 1,
+      price_data: {
+        currency: CURRENCY,
+        unit_amount: STANDARD_COST,
+        tax_behavior: "exclusive",
+        product_data: {
+          # Line items can't carry a delivery_estimate the way the old
+          # shipping_options did, so the next-working-day promise rides in the
+          # name to keep it visible in the Stripe Checkout modal.
+          name: "Shipping (next working day)",
+          metadata: LINE_ITEM_FLAG
         }
-      }
-    }
-  end
-
-  def self.free_shipping_option
-    {
-      shipping_rate_data: {
-        type: "fixed_amount",
-        fixed_amount: {
-          amount: 0,
-          currency: CURRENCY
-        },
-        display_name: "Free Shipping",
-        delivery_estimate: {
-          minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
-          maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }
-        }
-      }
-    }
-  end
-
-  # Shipping option for samples-only orders (same cost as standard)
-  def self.sample_only_shipping_option
-    {
-      shipping_rate_data: {
-        type: "fixed_amount",
-        fixed_amount: {
-          amount: STANDARD_COST,
-          currency: CURRENCY
-        },
-        display_name: "Standard Shipping",
-        delivery_estimate: {
-          minimum: { unit: "business_day", value: STANDARD_MIN_DAYS },
-          maximum: { unit: "business_day", value: STANDARD_MAX_DAYS }
-        }
-      }
+      },
+      tax_rates: [ tax_rate_id ]
     }
   end
 end

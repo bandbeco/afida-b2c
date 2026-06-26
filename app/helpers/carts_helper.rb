@@ -12,15 +12,29 @@ module CartsHelper
     WELCOME_DISCOUNT_PERCENTAGE
   end
 
-  # The discount as a fraction for arithmetic, e.g. subtotal * 0.10.
-  def welcome_discount_rate
-    WELCOME_DISCOUNT_PERCENTAGE / 100.0
+  # The cart-totals summary as an ordered list of display lines, the single source
+  # of truth shared by the cart page and the cart drawer (the cart-side twin of
+  # order_summary_lines). Delegates to CartSummary so the line order, labels, money
+  # format and discount-visibility rule live in one place; each surface supplies its
+  # own row markup. See CartSummary for the shape of each line.
+  def cart_summary_lines(cart)
+    CartSummary.lines(cart)
   end
 
-  # Estimated saving on a cart's subtotal at the welcome rate. The real discount
-  # is computed by Stripe at checkout; this is the indicative figure we show.
+  # The DOM id for a cart-summary line's amount span on the cart page, kept stable
+  # across the names earlier markup used. The Total uses "grand_total" (handled in
+  # the partial); the discount amount keeps "discount_amount".
+  def cart_summary_line_dom_id(kind)
+    kind == :discount ? "discount_amount" : kind.to_s
+  end
+
+  # The saving shown in the "you'll save £X" copy. The welcome coupon is a whole-order
+  # Stripe percent_off (subtotal + shipping), so the saving is the cart's own
+  # discount_amount, computed once by OrderTotals. Callers show this only when the
+  # discount is active (the rate is injected), so discount_amount is the real figure
+  # and the success-box copy stays in lockstep with the cart-summary discount line.
   def welcome_discount_savings(cart)
-    cart.subtotal_amount * welcome_discount_rate
+    cart.discount_amount
   end
 
   # Determine if the discount signup form should be shown

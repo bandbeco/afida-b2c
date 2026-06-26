@@ -8,13 +8,18 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     @cart_item = @cart.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
   end
 
-  test "creates paid order from Stripe amounts and cart items" do
+  test "creates paid order from Stripe amounts and cart items, taxing shipping" do
+    # Shipping is a taxed line item, so amount_subtotal includes it (2000 + 699)
+    # and amount_tax is VAT on the lot: (20.00 + 6.99) * 0.2 = 5.40.
     stripe_session = build_stripe_session(
       customer_email: "buyer@example.com",
-      amount_subtotal: 2000,
-      amount_tax: 400,
-      shipping_amount_total: 699,
-      amount_total: 3099
+      amount_subtotal: 2699,
+      amount_tax: 540,
+      amount_total: 3239,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 699)
+      ]
     )
 
     assert_difference [ "Order.count", "OrderItem.count" ], 1 do
@@ -24,14 +29,31 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal "buyer@example.com", @order.email
     assert_equal "paid", @order.status
     assert_equal 20.0, @order.subtotal_amount.to_f
-    assert_equal 4.0, @order.vat_amount.to_f
+    assert_equal 5.4, @order.vat_amount.to_f
     assert_equal 6.99, @order.shipping_amount.to_f
-    assert_equal 30.99, @order.total_amount.to_f
+    assert_equal 32.39, @order.total_amount.to_f
 
     order_item = @order.order_items.first
     assert_equal @cart_item.product, order_item.product
     assert_equal @cart_item.quantity, order_item.quantity
     assert_equal @cart_item.price, order_item.price
+  end
+
+  test "records zero shipping when the session has no shipping line (free shipping)" do
+    stripe_session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2000,
+      amount_tax: 400,
+      amount_total: 2400,
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 2000) ]
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal 20.0, order.subtotal_amount.to_f
+    assert_equal 4.0, order.vat_amount.to_f
+    assert_equal 0.0, order.shipping_amount.to_f
+    assert_equal 24.0, order.total_amount.to_f
   end
 
   test "stores promotion code from Stripe discount breakdown" do

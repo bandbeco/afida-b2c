@@ -21,6 +21,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     stub_stripe_tax_rate_list
   end
 
+  # The welcome coupon id the app applies, read from the test credentials so the
+  # assertions track the actual vault value (CI decrypts test.yml.enc via
+  # RAILS_TEST_KEY, so this is the same in CI and locally).
+  def welcome_coupon_id
+    Rails.application.credentials.dig(:stripe, :welcome_coupon)
+  end
+
   # ============================================================================
   # CREATE ACTION TESTS (POST /checkouts)
   # ============================================================================
@@ -46,7 +53,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil captured_params
-    assert_equal "gbp", captured_params[:line_items].first[:price_data][:currency]
+    assert captured_params[:line_items].all? { |li| li[:price_data][:currency] == "gbp" }
     assert_equal "card", captured_params[:payment_method_types].first
     assert_equal "payment", captured_params[:mode]
   end
@@ -110,7 +117,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_includes captured_params[:shipping_address_collection][:allowed_countries], "GB"
   end
 
-  test "create includes shipping options from Shipping module" do
+  test "create appends a taxed shipping line item instead of shipping options" do
     captured_params = nil
     session = build_stripe_session
     Stripe::Checkout::Session.stubs(:create).with do |params|
@@ -120,12 +127,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     post checkout_path
 
-    # Shipping module returns 1 option based on subtotal:
-    # - Orders < £100: Standard Shipping
-    # - Orders >= £100: Free Shipping
-    assert_not_empty captured_params[:shipping_options]
-    assert_equal 1, captured_params[:shipping_options].length
-    assert_equal "Standard Shipping", captured_params[:shipping_options].first[:shipping_rate_data][:display_name]
+    # Shipping rides as a taxed line item (manual tax rates only tax line items),
+    # not a shipping_option. The £20 cart is under the free-shipping threshold.
+    assert_nil captured_params[:shipping_options]
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+    assert shipping_line, "expected a taxed shipping line item"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
+    assert_equal "exclusive", shipping_line[:price_data][:tax_behavior]
   end
 
   test "create includes success and cancel URLs" do
@@ -156,8 +166,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     post checkout_path
 
-    # Should reuse existing tax rate
-    assert_equal "txr_existing_123", captured_params[:line_items].first[:tax_rates].first
+    # Should reuse existing tax rate on the product line (the shipping line is
+    # prepended, so select by content rather than position).
+    product_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
+    end
+    assert_equal "txr_existing_123", product_line[:tax_rates].first
   end
 
   # ============================================================================
@@ -207,13 +221,18 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "GB", order.shipping_country
   end
 
-  test "success calculates order totals from Stripe session amounts" do
+  test "success calculates order totals from Stripe session amounts, taxing shipping" do
+    # Shipping is a taxed line item: amount_subtotal includes it (2000 + 500) and
+    # amount_tax is VAT on both: 2500 * 0.2 = 500.
     session = stub_stripe_session_retrieve(
       customer_email: "buyer@example.com",
-      amount_subtotal: 2000,      # £20.00
-      amount_tax: 400,            # £4.00
-      shipping_amount_total: 500, # £5.00
-      amount_total: 2900          # £29.00
+      amount_subtotal: 2500,
+      amount_tax: 500,
+      amount_total: 3000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
 
     assert_difference "Order.count", 1 do
@@ -222,9 +241,29 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     order = Order.last
     assert_equal 20.0, order.subtotal_amount.to_f
-    assert_equal 4.0, order.vat_amount.to_f
+    assert_equal 5.0, order.vat_amount.to_f
     assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 29.0, order.total_amount.to_f
+    assert_equal 30.0, order.total_amount.to_f
+  end
+
+  test "success expands nested line item product so shipping is identifiable" do
+    session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2500,
+      amount_tax: 500,
+      amount_total: 3000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
+    )
+    Stripe::Checkout::Session.expects(:retrieve).with do |args|
+      args[:expand] == [ "collected_information", "line_items.data.price.product" ]
+    end.returns(session)
+
+    assert_difference "Order.count", 1 do
+      get success_checkout_path, params: { session_id: session.id }
+    end
   end
 
   test "success creates order items from cart items" do
@@ -303,6 +342,55 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{/orders/#{first_order.id}/confirmation\?token=}, response.location
   end
 
+  test "success redirects to the existing order when it loses the create race to the webhook" do
+    # TOCTOU: the find_by check passes (no order yet), then the webhook commits the
+    # order microseconds before OrderCreator runs, so create! hits the unique
+    # stripe_session_id index. The paying customer must be redirected to the
+    # existing order's confirmation, not shown a 500.
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+
+    # The order the webhook commits during the TOCTOU window.
+    racing_order = Order.create!(
+      user: @user, email: "buyer@example.com", stripe_session_id: session.id, status: "paid",
+      subtotal_amount: 20, vat_amount: 4, shipping_amount: 0, total_amount: 24,
+      shipping_name: "Buyer", shipping_address_line1: "1 St", shipping_city: "London",
+      shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+    )
+    # find_by sees nothing on the guard check, but the order exists by the time the
+    # rescue re-checks; OrderCreator hits the unique index in between.
+    Order.stubs(:find_by).with(stripe_session_id: session.id).returns(nil).then.returns(racing_order)
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(
+      ActiveRecord::RecordNotUnique.new("duplicate key value violates unique constraint")
+    )
+
+    get success_checkout_path, params: { session_id: session.id }
+
+    assert_response :redirect
+    assert_match %r{/orders/#{racing_order.id}/confirmation\?token=}, response.location
+  end
+
+  test "success does not 422 a paid customer when an order item fails validation" do
+    # A non-race RecordInvalid (e.g. an OrderItem validation fails inside
+    # OrderCreator's transaction, rolling back the order) must not surface as a 422
+    # to someone who has already paid. Capture it and redirect gracefully - the
+    # webhook fallback still creates the order - rather than re-raising.
+    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+    # No order exists for this session, and create raises a validation error that is
+    # NOT the uniqueness race.
+    Order.stubs(:find_by).with(stripe_session_id: session.id).returns(nil)
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(
+      ActiveRecord::RecordInvalid.new(Order.new)
+    )
+    Sentry.expects(:capture_exception).at_least_once
+
+    assert_no_difference "Order.count" do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    assert_redirected_to cart_path
+    assert_match /Unable to verify payment/, flash[:error]
+  end
+
   test "success handles missing session_id parameter" do
     get success_checkout_path
 
@@ -324,12 +412,57 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Payment was not completed/, flash[:error]
   end
 
+  test "success creates a zero-total order for a no_payment_required session" do
+    # A 100%-off coupon (or any discount covering the whole order, including the
+    # taxed shipping line) makes Stripe complete the session with payment_status
+    # "no_payment_required" and amount_total 0 - never "paid". The order must
+    # still be created and fulfilled.
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      client_reference_id: @user.id,
+      payment_status: "no_payment_required",
+      amount_subtotal: 0,
+      amount_tax: 0,
+      amount_total: 0
+    )
+
+    assert_difference "Order.count", 1 do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    order = Order.last
+    assert_equal "buyer@example.com", order.email
+    assert_equal session.id, order.stripe_session_id
+    assert_equal "paid", order.status
+    assert_equal 0, order.total_amount
+    # Token carries a timestamp, so match the confirmation path rather than rebuild it.
+    assert_response :redirect
+    assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
+  end
+
   test "success handles invalid session_id" do
     Stripe::Checkout::Session.stubs(:retrieve).raises(
       Stripe::InvalidRequestError.new("No such session", nil)
     )
 
     get success_checkout_path, params: { session_id: "sess_invalid_12345" }
+
+    assert_redirected_to cart_path
+    assert_match /Unable to verify payment/, flash[:error]
+  end
+
+  test "success handles an unexpanded-line-item error gracefully instead of 500ing" do
+    # If a future change drops the line_items.data.price.product expand,
+    # SessionAmounts raises UnexpandedLineItemError. The paying customer must get a
+    # graceful redirect (the webhook still creates the order), not a 500.
+    stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+    Checkout::SessionAmounts.stubs(:from).raises(
+      Checkout::SessionAmounts::UnexpandedLineItemError.new("line item product not expanded")
+    )
+
+    assert_no_difference "Order.count" do
+      get success_checkout_path, params: { session_id: "sess_unexpanded" }
+    end
 
     assert_redirected_to cart_path
     assert_match /Unable to verify payment/, flash[:error]
@@ -376,17 +509,21 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # ============================================================================
 
   test "success uses Stripe session amounts as source of truth for order totals" do
-    # Cart has subtotal £20 (2 items × £10), but Stripe session reflects
-    # a discount: subtotal £19 (post-discount), tax £3.80, shipping £5, total £27.80
+    # Cart has subtotal £20 (2 items × £10), but Stripe reflects a discount.
+    # Shipping is a taxed line item, so amount_subtotal includes it (1900 + 500)
+    # and amount_tax is VAT on both: 2400 * 0.2 = 480.
     session = build_stripe_session(
       id: "sess_discount_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1900,    # £19.00 post-discount
-      amount_tax: 380,          # £3.80
-      shipping_amount_total: 500, # £5.00
-      amount_total: 2780,       # £27.80
-      amount_discount: 100      # £1.00 discount
+      amount_subtotal: 2400,    # products £19 (post-discount) + shipping £5
+      amount_tax: 480,          # £4.80
+      amount_total: 2880,       # £28.80
+      amount_discount: 100,     # £1.00 discount
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1900),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -395,9 +532,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     order = Order.last
     # Order should use Stripe amounts, NOT cart-calculated amounts
     assert_equal 19.0, order.subtotal_amount.to_f
-    assert_equal 3.80, order.vat_amount.to_f
+    assert_equal 4.80, order.vat_amount.to_f
     assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 27.80, order.total_amount.to_f
+    assert_equal 28.80, order.total_amount.to_f
     assert_equal 1.0, order.discount_amount.to_f
   end
 
@@ -406,12 +543,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_discount_code_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1900,
-      amount_tax: 380,
-      shipping_amount_total: 500,
-      amount_total: 2780,
+      amount_subtotal: 2400,
+      amount_tax: 480,
+      amount_total: 2880,
       amount_discount: 100,
-      metadata: { discount_code: "WELCOME5" }
+      metadata: { discount_code: "WELCOME5" },
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1900),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -426,11 +566,14 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_no_discount_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 2000,
-      amount_tax: 400,
-      shipping_amount_total: 500,
-      amount_total: 2900,
-      amount_discount: 0
+      amount_subtotal: 2500,
+      amount_tax: 500,
+      amount_total: 3000,
+      amount_discount: 0,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -486,7 +629,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Set discount code in session via email subscription
     post email_subscriptions_path, params: { email: "promo-test@example.com" }
 
-    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME10"))
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: welcome_coupon_id))
 
     captured_params = nil
     stripe_session = build_stripe_session
@@ -498,7 +641,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_nil captured_params[:allow_promotion_codes]
-    assert_equal [ { coupon: "WELCOME10" } ], captured_params[:discounts]
+    assert_equal [ { coupon: welcome_coupon_id } ], captured_params[:discounts]
   end
 
   test "success extracts discount code from Stripe promotion code when customer enters code" do
@@ -506,13 +649,16 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_promo_code_test",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1800,
-      amount_tax: 360,
-      shipping_amount_total: 500,
-      amount_total: 2660,
+      amount_subtotal: 2300,
+      amount_tax: 460,
+      amount_total: 2760,
       amount_discount: 200,
       metadata: {},
-      promotion_code: "SUMMER20"
+      promotion_code: "SUMMER20",
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1800),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -528,13 +674,16 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       id: "sess_metadata_priority",
       payment_status: "paid",
       customer_email: "buyer@example.com",
-      amount_subtotal: 1800,
-      amount_tax: 360,
-      shipping_amount_total: 500,
-      amount_total: 2660,
+      amount_subtotal: 2300,
+      amount_tax: 460,
+      amount_total: 2760,
       amount_discount: 200,
       metadata: { discount_code: "WELCOME5" },
-      promotion_code: "SUMMER20"
+      promotion_code: "SUMMER20",
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1800),
+        stripe_shipping_line_item(amount_subtotal: 500)
+      ]
     )
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
@@ -581,7 +730,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "create clears invalid discount before handling later Stripe session errors" do
     post email_subscriptions_path, params: { email: "invalid-discount@example.com" }
-    assert_equal "WELCOME10", session[:discount_code]
+    assert_equal welcome_coupon_id, session[:discount_code]
 
     Stripe::Coupon.stubs(:retrieve).raises(
       Stripe::InvalidRequestError.new("No such coupon", nil)
@@ -765,7 +914,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # SAMPLES-ONLY CHECKOUT TESTS
   # ============================================================================
 
-  test "samples-only cart uses Standard Shipping option" do
+  test "samples-only cart appends a taxed shipping line item" do
     # Create samples-only cart
     @cart.cart_items.destroy_all
     sample_variant = products(:sample_cup_8oz)
@@ -788,11 +937,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_response :see_other
     assert_not_nil captured_params
 
-    # Should have single Standard Shipping option (same as orders < £100)
-    assert_equal 1, captured_params[:shipping_options].length
-    shipping_option = captured_params[:shipping_options].first
-    assert_equal "Standard Shipping", shipping_option[:shipping_rate_data][:display_name]
-    assert_equal Shipping::STANDARD_COST, shipping_option[:shipping_rate_data][:fixed_amount][:amount]
+    # Samples-only carts still pay (taxed) shipping; it rides as a line item.
+    assert_nil captured_params[:shipping_options]
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+    assert shipping_line, "expected a taxed shipping line item"
+    assert_equal Shipping::STANDARD_COST, shipping_line[:price_data][:unit_amount]
   end
 
   test "samples-only cart line items have zero unit_amount" do
@@ -816,11 +967,15 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil captured_params
-    # Sample line items should have unit_amount of 0
-    assert_equal 0, captured_params[:line_items].first[:price_data][:unit_amount]
+    # Sample line items should have unit_amount of 0. Select the product line by
+    # content: the shipping line is prepended, so it is no longer at index 0.
+    sample_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
+    end
+    assert_equal 0, sample_line[:price_data][:unit_amount]
   end
 
-  test "mixed cart (samples + paid) uses standard shipping options" do
+  test "mixed cart (samples + paid) appends a taxed shipping line item" do
     # Add sample to existing cart (which already has paid items)
     sample_variant = products(:sample_cup_8oz)
     @cart.cart_items.create!(
@@ -840,12 +995,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_not_nil captured_params
-    # Mixed cart uses subtotal-based shipping:
-    # - Orders < £100: Standard Shipping
-    # - Orders >= £100: Free Shipping
-    # Test cart has ~£20 subtotal, so should get Standard Shipping
-    assert_equal 1, captured_params[:shipping_options].length
-    assert_equal "Standard Shipping", captured_params[:shipping_options].first[:shipping_rate_data][:display_name]
+    # Mixed cart, ~£20 subtotal (under the £100 threshold), so shipping is charged
+    # as a taxed line item.
+    assert_nil captured_params[:shipping_options]
+    shipping_line = captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+    assert shipping_line, "expected a taxed shipping line item"
   end
 
   # ============================================================================
@@ -914,7 +1070,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post email_subscriptions_path, params: { email: "noorders@example.com" }
     assert session[:discount_code].present?, "setup: discount code should be in session"
     # With a code in session, checkout validates the coupon against Stripe; stub it.
-    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME10"))
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: welcome_coupon_id))
     stub_stripe_session_create
 
     assert_no_event_reported("cart.checkout_initiated") do
@@ -930,6 +1086,19 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_no_event_reported("cart.checkout_initiated") do
       post checkout_path
     end
+  end
+
+  test "create rejects an empty cart without building a Stripe session" do
+    # An empty cart has subtotal 0, which is below the free-shipping threshold, so
+    # building a session would add a shipping line and create a shipping-only
+    # Checkout Session that could be charged. Reject before reaching Stripe.
+    @cart.cart_items.destroy_all
+    Stripe::Checkout::Session.expects(:create).never
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert_match /cart is empty/i, flash[:alert]
   end
 
   test "does not emit cart.checkout_initiated for a logged-in user with an empty cart" do
@@ -988,10 +1157,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   test "emits email_signup.discount_claimed event when order placed with discount" do
     # Set discount code in session
     post email_subscriptions_path, params: { email: "discount-test@example.com" }
-    assert_equal "WELCOME10", session[:discount_code]
+    assert_equal welcome_coupon_id, session[:discount_code]
 
     # Stub Stripe to return a valid coupon
-    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "WELCOME10"))
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: welcome_coupon_id))
 
     session = stub_stripe_session_retrieve(
       customer_email: "discount-test@example.com",

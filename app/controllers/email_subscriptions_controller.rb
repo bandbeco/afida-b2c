@@ -38,6 +38,10 @@ class EmailSubscriptionsController < ApplicationController
       # Store discount code in session (only if not already present)
       session[:discount_code] ||= welcome_discount_code
 
+      # set_current_cart ran before the code was in the session, so the cart has no
+      # discount yet. Inject it now so render_success can show the discounted summary.
+      apply_session_discount_to_cart
+
       # Emit event for tracking email signup funnel.
       # subscription_id lets subscribers resolve the real email: Rails.event filters
       # payload keys matching config.filter_parameters, and :email matches as a
@@ -90,9 +94,9 @@ class EmailSubscriptionsController < ApplicationController
   def render_success
     respond_to do |format|
       format.turbo_stream do
-        render turbo_stream: turbo_stream.replace(
-          "discount-signup",
-          partial: "email_subscriptions/success",
+        render turbo_stream: render_to_string(
+          partial: "email_subscriptions/discount_applied",
+          formats: [ :turbo_stream ],
           locals: { cart: Current.cart }
         )
       end
