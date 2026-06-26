@@ -18,20 +18,8 @@
 <%# Update cart counter %>
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
 
-<%# Update cart items list (cart page) %>
+<%# Update cart items list (cart page). The whole #cart frame is re-rendered, so the
+    summary totals refresh with it; no per-line updates needed. %>
 <%= turbo_stream.update "cart" do %>
   <%= render partial: "cart_items/index", locals: { cart_items: Current.cart.cart_items.includes(:product).order('products.name ASC') } %>
-<% end %>
-
-<%# Update cart totals (cart page) %>
-<%= turbo_stream.update "vat" do %>
-  <%= number_to_currency(Current.cart.vat_amount) %>
-<% end %>
-
-<%= turbo_stream.update "subtotal" do %>
-  <%= number_to_currency(Current.cart.subtotal_amount) %>
-<% end %>
-
-<%= turbo_stream.update "grand_total" do %>
-  <%= number_to_currency(Current.cart.display_total_amount) %>
 <% end %>

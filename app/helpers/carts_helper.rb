@@ -12,9 +12,20 @@ module CartsHelper
     WELCOME_DISCOUNT_PERCENTAGE
   end
 
-  # The discount as a fraction for arithmetic, e.g. subtotal * 0.10.
-  def welcome_discount_rate
-    WELCOME_DISCOUNT_PERCENTAGE / 100.0
+  # The cart-totals summary as an ordered list of display lines, the single source
+  # of truth shared by the cart page and the cart drawer (the cart-side twin of
+  # order_summary_lines). Delegates to CartSummary so the line order, labels, money
+  # format and discount-visibility rule live in one place; each surface supplies its
+  # own row markup. See CartSummary for the shape of each line.
+  def cart_summary_lines(cart)
+    CartSummary.lines(cart)
+  end
+
+  # The DOM id for a cart-summary line's amount span on the cart page, kept stable
+  # across the names earlier markup used. The Total uses "grand_total" (handled in
+  # the partial); the discount amount keeps "discount_amount".
+  def cart_summary_line_dom_id(kind)
+    kind == :discount ? "discount_amount" : kind.to_s
   end
 
   # The saving shown in the "you'll save £X" copy. The welcome coupon is a whole-order
@@ -24,29 +35,6 @@ module CartsHelper
   # and the success-box copy stays in lockstep with the cart-summary discount line.
   def welcome_discount_savings(cart)
     cart.discount_amount
-  end
-
-  # The cart preview's shipping line. The cart charges shipping the same way
-  # checkout does, so this shows "Free" at/above the free-shipping threshold, the
-  # currency amount below it, and "Calculate at checkout" only for an empty cart
-  # (shipping_amount is nil) which never actually renders the summary.
-  def cart_shipping_display(cart)
-    shipping = cart.shipping_amount
-    return "Calculate at checkout" if shipping.nil?
-
-    shipping.zero? ? "Free" : number_to_currency(shipping)
-  end
-
-  # Whether the cart carries a discount worth showing a line for. Guards the
-  # discount row so it appears only when a coupon is actually reducing the total.
-  def cart_has_discount?(cart)
-    cart.discount_amount.positive?
-  end
-
-  # The cart preview's discount line: the discount as a negative currency amount,
-  # e.g. "-£2.00". Shown between Subtotal and Shipping when cart_has_discount?.
-  def cart_discount_display(cart)
-    "-#{number_to_currency(cart.discount_amount, unit: '£')}"
   end
 
   # Determine if the discount signup form should be shown

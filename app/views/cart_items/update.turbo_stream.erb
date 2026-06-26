@@ -18,30 +18,14 @@
   <%= number_to_currency(@cart_item.line_total) %>
 <% end %>
 
-<%= turbo_stream.update "vat" do %>
-  <%= number_to_currency(Current.cart.vat_amount) %>
-<% end %>
+<%# Replace the whole summary in one shot (subtotal, shipping, discount line, VAT
+    and total all move together when a quantity changes or shipping flips), so the
+    lines can never refresh out of step. Sourced from CartSummary, the same lines
+    the cart page rendered initially. %>
+<%= turbo_stream.replace "cart_summary", partial: "cart_items/summary", locals: { cart: Current.cart } %>
 
-<%= turbo_stream.update "subtotal" do %>
-  <%= number_to_currency(Current.cart.subtotal_amount) %>
-<% end %>
-
-<%# The discount is a percentage of subtotal + shipping, so a quantity change (or a
-    shipping flip) moves its amount. Replace the whole line so its visibility and
-    value both stay current. %>
-<%= turbo_stream.replace "discount_line", partial: "cart_items/discount_line", locals: { cart: Current.cart } %>
-
-<%# Shipping can flip (e.g. a quantity change crossing the free-shipping
-    threshold), so refresh it alongside the other totals. %>
-<%= turbo_stream.update "shipping" do %>
-  <%= cart_shipping_display(Current.cart) %>
-<% end %>
-
-<%= turbo_stream.update "grand_total" do %>
-  <%= number_to_currency(Current.cart.display_total_amount) %>
-<% end %>
-
-<%# Update discount savings if a discount is active %>
+<%# Update discount savings if a discount is active (it lives in the signup success
+    box, outside #cart_summary). %>
 <% if session[:discount_code].present? && Current.cart.subtotal_amount.positive? %>
   <%= turbo_stream.update "discount_savings" do %>
     <%= number_to_currency(welcome_discount_savings(Current.cart), unit: "£") %>

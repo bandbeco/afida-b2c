@@ -33,10 +33,11 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'turbo-stream action="replace" target="discount-signup"'
   end
 
-  # When the cart has items, claiming the discount must refresh the cart summary
-  # in the same response so the discount line, VAT and total appear without a
-  # full page reload (the form submits via Turbo). It keys off the freshly stored
-  # session code, so the cart has to be given the discount rate before rendering.
+  # When the cart has items, claiming the discount must refresh the cart summary in
+  # the same response so the discount line, VAT and total appear without a full page
+  # reload (the form submits via Turbo). The whole #cart_summary is replaced, so the
+  # discount line and the reduced total arrive together. It keys off the freshly
+  # stored session code, so the cart has to be given the discount rate before rendering.
   test "successful signup refreshes the cart summary with the discount" do
     add_item_to_session_cart
 
@@ -45,28 +46,26 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
-    assert_select "turbo-stream[action=replace][target=discount_line]" do
+    assert_select "turbo-stream[action=replace][target=cart_summary]" do
       assert_select "#discount_amount", text: /-/
+      assert_select "#grand_total"
     end
-    assert_select "turbo-stream[action=update][target=vat]"
-    assert_select "turbo-stream[action=update][target=grand_total]"
   end
 
   test "successful signup does not refresh the cart summary when the cart is empty" do
     # No items, so there is no summary on screen to update; only the signup box
-    # is replaced. Avoids targeting cart-summary ids that are not in the DOM.
+    # is replaced. Avoids targeting a cart-summary that is not in the DOM.
     post email_subscriptions_path,
          params: { email: "empty-summary@example.com" },
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
-    assert_select "turbo-stream[target=discount_line]", count: 0
-    assert_select "turbo-stream[target=grand_total]", count: 0
+    assert_select "turbo-stream[target=cart_summary]", count: 0
   end
 
   # A samples-only cart pays only shipping, and SessionBuilder refuses every discount
   # for it at checkout. The preview must not promise a discount the customer won't
-  # get: claiming the code refreshes the (empty) discount line and a Total that still
+  # get: the refreshed summary carries no discount line and a Total that still
   # reflects full shipping + VAT, never a reduced figure.
   test "successful signup does not show a discount for a samples-only cart" do
     cart = add_item_to_session_cart
@@ -77,15 +76,14 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
-    # The discount line is refreshed but carries no amount (no leading-minus value).
-    assert_select "turbo-stream[action=replace][target=discount_line]" do
-      assert_select "#discount_amount", count: 0
-    end
-    # The previewed Total equals shipping + VAT with no discount applied.
     cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
     expected_total = (cost + cost * BigDecimal(VAT_RATE.to_s)).round(2)
-    assert_select "turbo-stream[action=update][target=grand_total]",
-                  text: /#{Regexp.escape(ActiveSupport::NumberHelper.number_to_currency(expected_total))}/
+    assert_select "turbo-stream[action=replace][target=cart_summary]" do
+      # No discount line (no leading-minus amount), and the Total is full shipping + VAT.
+      assert_select "#discount_amount", count: 0
+      assert_select "#grand_total",
+                    text: /#{Regexp.escape(ActiveSupport::NumberHelper.number_to_currency(expected_total))}/
+    end
   end
 
   # =============================================================================

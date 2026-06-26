@@ -111,7 +111,8 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
 
     get cart_url
     assert_response :success
-    assert_select "#discount_line", text: /Discount/
+    # The discount line is rendered inside the summary, with its negative amount.
+    assert_select "#cart_summary", text: /Discount/
     assert_select "#discount_amount", text: /-/
   end
 
@@ -122,7 +123,7 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
 
     get cart_url
     assert_response :success
-    # The row element is always present, but it carries no discount content.
+    # CartSummary omits the discount line entirely when no discount is active.
     assert_select "#discount_amount", count: 0
   end
 

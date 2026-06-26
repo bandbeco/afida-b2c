@@ -1,0 +1,24 @@
+<%# The cart-page totals summary. Lines come from CartSummary (the same source the
+    drawer uses, mirroring OrderSummary + orders/_summary for orders) so labels, line
+    order and the discount-visibility rule have one home; this partial supplies the
+    full-card markup. The whole block is wrapped in #cart_summary and replaced
+    wholesale by the cart Turbo Streams (update/destroy/destroy_sample and the
+    discount-claim stream), so a changed cart can never refresh some lines but not
+    others. Pass the cart as `cart`. %>
+<div id="cart_summary">
+  <h2 class="text-lg sm:text-2xl mb-3 sm:mb-6">Cart Summary</h2>
+
+  <% cart_summary_lines(cart).each do |line| %>
+    <% if line[:kind] == :total %>
+      <div class="flex justify-between text-lg sm:text-xl text-gray-800 border-t pt-3 mt-3">
+        <span><%= line[:label] %></span>
+        <span id="grand_total"><%= line[:amount] %></span>
+      </div>
+    <% else %>
+      <div class="flex justify-between mb-2 text-sm sm:text-base <%= line[:negative] ? "text-success" : "text-gray-700" %>">
+        <span><%= line[:label] %></span>
+        <span id="<%= cart_summary_line_dom_id(line[:kind]) %>"><%= line[:amount] %></span>
+      </div>
+    <% end %>
+  <% end %>
+</div>

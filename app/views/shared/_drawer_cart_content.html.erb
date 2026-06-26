@@ -57,33 +57,16 @@
     </div>
 
     <div class="border-t pt-4 flex-shrink-0">
-      <div class="flex justify-between items-center mb-4">
-        <span class="font-medium">Subtotal</span>
-        <span><%= number_to_currency(Current.cart.subtotal_amount) %></span>
-      </div>
-
-      <div class="flex justify-between items-center mb-4">
-        <span class="font-medium">Shipping</span>
-        <span><%= cart_shipping_display(Current.cart) %></span>
-      </div>
-
-      <%# Placed after Shipping so the discount visibly applies to subtotal + shipping (the coupon is whole-order). %>
-      <% if cart_has_discount?(Current.cart) %>
-        <div class="flex justify-between items-center mb-4 text-success">
-          <span class="font-medium">Discount (<%= welcome_discount_percentage %>%)</span>
-          <span><%= cart_discount_display(Current.cart) %></span>
+      <%# Lines come from CartSummary (the same source the cart page uses, mirroring
+          OrderSummary for orders) so the labels, order and discount-visibility stay
+          consistent across both cart surfaces; the drawer supplies its own compact
+          row markup. The Total carries its own emphasis and extra bottom margin. %>
+      <% cart_summary_lines(Current.cart).each do |line| %>
+        <div class="flex justify-between items-center <%= line[:kind] == :total ? "mb-8" : "mb-4" %><%= " text-success" if line[:negative] %>">
+          <span class="font-medium"><%= line[:label] %></span>
+          <span class="<%= "text-lg" if line[:kind] == :total %>"><%= line[:amount] %></span>
         </div>
       <% end %>
-
-      <div class="flex justify-between items-center mb-4">
-        <span class="font-medium">VAT <%= VAT_RATE * 100 %>%</span>
-        <span><%= number_to_currency(Current.cart.vat_amount) %></span>
-      </div>
-
-      <div class="flex justify-between items-center mb-8">
-        <span class="font-medium">Total</span>
-        <span class="text-lg"><%= number_to_currency(Current.cart.display_total_amount) %></span>
-      </div>
 
       <div>
         <%= button_to "Proceed to Checkout", checkout_path, class: "btn btn-primary w-full", data: { turbo: false } %>
