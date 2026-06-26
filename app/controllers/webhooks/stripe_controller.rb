@@ -83,7 +83,7 @@ module Webhooks
       )
 
       # Extract shipping address
-      shipping = extract_shipping_address(full_session)
+      shipping = Checkout::SessionDetails.shipping_address(full_session)
 
       # Guard the permanent failure upstream (as OrderCreator does on the success
       # path): a completed session with no shipping_details would build an order with
@@ -112,7 +112,7 @@ module Webhooks
       total_amount = amounts.total
       discount_code = full_session.metadata&.[]("discount_code")
       if discount_code.blank?
-        discount_code = extract_promotion_code(full_session)
+        discount_code = webhook_promotion_code(full_session)
       end
 
       # Create the order and its items atomically: a mid-loop item failure must
@@ -224,36 +224,13 @@ module Webhooks
       raise RetryableWebhookError, e.message
     end
 
-    def extract_shipping_address(stripe_session)
-      session_hash = stripe_session.to_hash.with_indifferent_access
-      shipping = session_hash.dig(:collected_information, :shipping_details)
-      return {} unless shipping
-
-      shipping = shipping.with_indifferent_access if shipping.respond_to?(:with_indifferent_access)
-      address = shipping[:address]
-      return {} unless address
-
-      address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
-
-      {
-        name: shipping[:name],
-        line1: address[:line1],
-        line2: address[:line2],
-        city: address[:city],
-        postal_code: address[:postal_code],
-        country: address[:country]
-      }
-    end
-
-    def extract_promotion_code(stripe_session)
-      stripe_session
-        .total_details
-        &.breakdown
-        &.discounts
-        &.first
-        &.discount
-        &.promotion_code
-        &.code
+    # The Stripe-entered promotion code, or nil. Unlike OrderCreator (which lets an
+    # unexpected discount shape surface), the webhook swallows a NoMethodError: a
+    # malformed cosmetic field must not fail an already-paid order and trigger 72h of
+    # Stripe retries. The traversal itself lives in Checkout::SessionDetails so the
+    # two paths read the session identically.
+    def webhook_promotion_code(stripe_session)
+      Checkout::SessionDetails.promotion_code(stripe_session)
     rescue NoMethodError
       nil
     end

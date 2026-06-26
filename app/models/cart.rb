@@ -94,8 +94,21 @@ class Cart < ApplicationRecord
   end
 
   # Final total including shipping and VAT, matching what Stripe charges.
+  # Full precision (rounded once at the view); use display_total_amount for the
+  # figure shown on the Total line.
   def total_amount
     cart_totals.total
+  end
+
+  # The Total to DISPLAY: the sum of the summary lines each rounded to the penny.
+  # The cart summary renders Subtotal/Shipping/Discount/VAT via number_to_currency,
+  # which rounds each independently, while Stripe rounds per line item too. Deriving
+  # the Total from the full-precision figure can land on a different penny than the
+  # visible lines add up to (e.g. £85.70 + £6.99 with 10% off shows lines summing to
+  # £100.10 but a full-precision total of £100.1052 -> £100.11). Summing the rounded
+  # parts keeps the Total reconciling with the lines above it and with the charge.
+  def display_total_amount
+    cart_totals.rounded.total
   end
 
   # Check if this is a guest cart (not associated with a user)
@@ -198,8 +211,19 @@ class Cart < ApplicationRecord
     # the memoized result.
     @cart_totals ||= begin
       stance = cart_items.empty? ? :deferred : :charged
-      OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: discount_rate || 0)
+      OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: applicable_discount_rate)
     end
+  end
+
+  # The discount rate that will actually be charged. A samples-only cart pays only
+  # shipping (samples are free), and SessionBuilder refuses every discount for such
+  # a cart so a coupon can't reduce that shipping charge. The preview mirrors that
+  # by dropping the injected rate to zero, otherwise it would show a discount Stripe
+  # will not apply (a -£x line on the shipping, with a lower VAT and total).
+  def applicable_discount_rate
+    return 0 if only_samples?
+
+    discount_rate || 0
   end
 
   # Action Mailer's host, configured in every environment. recovery_url runs

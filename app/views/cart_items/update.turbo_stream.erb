@@ -38,7 +38,7 @@
 <% end %>
 
 <%= turbo_stream.update "grand_total" do %>
-  <%= number_to_currency(Current.cart.total_amount) %>
+  <%= number_to_currency(Current.cart.display_total_amount) %>
 <% end %>
 
 <%# Update discount savings if a discount is active %>

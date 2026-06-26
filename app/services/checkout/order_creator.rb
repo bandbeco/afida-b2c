@@ -6,7 +6,7 @@ module Checkout
     end
 
     def create
-      shipping_address = extract_shipping_address
+      shipping_address = Checkout::SessionDetails.shipping_address(stripe_session)
       if Order.required_shipping_values(shipping_address).any?(&:blank?)
         raise Checkout::MissingShippingDetails, "Shipping details are required"
       end
@@ -64,42 +64,11 @@ module Checkout
     end
 
     def discount_code
-      stripe_session.metadata&.[]("discount_code").presence || extract_promotion_code
-    end
-
-    def extract_shipping_address
-      session_hash = stripe_session.to_hash.with_indifferent_access
-
-      shipping = session_hash.dig(:collected_information, :shipping_details)
-      return {} unless shipping
-
-      shipping = shipping.with_indifferent_access if shipping.respond_to?(:with_indifferent_access)
-      address = shipping[:address]
-      return {} unless address
-
-      address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
-
-      {
-        name: shipping[:name],
-        line1: address[:line1],
-        line2: address[:line2],
-        city: address[:city],
-        postal_code: address[:postal_code],
-        country: address[:country]
-      }
-    end
-
-    def extract_promotion_code
-      # Stripe discount objects should follow this shape. Unexpected method
-      # errors are allowed to surface so checkout success failures are visible.
-      stripe_session
-        .total_details
-        &.breakdown
-        &.discounts
-        &.first
-        &.discount
-        &.promotion_code
-        &.code
+      # An unexpected Stripe discount shape is allowed to surface here so a
+      # success-path failure is visible (the webhook fallback still creates the
+      # order); the webhook rescues the same call to nil instead.
+      stripe_session.metadata&.[]("discount_code").presence ||
+        Checkout::SessionDetails.promotion_code(stripe_session)
     end
   end
 end

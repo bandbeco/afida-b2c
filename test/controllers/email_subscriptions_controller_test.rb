@@ -64,6 +64,30 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-stream[target=grand_total]", count: 0
   end
 
+  # A samples-only cart pays only shipping, and SessionBuilder refuses every discount
+  # for it at checkout. The preview must not promise a discount the customer won't
+  # get: claiming the code refreshes the (empty) discount line and a Total that still
+  # reflects full shipping + VAT, never a reduced figure.
+  test "successful signup does not show a discount for a samples-only cart" do
+    cart = add_item_to_session_cart
+    cart.cart_items.update_all(is_sample: true, price: 0)
+
+    post email_subscriptions_path,
+         params: { email: "samples-discount@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    # The discount line is refreshed but carries no amount (no leading-minus value).
+    assert_select "turbo-stream[action=replace][target=discount_line]" do
+      assert_select "#discount_amount", count: 0
+    end
+    # The previewed Total equals shipping + VAT with no discount applied.
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    expected_total = (cost + cost * BigDecimal(VAT_RATE.to_s)).round(2)
+    assert_select "turbo-stream[action=update][target=grand_total]",
+                  text: /#{Regexp.escape(ActiveSupport::NumberHelper.number_to_currency(expected_total))}/
+  end
+
   # =============================================================================
   # T012: Session Discount Code Storage Tests (US1)
   # =============================================================================

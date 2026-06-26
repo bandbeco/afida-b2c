@@ -104,6 +104,69 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 0, cart.shipping_amount
   end
 
+  # A samples-only cart pays only shipping (samples are free), and SessionBuilder
+  # refuses every discount for such a cart so a coupon can't reduce that shipping
+  # charge. The preview must mirror that: an injected rate must NOT discount the
+  # shipping line, otherwise the cart promises a discount Stripe will not apply.
+  test "an injected discount is ignored for a samples-only cart" do
+    cart = Cart.create
+    cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+    cart.discount_rate = 0.10
+
+    assert cart.only_samples?
+    assert_equal 0, cart.discount_amount
+    # Shipping is still charged in full, and VAT/total carry no discount.
+    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    assert_equal cost, cart.shipping_amount
+    assert_equal cost * BigDecimal(VAT_RATE.to_s), cart.vat_amount
+    assert_equal cost + cost * BigDecimal(VAT_RATE.to_s), cart.total_amount
+  end
+
+  # The cart summary shows Subtotal/Shipping/Discount/VAT each rounded to the penny
+  # (number_to_currency rounds at the view). If the Total is derived from the
+  # full-precision figures it can round to a different penny than the sum of the
+  # lines above it (and than Stripe, which rounds per line). display_total_amount is
+  # the sum of the 2dp-rounded components, so the Total always reconciles with the
+  # visible lines and with the charge.
+  test "display_total_amount equals the sum of the rounded summary lines" do
+    cart = Cart.create
+    # £85.70 subtotal + £6.99 shipping, 10% welcome coupon: the figures from the
+    # original bug. Full-precision total 100.1052 would render as £100.11, but the
+    # rounded lines (85.70 + 6.99 - 9.27 + 16.68) sum to £100.10, matching Stripe.
+    variant = Product.create!(
+      category: categories(:cups),
+      name: "Penny pack",
+      sku: "TEST-CART-DISPLAY-TOTAL",
+      price: BigDecimal("85.70"),
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+    cart.discount_rate = 0.10
+
+    rounded_lines = cart.subtotal_amount.round(2) +
+                    cart.shipping_amount.round(2) -
+                    cart.discount_amount.round(2) +
+                    cart.vat_amount.round(2)
+
+    assert_equal BigDecimal("100.10"), rounded_lines
+    assert_equal BigDecimal("100.10"), cart.display_total_amount
+    # The full-precision total still rounds to a different penny, which is the bug
+    # display_total_amount exists to avoid showing as the Total line.
+    assert_equal BigDecimal("100.11"), cart.total_amount.round(2)
+  end
+
+  test "display_total_amount matches the rounded total when there is no rounding drift" do
+    # cart :one: £20 + £6.99 shipping, no discount. 20 + 6.99 + 5.40 (5.398->5.40) =
+    # 32.39, and the full-precision total 32.388 also rounds to 32.39, so they agree.
+    assert_equal @cart.total_amount.round(2), @cart.display_total_amount
+    assert_equal BigDecimal("32.39"), @cart.display_total_amount
+  end
+
+  test "display_total_amount is zero for an empty cart" do
+    assert_equal 0, @empty_cart.display_total_amount
+  end
+
   test "setting discount_rate after totals are memoized recomputes them" do
     # Reading totals first memoizes them at the zero-discount rate; setting the rate
     # must invalidate that so the discount is reflected.
