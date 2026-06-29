@@ -44,7 +44,7 @@ gem "ruby-vips", "~> 2.2"
 gem "aws-sdk-s3", require: false
 
 # Stripe gem for payments
-gem "stripe", "~> 19.2"
+gem "stripe", "~> 19.3"
 
 # Mailgun gem for email sending
 gem "mailgun-ruby"
