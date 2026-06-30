@@ -148,4 +148,49 @@ class AnalyticsHelperTest < ActionView::TestCase
 
     Rails.application.config.x.gtm_container_id = nil
   end
+
+  test "ga4_cart_items eager-loads category so it does not trigger a per-item N+1" do
+    # Three items in three genuinely distinct categories (one / cups / straws) so the
+    # eager-load has to load more than one category row in its single IN-clause query.
+    cart = Cart.create!
+    [ products(:napkin_small_white), products(:single_wall_cups), products(:paper_straws) ].each do |product|
+      cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+    end
+
+    category_lookups = count_category_queries { ga4_cart_items(cart) }
+
+    # Exactly one categories query: more than one is the per-item N+1 we guard against;
+    # zero would mean item_category stopped being read at all (a silent data regression).
+    # NOTE: the project's assert_no_n_plus_one_queries (Bullet) does NOT catch this. Bullet
+    # only flags N+1 inside a controller request boundary, not a bare helper call in a unit
+    # test (verified), so a focused categories-query counter is the right tool here.
+    assert_equal 1, category_lookups,
+      "ga4_cart_items should load categories in exactly one query, not per item; saw #{category_lookups}"
+  end
+
+  test "ecommerce_view_cart_event and ecommerce_begin_checkout_event include item_category" do
+    # Both events route through ga4_cart_items, which reads product.category&.name.
+    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
+    expected_category = @cart_item.product.category.name
+
+    assert_includes ecommerce_view_cart_event(@cart), expected_category
+    assert_includes ecommerce_begin_checkout_event(@cart), expected_category
+  ensure
+    # Reset in ensure so a failed assertion can't leak GTM-enabled into the next test.
+    Rails.application.config.x.gtm_container_id = nil
+  end
+
+  private
+
+  # Counts SELECT queries against the categories table within the block. Mirrors the
+  # per-record-lookup detection used in cart_items_controller_test.
+  def count_category_queries(&block)
+    count = 0
+    counter = ->(_, _, _, _, payload) do
+      sql = payload[:sql]
+      count += 1 if sql&.include?('"categories"') && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    end
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &block)
+    count
+  end
 end

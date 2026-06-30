@@ -348,6 +348,28 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match /removed from cart/, flash[:notice]
   end
 
+  test "destroy turbo_stream re-renders the drawer so it stays in step with the cart" do
+    # Two items so the cart isn't empty after one removal (the drawer still renders items).
+    @cart.cart_items.create!(product: @product_variant, quantity: 2, price: @product_variant.price)
+    other = @cart.cart_items.create!(product: products(:two), quantity: 1, price: products(:two).price)
+
+    delete cart_cart_item_path(other), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match(/turbo-stream action="replace" target="drawer_cart_content"/, @response.body)
+    assert_match(/turbo-stream action="replace" target="cart_counter"/, @response.body)
+  end
+
+  test "update turbo_stream re-renders the drawer so it stays in step with the cart" do
+    cart_item = @cart.cart_items.create!(product: @product_variant, quantity: 2, price: @product_variant.price)
+
+    patch cart_cart_item_path(cart_item), params: { cart_item: { quantity: 3 } },
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match(/turbo-stream action="replace" target="drawer_cart_content"/, @response.body)
+  end
+
   test "destroying cart item shows product name in notice" do
     cart_item = @cart.cart_items.create!(
       product: @product_variant,

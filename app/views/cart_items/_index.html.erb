@@ -35,14 +35,9 @@
         <div class="w-full md:w-1/2 lg:w-1/3 bg-gray-100 p-4 sm:p-6 rounded-lg shadow-md">
           <%= render "cart_items/summary", cart: Current.cart %>
 
-          <%# Checkout form with optional address selection %>
-          <%= form_with url: checkout_path, method: :post, data: {
-                turbo: false,
-                controller: "analytics",
-                action: "submit->analytics#beginCheckout",
-                analytics_cart_value_value: Current.cart.total_amount.to_f,
-                analytics_cart_items_value: ga4_cart_items_json(Current.cart)
-              } do |f| %>
+          <%# Checkout form with optional address selection. The analytics wiring comes from
+              the shared analytics_checkout_form_data so the begin_checkout contract has one home. %>
+          <%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do |f| %>
 
             <% if Current.user&.has_saved_addresses? %>
               <%# Inline address selector for logged-in users %>

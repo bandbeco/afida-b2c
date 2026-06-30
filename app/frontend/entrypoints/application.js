@@ -100,6 +100,14 @@ checkForLazyControllers()
 document.addEventListener("turbo:load", checkForLazyControllers)
 document.addEventListener("turbo:frame-load", checkForLazyControllers)
 
+// Check after Turbo Stream renders too. turbo_stream.replace/append/update fire neither
+// turbo:load nor turbo:frame-load, so a lazy controller whose element first appears inside
+// streamed HTML (e.g. the cart drawer / header dropdown injected on add-to-cart) would
+// otherwise never register. Run on the next tick so the streamed DOM is in place.
+document.addEventListener("turbo:before-stream-render", () => {
+  setTimeout(checkForLazyControllers, 0)
+})
+
 // Configure Stimulus
 application.debug = false
 window.Stimulus = application

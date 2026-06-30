@@ -48,6 +48,17 @@ module AnalyticsHelper
     }.compact
   end
 
+  # Builds the GA4 items array for a whole cart. Single source of truth for the
+  # eager-load: ga4_cart_item reads product.category&.name, so :category must be
+  # included or every cart item triggers a per-record category lookup (N+1). All
+  # cart-level GA4 events (view_cart, begin_checkout, the Stimulus data attribute)
+  # go through here so the eager-load can't drift out of sync.
+  # @param cart [Cart] The cart
+  # @return [Array<Hash>] GA4-compatible item hashes
+  def ga4_cart_items(cart)
+    cart.cart_items.includes(product: :category).map { |item| ga4_cart_item(item) }
+  end
+
   # Formats an order item as a GA4 item object
   # @param order_item [OrderItem] The order item to format
   # @return [Hash] GA4-compatible item hash
@@ -144,7 +155,7 @@ module AnalyticsHelper
   def ecommerce_view_cart_event(cart)
     return "" unless gtm_enabled?
 
-    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
+    items = ga4_cart_items(cart)
 
     event_data = {
       event: "view_cart",
@@ -164,7 +175,7 @@ module AnalyticsHelper
   def ecommerce_begin_checkout_event(cart)
     return "" unless gtm_enabled?
 
-    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
+    items = ga4_cart_items(cart)
 
     event_data = {
       event: "begin_checkout",
@@ -221,8 +232,28 @@ module AnalyticsHelper
   # @param cart [Cart] The cart
   # @return [String] JSON array of GA4-compatible items
   def ga4_cart_items_json(cart)
-    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
-    items.to_json.html_safe
+    ga4_cart_items(cart).to_json.html_safe
+  end
+
+  # Single source of truth for the form-level `data:` hash that wires a checkout
+  # submit to the GA4 begin_checkout event. Shared by every checkout entry point
+  # (cart page, drawer, header dropdown) so the Stimulus contract lives in one
+  # place. The analytics value computation (total_amount + the cart-items query)
+  # is gated on gtm_enabled?. When GTM is off (e.g. the global navbar dropdown on
+  # most page loads) the begin_checkout event can't fire anyway, so we skip the
+  # work entirely and emit only `turbo: false`.
+  # @param cart [Cart] The cart being checked out
+  # @return [Hash] the `data:` hash for form_with
+  def analytics_checkout_form_data(cart)
+    data = { turbo: false }
+    return data unless gtm_enabled?
+
+    data.merge(
+      controller: "analytics",
+      action: "submit->analytics#beginCheckout",
+      analytics_cart_value_value: cart.total_amount.to_f,
+      analytics_cart_items_value: ga4_cart_items_json(cart)
+    )
   end
 
   private
