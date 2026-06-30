@@ -191,7 +191,7 @@ GEM
       reline (>= 0.4.2)
     jmespath (1.6.2)
     json (2.20.0)
-    kamal (2.11.0)
+    kamal (2.12.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
       bcrypt_pbkdf (~> 1.0)
