@@ -136,7 +136,7 @@ GEM
     crack (1.0.1)
       bigdecimal
       rexml
-    crass (1.0.7)
+    crass (1.0.6)
     csv (3.3.5)
     date (3.5.1)
     debug (1.11.1)
@@ -180,7 +180,7 @@ GEM
       llhttp (~> 0.6.1)
     http-cookie (1.1.6)
       domain_name (~> 0.5)
-    i18n (1.15.2)
+    i18n (1.14.8)
       concurrent-ruby (~> 1.0)
     image_processing (2.0.2)
     io-console (0.8.2)
@@ -396,7 +396,7 @@ GEM
       ffi (~> 1.12)
       logger
     ruby2_keywords (0.0.5)
-    rubyzip (3.4.1)
+    rubyzip (3.4.0)
     securerandom (0.4.1)
     selenium-webdriver (4.45.0)
       base64 (~> 0.2)
