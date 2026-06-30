@@ -75,6 +75,7 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/turbo-stream action="replace" target="drawer_cart_content"/, @response.body)
     assert_match(/data-controller="analytics"/, @response.body)
-    assert_match(/submit-&gt;analytics#beginCheckout|submit->analytics#beginCheckout/, @response.body)
+    # Rails' tag builder HTML-entity-encodes attribute values, so submit-> becomes submit-&gt;.
+    assert_match(/submit-&gt;analytics#beginCheckout/, @response.body)
   end
 end

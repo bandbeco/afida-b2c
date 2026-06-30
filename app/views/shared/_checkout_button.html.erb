@@ -9,6 +9,11 @@
     Locals:
       label        - button text
       button_class - DaisyUI button classes (no inline styles, no bold/semibold) %>
+<%# Self-guard so the partial is safe in isolation (callers already guard, but a nil/empty
+    Current.cart would otherwise crash on total_amount). No cart, no checkout button.
+    Uses the memoized line_items_count rather than cart_items.any? to avoid an extra
+    SELECT 1 (the counter partial has already warmed it). %>
+<% return unless (Current.cart&.line_items_count || 0).positive? %>
 <%= form_with url: checkout_path, method: :post, data: {
       turbo: false,
       controller: "analytics",

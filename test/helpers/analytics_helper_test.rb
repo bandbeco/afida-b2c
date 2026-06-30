@@ -148,4 +148,42 @@ class AnalyticsHelperTest < ActionView::TestCase
 
     Rails.application.config.x.gtm_container_id = nil
   end
+
+  test "ga4_cart_items eager-loads category so it does not trigger a per-item N+1" do
+    # Build a cart with several items across distinct categories.
+    cart = Cart.create!
+    [ products(:napkin_small_white), products(:wooden_fork), products(:bamboo_spoon) ].each do |product|
+      cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+    end
+
+    category_lookups = count_category_queries { ga4_cart_items(cart) }
+
+    assert category_lookups <= 1,
+      "ga4_cart_items should load categories in one query, not per item; saw #{category_lookups}"
+  end
+
+  test "ecommerce_view_cart_event and ecommerce_begin_checkout_event include item_category" do
+    # Both events route through ga4_cart_items, which reads product.category&.name.
+    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
+    expected_category = @cart_item.product.category.name
+
+    assert_includes ecommerce_view_cart_event(@cart), expected_category
+    assert_includes ecommerce_begin_checkout_event(@cart), expected_category
+
+    Rails.application.config.x.gtm_container_id = nil
+  end
+
+  private
+
+  # Counts SELECT queries against the categories table within the block. Mirrors the
+  # per-record-lookup detection used in cart_items_controller_test.
+  def count_category_queries(&block)
+    count = 0
+    counter = ->(_, _, _, _, payload) do
+      sql = payload[:sql]
+      count += 1 if sql&.include?('"categories"') && !payload[:name].to_s.match?(/SCHEMA|TRANSACTION/)
+    end
+    ActiveSupport::Notifications.subscribed(counter, "sql.active_record", &block)
+    count
+  end
 end
