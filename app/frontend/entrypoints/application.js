@@ -32,9 +32,15 @@ application.register("debounced-submit", DebouncedSubmitController)
 import ClearableInputController from "../javascript/controllers/clearable_input_controller"
 application.register("clearable-input", ClearableInputController)
 
+// Eager-loaded: the analytics controller wires begin_checkout onto the cart drawer and
+// header dropdown, which are injected via turbo_stream.replace (firing neither turbo:load
+// nor turbo:frame-load). Lazy registration would never pick it up on those paths, so it
+// must be always-loaded for the dataLayer event to fire after an add-to-cart.
+import AnalyticsController from "../javascript/controllers/analytics_controller"
+application.register("analytics", AnalyticsController)
+
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
-  "analytics": () => import("../javascript/controllers/analytics_controller"),
   "carousel": () => import("../javascript/controllers/carousel_controller"),
   "branded-configurator": () => import("../javascript/controllers/branded_configurator_controller"),
   "product-card-hover": () => import("../javascript/controllers/product_card_hover_controller"),

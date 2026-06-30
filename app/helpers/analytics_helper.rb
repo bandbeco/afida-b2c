@@ -221,7 +221,10 @@ module AnalyticsHelper
   # @param cart [Cart] The cart
   # @return [String] JSON array of GA4-compatible items
   def ga4_cart_items_json(cart)
-    items = cart.cart_items.includes(:product).map { |item| ga4_cart_item(item) }
+    # Eager-load category too: ga4_cart_item reads product.category&.name, so without it
+    # each cart item triggers a per-record category lookup (N+1). This matters most when
+    # the drawer re-renders after add-to-cart, where this runs alongside the item list.
+    items = cart.cart_items.includes(product: :category).map { |item| ga4_cart_item(item) }
     items.to_json.html_safe
   end
 

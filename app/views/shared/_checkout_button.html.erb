@@ -1,0 +1,20 @@
+<%# Shared checkout button that fires the GA4 begin_checkout dataLayer event on submit.
+    Used by the cart drawer and the header dropdown so every checkout entry point is
+    instrumented, mirroring the cart-page form (cart_items/_index.html.erb). Reuses the
+    existing `analytics` Stimulus controller and ga4_cart_items_json helper.
+
+    turbo: false keeps this a full navigation to the Stripe-bound checkout_path; the
+    dataLayer push happens on submit, before the redirect.
+
+    Locals:
+      label        - button text
+      button_class - DaisyUI button classes (no inline styles, no bold/semibold) %>
+<%= form_with url: checkout_path, method: :post, data: {
+      turbo: false,
+      controller: "analytics",
+      action: "submit->analytics#beginCheckout",
+      analytics_cart_value_value: Current.cart.total_amount.to_f,
+      analytics_cart_items_value: ga4_cart_items_json(Current.cart)
+    } do %>
+  <button type="submit" class="<%= button_class %>"><%= label %></button>
+<% end %>

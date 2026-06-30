@@ -14,7 +14,9 @@
         <div class="card-actions mt-4">
           <div class="w-full flex flex-col gap-2">
             <%= link_to "View cart", cart_path, class: "btn btn-primary btn-block", data: { turbo: false } %>
-            <%= button_to "Checkout", checkout_path, class: "btn btn-secondary btn-block", data: { turbo: false } %>
+            <% if Current.cart&.cart_items&.any? %>
+              <%= render "shared/checkout_button", label: "Checkout", button_class: "btn btn-secondary btn-block" %>
+            <% end %>
           </div>
         </div>
       </div>
