@@ -235,6 +235,27 @@ module AnalyticsHelper
     ga4_cart_items(cart).to_json.html_safe
   end
 
+  # Single source of truth for the form-level `data:` hash that wires a checkout
+  # submit to the GA4 begin_checkout event. Shared by every checkout entry point
+  # (cart page, drawer, header dropdown) so the Stimulus contract lives in one
+  # place. The analytics value computation (total_amount + the cart-items query)
+  # is gated on gtm_enabled?. When GTM is off (e.g. the global navbar dropdown on
+  # most page loads) the begin_checkout event can't fire anyway, so we skip the
+  # work entirely and emit only `turbo: false`.
+  # @param cart [Cart] The cart being checked out
+  # @return [Hash] the `data:` hash for form_with
+  def analytics_checkout_form_data(cart)
+    data = { turbo: false }
+    return data unless gtm_enabled?
+
+    data.merge(
+      controller: "analytics",
+      action: "submit->analytics#beginCheckout",
+      analytics_cart_value_value: cart.total_amount.to_f,
+      analytics_cart_items_value: ga4_cart_items_json(cart)
+    )
+  end
+
   private
 
   def gtm_enabled?

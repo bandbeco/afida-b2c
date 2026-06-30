@@ -6,6 +6,13 @@
   <%= render partial: "shared/cart_counter", locals: { cart_items_count: Current.cart.items_count } %>
 <% end %>
 
+<%# Keep the slide-out drawer in step with the cart. No-op on the cart page (which
+    doesn't mount the drawer), but ensures the drawer's line items, totals and the
+    begin_checkout data attributes never go stale wherever it IS mounted. %>
+<%= turbo_stream.replace "drawer_cart_content" do %>
+  <%= render "shared/drawer_cart_content" %>
+<% end %>
+
 <%# The whole #cart frame (summary and the discount-savings success box included) is
     re-rendered above, so the totals refresh with it; no per-line updates needed. %>
 

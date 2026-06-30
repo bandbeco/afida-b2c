@@ -6,13 +6,13 @@ import { Controller } from "@hotwired/stimulus"
  * Handles events that need to fire on user interaction rather than page load,
  * such as begin_checkout when clicking the checkout button.
  *
- * Usage:
- *   <button data-controller="analytics"
- *           data-action="click->analytics#beginCheckout"
- *           data-analytics-cart-value="100.00"
- *           data-analytics-cart-items-value='[...]'>
- *     Checkout
- *   </button>
+ * Usage (wired on the form, fired on submit before the full-page checkout navigation):
+ *   <form data-controller="analytics"
+ *         data-action="submit->analytics#beginCheckout"
+ *         data-analytics-cart-value-value="100.00"
+ *         data-analytics-cart-items-value='[...]'>
+ *     <button type="submit">Checkout</button>
+ *   </form>
  */
 export default class extends Controller {
   static values = {

@@ -1,5 +1,11 @@
 <%= turbo_stream.replace "cart_counter", partial: "shared/cart_counter" %>
 
+<%# Keep the slide-out drawer in step with the cart (no-op where it isn't mounted), so
+    its line items, totals and begin_checkout data attributes never go stale. %>
+<%= turbo_stream.replace "drawer_cart_content" do %>
+  <%= render "shared/drawer_cart_content" %>
+<% end %>
+
 <%# Update unit price display (for branded products where price changes with quantity) %>
 <%= turbo_stream.update "cart_item_#{@cart_item.id}_price" do %>
   <%= format_price_display(@cart_item) %>

@@ -32,15 +32,9 @@ application.register("debounced-submit", DebouncedSubmitController)
 import ClearableInputController from "../javascript/controllers/clearable_input_controller"
 application.register("clearable-input", ClearableInputController)
 
-// Eager-loaded: the analytics controller wires begin_checkout onto the cart drawer and
-// header dropdown, which are injected via turbo_stream.replace (firing neither turbo:load
-// nor turbo:frame-load). Lazy registration would never pick it up on those paths, so it
-// must be always-loaded for the dataLayer event to fire after an add-to-cart.
-import AnalyticsController from "../javascript/controllers/analytics_controller"
-application.register("analytics", AnalyticsController)
-
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
+  "analytics": () => import("../javascript/controllers/analytics_controller"),
   "carousel": () => import("../javascript/controllers/carousel_controller"),
   "branded-configurator": () => import("../javascript/controllers/branded_configurator_controller"),
   "product-card-hover": () => import("../javascript/controllers/product_card_hover_controller"),
@@ -105,6 +99,14 @@ checkForLazyControllers()
 // Check after Turbo navigations
 document.addEventListener("turbo:load", checkForLazyControllers)
 document.addEventListener("turbo:frame-load", checkForLazyControllers)
+
+// Check after Turbo Stream renders too. turbo_stream.replace/append/update fire neither
+// turbo:load nor turbo:frame-load, so a lazy controller whose element first appears inside
+// streamed HTML (e.g. the cart drawer / header dropdown injected on add-to-cart) would
+// otherwise never register. Run on the next tick so the streamed DOM is in place.
+document.addEventListener("turbo:before-stream-render", () => {
+  setTimeout(checkForLazyControllers, 0)
+})
 
 // Configure Stimulus
 application.debug = false

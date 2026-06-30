@@ -1,25 +1,20 @@
+<%# locals: (label: "Proceed to Checkout", button_class: "btn btn-primary w-full") %>
 <%# Shared checkout button that fires the GA4 begin_checkout dataLayer event on submit.
     Used by the cart drawer and the header dropdown so every checkout entry point is
-    instrumented, mirroring the cart-page form (cart_items/_index.html.erb). Reuses the
-    existing `analytics` Stimulus controller and ga4_cart_items_json helper.
+    instrumented, mirroring the cart-page form (cart_items/_index.html.erb). The form-level
+    analytics wiring comes from analytics_checkout_form_data, the single home for that
+    contract (it also gates the cost on gtm_enabled?).
 
     turbo: false keeps this a full navigation to the Stripe-bound checkout_path; the
     dataLayer push happens on submit, before the redirect.
 
-    Locals:
-      label        - button text
-      button_class - DaisyUI button classes (no inline styles, no bold/semibold) %>
-<%# Self-guard so the partial is safe in isolation (callers already guard, but a nil/empty
-    Current.cart would otherwise crash on total_amount). No cart, no checkout button.
-    Uses the memoized line_items_count rather than cart_items.any? to avoid an extra
-    SELECT 1 (the counter partial has already warmed it). %>
+    Strict locals (defaults above) raise a clear error rather than 500-ing on a missing
+    local, and give callers sensible defaults.
+
+    Self-guard so the partial is safe in isolation (callers already guard, but a nil/empty
+    Current.cart would otherwise crash on total_amount). No cart, no checkout button. Uses
+    the memoized line_items_count rather than cart_items.any? to avoid an extra SELECT 1. %>
 <% return unless (Current.cart&.line_items_count || 0).positive? %>
-<%= form_with url: checkout_path, method: :post, data: {
-      turbo: false,
-      controller: "analytics",
-      action: "submit->analytics#beginCheckout",
-      analytics_cart_value_value: Current.cart.total_amount.to_f,
-      analytics_cart_items_value: ga4_cart_items_json(Current.cart)
-    } do %>
+<%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do %>
   <button type="submit" class="<%= button_class %>"><%= label %></button>
 <% end %>
