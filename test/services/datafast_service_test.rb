@@ -218,6 +218,19 @@ class DatafastServiceTest < ActiveSupport::TestCase
     assert_no_datafast_goals_tracked
   end
 
+  test "fails open and fires the goal when the cache layer errors" do
+    # A cache outage (e.g. Solid Cache's DB unreachable) must not drop the goal
+    # or resurface the FAILED alert; the gate falls through to firing.
+    stub_datafast_visitor_found(visitor_id: @visitor_id)
+    stub_datafast_goal_create
+    Rails.cache.stubs(:fetch).raises(RuntimeError, "cache backend unavailable")
+
+    result = DatafastService.track("add_to_cart", visitor_id: @visitor_id)
+
+    assert result
+    assert_datafast_goal_tracked("add_to_cart")
+  end
+
   test "caches the visitor verdict across goals in the same session" do
     stub_datafast_visitor_found(visitor_id: @visitor_id)
     stub_datafast_goal_create

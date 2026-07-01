@@ -93,8 +93,10 @@ class DatafastService
   # when it does and 404 when it does not. The verdict is cached per visitor so
   # the several goals in one session share a single lookup.
   #
-  # Fails open: on any error (timeout, network, unexpected status) we return
-  # true so the goal still fires rather than silently dropping a real event.
+  # Fails open on ANY error (HTTP timeout/network, unexpected status, or a
+  # cache-layer failure such as Solid Cache's backing store being unavailable):
+  # we return true so the goal still fires rather than silently dropping a real
+  # event or resurfacing the FAILED alert whenever the cache is unhealthy.
   def visitor_has_pageviews?
     Rails.cache.fetch(visitor_cache_key, expires_in: VISITOR_VERDICT_TTL) do
       response = HTTP
@@ -108,8 +110,8 @@ class DatafastService
       else true # unknown status: fail open
       end
     end
-  rescue HTTP::Error, HTTP::TimeoutError
-    true # lookup failed: fail open, let the goal through
+  rescue StandardError
+    true # lookup or cache failed: fail open, let the goal through
   end
 
   def visitor_cache_key
