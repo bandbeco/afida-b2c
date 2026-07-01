@@ -9,6 +9,10 @@ class DatafastServiceTest < ActiveSupport::TestCase
   setup do
     @visitor_id = "df_visitor_abc123"
     stub_datafast_credentials
+    # Default: visitor has a recorded pageview so goals are allowed through.
+    # The session gate (see "session gate" tests below) is what suppresses
+    # goals for visitors DataFast has no pageview for.
+    stub_datafast_visitor_found
   end
 
   test "tracks goal successfully" do
@@ -156,5 +160,87 @@ class DatafastServiceTest < ActiveSupport::TestCase
       body = JSON.parse(req.body)
       !body.key?("metadata")
     end
+  end
+
+  # --- Session gate --------------------------------------------------------
+  # DataFast rejects goals for visitors with no recorded pageview (bots,
+  # JS-blocked clients, server-only requests) with a 404. We check the visitor
+  # first and skip the goal for these ghosts instead of firing into a 404.
+
+  test "skips the goal when the visitor has no recorded pageviews" do
+    stub_datafast_visitor_not_found(visitor_id: @visitor_id)
+    stub_datafast_goal_create
+
+    result = DatafastService.track("add_to_cart", visitor_id: @visitor_id)
+
+    assert_not result
+    assert_datafast_visitor_looked_up(@visitor_id)
+    assert_no_datafast_goals_tracked
+  end
+
+  test "fires the goal when the visitor has a recorded pageview" do
+    stub_datafast_visitor_found(visitor_id: @visitor_id)
+    stub_datafast_goal_create
+
+    result = DatafastService.track("add_to_cart", visitor_id: @visitor_id)
+
+    assert result
+    assert_datafast_visitor_looked_up(@visitor_id)
+    assert_datafast_goal_tracked("add_to_cart")
+  end
+
+  test "fails open and fires the goal when the visitor lookup errors" do
+    stub_datafast_visitor_error(visitor_id: @visitor_id)
+    stub_datafast_goal_create
+
+    result = DatafastService.track("add_to_cart", visitor_id: @visitor_id)
+
+    assert result
+    assert_datafast_goal_tracked("add_to_cart")
+  end
+
+  test "fails open and fires the goal when the visitor lookup times out" do
+    stub_datafast_visitor_timeout(visitor_id: @visitor_id)
+    stub_datafast_goal_create
+
+    result = DatafastService.track("add_to_cart", visitor_id: @visitor_id)
+
+    assert result
+    assert_datafast_goal_tracked("add_to_cart")
+  end
+
+  test "does not look up the visitor when visitor_id is blank" do
+    stub_datafast_goal_create
+
+    assert_not DatafastService.track("add_to_cart", visitor_id: nil)
+
+    assert_no_datafast_visitor_lookup
+    assert_no_datafast_goals_tracked
+  end
+
+  test "caches the visitor verdict across goals in the same session" do
+    stub_datafast_visitor_found(visitor_id: @visitor_id)
+    stub_datafast_goal_create
+
+    # Test env uses :null_store; swap in a real store to observe caching.
+    with_memory_cache do
+      DatafastService.track("view_cart", visitor_id: @visitor_id)
+      DatafastService.track("add_to_cart", visitor_id: @visitor_id)
+      DatafastService.track("begin_checkout", visitor_id: @visitor_id)
+    end
+
+    # Visitor endpoint hit once; verdict reused for the other two goals.
+    assert_requested :get, "#{DatafastTestHelper::DATAFAST_VISITOR_ENDPOINT}/#{@visitor_id}", times: 1
+    assert_requested :post, DatafastService::ENDPOINT, times: 3
+  end
+
+  private
+
+  def with_memory_cache
+    original = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    Rails.cache = original
   end
 end

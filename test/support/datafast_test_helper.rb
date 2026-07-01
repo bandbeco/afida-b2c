@@ -13,6 +13,7 @@
 #
 module DatafastTestHelper
   DATAFAST_ENDPOINT = "https://datafa.st/api/v1/goals"
+  DATAFAST_VISITOR_ENDPOINT = "https://datafa.st/api/v1/visitors"
 
   # Stubs successful goal creation
   # @param response_body [Hash] Optional custom response body
@@ -47,6 +48,48 @@ module DatafastTestHelper
     stub_request(:post, DATAFAST_ENDPOINT).to_raise(HTTP::ConnectionError.new("Connection refused"))
   end
 
+  # Stubs the visitor lookup returning a recorded visitor (has pageviews).
+  # @param visitor_id [String] The visitor to match (default: any)
+  # @param pageview_count [Integer] Value for data.activity.pageViewCount
+  def stub_datafast_visitor_found(visitor_id: nil, pageview_count: 1)
+    body = {
+      status: "success",
+      data: {
+        visitorId: visitor_id || "any",
+        activity: { pageViewCount: pageview_count }
+      }
+    }
+    stub_request(:get, visitor_url(visitor_id))
+      .to_return(status: 200, body: body.to_json, headers: { "Content-Type" => "application/json" })
+  end
+
+  # Stubs the visitor lookup returning 404 (no recorded pageviews / ghost visitor).
+  def stub_datafast_visitor_not_found(visitor_id: nil)
+    body = { status: "error", error: { code: 404, message: "Visitor data not found for this website" } }
+    stub_request(:get, visitor_url(visitor_id))
+      .to_return(status: 404, body: body.to_json, headers: { "Content-Type" => "application/json" })
+  end
+
+  # Stubs the visitor lookup raising a network error (used to prove fail-open).
+  def stub_datafast_visitor_error(visitor_id: nil)
+    stub_request(:get, visitor_url(visitor_id)).to_raise(HTTP::ConnectionError.new("Connection refused"))
+  end
+
+  # Stubs the visitor lookup timing out (used to prove fail-open).
+  def stub_datafast_visitor_timeout(visitor_id: nil)
+    stub_request(:get, visitor_url(visitor_id)).to_timeout
+  end
+
+  # Asserts a visitor lookup was performed
+  def assert_datafast_visitor_looked_up(visitor_id)
+    assert_requested :get, "#{DATAFAST_VISITOR_ENDPOINT}/#{visitor_id}"
+  end
+
+  # Asserts no visitor lookup was performed
+  def assert_no_datafast_visitor_lookup
+    assert_not_requested :get, %r{\A#{Regexp.escape(DATAFAST_VISITOR_ENDPOINT)}/}
+  end
+
   # Asserts a goal was tracked with specific name
   # @param goal_name [String] Expected goal name
   # @param visitor_id [String] Optional expected visitor ID
@@ -70,5 +113,11 @@ module DatafastTestHelper
   # Clears DataFast API key (simulates unconfigured state)
   def stub_datafast_credentials_missing
     Rails.application.credentials.stubs(:dig).with(:datafast, :api_key).returns(nil)
+  end
+
+  private
+
+  def visitor_url(visitor_id)
+    visitor_id ? "#{DATAFAST_VISITOR_ENDPOINT}/#{visitor_id}" : %r{\A#{Regexp.escape(DATAFAST_VISITOR_ENDPOINT)}/}
   end
 end

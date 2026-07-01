@@ -14,8 +14,13 @@ require "http"
 #
 class DatafastService
   ENDPOINT = "https://datafa.st/api/v1/goals"
+  VISITOR_ENDPOINT = "https://datafa.st/api/v1/visitors"
   TIMEOUT_SECONDS = 5
   MAX_METADATA_KEYS = 10
+
+  # How long to remember that a visitor has (or lacks) a recorded pageview, so
+  # the several goals fired during one shopping session cost a single lookup.
+  VISITOR_VERDICT_TTL = 30.minutes
 
   class << self
     # Tracks a goal event with DataFast
@@ -45,6 +50,15 @@ class DatafastService
       return false
     end
 
+    # DataFast rejects goals for visitors it has no recorded pageview for (bots,
+    # JS-blocked clients, server-only requests) with a 404. Skip those instead
+    # of firing into a guaranteed error. Fails open: any uncertainty fires the
+    # goal so we never drop a real conversion over a flaky lookup.
+    unless visitor_has_pageviews?
+      log_skipped("visitor has no recorded pageviews")
+      return false
+    end
+
     send_goal
   rescue HTTP::Error, HTTP::TimeoutError => e
     log_error("HTTP error: #{e.class} - #{e.message}")
@@ -69,6 +83,37 @@ class DatafastService
       log_error("API returned #{response.status}: #{response.body}")
       false
     end
+  end
+
+  # True if DataFast has at least one recorded pageview for this visitor.
+  #
+  # DataFast only records a visitor when its client-side script runs in a real
+  # browser (it silently ignores bots and blocked clients), so a present cookie
+  # does not guarantee DataFast knows the visitor. GET /visitors/:id returns 200
+  # when it does and 404 when it does not. The verdict is cached per visitor so
+  # the several goals in one session share a single lookup.
+  #
+  # Fails open: on any error (timeout, network, unexpected status) we return
+  # true so the goal still fires rather than silently dropping a real event.
+  def visitor_has_pageviews?
+    Rails.cache.fetch(visitor_cache_key, expires_in: VISITOR_VERDICT_TTL) do
+      response = HTTP
+        .auth("Bearer #{api_key}")
+        .timeout(TIMEOUT_SECONDS)
+        .get("#{VISITOR_ENDPOINT}/#{@visitor_id}")
+
+      case response.code
+      when 200 then true
+      when 404 then false
+      else true # unknown status: fail open
+      end
+    end
+  rescue HTTP::Error, HTTP::TimeoutError
+    true # lookup failed: fail open, let the goal through
+  end
+
+  def visitor_cache_key
+    "datafast:visitor_has_pageviews:#{@visitor_id}"
   end
 
   def payload
@@ -112,5 +157,12 @@ class DatafastService
   def log_error(message)
     # Use info level to ensure visibility in production logs
     Rails.logger.info("[DataFast] FAILED goal='#{@name}' error='#{message}'")
+  end
+
+  # Expected, benign skip (not an error): the visitor was never recorded by
+  # DataFast, so there is nothing to attribute the goal to. Logged distinctly
+  # from FAILED so the alert on "[DataFast] FAILED" does not fire on it.
+  def log_skipped(reason)
+    Rails.logger.info("[DataFast] skipped goal='#{@name}' reason='#{reason}'")
   end
 end
