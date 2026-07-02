@@ -22,7 +22,7 @@ namespace :products do
       end
 
       family_name = brand.present? ? "#{brand} #{name}" : name
-      family_slug = family_name.parameterize
+      family_slug = family_name.parameterize.tr("_", "-")
 
       family = ProductFamily.find_by(slug: family_slug)
       if family.nil?

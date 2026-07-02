@@ -1,0 +1,46 @@
+<% content_for :title, "Product Families | Admin" %>
+
+<div class="py-4 sm:py-8">
+  <div class="flex justify-between items-center mb-6">
+    <h1>Product Families</h1>
+    <%= link_to "New Family", new_admin_product_family_path, class: "btn btn-primary" %>
+  </div>
+
+  <% if @product_families.any? %>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Slug</th>
+            <th>Products</th>
+            <th class="w-32">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @product_families.each do |family| %>
+            <tr>
+              <td><%= family.name %></td>
+              <td class="font-mono text-sm text-base-content/60"><%= family.slug %></td>
+              <td><%= family.products_count %></td>
+              <td>
+                <div class="flex gap-2">
+                  <%= link_to "Edit", edit_admin_product_family_path(family), class: "btn btn-ghost btn-sm" %>
+                  <%= button_to "Delete", admin_product_family_path(family),
+                                method: :delete,
+                                class: "btn btn-ghost btn-sm text-error",
+                                form: { data: { turbo_confirm: "Are you sure? This will detach #{pluralize(family.products_count, "product")} from this family." } } %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="text-center py-12 bg-base-200 rounded-lg">
+      <p class="text-base-content/70 mb-4">No product families yet.</p>
+      <%= link_to "Create your first family", new_admin_product_family_path, class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>

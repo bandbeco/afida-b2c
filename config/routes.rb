@@ -264,6 +264,7 @@ Rails.application.routes.draw do
         patch :move_lower
       end
     end
+    resources :product_families, path: "product-families", except: [ :show ]
     resources :orders, only: [ :index, :show ]
 
     # Blog management at /admin/blog/posts and /admin/blog/categories

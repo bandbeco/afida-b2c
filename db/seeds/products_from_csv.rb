@@ -69,7 +69,7 @@ CSV.foreach(csv_path, headers: true) do |row|
   # Create or find ProductFamily for grouping products with the same family name
   family_key = "#{product_family_name}|#{category_slug}"
   unless product_families[family_key]
-    family_slug = product_family_name.to_s.parameterize
+    family_slug = product_family_name.to_s.parameterize.tr("_", "-")
     family = ProductFamily.find_or_create_by!(slug: family_slug) do |f|
       f.name = product_family_name
     end
