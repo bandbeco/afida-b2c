@@ -1,46 +1,35 @@
 <%
-  products = products.to_a
   # The admin-managed ProductFamily is the sole variant-grouping signal.
-  # Products arrive with same-family items adjacent (see family_grouped_order
-  # in the controllers), so consecutive slicing is enough.
-  groups = products.slice_when { |a, b| a.product_family_id != b.product_family_id }.to_a
-  family_row_count = groups.count { |g| g.first.product_family_id.present? && g.size > 1 }
-  multi_family_page = family_row_count > 1
-  # Row breaks only earn their keep when at least one family has 2+ products
-  # on the page. Without that, every card is a singleton and the layout
-  # stair-steps for no benefit.
-  sectioned = family_row_count > 0
+  # Products arrive with same-family items adjacent (Product.family_grouped_order,
+  # used by the category and collection controllers), so consecutive slicing
+  # is enough. Each multi-product family gets its own full-width row; familied
+  # singletons and family-less products flow with the grid.
+  groups = products.to_a.slice_when { |a, b| a.product_family_id != b.product_family_id }.to_a
+  multi_family_page = groups.count { |g| g.first.product_family_id.present? && g.size > 1 } > 1
 %>
-<% if sectioned %>
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    <% groups.each do |group| %>
-      <% family = group.first.product_family %>
-      <% if family.present? && group.size > 1 %>
-        <% if multi_family_page %>
-          <h2 class="product-family-heading col-span-full flex items-center gap-4 mb-3 mt-8 first-of-type:mt-0">
-            <span class="h-px flex-1 bg-base-300"></span>
-            <span class="inline-flex items-baseline px-6 py-2 rounded-full bg-base-200 border border-base-300 text-2xl uppercase tracking-wider text-base-content/80">
-              <%= family.name %>
-            </span>
-            <span class="h-px flex-1 bg-base-300"></span>
-          </h2>
-        <% end %>
-        <%# Card widths match the parent grid's column sizing (grid-cols-2/3/4 with gap-4). %>
-        <div class="col-span-full flex flex-wrap justify-center gap-4">
-          <% group.each do |product| %>
-            <div class="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
-              <%= render partial: "products/card", locals: { product: product } %>
-            </div>
-          <% end %>
-        </div>
-      <% else %>
-        <%# Familied singletons and family-less products flow with the grid. %>
-        <%= render partial: "products/card", collection: group, as: :product %>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+  <% groups.each do |group| %>
+    <% family = group.first.product_family %>
+    <% if family.present? && group.size > 1 %>
+      <% if multi_family_page %>
+        <h2 class="product-family-heading col-span-full flex items-center gap-4 mb-3 mt-8 first-of-type:mt-0">
+          <span class="h-px flex-1 bg-base-300"></span>
+          <span class="inline-flex items-baseline px-6 py-2 rounded-full bg-base-200 border border-base-300 text-2xl uppercase tracking-wider text-base-content/80">
+            <%= family.name %>
+          </span>
+          <span class="h-px flex-1 bg-base-300"></span>
+        </h2>
       <% end %>
+      <%# Card widths match the parent grid's column sizing (grid-cols-2/3/4 with gap-4). %>
+      <div class="col-span-full flex flex-wrap justify-center gap-4">
+        <% group.each do |product| %>
+          <div class="w-[calc(50%-0.5rem)] md:w-[calc(33.333%-0.667rem)] lg:w-[calc(25%-0.75rem)]">
+            <%= render partial: "products/card", locals: { product: product } %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <%= render partial: "products/card", collection: group, as: :product %>
     <% end %>
-  </div>
-<% else %>
-  <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-    <%= render partial: "products/card", collection: products, as: :product %>
-  </div>
-<% end %>
+  <% end %>
+</div>

@@ -388,8 +388,8 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     )
 
     # Same product line ("Coffee Cup Sip Lids"), two materials × varying sizes.
-    # Within a name+material run we sort by colour first then volume, so a
-    # row reads as one colour's full size run, then the next colour's run.
+    # Within a family, cards sort by material, then colour, then volume, so
+    # one colour's full size run reads before the next colour's run.
     black_4 = make_variant(category, family, "Coffee Cup Sip Lids", "Black", "rPET", 118)
     black_8 = make_variant(category, family, "Coffee Cup Sip Lids", "Black", "rPET", 227)
     white_4 = make_variant(category, family, "Coffee Cup Sip Lids", "White", "rPET", 118)
@@ -461,9 +461,11 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", count: 0
   end
 
-  test "renders one centered flex row per multi-product family" do
-    family = product_families(:single_wall_cups)
-    family.update!(sort_order: 5)
+  test "renders exactly one centered flex row and one heading per multi-product family" do
+    family_a = product_families(:single_wall_cups)
+    family_a.update!(sort_order: 5)
+    family_b = product_families(:paper_lids)
+    family_b.update!(sort_order: 6)
 
     category = Category.create!(
       name: "Row Break Test",
@@ -471,17 +473,19 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
       position: 995,
     )
 
-    # Two named sub-lines under one family — the admin-managed family is the
-    # variant group, so they share a single flex row.
-    make_variant(category, family, "Double Wall Cups", "White", "Paper", 227)
-    make_variant(category, family, "Double Wall Cups", "White", "Paper", 340)
-    make_variant(category, family, "Single Wall Cups", "White", "Paper", 227)
-    make_variant(category, family, "Single Wall Cups", "White", "Paper", 340)
+    make_variant(category, family_a, "Cups", "White", "Paper", 227)
+    make_variant(category, family_a, "Cups", "White", "Paper", 340)
+    make_variant(category, family_b, "Lids", "Black", "rPET", 118)
+    make_variant(category, family_b, "Lids", "Black", "rPET", 227)
 
     get category_url(category.slug)
     assert_response :success
 
-    assert_select "div.col-span-full.flex.justify-center", count: 1
+    # Exact counts pin the same-family-adjacent ordering contract: if the
+    # ORDER BY stops clustering families, slice_when fragments them into
+    # extra rows and duplicate headings.
+    assert_select "div.col-span-full.flex.justify-center", count: 2
+    assert_select ".product-family-heading", count: 2
   end
 
   test "renders a family with mixed names, materials and colours as a single row" do
@@ -519,11 +523,16 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
       position: 988,
     )
 
-    # One multi-product family plus four family-less solo products. The
-    # family earns its own flex row; the solos should flow as normal grid
-    # cells, not stair-step into four full-width rows.
+    solo_family = product_families(:paper_lids)
+    solo_family.update!(sort_order: 6)
+
+    # One multi-product family plus a familied singleton and four family-less
+    # solo products. The family pair earns its own flex row; the singleton
+    # and the solos should flow as normal grid cells, not stair-step into
+    # full-width rows.
     make_variant(category, family, "Cups", "White", "Paper", 227)
     make_variant(category, family, "Cups", "White", "Paper", 340)
+    make_variant(category, solo_family, "Lonely Lid", "White", "rPET", 227)
     make_variant(category, nil, "Burger Tray", "Black", "Paperboard", nil)
     make_variant(category, nil, "Carry Pack", "Kraft", "Card", nil)
     make_variant(category, nil, "Takeaway Box", "White", "Card", nil)
@@ -554,7 +563,7 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", count: 0
   end
 
-  test "sorts by volume even when sibling rows have blank-string vs nil material" do
+  test "sorts by volume even when siblings mix blank-string and nil material" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
 
@@ -579,26 +588,6 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     actual_order = controller.view_assigns["products"].map(&:id) & expected_order
     assert_equal expected_order, actual_order,
       "Expected ascending volume order despite blank-string material/colour"
-  end
-
-  test "renders a single centered row for a multi-product family" do
-    family = product_families(:single_wall_cups)
-    family.update!(sort_order: 5)
-
-    category = Category.create!(
-      name: "Same-Name Test",
-      slug: "same-name-test-#{SecureRandom.hex(4)}",
-      position: 994,
-    )
-
-    make_variant(category, family, "Cups", "White", "Paper", 227)
-    make_variant(category, family, "Cups", "White", "Paper", 340)
-    make_variant(category, family, "Cups", "White", "Paper", 455)
-
-    get category_url(category.slug)
-    assert_response :success
-
-    assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
   test "does not render any family heading when only one family is on the page" do

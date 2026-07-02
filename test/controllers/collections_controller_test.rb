@@ -370,51 +370,46 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", count: 0
   end
 
-  test "renders one centered flex row per multi-product family on a collection" do
-    family = product_families(:single_wall_cups)
-    family.update!(sort_order: 5)
+  test "renders exactly one centered flex row and one heading per multi-product family on a collection" do
+    family_a = product_families(:single_wall_cups)
+    family_a.update!(sort_order: 5)
+    family_b = product_families(:paper_lids)
+    family_b.update!(sort_order: 6)
 
     collection = make_collection("Row Break Collection")
 
-    make_variant_in_collection(collection, family, "Double Wall Cups", "White", "Paper", 227)
-    make_variant_in_collection(collection, family, "Double Wall Cups", "White", "Paper", 340)
-    make_variant_in_collection(collection, family, "Single Wall Cups", "White", "Paper", 227)
-    make_variant_in_collection(collection, family, "Single Wall Cups", "White", "Paper", 340)
+    make_variant_in_collection(collection, family_a, "Cups", "White", "Paper", 227)
+    make_variant_in_collection(collection, family_a, "Cups", "White", "Paper", 340)
+    make_variant_in_collection(collection, family_b, "Lids", "Black", "rPET", 118)
+    make_variant_in_collection(collection, family_b, "Lids", "Black", "rPET", 227)
 
     get collection_url(collection.slug)
     assert_response :success
 
-    assert_select "div.col-span-full.flex.justify-center", count: 1
+    # Exact counts pin the same-family-adjacent ordering contract: if the
+    # ORDER BY stops clustering families, slice_when fragments them into
+    # extra rows and duplicate headings.
+    assert_select "div.col-span-full.flex.justify-center", count: 2
+    assert_select ".product-family-heading", count: 2
   end
 
   test "renders solo products inline with the grid on a collection, not as full-width rows" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
+    solo_family = product_families(:paper_lids)
+    solo_family.update!(sort_order: 6)
 
     collection = make_collection("Mixed Solo And Pair Collection")
 
+    # One multi-product family plus a familied singleton and four family-less
+    # solo products; only the family pair earns a flex row.
     make_variant_in_collection(collection, family, "Cups", "White", "Paper", 227)
     make_variant_in_collection(collection, family, "Cups", "White", "Paper", 340)
+    make_variant_in_collection(collection, solo_family, "Lonely Lid", "White", "rPET", 227)
     make_variant_in_collection(collection, nil, "Burger Tray", "Black", "Paperboard", nil)
     make_variant_in_collection(collection, nil, "Carry Pack", "Kraft", "Card", nil)
     make_variant_in_collection(collection, nil, "Takeaway Box", "White", "Card", nil)
     make_variant_in_collection(collection, nil, "Chips Bag", "White", "Paper", nil)
-
-    get collection_url(collection.slug)
-    assert_response :success
-
-    assert_select "div.col-span-full.flex.justify-center", count: 1
-  end
-
-  test "renders a single centered row for a multi-product family on a collection" do
-    family = product_families(:single_wall_cups)
-    family.update!(sort_order: 5)
-
-    collection = make_collection("Same-Name Collection")
-
-    make_variant_in_collection(collection, family, "Cups", "White", "Paper", 227)
-    make_variant_in_collection(collection, family, "Cups", "White", "Paper", 340)
-    make_variant_in_collection(collection, family, "Cups", "White", "Paper", 455)
 
     get collection_url(collection.slug)
     assert_response :success
