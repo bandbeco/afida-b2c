@@ -1,4 +1,8 @@
-<%= form_with(model: [:admin, category], local: true, class: "space-y-4 sm:space-y-6 max-w-2xl") do |form| %>
+<%# Explicit URL from the persisted slug: to_param returns the dirty slug, so after a
+    rejected slug the default action would point at a URL that no longer resolves. %>
+<%= form_with(model: [:admin, category],
+              url: category.persisted? ? admin_category_path(id: category.slug_in_database) : admin_categories_path,
+              local: true, class: "space-y-4 sm:space-y-6 max-w-2xl") do |form| %>
   <% if category.errors.any? %>
     <div class="alert alert-error">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
