@@ -15,9 +15,13 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
   end
 
   test "nested subcategory route returns 404 for wrong parent" do
+    # cups-and-accessories is a live parent, but pizza-boxes-sub belongs to
+    # food-containers. (The old wrong-parent example, cups-and-drinks, is now a
+    # renamed slug whose children 301 instead of 404.)
+    wrong_parent = categories(:parent_cups_and_drinks)
     subcategory = categories(:child_pizza_boxes)
 
-    get "/categories/cups-and-drinks/#{subcategory.slug}"
+    get "/categories/#{wrong_parent.slug}/#{subcategory.slug}"
     assert_response :not_found
   end
 

@@ -65,6 +65,42 @@ Rails.application.routes.draw do
   # Must precede `resources :blog_posts`.
   get "/blog/choose-right-coffee-cup-size", to: redirect(status: 301) { |_params, req| "/blog/paper-coffee-cups#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
 
+  # June 2026 admin category restructure (slugs renamed 2026-06-22..25) — the old
+  # URLs still rank in Google (~16k impressions/quarter, SEO audit 2026-07-02,
+  # docs/reports/seo-audit-2026-07-02.md). Must precede the category routes.
+  {
+    "/categories/cups-and-drinks" => "/categories/cups-and-accessories",
+    "/categories/cups-and-drinks/cold-cups" => "/categories/cups-and-accessories/cold-cups-and-lids",
+    "/categories/cups-and-drinks/hot-cups" => "/categories/cups-and-accessories/hot-cups",
+    "/categories/cups-and-drinks/ice-cream-cups" => "/categories/cups-and-accessories/ice-cream-cups",
+    "/categories/cups-and-drinks/cup-lids" => "/categories/cups-and-accessories/cup-lids",
+    "/categories/cups-and-drinks/cup-accessories" => "/categories/cups-and-accessories/cup-accessories",
+    "/categories/cups-and-drinks/straws" => "/categories/cups-and-accessories/straws",
+    "/categories/cups-and-accessories/cold-cups" => "/categories/cups-and-accessories/cold-cups-and-lids",
+    "/categories/hot-food" => "/categories/food-containers",
+    "/categories/hot-food/pizza-boxes" => "/categories/food-containers/pizza-boxes",
+    "/categories/hot-food/takeaway-boxes" => "/categories/food-containers/takeaway-boxes",
+    "/categories/hot-food/soup-containers" => "/categories/food-containers/soup-containers",
+    "/categories/hot-food/bagasse-containers" => "/categories/food-containers/bagasse-containers",
+    "/categories/hot-food/food-containers" => "/categories/food-containers/food-containers-and-lids",
+    "/categories/hot-food/food-bowls" => "/categories/food-containers/bowls-and-lids",
+    "/categories/hot-food/round-containers-lids" => "/categories/food-containers/food-containers-and-lids",
+    "/categories/hot-food/portion-pots-lids" => "/categories/food-containers/portion-pots-and-lids",
+    "/categories/cold-food-and-salads/deli-pots" => "/categories/cold-food-and-salads/deli-containers",
+    "/categories/tableware/plates-and-trays" => "/categories/tableware/plates-and-bowls",
+    "/categories/tableware/aluminium-containers" => "/categories/food-containers/aluminium-containers",
+    "/categories/food-containers/portion-pots-lids" => "/categories/food-containers/portion-pots-and-lids",
+    "/categories/food-containers/bowls-lids" => "/categories/food-containers/bowls-and-lids",
+    "/categories/food-containers/food-containers-lids" => "/categories/food-containers/food-containers-and-lids"
+  }.each do |from, to|
+    get from, to: redirect(status: 301) { |_params, req| "#{to}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  end
+
+  # Unmapped children of the renamed parents fall back to the new parent.
+  # Must come after the specific renames above.
+  get "/categories/cups-and-drinks/*path", to: redirect(status: 301) { |_params, req| "/categories/cups-and-accessories#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+  get "/categories/hot-food/*path", to: redirect(status: 301) { |_params, req| "/categories/food-containers#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
+
   get "shop", to: "pages#shop"
   get "search", to: "search#index"
   get "branding", to: "pages#branding"
