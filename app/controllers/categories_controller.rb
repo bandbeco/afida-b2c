@@ -34,16 +34,7 @@ class CategoriesController < ApplicationController
                        .includes(:category, :product_family,
                                  product_photo_attachment: :blob,
                                  lifestyle_photo_attachment: :blob)
-                       .order(
-                         Arel.sql("product_families.sort_order ASC NULLS LAST"),
-                         Arel.sql("product_families.id ASC NULLS LAST"),
-                         :name,
-                         Arel.sql("NULLIF(products.material, '') ASC NULLS LAST"),
-                         Arel.sql("NULLIF(products.colour, '') ASC NULLS LAST"),
-                         Arel.sql("products.volume_in_ml ASC NULLS LAST"),
-                         :position,
-                         :id,
-                       )
+                       .order(*Product.family_grouped_order)
 
     # Redirect to product page if only one product in category
     if @products.count == 1

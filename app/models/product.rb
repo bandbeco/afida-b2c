@@ -96,6 +96,24 @@ class Product < ApplicationRecord
     joins(:category).where(categories: { slug: slugs })
   }
 
+  # Sort keys for storefront listings rendered by products/_grouped_grid.
+  # The first two keys keep same-family products ADJACENT, which the partial
+  # relies on (it slices consecutive runs by product_family_id); the rest
+  # only orders cards within a family row. Requires the relation to reference
+  # product_families (e.g. includes(:product_family)).
+  def self.family_grouped_order(tiebreak: arel_table[:position].asc)
+    [
+      Arel.sql("product_families.sort_order ASC NULLS LAST"),
+      Arel.sql("product_families.id ASC NULLS LAST"),
+      arel_table[:name].asc,
+      Arel.sql("NULLIF(products.material, '') ASC NULLS LAST"),
+      Arel.sql("NULLIF(products.colour, '') ASC NULLS LAST"),
+      Arel.sql("products.volume_in_ml ASC NULLS LAST"),
+      tiebreak,
+      arel_table[:id].asc
+    ]
+  end
+
   # Search on product name, SKU, brand, and attributes (size, colour, material)
   # Splits multi-word queries so each word is matched independently across columns
   scope :search, ->(query) {

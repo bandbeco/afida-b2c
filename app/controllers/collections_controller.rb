@@ -38,15 +38,6 @@ class CollectionsController < ApplicationController
   private
 
   def family_grouped_order
-    [
-      Arel.sql("product_families.sort_order ASC NULLS LAST"),
-      Arel.sql("product_families.id ASC NULLS LAST"),
-      Product.arel_table[:name].asc,
-      Arel.sql("NULLIF(products.material, '') ASC NULLS LAST"),
-      Arel.sql("NULLIF(products.colour, '') ASC NULLS LAST"),
-      Arel.sql("products.volume_in_ml ASC NULLS LAST"),
-      Arel.sql("collection_items.position ASC"),
-      Product.arel_table[:id].asc
-    ]
+    Product.family_grouped_order(tiebreak: Arel.sql("collection_items.position ASC"))
   end
 end
