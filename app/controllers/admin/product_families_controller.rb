@@ -4,10 +4,7 @@ module Admin
 
     # GET /admin/product-families
     def index
-      @product_families = ProductFamily.left_joins(:products)
-                                       .select("product_families.*, COUNT(products.id) AS products_count")
-                                       .group("product_families.id")
-                                       .order(:name)
+      @product_families = ProductFamily.with_product_counts.order(:name)
     end
 
     # GET /admin/product-families/new
@@ -28,6 +25,11 @@ module Admin
       else
         render :new, status: :unprocessable_entity
       end
+    rescue ActiveRecord::RecordNotUnique
+      # Two concurrent creates can both pass the uniqueness check; the unique
+      # index catches the loser, which we surface as a validation error.
+      @product_family.errors.add(:slug, "has already been taken")
+      render :new, status: :unprocessable_entity
     end
 
     # PATCH/PUT /admin/product-families/:id

@@ -17,6 +17,17 @@ class ProductFamilyTest < ActiveSupport::TestCase
     assert_equal "custom-slug", family.slug
   end
 
+  test "auto-generated slug converts underscores so it satisfies the format validation" do
+    family = ProductFamily.create!(name: "96_Series Cups")
+    assert_equal "96-series-cups", family.slug
+  end
+
+  test "with_product_counts exposes a products_count attribute" do
+    family = product_families(:single_wall_cups)
+    loaded = ProductFamily.with_product_counts.find { |f| f.id == family.id }
+    assert_equal family.products.count, loaded.products_count
+  end
+
   test "regenerates slug from name when blanked on update" do
     family = product_families(:paper_straws)
     family.update!(name: "Bamboo Straws", slug: "")

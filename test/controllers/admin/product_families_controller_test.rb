@@ -21,9 +21,11 @@ class Admin::ProductFamiliesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows product counts" do
+    count = @product_family.products.count
+
     get admin_product_families_path, headers: @headers
     assert_response :success
-    assert_match @product_family.slug, response.body
+    assert_match "This will detach #{count} #{"product".pluralize(count)} from this family", response.body
   end
 
   test "should get new" do
@@ -59,6 +61,8 @@ class Admin::ProductFamiliesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get edit" do
+    assert_includes edit_admin_product_family_path(@product_family), @product_family.slug
+
     get edit_admin_product_family_path(@product_family), headers: @headers
     assert_response :success
     assert_match /Edit Product Family/, response.body
@@ -128,6 +132,42 @@ class Admin::ProductFamiliesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "edit form posts to the persisted slug after a rejected slug" do
+    patch admin_product_family_path(@product_family), headers: @headers, params: {
+      product_family: { slug: "Not A Slug!" }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "form[action=?]", admin_product_family_path(@product_family.reload)
+  end
+
+  test "update with blank name and slug re-renders the form instead of crashing" do
+    patch admin_product_family_path(@product_family), headers: @headers, params: {
+      product_family: { name: "", slug: "" }
+    }
+
+    assert_response :unprocessable_entity
+  end
+
+  test "create handles a slug uniqueness race as a validation error" do
+    # Simulate the loser of a concurrent-create race: validations pass but the
+    # unique index rejects the INSERT.
+    family = ProductFamily.new(name: "Race Cups", slug: "race-cups")
+    family.define_singleton_method(:save) { |**| raise ActiveRecord::RecordNotUnique, "duplicate key" }
+
+    ProductFamily.define_singleton_method(:new) { |*| family }
+    begin
+      post admin_product_families_path, headers: @headers, params: {
+        product_family: { name: "Race Cups", slug: "race-cups" }
+      }
+    ensure
+      ProductFamily.singleton_class.remove_method(:new)
+    end
+
+    assert_response :unprocessable_entity
+    assert_match /has already been taken/, response.body
+  end
+
   test "should destroy product family and detach its products" do
     product = products(:single_wall_8oz_white)
     assert_equal @product_family.id, product.product_family_id
@@ -142,11 +182,6 @@ class Admin::ProductFamiliesControllerTest < ActionDispatch::IntegrationTest
 
     product.reload
     assert_nil product.product_family_id
-  end
-
-  test "should use slug in URLs" do
-    get edit_admin_product_family_path(@product_family.slug), headers: @headers
-    assert_response :success
   end
 
   test "requires authentication" do

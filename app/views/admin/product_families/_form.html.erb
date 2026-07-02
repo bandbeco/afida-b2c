@@ -1,4 +1,8 @@
-<%= form_with(model: [ :admin, product_family ], local: true) do |form| %>
+<%# Explicit URL from the persisted slug: to_param returns the dirty slug, so after a
+    rejected slug the default action would point at a URL that no longer resolves. %>
+<%= form_with(model: [ :admin, product_family ],
+              url: product_family.persisted? ? admin_product_family_path(id: product_family.slug_in_database) : admin_product_families_path,
+              local: true) do |form| %>
   <% if product_family.errors.any? %>
     <div class="alert alert-error mb-6">
       <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
