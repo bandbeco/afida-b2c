@@ -349,17 +349,19 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", text: /Domed Lid/, count: 0
   end
 
-  test "falls back to a flat grid when no name+material has 2+ products on the collection page" do
+  test "falls back to a flat grid when no family has 2+ products on the collection page" do
     family_a = product_families(:single_wall_cups)
     family_a.update!(sort_order: 5)
     family_b = product_families(:paper_lids)
     family_b.update!(sort_order: 6)
+    family_c = product_families(:paper_straws)
+    family_c.update!(sort_order: 7)
 
     collection = make_collection("Miscellaneous Collection")
 
     make_variant_in_collection(collection, family_a, "Item A", "White", "Paper", 227)
     make_variant_in_collection(collection, family_b, "Item B", "Black", "rPET", 340)
-    make_variant_in_collection(collection, family_a, "Item C", "Kraft", "Bagasse", 455)
+    make_variant_in_collection(collection, family_c, "Item C", "Kraft", "Bagasse", 455)
 
     get collection_url(collection.slug)
     assert_response :success
@@ -368,7 +370,7 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".product-family-heading", count: 0
   end
 
-  test "renders one centered flex row per name+material run on a collection" do
+  test "renders one centered flex row per multi-product family on a collection" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
 
@@ -382,41 +384,10 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     get collection_url(collection.slug)
     assert_response :success
 
-    assert_select "div.col-span-full.flex.justify-center", count: 2
-  end
-
-  test "merges a singleton colour row into the previous multi-card row of the same name+material on a collection" do
-    family = product_families(:paper_lids)
-    family.update!(sort_order: 5)
-
-    collection = make_collection("Backward Merge Collection")
-
-    make_variant_in_collection(collection, family, "Coffee Cup Sip Lids", "Black", "PP", 340)
-    make_variant_in_collection(collection, family, "Coffee Cup Sip Lids", "Black", "PP", 455)
-    make_variant_in_collection(collection, family, "Coffee Cup Sip Lids", "White", "PP", 340)
-
-    get collection_url(collection.slug)
-    assert_response :success
-
     assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
-  test "merges singleton colour rows into the next colour row of the same name+material on a collection" do
-    family = product_families(:paper_lids)
-    family.update!(sort_order: 5)
-
-    collection = make_collection("Singleton Merge Collection")
-
-    make_variant_in_collection(collection, family, "Coffee Cup Sip Lids", "Black", "PP", 340)
-    make_variant_in_collection(collection, family, "Coffee Cup Sip Lids", "White", "PP", 340)
-
-    get collection_url(collection.slug)
-    assert_response :success
-
-    assert_select "div.col-span-full.flex.justify-center", count: 1
-  end
-
-  test "renders solo unmergeable products inline with the grid on a collection, not as full-width rows" do
+  test "renders solo products inline with the grid on a collection, not as full-width rows" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
 
@@ -424,10 +395,10 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
 
     make_variant_in_collection(collection, family, "Cups", "White", "Paper", 227)
     make_variant_in_collection(collection, family, "Cups", "White", "Paper", 340)
-    make_variant_in_collection(collection, family, "Burger Tray", "Black", "Paperboard", nil)
-    make_variant_in_collection(collection, family, "Carry Pack", "Kraft", "Card", nil)
-    make_variant_in_collection(collection, family, "Takeaway Box", "White", "Card", nil)
-    make_variant_in_collection(collection, family, "Chips Bag", "White", "Paper", nil)
+    make_variant_in_collection(collection, nil, "Burger Tray", "Black", "Paperboard", nil)
+    make_variant_in_collection(collection, nil, "Carry Pack", "Kraft", "Card", nil)
+    make_variant_in_collection(collection, nil, "Takeaway Box", "White", "Card", nil)
+    make_variant_in_collection(collection, nil, "Chips Bag", "White", "Paper", nil)
 
     get collection_url(collection.slug)
     assert_response :success
@@ -435,7 +406,7 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div.col-span-full.flex.justify-center", count: 1
   end
 
-  test "renders a single centered row on a collection when all products share name and material" do
+  test "renders a single centered row for a multi-product family on a collection" do
     family = product_families(:single_wall_cups)
     family.update!(sort_order: 5)
 
