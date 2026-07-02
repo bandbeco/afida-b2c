@@ -1,4 +1,8 @@
-<%= form_with(model: [:admin, blog_category], local: true, data: { turbo: false }) do |form| %>
+<%# Explicit URL from the persisted slug: to_param returns the dirty slug, so after a
+    rejected slug the default action would point at a URL that no longer resolves. %>
+<%= form_with(model: [:admin, blog_category],
+              url: blog_category.persisted? ? admin_blog_category_path(id: blog_category.slug_in_database) : admin_blog_categories_path,
+              local: true, data: { turbo: false }) do |form| %>
   <% if blog_category.errors.any? %>
     <div class="bg-red-50 text-red-500 px-3 py-2 font-medium rounded-md mt-3">
       <h2><%= pluralize(blog_category.errors.count, "error") %> prohibited this category from being saved:</h2>

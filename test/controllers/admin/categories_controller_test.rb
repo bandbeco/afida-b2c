@@ -151,7 +151,6 @@ class Admin::CategoriesControllerTest < ActionDispatch::IntegrationTest
     patch admin_category_path(@category), headers: @headers, params: {
       category: {
         name: ""
-        # Don't set slug to empty as it causes routing issues
       }
     }
 
@@ -159,6 +158,25 @@ class Admin::CategoriesControllerTest < ActionDispatch::IntegrationTest
 
     @category.reload
     assert_equal original_name, @category.name
+  end
+
+  test "edit form posts to the persisted slug after a duplicate slug is rejected" do
+    other = categories(:parent_cups_and_drinks)
+
+    patch admin_category_path(@category), headers: @headers, params: {
+      category: { slug: other.slug }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "form[action=?]", admin_category_path(@category.reload)
+  end
+
+  test "update with a blank slug re-renders the form instead of crashing" do
+    patch admin_category_path(@category), headers: @headers, params: {
+      category: { slug: "" }
+    }
+
+    assert_response :unprocessable_entity
   end
 
   test "should create subcategory with parent" do
