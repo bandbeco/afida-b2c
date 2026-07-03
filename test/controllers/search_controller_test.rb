@@ -304,6 +304,48 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "[aria-live='polite']"
   end
 
+  # Empty and zero-result states (issue #251)
+
+  test "falls back to search_extended when the direct search finds nothing" do
+    loose = products(:one)
+    loose.update!(product_family_id: nil, name: "Plain Widget", sku: "PW-1",
+                  brand: nil, colour: nil, material: nil, size: nil)
+    loose.category.update!(name: "Zorptastic Supplies")
+
+    # "Zorptastic" matches only the category name, so plain :search misses it
+    # but :search_extended finds it.
+    get search_url, params: { q: "Zorptastic", modal: "true" }
+
+    assert_response :success
+    assert_select "a[href=?]", product_path(loose.slug)
+  end
+
+  test "renders the most-searched chips when even the extended search is empty" do
+    get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
+
+    assert_response :success
+    # The dead-end copy is replaced by the reusable Most searched chips.
+    assert_select "p", text: /Most searched/i
+    assert_no_match(/try a different search term/i, response.body)
+  end
+
+  test "no-results state still names the query" do
+    get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
+
+    assert_response :success
+    assert_match(/zzzznomatchqueryzzzz/, response.body)
+  end
+
+  test "search input placeholder models an example query" do
+    # The full (non-modal) search page renders the app layout, which mounts the
+    # search modal and its input.
+    get search_url, params: { q: "8oz" }
+
+    assert_response :success
+    assert_select "input[data-search-modal-target='input'][placeholder=?]",
+                  "Search cups, boxes, napkins..."
+  end
+
   private
 
   # Removes the <mark> highlight wrappers so an assertion can match a title as a

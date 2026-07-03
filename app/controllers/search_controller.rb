@@ -36,6 +36,12 @@ class SearchController < ApplicationController
         .includes(:product_family, :category, product_photo_attachment: :blob)
 
       all_rows = SearchResultRow.collapse(ranked)
+
+      # Before declaring "no results", widen the net to category names via
+      # search_extended (issue #251). A query like "coffee shops" may name no
+      # product but match a category, so this rescues an otherwise dead end.
+      all_rows = extended_rows if all_rows.empty?
+
       @total_count = all_rows.size
 
       # Modal shows more results than the header dropdown.
@@ -50,6 +56,20 @@ class SearchController < ApplicationController
   end
 
   private
+
+  # Category-aware fallback rows for a query that matched no product directly.
+  # Uses search_extended (which also searches category names) and collapses
+  # families the same way the primary path does.
+  def extended_rows
+    extended = Product
+      .active
+      .catalog_products
+      .search_extended(@query)
+      .order(Product.sales_rank_order, Product.arel_table[:id].asc)
+      .includes(:product_family, :category, product_photo_attachment: :blob)
+
+    SearchResultRow.collapse(extended)
+  end
 
   def render_appropriate_template
     if @modal

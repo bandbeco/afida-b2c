@@ -6,6 +6,8 @@ require "application_system_test_case"
 class SearchModalTest < ApplicationSystemTestCase
   def open_modal
     visit "/"
+    # Start each test from a clean recent-searches history.
+    execute_script("window.localStorage.clear()")
     find("button[aria-label='Search products']").click
     assert_selector "[data-search-modal-target='input']", visible: true
   end
@@ -55,5 +57,23 @@ class SearchModalTest < ApplicationSystemTestCase
     first_option_id = all("[role='option']").first[:id]
     assert_equal first_option_id, input[:"aria-activedescendant"]
     assert_equal "true", find("##{first_option_id}")[:"aria-selected"]
+  end
+
+  # Issue #251: a searched query is remembered and offered on reopen.
+  test "a searched query is stored and shown as a recent search" do
+    open_modal
+
+    input = find("[data-search-modal-target='input']")
+    input.fill_in with: "cup"
+    assert_selector "[role='option']", minimum: 1
+
+    # Close and reopen; the recent-searches block hydrates from localStorage.
+    find("button[aria-label='Close search']").click
+    find("button[aria-label='Search products']").click
+
+    assert_selector "[data-search-modal-target='recentSearches']", visible: true
+    within "[data-search-modal-target='recentSearchesList']" do
+      assert_selector "button[data-term='cup']", text: "cup"
+    end
   end
 end

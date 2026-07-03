@@ -6,13 +6,17 @@
     <p>Type at least 2 characters to search</p>
   </div>
 <% elsif @rows.empty? %>
-  <div class="text-center py-12">
+  <%# Zero results: name the query, then offer the Most searched chips (and any
+  %>
+  <%# recent searches) instead of a dead-end message (issue #251). %>
+  <div class="text-center py-8">
     <svg class="mx-auto w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
     <p class="text-gray-500 text-lg">No results found for "<%= @query %>"</p>
-    <p class="text-gray-400 mt-2">Try a different search term or browse our categories</p>
+    <p class="text-gray-400 mt-2">Try one of these instead</p>
   </div>
+  <%= render "shared/search_suggestions" %>
 <% else %>
   <%# Results header. The count line links straight to the full results page so
   %>

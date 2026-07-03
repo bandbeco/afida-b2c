@@ -4,8 +4,15 @@ import { Controller } from "@hotwired/stimulus"
 // Opens a full-screen modal with search input, quick search chips, and category cards.
 // Results replace default content when user types.
 export default class extends Controller {
-  static targets = ["modal", "content", "input", "defaultContent", "results"]
+  static targets = [
+    "modal", "content", "input", "defaultContent", "results",
+    "recentSearches", "recentSearchesList"
+  ]
   static values = { debounce: { type: Number, default: 200 } }
+
+  // localStorage key and cap for the recent-searches history (issue #251).
+  static RECENT_KEY = "afida:recentSearches"
+  static RECENT_MAX = 5
 
   connect() {
     this.previouslyFocusedElement = null
@@ -66,6 +73,9 @@ export default class extends Controller {
     requestAnimationFrame(() => {
       this.inputTarget.focus()
     })
+
+    // Refresh the recent-searches list from localStorage.
+    this.renderRecentSearches()
 
     // Set up event listeners
     document.addEventListener("keydown", this.boundHandleEscape)
@@ -131,6 +141,9 @@ export default class extends Controller {
   performSearch(query) {
     // A new query invalidates any keyboard selection from the old result set.
     this.clearActiveSelection()
+
+    // Remember the query so repeat buyers can re-run it later (issue #251).
+    this.recordRecentSearch(query)
 
     // Update Turbo Frame src to trigger search
     const frame = this.resultsTarget
@@ -221,12 +234,76 @@ export default class extends Controller {
     })
   }
 
-  // Quick search chip clicked
+  // Quick search chip clicked (Most searched or a recent search).
   quickSearch(event) {
     event.preventDefault()
     const term = event.currentTarget.dataset.term
     this.inputTarget.value = term
     this.performSearch(term)
+  }
+
+  // --- Recent searches (localStorage), issue #251 ---
+
+  readRecentSearches() {
+    try {
+      const raw = window.localStorage.getItem(this.constructor.RECENT_KEY)
+      const parsed = raw ? JSON.parse(raw) : []
+      return Array.isArray(parsed) ? parsed : []
+    } catch (e) {
+      return []
+    }
+  }
+
+  recordRecentSearch(query) {
+    const term = query.trim()
+    if (term.length < 2) return
+
+    // Most-recent-first, case-insensitive dedupe, capped.
+    const existing = this.readRecentSearches().filter(
+      (t) => t.toLowerCase() !== term.toLowerCase()
+    )
+    const updated = [ term, ...existing ].slice(0, this.constructor.RECENT_MAX)
+
+    try {
+      window.localStorage.setItem(this.constructor.RECENT_KEY, JSON.stringify(updated))
+    } catch (e) {
+      // Ignore storage failures (private mode, quota) — the feature is optional.
+    }
+  }
+
+  clearRecentSearches(event) {
+    event?.preventDefault()
+    try {
+      window.localStorage.removeItem(this.constructor.RECENT_KEY)
+    } catch (e) {
+      // Ignore.
+    }
+    this.renderRecentSearches()
+  }
+
+  renderRecentSearches() {
+    if (!this.hasRecentSearchesTarget || !this.hasRecentSearchesListTarget) return
+
+    const terms = this.readRecentSearches()
+    if (terms.length === 0) {
+      this.recentSearchesTarget.classList.add("hidden")
+      this.recentSearchesListTarget.replaceChildren()
+      return
+    }
+
+    const chips = terms.map((term) => {
+      const button = document.createElement("button")
+      button.type = "button"
+      button.dataset.action = "click->search-modal#quickSearch"
+      button.dataset.term = term
+      button.className =
+        "px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm transition border border-black"
+      button.textContent = term
+      return button
+    })
+
+    this.recentSearchesListTarget.replaceChildren(...chips)
+    this.recentSearchesTarget.classList.remove("hidden")
   }
 
   // Navigate to category (closes modal)
