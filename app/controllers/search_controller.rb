@@ -34,10 +34,13 @@ class SearchController < ApplicationController
       # Modal shows more results than header dropdown
       limit = @modal ? 10 : 5
 
-      @products = base_query
+      # search_ranked reapplies the same :search filter, then orders by
+      # relevance (name matches first) and popularity (units sold).
+      @products = Product
+        .active
+        .catalog_products
+        .search_ranked(@query)
         .includes(:category, product_photo_attachment: :blob)
-        .order(Arel.sql("CASE WHEN product_type = 'customizable_template' THEN 0 ELSE 1 END"))
-        .order(:id)
         .limit(limit)
     end
 

@@ -393,6 +393,103 @@ class ProductTest < ActiveSupport::TestCase
     assert_includes results, product
   end
 
+  # search_ranked tests
+  test "search_ranked boosts name matches above attribute-only matches" do
+    name_match = products(:one)
+    name_match.update!(name: "Widget Cup", brand: nil, colour: nil, material: nil, sku: "RANK-NAME")
+
+    attribute_match = products(:two)
+    attribute_match.update!(name: "Saucer", brand: "Widget", colour: nil, material: nil, sku: "RANK-ATTR")
+
+    results = Product.search_ranked("widget").to_a
+
+    assert_operator results.index(name_match), :<, results.index(attribute_match)
+  end
+
+  test "search_ranked ranks full multi-word name matches above partial name matches" do
+    both_words = products(:one)
+    both_words.update!(name: "Kraft Coffee Cup", brand: nil, colour: nil, material: nil, sku: "RANK-BOTH")
+
+    one_word = products(:two)
+    # "cup" matches the name, "kraft" matches only the brand attribute, so this
+    # row survives the AND search filter but has fewer name-word hits.
+    one_word.update!(name: "Coffee Cup", brand: "Kraft", colour: nil, material: nil, sku: "RANK-ONE")
+
+    results = Product.search_ranked("kraft cup").to_a
+
+    assert_operator results.index(both_words), :<, results.index(one_word)
+  end
+
+  test "search_ranked breaks ties by completed-order sales quantity" do
+    popular = products(:single_wall_12oz_white)
+    popular.update!(name: "Rankable Cup A")
+
+    unpopular = products(:single_wall_8oz_white)
+    unpopular.update!(name: "Rankable Cup B")
+
+    paid_order = orders(:one)
+    OrderItem.create!(
+      order: paid_order, product: popular, product_name: popular.name,
+      product_sku: popular.sku, price: 10, quantity: 40, line_total: 400
+    )
+    OrderItem.create!(
+      order: paid_order, product: unpopular, product_name: unpopular.name,
+      product_sku: unpopular.sku, price: 10, quantity: 3, line_total: 30
+    )
+
+    results = Product.search_ranked("rankable cup").to_a
+
+    assert_operator results.index(popular), :<, results.index(unpopular)
+  end
+
+  test "search_ranked ignores sample line items in the popularity signal" do
+    sampled = products(:single_wall_12oz_white)
+    sampled.update!(name: "Sampled Cup A")
+
+    real = products(:single_wall_8oz_white)
+    real.update!(name: "Sampled Cup B")
+
+    paid_order = orders(:one)
+    OrderItem.create!(
+      order: paid_order, product: sampled, product_name: sampled.name,
+      product_sku: sampled.sku, price: 0, quantity: 99, line_total: 0, is_sample: true
+    )
+    OrderItem.create!(
+      order: paid_order, product: real, product_name: real.name,
+      product_sku: real.sku, price: 10, quantity: 5, line_total: 50
+    )
+
+    results = Product.search_ranked("sampled cup").to_a
+
+    assert_operator results.index(real), :<, results.index(sampled)
+  end
+
+  test "search_ranked ignores line items from unpaid orders in the popularity signal" do
+    pending_seller = products(:single_wall_12oz_white)
+    pending_seller.update!(name: "Pending Cup A")
+
+    paid_seller = products(:single_wall_8oz_white)
+    paid_seller.update!(name: "Pending Cup B")
+
+    OrderItem.create!(
+      order: orders(:two), product: pending_seller, product_name: pending_seller.name,
+      product_sku: pending_seller.sku, price: 10, quantity: 99, line_total: 990
+    )
+    OrderItem.create!(
+      order: orders(:one), product: paid_seller, product_name: paid_seller.name,
+      product_sku: paid_seller.sku, price: 10, quantity: 5, line_total: 50
+    )
+
+    results = Product.search_ranked("pending cup").to_a
+
+    assert_operator results.index(paid_seller), :<, results.index(pending_seller)
+  end
+
+  test "search_ranked returns all products when query is blank" do
+    assert_equal Product.count, Product.search_ranked("").count
+    assert_equal Product.count, Product.search_ranked(nil).count
+  end
+
   # Sort scope tests
   test "sorted by relevance uses default order" do
     products = Product.sorted("relevance").to_a

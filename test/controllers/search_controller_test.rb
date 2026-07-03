@@ -64,6 +64,23 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ERB::Util.html_escape(expected)
   end
 
+  test "index ranks name matches ahead of attribute-only matches" do
+    name_match = products(:single_wall_12oz_white)
+    name_match.update!(name: "Zephyr Cup", brand: nil, colour: nil, material: nil)
+
+    attribute_match = products(:single_wall_8oz_white)
+    attribute_match.update!(name: "Saucer", brand: "Zephyr", colour: nil, material: nil)
+
+    get search_url, params: { q: "zephyr" }
+
+    assert_response :success
+    name_pos = response.body.index(product_path(name_match.slug))
+    attr_pos = response.body.index(product_path(attribute_match.slug))
+    assert name_pos, "expected name match to render"
+    assert attr_pos, "expected attribute match to render"
+    assert_operator name_pos, :<, attr_pos
+  end
+
   test "index is accessible without authentication" do
     get search_url, params: { q: "test" }
     assert_response :success

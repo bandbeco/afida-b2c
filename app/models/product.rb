@@ -132,6 +132,56 @@ class Product < ApplicationRecord
     scope
   }
 
+  # Statuses that count an order as a completed sale for popularity ranking.
+  # Mirrors the bestseller reporting filter (paid through delivered; excludes
+  # pending, cancelled, and refunded).
+  SOLD_ORDER_STATUSES = %w[paid processing shipped delivered].freeze
+
+  # Applies the :search filter and then orders results by relevance:
+  #   1. Name matches first. Rows are ranked by how many query words appear in
+  #      the name, so a row matching every word ranks above one matching some,
+  #      and a row matching only attribute columns (size/colour/material/brand/
+  #      sku) ranks last.
+  #   2. Popularity tiebreak: total quantity sold across completed, non-sample
+  #      order line items (the same signal used for bestseller reporting).
+  #   3. Stable :id tiebreak.
+  # Ordering lives here (not in the controller) so callers get relevance for
+  # free. Uses sanitize_sql_like like :search to keep wildcards literal.
+  scope :search_ranked, ->(query) {
+    scoped = search(query)
+    return scoped if query.blank?
+
+    words = query.to_s.truncate(100, omission: "").split
+    return scoped.order(sales_rank_order, arel_table[:id].asc) if words.empty?
+
+    missing_word_terms = words.each_with_index.map do |word, i|
+      sanitized = sanitize_sql_like(word)
+      key = "rank#{i}"
+      [ "CASE WHEN products.name ILIKE :#{key} THEN 0 ELSE 1 END", key, "%#{sanitized}%" ]
+    end
+
+    name_rank_sql = missing_word_terms.map(&:first).join(" + ")
+    binds = missing_word_terms.to_h { |(_, key, value)| [ key.to_sym, value ] }
+
+    scoped.order(Arel.sql(sanitize_sql_array([ name_rank_sql, binds ]) + " ASC"))
+          .order(sales_rank_order, arel_table[:id].asc)
+  }
+
+  # ORDER BY term that ranks products by units sold across completed,
+  # non-sample orders (most-sold first). Correlated subquery so it needs no
+  # join or GROUP BY on the outer relation; leans on the existing
+  # order_items(product_id) and orders(status) indexes.
+  def self.sales_rank_order
+    Arel.sql(<<~SQL.squish + " DESC NULLS LAST")
+      (SELECT COALESCE(SUM(order_items.quantity), 0)
+       FROM order_items
+       JOIN orders ON orders.id = order_items.order_id
+       WHERE order_items.product_id = products.id
+         AND order_items.is_sample = FALSE
+         AND orders.status IN (#{SOLD_ORDER_STATUSES.map { |s| connection.quote(s) }.join(', ')}))
+    SQL
+  end
+
   # Extended search including category names
   # Splits multi-word queries so each word is matched independently across columns
   scope :search_extended, ->(query) {
