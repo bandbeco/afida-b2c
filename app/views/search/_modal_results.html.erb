@@ -1,11 +1,11 @@
 <%# Search results for modal - larger display than header dropdown %>
-<%# Variables: @products (search results), @query (search term), @total_count (total matches) %>
+<%# Variables: @rows (collapsed result rows), @query (search term), @total_count (total row count) %>
 
 <% if @query.blank? || @query.length < 2 %>
   <div class="text-center py-12 text-gray-500">
     <p>Type at least 2 characters to search</p>
   </div>
-<% elsif @products.empty? %>
+<% elsif @rows.empty? %>
   <div class="text-center py-12">
     <svg class="mx-auto w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -17,23 +17,23 @@
   <%# Results header %>
   <div class="mb-4 flex items-center justify-between">
     <p class="text-sm text-gray-500">
-      <% if @total_count > @products.size %>
-        Showing <%= @products.size %> of <%= @total_count %> results for "<%= @query %>"
+      <% if @total_count > @rows.size %>
+        Showing <%= @rows.size %> of <%= @total_count %> results for "<%= @query %>"
       <% else %>
-        <%= pluralize(@products.size, "result") %> for "<%= @query %>"
+        <%= pluralize(@rows.size, "result") %> for "<%= @query %>"
       <% end %>
     </p>
   </div>
 
   <%# Results list - horizontal stacked rows for better differentiation %>
   <div class="space-y-2">
-    <% @products.each do |product| %>
-      <%= render partial: "search/result_row", locals: { product: product, compact: false } %>
+    <% @rows.each do |row| %>
+      <%= render partial: "search/result_row", locals: { row: row, compact: false } %>
     <% end %>
   </div>
 
   <%# View all link %>
-  <% if @total_count > @products.size %>
+  <% if @total_count > @rows.size %>
     <div class="mt-6 text-center">
       <%= link_to shop_path(q: @query),
                   class: "inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-focus transition font-medium",

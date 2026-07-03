@@ -20,28 +20,27 @@ class SearchController < ApplicationController
     @modal = params[:modal] == "true"
 
     if @query.length < 2
-      @products = []
+      @rows = []
       @total_count = 0
     else
-      base_query = Product
-        .active
-        .catalog_products
-        .search(@query)
-
-      # Get total count for "view all" link
-      @total_count = base_query.count
-
-      # Modal shows more results than header dropdown
-      limit = @modal ? 10 : 5
-
-      # search_ranked reapplies the same :search filter, then orders by
-      # relevance (name matches first) and popularity (units sold).
-      @products = Product
+      # search_ranked reapplies the :search filter, then orders by relevance
+      # (name matches first) and popularity (units sold). Collapse size/colour
+      # variants that share a ProductFamily into one row (issue #247), so the
+      # limit and the "Showing X of Y" count apply to ROWS DISPLAYED, not raw
+      # SKUs. Relevance order is preserved: a family takes the rank of its
+      # best-ranked member (its first appearance in the ranked list).
+      ranked = Product
         .active
         .catalog_products
         .search_ranked(@query)
-        .includes(:category, product_photo_attachment: :blob)
-        .limit(limit)
+        .includes(:product_family, :category, product_photo_attachment: :blob)
+
+      all_rows = SearchResultRow.collapse(ranked)
+      @total_count = all_rows.size
+
+      # Modal shows more results than the header dropdown.
+      limit = @modal ? 10 : 5
+      @rows = all_rows.first(limit)
     end
 
     respond_to do |format|

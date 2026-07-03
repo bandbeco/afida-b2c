@@ -84,11 +84,13 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index ranks name matches ahead of attribute-only matches" do
+    # Detach from their shared family so ranking is asserted over distinct
+    # rows rather than a single collapsed family row (issue #247).
     name_match = products(:single_wall_12oz_white)
-    name_match.update!(name: "Zephyr Cup", brand: nil, colour: nil, material: nil)
+    name_match.update!(name: "Zephyr Cup", brand: nil, colour: nil, material: nil, product_family: nil)
 
     attribute_match = products(:single_wall_8oz_white)
-    attribute_match.update!(name: "Saucer", brand: "Zephyr", colour: nil, material: nil)
+    attribute_match.update!(name: "Saucer", brand: "Zephyr", colour: nil, material: nil, product_family: nil)
 
     get search_url, params: { q: "zephyr" }
 
@@ -98,6 +100,83 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert name_pos, "expected name match to render"
     assert attr_pos, "expected attribute match to render"
     assert_operator name_pos, :<, attr_pos
+  end
+
+  # Family collapsing (issue #247)
+
+  test "modal collapses a multi-member family into a single row" do
+    # The single_wall_cups family has several catalog members. Give them a
+    # shared searchable term and render the modal.
+    family_products = ProductFamily.find_by(slug: "single-wall-cups").products.to_a
+    family_products.each { |p| p.update_columns(material: "Zingcup") }
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # Exactly one row links into the family (via its representative), not one
+    # per SKU.
+    family_links = family_products.map { |p| product_path(p.slug) }
+    rendered = family_links.count { |href| response.body.include?("href=\"#{href}\"") }
+    assert_equal 1, rendered, "expected a single collapsed family row"
+  end
+
+  test "modal shows the family name and variant count for a collapsed family" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    family.products.each { |p| p.update_columns(material: "Zingcup") }
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    assert_includes response.body, ERB::Util.html_escape(family.name)
+    assert_match(/#{family.products.count}\s+variants/i, response.body)
+  end
+
+  test "modal count reflects collapsed rows, not raw SKUs" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    family.products.each { |p| p.update_columns(material: "Zingcup") }
+    raw_count = Product.active.catalog_products.search("Zingcup").count
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    assert_operator raw_count, :>, 1, "fixture should have several SKUs to collapse"
+    # The truthful count line must not advertise the raw SKU total.
+    assert_no_match(/of #{raw_count} results/, response.body)
+    # One collapsed family row means a single result.
+    assert_match(/1 result for/, response.body)
+  end
+
+  test "modal shows the size range for a collapsed family" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    sizes = %w[4oz 8oz 12oz 16oz 20oz]
+    family.products.each_with_index do |p, i|
+      p.update_columns(material: "Zingcup", size: sizes[i % sizes.size])
+    end
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # Smallest to largest size, by numeric value.
+    assert_match(/4oz\s*[-–]\s*20oz/, response.body)
+  end
+
+  test "modal keeps family-less products as individual rows" do
+    loose = products(:one)
+    loose.update_columns(product_family_id: nil, material: "Solocue")
+
+    get search_url, params: { q: "Solocue", modal: "true" }
+
+    assert_response :success
+    assert_select "a[href=?]", product_path(loose.slug)
+  end
+
+  test "modal keeps brandable template rows individual" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first, modal: "true" }
+
+    assert_response :success
+    assert_select "a[href=?]", branded_product_path(brandable.slug)
   end
 
   test "index is accessible without authentication" do

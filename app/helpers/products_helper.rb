@@ -37,6 +37,19 @@ module ProductsHelper
     end
   end
 
+  # Secondary text for a search result row. Collapsed family rows describe the
+  # variant spread (size range plus variant count); everything else falls back
+  # to the per-product subtitle.
+  def search_row_subtitle(row)
+    if row.family?
+      count = pluralize(row.variant_count, "variant")
+      range = row.size_range
+      range.present? ? "#{range} · #{count}" : count
+    else
+      search_display_subtitle(row.product)
+    end
+  end
+
   # Secondary text for search results - shows pack size only
   def search_display_subtitle(product)
     if product.brandable?

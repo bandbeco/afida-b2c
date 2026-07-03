@@ -1,18 +1,18 @@
 <%# Search results partial - rendered in header dropdown and full search page %>
-<%# Variables: @products (search results), @query (search term) %>
+<%# Variables: @rows (collapsed result rows), @query (search term) %>
 
 <% if @query.blank? || @query.length < 2 %>
   <div class="p-4 text-center text-gray-500">
     Type at least 2 characters to search
   </div>
-<% elsif @products.empty? %>
+<% elsif @rows.empty? %>
   <div class="p-4 text-center text-gray-500">
     No results found for "<%= @query %>"
   </div>
 <% else %>
   <div class="divide-y divide-gray-100">
-    <% @products.each do |product| %>
-      <%= render partial: "search/result_row", locals: { product: product, compact: true } %>
+    <% @rows.each do |row| %>
+      <%= render partial: "search/result_row", locals: { row: row, compact: true } %>
     <% end %>
   </div>
 
