@@ -24,9 +24,13 @@
             </svg>
             <input type="text"
                    data-search-modal-target="input"
-                   data-action="input->search-modal#search"
-                   placeholder="Type here"
+                   data-action="input->search-modal#search keydown.enter->search-modal#submit keydown.down->search-modal#next keydown.up->search-modal#previous"
+                   placeholder="Search cups, boxes, napkins..."
                    class="w-full pl-12 pr-10 py-4 text-lg border-2 border-gray-200 rounded-xl focus:border-primary focus:ring-0 focus:outline-none"
+                   role="combobox"
+                   aria-expanded="false"
+                   aria-controls="search-modal-results"
+                   aria-autocomplete="list"
                    autocomplete="off"
                    autocapitalize="off"
                    spellcheck="false">
@@ -60,9 +64,13 @@
           <%= render "shared/search_modal_default_content" %>
         </div>
 
-        <%# Search results (loaded via Turbo Frame) %>
+        <%# Search results (loaded via Turbo Frame). resultsLoaded records the
+            query into recent-searches only once the frame confirms it returned
+            results, so zero-result typos and curated-chip clicks don't pollute
+            the history (issue #251 follow-up). %>
         <%= turbo_frame_tag "search-modal-results",
-                            data: { search_modal_target: "results" },
+                            data: { search_modal_target: "results",
+                                    action: "turbo:frame-load->search-modal#resultsLoaded" },
                             class: "hidden" %>
       </div>
     </div>

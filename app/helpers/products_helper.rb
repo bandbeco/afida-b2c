@@ -37,6 +37,22 @@ module ProductsHelper
     end
   end
 
+  # Secondary text for a search result row. Collapsed family rows describe the
+  # variant spread (size range plus variant count); everything else falls back
+  # to the per-product subtitle. When the row will render each size as its own
+  # chip (a family with sizes), the range is dropped so the subtitle does not
+  # just echo those chips, leaving the bare variant count. The row itself knows
+  # this from its size_variants, so no caller flag is needed.
+  def search_row_subtitle(row)
+    if row.family?
+      count = pluralize(row.variant_count, "variant")
+      range = row.size_variants.any? ? nil : row.size_range
+      range.present? ? "#{range} · #{count}" : count
+    else
+      search_display_subtitle(row.product)
+    end
+  end
+
   # Secondary text for search results - shows pack size only
   def search_display_subtitle(product)
     if product.brandable?
@@ -96,6 +112,14 @@ module ProductsHelper
     end
   end
 
+  # " · Yp per unit" for a multi-unit pack, blank for a single-unit pack where
+  # the per-unit price is just the price itself.
+  def per_unit_suffix(product)
+    return "" unless product.pac_size.to_i > 1
+
+    " · #{format_unit_price(product.unit_price)} per unit"
+  end
+
   # Pence below a pound ("2.7p", "3p"), pounds otherwise ("£1.24")
   def format_unit_price(amount)
     if amount >= 1
@@ -103,6 +127,32 @@ module ProductsHelper
     else
       "#{number_with_precision(amount * 100, precision: 1, strip_insignificant_zeros: true)}p"
     end
+  end
+
+  # Price line for a search result row. Catalog rows pair the pack price with a
+  # per-unit rate so buyers can compare across pack sizes; family rows quote the
+  # cheapest member with the same per-unit treatment. Reuses format_unit_price
+  # from the shop card work (#237) for consistent pence/pound formatting.
+  def search_price_line(row)
+    product = row.product
+
+    if row.family?
+      "From #{number_to_currency(row.from_price)}#{per_unit_suffix(row.cheapest_per_unit_member)}"
+    else
+      "#{number_to_currency(product.price)}#{per_unit_suffix(product)}"
+    end
+  end
+
+  # Factual price anchor for a brandable template row: the cheapest achievable
+  # per-unit price across every branded size/tier, plus the maximum volume
+  # saving when there is one.
+  def branded_price_anchor(product)
+    cheapest = product.branded_product_prices.minimum(:price_per_unit)
+    return nil if cheapest.blank?
+
+    anchor = "From #{format_unit_price(cheapest)} per unit"
+    discount = max_volume_discount_percentage(product)
+    discount ? "#{anchor} · save up to #{discount}% in volume" : anchor
   end
 
   # Calculate the maximum volume discount percentage for branded products
@@ -122,5 +172,30 @@ module ProductsHelper
     end.max
 
     max_discount.positive? ? max_discount : nil
+  end
+
+  # Wraps each occurrence of a query word in a search result title with a
+  # subtle mint-tinted <mark>, so the matched term stands out without bold
+  # (banned by our design rules). Highlighting is done AFTER HTML-escaping the
+  # title, and query words are matched literally (Regexp.escape), so raw user
+  # input is never interpreted as HTML or as a regular expression.
+  def highlight_search_match(title, query)
+    escaped_title = ERB::Util.html_escape(title.to_s)
+
+    words = query.to_s.split.map(&:strip).reject(&:blank?)
+    return escaped_title if words.empty?
+
+    # Match the already-escaped query words against the already-escaped title
+    # so both sides share the same escaping and comparison stays literal. Build
+    # the alternation from string sources (not a nested Regexp) so the
+    # case-insensitive flag applies to every branch.
+    alternation = words.map { |word| Regexp.escape(ERB::Util.html_escape(word)) }.join("|")
+    pattern = Regexp.new("(#{alternation})", Regexp::IGNORECASE)
+
+    highlighted = escaped_title.to_str.gsub(pattern) do |match|
+      %(<mark class="bg-primary/10 text-inherit rounded-sm">#{match}</mark>)
+    end
+
+    highlighted.html_safe
   end
 end

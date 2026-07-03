@@ -20,24 +20,36 @@ class SearchController < ApplicationController
     @modal = params[:modal] == "true"
 
     if @query.length < 2
-      @products = []
+      @rows = []
       @total_count = 0
     else
-      base_query = Product
+      # search_ranked reapplies the :search filter, then orders by relevance
+      # (name matches first) and popularity (units sold). Collapse size/colour
+      # variants that share a ProductFamily into one row (issue #247), so the
+      # limit and the "Showing X of Y" count apply to ROWS DISPLAYED, not raw
+      # SKUs. Relevance order is preserved: a family takes the rank of its
+      # best-ranked member (its first appearance in the ranked list).
+      ranked = Product
         .active
         .catalog_products
-        .search(@query)
+        .search_ranked(@query)
+        .includes(:product_family, :category, product_photo_attachment: :blob)
 
-      # Get total count for "view all" link
-      @total_count = base_query.count
+      all_rows = SearchResultRow.collapse(ranked)
 
-      # Modal shows more results than header dropdown
+      # Before the modal declares "no results", widen the net to category names
+      # via search_extended (issue #251). A query like "coffee shops" may name no
+      # product but match a category, so this rescues an otherwise dead end.
+      # Scoped to the modal: the compact header dropdown keeps to direct matches
+      # so it never surfaces a product whose name has nothing to do with the
+      # query (matched only via its category) with no room to explain why.
+      all_rows = extended_rows if @modal && all_rows.empty?
+
+      @total_count = all_rows.size
+
+      # Modal shows more results than the header dropdown.
       limit = @modal ? 10 : 5
-
-      @products = base_query
-        .includes(:category, product_photo_attachment: :blob)
-        .order(Arel.sql("CASE WHEN product_type = 'customizable_template' THEN 0 ELSE 1 END"))
-        .limit(limit)
+      @rows = all_rows.first(limit)
     end
 
     respond_to do |format|
@@ -47,6 +59,21 @@ class SearchController < ApplicationController
   end
 
   private
+
+  # Category-aware fallback rows for a query that matched no product directly.
+  # Uses search_extended (which also searches category names) and ranks by the
+  # same relevance ordering as the primary path (by_relevance) so the two search
+  # paths agree, then collapses families the same way.
+  def extended_rows
+    extended = Product
+      .active
+      .catalog_products
+      .search_extended(@query)
+      .by_relevance(@query)
+      .includes(:product_family, :category, product_photo_attachment: :blob)
+
+    SearchResultRow.collapse(extended)
+  end
 
   def render_appropriate_template
     if @modal

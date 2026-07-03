@@ -1,31 +1,18 @@
 <%# Search results partial - rendered in header dropdown and full search page %>
-<%# Variables: @products (search results), @query (search term) %>
+<%# Variables: @rows (collapsed result rows), @query (search term) %>
 
 <% if @query.blank? || @query.length < 2 %>
   <div class="p-4 text-center text-gray-500">
     Type at least 2 characters to search
   </div>
-<% elsif @products.empty? %>
+<% elsif @rows.empty? %>
   <div class="p-4 text-center text-gray-500">
     No results found for "<%= @query %>"
   </div>
 <% else %>
   <div class="divide-y divide-gray-100">
-    <% @products.each do |product| %>
-      <%= link_to search_result_path(product),
-                  class: "product-card flex items-center gap-3 p-3 hover:bg-base-200 transition",
-                  data: { turbo_frame: "_top" } do %>
-        <div class="w-12 h-12 flex-shrink-0 bg-white rounded overflow-hidden">
-          <%= product_photo_tag(product.primary_photo,
-                                alt: product.full_name,
-                                class: "w-full h-full object-contain",
-                                variant: { resize_and_pad: [48, 48, { background: [255, 255, 255] }] }) %>
-        </div>
-        <div class="flex-1 min-w-0">
-          <div class="font-medium text-sm truncate"><%= product.full_name %></div>
-          <div class="text-xs text-gray-500"><%= number_to_currency(product.price) %></div>
-        </div>
-      <% end %>
+    <% @rows.each do |row| %>
+      <%= render partial: "search/result_row", locals: { row: row, compact: true } %>
     <% end %>
   </div>
 

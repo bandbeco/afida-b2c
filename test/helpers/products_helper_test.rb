@@ -268,4 +268,136 @@ class ProductsHelperTest < ActionView::TestCase
 
     assert_equal "£41.31", card_price_line(product)
   end
+
+  # search_price_line tests (issue #248)
+
+  test "search_price_line pairs the pack price with a per-unit rate" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 86.15, pac_size: 1000)
+    row = SearchResultRow.new([ product ])
+
+    assert_equal "£86.15 · 8.6p per unit", search_price_line(row)
+  end
+
+  test "search_price_line uses pounds for per-unit rates of a pound or more" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 620.00, pac_size: 500)
+    row = SearchResultRow.new([ product ])
+
+    assert_equal "£620.00 · £1.24 per unit", search_price_line(row)
+  end
+
+  test "search_price_line shows the plain price for a single-unit pack" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 9.99, pac_size: 1)
+    row = SearchResultRow.new([ product ])
+
+    assert_equal "£9.99", search_price_line(row)
+  end
+
+  test "search_price_line quotes a from-price and per-unit rate for a family row" do
+    cheaper = products(:single_wall_8oz_white)
+    cheaper.update!(pricing_tiers: nil, price: 42.30, pac_size: 1000)
+    dearer = products(:single_wall_12oz_white)
+    dearer.update!(pricing_tiers: nil, price: 55.00, pac_size: 1000)
+    row = SearchResultRow.collapse([ cheaper, dearer ]).first
+
+    assert row.family?
+    assert_equal "From £42.30 · 4.2p per unit", search_price_line(row)
+  end
+
+  # search_row_subtitle tests
+
+  test "search_row_subtitle shows just the variant count for a family with sizes" do
+    a = products(:single_wall_8oz_white)
+    a.update_columns(size: "8oz")
+    b = products(:single_wall_12oz_white)
+    b.update_columns(size: "12oz")
+    row = SearchResultRow.collapse([ a, b ]).first
+
+    assert row.family?
+    # The row has sizes, so the modal renders each as its own chip; the subtitle
+    # would only echo them, so it shows the bare count. The row decides this from
+    # its own size_variants (no caller flag).
+    assert_equal "2 variants", search_row_subtitle(row)
+  end
+
+  test "search_row_subtitle keeps the size range for a family whose members carry no size" do
+    a = products(:single_wall_8oz_white)
+    b = products(:single_wall_12oz_white)
+    [ a, b ].each { |p| p.update_columns(size: nil) }
+    row = SearchResultRow.collapse([ a, b ]).first
+
+    # No sizes means no chips, so the subtitle is just the count (size_range nil).
+    assert_equal "2 variants", search_row_subtitle(row)
+  end
+
+  # branded_price_anchor tests (issue #248)
+
+  test "branded_price_anchor quotes the cheapest per-unit price and the max volume discount" do
+    product = products(:branded_template_variant)
+
+    assert_equal "From 18p per unit · save up to 40% in volume",
+                 branded_price_anchor(product)
+  end
+
+  test "branded_price_anchor drops the discount clause when there is no volume saving" do
+    product = products(:branded_template_variant)
+    product.branded_product_prices.destroy_all
+    product.branded_product_prices.create!(
+      size: "8oz", quantity_tier: 1000, price_per_unit: 0.25, case_quantity: 500
+    )
+
+    assert_equal "From 25p per unit", branded_price_anchor(product)
+  end
+
+  # highlight_search_match tests (issue #250)
+
+  test "highlight_search_match wraps the matched term in a mint-tinted mark" do
+    result = highlight_search_match("8oz White Cups", "white")
+
+    assert_match %r{<mark class="[^"]*bg-primary/10[^"]*">White</mark>}, result
+  end
+
+  test "highlight_search_match preserves the original casing of the match" do
+    result = highlight_search_match("8oz White Cups", "WHITE")
+
+    assert_includes result, ">White</mark>"
+  end
+
+  test "highlight_search_match highlights every query word" do
+    result = highlight_search_match("8oz White Cups", "white cups")
+
+    assert_includes result, ">White</mark>"
+    assert_includes result, ">Cups</mark>"
+  end
+
+  test "highlight_search_match escapes HTML in the title" do
+    result = highlight_search_match("<script>alert(1)</script> cups", "cups")
+
+    refute_includes result, "<script>"
+    assert_includes result, "&lt;script&gt;"
+  end
+
+  test "highlight_search_match does not interpret regex metacharacters in the query" do
+    result = highlight_search_match("8oz White Cups", "wh.te")
+
+    # A literal "wh.te" must not match "Whit"; the title comes back escaped and
+    # unhighlighted rather than treating "." as a wildcard.
+    refute_includes result, "<mark"
+    assert_includes result, "8oz White Cups"
+  end
+
+  test "highlight_search_match returns the escaped title unchanged for a blank query" do
+    result = highlight_search_match("8oz White Cups", "")
+
+    refute_includes result, "<mark"
+    assert_includes result, "8oz White Cups"
+  end
+
+  test "highlight_search_match returns an html_safe string" do
+    result = highlight_search_match("8oz White Cups", "white")
+
+    assert_predicate result, :html_safe?
+  end
 end

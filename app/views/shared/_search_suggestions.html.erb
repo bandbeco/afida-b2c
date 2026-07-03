@@ -1,0 +1,50 @@
+<%# Reusable search suggestions block (issue #251). %>
+<%# Rendered both in the modal's default (pre-typing) content and in the %>
+<%# no-results state, so a zero-result query is never a dead end. %>
+<%# %>
+<%# Locals: %>
+<%#   show_recent - render the localStorage-backed "Recent searches" block. %>
+<%#     Only the default (pre-typing) content passes true: its recentSearches %>
+<%#     targets are hydrated by the Stimulus controller on open. The no-results %>
+<%#     state omits it, so the recentSearches targets are never duplicated in %>
+<%#     the DOM (Stimulus singular targets would otherwise resolve to the first %>
+<%#     copy and the visible one would never populate). %>
+
+<%
+  show_recent = local_assigns.fetch(:show_recent, false)
+  quick_terms = ["Cups", "Pizza boxes", "Napkins", "Straws", "Takeaway containers", "Ice cream"]
+%>
+
+<%# Recent searches (populated from localStorage) %>
+<% if show_recent %>
+  <div class="mb-8 hidden" data-search-modal-target="recentSearches">
+    <div class="flex items-center justify-between mb-3">
+      <p class="text-sm font-medium text-gray-500">Recent searches</p>
+      <button type="button"
+              data-action="click->search-modal#clearRecentSearches"
+              class="text-xs text-gray-400 hover:text-gray-600 transition">
+        Clear
+      </button>
+    </div>
+    <div class="flex flex-wrap gap-2" data-search-modal-target="recentSearchesList"></div>
+  </div>
+<% end %>
+
+<%# Most searched chips %>
+<div class="mb-8">
+  <p class="text-sm font-medium text-gray-500 mb-3">Most searched</p>
+  <div class="flex flex-wrap gap-2">
+    <% quick_terms.each do |term| %>
+      <%# data-search-modal-target="quickChip" marks these as the single source
+          of chip styling; recent-search chips are cloned from one (see the
+          controller's buildQuickChip). %>
+      <button type="button"
+              data-search-modal-target="quickChip"
+              data-action="click->search-modal#quickSearch"
+              data-term="<%= term %>"
+              class="px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm transition border border-black">
+        <%= term %>
+      </button>
+    <% end %>
+  </div>
+</div>

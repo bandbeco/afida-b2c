@@ -1,81 +1,53 @@
 <%# Search results for modal - larger display than header dropdown %>
-<%# Variables: @products (search results), @query (search term), @total_count (total matches) %>
+<%# Variables: @rows (collapsed result rows), @query (search term), @total_count (total row count) %>
 
 <% if @query.blank? || @query.length < 2 %>
   <div class="text-center py-12 text-gray-500">
     <p>Type at least 2 characters to search</p>
   </div>
-<% elsif @products.empty? %>
-  <div class="text-center py-12">
+<% elsif @rows.empty? %>
+  <%# Zero results: name the query, then offer the Most searched chips (and any
+  %>
+  <%# recent searches) instead of a dead-end message (issue #251). %>
+  <div class="text-center py-8">
     <svg class="mx-auto w-16 h-16 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
     </svg>
     <p class="text-gray-500 text-lg">No results found for "<%= @query %>"</p>
-    <p class="text-gray-400 mt-2">Try a different search term or browse our categories</p>
+    <p class="text-gray-400 mt-2">Try one of these instead</p>
   </div>
+  <%= render "shared/search_suggestions" %>
 <% else %>
-  <%# Results header %>
-  <div class="mb-4 flex items-center justify-between">
-    <p class="text-sm text-gray-500">
-      <% if @total_count > @products.size %>
-        Showing <%= @products.size %> of <%= @total_count %> results for "<%= @query %>"
+  <%# Results header. The count line links straight to the full results page so
+  %>
+  <%# it is reachable without scrolling past every row (issue #249). It is also
+  %>
+  <%# an aria-live region so screen readers announce the result count (#250). %>
+  <div class="mb-4 flex items-center justify-between" aria-live="polite">
+    <%= link_to shop_path(q: @query),
+                class: "text-sm text-gray-500 hover:text-primary transition",
+                data: { turbo_frame: "_top" } do %>
+      <% if @total_count > @rows.size %>
+        Showing <%= @rows.size %> of <%= @total_count %> results for "<%= @query %>"
       <% else %>
-        <%= pluralize(@products.size, "result") %> for "<%= @query %>"
-      <% end %>
-    </p>
-  </div>
-
-  <%# Results list - horizontal stacked rows for better differentiation %>
-  <div class="space-y-2">
-    <% @products.each do |product| %>
-      <%= link_to search_result_path(product),
-                  class: "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition",
-                  data: { turbo_frame: "_top" } do %>
-        <%# Product thumbnail %>
-        <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
-          <%= product_photo_tag(product.primary_photo,
-                                alt: product.full_name,
-                                class: "w-full h-full object-contain",
-                                variant: { resize_and_pad: [80, 80, { background: [255, 255, 255] }] },
-                                loading: "lazy") %>
-        </div>
-
-        <%# Product info - two lines %>
-        <div class="flex-1 min-w-0">
-          <h3 class="text-gray-900 truncate">
-            <%= search_display_title(product) %>
-            <% if product.brandable? %>
-              <span class="badge badge-warning badge-sm ml-1">Brandable</span>
-            <% end %>
-          </h3>
-          <p class="text-sm text-gray-500 truncate">
-            <%= search_display_subtitle(product) %>
-          </p>
-        </div>
-
-        <%# Price - right aligned %>
-        <div class="flex-shrink-0 text-right">
-          <% if product.brandable? %>
-            <% discount = max_volume_discount_percentage(product) %>
-            <span class="">
-              <% if discount %>
-                Volume discount: save up to <%= discount %>%
-              <% else %>
-                Volume pricing
-              <% end %>
-            </span>
-          <% else %>
-            <p class="text-gray-700">
-              <%= number_to_currency(product.price) %>
-            </p>
-          <% end %>
-        </div>
+        <%= pluralize(@rows.size, "result") %> for "<%= @query %>"
       <% end %>
     <% end %>
   </div>
 
+  <%# Results list - horizontal stacked rows for better differentiation. The
+  %>
+  <%# listbox/option roles and per-row ids back the ARIA combobox and the
+  %>
+  <%# keyboard navigation in the Stimulus controller (issue #250). %>
+  <div class="space-y-2" role="listbox" aria-label="Search results" data-search-modal-target="listbox">
+    <% @rows.each_with_index do |row, index| %>
+      <%= render partial: "search/result_row", locals: { row: row, compact: false, option_index: index } %>
+    <% end %>
+  </div>
+
   <%# View all link %>
-  <% if @total_count > @products.size %>
+  <% if @total_count > @rows.size %>
     <div class="mt-6 text-center">
       <%= link_to shop_path(q: @query),
                   class: "inline-flex items-center gap-2 px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-focus transition font-medium",

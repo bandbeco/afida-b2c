@@ -44,6 +44,187 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", product_path(@variant.slug)
   end
 
+  test "header results render generated_title" do
+    @variant.update_columns(brand: "Vegware", material: "Paper", size: "8oz", name: "Single Wall Cups")
+    expected = @variant.generated_title # "Vegware Paper Single Wall Cups - 8oz"
+
+    get search_url, params: { q: "Vegware" }
+
+    assert_response :success
+    # Matched terms are wrapped in <mark> for highlighting (issue #250), so
+    # strip the tags before asserting the full title rendered.
+    assert_includes unhighlighted(response.body), ERB::Util.html_escape(expected)
+  end
+
+  test "modal results render generated_title" do
+    @variant.update_columns(brand: "Vegware", material: "Paper", size: "8oz", name: "Single Wall Cups")
+    expected = @variant.generated_title # "Vegware Paper Single Wall Cups - 8oz"
+
+    get search_url, params: { q: "Vegware", modal: "true" }
+
+    assert_response :success
+    assert_includes unhighlighted(response.body), ERB::Util.html_escape(expected)
+  end
+
+  test "header dropdown does not show a raw price for brandable templates" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first }
+
+    assert_response :success
+    # The £0.01 template price must never surface in the dropdown.
+    assert_no_match(/£0\.01/, response.body)
+  end
+
+  test "header dropdown shows the volume-discount treatment for brandable templates" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first }
+
+    assert_response :success
+    assert_match(/save up to/i, response.body)
+  end
+
+  test "brandable rows anchor the price with a from per-unit figure" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first, modal: "true" }
+
+    assert_response :success
+    # Cheapest per-unit across the fixture's branded prices is 18p, max
+    # volume saving 40%.
+    assert_match(%r{From 18p per unit · save up to 40% in volume}, response.body)
+  end
+
+  test "catalog rows show the per-unit price alongside the pack price" do
+    loose = products(:one)
+    loose.update!(product_family_id: nil, material: "Persol", pricing_tiers: nil,
+                  price: 86.15, pac_size: 1000)
+
+    get search_url, params: { q: "Persol", modal: "true" }
+
+    assert_response :success
+    assert_match(%r{£86\.15 · 8\.6p per unit}, response.body)
+  end
+
+  test "index ranks name matches ahead of attribute-only matches" do
+    # Detach from their shared family so ranking is asserted over distinct
+    # rows rather than a single collapsed family row (issue #247).
+    name_match = products(:single_wall_12oz_white)
+    name_match.update!(name: "Zephyr Cup", brand: nil, colour: nil, material: nil, product_family: nil)
+
+    attribute_match = products(:single_wall_8oz_white)
+    attribute_match.update!(name: "Saucer", brand: "Zephyr", colour: nil, material: nil, product_family: nil)
+
+    get search_url, params: { q: "zephyr" }
+
+    assert_response :success
+    name_pos = response.body.index(product_path(name_match.slug))
+    attr_pos = response.body.index(product_path(attribute_match.slug))
+    assert name_pos, "expected name match to render"
+    assert attr_pos, "expected attribute match to render"
+    assert_operator name_pos, :<, attr_pos
+  end
+
+  # Family collapsing (issue #247)
+
+  test "modal collapses a multi-member family into a single row" do
+    # The single_wall_cups family has several catalog members. Give them a
+    # shared searchable term and render the modal.
+    family_products = ProductFamily.find_by(slug: "single-wall-cups").products.to_a
+    family_products.each { |p| p.update_columns(material: "Zingcup") }
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # Exactly one row links into the family (via its representative), not one
+    # per SKU.
+    family_links = family_products.map { |p| product_path(p.slug) }
+    rendered = family_links.count { |href| response.body.include?("href=\"#{href}\"") }
+    assert_equal 1, rendered, "expected a single collapsed family row"
+  end
+
+  test "modal shows the family name and variant count for a collapsed family" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    family.products.each { |p| p.update_columns(material: "Zingcup") }
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    assert_includes response.body, ERB::Util.html_escape(family.name)
+    assert_match(/#{family.products.count}\s+variants/i, response.body)
+  end
+
+  test "modal count reflects collapsed rows, not raw SKUs" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    family.products.each { |p| p.update_columns(material: "Zingcup") }
+    raw_count = Product.active.catalog_products.search("Zingcup").count
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    assert_operator raw_count, :>, 1, "fixture should have several SKUs to collapse"
+    # The truthful count line must not advertise the raw SKU total.
+    assert_no_match(/of #{raw_count} results/, response.body)
+    # One collapsed family row means a single result.
+    assert_match(/1 result for/, response.body)
+  end
+
+  test "modal renders each family size as its own linkable chip" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    sizes = %w[4oz 8oz 12oz 16oz 20oz]
+    family.products.each_with_index do |p, i|
+      p.update_columns(material: "Zingcup", size: sizes[i % sizes.size])
+    end
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # Sizes now surface as individual variant links rather than an inert
+    # "4oz - 20oz" range in the subtitle. Each size link points at a product
+    # page and the full set of sizes is represented.
+    size_links = css_select("div a[href^='/products/']").select { |a| sizes.include?(a.text.strip) }
+    assert_equal sizes.uniq.sort, size_links.map { |a| a.text.strip }.uniq.sort
+    size_links.each { |a| assert_match %r{^/products/}, a["href"] }
+  end
+
+  test "modal links each variant of a collapsed family to its own page" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    sizes = %w[4oz 8oz 12oz]
+    members = family.products.first(3)
+    members.each_with_index do |p, i|
+      p.update_columns(material: "Zingcup", size: sizes[i])
+    end
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # The collapsed row still shows one heading, but each size is a link to
+    # that variant's page so no variant is stranded (issue #247 follow-up).
+    members.each do |member|
+      assert_select "a[href=?]", product_path(member.slug), text: member.size
+    end
+  end
+
+  test "modal keeps family-less products as individual rows" do
+    loose = products(:one)
+    loose.update_columns(product_family_id: nil, material: "Solocue")
+
+    get search_url, params: { q: "Solocue", modal: "true" }
+
+    assert_response :success
+    assert_select "a[href=?]", product_path(loose.slug)
+  end
+
+  test "modal keeps brandable template rows individual" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first, modal: "true" }
+
+    assert_response :success
+    assert_select "a[href=?]", branded_product_path(brandable.slug)
+  end
+
   test "index is accessible without authentication" do
     get search_url, params: { q: "test" }
     assert_response :success
@@ -98,5 +279,126 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     get search_url, params: { q: "8oz" }, as: :turbo_stream
     assert_response :success
     assert_match(/header-search-results/, response.body)
+  end
+
+  # View-all affordance (issue #249)
+
+  test "modal result count line links to the full results page" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    family.products.each { |p| p.update_columns(material: "Zingcup") }
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # The "Showing X of Y" / "N results" line is itself a link to /shop?q=,
+    # so the full results are reachable without scrolling past every row.
+    assert_select "a[href=?]", shop_path(q: "Zingcup"), text: /result/i
+  end
+
+  # Keyboard navigation, highlighting, and ARIA (issue #250)
+
+  test "result titles highlight the matched query term" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "mark.bg-primary\\/10", text: /8oz/i
+  end
+
+  test "modal wraps results in an ARIA listbox with option rows" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "[role='listbox']"
+    assert_select "[role='option']"
+  end
+
+  test "modal result rows carry stable ids for aria-activedescendant" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "[role='option'][id^='search-result-']"
+  end
+
+  test "modal result count line is an aria-live polite region" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "[aria-live='polite']"
+  end
+
+  # Empty and zero-result states (issue #251)
+
+  test "falls back to search_extended when the direct search finds nothing" do
+    loose = products(:one)
+    loose.update!(product_family_id: nil, name: "Plain Widget", sku: "PW-1",
+                  brand: nil, colour: nil, material: nil, size: nil)
+    loose.category.update!(name: "Zorptastic Supplies")
+
+    # "Zorptastic" matches only the category name, so plain :search misses it
+    # but :search_extended finds it.
+    get search_url, params: { q: "Zorptastic", modal: "true" }
+
+    assert_response :success
+    assert_select "a[href=?]", product_path(loose.slug)
+  end
+
+  test "header dropdown does not use the category-name fallback" do
+    loose = products(:one)
+    loose.update!(product_family_id: nil, name: "Plain Widget", sku: "PW-1",
+                  brand: nil, colour: nil, material: nil, size: nil)
+    loose.category.update!(name: "Zorptastic Supplies")
+
+    # Same query as the modal fallback test, but the compact header dropdown
+    # (no modal param) keeps to direct matches, so a product matched only via
+    # its category name must NOT surface there.
+    get search_url, params: { q: "Zorptastic" }
+
+    assert_response :success
+    assert_select "a[href=?]", product_path(loose.slug), count: 0
+  end
+
+  test "renders the most-searched chips when even the extended search is empty" do
+    get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
+
+    assert_response :success
+    # The dead-end copy is replaced by the reusable Most searched chips.
+    assert_select "p", text: /Most searched/i
+    assert_no_match(/try a different search term/i, response.body)
+  end
+
+  test "no-results state does not render its own recent-searches target" do
+    get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
+
+    assert_response :success
+    # The recentSearches Stimulus target lives only in the default (pre-typing)
+    # content; duplicating it in the no-results frame would make the singular
+    # target resolve to the wrong (hidden) copy, so the no-results view must not
+    # emit one.
+    assert_select "[data-search-modal-target='recentSearches']", count: 0
+  end
+
+  test "no-results state still names the query" do
+    get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
+
+    assert_response :success
+    assert_match(/zzzznomatchqueryzzzz/, response.body)
+  end
+
+  test "search input placeholder models an example query" do
+    # The full (non-modal) search page renders the app layout, which mounts the
+    # search modal and its input.
+    get search_url, params: { q: "8oz" }
+
+    assert_response :success
+    assert_select "input[data-search-modal-target='input'][placeholder=?]",
+                  "Search cups, boxes, napkins..."
+  end
+
+  private
+
+  # Removes the <mark> highlight wrappers so an assertion can match a title as a
+  # contiguous substring regardless of which words were highlighted (#250).
+  def unhighlighted(html)
+    html.gsub(%r{</?mark[^>]*>}, "")
   end
 end

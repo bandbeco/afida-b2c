@@ -132,6 +132,62 @@ class Product < ApplicationRecord
     scope
   }
 
+  # Statuses that count an order as a completed sale for popularity ranking.
+  # Mirrors the bestseller reporting filter (paid through delivered; excludes
+  # pending, cancelled, and refunded).
+  SOLD_ORDER_STATUSES = %w[paid processing shipped delivered].freeze
+
+  # Applies the :search filter and then orders results by relevance:
+  #   1. Name matches first. Rows are ranked by how many query words appear in
+  #      the name, so a row matching every word ranks above one matching some,
+  #      and a row matching only attribute columns (size/colour/material/brand/
+  #      sku) ranks last.
+  #   2. Popularity tiebreak: total quantity sold across completed, non-sample
+  #      order line items (the same signal used for bestseller reporting).
+  #   3. Stable :id tiebreak.
+  # Ordering lives here (not in the controller) so callers get relevance for
+  # free. Uses sanitize_sql_like like :search to keep wildcards literal.
+  scope :search_ranked, ->(query) {
+    search(query).by_relevance(query)
+  }
+
+  # Applies the relevance ordering (name-match rank, then popularity, then a
+  # stable id tiebreak) to whatever base relation it is chained onto. Extracted
+  # so both the primary search (search_ranked) and the category-name fallback
+  # (search_extended) rank results the same way instead of each hand-rolling an
+  # order clause that can drift apart.
+  scope :by_relevance, ->(query) {
+    words = query.to_s.truncate(100, omission: "").split
+    return order(sales_rank_order, arel_table[:id].asc) if words.empty?
+
+    missing_word_terms = words.each_with_index.map do |word, i|
+      sanitized = sanitize_sql_like(word)
+      key = "rank#{i}"
+      [ "CASE WHEN products.name ILIKE :#{key} THEN 0 ELSE 1 END", key, "%#{sanitized}%" ]
+    end
+
+    name_rank_sql = missing_word_terms.map(&:first).join(" + ")
+    binds = missing_word_terms.to_h { |(_, key, value)| [ key.to_sym, value ] }
+
+    order(Arel.sql(sanitize_sql_array([ name_rank_sql, binds ]) + " ASC"))
+      .order(sales_rank_order, arel_table[:id].asc)
+  }
+
+  # ORDER BY term that ranks products by units sold across completed,
+  # non-sample orders (most-sold first). Correlated subquery so it needs no
+  # join or GROUP BY on the outer relation; leans on the existing
+  # order_items(product_id) and orders(status) indexes.
+  def self.sales_rank_order
+    Arel.sql(<<~SQL.squish + " DESC NULLS LAST")
+      (SELECT COALESCE(SUM(order_items.quantity), 0)
+       FROM order_items
+       JOIN orders ON orders.id = order_items.order_id
+       WHERE order_items.product_id = products.id
+         AND order_items.is_sample = FALSE
+         AND orders.status IN (#{SOLD_ORDER_STATUSES.map { |s| connection.quote(s) }.join(', ')}))
+    SQL
+  end
+
   # Extended search including category names
   # Splits multi-word queries so each word is matched independently across columns
   scope :search_extended, ->(query) {
@@ -252,8 +308,13 @@ class Product < ApplicationRecord
   # present, otherwise a value derived from the dimension columns.
   # Example: "Vegware White Paper Coffee Cups - 12oz"
   # Deduplicates when colour and material are identical (e.g. "Kraft Kraft" -> "Kraft")
+  # and drops leading words of the name that already appear (case-insensitively)
+  # among the brand/colour/material tokens (e.g. brand "Vegware" + name "Vegware
+  # Single Wall Cups" -> "Vegware Single Wall Cups", not "Vegware Vegware ...").
   def generated_title
-    base = [ brand, colour, material, name ].compact_blank.uniq(&:downcase).join(" ")
+    attributes = [ brand, colour, material ].compact_blank.uniq(&:downcase)
+    trimmed_name = strip_leading_attribute_words(name, attributes)
+    base = (attributes + [ trimmed_name ]).compact_blank.uniq(&:downcase).join(" ")
     token = size.presence || derived_size
     token.present? ? "#{base} - #{token}" : base
   end
@@ -460,6 +521,21 @@ class Product < ApplicationRecord
     fragment = accepted.join(" ")
     fragment += "." unless fragment.match?(/[.!?]\z/)
     fragment
+  end
+
+  # Drops leading words of the name that already appear (case-insensitively)
+  # among the given attribute tokens, so a name that repeats the brand or
+  # material at its start does not double it up in the generated title. Only
+  # the leading run is stripped, so a word that legitimately recurs mid-name is
+  # preserved. Never returns blank: if every word matches an attribute, the
+  # original name is returned unchanged.
+  def strip_leading_attribute_words(name, attributes)
+    return name if name.blank?
+
+    attribute_words = attributes.flat_map { |value| value.to_s.split }.map(&:downcase).to_set
+    words = name.split
+    kept = words.drop_while { |word| attribute_words.include?(word.downcase) }
+    kept.empty? ? name : kept.join(" ")
   end
 
   def truncate_to_words(text, word_count)
