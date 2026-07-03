@@ -44,6 +44,26 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", product_path(@variant.slug)
   end
 
+  test "header results render generated_title" do
+    @variant.update_columns(brand: "Vegware", material: "Paper", size: "8oz", name: "Single Wall Cups")
+    expected = @variant.generated_title # "Vegware Paper Single Wall Cups - 8oz"
+
+    get search_url, params: { q: "Vegware" }
+
+    assert_response :success
+    assert_includes response.body, ERB::Util.html_escape(expected)
+  end
+
+  test "modal results render generated_title" do
+    @variant.update_columns(brand: "Vegware", material: "Paper", size: "8oz", name: "Single Wall Cups")
+    expected = @variant.generated_title # "Vegware Paper Single Wall Cups - 8oz"
+
+    get search_url, params: { q: "Vegware", modal: "true" }
+
+    assert_response :success
+    assert_includes response.body, ERB::Util.html_escape(expected)
+  end
+
   test "index is accessible without authentication" do
     get search_url, params: { q: "test" }
     assert_response :success

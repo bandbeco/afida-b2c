@@ -37,6 +37,7 @@ class SearchController < ApplicationController
       @products = base_query
         .includes(:category, product_photo_attachment: :blob)
         .order(Arel.sql("CASE WHEN product_type = 'customizable_template' THEN 0 ELSE 1 END"))
+        .order(:id)
         .limit(limit)
     end
 
