@@ -64,6 +64,25 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ERB::Util.html_escape(expected)
   end
 
+  test "header dropdown does not show a raw price for brandable templates" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first }
+
+    assert_response :success
+    # The £0.01 template price must never surface in the dropdown.
+    assert_no_match(/£0\.01/, response.body)
+  end
+
+  test "header dropdown shows the volume-discount treatment for brandable templates" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first }
+
+    assert_response :success
+    assert_match(/save up to/i, response.body)
+  end
+
   test "index ranks name matches ahead of attribute-only matches" do
     name_match = products(:single_wall_12oz_white)
     name_match.update!(name: "Zephyr Cup", brand: nil, colour: nil, material: nil)

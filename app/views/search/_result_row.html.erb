@@ -1,0 +1,77 @@
+<%# Shared search result row for the header dropdown and the modal. %>
+<%# Locals: %>
+<%#   product - the Product to render %>
+<%#   compact - true for the smaller header-dropdown layout, false for the modal %>
+<% compact = local_assigns.fetch(:compact, false) %>
+
+<% if compact %>
+  <%= link_to search_result_path(product),
+              class: "product-card flex items-center gap-3 p-3 hover:bg-base-200 transition",
+              data: { turbo_frame: "_top" } do %>
+    <div class="w-12 h-12 flex-shrink-0 bg-white rounded overflow-hidden">
+      <%= product_photo_tag(product.primary_photo,
+                            alt: product.generated_title,
+                            class: "w-full h-full object-contain",
+                            variant: { resize_and_pad: [48, 48, { background: [255, 255, 255] }] }) %>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-sm truncate"><%= product.generated_title %></div>
+      <div class="text-xs text-gray-500">
+        <% if product.brandable? %>
+          <% discount = max_volume_discount_percentage(product) %>
+          <% if discount %>
+            Volume discount: save up to <%= discount %>%
+          <% else %>
+            Volume pricing
+          <% end %>
+        <% else %>
+          <%= number_to_currency(product.price) %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% else %>
+  <%= link_to search_result_path(product),
+              class: "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition",
+              data: { turbo_frame: "_top" } do %>
+    <%# Product thumbnail %>
+    <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
+      <%= product_photo_tag(product.primary_photo,
+                            alt: product.generated_title,
+                            class: "w-full h-full object-contain",
+                            variant: { resize_and_pad: [80, 80, { background: [255, 255, 255] }] },
+                            loading: "lazy") %>
+    </div>
+
+    <%# Product info - two lines %>
+    <div class="flex-1 min-w-0">
+      <h3 class="text-gray-900 truncate">
+        <%= product.generated_title %>
+        <% if product.brandable? %>
+          <span class="badge badge-warning badge-sm ml-1">Brandable</span>
+        <% end %>
+      </h3>
+      <p class="text-sm text-gray-500 truncate">
+        <%= search_display_subtitle(product) %>
+      </p>
+    </div>
+
+    <%# Price - right aligned %>
+    <div class="flex-shrink-0 text-right">
+      <% if product.brandable? %>
+        <% discount = max_volume_discount_percentage(product) %>
+        <span>
+          <% if discount %>
+            Volume discount: save up to <%= discount %>%
+          <% else %>
+            Volume pricing
+          <% end %>
+        </span>
+      <% else %>
+        <p class="text-gray-700">
+          <%= number_to_currency(product.price) %>
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
