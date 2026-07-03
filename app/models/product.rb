@@ -252,8 +252,13 @@ class Product < ApplicationRecord
   # present, otherwise a value derived from the dimension columns.
   # Example: "Vegware White Paper Coffee Cups - 12oz"
   # Deduplicates when colour and material are identical (e.g. "Kraft Kraft" -> "Kraft")
+  # and drops leading words of the name that already appear (case-insensitively)
+  # among the brand/colour/material tokens (e.g. brand "Vegware" + name "Vegware
+  # Single Wall Cups" -> "Vegware Single Wall Cups", not "Vegware Vegware ...").
   def generated_title
-    base = [ brand, colour, material, name ].compact_blank.uniq(&:downcase).join(" ")
+    attributes = [ brand, colour, material ].compact_blank.uniq(&:downcase)
+    trimmed_name = strip_leading_attribute_words(name, attributes)
+    base = (attributes + [ trimmed_name ]).compact_blank.uniq(&:downcase).join(" ")
     token = size.presence || derived_size
     token.present? ? "#{base} - #{token}" : base
   end
@@ -460,6 +465,21 @@ class Product < ApplicationRecord
     fragment = accepted.join(" ")
     fragment += "." unless fragment.match?(/[.!?]\z/)
     fragment
+  end
+
+  # Drops leading words of the name that already appear (case-insensitively)
+  # among the given attribute tokens, so a name that repeats the brand or
+  # material at its start does not double it up in the generated title. Only
+  # the leading run is stripped, so a word that legitimately recurs mid-name is
+  # preserved. Never returns blank: if every word matches an attribute, the
+  # original name is returned unchanged.
+  def strip_leading_attribute_words(name, attributes)
+    return name if name.blank?
+
+    attribute_words = attributes.flat_map { |value| value.to_s.split }.map(&:downcase).to_set
+    words = name.split
+    kept = words.drop_while { |word| attribute_words.include?(word.downcase) }
+    kept.empty? ? name : kept.join(" ")
   end
 
   def truncate_to_words(text, word_count)

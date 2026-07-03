@@ -696,6 +696,97 @@ class ProductTest < ActiveSupport::TestCase
     assert_equal "kraft Pizza Boxes", product.generated_title
   end
 
+  test "generated_title drops leading name word already present in brand" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Vegware",
+      size: nil,
+      colour: "Kraft",
+      material: nil,
+      name: "Vegware Single Wall Takeaway Hot Cups"
+    )
+
+    assert_equal "Vegware Kraft Single Wall Takeaway Hot Cups", product.generated_title
+  end
+
+  test "generated_title drops leading name word already present in material" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      colour: nil,
+      material: "CPLA",
+      name: "CPLA Hot Cup Lids"
+    )
+
+    assert_equal "CPLA Hot Cup Lids", product.generated_title
+  end
+
+  test "generated_title drops leading name word matching material case-insensitively" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      colour: nil,
+      material: "PP",
+      name: "PP Hot Cup Sip Lids"
+    )
+
+    assert_equal "PP Hot Cup Sip Lids", product.generated_title
+  end
+
+  test "generated_title drops multiple leading name words present in attributes" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Vegware",
+      size: nil,
+      colour: nil,
+      material: "CPLA",
+      name: "Vegware CPLA Hot Cup Lids"
+    )
+
+    assert_equal "Vegware CPLA Hot Cup Lids", product.generated_title
+  end
+
+  test "generated_title keeps a repeated word that appears mid-name" do
+    product = products(:one)
+    product.update_columns(
+      brand: nil,
+      size: nil,
+      colour: "Kraft",
+      material: nil,
+      name: "Hot Cups with Kraft Sleeve"
+    )
+
+    assert_equal "Kraft Hot Cups with Kraft Sleeve", product.generated_title
+  end
+
+  test "generated_title keeps name intact when leading word is not an attribute" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Vegware",
+      size: nil,
+      colour: nil,
+      material: nil,
+      name: "Single Wall Hot Cups"
+    )
+
+    assert_equal "Vegware Single Wall Hot Cups", product.generated_title
+  end
+
+  test "generated_title falls back to full name when every word matches attributes" do
+    product = products(:one)
+    product.update_columns(
+      brand: "Kraft",
+      size: nil,
+      colour: nil,
+      material: nil,
+      name: "Kraft"
+    )
+
+    assert_equal "Kraft", product.generated_title
+  end
+
   # Vegware collection membership tests
   test "vegware? returns true for products in the Vegware collection" do
     product = products(:vegware_hot_cup)
