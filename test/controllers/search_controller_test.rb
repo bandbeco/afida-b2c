@@ -170,7 +170,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_match(/1 result for/, response.body)
   end
 
-  test "modal shows the size range for a collapsed family" do
+  test "modal renders each family size as its own linkable chip" do
     family = ProductFamily.find_by(slug: "single-wall-cups")
     sizes = %w[4oz 8oz 12oz 16oz 20oz]
     family.products.each_with_index do |p, i|
@@ -180,8 +180,30 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     get search_url, params: { q: "Zingcup", modal: "true" }
 
     assert_response :success
-    # Smallest to largest size, by numeric value.
-    assert_match(/4oz\s*[-–]\s*20oz/, response.body)
+    # Sizes now surface as individual variant links rather than an inert
+    # "4oz - 20oz" range in the subtitle. Each size link points at a product
+    # page and the full set of sizes is represented.
+    size_links = css_select("div a[href^='/products/']").select { |a| sizes.include?(a.text.strip) }
+    assert_equal sizes.uniq.sort, size_links.map { |a| a.text.strip }.uniq.sort
+    size_links.each { |a| assert_match %r{^/products/}, a["href"] }
+  end
+
+  test "modal links each variant of a collapsed family to its own page" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    sizes = %w[4oz 8oz 12oz]
+    members = family.products.first(3)
+    members.each_with_index do |p, i|
+      p.update_columns(material: "Zingcup", size: sizes[i])
+    end
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # The collapsed row still shows one heading, but each size is a link to
+    # that variant's page so no variant is stranded (issue #247 follow-up).
+    members.each do |member|
+      assert_select "a[href=?]", product_path(member.slug), text: member.size
+    end
   end
 
   test "modal keeps family-less products as individual rows" do
@@ -320,6 +342,21 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href=?]", product_path(loose.slug)
   end
 
+  test "header dropdown does not use the category-name fallback" do
+    loose = products(:one)
+    loose.update!(product_family_id: nil, name: "Plain Widget", sku: "PW-1",
+                  brand: nil, colour: nil, material: nil, size: nil)
+    loose.category.update!(name: "Zorptastic Supplies")
+
+    # Same query as the modal fallback test, but the compact header dropdown
+    # (no modal param) keeps to direct matches, so a product matched only via
+    # its category name must NOT surface there.
+    get search_url, params: { q: "Zorptastic" }
+
+    assert_response :success
+    assert_select "a[href=?]", product_path(loose.slug), count: 0
+  end
+
   test "renders the most-searched chips when even the extended search is empty" do
     get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
 
@@ -327,6 +364,17 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     # The dead-end copy is replaced by the reusable Most searched chips.
     assert_select "p", text: /Most searched/i
     assert_no_match(/try a different search term/i, response.body)
+  end
+
+  test "no-results state does not render its own recent-searches target" do
+    get search_url, params: { q: "zzzznomatchqueryzzzz", modal: "true" }
+
+    assert_response :success
+    # The recentSearches Stimulus target lives only in the default (pre-typing)
+    # content; duplicating it in the no-results frame would make the singular
+    # target resolve to the wrong (hidden) copy, so the no-results view must not
+    # emit one.
+    assert_select "[data-search-modal-target='recentSearches']", count: 0
   end
 
   test "no-results state still names the query" do

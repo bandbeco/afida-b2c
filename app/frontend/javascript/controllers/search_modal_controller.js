@@ -6,7 +6,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "modal", "content", "input", "defaultContent", "results",
-    "recentSearches", "recentSearchesList"
+    "recentSearches", "recentSearchesList", "quickChip"
   ]
   static values = { debounce: { type: Number, default: 200 } }
 
@@ -17,6 +17,8 @@ export default class extends Controller {
   connect() {
     this.previouslyFocusedElement = null
     this.searchTimeout = null
+    // Query awaiting a recent-searches record once the frame confirms results.
+    this.pendingRecordQuery = null
     // Index of the keyboard-selected result row (-1 = nothing selected).
     this.activeIndex = -1
 
@@ -42,7 +44,7 @@ export default class extends Controller {
 
   // Cmd+K (mac) / Ctrl+K (win/linux) toggles the search modal open.
   handleShortcut(event) {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+    if ((event.metaKey || event.ctrlKey) && event.key?.toLowerCase() === "k") {
       event.preventDefault()
       if (this.modalTarget.classList.contains("hidden")) {
         this.open()
@@ -134,16 +136,19 @@ export default class extends Controller {
     }
 
     this.searchTimeout = setTimeout(() => {
-      this.performSearch(query)
+      // A typed query is eligible for recent-searches history; a curated or
+      // recent chip (quickSearch) is not, so it does not echo back into recents.
+      this.performSearch(query, { record: true })
     }, this.debounceValue)
   }
 
-  performSearch(query) {
+  performSearch(query, { record = false } = {}) {
     // A new query invalidates any keyboard selection from the old result set.
     this.clearActiveSelection()
 
-    // Remember the query so repeat buyers can re-run it later (issue #251).
-    this.recordRecentSearch(query)
+    // Defer recording until the frame confirms results exist (resultsLoaded),
+    // so zero-result typos never land in history (issue #251 follow-up).
+    this.pendingRecordQuery = record ? query : null
 
     // Update Turbo Frame src to trigger search
     const frame = this.resultsTarget
@@ -154,6 +159,19 @@ export default class extends Controller {
     this.showResults()
   }
 
+  // Fires after the results Turbo Frame swaps in new content. Records the query
+  // into recent-searches only when it was typed (not a curated/recent chip) and
+  // actually returned at least one result row, keeping the history clean.
+  resultsLoaded() {
+    const query = this.pendingRecordQuery
+    this.pendingRecordQuery = null
+    if (!query) return
+
+    const hasResults = this.hasResultsTarget &&
+      this.resultsTarget.querySelector('[role="option"]') !== null
+    if (hasResults) this.recordRecentSearch(query)
+  }
+
   // Enter opens the keyboard-selected result row when there is one, otherwise
   // it navigates to the full results page with the current query (issues #249
   // and #250). Guards the minimum 2-character rule for the fallback.
@@ -161,7 +179,7 @@ export default class extends Controller {
     const active = this.activeOption()
     if (active) {
       event.preventDefault()
-      active.click()
+      this.primaryLinkFor(active)?.click()
       return
     }
 
@@ -170,6 +188,23 @@ export default class extends Controller {
 
     event.preventDefault()
     window.location.href = `/shop?q=${encodeURIComponent(query)}`
+  }
+
+  // Each result row is an inert div[role="option"] whose primary action is its
+  // heading link, so its size chips can be their own links without nesting
+  // anchors. A click anywhere on the row background delegates to that heading
+  // link (reusing its Turbo _top navigation), while a click that lands on an
+  // inner link (heading or size chip) is left to navigate on its own (#247).
+  navigateRow(event) {
+    if (event.target.closest("a")) return
+
+    this.primaryLinkFor(event.currentTarget)?.click()
+  }
+
+  // The heading link of a result-row option, used for both row-background
+  // clicks and keyboard Enter.
+  primaryLinkFor(option) {
+    return option.querySelector("[data-search-primary-link]")
   }
 
   // Arrow down moves the selection to the next result row (issue #250).
@@ -267,7 +302,7 @@ export default class extends Controller {
     try {
       window.localStorage.setItem(this.constructor.RECENT_KEY, JSON.stringify(updated))
     } catch (e) {
-      // Ignore storage failures (private mode, quota) — the feature is optional.
+      // Ignore storage failures (private mode, quota); the feature is optional.
     }
   }
 
@@ -291,19 +326,26 @@ export default class extends Controller {
       return
     }
 
-    const chips = terms.map((term) => {
-      const button = document.createElement("button")
-      button.type = "button"
-      button.dataset.action = "click->search-modal#quickSearch"
-      button.dataset.term = term
-      button.className =
-        "px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-full text-sm transition border border-black"
-      button.textContent = term
-      return button
-    })
+    const chips = terms.map((term) => this.buildQuickChip(term))
 
     this.recentSearchesListTarget.replaceChildren(...chips)
     this.recentSearchesTarget.classList.remove("hidden")
+  }
+
+  // Builds a recent-search chip by cloning a server-rendered "Most searched"
+  // chip, so the chip styling lives in one place (the _search_suggestions
+  // partial) instead of being duplicated as a class string here. Falls back to
+  // a plain button if no quick chip is present to clone.
+  buildQuickChip(term) {
+    const template = this.hasQuickChipTarget ? this.quickChipTarget : null
+    const button = template
+      ? template.cloneNode(false)
+      : document.createElement("button")
+    button.type = "button"
+    button.dataset.action = "click->search-modal#quickSearch"
+    button.dataset.term = term
+    button.textContent = term
+    return button
   }
 
   // Navigate to category (closes modal)

@@ -306,6 +306,32 @@ class ProductsHelperTest < ActionView::TestCase
     assert_equal "From £42.30 · 4.2p per unit", search_price_line(row)
   end
 
+  # search_row_subtitle tests
+
+  test "search_row_subtitle shows just the variant count for a family with sizes" do
+    a = products(:single_wall_8oz_white)
+    a.update_columns(size: "8oz")
+    b = products(:single_wall_12oz_white)
+    b.update_columns(size: "12oz")
+    row = SearchResultRow.collapse([ a, b ]).first
+
+    assert row.family?
+    # The row has sizes, so the modal renders each as its own chip; the subtitle
+    # would only echo them, so it shows the bare count. The row decides this from
+    # its own size_variants (no caller flag).
+    assert_equal "2 variants", search_row_subtitle(row)
+  end
+
+  test "search_row_subtitle keeps the size range for a family whose members carry no size" do
+    a = products(:single_wall_8oz_white)
+    b = products(:single_wall_12oz_white)
+    [ a, b ].each { |p| p.update_columns(size: nil) }
+    row = SearchResultRow.collapse([ a, b ]).first
+
+    # No sizes means no chips, so the subtitle is just the count (size_range nil).
+    assert_equal "2 variants", search_row_subtitle(row)
+  end
+
   # branded_price_anchor tests (issue #248)
 
   test "branded_price_anchor quotes the cheapest per-unit price and the max volume discount" do

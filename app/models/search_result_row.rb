@@ -72,9 +72,9 @@ class SearchResultRow
     family? ? representative.product_family.name : representative.generated_title
   end
 
-  # Distinct member sizes ordered smallest to largest by their numeric prefix.
+  # Distinct member sizes ordered smallest to largest.
   def sizes
-    members.map(&:size).compact_blank.uniq.sort_by { |size| size.to_i }
+    members.map(&:size).compact_blank.uniq.sort_by { |size| size_sort_key(size) }
   end
 
   # "4oz - 16oz" (or a single size), nil when no member carries a size.
@@ -90,6 +90,24 @@ class SearchResultRow
     members.size
   end
 
+  # [[size, member], ...] for each distinct member size, ordered smallest to
+  # largest. When several members share a size (e.g. colours of the same size),
+  # the cheapest one represents it, so a size chip links to a page consistent
+  # with the row's "from" price framing. Lets the modal turn the size range into
+  # per-variant links, since each variant has its own page.
+  #
+  # Members with a blank size are excluded (they carry no size to label a chip);
+  # they stay reachable through the row's heading/representative link, and the
+  # honest "N variants" count still includes them. Splitting an over-broad family
+  # so its variants share a clean size axis is a data fix, not a code one.
+  def size_variants
+    @size_variants ||= members
+      .select { |member| member.size.present? }
+      .group_by(&:size)
+      .map { |size, group| [ size, group.min_by(&:price) ] }
+      .sort_by { |size, _member| size_sort_key(size) }
+  end
+
   # The cheapest member price, used for a family row's "from" price.
   def from_price
     members.map(&:price).min
@@ -99,5 +117,23 @@ class SearchResultRow
   # row can quote a per-unit "from" figure consistent with the card helper.
   def cheapest_per_unit_member
     members.min_by(&:best_unit_price)
+  end
+
+  private
+
+  # Orders sizes smallest to largest. Sizes with a leading number (the common
+  # "8oz", "12oz / 340ml", "2-Cup") sort first, numerically by that number, then
+  # alphabetically for equal numbers; sizes with no leading number ("Small",
+  # "Medium") sort after them, alphabetically. This keeps ordering deterministic
+  # instead of collapsing every non-numeric or bare size to 0 with `to_i`.
+  # Note: it does not normalise units, so a family mixing oz and litres can still
+  # order oddly; the real fix for such a family is splitting it (a data fix).
+  def size_sort_key(size)
+    leading_number = size[/\A\s*(\d+(?:\.\d+)?)/, 1]
+    if leading_number
+      [ 0, leading_number.to_f, size.downcase ]
+    else
+      [ 1, 0.0, size.downcase ]
+    end
   end
 end

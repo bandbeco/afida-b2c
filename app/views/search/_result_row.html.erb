@@ -30,12 +30,24 @@
     </div>
   <% end %>
 <% else %>
-  <%= link_to search_result_path(product),
-              id: option_id,
+  <%# Every modal row is an inert div[role="option"] whose primary action is the
+      heading link (the representative product). Collapsed families also link
+      each size to its own variant page. Keeping the shell a non-anchor lets those
+      inner links exist without nesting anchors, keeps the ARIA listbox option
+      atomic, and means the primary action (the heading) works with JS disabled.
+      A thin row-click handler delegates to the heading link so clicking anywhere
+      on the row still navigates, reusing the heading's Turbo (_top) semantics
+      rather than reimplementing navigation (issue #247 follow-up). %>
+  <% size_variants = row.family? ? row.size_variants : [] %>
+  <% has_variant_links = size_variants.any? %>
+  <% option_classes = "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition cursor-pointer" %>
+
+  <%= tag.div id: option_id,
               role: "option",
               "aria-selected": "false",
-              class: "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition",
-              data: { turbo_frame: "_top", search_modal_target: "option" } do %>
+              class: option_classes,
+              data: { search_modal_target: "option",
+                      action: "click->search-modal#navigateRow" } do %>
     <%# Product thumbnail %>
     <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
       <%= product_photo_tag(row.primary_photo,
@@ -48,7 +60,13 @@
     <%# Product info - two lines %>
     <div class="flex-1 min-w-0">
       <h3 class="text-gray-900 truncate">
-        <%= highlight_search_match(row.title, @query) %>
+        <%# The heading is the row's primary link. data-search-primary-link marks
+            it so the controller can activate it on Enter and delegate row clicks
+            to it, reusing its Turbo (_top) navigation. %>
+        <%= link_to highlight_search_match(row.title, @query),
+                    search_result_path(product),
+                    class: "hover:underline",
+                    data: { turbo_frame: "_top", "search-primary-link": "" } %>
         <% if row.brandable? %>
           <span class="badge badge-warning badge-sm ml-1">Brandable</span>
         <% end %>
@@ -56,6 +74,20 @@
       <p class="text-sm text-gray-500 truncate">
         <%= search_row_subtitle(row) %>
       </p>
+      <% if has_variant_links %>
+        <%# Each variant has its own page, so link every size out of the
+            collapsed row (issue #247 follow-up). The heading still opens the
+            representative product. %>
+        <div class="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+          <span class="text-xs text-gray-400">Sizes:</span>
+          <% size_variants.each do |size, member| %>
+            <%= link_to size,
+                        search_result_path(member),
+                        class: "text-blue-600 underline hover:text-blue-800",
+                        data: { turbo_frame: "_top" } %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <%# Price - right aligned %>

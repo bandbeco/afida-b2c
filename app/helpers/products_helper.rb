@@ -39,11 +39,14 @@ module ProductsHelper
 
   # Secondary text for a search result row. Collapsed family rows describe the
   # variant spread (size range plus variant count); everything else falls back
-  # to the per-product subtitle.
+  # to the per-product subtitle. When the row will render each size as its own
+  # chip (a family with sizes), the range is dropped so the subtitle does not
+  # just echo those chips, leaving the bare variant count. The row itself knows
+  # this from its size_variants, so no caller flag is needed.
   def search_row_subtitle(row)
     if row.family?
       count = pluralize(row.variant_count, "variant")
-      range = row.size_range
+      range = row.size_variants.any? ? nil : row.size_range
       range.present? ? "#{range} · #{count}" : count
     else
       search_display_subtitle(row.product)

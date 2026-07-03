@@ -148,11 +148,17 @@ class Product < ApplicationRecord
   # Ordering lives here (not in the controller) so callers get relevance for
   # free. Uses sanitize_sql_like like :search to keep wildcards literal.
   scope :search_ranked, ->(query) {
-    scoped = search(query)
-    return scoped if query.blank?
+    search(query).by_relevance(query)
+  }
 
+  # Applies the relevance ordering (name-match rank, then popularity, then a
+  # stable id tiebreak) to whatever base relation it is chained onto. Extracted
+  # so both the primary search (search_ranked) and the category-name fallback
+  # (search_extended) rank results the same way instead of each hand-rolling an
+  # order clause that can drift apart.
+  scope :by_relevance, ->(query) {
     words = query.to_s.truncate(100, omission: "").split
-    return scoped.order(sales_rank_order, arel_table[:id].asc) if words.empty?
+    return order(sales_rank_order, arel_table[:id].asc) if words.empty?
 
     missing_word_terms = words.each_with_index.map do |word, i|
       sanitized = sanitize_sql_like(word)
@@ -163,8 +169,8 @@ class Product < ApplicationRecord
     name_rank_sql = missing_word_terms.map(&:first).join(" + ")
     binds = missing_word_terms.to_h { |(_, key, value)| [ key.to_sym, value ] }
 
-    scoped.order(Arel.sql(sanitize_sql_array([ name_rank_sql, binds ]) + " ASC"))
-          .order(sales_rank_order, arel_table[:id].asc)
+    order(Arel.sql(sanitize_sql_array([ name_rank_sql, binds ]) + " ASC"))
+      .order(sales_rank_order, arel_table[:id].asc)
   }
 
   # ORDER BY term that ranks products by units sold across completed,

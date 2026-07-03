@@ -1,8 +1,10 @@
 <%# Default content for search modal - shown before user starts typing %>
 <%# Includes recent + quick search chips and the branded products promo banner %>
 
-<%# Recent searches and Most searched chips (issue #251) %>
-<%= render "shared/search_suggestions" %>
+<%# Recent searches and Most searched chips (issue #251). Only the default
+    content shows Recent searches (it owns the hydrated recentSearches targets);
+    the no-results state renders Most searched only. %>
+<%= render "shared/search_suggestions", show_recent: true %>
 
 <%# Branded products promo banner %>
 <%= link_to branded_products_path,

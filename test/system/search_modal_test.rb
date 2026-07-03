@@ -76,4 +76,51 @@ class SearchModalTest < ApplicationSystemTestCase
       assert_selector "button[data-term='cup']", text: "cup"
     end
   end
+
+  # A query that returns nothing must not be stored as a recent search.
+  test "a zero-result query is not stored as a recent search" do
+    open_modal
+
+    input = find("[data-search-modal-target='input']")
+    input.fill_in with: "zzzznomatchquery"
+    # Wait for the no-results frame to render before closing.
+    assert_text(/No results found/i)
+
+    find("button[aria-label='Close search']").click
+    find("button[aria-label='Search products']").click
+
+    # No history at all, so the recent-searches block stays hidden.
+    assert_no_selector "[data-search-modal-target='recentSearches']", visible: true
+  end
+
+  # A curated "Most searched" chip click must not echo back into recent searches.
+  test "clicking a Most searched chip does not record it as a recent search" do
+    open_modal
+
+    find("button[data-term='Cups']").click
+    assert_selector "[role='option']", minimum: 1
+
+    find("button[aria-label='Close search']").click
+    find("button[aria-label='Search products']").click
+
+    # "Cups" came from a curated chip, so it must not appear under Recent searches.
+    assert_no_selector "[data-search-modal-target='recentSearchesList'] button[data-term='Cups']"
+  end
+
+  # Issue #247 follow-up: the whole result row navigates to its representative
+  # product, and each size chip navigates to its own variant page.
+  test "clicking the row background opens the representative product" do
+    open_modal
+
+    input = find("[data-search-modal-target='input']")
+    input.fill_in with: "cup"
+    assert_selector "[role='option']", minimum: 1
+
+    option = all("[role='option']").first
+    href = option.find("[data-search-primary-link]")[:href]
+    # Click the option's own box (not an inner link) to trigger navigateRow.
+    option.click
+
+    assert_current_path(URI(href).path)
+  end
 end

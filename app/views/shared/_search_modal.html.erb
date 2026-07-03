@@ -64,9 +64,13 @@
           <%= render "shared/search_modal_default_content" %>
         </div>
 
-        <%# Search results (loaded via Turbo Frame) %>
+        <%# Search results (loaded via Turbo Frame). resultsLoaded records the
+            query into recent-searches only once the frame confirms it returned
+            results, so zero-result typos and curated-chip clicks don't pollute
+            the history (issue #251 follow-up). %>
         <%= turbo_frame_tag "search-modal-results",
-                            data: { search_modal_target: "results" },
+                            data: { search_modal_target: "results",
+                                    action: "turbo:frame-load->search-modal#resultsLoaded" },
                             class: "hidden" %>
       </div>
     </div>
