@@ -342,8 +342,21 @@ class Product < ApplicationRecord
     price / pac_size
   end
 
+  # Cheapest achievable per-unit price. Tiers are validated sorted by
+  # quantity, so the last tier carries the best rate.
+  def best_unit_price
+    return unit_price if pricing_tiers.blank?
+
+    tier = pricing_tiers.last
+    BigDecimal(tier["price"].to_s) / tier["quantity"].to_i
+  end
+
+  # Smallest orderable quantity in units: the entry tier for tiered
+  # products, otherwise one pack.
   def minimum_order_units
-    pac_size || 1
+    return pricing_tiers.first["quantity"].to_i if pricing_tiers.present?
+
+    pac_size.to_i.positive? ? pac_size : 1
   end
 
   def price_display

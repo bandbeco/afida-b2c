@@ -1082,4 +1082,47 @@ class ProductTest < ActiveSupport::TestCase
     )
     refute_match(/\.\./, product.generated_meta_description)
   end
+
+  # best_unit_price / minimum_order_units tests
+
+  test "best_unit_price uses the largest pricing tier" do
+    product = products(:one)
+    product.update!(pac_size: 1000, pricing_tiers: [
+      { "quantity" => 1000, "price" => "29.65" },
+      { "quantity" => 25000, "price" => "519.00" }
+    ])
+
+    assert_in_delta 519.0 / 25000, product.best_unit_price, 0.00001
+  end
+
+  test "best_unit_price falls back to unit_price without tiers" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 26.60, pac_size: 1000)
+
+    assert_in_delta 0.0266, product.best_unit_price, 0.00001
+  end
+
+  test "minimum_order_units is the first tier quantity for tiered products" do
+    product = products(:one)
+    product.update!(pac_size: 500, pricing_tiers: [
+      { "quantity" => 1000, "price" => "29.65" },
+      { "quantity" => 25000, "price" => "519.00" }
+    ])
+
+    assert_equal 1000, product.minimum_order_units
+  end
+
+  test "minimum_order_units is the pack size without tiers" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, pac_size: 300)
+
+    assert_equal 300, product.minimum_order_units
+  end
+
+  test "minimum_order_units is 1 without tiers or pack size" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, pac_size: nil)
+
+    assert_equal 1, product.minimum_order_units
+  end
 end

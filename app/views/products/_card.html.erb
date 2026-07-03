@@ -38,11 +38,7 @@
 
   <div class="px-4 pb-4 mt-auto">
     <p class="text-sm text-gray-600 mb-2">
-      <% if product.pricing_tiers.present? %>
-        From <%= number_to_currency(product.pricing_tiers.first["price"].to_f, unit: "£") %>
-      <% else %>
-        <%= number_to_currency(product.price, unit: "£") %> / pack of <%= number_with_delimiter(product.pac_size) %>
-      <% end %>
+      <%= card_price_line(product) %>
     </p>
 
     <% show_quick_add = local_assigns.fetch(:show_quick_add, true) %>

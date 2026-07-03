@@ -83,6 +83,28 @@ module ProductsHelper
     end
   end
 
+  # Price line for grid product cards, led by the per-unit price so products
+  # stay comparable across pack sizes. Tiered products quote the best tier's
+  # rate ("From") with the minimum order quantity as context.
+  def card_price_line(product)
+    if product.pricing_tiers.present?
+      "From #{format_unit_price(product.best_unit_price)}/unit · min #{number_with_delimiter(product.minimum_order_units)}"
+    elsif product.pac_size.to_i > 1
+      "#{format_unit_price(product.unit_price)}/unit · pack of #{number_with_delimiter(product.pac_size)}"
+    else
+      number_to_currency(product.price)
+    end
+  end
+
+  # Pence below a pound ("2.7p", "3p"), pounds otherwise ("£1.24")
+  def format_unit_price(amount)
+    if amount >= 1
+      number_to_currency(amount)
+    else
+      "#{number_with_precision(amount * 100, precision: 1, strip_insignificant_zeros: true)}p"
+    end
+  end
+
   # Calculate the maximum volume discount percentage for branded products
   # Compares first tier (base price) to last tier within each size, returns the max
   def max_volume_discount_percentage(product)

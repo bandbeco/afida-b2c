@@ -228,4 +228,44 @@ class ProductsHelperTest < ActionView::TestCase
     assert_equal 1_000, result[0][:quantity]
     assert_equal BigDecimal("6.69"), result[0][:price]
   end
+
+  # card_price_line tests
+
+  test "card_price_line quotes the best tier unit price with the minimum quantity" do
+    product = products(:one)
+    product.update!(pac_size: 1000, pricing_tiers: [
+      { "quantity" => 1000, "price" => "29.65" },
+      { "quantity" => 25000, "price" => "519.00" }
+    ])
+
+    assert_equal "From 2.1p/unit · min 1,000", card_price_line(product)
+  end
+
+  test "card_price_line shows unit price and pack size for flat-priced products" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 26.60, pac_size: 1000)
+
+    assert_equal "2.7p/unit · pack of 1,000", card_price_line(product)
+  end
+
+  test "card_price_line uses pounds for unit prices of a pound or more" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 620.00, pac_size: 500)
+
+    assert_equal "£1.24/unit · pack of 500", card_price_line(product)
+  end
+
+  test "card_price_line drops the pence decimal when it is whole" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 30.00, pac_size: 1000)
+
+    assert_equal "3p/unit · pack of 1,000", card_price_line(product)
+  end
+
+  test "card_price_line falls back to the plain price without a pack size" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 41.31, pac_size: nil)
+
+    assert_equal "£41.31", card_price_line(product)
+  end
 end
