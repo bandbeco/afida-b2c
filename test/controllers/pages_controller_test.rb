@@ -6,9 +6,45 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h1", text: /Shop/
-    # Verify at least one product link is present
-    product = Product.active.catalog_products.first
+    # Verify the first product in shop order is present as a link
+    product = Product.active.standard.left_joins(:product_family).order(*Product.family_grouped_order).first
     assert_select "a[href=?]", product_path(product.slug)
+  end
+
+  test "shop page shows one page of products with a load-more link" do
+    get shop_path
+
+    assert_response :success
+    assert_select ".shop-products-grid .product-card", count: 24
+    assert_select "turbo-frame#products_page_2 a.shop-load-more[href=?]", shop_path(page: 2)
+  end
+
+  test "shop page wraps each batch in its own numbered frame" do
+    get shop_path, params: { page: 2 }
+
+    assert_response :success
+    # Fixtures hold 48 active standard products, so page 2 is the last page
+    assert_select "turbo-frame#products_page_2 .product-card", count: 24
+    assert_select "turbo-frame#products_page_3", count: 0
+    assert_select ".shop-load-more", count: 0
+  end
+
+  test "shop page load-more link preserves active filters" do
+    Product.active.standard.limit(30).each { |p| p.update_columns(brand: "Vegware") }
+
+    get shop_path, params: { brand: "Vegware", sort: "price_asc" }
+
+    assert_response :success
+    assert_select "a.shop-load-more[href=?]", shop_path(brand: "Vegware", sort: "price_asc", page: 2)
+  end
+
+  test "shop page result count shows the filtered total not the page size" do
+    get shop_path
+
+    assert_response :success
+    count = Product.active.standard.count
+    assert_operator count, :>, 24
+    assert_select ".shop-result-count", text: "#{count} products"
   end
 
   test "shop page filters by categories" do

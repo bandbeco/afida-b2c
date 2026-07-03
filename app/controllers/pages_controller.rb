@@ -1,4 +1,7 @@
 class PagesController < ApplicationController
+  # 24 divides evenly into the shop grid's 2, 3, and 4 column layouts
+  PRODUCTS_PER_PAGE = 24
+
   allow_unauthenticated_access
 
   def home
@@ -30,7 +33,8 @@ class PagesController < ApplicationController
     @products = Product
       .active
       .standard
-      .includes(:category, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
+      .left_joins(:product_family)
+      .includes(:category, :product_family, product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
 
     # Build hierarchical category structure for sidebar
     # Count products per subcategory
@@ -63,8 +67,9 @@ class PagesController < ApplicationController
     @products = @products.with_colour(params[:colour])
     @products = @products.with_material(params[:material])
 
-    # Apply sorting
-    @products = @products.sorted(params[:sort])
+    # Family-grouped default order keeps variants adjacent (and pagination
+    # deterministic); explicit sorts reorder on top of it
+    @products = @products.order(*Product.family_grouped_order).sorted(params[:sort])
 
     # Build available filter values from current product set
     @available_filters = build_available_filters(@products)
@@ -74,7 +79,7 @@ class PagesController < ApplicationController
       .where.not(brand: [ nil, "" ])
       .distinct.pluck(:brand).sort
 
-    @products = @products.to_a
+    @pagy, @products = pagy(@products, limit: PRODUCTS_PER_PAGE)
     @active_filters = active_shop_filters
   end
 

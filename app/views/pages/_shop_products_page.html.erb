@@ -1,0 +1,18 @@
+<%# One page of shop results. Each batch lives in a frame named after its
+    page so the load-more link (inside the NEXT page's frame) swaps itself
+    for that page's batch, appending to the grid without replacing it. %>
+<%= turbo_frame_tag "products_page_#{pagy.page}" do %>
+  <div class="shop-products-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+    <%= render partial: "products/card", collection: products, as: :product %>
+  </div>
+
+  <% if pagy.next %>
+    <%= turbo_frame_tag "products_page_#{pagy.next}" do %>
+      <div class="text-center mb-8">
+        <%= link_to "Load more products",
+                    shop_path(request.query_parameters.merge("page" => pagy.next)),
+                    class: "shop-load-more btn btn-outline" %>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
