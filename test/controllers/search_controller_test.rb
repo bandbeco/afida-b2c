@@ -108,8 +108,6 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index ranks name matches ahead of attribute-only matches" do
-    # Detach from their shared family so ranking is asserted over distinct
-    # rows rather than a single collapsed family row (issue #247).
     name_match = products(:single_wall_12oz_white)
     name_match.update!(name: "Zephyr Cup", brand: nil, colour: nil, material: nil, product_family: nil)
 
@@ -126,84 +124,48 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_operator name_pos, :<, attr_pos
   end
 
-  # Family collapsing (issue #247)
+  # Family members surface as individual rows (issue #253)
+  #
+  # A ProductFamily groups products that serve the same purpose, not size
+  # variants of one model, so search no longer collapses a family into a single
+  # "N variants" row. Every matching member is its own result.
 
-  test "modal collapses a multi-member family into a single row" do
+  test "modal renders each family member as its own row" do
     # The single_wall_cups family has several catalog members. Give them a
     # shared searchable term and render the modal.
-    family_products = ProductFamily.find_by(slug: "single-wall-cups").products.to_a
+    family_products = ProductFamily.find_by(slug: "single-wall-cups").products.first(3).to_a
     family_products.each { |p| p.update_columns(material: "Zingcup") }
 
     get search_url, params: { q: "Zingcup", modal: "true" }
 
     assert_response :success
-    # Exactly one row links into the family (via its representative), not one
-    # per SKU.
-    family_links = family_products.map { |p| product_path(p.slug) }
-    rendered = family_links.count { |href| response.body.include?("href=\"#{href}\"") }
-    assert_equal 1, rendered, "expected a single collapsed family row"
+    # Every family member links to its own page, not one collapsed row.
+    family_products.each do |member|
+      assert_select "a[href=?]", product_path(member.slug)
+    end
   end
 
-  test "modal shows the family name and variant count for a collapsed family" do
+  test "modal does not render a variant-count subtitle for family members" do
     family = ProductFamily.find_by(slug: "single-wall-cups")
     family.products.each { |p| p.update_columns(material: "Zingcup") }
 
     get search_url, params: { q: "Zingcup", modal: "true" }
 
     assert_response :success
-    assert_includes response.body, ERB::Util.html_escape(family.name)
-    assert_match(/#{family.products.count}\s+variants/i, response.body)
+    assert_no_match(/\d+\s+variants/i, response.body)
   end
 
-  test "modal count reflects collapsed rows, not raw SKUs" do
+  test "modal count reflects one row per matching member" do
     family = ProductFamily.find_by(slug: "single-wall-cups")
-    family.products.each { |p| p.update_columns(material: "Zingcup") }
-    raw_count = Product.active.catalog_products.search("Zingcup").count
+    family.products.first(3).each { |p| p.update_columns(material: "Zingcup") }
+    member_count = Product.active.catalog_products.search("Zingcup").count
 
     get search_url, params: { q: "Zingcup", modal: "true" }
 
     assert_response :success
-    assert_operator raw_count, :>, 1, "fixture should have several SKUs to collapse"
-    # The truthful count line must not advertise the raw SKU total.
-    assert_no_match(/of #{raw_count} results/, response.body)
-    # One collapsed family row means a single result.
-    assert_match(/1 result for/, response.body)
-  end
-
-  test "modal renders each family size as its own linkable chip" do
-    family = ProductFamily.find_by(slug: "single-wall-cups")
-    sizes = %w[4oz 8oz 12oz 16oz 20oz]
-    family.products.each_with_index do |p, i|
-      p.update_columns(material: "Zingcup", size: sizes[i % sizes.size])
-    end
-
-    get search_url, params: { q: "Zingcup", modal: "true" }
-
-    assert_response :success
-    # Sizes now surface as individual variant links rather than an inert
-    # "4oz - 20oz" range in the subtitle. Each size link points at a product
-    # page and the full set of sizes is represented.
-    size_links = css_select("div a[href^='/products/']").select { |a| sizes.include?(a.text.strip) }
-    assert_equal sizes.uniq.sort, size_links.map { |a| a.text.strip }.uniq.sort
-    size_links.each { |a| assert_match %r{^/products/}, a["href"] }
-  end
-
-  test "modal links each variant of a collapsed family to its own page" do
-    family = ProductFamily.find_by(slug: "single-wall-cups")
-    sizes = %w[4oz 8oz 12oz]
-    members = family.products.first(3)
-    members.each_with_index do |p, i|
-      p.update_columns(material: "Zingcup", size: sizes[i])
-    end
-
-    get search_url, params: { q: "Zingcup", modal: "true" }
-
-    assert_response :success
-    # The collapsed row still shows one heading, but each size is a link to
-    # that variant's page so no variant is stranded (issue #247 follow-up).
-    members.each do |member|
-      assert_select "a[href=?]", product_path(member.slug), text: member.size
-    end
+    assert_operator member_count, :>, 1, "fixture should have several matching members"
+    # The count line reflects one row per member, not a single collapsed row.
+    assert_match(/#{member_count} results for/, response.body)
   end
 
   test "modal keeps family-less products as individual rows" do
@@ -285,7 +247,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
 
   test "modal result count line links to the full results page" do
     family = ProductFamily.find_by(slug: "single-wall-cups")
-    family.products.each { |p| p.update_columns(material: "Zingcup") }
+    family.products.first(3).each { |p| p.update_columns(material: "Zingcup") }
 
     get search_url, params: { q: "Zingcup", modal: "true" }
 

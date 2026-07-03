@@ -107,8 +107,8 @@ class SearchModalTest < ApplicationSystemTestCase
     assert_no_selector "[data-search-modal-target='recentSearchesList'] button[data-term='Cups']"
   end
 
-  # Issue #247 follow-up: the whole result row navigates to its representative
-  # product, and each size chip navigates to its own variant page.
+  # The whole result row navigates to its product, delegating a background
+  # click to the row's primary heading link.
   test "clicking the row background opens the representative product" do
     open_modal
 

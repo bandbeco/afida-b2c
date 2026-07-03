@@ -37,20 +37,9 @@ module ProductsHelper
     end
   end
 
-  # Secondary text for a search result row. Collapsed family rows describe the
-  # variant spread (size range plus variant count); everything else falls back
-  # to the per-product subtitle. When the row will render each size as its own
-  # chip (a family with sizes), the range is dropped so the subtitle does not
-  # just echo those chips, leaving the bare variant count. The row itself knows
-  # this from its size_variants, so no caller flag is needed.
+  # Secondary text for a search result row: the wrapped product's pack subtitle.
   def search_row_subtitle(row)
-    if row.family?
-      count = pluralize(row.variant_count, "variant")
-      range = row.size_variants.any? ? nil : row.size_range
-      range.present? ? "#{range} · #{count}" : count
-    else
-      search_display_subtitle(row.product)
-    end
+    search_display_subtitle(row.product)
   end
 
   # Secondary text for search results - shows pack size only
@@ -129,18 +118,13 @@ module ProductsHelper
     end
   end
 
-  # Price line for a search result row. Catalog rows pair the pack price with a
-  # per-unit rate so buyers can compare across pack sizes; family rows quote the
-  # cheapest member with the same per-unit treatment. Reuses format_unit_price
-  # from the shop card work (#237) for consistent pence/pound formatting.
+  # Price line for a search result row: the pack price paired with a per-unit
+  # rate so buyers can compare across pack sizes. Reuses format_unit_price from
+  # the shop card work (#237) for consistent pence/pound formatting.
   def search_price_line(row)
     product = row.product
 
-    if row.family?
-      "From #{number_to_currency(row.from_price)}#{per_unit_suffix(row.cheapest_per_unit_member)}"
-    else
-      "#{number_to_currency(product.price)}#{per_unit_suffix(product)}"
-    end
+    "#{number_to_currency(product.price)}#{per_unit_suffix(product)}"
   end
 
   # Factual price anchor for a brandable template row: the cheapest achievable

@@ -24,18 +24,18 @@ class SearchController < ApplicationController
       @total_count = 0
     else
       # search_ranked reapplies the :search filter, then orders by relevance
-      # (name matches first) and popularity (units sold). Collapse size/colour
-      # variants that share a ProductFamily into one row (issue #247), so the
-      # limit and the "Showing X of Y" count apply to ROWS DISPLAYED, not raw
-      # SKUs. Relevance order is preserved: a family takes the rank of its
-      # best-ranked member (its first appearance in the ranked list).
+      # (name matches first) and popularity (units sold). Each matching product
+      # is its own row: a ProductFamily groups products that serve the same
+      # purpose, not size variants of one model, so search does not collapse a
+      # family into one row (issue #253). The limit and the "Showing X of Y"
+      # count therefore apply to one row per matching product.
       ranked = Product
         .active
         .catalog_products
         .search_ranked(@query)
         .includes(:product_family, :category, product_photo_attachment: :blob)
 
-      all_rows = SearchResultRow.collapse(ranked)
+      all_rows = ranked.map { |product| SearchResultRow.new([ product ]) }
 
       # Before the modal declares "no results", widen the net to category names
       # via search_extended (issue #251). A query like "coffee shops" may name no
@@ -63,7 +63,7 @@ class SearchController < ApplicationController
   # Category-aware fallback rows for a query that matched no product directly.
   # Uses search_extended (which also searches category names) and ranks by the
   # same relevance ordering as the primary path (by_relevance) so the two search
-  # paths agree, then collapses families the same way.
+  # paths agree, wrapping each product in its own row like the primary path.
   def extended_rows
     extended = Product
       .active
@@ -72,7 +72,7 @@ class SearchController < ApplicationController
       .by_relevance(@query)
       .includes(:product_family, :category, product_photo_attachment: :blob)
 
-    SearchResultRow.collapse(extended)
+    extended.map { |product| SearchResultRow.new([ product ]) }
   end
 
   def render_appropriate_template
