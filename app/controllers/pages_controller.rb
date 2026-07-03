@@ -75,6 +75,7 @@ class PagesController < ApplicationController
       .distinct.pluck(:brand).sort
 
     @products = @products.to_a
+    @active_filters = active_shop_filters
   end
 
   def branding
@@ -201,6 +202,32 @@ class PagesController < ApplicationController
     # Get distinct material values
     materials = Product.where(id: product_ids).where.not(material: [ nil, "" ]).distinct.pluck(:material).sort
     filters["material"] = materials.map { |m| { value: m, label: m } } if materials.any?
+
+    filters
+  end
+
+  # Build the active-filter chips shown above the product grid.
+  # Each entry has a label and the shop URL with that one filter removed.
+  def active_shop_filters
+    filters = []
+    base = request.query_parameters.except("page")
+
+    # Category filters are ignored while searching, so no chips for them then
+    if params[:q].blank?
+      slugs = params[:categories].is_a?(Array) ? params[:categories].grep(String) : []
+      names = Category.where(slug: slugs).pluck(:slug, :name).to_h
+      slugs.each do |slug|
+        next unless names.key?(slug)
+        remaining = slugs - [ slug ]
+        filters << { label: names[slug], url: shop_path(base.merge("categories" => remaining.presence).compact) }
+      end
+    end
+
+    %w[brand colour material].each do |key|
+      value = params[key]
+      next unless value.is_a?(String) && value.present?
+      filters << { label: value, url: shop_path(base.except(key)) }
+    end
 
     filters
   end

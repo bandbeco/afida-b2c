@@ -92,6 +92,19 @@
 
         <!-- Product Grid (inside Turbo Frame) -->
         <%= turbo_frame_tag "products", data: { turbo_action: "replace" } do %>
+          <div class="flex flex-wrap items-center gap-2 mb-4">
+            <span class="shop-result-count text-sm text-base-content/60"><%= pluralize(@products.size, "product") %></span>
+            <% @active_filters.each do |filter| %>
+              <%= link_to filter[:url],
+                          class: "shop-filter-chip badge badge-outline badge-lg gap-1",
+                          aria: { label: "Remove filter #{filter[:label]}" },
+                          data: { turbo_frame: "_top" } do %>
+                <%= filter[:label] %>
+                <span aria-hidden="true">&times;</span>
+              <% end %>
+            <% end %>
+          </div>
+
           <% if @products.any? %>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               <%= render partial: "products/card", collection: @products, as: :product %>

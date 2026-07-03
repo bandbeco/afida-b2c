@@ -39,6 +39,58 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     # Verify products are present (specific order checking in system tests)
   end
 
+  test "shop page shows the result count" do
+    get shop_path
+
+    assert_response :success
+    count = Product.active.standard.count
+    assert_select ".shop-result-count", text: "#{count} #{"product".pluralize(count)}"
+  end
+
+  test "shop page result count reflects active filters" do
+    category = categories(:one)
+    products(:one).update!(category: category)
+
+    get shop_path, params: { categories: [ category.slug ] }
+
+    assert_response :success
+    count = Product.active.standard.in_categories([ category.slug ]).count
+    assert_select ".shop-result-count", text: "#{count} #{"product".pluralize(count)}"
+  end
+
+  test "shop page shows a removable chip for an active category filter" do
+    category = categories(:one)
+
+    get shop_path, params: { categories: [ category.slug ], sort: "price_asc" }
+
+    assert_response :success
+    assert_select ".shop-filter-chip", text: /#{category.name}/
+    assert_select ".shop-filter-chip[href=?]", shop_path(sort: "price_asc")
+  end
+
+  test "shop page category chip removes only its own category" do
+    get shop_path, params: { categories: [ categories(:one).slug, categories(:two).slug ] }
+
+    assert_response :success
+    assert_select ".shop-filter-chip[href=?]", shop_path(categories: [ categories(:two).slug ])
+  end
+
+  test "shop page shows a removable chip for the brand filter" do
+    products(:one).update!(brand: "Vegware")
+
+    get shop_path, params: { brand: "Vegware" }
+
+    assert_response :success
+    assert_select ".shop-filter-chip[href=?]", shop_path, text: /Vegware/
+  end
+
+  test "shop page does not render chips for malformed filter params" do
+    get shop_path, params: { brand: { foo: "bar" }, categories: { foo: "bar" } }
+
+    assert_response :success
+    assert_select ".shop-filter-chip", count: 0
+  end
+
   test "shop page handles excessive page number gracefully" do
     get shop_path, params: { page: 999999 }
 
