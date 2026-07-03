@@ -10,21 +10,39 @@ export default class extends Controller {
   connect() {
     this.previouslyFocusedElement = null
     this.searchTimeout = null
+    // Index of the keyboard-selected result row (-1 = nothing selected).
+    this.activeIndex = -1
 
     // Store bound function references
     this.boundHandleEscape = this.handleEscape.bind(this)
     this.boundTrapFocus = this.trapFocus.bind(this)
     this.boundOpenFromEvent = this.openFromEvent.bind(this)
+    this.boundHandleShortcut = this.handleShortcut.bind(this)
 
     // Listen for global open event (from navbar button)
     window.addEventListener("search-modal:open", this.boundOpenFromEvent)
+    // Cmd+K / Ctrl+K opens search from anywhere on the page.
+    document.addEventListener("keydown", this.boundHandleShortcut)
   }
 
   disconnect() {
     this.clearSearchTimeout()
     document.removeEventListener("keydown", this.boundHandleEscape)
+    document.removeEventListener("keydown", this.boundHandleShortcut)
     this.element.removeEventListener("keydown", this.boundTrapFocus)
     window.removeEventListener("search-modal:open", this.boundOpenFromEvent)
+  }
+
+  // Cmd+K (mac) / Ctrl+K (win/linux) toggles the search modal open.
+  handleShortcut(event) {
+    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+      event.preventDefault()
+      if (this.modalTarget.classList.contains("hidden")) {
+        this.open()
+      } else {
+        this.inputTarget.focus()
+      }
+    }
   }
 
   // Called from global event (navbar button click)
@@ -42,6 +60,7 @@ export default class extends Controller {
     this.modalTarget.classList.remove("hidden")
     this.modalTarget.classList.add("flex")
     document.body.classList.add("overflow-hidden")
+    this.inputTarget.setAttribute("aria-expanded", "true")
 
     // Focus search input
     requestAnimationFrame(() => {
@@ -63,6 +82,8 @@ export default class extends Controller {
 
     // Clear search and show default content
     this.inputTarget.value = ""
+    this.inputTarget.setAttribute("aria-expanded", "false")
+    this.clearActiveSelection()
     this.showDefaultContent()
 
     // Restore focus
@@ -108,6 +129,9 @@ export default class extends Controller {
   }
 
   performSearch(query) {
+    // A new query invalidates any keyboard selection from the old result set.
+    this.clearActiveSelection()
+
     // Update Turbo Frame src to trigger search
     const frame = this.resultsTarget
     const url = `/search?q=${encodeURIComponent(query)}&modal=true`
@@ -117,14 +141,84 @@ export default class extends Controller {
     this.showResults()
   }
 
-  // Enter in the search input navigates to the full results page with the
-  // current query (issue #249). Guards the minimum 2-character rule.
+  // Enter opens the keyboard-selected result row when there is one, otherwise
+  // it navigates to the full results page with the current query (issues #249
+  // and #250). Guards the minimum 2-character rule for the fallback.
   submit(event) {
+    const active = this.activeOption()
+    if (active) {
+      event.preventDefault()
+      active.click()
+      return
+    }
+
     const query = this.inputTarget.value.trim()
     if (query.length < 2) return
 
     event.preventDefault()
     window.location.href = `/shop?q=${encodeURIComponent(query)}`
+  }
+
+  // Arrow down moves the selection to the next result row (issue #250).
+  next(event) {
+    const options = this.optionElements()
+    if (options.length === 0) return
+
+    event.preventDefault()
+    this.activeIndex = (this.activeIndex + 1) % options.length
+    this.applyActiveSelection(options)
+  }
+
+  // Arrow up moves the selection to the previous result row (issue #250).
+  previous(event) {
+    const options = this.optionElements()
+    if (options.length === 0) return
+
+    event.preventDefault()
+    this.activeIndex = this.activeIndex <= 0 ? options.length - 1 : this.activeIndex - 1
+    this.applyActiveSelection(options)
+  }
+
+  // Live list of the current result-row options (re-queried each time because
+  // Turbo replaces the frame contents on every search).
+  optionElements() {
+    if (!this.hasResultsTarget) return []
+    return Array.from(this.resultsTarget.querySelectorAll('[role="option"]'))
+  }
+
+  // The currently keyboard-selected option element, or null.
+  activeOption() {
+    const options = this.optionElements()
+    if (this.activeIndex < 0 || this.activeIndex >= options.length) return null
+    return options[this.activeIndex]
+  }
+
+  applyActiveSelection(options) {
+    options.forEach((option, index) => {
+      const selected = index === this.activeIndex
+      option.setAttribute("aria-selected", selected ? "true" : "false")
+      // Toggle the highlight classes directly, matching the pricing-tier and
+      // configurator selectors (Tailwind aria variants are not relied on here).
+      option.classList.toggle("border-primary", selected)
+      option.classList.toggle("bg-primary/5", selected)
+      option.classList.toggle("border-gray-100", !selected)
+    })
+
+    const active = options[this.activeIndex]
+    if (active) {
+      this.inputTarget.setAttribute("aria-activedescendant", active.id)
+      active.scrollIntoView({ block: "nearest" })
+    }
+  }
+
+  clearActiveSelection() {
+    this.activeIndex = -1
+    this.inputTarget.removeAttribute("aria-activedescendant")
+    this.optionElements().forEach((option) => {
+      option.setAttribute("aria-selected", "false")
+      option.classList.remove("border-primary", "bg-primary/5")
+      option.classList.add("border-gray-100")
+    })
   }
 
   // Quick search chip clicked

@@ -170,4 +170,29 @@ module ProductsHelper
 
     max_discount.positive? ? max_discount : nil
   end
+
+  # Wraps each occurrence of a query word in a search result title with a
+  # subtle mint-tinted <mark>, so the matched term stands out without bold
+  # (banned by our design rules). Highlighting is done AFTER HTML-escaping the
+  # title, and query words are matched literally (Regexp.escape), so raw user
+  # input is never interpreted as HTML or as a regular expression.
+  def highlight_search_match(title, query)
+    escaped_title = ERB::Util.html_escape(title.to_s)
+
+    words = query.to_s.split.map(&:strip).reject(&:blank?)
+    return escaped_title if words.empty?
+
+    # Match the already-escaped query words against the already-escaped title
+    # so both sides share the same escaping and comparison stays literal. Build
+    # the alternation from string sources (not a nested Regexp) so the
+    # case-insensitive flag applies to every branch.
+    alternation = words.map { |word| Regexp.escape(ERB::Util.html_escape(word)) }.join("|")
+    pattern = Regexp.new("(#{alternation})", Regexp::IGNORECASE)
+
+    highlighted = escaped_title.to_str.gsub(pattern) do |match|
+      %(<mark class="bg-primary/10 text-inherit rounded-sm">#{match}</mark>)
+    end
+
+    highlighted.html_safe
+  end
 end

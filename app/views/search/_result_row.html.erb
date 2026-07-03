@@ -2,7 +2,10 @@
 <%# Locals: %>
 <%#   row     - a SearchResultRow (a single product or a collapsed family) %>
 <%#   compact - true for the smaller header-dropdown layout, false for the modal %>
+<%#   option_index - row position, used to build the ARIA option id (modal only) %>
 <% compact = local_assigns.fetch(:compact, false) %>
+<% option_index = local_assigns[:option_index] %>
+<% option_id = option_index && "search-result-#{option_index}" %>
 <% product = row.product %>
 
 <% if compact %>
@@ -16,7 +19,7 @@
                             variant: { resize_and_pad: [48, 48, { background: [255, 255, 255] }] }) %>
     </div>
     <div class="flex-1 min-w-0">
-      <div class="font-medium text-sm truncate"><%= row.title %></div>
+      <div class="font-medium text-sm truncate"><%= highlight_search_match(row.title, @query) %></div>
       <div class="text-xs text-gray-500">
         <% if row.brandable? %>
           <%= branded_price_anchor(product) || "Volume pricing" %>
@@ -28,8 +31,11 @@
   <% end %>
 <% else %>
   <%= link_to search_result_path(product),
+              id: option_id,
+              role: "option",
+              "aria-selected": "false",
               class: "group flex items-center gap-4 p-3 bg-white rounded-lg border border-gray-100 hover:border-primary hover:shadow-md transition",
-              data: { turbo_frame: "_top" } do %>
+              data: { turbo_frame: "_top", search_modal_target: "option" } do %>
     <%# Product thumbnail %>
     <div class="w-16 h-16 flex-shrink-0 bg-gray-50 rounded-lg overflow-hidden">
       <%= product_photo_tag(row.primary_photo,
@@ -42,7 +48,7 @@
     <%# Product info - two lines %>
     <div class="flex-1 min-w-0">
       <h3 class="text-gray-900 truncate">
-        <%= row.title %>
+        <%= highlight_search_match(row.title, @query) %>
         <% if row.brandable? %>
           <span class="badge badge-warning badge-sm ml-1">Brandable</span>
         <% end %>

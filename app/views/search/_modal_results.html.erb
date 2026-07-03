@@ -16,8 +16,10 @@
 <% else %>
   <%# Results header. The count line links straight to the full results page so
   %>
-  <%# it is reachable without scrolling past every row (issue #249). %>
-  <div class="mb-4 flex items-center justify-between">
+  <%# it is reachable without scrolling past every row (issue #249). It is also
+  %>
+  <%# an aria-live region so screen readers announce the result count (#250). %>
+  <div class="mb-4 flex items-center justify-between" aria-live="polite">
     <%= link_to shop_path(q: @query),
                 class: "text-sm text-gray-500 hover:text-primary transition",
                 data: { turbo_frame: "_top" } do %>
@@ -29,10 +31,14 @@
     <% end %>
   </div>
 
-  <%# Results list - horizontal stacked rows for better differentiation %>
-  <div class="space-y-2">
-    <% @rows.each do |row| %>
-      <%= render partial: "search/result_row", locals: { row: row, compact: false } %>
+  <%# Results list - horizontal stacked rows for better differentiation. The
+  %>
+  <%# listbox/option roles and per-row ids back the ARIA combobox and the
+  %>
+  <%# keyboard navigation in the Stimulus controller (issue #250). %>
+  <div class="space-y-2" role="listbox" aria-label="Search results" data-search-modal-target="listbox">
+    <% @rows.each_with_index do |row, index| %>
+      <%= render partial: "search/result_row", locals: { row: row, compact: false, option_index: index } %>
     <% end %>
   </div>
 

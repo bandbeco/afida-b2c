@@ -324,4 +324,54 @@ class ProductsHelperTest < ActionView::TestCase
 
     assert_equal "From 25p per unit", branded_price_anchor(product)
   end
+
+  # highlight_search_match tests (issue #250)
+
+  test "highlight_search_match wraps the matched term in a mint-tinted mark" do
+    result = highlight_search_match("8oz White Cups", "white")
+
+    assert_match %r{<mark class="[^"]*bg-primary/10[^"]*">White</mark>}, result
+  end
+
+  test "highlight_search_match preserves the original casing of the match" do
+    result = highlight_search_match("8oz White Cups", "WHITE")
+
+    assert_includes result, ">White</mark>"
+  end
+
+  test "highlight_search_match highlights every query word" do
+    result = highlight_search_match("8oz White Cups", "white cups")
+
+    assert_includes result, ">White</mark>"
+    assert_includes result, ">Cups</mark>"
+  end
+
+  test "highlight_search_match escapes HTML in the title" do
+    result = highlight_search_match("<script>alert(1)</script> cups", "cups")
+
+    refute_includes result, "<script>"
+    assert_includes result, "&lt;script&gt;"
+  end
+
+  test "highlight_search_match does not interpret regex metacharacters in the query" do
+    result = highlight_search_match("8oz White Cups", "wh.te")
+
+    # A literal "wh.te" must not match "Whit"; the title comes back escaped and
+    # unhighlighted rather than treating "." as a wildcard.
+    refute_includes result, "<mark"
+    assert_includes result, "8oz White Cups"
+  end
+
+  test "highlight_search_match returns the escaped title unchanged for a blank query" do
+    result = highlight_search_match("8oz White Cups", "")
+
+    refute_includes result, "<mark"
+    assert_includes result, "8oz White Cups"
+  end
+
+  test "highlight_search_match returns an html_safe string" do
+    result = highlight_search_match("8oz White Cups", "white")
+
+    assert_predicate result, :html_safe?
+  end
 end

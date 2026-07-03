@@ -51,7 +51,9 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     get search_url, params: { q: "Vegware" }
 
     assert_response :success
-    assert_includes response.body, ERB::Util.html_escape(expected)
+    # Matched terms are wrapped in <mark> for highlighting (issue #250), so
+    # strip the tags before asserting the full title rendered.
+    assert_includes unhighlighted(response.body), ERB::Util.html_escape(expected)
   end
 
   test "modal results render generated_title" do
@@ -61,7 +63,7 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     get search_url, params: { q: "Vegware", modal: "true" }
 
     assert_response :success
-    assert_includes response.body, ERB::Util.html_escape(expected)
+    assert_includes unhighlighted(response.body), ERB::Util.html_escape(expected)
   end
 
   test "header dropdown does not show a raw price for brandable templates" do
@@ -269,5 +271,44 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     # The "Showing X of Y" / "N results" line is itself a link to /shop?q=,
     # so the full results are reachable without scrolling past every row.
     assert_select "a[href=?]", shop_path(q: "Zingcup"), text: /result/i
+  end
+
+  # Keyboard navigation, highlighting, and ARIA (issue #250)
+
+  test "result titles highlight the matched query term" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "mark.bg-primary\\/10", text: /8oz/i
+  end
+
+  test "modal wraps results in an ARIA listbox with option rows" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "[role='listbox']"
+    assert_select "[role='option']"
+  end
+
+  test "modal result rows carry stable ids for aria-activedescendant" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "[role='option'][id^='search-result-']"
+  end
+
+  test "modal result count line is an aria-live polite region" do
+    get search_url, params: { q: "8oz", modal: "true" }
+
+    assert_response :success
+    assert_select "[aria-live='polite']"
+  end
+
+  private
+
+  # Removes the <mark> highlight wrappers so an assertion can match a title as a
+  # contiguous substring regardless of which words were highlighted (#250).
+  def unhighlighted(html)
+    html.gsub(%r{</?mark[^>]*>}, "")
   end
 end
