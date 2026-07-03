@@ -117,6 +117,16 @@ export default class extends Controller {
     this.showResults()
   }
 
+  // Enter in the search input navigates to the full results page with the
+  // current query (issue #249). Guards the minimum 2-character rule.
+  submit(event) {
+    const query = this.inputTarget.value.trim()
+    if (query.length < 2) return
+
+    event.preventDefault()
+    window.location.href = `/shop?q=${encodeURIComponent(query)}`
+  }
+
   // Quick search chip clicked
   quickSearch(event) {
     event.preventDefault()

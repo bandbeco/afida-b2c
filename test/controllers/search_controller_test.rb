@@ -256,4 +256,18 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_match(/header-search-results/, response.body)
   end
+
+  # View-all affordance (issue #249)
+
+  test "modal result count line links to the full results page" do
+    family = ProductFamily.find_by(slug: "single-wall-cups")
+    family.products.each { |p| p.update_columns(material: "Zingcup") }
+
+    get search_url, params: { q: "Zingcup", modal: "true" }
+
+    assert_response :success
+    # The "Showing X of Y" / "N results" line is itself a link to /shop?q=,
+    # so the full results are reachable without scrolling past every row.
+    assert_select "a[href=?]", shop_path(q: "Zingcup"), text: /result/i
+  end
 end

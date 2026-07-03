@@ -14,15 +14,19 @@
     <p class="text-gray-400 mt-2">Try a different search term or browse our categories</p>
   </div>
 <% else %>
-  <%# Results header %>
+  <%# Results header. The count line links straight to the full results page so
+  %>
+  <%# it is reachable without scrolling past every row (issue #249). %>
   <div class="mb-4 flex items-center justify-between">
-    <p class="text-sm text-gray-500">
+    <%= link_to shop_path(q: @query),
+                class: "text-sm text-gray-500 hover:text-primary transition",
+                data: { turbo_frame: "_top" } do %>
       <% if @total_count > @rows.size %>
         Showing <%= @rows.size %> of <%= @total_count %> results for "<%= @query %>"
       <% else %>
         <%= pluralize(@rows.size, "result") %> for "<%= @query %>"
       <% end %>
-    </p>
+    <% end %>
   </div>
 
   <%# Results list - horizontal stacked rows for better differentiation %>
