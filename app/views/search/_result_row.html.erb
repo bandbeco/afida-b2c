@@ -19,16 +19,9 @@
       <div class="font-medium text-sm truncate"><%= row.title %></div>
       <div class="text-xs text-gray-500">
         <% if row.brandable? %>
-          <% discount = max_volume_discount_percentage(product) %>
-          <% if discount %>
-            Volume discount: save up to <%= discount %>%
-          <% else %>
-            Volume pricing
-          <% end %>
-        <% elsif row.family? %>
-          from <%= number_to_currency(row.from_price) %>
+          <%= branded_price_anchor(product) || "Volume pricing" %>
         <% else %>
-          <%= number_to_currency(product.price) %>
+          <%= search_price_line(row) %>
         <% end %>
       </div>
     </div>
@@ -62,21 +55,12 @@
     <%# Price - right aligned %>
     <div class="flex-shrink-0 text-right">
       <% if row.brandable? %>
-        <% discount = max_volume_discount_percentage(product) %>
-        <span>
-          <% if discount %>
-            Volume discount: save up to <%= discount %>%
-          <% else %>
-            Volume pricing
-          <% end %>
-        </span>
-      <% elsif row.family? %>
         <p class="text-gray-700">
-          from <%= number_to_currency(row.from_price) %>
+          <%= branded_price_anchor(product) || "Volume pricing" %>
         </p>
       <% else %>
         <p class="text-gray-700">
-          <%= number_to_currency(product.price) %>
+          <%= search_price_line(row) %>
         </p>
       <% end %>
     </div>

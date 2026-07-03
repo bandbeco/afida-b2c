@@ -109,6 +109,14 @@ module ProductsHelper
     end
   end
 
+  # " · Yp per unit" for a multi-unit pack, blank for a single-unit pack where
+  # the per-unit price is just the price itself.
+  def per_unit_suffix(product)
+    return "" unless product.pac_size.to_i > 1
+
+    " · #{format_unit_price(product.unit_price)} per unit"
+  end
+
   # Pence below a pound ("2.7p", "3p"), pounds otherwise ("£1.24")
   def format_unit_price(amount)
     if amount >= 1
@@ -116,6 +124,32 @@ module ProductsHelper
     else
       "#{number_with_precision(amount * 100, precision: 1, strip_insignificant_zeros: true)}p"
     end
+  end
+
+  # Price line for a search result row. Catalog rows pair the pack price with a
+  # per-unit rate so buyers can compare across pack sizes; family rows quote the
+  # cheapest member with the same per-unit treatment. Reuses format_unit_price
+  # from the shop card work (#237) for consistent pence/pound formatting.
+  def search_price_line(row)
+    product = row.product
+
+    if row.family?
+      "From #{number_to_currency(row.from_price)}#{per_unit_suffix(row.cheapest_per_unit_member)}"
+    else
+      "#{number_to_currency(product.price)}#{per_unit_suffix(product)}"
+    end
+  end
+
+  # Factual price anchor for a brandable template row: the cheapest achievable
+  # per-unit price across every branded size/tier, plus the maximum volume
+  # saving when there is one.
+  def branded_price_anchor(product)
+    cheapest = product.branded_product_prices.minimum(:price_per_unit)
+    return nil if cheapest.blank?
+
+    anchor = "From #{format_unit_price(cheapest)} per unit"
+    discount = max_volume_discount_percentage(product)
+    discount ? "#{anchor} · save up to #{discount}% in volume" : anchor
   end
 
   # Calculate the maximum volume discount percentage for branded products

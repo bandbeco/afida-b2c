@@ -268,4 +268,60 @@ class ProductsHelperTest < ActionView::TestCase
 
     assert_equal "£41.31", card_price_line(product)
   end
+
+  # search_price_line tests (issue #248)
+
+  test "search_price_line pairs the pack price with a per-unit rate" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 86.15, pac_size: 1000)
+    row = SearchResultRow.new([ product ])
+
+    assert_equal "£86.15 · 8.6p per unit", search_price_line(row)
+  end
+
+  test "search_price_line uses pounds for per-unit rates of a pound or more" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 620.00, pac_size: 500)
+    row = SearchResultRow.new([ product ])
+
+    assert_equal "£620.00 · £1.24 per unit", search_price_line(row)
+  end
+
+  test "search_price_line shows the plain price for a single-unit pack" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 9.99, pac_size: 1)
+    row = SearchResultRow.new([ product ])
+
+    assert_equal "£9.99", search_price_line(row)
+  end
+
+  test "search_price_line quotes a from-price and per-unit rate for a family row" do
+    cheaper = products(:single_wall_8oz_white)
+    cheaper.update!(pricing_tiers: nil, price: 42.30, pac_size: 1000)
+    dearer = products(:single_wall_12oz_white)
+    dearer.update!(pricing_tiers: nil, price: 55.00, pac_size: 1000)
+    row = SearchResultRow.collapse([ cheaper, dearer ]).first
+
+    assert row.family?
+    assert_equal "From £42.30 · 4.2p per unit", search_price_line(row)
+  end
+
+  # branded_price_anchor tests (issue #248)
+
+  test "branded_price_anchor quotes the cheapest per-unit price and the max volume discount" do
+    product = products(:branded_template_variant)
+
+    assert_equal "From 18p per unit · save up to 40% in volume",
+                 branded_price_anchor(product)
+  end
+
+  test "branded_price_anchor drops the discount clause when there is no volume saving" do
+    product = products(:branded_template_variant)
+    product.branded_product_prices.destroy_all
+    product.branded_product_prices.create!(
+      size: "8oz", quantity_tier: 1000, price_per_unit: 0.25, case_quantity: 500
+    )
+
+    assert_equal "From 25p per unit", branded_price_anchor(product)
+  end
 end

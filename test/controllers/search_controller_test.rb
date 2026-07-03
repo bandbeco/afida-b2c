@@ -83,6 +83,28 @@ class SearchControllerTest < ActionDispatch::IntegrationTest
     assert_match(/save up to/i, response.body)
   end
 
+  test "brandable rows anchor the price with a from per-unit figure" do
+    brandable = products(:branded_template_variant)
+
+    get search_url, params: { q: brandable.generated_title.split.first, modal: "true" }
+
+    assert_response :success
+    # Cheapest per-unit across the fixture's branded prices is 18p, max
+    # volume saving 40%.
+    assert_match(%r{From 18p per unit · save up to 40% in volume}, response.body)
+  end
+
+  test "catalog rows show the per-unit price alongside the pack price" do
+    loose = products(:one)
+    loose.update!(product_family_id: nil, material: "Persol", pricing_tiers: nil,
+                  price: 86.15, pac_size: 1000)
+
+    get search_url, params: { q: "Persol", modal: "true" }
+
+    assert_response :success
+    assert_match(%r{£86\.15 · 8\.6p per unit}, response.body)
+  end
+
   test "index ranks name matches ahead of attribute-only matches" do
     # Detach from their shared family so ranking is asserted over distinct
     # rows rather than a single collapsed family row (issue #247).
