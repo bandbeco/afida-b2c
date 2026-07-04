@@ -64,3 +64,7 @@ node_modules
 # Local progress tracking
 /progress.txt
 
+# Private billing worklogs (time tracking; not for the shared repo)
+/docs/worklog.md
+/docs/worklog-auto.md
+

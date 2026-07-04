@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash|mcp__klaviyo__.*|mcp__claude_ai_Windsor_ai__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/worklog-append.sh\" 2>/dev/null || true",
+            "statusMessage": "Logging billable tool use"
+          }
+        ]
+      }
+    ]
+  }
+}
