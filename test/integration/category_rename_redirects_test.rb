@@ -158,6 +158,13 @@ class CategoryRenameRedirectsTest < ActionDispatch::IntegrationTest
     assert_equal 301, response.status
   end
 
+  # Collection pages scoped to a renamed category slug (GSC 404 report 2026-07-07)
+  test "redirects vegware collection scoped to renamed hot-food slug" do
+    get "/collections/vegware/hot-food"
+    assert_redirected_to "/collections/vegware/food-containers"
+    assert_equal 301, response.status
+  end
+
   # Query strings survive the redirect (UTM tracking)
   test "preserves query parameters on renamed category redirect" do
     get "/categories/cups-and-drinks/hot-cups?utm_source=google&utm_campaign=test"
