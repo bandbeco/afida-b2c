@@ -272,4 +272,21 @@ class CategoryTest < ActiveSupport::TestCase
     assert_not grandchild.valid?
     assert_includes grandchild.errors[:parent].join, "two levels"
   end
+
+  test "meta_description_with_fallback prefers the explicit meta description" do
+    category = categories(:cups)
+    category.meta_description = "Explicit copy"
+    assert_equal "Explicit copy", category.meta_description_with_fallback
+  end
+
+  test "meta_description_with_fallback falls back to description then generated copy" do
+    category = categories(:cups)
+    category.meta_description = ""
+    category.description = "On-page description"
+    assert_equal "On-page description", category.meta_description_with_fallback
+
+    category.description = ""
+    assert_includes category.meta_description_with_fallback, category.name.downcase
+    assert_includes category.meta_description_with_fallback, "free UK delivery"
+  end
 end

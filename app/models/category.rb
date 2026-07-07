@@ -32,6 +32,14 @@ class Category < ApplicationRecord
     slug
   end
 
+  # Search-snippet description with fallbacks so no category ever ships an
+  # empty <meta name="description"> tag.
+  def meta_description_with_fallback
+    meta_description.presence ||
+      description.presence ||
+      "Buy #{name.downcase} in bulk from Afida. Eco-friendly catering disposables for UK food businesses, with free UK delivery over £100."
+  end
+
   private
 
   # Every admin rename leaves a permanent 301 behind (the June 2026 renames

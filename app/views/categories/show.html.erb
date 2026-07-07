@@ -7,7 +7,7 @@
 <% end %>
 
 <% content_for :meta_description do %>
-<%= @category.meta_description %>
+<%= @category.meta_description_with_fallback %>
 <% end %>
 
 <% if @category.image.attached? %>
@@ -19,14 +19,14 @@
 <% content_for :head do %>
   <meta property="og:type" content="website">
   <meta property="og:title" content="<%= @category.meta_title.presence || "#{@category.name} | Afida" %>">
-  <meta property="og:description" content="<%= @category.meta_description %>">
+  <meta property="og:description" content="<%= @category.meta_description_with_fallback %>">
   <meta property="og:url" content="<%= category_browse_url(@category) %>">
   <meta property="og:site_name" content="Afida">
   <meta property="og:image" content="<%= @category.image.attached? ? rails_storage_proxy_url(@category.image) : hero_image_url %>">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="<%= @category.meta_title.presence || "#{@category.name} | Afida" %>">
-  <meta name="twitter:description" content="<%= @category.meta_description %>">
+  <meta name="twitter:description" content="<%= @category.meta_description_with_fallback %>">
 
   <script type="application/ld+json">
     <%
