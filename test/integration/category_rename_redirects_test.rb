@@ -165,6 +165,17 @@ class CategoryRenameRedirectsTest < ActionDispatch::IntegrationTest
     assert_equal 301, response.status
   end
 
+  test "redirects vegware collection scoped to renamed cups-and-drinks slug" do
+    get "/collections/vegware/cups-and-drinks"
+    assert_redirected_to "/collections/vegware/cups-and-accessories"
+    assert_equal 301, response.status
+  end
+
+  test "preserves query parameters on the vegware cups-and-drinks redirect" do
+    get "/collections/vegware/cups-and-drinks?utm_source=google"
+    assert_redirected_to "/collections/vegware/cups-and-accessories?utm_source=google"
+  end
+
   # Query strings survive the redirect (UTM tracking)
   test "preserves query parameters on renamed category redirect" do
     get "/categories/cups-and-drinks/hot-cups?utm_source=google&utm_campaign=test"

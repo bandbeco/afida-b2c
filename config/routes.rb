@@ -92,7 +92,8 @@ Rails.application.routes.draw do
     "/categories/food-containers/portion-pots-lids" => "/categories/food-containers/portion-pots-and-lids",
     "/categories/food-containers/bowls-lids" => "/categories/food-containers/bowls-and-lids",
     "/categories/food-containers/food-containers-lids" => "/categories/food-containers/food-containers-and-lids",
-    "/collections/vegware/hot-food" => "/collections/vegware/food-containers"
+    "/collections/vegware/hot-food" => "/collections/vegware/food-containers",
+    "/collections/vegware/cups-and-drinks" => "/collections/vegware/cups-and-accessories"
   }.each do |from, to|
     get from, to: redirect(status: 301) { |_params, req| "#{to}#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   end
