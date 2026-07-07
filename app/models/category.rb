@@ -8,7 +8,10 @@ class Category < ApplicationRecord
 
   has_many :products
   has_many :collection_category_guides, dependent: :destroy
+  has_many :slug_redirects, class_name: "CategorySlugRedirect", dependent: :destroy
   has_one_attached :image
+
+  after_update :record_slug_history
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
@@ -30,6 +33,19 @@ class Category < ApplicationRecord
   end
 
   private
+
+  # Every admin rename leaves a permanent 301 behind (the June 2026 renames
+  # 404'd ~16k impressions/quarter of ranking URLs; never again).
+  def record_slug_history
+    return unless saved_change_to_slug?
+
+    previous_slug = saved_change_to_slug.first
+    return if previous_slug.blank?
+
+    # A redirect must never shadow a live slug, and the latest rename wins.
+    CategorySlugRedirect.where(old_slug: [ slug, previous_slug ]).destroy_all
+    slug_redirects.create!(old_slug: previous_slug)
+  end
 
   def parent_cannot_be_self
     if parent_id.present? && parent_id == id

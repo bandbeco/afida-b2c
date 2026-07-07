@@ -2,19 +2,19 @@ class CategoriesController < ApplicationController
   allow_unauthenticated_access
 
   def show
-    if params[:parent_slug].present?
-      # Nested route: /categories/:parent_slug/:id
-      @parent = Category.top_level.find_by!(slug: params[:parent_slug])
-      @category = @parent.children.includes(:parent, image_attachment: :blob).find_by!(slug: params[:id])
-    else
-      @category = Category.includes(:parent, image_attachment: :blob).find_by!(slug: params[:id])
+    @category = Category.includes(:parent, image_attachment: :blob).find_by(slug: params[:id])
+    @category ||= CategorySlugRedirect.find_by(old_slug: params[:id])&.category
 
-      # If a subcategory is accessed via flat URL, redirect to nested URL
-      if @category.parent.present?
-        redirect_to category_subcategory_path(@category.parent.slug, @category.slug, request.query_parameters),
-                    status: :moved_permanently
-        return
-      end
+    raise ActiveRecord::RecordNotFound unless @category
+
+    # Enforce the canonical URL. One check covers: subcategories reached via
+    # flat URLs, renamed child slugs, and stale parent slugs in nested URLs.
+    canonical_path = helpers.category_browse_path(@category)
+    if request.path != canonical_path
+      target = canonical_path
+      target += "?#{request.query_parameters.to_query}" if request.query_parameters.present?
+      redirect_to target, status: :moved_permanently
+      return
     end
 
     # Eager load children to avoid separate query for .any? and iteration
