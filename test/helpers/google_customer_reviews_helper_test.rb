@@ -76,7 +76,7 @@ class GoogleCustomerReviewsHelperTest < ActionView::TestCase
 
   # The sitewide store badge is intentionally not rendered: it adds no value to
   # Google Shopping ad seller ratings (those come from the confirmation-page
-  # survey) and it collided with the floating WhatsApp button bottom-right.
+  # survey).
 
   # estimated_delivery_date tests
 
