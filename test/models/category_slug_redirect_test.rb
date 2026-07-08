@@ -40,4 +40,23 @@ class CategorySlugRedirectTest < ActiveSupport::TestCase
       category.update!(name: "Renamed Display Name")
     end
   end
+
+  test "creating a category whose slug matches a stale redirect removes the shadowed redirect" do
+    CategorySlugRedirect.create!(old_slug: "brand-new-slug", category: categories(:two))
+
+    Category.create!(name: "Brand New", slug: "brand-new-slug")
+
+    assert_not CategorySlugRedirect.exists?(old_slug: "brand-new-slug")
+  end
+
+  test "renaming onto a slug with a foreign stale redirect repoints it instead of raising" do
+    owner = categories(:cups)
+    original = owner.slug
+    stale = CategorySlugRedirect.create!(old_slug: original, category: categories(:two))
+
+    owner.update!(slug: "#{original}-renamed")
+
+    assert_equal owner, stale.reload.category
+    assert_equal 1, CategorySlugRedirect.where(old_slug: original).count
+  end
 end
