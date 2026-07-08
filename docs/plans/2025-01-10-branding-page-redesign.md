@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Plan to transform the plain /branding page into a full landing page for the custom branded double wall cup service, with hero, trust badges, how-it-works, showcase, and CTA sections.
+status: shipped
+timestamp: 2025-12-15
+---
+
 # Branding Page Redesign
 
 ## Overview

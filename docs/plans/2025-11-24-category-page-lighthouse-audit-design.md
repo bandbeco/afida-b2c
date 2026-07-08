@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Workflow design for a baseline Lighthouse audit of the category page and category-by-category fixes across accessibility, SEO, best practices, and performance.
+status: shipped
+timestamp: 2025-11-24
+---
+
 # Category Page Lighthouse Audit & Fix Workflow
 
 **Date:** 2025-11-24

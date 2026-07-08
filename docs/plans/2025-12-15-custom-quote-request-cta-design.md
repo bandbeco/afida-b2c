@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a product page call-to-action linking shoppers to the contact page when they need a custom size, quantity or material.
+status: shipped
+timestamp: 2025-12-15
+---
+
 # Custom Quote Request CTA - Design Document
 
 ## Overview

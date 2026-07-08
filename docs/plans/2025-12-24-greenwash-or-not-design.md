@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for an interactive swipe-game tool that checks packaging environmental claims and generates a citable report for backlink acquisition.
+status: abandoned
+timestamp: 2025-12-24
+---
+
 # Greenwash or Not? - Design Document
 
 **Date:** 2025-12-24

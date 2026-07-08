@@ -1,3 +1,10 @@
+---
+type: Report
+description: WCAG 2.1 AA accessibility audit and fixes applied to the homepage, covering semantic HTML, ARIA labels, contrast and motion issues.
+status: shipped
+timestamp: 2025-11-24
+---
+
 # Homepage Accessibility Audit - Design Document
 
 **Date:** November 24, 2025

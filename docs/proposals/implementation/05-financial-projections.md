@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Financial projections for the 2025 profit-share partnership model; the fixed-margin split was never executed as written.
+status: abandoned
+timestamp: 2025-12-02
+---
+
 # Financial Projections
 
 **Profit Share:** 50/50 split using fixed margins

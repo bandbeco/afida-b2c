@@ -1,3 +1,10 @@
+---
+type: Report
+description: WCAG 2.1 AA accessibility audit and fixes applied to standard and customizable product pages, covering labels, contrast and ARIA attributes.
+status: shipped
+timestamp: 2025-11-24
+---
+
 # Product Page Accessibility Audit - Design & Implementation
 
 **Date:** November 24, 2025

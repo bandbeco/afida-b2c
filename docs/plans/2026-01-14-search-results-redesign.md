@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design to replace the search modal's grid layout with horizontal list rows that better differentiate same-family products.
+status: shipped
+timestamp: 2026-01-14
+---
+
 # Search Results Redesign
 
 ## Problem

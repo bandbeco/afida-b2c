@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a dedicated /price-list page offering a filterable, sortable price table with Excel and PDF export and direct add-to-cart.
+status: shipped
+timestamp: 2025-12-14
+---
+
 # B2B Price List Feature
 
 ## Overview

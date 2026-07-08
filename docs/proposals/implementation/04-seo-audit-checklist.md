@@ -1,3 +1,10 @@
+---
+type: Playbook
+description: Generic SEO audit checklist from the 2025 partnership proposal package.
+status: abandoned
+timestamp: 2026-01-19
+---
+
 # SEO Audit Checklist for Afida
 
 **Purpose:** Identify and fix SEO issues to improve organic search visibility

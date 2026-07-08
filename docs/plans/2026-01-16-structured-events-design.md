@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for application-wide structured event reporting using Rails.event, with events flowing to Logtail and future analytics tools.
+status: shipped
+timestamp: 2026-01-16
+---
+
 # Structured Events Infrastructure Design
 
 **Date:** 2026-01-16

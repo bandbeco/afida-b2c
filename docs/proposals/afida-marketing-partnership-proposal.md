@@ -1,3 +1,11 @@
+---
+type: Proposal
+description: November 2025 proposal for a 50/50 profit-share digital marketing partnership; the engagement was later restructured around a dev retainer with the profit share retained.
+status: superseded
+superseded_by: /retainer-proposal-tariq.md
+timestamp: 2025-12-02
+---
+
 # Digital Marketing Partnership Proposal
 
 **Prepared for:** Afida Ltd

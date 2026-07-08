@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Launch framework for Google Ads under the 2025 partnership proposal; the campaign structure agreed in May 2026 differs.
+status: abandoned
+timestamp: 2026-01-19
+---
+
 # Initial Google Ads Campaign Structure
 
 **Purpose:** Launch framework for Afida's paid search advertising

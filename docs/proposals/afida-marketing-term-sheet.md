@@ -1,3 +1,11 @@
+---
+type: Proposal
+description: Term sheet for the 2025 profit-share marketing partnership; never executed as written, restructured by the 2026-07 retainer proposal.
+status: superseded
+superseded_by: /retainer-proposal-tariq.md
+timestamp: 2025-12-02
+---
+
 # Afida Digital Marketing Partnership
 ## Term Sheet
 

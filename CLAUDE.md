@@ -15,5 +15,5 @@
 - Cross-link related docs with bundle-absolute markdown links: `/seo/backlog.md` means `docs/seo/backlog.md`.
 - Each curated directory has an `index.md` listing every doc with a one-line description; `docs/log.md` records changes newest-first under `## YYYY-MM-DD` headings.
 - After any session that creates or changes knowledge under `docs/`: update the touched docs' frontmatter (`timestamp`, `status`), the directory's `index.md`, and `docs/log.md`. When a doc replaces another, mark the old one `superseded` with `superseded_by`; never delete it.
-- Only `docs/seo/` is retrofitted so far. When you substantively touch a legacy doc elsewhere, add frontmatter to it as part of the change.
+- Curated so far: `seo/`, `plans/`, `reports/`, `proposals/`, `runbooks/` (mirrored in `CURATED_DIRS` in `bin/docs_lint`). `articles/`, `audits/`, `insights/`, `superpowers/` and most root-level docs are not yet retrofitted; when you substantively touch a legacy doc, add frontmatter to it (and extend `CURATED_DIRS` when a directory is fully done) as part of the change.
 - `bin/docs_lint` mechanically checks the curated parts of the bundle (frontmatter, index coverage, link resolution); it runs in CI.

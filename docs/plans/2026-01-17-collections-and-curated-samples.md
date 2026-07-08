@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Implementation plan for audience-based Collections and curated Sample Packs as a many-to-many grouping of products cutting across categories.
+status: shipped
+timestamp: 2026-01-19
+---
+
 # Collections & Curated Samples Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

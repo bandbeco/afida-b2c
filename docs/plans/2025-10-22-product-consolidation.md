@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Plan to consolidate duplicate color/size product variants into single products with options by re-seeding the catalog from a CSV file.
+status: shipped
+timestamp: 2025-10-22
+---
+
 # Product Consolidation Using Product Options
 
 > **For Claude:** This plan consolidates duplicate products (e.g., "Single Wall Cups White" + "Single Wall Cups Black") into single products with Color and Size options.

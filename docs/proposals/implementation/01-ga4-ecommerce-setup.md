@@ -1,3 +1,10 @@
+---
+type: Plan
+description: GA4 e-commerce tracking setup written for the 2025 partnership proposal; store analytics was built on Datafast instead.
+status: abandoned
+timestamp: 2025-12-02
+---
+
 # GA4 E-commerce Tracking Setup Plan
 
 **Purpose:** Track revenue attribution for the marketing partnership

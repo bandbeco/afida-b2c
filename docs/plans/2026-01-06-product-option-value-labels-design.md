@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design to replace the JSONB option_values column on product_variants with a variant_option_values join table for referential integrity and display labels.
+status: abandoned
+timestamp: 2026-01-06
+---
+
 # Product Option Value Labels Design
 
 ## Problem

@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Plan to consolidate related napkin, straw and cutlery products into single configurable pages using existing variant option_values data.
+status: shipped
+timestamp: 2025-12-18
+---
+
 # Product Consolidation (Simple Approach)
 
 ## Overview

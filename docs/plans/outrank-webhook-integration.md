@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Plan to integrate Outrank.so's webhook so it automatically creates draft BlogPost records from SEO content the platform generates.
+status: shipped
+timestamp: 2026-01-15
+---
+
 # Outrank Webhook Integration Plan
 
 ## Overview

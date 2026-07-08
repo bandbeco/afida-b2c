@@ -1,3 +1,10 @@
+---
+type: Plan
+description: UTM tagging conventions for paid campaign attribution, written for the 2025 partnership proposal.
+status: abandoned
+timestamp: 2025-12-02
+---
+
 # UTM Parameter Strategy
 
 **Purpose:** Consistent tracking of all marketing campaigns for accurate attribution

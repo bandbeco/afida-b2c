@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a redesigned sign-up flow, post-checkout account conversion, order reordering and recurring order subscriptions for B2B customers.
+status: shipped
+timestamp: 2025-12-15
+---
+
 # Sign-Up Page & User Accounts Design
 
 ## Overview

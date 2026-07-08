@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a cart-page email signup form offering 5% off a first order, backed by a Stripe coupon and an email_subscriptions table.
+status: shipped
+timestamp: 2026-01-16
+---
+
 # Email Signup Discount Feature
 
 **Date:** 2026-01-16

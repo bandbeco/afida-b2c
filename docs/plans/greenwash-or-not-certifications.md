@@ -1,3 +1,10 @@
+---
+type: Research
+description: Research database of 31 packaging certifications and logos with verdicts and explanations, compiled as content for the proposed Greenwash or Not? tool.
+status: abandoned
+timestamp: 2025-12-24
+---
+
 # Greenwash or Not? - Certification Database
 
 **Status:** Draft for review

@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a scheduled reorder system using one-time charges with a saved payment method, replacing an earlier unmerged Stripe subscriptions approach.
+status: shipped
+timestamp: 2025-12-16
+---
+
 # Scheduled Reorder with Review: Implementation Design
 
 **Date**: 2025-12-16

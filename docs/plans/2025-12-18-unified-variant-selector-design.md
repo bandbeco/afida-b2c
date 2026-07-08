@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design to unify the standard product UI and consolidated product configurator into a single accordion-style variant selector.
+status: shipped
+timestamp: 2025-12-19
+---
+
 # Unified Variant Selector Design
 
 **Date:** 2025-12-18

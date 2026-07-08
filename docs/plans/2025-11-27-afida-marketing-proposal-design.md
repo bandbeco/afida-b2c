@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Draft commercial proposal for a 50/50 profit-share marketing partnership between Laurent and Afida on newly acquired customers.
+status: shipped
+timestamp: 2025-12-02
+---
+
 # Afida Marketing Partnership Proposal - Design Document
 
 **Date:** 2025-11-27

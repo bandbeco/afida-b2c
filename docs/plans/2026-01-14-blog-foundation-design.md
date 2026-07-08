@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a basic blog with a blog_posts table, markdown rendering, and public and admin CRUD, for SEO and content marketing.
+status: shipped
+timestamp: 2026-01-14
+---
+
 # Blog Foundation Design
 
 ## Overview

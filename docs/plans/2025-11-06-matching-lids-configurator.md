@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Implementation plan for a relational compatible-lids join table and a configurator step offering matching lid selection for branded cups.
+status: shipped
+timestamp: 2025-11-07
+---
+
 # Matching Lids Configurator Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

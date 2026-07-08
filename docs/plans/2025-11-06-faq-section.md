@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Implementation plan for a searchable FAQ page with categorized questions stored in YAML, accordion UI, and FAQPage schema markup for SEO.
+status: shipped
+timestamp: 2025-11-06
+---
+
 # FAQ Section Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

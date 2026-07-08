@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Task-by-task implementation plan for the dual product_photo/lifestyle_photo system, including migration, model helpers, hover-effect Stimulus controller, and admin form updates.
+status: shipped
+timestamp: 2025-11-03
+---
+
 # Product Photo Architecture Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

@@ -8,7 +8,7 @@ require "yaml"
 require "date"
 
 BUNDLE_ROOT = File.expand_path(ARGV[0] || File.join(__dir__, "..", "docs"))
-CURATED_DIRS = %w[seo].freeze
+CURATED_DIRS = %w[seo plans reports proposals runbooks].freeze
 RESERVED = %w[index.md log.md].freeze
 STATUSES = %w[active shipped superseded abandoned].freeze
 
@@ -73,17 +73,24 @@ def check_links(path)
 end
 
 def check_index_coverage(dir)
-  index = File.join(dir, "index.md")
-  return problem(dir, "curated directory has no index.md") unless File.file?(index)
+  subdirs = Dir.glob(File.join(dir, "**/")).map { |d| d.chomp("/") }
+  ([dir] + subdirs).uniq.each do |d|
+    concepts = Dir.glob(File.join(d, "*.md")).reject { |p| RESERVED.include?(File.basename(p)) }
+    next if concepts.empty?
 
-  listed = File.read(index).scan(/\]\(([^)\s]+\.md)\)/).flatten.map do |target|
-    target.start_with?("/") ? File.join(BUNDLE_ROOT, target) : File.expand_path(target, dir)
-  end
+    index = File.join(d, "index.md")
+    unless File.file?(index)
+      problem(d, "directory with concept docs has no index.md")
+      next
+    end
 
-  Dir.glob(File.join(dir, "*.md")).each do |path|
-    next if RESERVED.include?(File.basename(path))
+    listed = File.read(index).scan(/\]\(([^)\s]+\.md)\)/).flatten.map do |target|
+      target.start_with?("/") ? File.join(BUNDLE_ROOT, target) : File.expand_path(target, d)
+    end
 
-    problem(path, "not listed in #{index.delete_prefix("#{BUNDLE_ROOT}/")}") unless listed.include?(path)
+    concepts.each do |path|
+      problem(path, "not listed in #{index.delete_prefix("#{BUNDLE_ROOT}/")}") unless listed.include?(path)
+    end
   end
 end
 

@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a Title Builder section in the admin product form that exposes the fields behind generated_title with a live preview.
+status: shipped
+timestamp: 2026-01-13
+---
+
 # Admin Product Title Builder Design
 
 ## Overview

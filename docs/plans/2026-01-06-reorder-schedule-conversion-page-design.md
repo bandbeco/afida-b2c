@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a conversion-focused redesign of the reorder schedule setup page, leading with flexibility messaging to reduce commitment anxiety.
+status: shipped
+timestamp: 2026-01-06
+---
+
 # Reorder Schedule Setup Page Redesign
 
 ## Overview

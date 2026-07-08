@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Enhancement adding an Afida logo, value propositions and a branded footer to the price list PDF export.
+status: shipped
+timestamp: 2025-12-14
+---
+
 # Price List PDF Branding Enhancement
 
 **Date:** 14 December 2025

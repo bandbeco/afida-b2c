@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Implementation plan for a product configuration system with organizations, product options, branded product pricing, and customer product instances for reordering.
+status: shipped
+timestamp: 2025-10-22
+---
+
 # Product Configuration System Implementation Plan
 
 > **For Claude:** Use `${SUPERPOWERS_SKILLS_ROOT}/skills/collaboration/executing-plans/SKILL.md` to implement this plan task-by-task.
@@ -4993,7 +5000,7 @@ B2B custom packaging with:
 - Quantity-based pricing tiers
 - Organization product instances for reordering
 
-See [docs/BRANDED_PRODUCTS.md](docs/BRANDED_PRODUCTS.md) for detailed documentation.
+See [docs/BRANDED_PRODUCTS.md](/BRANDED_PRODUCTS.md) for detailed documentation.
 ```
 
 **Step 3: Commit**

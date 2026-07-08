@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design allowing logged-in users to save multiple delivery addresses that prefill Stripe Checkout.
+status: shipped
+timestamp: 2025-12-17
+---
+
 # User Address Storage
 
 ## Overview

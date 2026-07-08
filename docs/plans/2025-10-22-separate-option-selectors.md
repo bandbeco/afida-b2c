@@ -1,3 +1,11 @@
+---
+type: Plan
+description: Plan to replace the single combined variant dropdown on product pages with separate Size and Color dropdowns matched by JavaScript.
+status: superseded
+timestamp: 2025-10-23
+superseded_by: /plans/2026-01-10-variant-pages-design.md
+---
+
 # Separate Option Selectors for Product Pages
 
 ## Goal

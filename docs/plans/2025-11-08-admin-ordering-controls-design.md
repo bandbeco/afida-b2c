@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design document for admin controls to manage category and product display order using acts_as_list and up/down arrow ordering pages.
+status: shipped
+timestamp: 2025-11-08
+---
+
 # Admin Ordering Controls Design
 
 **Date:** 2025-11-08

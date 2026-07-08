@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a periodic Ruby script that scrapes competitor sites via Firecrawl and generates CSV and markdown price comparison reports.
+status: abandoned
+timestamp: 2025-12-30
+---
+
 # Competitor Price Analysis Tool - Design Document
 
 ## Overview

@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for moving branded products onto their own /branded-products URL namespace and excluding them from the standard shop catalog.
+status: shipped
+timestamp: 2025-11-25
+---
+
 # Branded Products URL Separation
 
 **Date**: 2025-11-25

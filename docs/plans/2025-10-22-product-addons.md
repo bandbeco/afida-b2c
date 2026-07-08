@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Implementation plan for a lids configuration step and an add-ons carousel with modal configurators in the branded product configurator.
+status: shipped
+timestamp: 2025-10-23
+---
+
 # Product Add-ons System Implementation Plan
 
 > **For Claude:** Use `${SUPERPOWERS_SKILLS_ROOT}/skills/collaboration/executing-plans/SKILL.md` to implement this plan task-by-task.

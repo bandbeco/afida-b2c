@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design document for a dual photo system giving Products and ProductVariants separate product_photo and lifestyle_photo attachments with hover-swap display behavior.
+status: shipped
+timestamp: 2025-11-03
+---
+
 # Product Photo Architecture - Dual Photo System
 
 **Date:** 2025-11-03

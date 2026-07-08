@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Email marketing strategy written for the 2025 partnership proposal; email now runs in Klaviyo under the retainer.
+status: abandoned
+timestamp: 2026-01-19
+---
+
 # Email Marketing Strategy for Afida
 
 **Purpose:** Build an owned audience that generates attributed revenue with zero ad spend

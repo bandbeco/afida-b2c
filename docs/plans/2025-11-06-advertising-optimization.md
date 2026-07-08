@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Implementation plan for advertising campaign optimizations covering Google Shopping feed enhancements, conversion tracking, cart abandonment recovery, and CRO components.
+status: shipped
+timestamp: 2026-01-19
+---
+
 # Advertising Campaign Optimization Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

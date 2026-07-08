@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Task-by-task implementation plan for the acts_as_list-based admin ordering controls for categories and products.
+status: shipped
+timestamp: 2025-11-08
+---
+
 # Admin Ordering Controls Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

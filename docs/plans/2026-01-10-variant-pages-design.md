@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design to replace consolidated product pages with individual pages per SKU, plus a shop page with Postgres full-text search and filters.
+status: shipped
+timestamp: 2026-01-10
+---
+
 # Variant-Level Product Pages Design
 
 **Date:** 2026-01-10

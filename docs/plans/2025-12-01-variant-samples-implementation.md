@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Task-by-task implementation plan for letting visitors select up to 5 free product variant samples with flat-rate shipping at checkout.
+status: shipped
+timestamp: 2026-01-19
+---
+
 # Variant-Level Sample Request Implementation Plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.

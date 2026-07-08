@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Design for a bolder homepage branding section combining a photo collage, headline, trust badges and a call to action.
+status: shipped
+timestamp: 2025-12-15
+---
+
 # Homepage Branding Section Redesign
 
 ## Overview

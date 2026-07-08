@@ -1,3 +1,11 @@
+---
+type: Plan
+description: Design for a free sample pack feature sold as a zero-price product that customers pay only shipping for.
+status: superseded
+timestamp: 2025-11-30
+superseded_by: /plans/2025-12-01-variant-samples-implementation.md
+---
+
 # Sample Pack Feature Design
 
 **Date:** 2025-11-30
