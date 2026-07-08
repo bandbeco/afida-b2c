@@ -27,4 +27,4 @@ OKF bundle for the Afida shop project. Conventions live in the repo `CLAUDE.md` 
 
 * [Developer guide](/developer_guide.md) - Codebase orientation for developers.
 * [Analytics strategy](/analytics-strategy.md) - Analytics and measurement strategy.
-* [Worklog](/worklog.md) - Non-code work sessions; feeds the monthly timesheet.
+* Worklogs (`/worklog.md`, `/worklog-auto.md`) - Non-code work sessions feeding the monthly timesheet; gitignored, local only.

@@ -1,8 +1,9 @@
 ---
 type: Research
 description: Per-category UK keyword targets and on-page placement rules from Ahrefs; pre-dates the 2026-07 B2B plan's wholesale-modifier targeting.
-status: active
-timestamp: 2026-01-19
+status: superseded
+superseded_by: /seo/b2b-organic-growth-plan-2026-07.md
+timestamp: 2026-07-08
 ---
 
 # Keyword Targeting Strategy

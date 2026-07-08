@@ -68,3 +68,9 @@ node_modules
 /docs/worklog.md
 /docs/worklog-auto.md
 
+# Generated invoices contain bank details / personal info — never commit
+/docs/invoices/
+
+# Private negotiation notes — never commit
+/docs/retainer-proposal-tariq.md
+

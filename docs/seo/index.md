@@ -10,7 +10,7 @@ Organic growth for afida.com: strategy, working backlog, keyword research, and s
 # Research
 
 * [Ahrefs Keyword Research: Collections & Sample Packs](/seo/ahrefs-keyword-research-2025-01-17.md) - UK keyword and volume research for collections and sample packs; a source for the B2B plan.
-* [Keyword Targeting Strategy](/seo/keyword-targeting-strategy.md) - Per-category UK keyword targets and on-page placement rules; pre-dates the B2B plan's wholesale-modifier targeting.
+* [Keyword Targeting Strategy](/seo/keyword-targeting-strategy.md) - Per-category UK keyword targets and on-page placement rules; superseded by the [B2B plan](/seo/b2b-organic-growth-plan-2026-07.md)'s wholesale-modifier targeting.
 
 # Playbooks
 
