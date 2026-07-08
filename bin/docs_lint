@@ -1,0 +1,126 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Lints the curated parts of the docs/ OKF bundle (see CLAUDE.md, "docs/ knowledge bundle").
+# Stdlib only; runs in CI without bundler. Usage: bin/docs_lint [bundle_root]
+
+require "yaml"
+require "date"
+
+BUNDLE_ROOT = File.expand_path(ARGV[0] || File.join(__dir__, "..", "docs"))
+CURATED_DIRS = %w[seo].freeze
+RESERVED = %w[index.md log.md].freeze
+STATUSES = %w[active shipped superseded abandoned].freeze
+
+@problems = []
+
+def problem(path, message)
+  @problems << "#{path.delete_prefix("#{BUNDLE_ROOT}/")}: #{message}"
+end
+
+def frontmatter(path)
+  lines = File.readlines(path)
+  return nil unless lines.first&.strip == "---"
+
+  closing = lines[1..].index { |l| l.strip == "---" }
+  return nil unless closing
+
+  YAML.safe_load(lines[1..closing].join, permitted_classes: [Date, Time])
+rescue Psych::SyntaxError
+  :unparseable
+end
+
+def check_concept(path)
+  fm = frontmatter(path)
+  return problem(path, "missing YAML frontmatter") if fm.nil?
+  return problem(path, "frontmatter does not parse as YAML") if fm == :unparseable
+
+  %w[type description].each do |field|
+    value = fm[field]
+    problem(path, "frontmatter missing non-empty `#{field}`") unless value.is_a?(String) && !value.strip.empty?
+  end
+
+  status = fm["status"]
+  if status && !STATUSES.include?(status)
+    problem(path, "unknown status `#{status}` (expected #{STATUSES.join(" | ")})")
+  end
+  if status == "superseded" && !fm["superseded_by"]
+    problem(path, "status is superseded but `superseded_by` is missing")
+  end
+
+  timestamp = fm["timestamp"]
+  if timestamp && !timestamp.is_a?(Date) && !timestamp.is_a?(Time)
+    begin
+      Date.iso8601(timestamp.to_s)
+    rescue ArgumentError
+      problem(path, "`timestamp` is not an ISO 8601 date: #{timestamp.inspect}")
+    end
+  end
+end
+
+# Only .md targets are bundle links; plain paths like /samples are shop URLs.
+def check_links(path)
+  File.read(path).scan(/\]\(([^)\s]+\.md)(?:#[^)]*)?\)/).flatten.each do |target|
+    next if target.start_with?("http://", "https://")
+
+    resolved = if target.start_with?("/")
+      File.join(BUNDLE_ROOT, target)
+    else
+      File.expand_path(target, File.dirname(path))
+    end
+    problem(path, "broken bundle link: #{target}") unless File.file?(resolved)
+  end
+end
+
+def check_index_coverage(dir)
+  index = File.join(dir, "index.md")
+  return problem(dir, "curated directory has no index.md") unless File.file?(index)
+
+  listed = File.read(index).scan(/\]\(([^)\s]+\.md)\)/).flatten.map do |target|
+    target.start_with?("/") ? File.join(BUNDLE_ROOT, target) : File.expand_path(target, dir)
+  end
+
+  Dir.glob(File.join(dir, "*.md")).each do |path|
+    next if RESERVED.include?(File.basename(path))
+
+    problem(path, "not listed in #{index.delete_prefix("#{BUNDLE_ROOT}/")}") unless listed.include?(path)
+  end
+end
+
+def check_log
+  log = File.join(BUNDLE_ROOT, "log.md")
+  return problem(log, "missing bundle log.md") unless File.file?(log)
+
+  File.read(log).scan(/^## (.+)$/).flatten.each do |heading|
+    Date.iso8601(heading.strip)
+  rescue ArgumentError
+    problem(log, "log heading is not an ISO date: `## #{heading}`")
+  end
+end
+
+problem(File.join(BUNDLE_ROOT, "index.md"), "missing bundle root index.md") unless File.file?(File.join(BUNDLE_ROOT, "index.md"))
+check_log
+check_links(File.join(BUNDLE_ROOT, "index.md")) if File.file?(File.join(BUNDLE_ROOT, "index.md"))
+
+concept_count = 0
+CURATED_DIRS.each do |name|
+  dir = File.join(BUNDLE_ROOT, name)
+  next problem(dir, "curated directory does not exist") unless File.directory?(dir)
+
+  check_index_coverage(dir)
+  Dir.glob(File.join(dir, "**", "*.md")).each do |path|
+    check_links(path)
+    next if RESERVED.include?(File.basename(path))
+
+    concept_count += 1
+    check_concept(path)
+  end
+end
+
+if @problems.empty?
+  puts "docs_lint: OK (#{concept_count} concept docs across #{CURATED_DIRS.join(", ")})"
+else
+  puts "docs_lint: #{@problems.size} problem(s)"
+  @problems.each { |p| puts "  #{p}" }
+  exit 1
+end

@@ -1,3 +1,10 @@
+---
+type: Playbook
+description: Briefing rules, blog categories, and article-to-keyword mapping for Outrank.so content generation.
+status: active
+timestamp: 2026-01-18
+---
+
 # Outrank Article Instructions
 
 **Created:** 2025-01-18

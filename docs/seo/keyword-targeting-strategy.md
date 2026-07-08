@@ -1,3 +1,10 @@
+---
+type: Research
+description: Per-category UK keyword targets and on-page placement rules from Ahrefs; pre-dates the 2026-07 B2B plan's wholesale-modifier targeting.
+status: active
+timestamp: 2026-01-19
+---
+
 # Keyword Targeting Strategy
 
 Generated: December 2024 | Source: Ahrefs Keywords Explorer (UK)

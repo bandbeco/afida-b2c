@@ -56,6 +56,16 @@ jobs:
       - name: Lint code for consistent style
         run: bin/rubocop -f github
 
+  docs_lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      # Stdlib-only script; the runner's preinstalled Ruby is enough, no bundler.
+      - name: Lint docs/ knowledge bundle
+        run: ruby bin/docs_lint
+
   test:
     runs-on: ubuntu-latest
 

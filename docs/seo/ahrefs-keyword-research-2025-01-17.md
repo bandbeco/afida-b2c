@@ -1,3 +1,10 @@
+---
+type: Research
+description: UK Ahrefs keyword and volume research for collections and sample packs; identifies new industry verticals and feeds the B2B organic plan.
+status: active
+timestamp: 2026-01-19
+---
+
 # Ahrefs Keyword Research - Collections & Sample Packs SEO
 
 **Date:** 2025-01-17
