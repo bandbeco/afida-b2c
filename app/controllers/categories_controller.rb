@@ -3,15 +3,26 @@ class CategoriesController < ApplicationController
 
   def show
     @category = Category.includes(:parent, image_attachment: :blob).find_by(slug: params[:id])
-    @category ||= Category.find_by_slug_or_redirect!(params[:id])
+    @category ||= Category.find_by_slug_or_redirect(params[:id])
+
+    if @category.nil?
+      # Unknown child under a renamed parent slug falls back to the renamed
+      # parent, preserving the old route-level catch-all behaviour via slug
+      # history (e.g. /categories/cups-and-drinks/anything-unknown).
+      renamed_parent = CategorySlugRedirect.find_by(old_slug: params[:parent_slug])&.category if params[:parent_slug].present?
+      if renamed_parent && renamed_parent.parent_id.nil?
+        redirect_permanently_preserving_query(category_path(renamed_parent))
+        return
+      end
+
+      raise ActiveRecord::RecordNotFound
+    end
 
     # Enforce the canonical URL. One check covers: subcategories reached via
     # flat URLs, renamed child slugs, and stale parent slugs in nested URLs.
     canonical_path = helpers.category_browse_path(@category)
     if request.path != canonical_path
-      target = canonical_path
-      target += "?#{request.query_parameters.to_query}" if request.query_parameters.present?
-      redirect_to target, status: :moved_permanently
+      redirect_permanently_preserving_query(canonical_path)
       return
     end
 

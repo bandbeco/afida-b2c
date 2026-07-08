@@ -1,15 +1,16 @@
 class Category < ApplicationRecord
   BRANDED_PRODUCTS_SLUG = "branded-products".freeze
 
-  # Old slugs that config/routes.rb still 301s at the route layer (June 2026
-  # restructure + legacy Wix paths). A category taking one of these slugs would
-  # have its canonical URL hijacked by the static redirect before the app ever
-  # runs. Keep in sync with the redirect maps in config/routes.rb.
+  # Old slugs that config/routes.rb still 301s at the route layer (legacy flat
+  # category paths). A category taking one of these slugs would have its
+  # canonical URL hijacked by the static redirect before the app ever runs.
+  # Renamed slugs handled by slug history (CategorySlugRedirect) do NOT belong
+  # here: reclaiming those is safe because the shadowing redirect row is
+  # removed automatically. Keep in sync with the redirect map in
+  # config/routes.rb.
   RESERVED_REDIRECT_SLUGS = %w[
-    cups-and-drinks hot-food cups-and-lids takeaway-containers takeaway-extras
-    plates-trays bagasse-eco-range cold-cups deli-pots plates-and-trays
-    food-bowls round-containers-lids portion-pots-lids bowls-lids
-    food-containers-lids
+    cups-and-lids takeaway-containers takeaway-extras plates-trays
+    bagasse-eco-range
   ].freeze
 
   acts_as_list scope: :parent_id

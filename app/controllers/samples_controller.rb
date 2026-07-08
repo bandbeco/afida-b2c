@@ -41,7 +41,7 @@ class SamplesController < ApplicationController
 
     # Renamed slugs resolve via slug history; send them to the canonical URL.
     if @category.slug != params[:category_slug]
-      redirect_to category_samples_path(@category.slug, request.query_parameters), status: :moved_permanently
+      redirect_permanently_preserving_query(category_samples_path(@category.slug))
       return
     end
 

@@ -10,6 +10,14 @@ class ApplicationController < ActionController::Base
 
   private
 
+  # 301 to a canonical path, carrying the raw query string through unchanged
+  # (same semantics as the redirect blocks in config/routes.rb; avoids the
+  # re-ordering that Hash#to_query would introduce).
+  def redirect_permanently_preserving_query(path)
+    path += "?#{request.query_string}" if request.query_string.present?
+    redirect_to path, status: :moved_permanently
+  end
+
   def set_nav_categories
     @nav_categories = Category.browsable.top_level.order(:position)
     @nav_subcategories_by_parent = Category.subcategories

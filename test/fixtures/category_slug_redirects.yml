@@ -1,0 +1,13 @@
+# Slug history mirroring the June 2026 production renames (see the backfill
+# migration 20260708123508). These drive the rename-redirect integration tests.
+june_cups_and_drinks:
+  old_slug: "cups-and-drinks"
+  category: parent_cups_and_drinks
+
+june_hot_food:
+  old_slug: "hot-food"
+  category: parent_hot_food
+
+june_cold_cups:
+  old_slug: "cold-cups"
+  category: child_cold_cups

@@ -293,10 +293,17 @@ class CategoryTest < ActiveSupport::TestCase
 
   test "slug cannot take a reserved legacy redirect slug" do
     category = categories(:cups)
-    category.slug = "cups-and-drinks"
+    category.slug = "cups-and-lids"
 
     assert_not category.valid?
     assert_includes category.errors[:slug].join, "reserved"
+  end
+
+  test "a slug held only by slug history can be reclaimed" do
+    category = categories(:cups)
+    category.slug = "cups-and-drinks"
+
+    assert category.valid?, category.errors.full_messages.join(", ")
   end
 
   test "slug rejects dots, uppercase, and spaces" do
@@ -314,7 +321,7 @@ class CategoryTest < ActiveSupport::TestCase
 
   test "saving a record without changing a legacy slug stays valid" do
     category = categories(:cups)
-    Category.where(id: category.id).update_all(slug: "cups-and-drinks")
+    Category.where(id: category.id).update_all(slug: "cups-and-lids")
     category.reload
 
     category.name = "Renamed Display Only"

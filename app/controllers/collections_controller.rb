@@ -27,8 +27,7 @@ class CollectionsController < ApplicationController
 
     # Renamed slugs resolve via slug history; send them to the canonical URL.
     if @category.slug != params[:category_slug]
-      redirect_to category_filter_collection_path(@collection.slug, @category.slug, request.query_parameters),
-                  status: :moved_permanently
+      redirect_permanently_preserving_query(category_filter_collection_path(@collection.slug, @category.slug))
       return
     end
 
