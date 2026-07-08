@@ -22,7 +22,15 @@ class CollectionsController < ApplicationController
     @collection = Collection.regular.find_by!(slug: params[:slug])
     raise ActiveRecord::RecordNotFound unless @collection.slug == Collection::VEGWARE_SLUG
 
-    @category = Category.top_level.find_by!(slug: params[:category_slug])
+    @category = Category.find_by_slug_or_redirect!(params[:category_slug])
+    raise ActiveRecord::RecordNotFound if @category.parent_id.present?
+
+    # Renamed slugs resolve via slug history; send them to the canonical URL.
+    if @category.slug != params[:category_slug]
+      redirect_to category_filter_collection_path(@collection.slug, @category.slug, request.query_parameters),
+                  status: :moved_permanently
+      return
+    end
 
     @products = @collection.visible_products
                            .joins(:category)

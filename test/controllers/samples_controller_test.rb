@@ -52,4 +52,13 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
       assert_select "h2", text: /Empty Category/, count: 0
     end
   end
+
+  # Slug-history: renamed category slugs must 301, never 404 (June 2026 incident)
+  test "samples category under a renamed slug 301s to the current slug" do
+    CategorySlugRedirect.create!(old_slug: "samples-legacy-slug", category: @category)
+
+    get category_samples_path("samples-legacy-slug")
+    assert_response :moved_permanently
+    assert_redirected_to category_samples_path(@category.slug)
+  end
 end

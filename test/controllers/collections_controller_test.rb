@@ -468,6 +468,24 @@ class CollectionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal black_volumes.sort, black_volumes
   end
 
+  # Slug-history: renamed category slugs must 301, never 404 (June 2026 incident)
+  test "vegware filter under a renamed category slug 301s to the current slug" do
+    parent = categories(:parent_cups_and_drinks)
+    CategorySlugRedirect.create!(old_slug: "cups-n-drinks-legacy", category: parent)
+
+    get "/collections/vegware/cups-n-drinks-legacy?utm_source=x"
+    assert_response :moved_permanently
+    assert_redirected_to "/collections/vegware/#{parent.slug}?utm_source=x"
+  end
+
+  test "vegware filter 404s when a redirect resolves to a subcategory" do
+    child = categories(:child_hot_cups)
+    CategorySlugRedirect.create!(old_slug: "old-child-filter-slug", category: child)
+
+    get "/collections/vegware/old-child-filter-slug"
+    assert_response :not_found
+  end
+
   private
 
   def sign_in_as(user)

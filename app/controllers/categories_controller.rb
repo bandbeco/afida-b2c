@@ -3,9 +3,7 @@ class CategoriesController < ApplicationController
 
   def show
     @category = Category.includes(:parent, image_attachment: :blob).find_by(slug: params[:id])
-    @category ||= CategorySlugRedirect.find_by(old_slug: params[:id])&.category
-
-    raise ActiveRecord::RecordNotFound unless @category
+    @category ||= Category.find_by_slug_or_redirect!(params[:id])
 
     # Enforce the canonical URL. One check covers: subcategories reached via
     # flat URLs, renamed child slugs, and stale parent slugs in nested URLs.

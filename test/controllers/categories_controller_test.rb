@@ -719,6 +719,34 @@ class CategoriesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "never-existed parent slug with a real child 301s to the canonical URL" do
+    child = categories(:child_hot_cups)
+
+    get "/categories/never-a-real-parent/#{child.slug}"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/#{child.parent.slug}/#{child.slug}"
+  end
+
+  test "format-suffixed category URL 301s to the canonical extensionless URL" do
+    get "/categories/#{@category.slug}.json"
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/#{@category.slug}"
+  end
+
+  test "CollectionPage structured data description falls back when description is blank" do
+    @category.update!(description: "", meta_description: "Explicit meta copy for schema")
+
+    get category_url(@category.slug)
+    assert_response :success
+
+    schemas = Nokogiri::HTML(response.body)
+      .css('script[type="application/ld+json"]')
+      .filter_map { |node| JSON.parse(node.text) rescue nil }
+    collection_page = schemas.find { |json| json["@type"] == "CollectionPage" }
+
+    assert_equal "Explicit meta copy for schema", collection_page["description"]
+  end
+
   private
 
   def sign_in_as(user)
