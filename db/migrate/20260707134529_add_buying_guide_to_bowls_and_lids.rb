@@ -49,5 +49,7 @@ class AddBuyingGuideToBowlsAndLids < ActiveRecord::Migration[8.1]
   end
 
   def down
+    # Meta fields are not restored: the pre-migration values were not recorded.
+    Category.find_by(slug: "bowls-and-lids")&.update!(buying_guide: nil)
   end
 end
