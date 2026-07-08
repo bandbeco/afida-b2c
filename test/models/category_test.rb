@@ -272,4 +272,88 @@ class CategoryTest < ActiveSupport::TestCase
     assert_not grandchild.valid?
     assert_includes grandchild.errors[:parent].join, "two levels"
   end
+
+  test "find_by_slug_or_redirect resolves live slugs, stale slugs, and misses" do
+    category = categories(:cups)
+    assert_equal category, Category.find_by_slug_or_redirect(category.slug)
+
+    CategorySlugRedirect.create!(old_slug: "stale-cups", category: category)
+    assert_equal category, Category.find_by_slug_or_redirect("stale-cups")
+
+    assert_nil Category.find_by_slug_or_redirect("never-existed")
+    assert_raises(ActiveRecord::RecordNotFound) { Category.find_by_slug_or_redirect!("never-existed") }
+  end
+
+  test "live slug wins over a stale redirect with the same slug" do
+    category = categories(:cups)
+    CategorySlugRedirect.create!(old_slug: categories(:two).slug, category: category)
+
+    assert_equal categories(:two), Category.find_by_slug_or_redirect(categories(:two).slug)
+  end
+
+  test "slug cannot take a reserved legacy redirect slug" do
+    category = categories(:cups)
+    category.slug = "cups-and-lids"
+
+    assert_not category.valid?
+    assert_includes category.errors[:slug].join, "reserved"
+  end
+
+  test "a slug held only by slug history can be reclaimed" do
+    category = categories(:cups)
+    category.slug = "cups-and-drinks"
+
+    assert category.valid?, category.errors.full_messages.join(", ")
+  end
+
+  test "slug rejects dots, uppercase, and spaces" do
+    category = categories(:cups)
+
+    %w[deli.pots Deli-Pots].push("deli pots").each do |bad|
+      category.slug = bad
+      assert_not category.valid?, "expected #{bad.inspect} to be invalid"
+    end
+
+    category.slug = "deli-pots-2"
+    category.valid?
+    assert_empty category.errors[:slug]
+  end
+
+  test "saving a record without changing a legacy slug stays valid" do
+    category = categories(:cups)
+    Category.where(id: category.id).update_all(slug: "cups-and-lids")
+    category.reload
+
+    category.name = "Renamed Display Only"
+    assert category.valid?
+  end
+
+  test "meta_title_with_fallback prefers the explicit meta title" do
+    category = categories(:cups)
+    category.meta_title = "Explicit Title"
+    assert_equal "Explicit Title", category.meta_title_with_fallback
+  end
+
+  test "meta_title_with_fallback generates a branded title when blank" do
+    category = categories(:cups)
+    category.meta_title = ""
+    assert_equal "#{category.name} | Afida", category.meta_title_with_fallback
+  end
+
+  test "meta_description_with_fallback prefers the explicit meta description" do
+    category = categories(:cups)
+    category.meta_description = "Explicit copy"
+    assert_equal "Explicit copy", category.meta_description_with_fallback
+  end
+
+  test "meta_description_with_fallback falls back to description then generated copy" do
+    category = categories(:cups)
+    category.meta_description = ""
+    category.description = "On-page description"
+    assert_equal "On-page description", category.meta_description_with_fallback
+
+    category.description = ""
+    assert_includes category.meta_description_with_fallback, category.name.downcase
+    assert_includes category.meta_description_with_fallback, "free UK delivery"
+  end
 end

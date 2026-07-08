@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_10_102411) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_08_123508) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -183,6 +183,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_102411) do
     t.index ["parent_id"], name: "index_categories_on_parent_id"
     t.index ["position"], name: "index_categories_on_position"
     t.index ["slug"], name: "index_categories_on_slug", unique: true
+  end
+
+  create_table "category_slug_redirects", force: :cascade do |t|
+    t.bigint "category_id", null: false
+    t.datetime "created_at", null: false
+    t.string "old_slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["category_id"], name: "index_category_slug_redirects_on_category_id"
+    t.index ["old_slug"], name: "index_category_slug_redirects_on_old_slug", unique: true
   end
 
   create_table "collection_category_guides", force: :cascade do |t|
@@ -493,6 +502,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_102411) do
   add_foreign_key "cart_items", "products"
   add_foreign_key "carts", "users"
   add_foreign_key "categories", "categories", column: "parent_id"
+  add_foreign_key "category_slug_redirects", "categories"
   add_foreign_key "collection_category_guides", "categories", on_delete: :cascade
   add_foreign_key "collection_category_guides", "collections", on_delete: :cascade
   add_foreign_key "collection_items", "collections"

@@ -37,7 +37,13 @@ class SamplesController < ApplicationController
   # GET /samples/:category_slug
   # Returns products for a category (Turbo Frame response)
   def category
-    @category = Category.find_by!(slug: params[:category_slug])
+    @category = Category.find_by_slug_or_redirect!(params[:category_slug])
+
+    # Renamed slugs resolve via slug history; send them to the canonical URL.
+    if @category.slug != params[:category_slug]
+      redirect_permanently_preserving_query(category_samples_path(@category.slug))
+      return
+    end
 
     @products = Product
       .standard

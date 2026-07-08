@@ -52,9 +52,11 @@ child_hot_cups:
   parent: parent_cups_and_drinks
   position: 1
 
+# Production renamed this slug from "cold-cups" in June 2026; the old slug
+# lives on as a category_slug_redirects fixture.
 child_cold_cups:
   name: "Cold Cups"
-  slug: "cold-cups"
+  slug: "cold-cups-and-lids"
   parent: parent_cups_and_drinks
   position: 2
 

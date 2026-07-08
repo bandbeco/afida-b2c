@@ -14,15 +14,16 @@ class CategoryRoutesTest < ActionDispatch::IntegrationTest
     assert_match subcategory.name, response.body
   end
 
-  test "nested subcategory route returns 404 for wrong parent" do
-    # cups-and-accessories is a live parent, but pizza-boxes-sub belongs to
-    # food-containers. (The old wrong-parent example, cups-and-drinks, is now a
-    # renamed slug whose children 301 instead of 404.)
+  test "nested subcategory route 301s wrong-parent URLs to the canonical URL" do
+    # Canonical-path enforcement (slug-history work, 2026-07): a real
+    # subcategory reached under the wrong parent slug redirects to its one
+    # canonical URL instead of 404ing, so stale parent slugs keep their equity.
     wrong_parent = categories(:parent_cups_and_drinks)
     subcategory = categories(:child_pizza_boxes)
 
     get "/categories/#{wrong_parent.slug}/#{subcategory.slug}"
-    assert_response :not_found
+    assert_response :moved_permanently
+    assert_redirected_to "/categories/#{subcategory.parent.slug}/#{subcategory.slug}"
   end
 
   test "nested subcategory route returns 404 for nonexistent subcategory" do
