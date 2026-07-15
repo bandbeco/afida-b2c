@@ -23,3 +23,7 @@ production:
     class: RefreshBankHolidaysJob
     queue: default
     schedule: at 4am every day
+  discover_leads:
+    class: LeadGen::DiscoverLeadsJob
+    queue: default
+    schedule: every monday at 7am

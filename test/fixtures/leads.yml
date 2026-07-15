@@ -1,0 +1,24 @@
+# Leads discovered by the LeadGen weekly monitor (see docs/adr/0001).
+# Keep minimal: fixtures :all loads these into every test.
+
+fhrs_cafe:
+  source: fhrs
+  external_id: "1900001"
+  business_name: Fixture Coffee House
+  business_type: Restaurant/Cafe/Canteen
+  address: 1 Fixture Lane, Testtown
+  postcode: TT1 1AA
+  local_authority: Testshire
+  status: new_lead
+  payload: {}
+
+fhrs_takeaway_contacted:
+  source: fhrs
+  external_id: "1900002"
+  business_name: Fixture Kebabs
+  business_type: Takeaway/sandwich shop
+  address: 2 Fixture Parade, Testtown
+  postcode: TT2 2BB
+  local_authority: Testshire
+  status: contacted
+  payload: {}

@@ -1,0 +1,21 @@
+Weekly new-business leads: <%= @total_new %> new <%= "lead".pluralize(@total_new) %> this week.
+
+<% @sections.each do |section| -%>
+== <%= section[:source].tr("_", " ").upcase %> ==
+
+<% if section[:failed] -%>
+Fetch failed; no data was recorded this week. Check the production logs for "[LeadGen]". Missed businesses will surface in next week's run.
+<% elsif section[:seeded] -%>
+First run: seeded <%= number_with_delimiter(section[:sighted_count]) %> register entries. Nothing is reported as new on a seed run; next week's digest will carry the first real leads.
+<% elsif section[:new_leads].empty? -%>
+No new businesses this week.
+<% else -%>
+<% section[:new_leads].first(LeadDigestMailer::TABLE_ROW_CAP).each do |lead| -%>
+- <%= lead.business_name %> | <%= lead.business_type %> | <%= lead.postcode %> | <%= lead.local_authority %>
+<% end -%>
+<% if section[:new_leads].size > LeadDigestMailer::TABLE_ROW_CAP -%>
+...plus <%= section[:new_leads].size - LeadDigestMailer::TABLE_ROW_CAP %> more in the attached CSV.
+<% end -%>
+<% end -%>
+
+<% end -%>

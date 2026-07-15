@@ -33,6 +33,9 @@
 * **Creation**: [SEO Audit 2026-07-19](/seo/seo-audit-2026-07-19.md). Full audit + the Jul 17 GSC measurement checkpoint (28-day manual export). Organic clicks recovered to the ~10/day pre-rename baseline; the deep Datafa.st "Google" V was non-organic (Ads bundled in the referrer). B1 buying-guide gate FAILED (B2 stays paused); B0 meta rewrite measured neutral; high-intent buckets still ~0 clicks; old renamed URLs still out-rank their replacements (equity transfer incomplete). Datafa.st: flat MoM, returning share doubled, funnel goals firing again (purchase captures 12/27 payments). Scoreboard: W0.2/W0.3/W0.4/W5-CTA done; W1 5/30, W3/W6/W7 open. New: merchant-feed taxonomy gap for renamed categories, Outrank drafts at 89, quick_add URLs collecting impressions.
 * **Update**: [SEO Backlog](/seo/backlog.md) re-prioritised per the measurement: B0 closed (neutral), B1 resolved (gate failed), B5 resolved (structural), B0b partial (CTA targets done), B3/B4 escalated (89 drafts). SEO index updated.
 * **Creation**: [Napkins "for Restaurants & Cafés" Content](/seo/napkins-restaurants-content-2026-07-19.md), applied to production and live-verified same day: napkins category retitle + guide section + usage-rate FAQ, and a first-screen category link in /blog/paper-napkins. Executes the audit's proven play (`paper napkins for restaurants` pos 4.6 / 0 clicks held by the blog URL); measure at the ~2026-08-16 pull.
+## 2026-07-15
+
+* **Creation**: New `/adr/` area for architecture decision records, added to the curated bundle (`CURATED_DIRS`). First record: [Lead discovery via register snapshot diffing](/adr/0001-lead-discovery-via-register-diffing.md), from the grilled design of the weekly new-business lead monitor (FSA hygiene register → Sightings → Leads → digest email → `/admin/leads`). Root `CONTEXT.md` gained a Lead generation glossary section (Sighting, Lead, Seed run, Lead status).
 
 ## 2026-07-08
 

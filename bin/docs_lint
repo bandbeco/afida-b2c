@@ -8,7 +8,7 @@ require "yaml"
 require "date"
 
 BUNDLE_ROOT = File.expand_path(ARGV[0] || File.join(__dir__, "..", "docs"))
-CURATED_DIRS = %w[seo plans reports proposals runbooks].freeze
+CURATED_DIRS = %w[seo plans reports proposals runbooks adr].freeze
 RESERVED = %w[index.md log.md].freeze
 STATUSES = %w[active shipped superseded abandoned].freeze
 

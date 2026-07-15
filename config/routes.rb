@@ -301,6 +301,11 @@ Rails.application.routes.draw do
         post :create_instance_product
       end
     end
+    resources :leads, only: [ :index ] do
+      member do
+        patch :update_status
+      end
+    end
   end
 
   # Product feeds

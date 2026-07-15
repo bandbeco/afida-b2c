@@ -1,0 +1,106 @@
+<div class="py-4 sm:py-8">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Leads</h1>
+  </div>
+
+  <div class="mb-4">
+    <%= form_with url: admin_leads_path, method: :get, data: { turbo_frame: "leads", turbo_action: "advance" } do |f| %>
+      <%= f.select :status,
+                   options_for_select(
+                     [ [ "All statuses", "" ] ] + Lead.statuses.keys.map { |key| [ key.humanize, key ] },
+                     params[:status]
+                   ),
+                   {},
+                   class: "select select-bordered select-sm",
+                   onchange: "this.form.submit()" %>
+    <% end %>
+  </div>
+
+  <%= turbo_frame_tag "leads" do %>
+    <%# Desktop Table View %>
+    <div class="hidden md:block overflow-x-auto">
+      <table class="table table-zebra w-full">
+        <thead>
+          <tr>
+            <th>Business</th>
+            <th>Type</th>
+            <th>Postcode</th>
+            <th>Local authority</th>
+            <th>First seen</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @leads.each do |lead| %>
+            <tr>
+              <td>
+                <p><%= lead.business_name %></p>
+                <p class="text-xs text-base-content/70"><%= lead.address %></p>
+              </td>
+              <td><%= lead.business_type %></td>
+              <td><%= lead.postcode %></td>
+              <td><%= lead.local_authority %></td>
+              <td><%= lead.created_at.to_date.strftime("%-d %b %Y") %></td>
+              <td>
+                <%= form_with url: update_status_admin_lead_path(lead), method: :patch, data: { turbo_frame: "_top" } do |f| %>
+                  <%= f.select :status,
+                               options_for_select(Lead.statuses.keys.map { |key| [ key.humanize, key ] }, lead.status),
+                               {},
+                               class: "select select-bordered select-sm",
+                               onchange: "this.form.submit()" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%# Mobile Card View %>
+    <div class="md:hidden space-y-3">
+      <% @leads.each do |lead| %>
+        <div class="card bg-base-100 shadow-sm border border-base-200">
+          <div class="card-body p-4">
+            <div class="flex justify-between items-start gap-2">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm"><%= lead.business_name %></p>
+                <p class="text-xs text-base-content/70 mt-1"><%= lead.address %></p>
+                <div class="flex items-center gap-2 mt-1 text-xs text-base-content/70">
+                  <span><%= lead.business_type %></span>
+                  <span><%= lead.postcode %></span>
+                </div>
+                <p class="text-xs text-base-content/70 mt-1">
+                  <%= lead.local_authority %> · first seen <%= lead.created_at.to_date.strftime("%-d %b %Y") %>
+                </p>
+              </div>
+            </div>
+            <div class="mt-2">
+              <%= form_with url: update_status_admin_lead_path(lead), method: :patch, data: { turbo_frame: "_top" } do |f| %>
+                <%= f.select :status,
+                             options_for_select(Lead.statuses.keys.map { |key| [ key.humanize, key ] }, lead.status),
+                             {},
+                             class: "select select-bordered select-sm w-full",
+                             onchange: "this.form.submit()" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @leads.empty? %>
+      <div class="text-center py-8 text-base-content/70">
+        <p>No leads found. New businesses appear here after each weekly discovery run.</p>
+      </div>
+    <% else %>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mt-4">
+        <p class="text-sm text-base-content/70">
+          Showing <%= @pagy.from %>–<%= @pagy.to %> of <%= @pagy.count %> leads
+        </p>
+        <% if @pagy.pages > 1 %>
+          <%== @pagy.series_nav %>
+        <% end %>
+      </div>
+    <% end %>
+  <% end %>
+</div>

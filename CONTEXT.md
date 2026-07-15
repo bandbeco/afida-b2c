@@ -61,3 +61,21 @@ _Avoid_: welcome coupon (a coupon is Stripe's internal object; the discount is t
 **Promotion code**:
 A customer-facing code typed at checkout to claim a discount. Distinct from a coupon, Stripe's internal discount object that a promotion code points at; the two have different identifiers, and conflating them has caused real bugs.
 _Avoid_: promo, voucher, coupon code.
+
+### Lead generation
+
+**Sighting**:
+The fact that a business identity has been observed in an external register (a food-hygiene FHRSID today; later possibly a Companies House number). Pure record-of-observation, never shown to humans.
+_Avoid_: snapshot row, register entry.
+
+**Lead**:
+An actionable prospect: a newly opened food business a human might contact. A lead exists only for businesses first sighted after their register's seed run; register backfill is never a lead.
+_Avoid_: using "lead" for seeded register rows.
+
+**Seed run**:
+The first discovery run against a register source. It records sightings for everything currently in the register and deliberately reports nothing as new.
+_Avoid_: initial import, backfill run.
+
+**Lead status**:
+Where a lead stands in the outreach lifecycle. `New lead` = nobody has acted on it; `contacted` = at least one outreach of any kind has been sent; `converted` = the business placed an order or opened a trade account; `dismissed` = deliberately not pursued (chain, out of scope, closed).
+_Avoid_: pipeline stage, funnel step.

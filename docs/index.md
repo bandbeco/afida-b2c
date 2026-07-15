@@ -4,7 +4,7 @@ okf_version: "0.1"
 
 # Afida Shop Knowledge Bundle
 
-OKF bundle for the Afida shop project. Conventions live in the repo `CLAUDE.md` under "docs/ knowledge bundle". Curated areas (frontmatter, indexes, linted in CI): `seo/`, `plans/`, `reports/`, `proposals/`, `runbooks/`. The rest is pending retrofit; treat those docs' status as unknown until marked.
+OKF bundle for the Afida shop project. Conventions live in the repo `CLAUDE.md` under "docs/ knowledge bundle". Curated areas (frontmatter, indexes, linted in CI): `seo/`, `plans/`, `reports/`, `proposals/`, `runbooks/`, `adr/`. The rest is pending retrofit; treat those docs' status as unknown until marked.
 
 # Curated Areas
 
@@ -13,6 +13,7 @@ OKF bundle for the Afida shop project. Conventions live in the repo `CLAUDE.md` 
 * [Reports](/reports/index.md) - Growth plan, marketing strategy, point-in-time analyses, timesheets.
 * [Proposals](/proposals/index.md) - The 2025 partnership package and its annexes (superseded).
 * [Runbooks](/runbooks/index.md) - Deploy, credentials, Stripe and Datafast operational knowledge.
+* [ADRs](/adr/index.md) - Architecture decision records: hard-to-reverse choices and why they were made.
 
 # Not Yet Retrofitted
 

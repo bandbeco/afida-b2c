@@ -1,0 +1,67 @@
+<table border="0" cellpadding="0" cellspacing="0" width="100%">
+  <tr>
+    <td style="padding: 20px 30px 10px 30px;">
+      <h1 style="font-size: 22px; font-weight: normal; color: #111827; margin: 0;">Weekly new-business leads</h1>
+      <p style="color: #374151; font-size: 15px; margin-top: 8px;">
+        <%= @total_new %> new <%= "lead".pluralize(@total_new) %> this week.
+      </p>
+      <a href="<%= admin_leads_url %>" target="_blank" style="display: inline-block; background-color: #76e9bf; color: #000000; padding: 10px 24px; margin-top: 12px; border-radius: 8px; text-decoration: none;">
+        Work the leads in Admin
+      </a>
+    </td>
+  </tr>
+
+  <% @sections.each do |section| %>
+    <tr>
+      <td style="padding: 10px 30px 20px 30px;">
+        <h2 style="font-size: 17px; font-weight: normal; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 8px;">
+          <%= section[:source].tr("_", " ").upcase %>
+        </h2>
+
+        <% if section[:failed] %>
+          <p style="color: #b91c1c; font-size: 15px;">
+            Fetch failed; no data was recorded this week. Check the production logs for
+            "[LeadGen]". Missed businesses will surface in next week's run.
+          </p>
+        <% elsif section[:seeded] %>
+          <p style="color: #374151; font-size: 15px;">
+            First run: seeded <%= number_with_delimiter(section[:sighted_count]) %> register entries.
+            Nothing is reported as new on a seed run; next week's digest will carry the first real leads.
+          </p>
+        <% elsif section[:new_leads].empty? %>
+          <p style="color: #374151; font-size: 15px;">No new businesses this week.</p>
+        <% else %>
+          <p style="color: #374151; font-size: 14px; margin: 12px 0 4px 0;">
+            <% section[:new_leads].group_by(&:business_type).sort_by { |_, group| -group.size }.each do |type, group| %>
+              <%= type || "Unknown type" %>: <%= group.size %><br>
+            <% end %>
+          </p>
+
+          <table cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top: 12px;">
+            <tr>
+              <td style="font-size: 13px; color: #6b7280; padding-bottom: 6px;">Business</td>
+              <td style="font-size: 13px; color: #6b7280; padding-bottom: 6px;">Type</td>
+              <td style="font-size: 13px; color: #6b7280; padding-bottom: 6px;">Postcode</td>
+              <td style="font-size: 13px; color: #6b7280; padding-bottom: 6px;">Local authority</td>
+            </tr>
+            <% section[:new_leads].first(LeadDigestMailer::TABLE_ROW_CAP).each do |lead| %>
+              <tr>
+                <td style="font-size: 14px; color: #111827; padding: 4px 8px 4px 0;"><%= lead.business_name %></td>
+                <td style="font-size: 14px; color: #374151; padding: 4px 8px 4px 0;"><%= lead.business_type %></td>
+                <td style="font-size: 14px; color: #374151; padding: 4px 8px 4px 0;"><%= lead.postcode %></td>
+                <td style="font-size: 14px; color: #374151; padding: 4px 0;"><%= lead.local_authority %></td>
+              </tr>
+            <% end %>
+          </table>
+
+          <% overflow = section[:new_leads].size - LeadDigestMailer::TABLE_ROW_CAP %>
+          <% if overflow > 0 %>
+            <p style="color: #6b7280; font-size: 13px; margin-top: 10px;">
+              …plus <%= overflow %> more in the attached CSV.
+            </p>
+          <% end %>
+        <% end %>
+      </td>
+    </tr>
+  <% end %>
+</table>
