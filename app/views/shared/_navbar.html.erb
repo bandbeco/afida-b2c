@@ -98,7 +98,10 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
       <span class="flex-1 text-left">Search products...</span>
-      <kbd class="kbd kbd-lg h-9 px-3 text-lg hidden md:inline-flex" aria-hidden="true">⌘K</kbd>
+      <%# The command glyph's ink height is ~70% of the letter's in the kbd
+          monospace stack, so it gets a proportionally larger size to render
+          the two at the same visual height. %>
+      <kbd class="kbd kbd-lg h-9 px-3 hidden md:inline-flex" aria-hidden="true"><span class="text-[26px] leading-none">⌘</span><span class="text-lg leading-none">k</span></kbd>
     </button>
   </div>
 </nav>

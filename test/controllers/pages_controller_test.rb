@@ -421,7 +421,7 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "nav button[aria-label='Search products']", count: 1
     assert_select "nav button[aria-label='Search products'][data-testid='navbar-search-bar']" do
-      assert_select "kbd.kbd-lg", text: "⌘K"
+      assert_select "kbd.kbd-lg", text: "⌘k"
     end
     assert_select "nav button[data-testid='navbar-search-bar']", text: /Search products/
   end
