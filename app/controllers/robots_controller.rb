@@ -40,9 +40,6 @@ class RobotsController < ApplicationController
       Disallow: /signin
       Disallow: /signup
 
-      # Disallow quick_add modal endpoints (Turbo Frame content only)
-      Disallow: /products/*/quick_add
-
       # AI Search Engine Crawlers - Explicitly Allowed
       User-agent: GPTBot
       Content-Signal: ai-train=yes, search=yes, ai-input=yes

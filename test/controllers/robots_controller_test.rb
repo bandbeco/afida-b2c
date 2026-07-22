@@ -18,6 +18,14 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Disallow: /admin/"
   end
 
+  test "robots txt does not disallow quick_add endpoints" do
+    # Blocking quick_add hides its noindex header from Googlebot, which then
+    # indexes the URLs as "Indexed, though blocked by robots.txt". The action
+    # itself sends X-Robots-Tag: noindex, which must stay crawlable to work.
+    get "/robots.txt"
+    refute_includes response.body, "quick_add"
+  end
+
   test "does not set a datafast_visitor_id tracking cookie" do
     get "/robots.txt"
     assert_nil cookies[:datafast_visitor_id],

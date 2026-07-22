@@ -227,6 +227,15 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "quick_add sends a noindex header so crawlers drop it from the index" do
+    standard_product = products(:one)
+    standard_product.update!(product_type: "standard")
+
+    get quick_add_product_url(standard_product)
+
+    assert_equal "noindex, nofollow", response.headers["X-Robots-Tag"]
+  end
+
   # Product Display Tests
   # Tests for product page content and functionality
 
