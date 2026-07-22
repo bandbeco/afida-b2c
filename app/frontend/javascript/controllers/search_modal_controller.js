@@ -37,13 +37,15 @@ export default class extends Controller {
   // The navbar shortcut hint stays invisible until the controller connects
   // (the shortcut only works once JS is live). Shows ⌘k on mac platforms and
   // swaps to "Ctrl K" everywhere else, matching handleShortcut's bindings.
+  // The variants toggle via the hidden HTML attribute, which preflight
+  // enforces with !important so it wins over Tailwind display utilities.
   revealShortcutHint() {
     if (!this.hasShortcutHintTarget) return
 
     const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
     if (!isMac && this.hasHintMacTarget && this.hasHintOtherTarget) {
-      this.hintMacTarget.classList.add("hidden")
-      this.hintOtherTarget.classList.remove("hidden")
+      this.hintMacTarget.hidden = true
+      this.hintOtherTarget.hidden = false
     }
     this.shortcutHintTarget.classList.remove("invisible")
   }
