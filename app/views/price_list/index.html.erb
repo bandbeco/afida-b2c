@@ -1,6 +1,9 @@
 <% content_for :title, "Price List | Afida" %>
 <% content_for :meta_description, "Complete price list for Afida eco-friendly packaging supplies. Filter by category or search. Export to Excel or PDF." %>
 
+<%# This page has its own full-width product search; hide the navbar one. %>
+<% content_for :hide_navbar_search, "true" %>
+
 <div class="drawer drawer-end" data-controller="cart-drawer">
   <input id="cart-drawer" type="checkbox" class="drawer-toggle" data-cart-drawer-target="checkbox" aria-label="Toggle shopping cart" />
 

@@ -65,7 +65,9 @@ export default class extends Controller {
       this.panelTarget.offsetHeight
       this.panelTarget.classList.remove("opacity-0", "-translate-y-3")
       this.panelTarget.classList.add("opacity-100", "translate-y-0")
-    }, 50) // Small delay to prevent accidental triggers
+    }, 150) // Delay filters out transit hovers: the panel opens over the
+            // navbar search bar directly below, so a cursor merely passing
+            // through the trigger must not cover it
   }
 
   // Hide panel when mouse leaves the entire menu area

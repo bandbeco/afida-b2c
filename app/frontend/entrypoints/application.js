@@ -32,6 +32,12 @@ application.register("debounced-submit", DebouncedSubmitController)
 import ClearableInputController from "../javascript/controllers/clearable_input_controller"
 application.register("clearable-input", ClearableInputController)
 
+// Mounted on <body> in the application layout, so it is needed on every page;
+// eager registration closes the gap where an early click on the navbar search
+// bar would fire before the controller connects.
+import SearchModalController from "../javascript/controllers/search_modal_controller"
+application.register("search-modal", SearchModalController)
+
 // LAZY LOADED CONTROLLERS - Only loaded when needed
 const lazyControllers = {
   "analytics": () => import("../javascript/controllers/analytics_controller"),
@@ -43,7 +49,6 @@ const lazyControllers = {
   "compatible-lids": () => import("../javascript/controllers/compatible_lids_controller"),
   "faq-search": () => import("../javascript/controllers/faq_search_controller"),
   "header-search": () => import("../javascript/controllers/header_search_controller"),
-  "search-modal": () => import("../javascript/controllers/search_modal_controller"),
   "nested-form": () => import("../javascript/controllers/nested_form_controller"),
   "character-counter": () => import("../javascript/controllers/character_counter_controller"),
   "quick-add-modal": () => import("../javascript/controllers/quick_add_modal_controller"),

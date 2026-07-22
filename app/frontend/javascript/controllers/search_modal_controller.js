@@ -6,7 +6,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "modal", "content", "input", "defaultContent", "results",
-    "recentSearches", "recentSearchesList", "quickChip"
+    "recentSearches", "recentSearchesList", "quickChip",
+    "shortcutHint", "hintMac", "hintOther"
   ]
   static values = { debounce: { type: Number, default: 200 } }
 
@@ -25,13 +26,28 @@ export default class extends Controller {
     // Store bound function references
     this.boundHandleEscape = this.handleEscape.bind(this)
     this.boundTrapFocus = this.trapFocus.bind(this)
-    this.boundOpenFromEvent = this.openFromEvent.bind(this)
     this.boundHandleShortcut = this.handleShortcut.bind(this)
 
-    // Listen for global open event (from navbar button)
-    window.addEventListener("search-modal:open", this.boundOpenFromEvent)
     // Cmd+K / Ctrl+K opens search from anywhere on the page.
     document.addEventListener("keydown", this.boundHandleShortcut)
+
+    this.revealShortcutHint()
+  }
+
+  // The navbar shortcut hint stays invisible until the controller connects
+  // (the shortcut only works once JS is live). Shows ⌘k on mac platforms and
+  // swaps to "Ctrl K" everywhere else, matching handleShortcut's bindings.
+  // The variants toggle via the hidden HTML attribute, which preflight
+  // enforces with !important so it wins over Tailwind display utilities.
+  revealShortcutHint() {
+    if (!this.hasShortcutHintTarget) return
+
+    const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+    if (!isMac && this.hasHintMacTarget && this.hasHintOtherTarget) {
+      this.hintMacTarget.hidden = true
+      this.hintOtherTarget.hidden = false
+    }
+    this.shortcutHintTarget.classList.remove("invisible")
   }
 
   disconnect() {
@@ -39,7 +55,6 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.boundHandleEscape)
     document.removeEventListener("keydown", this.boundHandleShortcut)
     this.element.removeEventListener("keydown", this.boundTrapFocus)
-    window.removeEventListener("search-modal:open", this.boundOpenFromEvent)
   }
 
   // Cmd+K (mac) / Ctrl+K (win/linux) toggles the search modal open.
@@ -52,11 +67,6 @@ export default class extends Controller {
         this.inputTarget.focus()
       }
     }
-  }
-
-  // Called from global event (navbar button click)
-  openFromEvent(event) {
-    this.open(event)
   }
 
   open(event) {

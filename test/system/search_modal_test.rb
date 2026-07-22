@@ -8,7 +8,7 @@ class SearchModalTest < ApplicationSystemTestCase
     visit "/"
     # Start each test from a clean recent-searches history.
     execute_script("window.localStorage.clear()")
-    find("button[aria-label='Search products']").click
+    find("[data-testid='navbar-search-bar']").click
     assert_selector "[data-search-modal-target='input']", visible: true
   end
 
@@ -69,7 +69,7 @@ class SearchModalTest < ApplicationSystemTestCase
 
     # Close and reopen; the recent-searches block hydrates from localStorage.
     find("button[aria-label='Close search']").click
-    find("button[aria-label='Search products']").click
+    find("[data-testid='navbar-search-bar']").click
 
     assert_selector "[data-search-modal-target='recentSearches']", visible: true
     within "[data-search-modal-target='recentSearchesList']" do
@@ -87,7 +87,7 @@ class SearchModalTest < ApplicationSystemTestCase
     assert_text(/No results found/i)
 
     find("button[aria-label='Close search']").click
-    find("button[aria-label='Search products']").click
+    find("[data-testid='navbar-search-bar']").click
 
     # No history at all, so the recent-searches block stays hidden.
     assert_no_selector "[data-search-modal-target='recentSearches']", visible: true
@@ -101,7 +101,7 @@ class SearchModalTest < ApplicationSystemTestCase
     assert_selector "[role='option']", minimum: 1
 
     find("button[aria-label='Close search']").click
-    find("button[aria-label='Search products']").click
+    find("[data-testid='navbar-search-bar']").click
 
     # "Cups" came from a curated chip, so it must not appear under Recent searches.
     assert_no_selector "[data-search-modal-target='recentSearchesList'] button[data-term='Cups']"

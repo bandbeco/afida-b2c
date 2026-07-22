@@ -1,7 +1,9 @@
 <%# Search Modal - Full-screen search experience %>
-<%# Opens when user clicks search icon in navbar %>
+<%# Opens from the navbar search bar or Cmd/Ctrl+K. The search-modal
+    controller itself is mounted on <body> in the application layout so
+    out-of-partial triggers can reach it via data-action. %>
 
-<div data-controller="search-modal">
+<div>
   <%# Modal container - hidden by default %>
   <div data-search-modal-target="modal"
        class="hidden fixed inset-0 z-50 items-start justify-center bg-black/50 backdrop-blur-sm pt-16 md:pt-24"

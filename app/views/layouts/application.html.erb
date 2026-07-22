@@ -82,14 +82,18 @@
     <%= Sentry.get_trace_propagation_meta.html_safe %>
   </head>
 
-  <body class="flex flex-col h-screen">
+  <%# search-modal is mounted on body so triggers in any partial (navbar
+      search bar, Cmd/Ctrl+K) reach it via plain Stimulus data-action. %>
+  <body class="flex flex-col h-screen" data-controller="search-modal">
     <%= render "layouts/google_tag_manager_noscript" %>
 
     <%= tag.div notice, class: "alert alert-info", data: { turbo_temporary: true } if notice %>
     <%= tag.div alert, class: "alert alert-error", data: { turbo_temporary: true } if alert %>
 
-    <%# Global toast container for Turbo Stream notifications %>
-    <div id="toast-container" class="fixed top-20 right-4 z-50 space-y-2"></div>
+    <%# Global toast container for Turbo Stream notifications. top-40 clears
+        the full header (banner + nav links + search bar) so toasts never
+        cover the navbar search bar's click target. %>
+    <div id="toast-container" class="fixed top-40 right-4 z-50 space-y-2"></div>
 
     <%= render "shared/vegware_stockist_banner" %>
     <%= render "shared/navbar" %>
