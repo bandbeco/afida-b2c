@@ -422,11 +422,12 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "nav a[data-testid='navbar-search-bar']", count: 1
     assert_select "nav a.border-primary[data-testid='navbar-search-bar'][href='#{shop_path}']" do
-      assert_select "kbd[aria-hidden=true]", text: /⌘\s*k/
+      assert_select "kbd[aria-hidden=true]", text: /⌘\s*\+\s*k/
       # The platform variants toggle via the hidden HTML attribute (it beats
       # Tailwind display utilities), with the mac variant showing by default.
       assert_select "[data-search-modal-target='hintMac'][hidden]", count: 0
       assert_select "[data-search-modal-target='hintOther'][hidden]", count: 1
+      assert_select "[data-search-modal-target='hintOther']", text: "ctrl + k"
     end
 
     bar = css_select("nav a[data-testid='navbar-search-bar']").first
