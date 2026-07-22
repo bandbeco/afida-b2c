@@ -410,4 +410,27 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
           q.match?(/LIMIT \$\d+\z/)
       }.first(5).join("\n")
   end
+
+  # The navbar search trigger is a prominent full-width bar under the nav links
+  # (client request 2026-07-22): brand-coloured outline, visible placeholder
+  # text, and a larger Cmd+K hint. It stays a button that opens the search
+  # modal, keeping the aria-label the system tests click on.
+  test "navbar renders a prominent search bar below the nav links" do
+    get root_path
+
+    assert_response :success
+    assert_select "nav button[aria-label='Search products']", count: 1
+    assert_select "nav button[aria-label='Search products'][data-testid='navbar-search-bar']" do
+      assert_select "kbd.kbd-lg", text: "⌘K"
+    end
+    assert_select "nav button[data-testid='navbar-search-bar']", text: /Search products/
+  end
+
+  test "navbar search bar carries the brand-coloured outline" do
+    get root_path
+
+    bar = css_select("nav button[data-testid='navbar-search-bar']").first
+    assert bar, "expected the navbar search bar to render"
+    assert_includes bar["class"], "border-primary"
+  end
 end
