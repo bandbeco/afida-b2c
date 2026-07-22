@@ -260,9 +260,16 @@ class BlogPostTest < ActiveSupport::TestCase
     assert @published_post.structured?
   end
 
-  test "structured? returns true when any jsonb array field is populated" do
-    @published_post.faq_items = [ { "question" => "Why?", "answer" => "Because." } ]
+  test "structured? returns true when any content jsonb array field is populated" do
+    @published_post.decision_factors = [ { "heading" => "Size", "body" => "Pick 16oz." } ]
     assert @published_post.structured?
+  end
+
+  test "structured? returns false when only faq_items are present" do
+    # faq_items on a markdown post feed the FAQPage JSON-LD in the show
+    # template; the post must keep rendering its markdown body.
+    @published_post.faq_items = [ { "question" => "Why?", "answer" => "Because." } ]
+    assert_not @published_post.structured?
   end
 
   test "structured? returns true when a CTA field is present" do

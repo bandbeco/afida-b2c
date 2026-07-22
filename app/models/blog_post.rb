@@ -55,8 +55,12 @@ class BlogPost < ApplicationRecord
     final_cta_heading final_cta_body
   ].freeze
 
+  # faq_items is deliberately absent: on markdown posts it only feeds the
+  # FAQPage JSON-LD in the show template, and must not switch rendering away
+  # from the markdown body. Structured posts render their visible FAQ section
+  # via the partial's own faq_items check.
   STRUCTURED_CONTENT_JSONB_FIELDS = %i[
-    decision_factors buyer_setups recommended_options faq_items
+    decision_factors buyer_setups recommended_options
     top_cta_buttons final_cta_buttons
   ].freeze
 
