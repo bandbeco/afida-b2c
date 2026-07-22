@@ -178,14 +178,15 @@ class Product < ApplicationRecord
   # join or GROUP BY on the outer relation; leans on the existing
   # order_items(product_id) and orders(status) indexes.
   def self.sales_rank_order
-    Arel.sql(<<~SQL.squish + " DESC NULLS LAST")
+    subquery = sanitize_sql_array([ <<~SQL.squish, SOLD_ORDER_STATUSES ])
       (SELECT COALESCE(SUM(order_items.quantity), 0)
        FROM order_items
        JOIN orders ON orders.id = order_items.order_id
        WHERE order_items.product_id = products.id
          AND order_items.is_sample = FALSE
-         AND orders.status IN (#{SOLD_ORDER_STATUSES.map { |s| connection.quote(s) }.join(', ')}))
+         AND orders.status IN (?))
     SQL
+    Arel.sql(subquery + " DESC NULLS LAST")
   end
 
   # Extended search including category names
