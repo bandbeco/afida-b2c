@@ -403,6 +403,12 @@ class PriceListControllerTest < ActionDispatch::IntegrationTest
       }.first(5).join("\n")
   end
 
+  # The page has its own search field, so the navbar search bar is suppressed.
+  test "index does not render the navbar search bar" do
+    get price_list_url
+    assert_select "[data-testid='navbar-search-bar']", count: 0
+  end
+
   private
 
   def sign_in_as(user)

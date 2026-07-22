@@ -32,4 +32,10 @@ class FaqsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h2", text: /Search Results for "shipping"/
   end
+
+  # The page has its own search field, so the navbar search bar is suppressed.
+  test "index does not render the navbar search bar" do
+    get faqs_url
+    assert_select "[data-testid='navbar-search-bar']", count: 0
+  end
 end

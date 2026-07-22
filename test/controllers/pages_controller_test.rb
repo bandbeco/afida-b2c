@@ -412,25 +412,45 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   # The navbar search trigger is a prominent full-width bar under the nav links
-  # (client request 2026-07-22): brand-coloured outline, visible placeholder
-  # text, and a larger Cmd+K hint. It stays a button that opens the search
-  # modal, keeping the aria-label the system tests click on.
+  # (client request 2026-07-22): brand-coloured outline, visible label text,
+  # and a platform-aware Cmd/Ctrl+K hint. It is a link to /shop so it still
+  # works before the Stimulus controller connects (or with JS off), enhanced
+  # into a modal opener via data-action.
   test "navbar renders a prominent search bar below the nav links" do
     get root_path
 
     assert_response :success
-    assert_select "nav button[aria-label='Search products']", count: 1
-    assert_select "nav button[aria-label='Search products'][data-testid='navbar-search-bar']" do
-      assert_select "kbd.kbd-lg", text: "⌘k"
+    assert_select "nav a[data-testid='navbar-search-bar']", count: 1
+    assert_select "nav a.border-primary[data-testid='navbar-search-bar'][href='#{shop_path}']" do
+      assert_select "kbd[aria-hidden=true]", text: /⌘\s*k/
     end
-    assert_select "nav button[data-testid='navbar-search-bar']", text: /Search products/
+
+    bar = css_select("nav a[data-testid='navbar-search-bar']").first
+    assert_equal "click->search-modal#open", bar["data-action"]
+    assert_equal "dialog", bar["aria-haspopup"]
+    assert_equal "Meta+K Control+K", bar["aria-keyshortcuts"]
+    assert_nil bar["onclick"]
+    # The accessible name is the visible text; an aria-label would shadow it.
+    assert_nil bar["aria-label"]
+    assert_match(/Search products/, bar.text)
   end
 
-  test "navbar search bar carries the brand-coloured outline" do
+  # The search modal controller lives on <body> so the navbar trigger can use
+  # ordinary Stimulus data-action wiring across partials.
+  test "layout mounts the search modal controller on the body" do
     get root_path
 
-    bar = css_select("nav button[data-testid='navbar-search-bar']").first
-    assert bar, "expected the navbar search bar to render"
-    assert_includes bar["class"], "border-primary"
+    body = css_select("body").first
+    assert_includes body["data-controller"].to_s.split, "search-modal"
+    assert_select "[data-search-modal-target='modal']", count: 1
+  end
+
+  # Pages with their own full-width search input suppress the navbar bar so
+  # users don't get two stacked search affordances with different behaviour.
+  test "shop page does not render the navbar search bar" do
+    get shop_path
+
+    assert_response :success
+    assert_select "[data-testid='navbar-search-bar']", count: 0
   end
 end
