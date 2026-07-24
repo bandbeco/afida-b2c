@@ -13,6 +13,15 @@ class CheckoutsController < ApplicationController
       return redirect_to cart_path, alert: "Your cart is empty."
     end
 
+    # Refuse to build a session without a destination we can price. Shipping is
+    # baked into the line items here, one screen before Stripe collects the
+    # address, so an unknown destination would be charged mainland rates however
+    # far the parcel is actually going.
+    unless deliverable_destination?(params[:address_id])
+      return redirect_to cart_path,
+                         alert: "Please enter your delivery postcode so we can calculate delivery."
+    end
+
     # Kept outside the begin block so the rescue path can inspect builder state
     # after Stripe raises during session creation.
     builder = nil
@@ -216,6 +225,13 @@ class CheckoutsController < ApplicationController
   # to calculate delivery. Nil means mainland pricing, as today.
   def delivery_postcode_for(address_id)
     selected_address_postcode(address_id) || session[:delivery_postcode]
+  end
+
+  # Whether we know where this order is going well enough to price it. A selected
+  # saved address counts (it carries its own postcode and is the address the order
+  # ships to), so a logged-in customer never retypes what they already gave us.
+  def deliverable_destination?(address_id)
+    ShippingZone.deliverable?(ShippingZone.for(delivery_postcode_for(address_id)))
   end
 
   def selected_address_postcode(address_id)

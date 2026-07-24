@@ -19,6 +19,17 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     # Stub UK VAT tax rate lookup (used by controller)
     stub_stripe_tax_rate_list
+
+    # Checkout requires a delivery destination (see the guard tests below), so
+    # give every other test a mainland one. Those tests are about discounts,
+    # line items and Stripe wiring, not about where the parcel is going.
+    set_delivery_postcode("WD18 9SB")
+  end
+
+  # Store a delivery postcode in the session the way the cart page does. The
+  # session isn't writable from an integration test, so go through the route.
+  def set_delivery_postcode(postcode)
+    post delivery_postcode_cart_path, params: { delivery_postcode: postcode }
   end
 
   # The welcome coupon id the app stores in the session, read from the test
@@ -54,6 +65,64 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :see_other
     assert_match %r{https://checkout\.stripe\.com/test/sess_}, response.redirect_url
+  end
+
+  # --- delivery destination is required ---
+  # Shipping is priced into the line items before Stripe collects the address, so
+  # checkout must know the destination first. Without this a customer could skip
+  # the cart-page field and be charged mainland rates to a surcharged zone.
+
+  test "create refuses checkout when no delivery postcode has been given" do
+    set_delivery_postcode("")
+    Stripe::Checkout::Session.expects(:create).never
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert flash[:alert].present?, "expected the customer to be told why checkout stopped"
+  end
+
+  test "create refuses checkout when a selected address has an unusable postcode" do
+    # A saved address is trusted over the typed field, so it must be checked too:
+    # a non-UK or malformed saved postcode can't be priced.
+    set_delivery_postcode("")
+    sign_in_as(@user)
+    address = @user.addresses.create!(
+      nickname: "Bad postcode #{SecureRandom.hex(4)}",
+      recipient_name: "Jane",
+      line1: "1 St",
+      city: "Somewhere",
+      postcode: "00000",
+      country: "FR"
+    )
+    Stripe::Checkout::Session.expects(:create).never
+
+    post checkout_path, params: { address_id: address.id }
+
+    assert_redirected_to cart_path
+  end
+
+  test "a selected saved address satisfies the requirement without a typed postcode" do
+    set_delivery_postcode("")
+    address = addresses(:office)
+    @user.update!(stripe_customer_id: "cus_zone_guard")
+    User.any_instance.stubs(:sync_stripe_customer!)
+    sign_in_as(@user)
+    stub_stripe_session_create
+
+    post checkout_path, params: { address_id: address.id }
+
+    assert_response :see_other
+    assert_match %r{https://checkout\.stripe\.com/test/sess_}, response.redirect_url
+  end
+
+  test "checkout proceeds once a postcode has been given" do
+    set_delivery_postcode("BT1 6EE")
+    stub_stripe_session_create
+
+    post checkout_path
+
+    assert_response :see_other
   end
 
   test "create builds line items from cart items" do

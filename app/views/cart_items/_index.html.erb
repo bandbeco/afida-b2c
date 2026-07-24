@@ -75,18 +75,28 @@
                            class="radio radio-primary radio-sm mt-0.5">
                     <div class="flex-1">
                       <span class="font-medium text-sm">Enter a different address</span>
-                      <p class="text-xs text-gray-500">I'll enter my address at checkout</p>
+                      <p class="text-xs text-gray-500">Enter its postcode above so we can price delivery</p>
                     </div>
                   </label>
                 </div>
               </div>
             <% end %>
 
+            <%# Delivery is priced into the Stripe line items before Stripe collects
+                the address, so checkout is refused without a destination. Disable
+                the button rather than letting the customer bounce off the guard. %>
+            <% destination_known = delivery_destination_known?(Current.cart, has_saved_address: Current.user&.has_saved_addresses?) %>
             <div class="mt-4 sm:mt-6">
               <button type="submit"
-                      class="btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20">
+                      class="btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20"
+                      <%= "disabled" unless destination_known %>>
                 Proceed to Checkout
               </button>
+              <% unless destination_known %>
+                <p class="mt-2 text-xs text-center text-gray-600" data-test="checkout-blocked-note">
+                  Enter your delivery postcode above to continue.
+                </p>
+              <% end %>
             </div>
           <% end %>
 

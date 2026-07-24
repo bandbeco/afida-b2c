@@ -26,6 +26,12 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     @cart = Cart.create!(user: @user)
     @cart.cart_items.create!(product: @product_variant, quantity: 1, price: 10.00)
     Current.stubs(:cart).returns(@cart)
+
+    # Checkout requires a destination it can price delivery for. These tests are
+    # about address prefill, not about where the parcel goes, so give them a
+    # mainland one. (A selected saved address also satisfies the requirement, but
+    # several of these tests deliberately checkout without one.)
+    post delivery_postcode_cart_path, params: { delivery_postcode: "WD18 9SB" }
   end
 
   test "checkout with address_id creates Stripe Customer and uses it" do

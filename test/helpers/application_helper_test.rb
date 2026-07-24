@@ -69,4 +69,36 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_equal "Northern Ireland", delivery_zone_name(:northern_ireland)
     assert_equal "the Scottish Highlands", delivery_zone_name(:highlands)
   end
+
+  # ==========================================================================
+  # delivery_destination_known? - drives whether the cart offers checkout.
+  # Checkout is refused without a destination, so the cart must not present a
+  # button that will bounce the customer straight back.
+  # ==========================================================================
+
+  test "delivery_destination_known? is false for a cart with no postcode" do
+    assert_not delivery_destination_known?(Cart.new)
+  end
+
+  test "delivery_destination_known? is true once a valid postcode is entered" do
+    cart = Cart.new
+    cart.delivery_postcode = "BT1 6EE"
+
+    assert delivery_destination_known?(cart)
+  end
+
+  test "delivery_destination_known? is false for an unusable postcode" do
+    cart = Cart.new
+    cart.delivery_postcode = "not a postcode"
+
+    assert_not delivery_destination_known?(cart)
+  end
+
+  test "delivery_destination_known? is true when a saved address is available" do
+    # A logged-in customer with a saved address never has to retype it, so the
+    # cart offers checkout on the strength of that address alone.
+    cart = Cart.new
+
+    assert delivery_destination_known?(cart, has_saved_address: true)
+  end
 end

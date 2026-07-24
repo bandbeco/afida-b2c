@@ -231,6 +231,30 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_equal :highlands, ShippingZone.for(session[:delivery_postcode])
   end
 
+  # Checkout refuses an order with no destination, so the cart must not offer a
+  # button that would bounce the customer straight back to the cart.
+
+  test "checkout is disabled until a delivery postcode is given" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    get cart_url
+
+    assert_select "button[type=submit][disabled]", text: /Proceed to Checkout/
+    assert_select "[data-test=checkout-blocked-note]"
+  end
+
+  test "checkout is enabled once a delivery postcode is given" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+    post delivery_postcode_cart_url, params: { delivery_postcode: "WD18 9SB" }
+
+    get cart_url
+
+    assert_select "button[type=submit]:not([disabled])", text: /Proceed to Checkout/
+    assert_select "[data-test=checkout-blocked-note]", count: 0
+  end
+
   private
 
   def sign_in_as(user)

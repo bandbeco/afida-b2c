@@ -79,4 +79,17 @@ module ApplicationHelper
   def delivery_zone_name(zone)
     DELIVERY_ZONE_NAMES.fetch(zone, "your area")
   end
+
+  # Whether we know where this cart is going well enough to price it, which is
+  # what CheckoutsController requires before it will build a Stripe session.
+  # Checks the entered postcode rather than the cart's zone, because the zone
+  # falls back to mainland by design and so is never "unknown".
+  #
+  # A customer with a saved address satisfies it without typing anything: the
+  # address carries its own postcode and is what the order ships to.
+  def delivery_destination_known?(cart, has_saved_address: false)
+    return true if has_saved_address
+
+    ShippingZone.deliverable?(ShippingZone.for(cart.delivery_postcode))
+  end
 end

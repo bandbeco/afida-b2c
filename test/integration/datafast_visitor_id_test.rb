@@ -51,6 +51,10 @@ class DatafastVisitorIdTest < ActionDispatch::IntegrationTest
     visitor_id = cookies[:datafast_visitor_id]
     assert visitor_id.present?, "cart request should have minted a visitor id"
 
+    # Checkout needs a destination it can price delivery for before it will build
+    # a session; this test is about visitor-id propagation, not delivery.
+    post delivery_postcode_cart_path, params: { delivery_postcode: "WD18 9SB" }
+
     # SessionBuilder must receive the non-blank visitor id (it flows into Stripe
     # metadata, which the webhook later reads for purchase attribution).
     captured = nil
