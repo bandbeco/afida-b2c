@@ -49,4 +49,19 @@ module ApplicationHelper
   def free_shipping_threshold_display
     Shipping.formatted_free_shipping_threshold
   end
+
+  # The free-delivery claim, qualified by zone. Free delivery is a mainland
+  # promise (ShippingZone::FREE_SHIPPING_ZONES), so the copy has to say so:
+  # an unqualified claim is one we cannot keep for Northern Ireland, the
+  # Highlands or the islands. Single source so the four templates that make
+  # this claim cannot drift apart.
+  def free_delivery_promise
+    "Free delivery on mainland UK orders over #{free_shipping_threshold_display}"
+  end
+
+  # The companion caveat for the zones excluded from the promise above.
+  def non_mainland_delivery_note
+    "Northern Ireland, the Scottish Highlands and offshore islands are charged " \
+      "at a separate rate and may take longer to arrive."
+  end
 end

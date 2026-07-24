@@ -18,4 +18,13 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
 
     assert_select "[data-test='free-delivery-hint']", text: /free delivery/i
   end
+
+  # Free delivery only applies to the mainland (ShippingZone::FREE_SHIPPING_ZONES).
+  # An unqualified claim here is a promise we cannot keep for Northern Ireland,
+  # the Highlands or the islands, all of which have placed real orders.
+  test "free-delivery hint qualifies the promise as mainland UK" do
+    get product_path(@product)
+
+    assert_select "[data-test='free-delivery-hint']", text: /mainland UK/i
+  end
 end

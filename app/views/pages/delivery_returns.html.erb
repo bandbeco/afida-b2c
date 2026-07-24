@@ -1,6 +1,6 @@
 <% content_for :title, "Delivery & Returns | Afida" %>
 
-<% content_for :meta_description, "Free next working day delivery on orders over #{free_shipping_threshold_display}. Learn about our delivery options, returns policy, and how to arrange a return at Afida." %>
+<% content_for :meta_description, "Free next working day delivery on mainland UK orders over #{free_shipping_threshold_display}. Learn about our delivery options, returns policy, and how to arrange a return at Afida." %>
 
 <div class="bg-gray-50 min-h-screen">
   <!-- Header -->
@@ -21,7 +21,7 @@
           </svg>
         </div>
         <h3 class="text-gray-900 mb-1">Free Delivery</h3>
-        <p class="text-sm text-gray-600">On orders over <%= free_shipping_threshold_display %> (ex. VAT)</p>
+        <p class="text-sm text-gray-600">On mainland UK orders over <%= free_shipping_threshold_display %> (ex. VAT)</p>
       </div>
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm text-center">
         <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -30,7 +30,7 @@
           </svg>
         </div>
         <h3 class="text-gray-900 mb-1">Next Working Day</h3>
-        <p class="text-sm text-gray-600">Order by 2pm Mon-Fri</p>
+        <p class="text-sm text-gray-600">Mainland UK, order by 2pm Mon-Fri</p>
       </div>
       <div class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm text-center">
         <div class="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -66,7 +66,8 @@
         <div class="space-y-6">
           <div>
             <h3 class="font-medium text-gray-900 mb-2">Free Next Working Day Delivery</h3>
-            <p class="text-gray-600 text-sm">We provide free next working day delivery for all orders over <%= free_shipping_threshold_display %> (excluding VAT). Simply place your order by 2pm, Monday to Friday, to take advantage of next working day delivery.</p>
+            <p class="text-gray-600 text-sm">We provide free next working day delivery to mainland UK addresses for all orders over <%= free_shipping_threshold_display %> (excluding VAT). Simply place your order by 2pm, Monday to Friday, to take advantage of next working day delivery.</p>
+            <p class="text-gray-600 text-sm mt-2"><%= non_mainland_delivery_note %></p>
             <p class="text-gray-500 text-sm mt-2 italic">Please note that delivery times may be slightly longer during peak periods.</p>
           </div>
 
@@ -76,6 +77,7 @@
               <table class="w-full text-sm">
                 <thead>
                   <tr class="border-b border-gray-200">
+                    <th class="text-left py-3 pr-4 font-medium text-gray-900">Destination</th>
                     <th class="text-left py-3 pr-4 font-medium text-gray-900">Order Value</th>
                     <th class="text-left py-3 pr-4 font-medium text-gray-900">Delivery</th>
                     <th class="text-left py-3 font-medium text-gray-900">Cost</th>
@@ -83,14 +85,28 @@
                 </thead>
                 <tbody class="text-gray-600">
                   <tr class="border-b border-gray-100">
+                    <td class="py-3 pr-4">Mainland UK</td>
                     <td class="py-3 pr-4">Over <%= free_shipping_threshold_display %> (ex. VAT)</td>
                     <td class="py-3 pr-4">Next working day</td>
                     <td class="py-3 font-medium text-primary">Free</td>
                   </tr>
-                  <tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-3 pr-4">Mainland UK</td>
                     <td class="py-3 pr-4">Under <%= free_shipping_threshold_display %> (ex. VAT)</td>
                     <td class="py-3 pr-4">Next working day</td>
                     <td class="py-3"><%= delivery_price_display %></td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-3 pr-4">Northern Ireland, Scottish Highlands</td>
+                    <td class="py-3 pr-4">Any</td>
+                    <td class="py-3 pr-4">Two working days</td>
+                    <td class="py-3">Quoted at checkout</td>
+                  </tr>
+                  <tr>
+                    <td class="py-3 pr-4">Offshore islands</td>
+                    <td class="py-3 pr-4">Any</td>
+                    <td class="py-3 pr-4">Two to four working days</td>
+                    <td class="py-3">Quoted at checkout</td>
                   </tr>
                 </tbody>
               </table>
@@ -99,12 +115,12 @@
 
           <div>
             <h3 class="font-medium text-gray-900 mb-2">Dispatch Times</h3>
-            <p class="text-gray-600 text-sm">We aim to dispatch every order received before 2pm (Monday to Friday) on the same day. Unless otherwise specified, your order will be sent using our next working day service.</p>
+            <p class="text-gray-600 text-sm">We aim to dispatch every order received before 2pm (Monday to Friday) on the same day. Unless otherwise specified, mainland UK orders are sent using our next working day service; deliveries to Northern Ireland, the Scottish Highlands and offshore islands take longer in transit.</p>
           </div>
 
           <div>
             <h3 class="font-medium text-gray-900 mb-2">Delivery Area</h3>
-            <p class="text-gray-600 text-sm">We currently deliver to addresses within the United Kingdom only.</p>
+            <p class="text-gray-600 text-sm">We currently deliver to addresses within the United Kingdom only. Our free delivery and next-working-day service cover mainland UK. <%= non_mainland_delivery_note %> The exact delivery charge for your address is shown at checkout before you pay.</p>
           </div>
 
           <div>
