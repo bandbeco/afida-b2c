@@ -9,8 +9,8 @@ class DeliveryEstimateTest < ActiveSupport::TestCase
     Business::Calendar.new(working_days: %w[mon tue wed thu fri], holidays: holidays)
   end
 
-  def estimate(time, holidays = [])
-    DeliveryEstimate.new(time, calendar: calendar(holidays))
+  def estimate(time, holidays = [], zone: :mainland)
+    DeliveryEstimate.new(time, calendar: calendar(holidays), zone: zone)
   end
 
   test "weekday before 2pm delivers next working day" do
@@ -110,5 +110,84 @@ class DeliveryEstimateTest < ActiveSupport::TestCase
     est = estimate(Time.zone.local(2026, 4, 2, 12, 0, 0), holidays)
     assert_equal Time.zone.local(2026, 4, 2, 14, 0, 0), est.cutoff_at
     assert_equal Date.new(2026, 4, 7), est.delivery_date
+  end
+
+  # ==========================================================================
+  # Delivery zone. DPD rates the Highlands and Northern Ireland at 2 days and
+  # HS/ZE/KW15-17 at 2-4 days, so those destinations cannot be promised
+  # next-working-day at any price. A real order to Stornoway was sold exactly
+  # that promise, which is what these cases exist to prevent.
+  # ==========================================================================
+
+  test "zone defaults to mainland, keeping the next-working-day promise" do
+    # Monday 12:00 -> dispatch Mon -> delivery Tuesday, unchanged.
+    assert_equal Date.new(2026, 6, 2), estimate(Time.zone.local(2026, 6, 1, 12, 0, 0)).delivery_date
+  end
+
+  test "the highlands add a working day on top of the mainland promise" do
+    # Monday 12:00 -> dispatch Mon -> mainland Tue -> Highlands Wednesday.
+    assert_equal Date.new(2026, 6, 3),
+                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :highlands).delivery_date
+  end
+
+  test "northern ireland adds a working day on top of the mainland promise" do
+    assert_equal Date.new(2026, 6, 3),
+                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :northern_ireland).delivery_date
+  end
+
+  test "remote islands take the longest" do
+    # Monday 12:00 -> dispatch Mon -> mainland Tue -> +3 working days -> Friday.
+    assert_equal Date.new(2026, 6, 5),
+                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :remote_islands).delivery_date
+  end
+
+  test "zone transit skips weekends like every other working-day hop" do
+    # Thursday 12:00 -> dispatch Thu -> mainland Fri -> Highlands rolls over the
+    # weekend to Monday rather than landing on Saturday.
+    assert_equal Date.new(2026, 6, 8),
+                 estimate(Time.zone.local(2026, 6, 4, 12, 0, 0), zone: :highlands).delivery_date
+  end
+
+  test "zone transit skips bank holidays too" do
+    # Monday 1 June 12:00, with Tuesday 2 June a holiday: dispatch Mon, mainland
+    # hop skips to Wed, Highlands hop lands Thursday.
+    holidays = [ Date.new(2026, 6, 2) ]
+    assert_equal Date.new(2026, 6, 4),
+                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), holidays, zone: :highlands).delivery_date
+  end
+
+  test "an unknown zone falls back to the mainland promise" do
+    assert_equal estimate(Time.zone.local(2026, 6, 1, 12, 0, 0)).delivery_date,
+                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :unknown).delivery_date
+  end
+
+  test "the zone never moves the dispatch cutoff" do
+    # The cutoff is about when we hand the parcel over, which does not change
+    # with the destination; only the transit after dispatch does.
+    mainland = estimate(Time.zone.local(2026, 6, 1, 12, 0, 0))
+    islands = estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :remote_islands)
+
+    assert_equal mainland.cutoff_at, islands.cutoff_at
+  end
+
+  test "for_order derives the zone from the order's shipping postcode" do
+    # The order records where it actually shipped, so the promise shown on the
+    # confirmation reflects that destination rather than assuming mainland.
+    order = orders(:one)
+    order.update_columns(created_at: Time.zone.local(2026, 6, 1, 12, 0, 0),
+                         shipping_postal_code: "IV51 9YB")
+
+    assert_equal :highlands, DeliveryEstimate.for_order(order).zone
+  end
+
+  test "for_order falls back to mainland when the stored postcode is unusable" do
+    # shipping_postal_code is NOT NULL, but Stripe can hand back something we
+    # can't parse. The confirmation page must still show a date.
+    order = orders(:one)
+    order.update_columns(created_at: Time.zone.local(2026, 6, 1, 12, 0, 0),
+                         shipping_postal_code: "")
+
+    assert_equal :mainland, DeliveryEstimate.for_order(order).zone
+    assert_equal Date.new(2026, 6, 2), DeliveryEstimate.for_order(order).delivery_date
   end
 end

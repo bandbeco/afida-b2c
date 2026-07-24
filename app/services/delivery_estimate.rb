@@ -1,9 +1,15 @@
-# Single source of truth for the next-working-day delivery promise.
+# Single source of truth for the delivery promise.
 #
 # Orders placed before the 2pm cutoff on a working day are dispatched that day
 # for next-working-day delivery. Orders after the cutoff (or on a non-working
 # day) roll to the next working day's cutoff. Weekends and UK bank holidays are
 # never working days.
+#
+# Destination matters as well as timing: DPD rates the Highlands and Northern
+# Ireland at 2 days and HS/ZE/KW15-17 at 2-4 days, so those cannot be promised
+# next-working-day at any price. The zone's transit days are added after the
+# mainland hop, through the same calendar, so the extra days skip weekends and
+# bank holidays like every other hop.
 #
 # Working-day maths is delegated to a Business::Calendar (see
 # WorkingDayCalendar); the 2pm cutoff lives here because the calendar is
@@ -16,8 +22,11 @@ class DeliveryEstimate
   # Display format for a delivery date, e.g. "Tuesday, 2 June".
   DISPLAY_FORMAT = "%A, %-d %B"
 
+  # The promise for an order, using the zone it was priced against (Order
+  # #delivery_zone falls back to the shipping postcode for orders predating the
+  # stored column).
   def self.for_order(order)
-    new(order.created_at)
+    new(order.created_at, zone: order.delivery_zone)
   end
 
   # Format a stored/computed delivery date for display.
@@ -25,14 +34,22 @@ class DeliveryEstimate
     date.strftime(DISPLAY_FORMAT)
   end
 
-  def initialize(placed_at, calendar: WorkingDayCalendar.current)
+  # zone is the destination's ShippingZone. An unknown or unrecognised zone
+  # falls back to mainland: the estimate is shown to a customer who has already
+  # been quoted a price, so it must degrade to the existing promise rather than
+  # fail.
+  attr_reader :zone
+
+  def initialize(placed_at, calendar: WorkingDayCalendar.current, zone: :mainland)
     @placed_at = placed_at.in_time_zone
     @calendar = calendar
+    @zone = ShippingZone.deliverable?(zone) ? zone : :mainland
   end
 
-  # The date the order is expected to be delivered.
+  # The date the order is expected to be delivered: the next working day after
+  # dispatch, plus the destination zone's transit days.
   def delivery_date
-    @calendar.add_business_days(dispatch_date, 1)
+    @calendar.add_business_days(dispatch_date, 1 + ShippingZone.transit_days(zone))
   end
 
   # The 2pm cutoff instant the order is racing against: 2pm on the dispatch day.

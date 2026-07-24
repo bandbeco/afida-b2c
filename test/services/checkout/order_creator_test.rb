@@ -56,6 +56,46 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal 24.0, order.total_amount.to_f
   end
 
+  test "stamps the delivery zone from the address Stripe collected" do
+    # The zone is recorded on the order so what the customer was charged and
+    # promised survives any later change to the zone table or rate card.
+    stripe_session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2699,
+      amount_tax: 540,
+      amount_total: 3239,
+      shipping_address: { postal_code: "IV51 9YB" },
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 699)
+      ]
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal "highlands", order.shipping_zone
+    assert_equal :highlands, order.delivery_zone
+  end
+
+  test "a non-mainland order is not promised the mainland delivery date" do
+    stripe_session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2699,
+      amount_tax: 540,
+      amount_total: 3239,
+      shipping_address: { postal_code: "HS1 2DD" },
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 2000),
+        stripe_shipping_line_item(amount_subtotal: 699)
+      ]
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+    mainland_promise = DeliveryEstimate.new(order.created_at).delivery_date
+
+    assert_operator order.estimated_delivery_on, :>, mainland_promise
+  end
+
   test "stores promotion code from Stripe discount breakdown" do
     stripe_session = build_stripe_session(
       customer_email: "buyer@example.com",

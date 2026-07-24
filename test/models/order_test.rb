@@ -661,4 +661,71 @@ class OrderTest < ActiveSupport::TestCase
 
     assert Order.required_shipping_values(shipping).any?(&:blank?)
   end
+
+  # --- delivery zone ---
+  # The zone is frozen at purchase time (like estimated_delivery_on) because it
+  # records what the customer was charged and promised. Orders predating zone
+  # pricing have no stored zone, so they fall back to deriving it from the
+  # postcode rather than misreporting a zone rate they were never charged.
+
+  test "delivery_zone is stamped from the shipping postcode at creation" do
+    order = build_order(shipping_postal_code: "BT1 6EE")
+    order.save!
+
+    assert_equal "northern_ireland", order.shipping_zone
+    assert_equal :northern_ireland, order.delivery_zone
+  end
+
+  test "delivery_zone falls back to the postcode for orders with no stored zone" do
+    order = orders(:one)
+    order.update_columns(shipping_zone: nil, shipping_postal_code: "IV51 9YB")
+
+    assert_equal :highlands, order.delivery_zone
+  end
+
+  test "a stored zone wins over the postcode so history is never rewritten" do
+    # If the zone table later reclassifies a postcode, an already-shipped order
+    # must keep reporting what it was actually charged for.
+    order = orders(:one)
+    order.update_columns(shipping_zone: "mainland", shipping_postal_code: "BT1 6EE")
+
+    assert_equal :mainland, order.delivery_zone
+  end
+
+  test "delivery_zone falls back to mainland when the postcode is unusable" do
+    order = orders(:one)
+    order.update_columns(shipping_zone: nil, shipping_postal_code: "")
+
+    assert_equal :mainland, order.delivery_zone
+  end
+
+  test "the stamped zone drives the promised delivery date" do
+    # A Highlands order must not be stamped with the mainland next-day promise.
+    mainland = build_order(shipping_postal_code: "WD18 9SB")
+    mainland.save!
+    highlands = build_order(shipping_postal_code: "IV51 9YB", stripe_session_id: "sess_zone_highlands")
+    highlands.save!
+
+    assert_operator highlands.estimated_delivery_on, :>, mainland.estimated_delivery_on
+  end
+
+  private
+
+  def build_order(shipping_postal_code:, stripe_session_id: "sess_zone_test")
+    Order.new(
+      email: "zone@example.com",
+      order_number: "ORDER-ZONE-#{stripe_session_id}",
+      stripe_session_id: stripe_session_id,
+      status: "paid",
+      subtotal_amount: 10.0,
+      vat_amount: 2.0,
+      shipping_amount: 6.99,
+      total_amount: 18.99,
+      shipping_name: "Jane",
+      shipping_address_line1: "1 St",
+      shipping_city: "London",
+      shipping_postal_code: shipping_postal_code,
+      shipping_country: "GB"
+    )
+  end
 end

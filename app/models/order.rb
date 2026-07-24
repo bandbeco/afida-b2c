@@ -50,6 +50,9 @@ class Order < ApplicationRecord
   }, prefix: true, validate: { allow_nil: true }
 
   before_validation :generate_order_number, on: :create
+  # Order matters: the delivery promise depends on the zone, so stamp the zone
+  # first.
+  before_create :set_shipping_zone
   before_create :set_estimated_delivery_on
 
   scope :recent, -> { order(created_at: :desc) }
@@ -101,6 +104,19 @@ class Order < ApplicationRecord
   # The promised delivery date formatted for display, e.g. "Tuesday, 2 June".
   def formatted_delivery_date
     DeliveryEstimate.format(estimated_delivery_date)
+  end
+
+  # The delivery zone this order was priced and promised against. Stamped at
+  # creation (see set_shipping_zone); falls back to deriving it from the postcode
+  # for orders predating the column, and to mainland when that can't be parsed.
+  # The stored value wins so a later change to the zone table never rewrites what
+  # an already-shipped order was charged.
+  def delivery_zone
+    stored = shipping_zone.presence&.to_sym
+    return stored if stored && ShippingZone.deliverable?(stored)
+
+    derived = ShippingZone.for(shipping_postal_code)
+    ShippingZone.deliverable?(derived) ? derived : :mainland
   end
 
   def b2b_order?
@@ -186,6 +202,15 @@ class Order < ApplicationRecord
   def set_estimated_delivery_on
     return if estimated_delivery_on.present?
 
-    self.estimated_delivery_on = DeliveryEstimate.new(Time.current).delivery_date
+    self.estimated_delivery_on = DeliveryEstimate.new(Time.current, zone: delivery_zone).delivery_date
+  end
+
+  # Freeze the delivery zone at purchase time, for the same reason as the
+  # delivery date: it records what the customer was actually charged, so a later
+  # change to the zone table or the DPD rate card can't rewrite a shipped order.
+  def set_shipping_zone
+    return if shipping_zone.present?
+
+    self.shipping_zone = ShippingZone.for(shipping_postal_code).to_s
   end
 end

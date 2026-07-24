@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_08_123508) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_24_202019) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -245,6 +245,23 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_123508) do
     t.index ["email"], name: "index_email_subscriptions_on_email", unique: true
   end
 
+  create_table "leads", force: :cascade do |t|
+    t.text "address"
+    t.string "business_name", null: false
+    t.string "business_type"
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.string "local_authority"
+    t.jsonb "payload", default: {}, null: false
+    t.string "postcode"
+    t.string "source", null: false
+    t.string "status", default: "new_lead", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_at"], name: "index_leads_on_created_at"
+    t.index ["source", "external_id"], name: "index_leads_on_source_and_external_id", unique: true
+    t.index ["status"], name: "index_leads_on_status"
+  end
+
   create_table "order_items", force: :cascade do |t|
     t.jsonb "configuration", default: {}
     t.datetime "created_at", null: false
@@ -283,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_123508) do
     t.string "shipping_country", null: false
     t.string "shipping_name", null: false
     t.string "shipping_postal_code", null: false
+    t.string "shipping_zone"
     t.string "status", default: "pending", null: false
     t.string "stripe_session_id", null: false
     t.decimal "subtotal_amount", precision: 10, scale: 2, null: false
@@ -449,6 +467,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_123508) do
     t.bigint "user_id", null: false
     t.index ["created_at"], name: "index_sessions_on_created_at"
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "sightings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.string "source", null: false
+    t.datetime "updated_at", null: false
+    t.index ["source", "external_id"], name: "index_sightings_on_source_and_external_id", unique: true
   end
 
   create_table "site_settings", force: :cascade do |t|
