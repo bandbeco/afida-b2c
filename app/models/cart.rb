@@ -47,6 +47,31 @@ class Cart < ApplicationRecord
     @cart_totals = nil
   end
 
+  # The delivery postcode the customer entered on the cart page, so the preview
+  # can price the real destination instead of assuming mainland. Like
+  # discount_rate it is injected per request from the session rather than stored:
+  # the cart is a preview, and the order records the address Stripe collects.
+  # Assigning it clears the memoized totals so shipping, VAT and the total all
+  # move together. It survives reload for the same reason discount_rate does (the
+  # sample-limit validator reloads the cart mid-request).
+  attr_reader :delivery_postcode
+
+  def delivery_postcode=(postcode)
+    @delivery_postcode = postcode
+    @delivery_zone = nil
+    @cart_totals = nil
+  end
+
+  # The destination zone for the entered postcode. Falls back to mainland when no
+  # postcode has been entered or it cannot be parsed: the cart is a preview and
+  # the field is optional, so an unrecognised postcode must not block the customer.
+  def delivery_zone
+    @delivery_zone ||= begin
+      resolved = ShippingZone.for(delivery_postcode)
+      ShippingZone.deliverable?(resolved) ? resolved : :mainland
+    end
+  end
+
   # Total quantity of all items in cart (sum of quantities, not distinct items)
   # e.g., 4 of the same SKU = 4, not 1
   # Memoized to prevent repeated database calls within same request
@@ -79,8 +104,9 @@ class Cart < ApplicationRecord
   end
 
   # Shipping the cart will be charged at checkout: 0 at/above the free-shipping
-  # threshold, STANDARD_COST below it, and nil for an empty cart (nothing to
-  # ship). Delegates to OrderTotals so this mirrors SessionBuilder's rule exactly.
+  # threshold on mainland, the destination zone's cost otherwise, and nil for an
+  # empty cart (nothing to ship). Delegates to OrderTotals so this mirrors
+  # SessionBuilder's rule exactly.
   def shipping_amount
     cart_totals.shipping
   end
@@ -211,7 +237,8 @@ class Cart < ApplicationRecord
     # the memoized result.
     @cart_totals ||= begin
       stance = cart_items.empty? ? :deferred : :charged
-      OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: applicable_discount_rate)
+      OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: applicable_discount_rate,
+                                       zone: delivery_zone)
     end
   end
 

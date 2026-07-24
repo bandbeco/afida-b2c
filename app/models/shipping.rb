@@ -43,30 +43,47 @@ class Shipping
     ActiveSupport::NumberHelper.number_to_currency(FREE_SHIPPING_THRESHOLD, unit: "£", precision: 0)
   end
 
-  # A Stripe Checkout line item for the standard shipping charge, carrying the UK
-  # VAT tax rate. Shipping is a line item (not a shipping_option) because manual
-  # tax rates only tax line items, so this is what makes Stripe apply VAT to the
+  # A Stripe Checkout line item for the shipping charge, carrying the UK VAT tax
+  # rate. Shipping is a line item (not a shipping_option) because manual tax
+  # rates only tax line items, so this is what makes Stripe apply VAT to the
   # delivery charge. The product metadata lets SessionAmounts find this line when
   # splitting the persisted order amounts back out.
   #
   # The free-shipping / samples decision lives with the caller (SessionBuilder),
-  # which knows the cart; this builder always charges STANDARD_COST.
-  def self.shipping_line_item(tax_rate_id:)
+  # which knows the cart; this builder always charges.
+  #
+  # zone is the ShippingZone the order is going to. It adds that zone's surcharge
+  # and names its real transit time, so a non-mainland order is neither priced
+  # nor promised as if it were local. It defaults to mainland for callers that
+  # have not captured a destination postcode.
+  def self.shipping_line_item(tax_rate_id:, zone: :mainland)
     {
       quantity: 1,
       price_data: {
         currency: CURRENCY,
-        unit_amount: STANDARD_COST,
+        unit_amount: cost_for_zone(zone),
         tax_behavior: "exclusive",
         product_data: {
           # Line items can't carry a delivery_estimate the way the old
-          # shipping_options did, so the next-working-day promise rides in the
-          # name to keep it visible in the Stripe Checkout modal.
-          name: "Shipping (next working day)",
+          # shipping_options did, so the delivery promise rides in the name to
+          # keep it visible in the Stripe Checkout modal.
+          name: "Shipping (#{ShippingZone.transit_label(zone)})",
           metadata: LINE_ITEM_FLAG
         }
       },
       tax_rates: [ tax_rate_id ]
     }
+  end
+
+  # The delivery charge to a zone, in pence: the standard cost plus the zone's
+  # surcharge. Rounded rather than truncated so a surcharge like 12.50 can never
+  # lose a penny to float representation.
+  def self.cost_for_zone(zone)
+    STANDARD_COST + (ShippingZone.surcharge(zone) * 100).round.to_i
+  end
+
+  # The delivery charge to a zone in pounds, for display and for OrderTotals.
+  def self.cost_for_zone_in_pounds(zone)
+    BigDecimal(cost_for_zone(zone).to_s) / 100
   end
 end

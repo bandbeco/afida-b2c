@@ -176,6 +176,61 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_not_equal user_cart.id, session[:cart_id]
   end
 
+  # POST /cart/delivery_postcode — the cart-page "calculate delivery" field.
+  # The postcode is held in the session so every cart surface prices the same
+  # destination, and so the checkout POST already knows where the order is going
+  # (Stripe only collects the address on the screen after the price is fixed).
+
+  test "delivery_postcode stores a valid postcode in the session" do
+    get cart_url
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+
+    assert_redirected_to cart_path
+    assert_equal "BT1 6EE", session[:delivery_postcode]
+  end
+
+  test "delivery_postcode prices the cart for the entered destination" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+    follow_redirect!
+
+    assert_response :success
+    # The surcharged rate is shown on the cart, not the mainland £6.99, so the
+    # customer sees the real cost before reaching Stripe.
+    assert_select "#shipping", text: /#{Regexp.escape(ActiveSupport::NumberHelper.number_to_currency(Shipping.cost_for_zone_in_pounds(:northern_ireland), unit: "£"))}/
+    assert_select "[data-test=delivery-zone-note]", text: /Northern Ireland/
+  end
+
+  test "delivery_postcode rejects an unparseable postcode without storing it" do
+    get cart_url
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "not a postcode" }
+
+    assert_redirected_to cart_path
+    assert_nil session[:delivery_postcode]
+    assert flash[:alert].present?, "expected an explanation the postcode was not recognised"
+  end
+
+  test "delivery_postcode clears a stored postcode when submitted blank" do
+    get cart_url
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "" }
+
+    assert_nil session[:delivery_postcode]
+  end
+
+  test "delivery_postcode accepts a messily formatted postcode" do
+    get cart_url
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "  iv51 9yb " }
+
+    assert_equal :highlands, ShippingZone.for(session[:delivery_postcode])
+  end
+
   private
 
   def sign_in_as(user)

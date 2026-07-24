@@ -71,6 +71,16 @@ class ShippingZone
   # which is what the site copy now says.
   FREE_SHIPPING_ZONES = %i[mainland].freeze
 
+  # Customer-facing transit wording, shown in the cart and carried in the Stripe
+  # line-item name. Derived from TRANSIT_DAYS rather than written out per zone so
+  # a zone can never be labelled next-day while its transit time says otherwise.
+  # remote_islands is a range because DPD quotes 2-4 days for HS/ZE/KW15-17.
+  TRANSIT_LABELS = {
+    0 => "next working day",
+    1 => "2 working days",
+    3 => "2-4 working days"
+  }.freeze
+
   class << self
     # The zone for a postcode, or :unknown when the postcode cannot be parsed.
     #
@@ -98,6 +108,12 @@ class ShippingZone
 
     def transit_days(zone)
       TRANSIT_DAYS.fetch(zone, 0)
+    end
+
+    # How long delivery takes to this zone, in customer-facing words.
+    def transit_label(zone)
+      days = transit_days(zone)
+      TRANSIT_LABELS.fetch(days) { "#{days + 1} working days" }
     end
 
     def surcharge(zone)

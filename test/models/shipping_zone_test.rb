@@ -123,4 +123,42 @@ class ShippingZoneTest < ActiveSupport::TestCase
       assert_not_nil ShippingZone.surcharge(zone), "expected #{zone} to declare a surcharge"
     end
   end
+
+  # The customer-facing transit label. It rides in the Stripe line-item name and
+  # the cart, so a zone we cannot reach next day never reads "next working day".
+
+  test "mainland keeps the next-working-day label" do
+    assert_equal "next working day", ShippingZone.transit_label(:mainland)
+  end
+
+  test "zones we cannot reach next day are labelled with their real transit time" do
+    assert_equal "2 working days", ShippingZone.transit_label(:highlands)
+    assert_equal "2 working days", ShippingZone.transit_label(:northern_ireland)
+    assert_equal "2-4 working days", ShippingZone.transit_label(:remote_islands)
+  end
+
+  test "no zone label promises next working day unless its transit is zero" do
+    ShippingZone::ZONES.each do |zone|
+      next if ShippingZone.transit_days(zone).zero?
+
+      assert_not_equal "next working day", ShippingZone.transit_label(zone),
+                       "#{zone} takes #{ShippingZone.transit_days(zone)} extra days but is sold as next-day"
+    end
+  end
+
+  # Free delivery is a mainland promise. Every other zone pays, which is exactly
+  # the leak this class exists to close (two real orders shipped free to
+  # Northern Ireland and Skye).
+
+  test "free shipping applies to mainland only" do
+    assert ShippingZone.free_shipping?(:mainland)
+
+    (ShippingZone::ZONES - [ :mainland ]).each do |zone|
+      assert_not ShippingZone.free_shipping?(zone), "expected #{zone} not to ship free"
+    end
+  end
+
+  test "an unknown zone never ships free" do
+    assert_not ShippingZone.free_shipping?(:unknown)
+  end
 end

@@ -29,6 +29,29 @@ class CartsController < ApplicationController
     redirect_to cart_path
   end
 
+  # POST /cart/delivery_postcode
+  # The cart-page "calculate delivery" field. Stores the postcode in the session
+  # so every cart surface prices the same destination and the checkout POST knows
+  # where the order is going: line-item prices are fixed when the Stripe session
+  # is built, one screen before Stripe collects the address.
+  #
+  # A blank submission clears it (back to mainland pricing). An unrecognised
+  # postcode is refused rather than stored, so we never price a destination we
+  # could not identify.
+  def delivery_postcode
+    postcode = params[:delivery_postcode].to_s.strip
+
+    if postcode.blank?
+      session.delete(:delivery_postcode)
+    elsif ShippingZone.deliverable?(ShippingZone.for(postcode))
+      session[:delivery_postcode] = postcode
+    else
+      flash[:alert] = "We didn't recognise that postcode. Please check it and try again."
+    end
+
+    redirect_to cart_path
+  end
+
   def destroy
     @cart.destroy
     redirect_to root_path, notice: "Cart was successfully destroyed."

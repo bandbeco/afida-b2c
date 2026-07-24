@@ -50,4 +50,23 @@ class ApplicationHelperTest < ActionView::TestCase
   test "non_mainland_delivery_note points non-mainland customers somewhere" do
     assert_match(/highland|island|northern ireland/i, non_mainland_delivery_note)
   end
+
+  # ==========================================================================
+  # delivery_zone_name - the customer-facing name for a ShippingZone
+  # ==========================================================================
+
+  test "delivery_zone_name names every deliverable zone in plain words" do
+    ShippingZone::ZONES.each do |zone|
+      name = delivery_zone_name(zone)
+
+      assert name.present?, "expected a name for #{zone}"
+      assert_no_match(/_/, name, "#{zone} is shown to customers, so it can't read like a symbol")
+    end
+  end
+
+  test "delivery_zone_name uses the customer's words, not ours" do
+    assert_equal "mainland UK", delivery_zone_name(:mainland)
+    assert_equal "Northern Ireland", delivery_zone_name(:northern_ireland)
+    assert_equal "the Scottish Highlands", delivery_zone_name(:highlands)
+  end
 end

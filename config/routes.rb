@@ -153,6 +153,7 @@ Rails.application.routes.draw do
 
   resource :cart, only: [ :show, :destroy ] do
     get :resume # GET /cart/resume?token=... — restore an abandoned cart from a recovery link
+    post :delivery_postcode # POST /cart/delivery_postcode — price delivery for a destination
     resources :cart_items, only: [ :create, :update, :destroy ], path_names: { edit: "" }
   end
 

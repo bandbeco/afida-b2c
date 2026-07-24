@@ -282,6 +282,125 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_nil captured_params[:customer_email]
   end
 
+  # ==========================================================================
+  # Delivery zone. The customer's postcode is captured on the cart page, before
+  # the session is built, because line-item prices are fixed here and Stripe
+  # only collects the address on the next screen. These assertions must mirror
+  # OrderTotals; the displayed total and the charged total are the pair that
+  # has drifted before.
+  # ==========================================================================
+
+  test "charges the zone surcharge for a non-mainland postcode" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "BT1 6EE").create
+
+    assert_equal Shipping.cost_for_zone(:northern_ireland), shipping_line_item(captured_params)[:price_data][:unit_amount]
+  end
+
+  test "still charges shipping above the free-shipping threshold for a non-mainland postcode" do
+    # The live bug: a £145 order to BT1 6EE and a £449 order to Skye both shipped
+    # free, because the threshold took no account of the destination.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 450.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "IV51 9YB").create
+
+    shipping_line = shipping_line_item(captured_params)
+    assert shipping_line, "expected an over-threshold Highlands order to still pay shipping"
+    assert_equal Shipping.cost_for_zone(:highlands), shipping_line[:price_data][:unit_amount]
+  end
+
+  test "still ships free above the threshold for a mainland postcode" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 450.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "WD18 9SB").create
+
+    assert_nil shipping_line_item(captured_params), "mainland free shipping must be unchanged"
+  end
+
+  test "prices as mainland when no delivery postcode was captured" do
+    # Guests who skip the cart-page postcode field keep today's behaviour rather
+    # than being blocked; Stripe still collects the real address afterwards.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    assert_equal Shipping::STANDARD_COST, shipping_line_item(captured_params)[:price_data][:unit_amount]
+  end
+
+  test "prices as mainland when the delivery postcode cannot be parsed" do
+    # An unparseable postcode is not a pricing signal. It must not raise on a
+    # paying customer, and Stripe still collects the real address next.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "not a postcode").create
+
+    assert_equal Shipping::STANDARD_COST, shipping_line_item(captured_params)[:price_data][:unit_amount]
+  end
+
+  test "names the zone's transit time on the shipping line so Stripe shows the real promise" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "HS1 2DD").create
+
+    assert_equal "Shipping (2-4 working days)",
+                 shipping_line_item(captured_params).dig(:price_data, :product_data, :name)
+  end
+
+  test "the charged shipping matches what OrderTotals displays for the same zone" do
+    # These two rules mirror each other by hand, so pin them together: a
+    # customer must never be shown one delivery price and charged another.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 450.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "BT1 6EE").create
+
+    displayed = OrderTotals.for(@cart.subtotal_amount, shipping: :charged, zone: :northern_ireland).shipping
+    charged_pence = shipping_line_item(captured_params)[:price_data][:unit_amount]
+    assert_equal displayed, BigDecimal(charged_pence.to_s) / 100
+  end
+
   private
 
   # The first non-shipping line item. The shipping line is now prepended, so
@@ -292,16 +411,23 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     end
   end
 
+  def shipping_line_item(captured_params)
+    captured_params[:line_items].find do |li|
+      li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
+    end
+  end
+
   def build_session(discount_code: nil)
     build_session_builder(discount_code: discount_code).create
   end
 
-  def build_session_builder(user: nil, address_id: nil, discount_code: nil)
+  def build_session_builder(user: nil, address_id: nil, discount_code: nil, delivery_postcode: nil)
     Checkout::SessionBuilder.new(
       cart: @cart,
       user: user,
       address_id: address_id,
       discount_code: discount_code,
+      delivery_postcode: delivery_postcode,
       datafast_visitor_id: nil,
       datafast_session_id: nil,
       success_url: @success_url,

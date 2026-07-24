@@ -50,6 +50,7 @@ class CheckoutsController < ApplicationController
         user: Current.user,
         address_id: params[:address_id],
         discount_code: session[:discount_code],
+        delivery_postcode: delivery_postcode_for(params[:address_id]),
         datafast_visitor_id: cookies[:datafast_visitor_id],
         datafast_session_id: cookies[:datafast_session_id],
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
@@ -205,5 +206,21 @@ class CheckoutsController < ApplicationController
 
   def cancel
     redirect_to cart_path, notice: "Checkout cancelled."
+  end
+
+  private
+
+  # The postcode used to price delivery. A saved address the customer selected is
+  # the better signal (it is the address the order will actually ship to), so it
+  # wins over the typed cart-page field; otherwise fall back to what they entered
+  # to calculate delivery. Nil means mainland pricing, as today.
+  def delivery_postcode_for(address_id)
+    selected_address_postcode(address_id) || session[:delivery_postcode]
+  end
+
+  def selected_address_postcode(address_id)
+    return nil if address_id.blank? || Current.user.blank?
+
+    Current.user.addresses.find_by(id: address_id)&.postcode
   end
 end

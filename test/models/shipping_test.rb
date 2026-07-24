@@ -66,4 +66,56 @@ class ShippingTest < ActiveSupport::TestCase
 
     assert_equal "Shipping (next working day)", item[:price_data][:product_data][:name]
   end
+
+  # ==========================================================================
+  # Zone surcharges. The delivery cost is the standard cost plus the zone's
+  # surcharge, so a non-mainland order stops being priced as if it were local.
+  # ==========================================================================
+
+  test "shipping_line_item with no zone charges the standard cost" do
+    # Callers that don't know the destination (no postcode captured) keep the
+    # existing behaviour rather than guessing a surcharge.
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
+
+    assert_equal Shipping::STANDARD_COST, item[:price_data][:unit_amount]
+  end
+
+  test "shipping_line_item with the mainland zone charges the standard cost" do
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :mainland)
+
+    assert_equal Shipping::STANDARD_COST, item[:price_data][:unit_amount]
+  end
+
+  test "shipping_line_item adds the zone surcharge for a surcharged zone" do
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :highlands)
+
+    expected = Shipping::STANDARD_COST + (ShippingZone.surcharge(:highlands) * 100).to_i
+    assert_equal expected, item[:price_data][:unit_amount]
+    assert_operator item[:price_data][:unit_amount], :>, Shipping::STANDARD_COST
+  end
+
+  test "shipping_line_item surcharges remote islands more than the highlands" do
+    highlands = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :highlands)
+    islands = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :remote_islands)
+
+    assert_operator islands[:price_data][:unit_amount], :>, highlands[:price_data][:unit_amount]
+  end
+
+  test "shipping_line_item names the zone's real transit time, not next working day" do
+    # The blanket "next working day" name was a promise we cannot keep to the
+    # islands, so the name follows the zone's transit time.
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :remote_islands)
+
+    assert_equal "Shipping (2-4 working days)", item[:price_data][:product_data][:name]
+  end
+
+  test "shipping_line_item keeps the VAT rate and read-back flag for a surcharged zone" do
+    # The surcharge must not cost us the two properties the line item exists for:
+    # VAT on delivery, and identifiability in SessionAmounts.
+    item = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :northern_ireland)
+
+    assert_equal "exclusive", item[:price_data][:tax_behavior]
+    assert_equal [ "txr_123" ], item[:tax_rates]
+    assert_equal "true", item[:price_data][:product_data][:metadata]["shipping_line"]
+  end
 end

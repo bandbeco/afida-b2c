@@ -192,12 +192,74 @@ class OrderTotalsTest < ActiveSupport::TestCase
   end
 
   # ==========================================================================
+  # Delivery zone. The free-shipping threshold is a mainland promise; other
+  # zones pay the standard cost plus their surcharge however large the order.
+  # These figures must mirror Checkout::SessionBuilder's shipping line item,
+  # which is the pair that has drifted before.
+  # ==========================================================================
+
+  test "zone defaults to mainland so existing callers are unchanged" do
+    default = OrderTotals.for(BigDecimal("96.00"), shipping: :charged)
+    explicit = OrderTotals.for(BigDecimal("96.00"), shipping: :charged, zone: :mainland)
+
+    assert_equal default.shipping, explicit.shipping
+    assert_equal default.total, explicit.total
+  end
+
+  test "a surcharged zone below the threshold pays the standard cost plus its surcharge" do
+    totals = OrderTotals.for(BigDecimal("96.00"), shipping: :charged, zone: :highlands)
+
+    assert_equal STANDARD_COST + ShippingZone.surcharge(:highlands), totals.shipping
+  end
+
+  test "a surcharged zone above the threshold still pays, unlike mainland" do
+    # The live bug: two orders over £100 shipped free to Northern Ireland and
+    # Skye because the threshold took no account of the destination.
+    mainland = OrderTotals.for(BigDecimal("450.00"), shipping: :charged, zone: :mainland)
+    highlands = OrderTotals.for(BigDecimal("450.00"), shipping: :charged, zone: :highlands)
+
+    assert_equal BigDecimal("0"), mainland.shipping
+    assert_equal STANDARD_COST + ShippingZone.surcharge(:highlands), highlands.shipping
+    assert_operator highlands.total, :>, mainland.total
+  end
+
+  test "zone shipping is taxed like any other shipping" do
+    # VAT applies to the delivery charge, surcharge included.
+    totals = OrderTotals.for(BigDecimal("450.00"), shipping: :charged, zone: :northern_ireland)
+
+    expected_vat = (BigDecimal("450.00") + totals.shipping) * BigDecimal(VAT_RATE.to_s)
+    assert_equal expected_vat, totals.vat
+  end
+
+  test "zone is ignored when shipping is deferred" do
+    # The cart shows "calculated at checkout" regardless of destination.
+    totals = OrderTotals.for(BigDecimal("96.00"), shipping: :deferred, zone: :remote_islands)
+
+    assert_nil totals.shipping
+  end
+
+  test "remote islands cost more than the highlands for the same order" do
+    highlands = OrderTotals.for(BigDecimal("50.00"), shipping: :charged, zone: :highlands)
+    islands = OrderTotals.for(BigDecimal("50.00"), shipping: :charged, zone: :remote_islands)
+
+    assert_operator islands.shipping, :>, highlands.shipping
+  end
+
+  # ==========================================================================
   # Guard rails
   # ==========================================================================
 
   test "an unknown shipping stance is rejected" do
     assert_raises(ArgumentError) do
       OrderTotals.for(BigDecimal("10.00"), shipping: :whenever)
+    end
+  end
+
+  test "an undeliverable zone is rejected rather than priced as mainland" do
+    # Guessing mainland for an address we failed to parse would reintroduce the
+    # exact underpricing this work removes.
+    assert_raises(ArgumentError) do
+      OrderTotals.for(BigDecimal("10.00"), shipping: :charged, zone: :unknown)
     end
   end
 end

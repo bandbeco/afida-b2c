@@ -6,11 +6,12 @@ module Checkout
       end
     end
 
-    def initialize(cart:, user:, address_id:, discount_code:, datafast_visitor_id:, datafast_session_id:, success_url:, cancel_url:)
+    def initialize(cart:, user:, address_id:, discount_code:, datafast_visitor_id:, datafast_session_id:, success_url:, cancel_url:, delivery_postcode: nil)
       @cart = cart
       @user = user
       @address_id = address_id
       @discount_code = discount_code
+      @delivery_postcode = delivery_postcode
       @datafast_visitor_id = datafast_visitor_id
       @datafast_session_id = datafast_session_id
       @success_url = success_url
@@ -37,8 +38,8 @@ module Checkout
 
     private
 
-    attr_reader :cart, :user, :address_id, :discount_code, :datafast_visitor_id, :datafast_session_id, :success_url,
-                :cancel_url, :invalid_discount_code, :selected_address_id
+    attr_reader :cart, :user, :address_id, :discount_code, :delivery_postcode, :datafast_visitor_id,
+                :datafast_session_id, :success_url, :cancel_url, :invalid_discount_code, :selected_address_id
 
     def build_session_params
       {
@@ -134,16 +135,38 @@ module Checkout
     end
 
     # The taxed shipping line item, or nil when the order ships free. Keyed off the
-    # subtotal vs the free-shipping threshold, the same rule OrderTotals uses for
-    # the displayed totals. Samples-only carts have a £0 subtotal (samples are
-    # free), which is below the threshold, so they correctly still pay shipping.
+    # subtotal vs the free-shipping threshold and the destination zone, the same
+    # rule OrderTotals uses for the displayed totals - keep the two in step.
+    # Samples-only carts have a £0 subtotal (samples are free), which is below the
+    # threshold, so they correctly still pay shipping.
+    #
+    # Free delivery is a mainland promise, so a large order to a surcharged zone
+    # still gets a shipping line. This is the fix for orders that shipped free to
+    # Northern Ireland and the Highlands.
     def shipping_line_item
       return @shipping_line_item if defined?(@shipping_line_item)
 
+      free = ShippingZone.free_shipping?(zone) && cart.subtotal_amount >= Shipping::FREE_SHIPPING_THRESHOLD
+
       @shipping_line_item =
-        if cart.subtotal_amount < Shipping::FREE_SHIPPING_THRESHOLD
-          Shipping.shipping_line_item(tax_rate_id: tax_rate.id)
+        unless free
+          Shipping.shipping_line_item(tax_rate_id: tax_rate.id, zone: zone)
         end
+    end
+
+    # The destination zone, from the postcode captured on the cart page. Stripe
+    # only collects the real address on the next screen, but line-item prices are
+    # fixed here, so the price has to be based on what the customer told us.
+    #
+    # An absent or unparseable postcode falls back to mainland. That under-prices
+    # a non-mainland order, but the alternative is blocking a paying customer over
+    # a field they were never required to fill in. The order still records the
+    # real address Stripe collects, so a mismatch is visible after the fact.
+    def zone
+      @zone ||= begin
+        resolved = ShippingZone.for(delivery_postcode)
+        ShippingZone.deliverable?(resolved) ? resolved : :mainland
+      end
     end
 
     def apply_discount(session_params)

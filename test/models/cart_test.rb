@@ -558,4 +558,80 @@ class CartTest < ActiveSupport::TestCase
     assert url.start_with?("http"), "expected an absolute url, got #{url.inspect}"
     assert_includes url, "/cart/resume"
   end
+
+  # --- delivery postcode (the cart-page "calculate delivery" field) ---
+  # The cart page asks for a postcode so the customer sees a real delivery price
+  # before checkout, rather than discovering a surcharge at the payment screen.
+  # Like discount_rate this is per-request state injected by the controller, not
+  # a column: it belongs to the browsing session, and the order still records the
+  # address Stripe collects.
+
+  test "delivery_zone is mainland until a postcode is set" do
+    assert_equal :mainland, @cart.delivery_zone
+  end
+
+  test "setting a non-mainland delivery postcode raises the shipping charge" do
+    @cart.delivery_postcode = "BT1 6EE"
+
+    assert_equal :northern_ireland, @cart.delivery_zone
+    assert_equal Shipping.cost_for_zone_in_pounds(:northern_ireland), @cart.shipping_amount
+  end
+
+  test "a large order to a surcharged zone still pays shipping" do
+    # The live bug: a £449 order to Skye shipped free.
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: 450.00)
+    cart.delivery_postcode = "IV51 9YB"
+
+    assert_operator cart.subtotal_amount, :>=, Shipping::FREE_SHIPPING_THRESHOLD
+    assert_equal Shipping.cost_for_zone_in_pounds(:highlands), cart.shipping_amount
+  end
+
+  test "a large mainland order still ships free" do
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: 450.00)
+    cart.delivery_postcode = "WD18 9SB"
+
+    assert_equal 0, cart.shipping_amount
+  end
+
+  test "assigning a delivery postcode clears memoized totals" do
+    # Mirrors discount_rate=; otherwise the VAT and Total lines would keep their
+    # pre-postcode figures while the shipping line changed underneath them.
+    before = @cart.total_amount
+    @cart.delivery_postcode = "HS1 2DD"
+
+    assert_operator @cart.total_amount, :>, before
+  end
+
+  test "an unparseable delivery postcode falls back to mainland" do
+    @cart.delivery_postcode = "not a postcode"
+
+    assert_equal :mainland, @cart.delivery_zone
+  end
+
+  test "a blank delivery postcode falls back to mainland" do
+    @cart.delivery_postcode = "   "
+
+    assert_equal :mainland, @cart.delivery_zone
+  end
+
+  test "vat is charged on the surcharged shipping too" do
+    @cart.delivery_postcode = "BT1 6EE"
+
+    expected = (@cart.subtotal_amount + @cart.shipping_amount) * BigDecimal(VAT_RATE.to_s)
+    assert_equal expected, @cart.vat_amount
+  end
+
+  test "reload preserves the injected delivery_postcode" do
+    # Same reason as discount_rate: the sample-limit validator reloads the cart
+    # mid-request, which must not silently reprice the order back to mainland.
+    @cart.delivery_postcode = "BT1 6EE"
+    @cart.total_amount
+
+    @cart.reload
+
+    assert_equal :northern_ireland, @cart.delivery_zone
+    assert_equal Shipping.cost_for_zone_in_pounds(:northern_ireland), @cart.shipping_amount
+  end
 end

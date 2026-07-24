@@ -16,8 +16,13 @@
 #               VAT is on the subtotal alone and total = subtotal + vat. The cart
 #               shows "calculated at checkout".
 #   :charged  — shipping fixed at order time (snapshot). Free at/above the
-#               free-shipping threshold, otherwise the standard cost; VAT is charged
-#               on subtotal + shipping and total includes both.
+#               free-shipping threshold in a free-shipping zone, otherwise the
+#               zone's cost; VAT is charged on subtotal + shipping and total
+#               includes both.
+#
+# The zone: keyword is the destination's ShippingZone (default :mainland). Free
+# delivery is a mainland promise, so a non-mainland order pays the standard cost
+# plus its surcharge however large the subtotal.
 #
 # Components are full-precision BigDecimals so display callers can round once, at the
 # view, via number_to_currency (unchanged behaviour). Callers that must persist money
@@ -61,18 +66,23 @@ class OrderTotals
   # restriction, so it discounts the whole order: the subtotal AND any charged
   # (taxed) shipping. It lowers the VAT base and the total, but never the
   # free-shipping decision (which keys off the gross subtotal, as Stripe does).
-  def self.for(subtotal, shipping:, discount_rate: BigDecimal("0"))
-    new(subtotal, shipping_stance: shipping, discount_rate: discount_rate).result
+  def self.for(subtotal, shipping:, discount_rate: BigDecimal("0"), zone: :mainland)
+    new(subtotal, shipping_stance: shipping, discount_rate: discount_rate, zone: zone).result
   end
 
-  def initialize(subtotal, shipping_stance:, discount_rate: BigDecimal("0"))
+  def initialize(subtotal, shipping_stance:, discount_rate: BigDecimal("0"), zone: :mainland)
     unless SHIPPING_STANCES.include?(shipping_stance)
       raise ArgumentError, "unknown shipping stance #{shipping_stance.inspect} (expected one of #{SHIPPING_STANCES.inspect})"
+    end
+
+    unless ShippingZone.deliverable?(zone)
+      raise ArgumentError, "undeliverable shipping zone #{zone.inspect}"
     end
 
     @subtotal = subtotal
     @shipping_stance = shipping_stance
     @discount_rate = BigDecimal(discount_rate.to_s)
+    @zone = zone
   end
 
   def result
@@ -113,16 +123,23 @@ class OrderTotals
     (gross(shipping_amount) - discount_amount) * BigDecimal(VAT_RATE.to_s)
   end
 
-  # nil when deferred (no shipping line yet); 0 or the standard cost when charged.
+  # nil when deferred (no shipping line yet); 0 or the zone's cost when charged.
   # Keyed off the gross subtotal so a discount can't tip an order back below the
   # free-shipping threshold, matching SessionBuilder (which checks cart.subtotal_amount).
+  #
+  # Free delivery is a mainland promise: only zones in
+  # ShippingZone::FREE_SHIPPING_ZONES can reach zero, so a large order to the
+  # Highlands or Northern Ireland still pays the surcharged rate. This mirrors
+  # SessionBuilder#shipping_line_item; the two rules have drifted before, so any
+  # change here needs the same change there.
   def shipping
     return nil if @shipping_stance == :deferred
+    return BigDecimal("0") if free_shipping?
 
-    @subtotal >= Shipping::FREE_SHIPPING_THRESHOLD ? BigDecimal("0") : standard_cost
+    Shipping.cost_for_zone_in_pounds(@zone)
   end
 
-  def standard_cost
-    BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+  def free_shipping?
+    ShippingZone.free_shipping?(@zone) && @subtotal >= Shipping::FREE_SHIPPING_THRESHOLD
   end
 end

@@ -1,0 +1,32 @@
+<%# The cart-page "calculate delivery" field. Delivery to Northern Ireland, the
+    Scottish Highlands and the offshore islands costs more and takes longer, so
+    the customer gets to see both here rather than meeting a surcharge at the
+    payment screen. The field is optional: leaving it blank prices mainland, and
+    Stripe still collects the real address at checkout.
+
+    Pass the cart as `cart`. %>
+<div class="mt-4 pt-4 border-t border-gray-200">
+  <%= form_with url: delivery_postcode_cart_path, method: :post, class: "space-y-2" do |f| %>
+    <%= f.label :delivery_postcode, "Delivery postcode", class: "block text-sm text-gray-700" %>
+
+    <div class="flex gap-2">
+      <%= f.text_field :delivery_postcode,
+                       value: cart.delivery_postcode,
+                       placeholder: "e.g. WD18 9SB",
+                       autocomplete: "postal-code",
+                       class: "input input-bordered input-sm flex-1 min-w-0" %>
+      <%= f.submit "Calculate", class: "btn btn-sm btn-outline" %>
+    </div>
+
+    <% if cart.delivery_postcode.present? %>
+      <p class="text-xs text-gray-600" data-test="delivery-zone-note">
+        Delivering to <%= delivery_zone_name(cart.delivery_zone) %>,
+        <%= ShippingZone.transit_label(cart.delivery_zone) %>.
+      </p>
+    <% else %>
+      <p class="text-xs text-gray-500">
+        <%= non_mainland_delivery_note %>
+      </p>
+    <% end %>
+  <% end %>
+</div>

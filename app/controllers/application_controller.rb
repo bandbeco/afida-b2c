@@ -57,6 +57,7 @@ class ApplicationController < ActionController::Base
     end
 
     apply_session_discount_to_cart
+    apply_session_delivery_postcode_to_cart
   end
 
   # The welcome coupon code is held in the session; inject its rate onto the cart so
@@ -66,5 +67,15 @@ class ApplicationController < ActionController::Base
     return unless Current.cart && session[:discount_code].present?
 
     Current.cart.discount_rate = CartsHelper::WELCOME_DISCOUNT_PERCENTAGE / 100.0
+  end
+
+  # The delivery postcode the customer entered on the cart page lives in the
+  # session, so every cart surface (page, drawer, Turbo Stream updates) prices the
+  # same destination. Without it the cart would quote mainland shipping and the
+  # customer would meet the surcharge for the first time at the payment screen.
+  def apply_session_delivery_postcode_to_cart
+    return unless Current.cart && session[:delivery_postcode].present?
+
+    Current.cart.delivery_postcode = session[:delivery_postcode]
   end
 end

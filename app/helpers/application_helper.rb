@@ -64,4 +64,19 @@ module ApplicationHelper
     "Northern Ireland, the Scottish Highlands and offshore islands are charged " \
       "at a separate rate and may take longer to arrive."
   end
+
+  # A ShippingZone in the customer's words, for the cart's delivery calculator.
+  # The zone symbols are carrier vocabulary; these are what a customer would
+  # recognise as the place they live.
+  DELIVERY_ZONE_NAMES = {
+    mainland: "mainland UK",
+    highlands: "the Scottish Highlands",
+    remote_islands: "the Scottish islands",
+    northern_ireland: "Northern Ireland",
+    offshore_islands: "the Isle of Wight"
+  }.freeze
+
+  def delivery_zone_name(zone)
+    DELIVERY_ZONE_NAMES.fetch(zone, "your area")
+  end
 end
