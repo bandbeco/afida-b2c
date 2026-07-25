@@ -46,7 +46,11 @@ module Checkout
         shipping_address_line2: shipping_address[:line2],
         shipping_city: shipping_address[:city],
         shipping_postal_code: shipping_address[:postal_code],
-        shipping_country: shipping_address[:country]
+        shipping_country: shipping_address[:country],
+        # The zone the order was priced against, not the zone of the collected
+        # address: the order records what the customer was charged. Nil falls
+        # back to deriving from the postcode (see Order#delivery_zone).
+        shipping_zone: Checkout::SessionDetails.shipping_zone(stripe_session)
       }
 
       attributes[:branded_order_status] = "design_pending" if cart_items.any?(&:configured?)

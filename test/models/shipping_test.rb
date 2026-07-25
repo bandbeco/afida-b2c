@@ -106,7 +106,7 @@ class ShippingTest < ActiveSupport::TestCase
     # islands, so the name follows the zone's transit time.
     item = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :remote_islands)
 
-    assert_equal "Shipping (2-4 working days)", item[:price_data][:product_data][:name]
+    assert_equal "Shipping (4 working days)", item[:price_data][:product_data][:name]
   end
 
   test "shipping_line_item keeps the VAT rate and read-back flag for a surcharged zone" do

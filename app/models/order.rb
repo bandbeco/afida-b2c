@@ -211,6 +211,11 @@ class Order < ApplicationRecord
   def set_shipping_zone
     return if shipping_zone.present?
 
-    self.shipping_zone = ShippingZone.for(shipping_postal_code).to_s
+    # Only ever store a real zone. ShippingZone.for returns :unknown for an
+    # unparseable postcode, and persisting "unknown" would put a value in the
+    # column the migration promises it never holds (what the customer was
+    # charged). Left nil, delivery_zone falls back to mainland on read.
+    derived = ShippingZone.for(shipping_postal_code)
+    self.shipping_zone = derived.to_s if ShippingZone.deliverable?(derived)
   end
 end

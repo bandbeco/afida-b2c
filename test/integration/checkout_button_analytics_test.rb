@@ -17,6 +17,11 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     # Seed a cart into the session by adding an item (mirrors cart_items_controller_test).
     post cart_cart_items_path, params: { cart_item: { sku: @product.sku, quantity: 1 } }
+    # Checkout needs a delivery destination before it will accept a POST, so the
+    # entry points only render a submitting FORM once one is known. These tests
+    # are about the analytics wiring on that form; the link variant (no postcode
+    # yet) has its own test below.
+    post delivery_postcode_cart_path, params: { delivery_postcode: "WD18 9SB" }
   end
 
   teardown do
@@ -73,6 +78,25 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     assert_select "#drawer_cart_content form[data-controller='analytics']", count: 0
     assert_select "#drawer_cart_content form[action='#{checkout_path}'] button[type=submit]",
                   text: "Proceed to Checkout"
+  end
+
+  test "the cart-link variant still reports begin_checkout" do
+    # With no delivery postcode the drawer links to the cart instead of POSTing
+    # (checkout would refuse it). That click is still the customer beginning
+    # checkout, so the funnel must not lose the event just because the affordance
+    # changed shape. Uses a fresh session so no postcode is in play.
+    reset!
+    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
+    post cart_cart_items_path, params: { cart_item: { sku: @product.sku, quantity: 1 } }
+
+    get root_url
+
+    assert_response :success
+    assert_select "#drawer_cart_content a[data-test=checkout-needs-postcode]" \
+                  "[data-controller='analytics']" \
+                  "[data-action='click->analytics#beginCheckout']" \
+                  "[data-analytics-cart-value-value]" \
+                  "[data-analytics-cart-items-value]"
   end
 
   test "empty cart renders no checkout form at all" do

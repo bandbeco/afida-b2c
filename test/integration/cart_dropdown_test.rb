@@ -21,6 +21,9 @@ class CartDropdownTest < ActionDispatch::IntegrationTest
     # The wiring is gated on gtm_enabled?, so enable GTM for this assertion.
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     post cart_cart_items_path, params: { cart_item: { sku: products(:one).sku, quantity: 1 } }
+    # Checkout is refused without a delivery destination, so the dropdown renders
+    # a submitting form only once one is known (it links to the cart otherwise).
+    post delivery_postcode_cart_path, params: { delivery_postcode: "WD18 9SB" }
     get root_url
 
     assert_response :success

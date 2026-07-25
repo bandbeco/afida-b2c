@@ -74,11 +74,16 @@ class ShippingZone
   # Customer-facing transit wording, shown in the cart and carried in the Stripe
   # line-item name. Derived from TRANSIT_DAYS rather than written out per zone so
   # a zone can never be labelled next-day while its transit time says otherwise.
-  # remote_islands is a range because DPD quotes 2-4 days for HS/ZE/KW15-17.
+  #
+  # These state the SAME number of days DeliveryEstimate adds, deliberately. DPD
+  # quotes 2-4 days for HS/ZE/KW15-17, and we plan to the slow end (TRANSIT_DAYS
+  # of 3, so 4 working days); labelling it "2-4 working days" while the order
+  # confirmation states a single date at the far end of that range would have the
+  # two promises contradict each other. Quote the date we actually commit to.
   TRANSIT_LABELS = {
     0 => "next working day",
     1 => "2 working days",
-    3 => "2-4 working days"
+    3 => "4 working days"
   }.freeze
 
   class << self
@@ -106,8 +111,17 @@ class ShippingZone
       ZONES.include?(zone)
     end
 
+    # Working days on top of the standard next-working-day dispatch.
+    #
+    # An undeliverable zone falls to the SLOWEST transit rather than 0. Defaulting
+    # to 0 would sell an address we could not identify as next working day, which
+    # is a promise made on no information; erring slow is the safe direction for a
+    # delivery commitment. Callers normalise to mainland before pricing, so this
+    # is a fail-safe rather than a live path.
     def transit_days(zone)
-      TRANSIT_DAYS.fetch(zone, 0)
+      return TRANSIT_DAYS.values.max unless deliverable?(zone)
+
+      TRANSIT_DAYS.fetch(zone)
     end
 
     # How long delivery takes to this zone, in customer-facing words.
@@ -116,10 +130,24 @@ class ShippingZone
       TRANSIT_LABELS.fetch(days) { "#{days + 1} working days" }
     end
 
+    # The zone's surcharge in pounds. Reached from Cart#cart_totals on every cart
+    # and drawer render, so a malformed env override degrades to the default
+    # rather than raising: a typo in SHIPPING_SURCHARGE_* must not take the
+    # storefront down. The bad value is logged so it doesn't fail silently.
     def surcharge(zone)
       return BigDecimal("0") unless deliverable?(zone)
 
-      BigDecimal(ENV.fetch("SHIPPING_SURCHARGE_#{zone.to_s.upcase}", DEFAULT_SURCHARGES.fetch(zone)))
+      default = DEFAULT_SURCHARGES.fetch(zone)
+      configured = ENV.fetch("SHIPPING_SURCHARGE_#{zone.to_s.upcase}", default)
+
+      begin
+        BigDecimal(configured)
+      rescue ArgumentError, TypeError
+        Rails.logger.error(
+          "[ShippingZone] SHIPPING_SURCHARGE_#{zone.to_s.upcase}=#{configured.inspect} is not a number; using #{default}"
+        )
+        BigDecimal(default)
+      end
     end
 
     def free_shipping?(zone)
@@ -128,16 +156,29 @@ class ShippingZone
 
     private
 
+    # An outward code on its own, e.g. "IV51" or "BT1". The zone lookup needs
+    # nothing more than this, and it is what a customer naturally types into a
+    # "calculate delivery" field, so accepting it avoids telling them their real
+    # postcode wasn't recognised. Mirrors the outward-code group in
+    # Address::UK_POSTCODE_REGEX, anchored so partial junk still fails.
+    OUTWARD_CODE_REGEX = /\A[A-Z]{1,2}[0-9][0-9A-Z]?\z/
+
     # The (area, district) pair, or nil when the postcode is unparseable.
-    # Reuses Address::UK_POSTCODE_REGEX so there is one definition of a valid UK
-    # postcode; its first capture group is the outward code.
+    # Accepts a full postcode (via Address::UK_POSTCODE_REGEX, so there is one
+    # definition of a valid UK postcode) or an outward code alone.
     def parse(postcode)
       normalised = postcode.to_s.upcase.strip
-      match = Address::UK_POSTCODE_REGEX.match(normalised)
-      return nil unless match
+      outward = outward_code(normalised)
+      return nil unless outward
 
-      outward = match[1]
       [ outward[/\A[A-Z]{1,2}/], outward[/[0-9]+/].to_i ]
+    end
+
+    def outward_code(normalised)
+      match = Address::UK_POSTCODE_REGEX.match(normalised)
+      return match[1] if match
+
+      normalised if OUTWARD_CODE_REGEX.match?(normalised)
     end
   end
 end

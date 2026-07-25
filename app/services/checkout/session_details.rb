@@ -35,6 +35,21 @@ module Checkout
       }
     end
 
+    # The delivery zone the order was PRICED against, recorded in session metadata
+    # by SessionBuilder, or nil when absent (sessions created before this existed).
+    #
+    # This is deliberately not re-derived from the delivered-to postcode: the two
+    # can differ, because delivery is priced from the cart-page postcode one screen
+    # before Stripe collects the real address. The order records what the customer
+    # was actually charged, so the priced zone is the authority; Order#delivery_zone
+    # falls back to the postcode when this is missing.
+    def shipping_zone(session)
+      zone = session.metadata&.[]("shipping_zone").presence
+      return nil unless zone
+
+      zone if ShippingZone.deliverable?(zone.to_sym)
+    end
+
     # The Stripe-entered promotion code (the human-typed string, e.g. "SUMMER20"), or
     # nil when none was applied. Deliberately does NOT rescue an unexpected Stripe
     # shape: each caller owns that policy. OrderCreator lets a NoMethodError surface

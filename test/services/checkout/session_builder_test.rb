@@ -379,8 +379,40 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     build_session_builder(delivery_postcode: "HS1 2DD").create
 
-    assert_equal "Shipping (2-4 working days)",
+    assert_equal "Shipping (4 working days)",
                  shipping_line_item(captured_params).dig(:price_data, :product_data, :name)
+  end
+
+  test "records the priced zone in Stripe metadata" do
+    # The order must be able to record the zone it was CHARGED for, which is not
+    # necessarily the zone of the address Stripe later collects: a customer can
+    # type a mainland postcode to price delivery and then enter a Highlands
+    # address at Stripe. Metadata is how the priced zone survives the round trip.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(delivery_postcode: "BT1 6EE").create
+
+    assert_equal "northern_ireland", captured_params[:metadata][:shipping_zone]
+  end
+
+  test "records the mainland zone in metadata when no postcode was captured" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    assert_equal "mainland", captured_params[:metadata][:shipping_zone]
   end
 
   test "the charged shipping matches what OrderTotals displays for the same zone" do

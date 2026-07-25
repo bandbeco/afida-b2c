@@ -22,6 +22,19 @@ module PricingHelper
     Shipping.formatted_standard_cost
   end
 
+  # The delivery price qualified as a starting point, e.g. "from £6.99".
+  #
+  # STANDARD_COST is the MAINLAND price; Northern Ireland, the Scottish Highlands
+  # and the islands pay a surcharge on top (see ShippingZone). Copy that states a
+  # flat price without this qualifier promises a rate we don't charge everyone,
+  # which is the same class of claim the free-delivery copy had to be corrected
+  # for. Use this wherever a price is quoted before a destination is known.
+  #
+  # @return [String] e.g. "from £6.99"
+  def delivery_price_from_display
+    "from #{delivery_price_display}"
+  end
+
   # Formats quantity display for cart items and order items
   # Pack-priced items: "30 packs (15,000 units)" - quantity IS packs, units = quantity * pac_size
   # Unit-priced items: "5,000 units" - quantity IS units

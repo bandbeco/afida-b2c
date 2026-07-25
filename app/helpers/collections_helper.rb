@@ -151,7 +151,7 @@ module CollectionsHelper
     return sample_pack.description if sample_pack.description.present?
 
     product_count = products&.size || 5
-    "Request your free #{sample_pack.name} sample pack. #{product_count} curated products delivered for just #{delivery_price_display}. Try before you buy with Afida."
+    "Request your free #{sample_pack.name} sample pack. #{product_count} curated products delivered #{delivery_price_from_display}. Try before you buy with Afida."
   end
 
   VEGWARE_FILTER_METAS = {

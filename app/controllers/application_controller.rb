@@ -73,9 +73,29 @@ class ApplicationController < ActionController::Base
   # session, so every cart surface (page, drawer, Turbo Stream updates) prices the
   # same destination. Without it the cart would quote mainland shipping and the
   # customer would meet the surcharge for the first time at the payment screen.
+  #
+  # A logged-in customer's default address is the fallback, mirroring
+  # CheckoutsController#delivery_postcode_for (which prefers a selected saved
+  # address over the typed field). Without this the cart would show "Free" on a
+  # large order to a saved Highlands address while Stripe charged the surcharge:
+  # exactly the undisclosed jump at the payment screen this work exists to remove.
+  # A typed postcode still wins, since that is the more recent explicit choice.
   def apply_session_delivery_postcode_to_cart
-    return unless Current.cart && session[:delivery_postcode].present?
+    return unless Current.cart
 
-    Current.cart.delivery_postcode = session[:delivery_postcode]
+    postcode = session[:delivery_postcode].presence || default_address_postcode
+    return if postcode.blank?
+
+    Current.cart.delivery_postcode = postcode
+  end
+
+  # Checks the cart's owner first and Current.user second: pages that call
+  # allow_unauthenticated_access skip resume_session (so Current.user is nil
+  # there), while a signed-in customer can still hold a guest cart (set_current_cart
+  # only binds a user cart when Current.user is set). Taking either keeps every
+  # surface pricing the same destination.
+  def default_address_postcode
+    owner = Current.cart&.user || Current.user
+    owner&.addresses&.default_first&.first&.postcode
   end
 end

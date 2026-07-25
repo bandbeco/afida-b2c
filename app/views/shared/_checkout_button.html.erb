@@ -15,6 +15,20 @@
     Current.cart would otherwise crash on total_amount). No cart, no checkout button. Uses
     the memoized line_items_count rather than cart_items.any? to avoid an extra SELECT 1. %>
 <% return unless (Current.cart&.line_items_count || 0).positive? %>
-<%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do %>
-  <button type="submit" class="<%= button_class %>"><%= label %></button>
+<%# Checkout is refused without a delivery destination it can price (shipping is
+    baked into the Stripe line items before Stripe collects the address). These
+    compact surfaces have no room for the postcode field, so send the customer to
+    the cart to enter it instead of POSTing into a guaranteed rejection. Without
+    this, a guest who adds to cart and checks out from the drawer or the navbar
+    without ever opening /cart hits a dead end. %>
+<% if delivery_destination_known?(Current.cart, address_postcode: cart_owner_default_postcode(Current.cart)) %>
+  <%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do %>
+    <button type="submit" class="<%= button_class %>"><%= label %></button>
+  <% end %>
+<% else %>
+  <%# Still reports begin_checkout: clicking this IS the customer starting
+      checkout, they just have to give a postcode first, so the funnel must not
+      lose the event just because the affordance is a link. %>
+  <%= link_to label, cart_path, class: button_class,
+              data: analytics_checkout_link_data(Current.cart).merge(test: "checkout-needs-postcode") %>
 <% end %>

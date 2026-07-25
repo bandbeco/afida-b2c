@@ -245,12 +245,29 @@ module AnalyticsHelper
   # @param cart [Cart] The cart being checked out
   # @return [Hash] the `data:` hash for form_with
   def analytics_checkout_form_data(cart)
+    analytics_checkout_data(cart, "submit")
+  end
+
+  # The same wiring for a checkout entry point rendered as a LINK rather than a
+  # form. The drawer and header dropdown link to the cart when no delivery
+  # postcode is known yet (they have no room for the field), and that click is
+  # still the customer beginning checkout, so it must report begin_checkout the
+  # same way. beginCheckout doesn't care which event invoked it.
+  # @param cart [Cart] The cart being checked out
+  # @return [Hash] the `data:` hash for link_to
+  def analytics_checkout_link_data(cart)
+    analytics_checkout_data(cart, "click")
+  end
+
+  # Shared body of the two above; `event` is the DOM event that triggers the
+  # Stimulus action ("submit" for a form, "click" for a link).
+  def analytics_checkout_data(cart, event)
     data = { turbo: false }
     return data unless gtm_enabled?
 
     data.merge(
       controller: "analytics",
-      action: "submit->analytics#beginCheckout",
+      action: "#{event}->analytics#beginCheckout",
       analytics_cart_value_value: cart.total_amount.to_f,
       analytics_cart_items_value: ga4_cart_items_json(cart)
     )

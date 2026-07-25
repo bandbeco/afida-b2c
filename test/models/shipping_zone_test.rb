@@ -124,6 +124,56 @@ class ShippingZoneTest < ActiveSupport::TestCase
     end
   end
 
+  # The zone lookup only needs the outward code, and "IV51" is the natural thing
+  # to type into a "calculate delivery" field. Rejecting it would tell a customer
+  # their real postcode wasn't recognised.
+
+  test "an outward code alone resolves to its zone" do
+    assert_equal :highlands, ShippingZone.for("IV51")
+    assert_equal :northern_ireland, ShippingZone.for("BT1")
+    assert_equal :mainland, ShippingZone.for("WD18")
+    assert_equal :remote_islands, ShippingZone.for("HS1")
+  end
+
+  test "an outward code agrees with the full postcode it came from" do
+    { "IV51" => "IV51 9YB", "BT1" => "BT1 6EE", "WD18" => "WD18 9SB" }.each do |outward, full|
+      assert_equal ShippingZone.for(full), ShippingZone.for(outward),
+                   "#{outward} must resolve like #{full}"
+    end
+  end
+
+  test "still rejects input that is not a postcode at all" do
+    [ "nonsense", "12345", "", nil, "!!" ].each do |input|
+      assert_equal :unknown, ShippingZone.for(input), "expected #{input.inspect} to stay unknown"
+    end
+  end
+
+  test "an env override sets the surcharge" do
+    with_env("SHIPPING_SURCHARGE_HIGHLANDS", "15.00") do
+      assert_equal BigDecimal("15.00"), ShippingZone.surcharge(:highlands)
+    end
+  end
+
+  test "a malformed env override falls back to the default instead of raising" do
+    # surcharge is reached from Cart#cart_totals on every cart and drawer render,
+    # so a typo like "12.50GBP" would otherwise 500 the whole storefront rather
+    # than degrade to a sane figure.
+    with_env("SHIPPING_SURCHARGE_HIGHLANDS", "12.50GBP") do
+      assert_equal BigDecimal(ShippingZone::DEFAULT_SURCHARGES.fetch(:highlands)),
+                   ShippingZone.surcharge(:highlands)
+    end
+  end
+
+  private
+
+  def with_env(key, value)
+    original = ENV[key]
+    ENV[key] = value
+    yield
+  ensure
+    ENV[key] = original
+  end
+
   # The customer-facing transit label. It rides in the Stripe line-item name and
   # the cart, so a zone we cannot reach next day never reads "next working day".
 
@@ -134,7 +184,28 @@ class ShippingZoneTest < ActiveSupport::TestCase
   test "zones we cannot reach next day are labelled with their real transit time" do
     assert_equal "2 working days", ShippingZone.transit_label(:highlands)
     assert_equal "2 working days", ShippingZone.transit_label(:northern_ireland)
-    assert_equal "2-4 working days", ShippingZone.transit_label(:remote_islands)
+    assert_equal "4 working days", ShippingZone.transit_label(:remote_islands)
+  end
+
+  test "the label states the same number of days the delivery date is computed from" do
+    # The label rides in the Stripe line-item name while DeliveryEstimate stamps
+    # a single date on the order, so a range label ("2-4 working days") would
+    # contradict the one date the confirmation email states. Both must derive
+    # from TRANSIT_DAYS.
+    ShippingZone::ZONES.each do |zone|
+      expected_days = ShippingZone.transit_days(zone) + 1
+      next if expected_days == 1 # mainland's label is worded, not numbered
+
+      assert_equal "#{expected_days} working days", ShippingZone.transit_label(zone),
+                   "#{zone}'s label must match the #{expected_days} days DeliveryEstimate adds"
+    end
+  end
+
+  test "an undeliverable zone is never labelled next working day" do
+    # transit_days defaults unknown zones to 0, which would sell an address we
+    # could not identify as next-day. Callers normalise to mainland first, so
+    # this is a fail-safe rather than a live path.
+    assert_not_equal "next working day", ShippingZone.transit_label(:unknown)
   end
 
   test "no zone label promises next working day unless its transit is zero" do

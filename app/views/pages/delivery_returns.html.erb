@@ -96,16 +96,24 @@
                     <td class="py-3 pr-4">Next working day</td>
                     <td class="py-3"><%= delivery_price_display %></td>
                   </tr>
+                  <%# Transit times come from ShippingZone so this table cannot
+                      drift from what the cart quotes and the order promises. %>
                   <tr class="border-b border-gray-100">
                     <td class="py-3 pr-4">Northern Ireland, Scottish Highlands</td>
                     <td class="py-3 pr-4">Any</td>
-                    <td class="py-3 pr-4">Two working days</td>
+                    <td class="py-3 pr-4"><%= ShippingZone.transit_label(:highlands).capitalize %></td>
+                    <td class="py-3">Quoted at checkout</td>
+                  </tr>
+                  <tr class="border-b border-gray-100">
+                    <td class="py-3 pr-4">Isle of Wight</td>
+                    <td class="py-3 pr-4">Any</td>
+                    <td class="py-3 pr-4"><%= ShippingZone.transit_label(:offshore_islands).capitalize %></td>
                     <td class="py-3">Quoted at checkout</td>
                   </tr>
                   <tr>
-                    <td class="py-3 pr-4">Offshore islands</td>
+                    <td class="py-3 pr-4">Scottish islands, Isles of Scilly</td>
                     <td class="py-3 pr-4">Any</td>
-                    <td class="py-3 pr-4">Two to four working days</td>
+                    <td class="py-3 pr-4"><%= ShippingZone.transit_label(:remote_islands).capitalize %></td>
                     <td class="py-3">Quoted at checkout</td>
                   </tr>
                 </tbody>

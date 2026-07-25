@@ -138,7 +138,10 @@ module Webhooks
           shipping_address_line2: shipping[:line2],
           shipping_city: shipping[:city],
           shipping_postal_code: shipping[:postal_code],
-          shipping_country: shipping[:country]
+          shipping_country: shipping[:country],
+          # The zone the order was priced against (see SessionDetails), not the
+          # zone of the collected address, so the order records what was charged.
+          shipping_zone: Checkout::SessionDetails.shipping_zone(full_session)
         )
 
         if cart&.cart_items&.any?

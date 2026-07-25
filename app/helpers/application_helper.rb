@@ -68,12 +68,17 @@ module ApplicationHelper
   # A ShippingZone in the customer's words, for the cart's delivery calculator.
   # The zone symbols are carrier vocabulary; these are what a customer would
   # recognise as the place they live.
+  # remote_islands spans the Scottish islands AND the Isles of Scilly (TR21-25,
+  # Cornwall), so it cannot be named "the Scottish islands" without telling a St
+  # Mary's customer they live in Scotland. offshore_islands is PO30-41 today but
+  # is named for the zone, not the one area in it, so adding another island
+  # doesn't silently make the copy wrong.
   DELIVERY_ZONE_NAMES = {
     mainland: "mainland UK",
     highlands: "the Scottish Highlands",
-    remote_islands: "the Scottish islands",
+    remote_islands: "the Scottish and Scilly isles",
     northern_ireland: "Northern Ireland",
-    offshore_islands: "the Isle of Wight"
+    offshore_islands: "the offshore islands"
   }.freeze
 
   def delivery_zone_name(zone)
@@ -85,11 +90,28 @@ module ApplicationHelper
   # Checks the entered postcode rather than the cart's zone, because the zone
   # falls back to mainland by design and so is never "unknown".
   #
-  # A customer with a saved address satisfies it without typing anything: the
-  # address carries its own postcode and is what the order ships to.
-  def delivery_destination_known?(cart, has_saved_address: false)
-    return true if has_saved_address
+  # address_postcode is the postcode of the address the customer has SELECTED
+  # (nil when none is). It must be the selected one, not merely one they have on
+  # file: the controller resolves the selected address_id, so gating on "has any
+  # saved address" would enable a button that checkout then refuses, bouncing the
+  # customer between the cart and the guard forever.
+  def delivery_destination_known?(cart, address_postcode: nil)
+    return true if ShippingZone.deliverable?(ShippingZone.for(address_postcode))
 
-    ShippingZone.deliverable?(ShippingZone.for(cart.delivery_postcode))
+    ShippingZone.deliverable?(ShippingZone.for(cart&.delivery_postcode))
+  end
+
+  # The saved-address postcode that stands in for "where this customer usually
+  # ships", used to decide whether checkout can be offered without typing.
+  #
+  # Checks the cart's owner first and Current.user second, because neither alone
+  # covers every surface: pages calling allow_unauthenticated_access (products,
+  # collections, the price list) skip resume_session, so Current.user is nil
+  # there; and a signed-in customer can still be holding a guest cart, since
+  # set_current_cart only binds a user cart when Current.user is set. Taking
+  # either keeps the drawer and the cart page at the same verdict.
+  def cart_owner_default_postcode(cart)
+    owner = cart&.user || Current.user
+    owner&.addresses&.default_first&.first&.postcode
   end
 end

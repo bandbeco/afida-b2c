@@ -84,8 +84,14 @@
 
             <%# Delivery is priced into the Stripe line items before Stripe collects
                 the address, so checkout is refused without a destination. Disable
-                the button rather than letting the customer bounce off the guard. %>
-            <% destination_known = delivery_destination_known?(Current.cart, has_saved_address: Current.user&.has_saved_addresses?) %>
+                the button rather than letting the customer bounce off the guard.
+
+                The default address stands in for the selected one: the radio is
+                pre-checked on the default and the server can't see a client-side
+                change. Picking "enter a different address" and submitting without
+                a postcode still hits the guard, but the cart already prices from
+                the default address, so that case now has a postcode either way. %>
+            <% destination_known = delivery_destination_known?(Current.cart, address_postcode: cart_owner_default_postcode(Current.cart)) %>
             <div class="mt-4 sm:mt-6">
               <button type="submit"
                       class="btn btn-primary btn-block text-base sm:text-lg shadow-lg shadow-black/20"

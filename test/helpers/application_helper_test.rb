@@ -94,11 +94,28 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_not delivery_destination_known?(cart)
   end
 
-  test "delivery_destination_known? is true when a saved address is available" do
+  test "delivery_destination_known? is true when a usable address is selected" do
     # A logged-in customer with a saved address never has to retype it, so the
     # cart offers checkout on the strength of that address alone.
     cart = Cart.new
 
-    assert delivery_destination_known?(cart, has_saved_address: true)
+    assert delivery_destination_known?(cart, address_postcode: "WD18 9SB")
+  end
+
+  test "delivery_destination_known? is false when the selected address is unusable" do
+    # Mirrors the controller: a non-UK or malformed saved postcode can't be
+    # priced, so it must not enable a button that checkout will refuse.
+    cart = Cart.new
+
+    assert_not delivery_destination_known?(cart, address_postcode: "00000")
+  end
+
+  test "delivery_destination_known? ignores a saved address that is not selected" do
+    # The bug this guards: enabling the button because the user has SOME saved
+    # address, while the controller checks the SELECTED one. Choosing "enter a
+    # different address" with no postcode then loops cart -> guard -> cart.
+    cart = Cart.new
+
+    assert_not delivery_destination_known?(cart, address_postcode: nil)
   end
 end

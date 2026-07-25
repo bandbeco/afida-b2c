@@ -55,7 +55,12 @@ module Checkout
           cart_id: cart.id.to_s,
           discount_code: discount_code,
           datafast_visitor_id: datafast_visitor_id,
-          datafast_session_id: datafast_session_id
+          datafast_session_id: datafast_session_id,
+          # The zone the order was PRICED against, which is not necessarily the
+          # zone of the address Stripe collects on the next screen. The order
+          # records what the customer was actually charged, so it reads this back
+          # rather than re-deriving from the delivered-to postcode.
+          shipping_zone: zone.to_s
         }
       }
     end

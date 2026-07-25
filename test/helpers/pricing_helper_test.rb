@@ -140,6 +140,18 @@ class PricingHelperTest < ActionView::TestCase
     assert_equal Shipping.formatted_standard_cost, delivery_price_display
   end
 
+  # The standard price is the MAINLAND price. Non-mainland zones pay a surcharge,
+  # so any copy stating a flat delivery price (including JSON-LD FAQ answers and
+  # meta descriptions on the sample pages) has to say which price it is.
+
+  test "delivery_price_from_display marks the price as a starting point" do
+    assert_equal "from £6.99", delivery_price_from_display
+  end
+
+  test "delivery_price_from_display tracks the standard cost" do
+    assert_includes delivery_price_from_display, delivery_price_display
+  end
+
   # Tests for format_quantity_display
   # New model: quantity = packs for standard products, units for branded
 
