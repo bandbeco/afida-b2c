@@ -225,6 +225,31 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#drawer_cart_content form[action=?]", delivery_postcode_cart_path
   end
 
+  test "the drawer omits the non-mainland explainer" do
+    # The drawer is a narrow column where the field, the totals and the checkout
+    # button all have to fit; the explainer pushed them down for a case most
+    # customers aren't in. Entering a postcode still reports the zone and the
+    # transit time, which is the part that applies to them.
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    get product_url(products(:one))
+
+    assert_select "#drawer_cart_content form[action=?]", delivery_postcode_cart_path
+    assert_select "#drawer_cart_content [data-test=non-mainland-note]", count: 0
+  end
+
+  test "the cart page keeps the non-mainland explainer" do
+    # It has room for it, and it's the page a customer lands on from the
+    # drawer's needs-a-postcode link, so the explanation stays reachable.
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    get cart_url
+
+    assert_select "[data-test=non-mainland-note]"
+  end
+
   test "a turbo stream submission updates the drawer in place" do
     # A redirect would navigate away and close the drawer, losing the customer's
     # place. The cart mutations already answer with a drawer replacement; this
