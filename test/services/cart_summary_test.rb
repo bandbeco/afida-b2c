@@ -69,10 +69,14 @@ class CartSummaryTest < ActiveSupport::TestCase
   end
 
   test "defers the shipping line until a destination is known" do
+    # The wording points at the postcode field, which both cart surfaces now
+    # carry, rather than deferring to checkout: the customer can resolve this
+    # here and now, and saying "at checkout" would send them looking for a step
+    # that no longer holds the answer.
     free_cart = free_shipping_cart # no postcode: free_shipping_cart sets none
 
     shipping = CartSummary.lines(free_cart).find { |l| l[:kind] == :shipping }
-    assert_equal "Calculate at checkout", shipping[:amount],
+    assert_equal "Enter postcode", shipping[:amount],
                  "a cart with no postcode must not be quoted a mainland price"
   end
 
@@ -85,7 +89,7 @@ class CartSummaryTest < ActiveSupport::TestCase
 
     shipping = CartSummary.lines(charged).find { |l| l[:kind] == :shipping }
 
-    assert_equal "Calculate at checkout", shipping[:amount]
+    assert_equal "Enter postcode", shipping[:amount]
   end
 
   test "quotes the off-mainland rate once an off-mainland destination is known" do

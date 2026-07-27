@@ -599,7 +599,7 @@ class CartTest < ActiveSupport::TestCase
 
   test "the deferred total excludes shipping rather than assuming mainland" do
     # Otherwise the Total silently contains £0 (or £6.99) of mainland shipping
-    # while the Shipping line reads "Calculate at checkout": the customer would
+    # while the Shipping line defers to the postcode field: the customer would
     # be shown a total that no destination actually produces.
     cart = undestined_cart
 

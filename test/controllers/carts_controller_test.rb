@@ -78,7 +78,7 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     # products(:one) is £10/pack; one pack keeps the cart under the £100 threshold.
     cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
     # A destination is required before any price is quoted, so enter one the way
-    # a customer does. Without it the line reads "Calculate at checkout".
+    # a customer does. Without it the line defers to the postcode field.
     post delivery_postcode_cart_url, params: { delivery_postcode: "WD18 9SB" }
 
     get cart_url

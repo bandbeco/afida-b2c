@@ -12,8 +12,8 @@
 # own markup (the full-page card vs the compact drawer) and iterates these lines.
 #
 # Differences from OrderSummary, all because the cart is a pre-checkout preview:
-#   - Shipping shows "Free" / "Calculate at checkout" (see #shipping_display), not
-#     just a currency amount.
+#   - Shipping shows "Free" / DEFERRED_LABEL (see #shipping_display), not just a
+#     currency amount.
 #   - the discount line is labelled with the welcome percentage (the cart has no
 #     Stripe coupon code yet), not a recorded code.
 #   - the Total is the cart's display_total_amount (the sum of the rounded lines, so
@@ -21,6 +21,12 @@
 # The discount-visibility rule (only when a discount is actually taken) and the
 # money format match OrderSummary exactly.
 class CartSummary
+  # What the Shipping line reads before a destination is known. It names the
+  # action the customer can take right there: both cart surfaces now carry the
+  # postcode field, so the old "Calculate at checkout" pointed at a later step
+  # that no longer holds the answer.
+  DEFERRED_LABEL = "Enter postcode"
+
   def self.lines(cart)
     new(cart).lines
   end
@@ -56,8 +62,8 @@ class CartSummary
   end
 
   # "Free" at/above the free-shipping threshold, the currency amount below it, and
-  # "Calculate at checkout" whenever the cart defers shipping (shipping nil): an
-  # empty cart, or one whose delivery destination we have not been told.
+  # DEFERRED_LABEL whenever the cart defers shipping (shipping nil): an empty
+  # cart, or one whose delivery destination we have not been told.
   #
   # The deferral rule itself lives in Cart#cart_totals, not here, so the deferred
   # shipping line and the VAT and Total that exclude it can never disagree. A
@@ -66,7 +72,7 @@ class CartSummary
   # delivery, so showing it early understates every off-mainland customer's cost.
   def shipping_display
     shipping = @cart.shipping_amount
-    return "Calculate at checkout" if shipping.nil?
+    return DEFERRED_LABEL if shipping.nil?
 
     shipping.zero? ? "Free" : money(shipping)
   end
