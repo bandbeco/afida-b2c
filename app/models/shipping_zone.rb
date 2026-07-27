@@ -1,26 +1,20 @@
 # Resolves a UK postcode to a delivery zone.
 #
-# Zones are transcribed from DPD's published "Islands and regions subject to
-# surcharge" list (DPD CLASSIC & DPD EXPRESS, edition 06/2020), because DPD is
-# the carrier named on the delivery page and its commercial boundary is the one
-# that actually bills us. Local-authority boundaries correlate with it but are
-# not the same thing, so they are deliberately not used here.
+# Zones follow DPD UK's published "Our services in Scottish Highlands & Islands"
+# table, because DPD is the carrier named on the delivery page and its UK
+# network is the one that actually bills us. Local-authority boundaries
+# correlate with it but are not the same thing, so they are not used here.
 #
-# The GB row of that list, verbatim:
-#   Northern Ireland: BT, Channel Islands Guernsey and Jersey: GY, JE, Outer
-#   Hebrides: HS, Isle of Man: IM, Scottish Highlands and Isle of Skye: IV,
-#   Orkney Inseln: KW, Shetland Islands: ZE, Firth of Clyde Islands: KA27-28,
-#   Region Argyll and Bute with Loch Lomond and Inner Hebrides: FK17-21,
-#   PA20-38, PA41-49, PA60-80, PH16-50, Isle of Wight: PO30-41,
-#   Isles of Scilly: TR21-25
+# That table is the ONLY source for the Scottish ranges. DPD publishes other
+# regional surcharge lists for its European networks whose ranges differ; they
+# describe different networks and must not be used to "correct" this table.
 #
-# Boundaries are numeric, not alphabetic, and the ranges are NOT contiguous:
-# PA39-40 and PA50-59 fall in gaps between the listed Argyll bands and take the
-# standard rate, while PA38 and PA41 either side of them do not. So the lookup
-# key is the (area, district) pair, never the area letters alone.
+# The Scilly Isles (TR21-25), Northern Ireland (BT) and the Isle of Wight
+# (PO30-41) are outside the Scottish table's scope; see their entries below.
 #
-# Aberdeenshire (AB) does not appear on the list at any district and is
-# therefore mainland throughout, despite being geographically remote.
+# Boundaries are numeric, not alphabetic: AB31-56 is surcharged but AB10
+# (Aberdeen city) is not, and PA20-78 is Argyll while PA1 (Paisley) is not. So
+# the lookup key is the (area, district) pair, never the area letters alone.
 #
 # This is a pure function of the postcode string: no database, no network, no
 # third-party dependency. Shipping must stay priceable when everything else is
@@ -30,41 +24,57 @@ class ShippingZone
   ZONES = %i[mainland highlands remote_islands northern_ireland offshore_islands].freeze
 
   # Zones matched on the postcode area alone, where every district belongs.
+  # HS and ZE are DPD UK's 2-4 Days rows (HS1-9, ZE1-3), which is every allocated
+  # district in both areas. BT is outside the Scottish table's scope: Northern
+  # Ireland is off-mainland by geography, not by a Scottish surcharge row.
   #
-  # Isle of Man (IM) and the Channel Islands (GY/JE) are on DPD's list but absent
-  # here deliberately: they are not GB, so Shipping::ALLOWED_COUNTRIES already
-  # refuses them at checkout and they can never reach this lookup.
-  #
-  # IV is on DPD's list as a whole area but is handled in DISTRICT_RANGE_ZONES
-  # instead, because IV1-63 covers every allocated district anyway and keeping it
-  # numeric documents that.
+  # Isle of Man (IM) and the Channel Islands (GY/JE) are absent deliberately:
+  # they are not GB, so Shipping::ALLOWED_COUNTRIES already refuses them at
+  # checkout and they can never reach this lookup.
   WHOLE_AREA_ZONES = {
     "BT" => :northern_ireland,
     "HS" => :remote_islands,
     "ZE" => :remote_islands
   }.freeze
 
-  # Zones matched on an (area, district range) pair, from DPD's list.
+  # Zones matched on an (area, district range) pair.
   #
-  # The three PA bands are deliberately separate entries rather than one 20..80
-  # range: DPD lists PA20-38, PA41-49 and PA60-80, leaving PA39-40 and PA50-59
-  # unlisted and therefore standard-rate. Collapsing them would surcharge those
-  # gaps wrongly.
+  # The Scottish rows are DPD UK's table, with its Two Day rows mapped to
+  # :highlands and its 2-4 Days rows to :remote_islands, so the zone carries the
+  # service level DPD actually offers:
   #
-  # KW is split by service level, not by DPD's list, which gives the whole area:
-  # Orkney (KW15-17) is a genuine island crossing, so it takes the slower
-  # remote-islands zone while the Caithness mainland (KW1-14) does not. Both are
-  # off-mainland and priced alike, so the split only affects the transit promise.
+  #   Aberdeen           AB31-AB35   Two Day     Argyll        PA20-PA78   Two Day
+  #   Aberdeen           AB41-AB54   Two Day     Dundee        PH15-PH18   Two Day
+  #   Northern Highlands AB36-AB38   Two Day     N. Highlands  PH19-PH29   Two Day
+  #   Northern Highlands AB55-AB56   Two Day     Argyll        PH30-PH31   Two Day
+  #   Argyll             FK17-FK21   Two Day     N. Highlands  PH32-PH33   Two Day
+  #   Northern Highlands HS1-HS9     2-4 Days    Argyll        PH34-PH44   Two Day
+  #   Northern Highlands IV1-IV63    Two Day     N. Highlands  PH45-PH48   Two Day
+  #   Arran              KA27        Two Day     Argyll        PH49-PH50   Two Day
+  #   Argyll             KA28        Two Day     Orkney/Shet.  ZE1-ZE3     2-4 Days
+  #   Northern Highlands KW0-KW14    Two Day
+  #   Orkney Shetland    KW15-KW17   2-4 Days
+  #
+  # Adjacent rows sharing a zone are merged (AB31-38 and AB41-56 rather than four
+  # rows; PH15-50 rather than seven), since the Argyll/Highlands/Dundee labels
+  # only name the depot and every one of those rows is Two Day. HS and ZE are
+  # whole-area and live in WHOLE_AREA_ZONES.
+  #
+  # KW0-14 starts at 0: DPD writes KW0, and although Royal Mail allocates no KW0
+  # today the range is transcribed as published rather than silently narrowed.
   DISTRICT_RANGE_ZONES = [
+    [ "AB", 31..38, :highlands ],
+    [ "AB", 41..56, :highlands ],
     [ "FK", 17..21, :highlands ],
     [ "IV",  1..63, :highlands ],
     [ "KA", 27..28, :highlands ],
-    [ "KW",  1..14, :highlands ],
+    [ "KW",  0..14, :highlands ],
     [ "KW", 15..17, :remote_islands ],
-    [ "PA", 20..38, :highlands ],
-    [ "PA", 41..49, :highlands ],
-    [ "PA", 60..80, :highlands ],
-    [ "PH", 16..50, :highlands ],
+    [ "PA", 20..78, :highlands ],
+    [ "PH", 15..50, :highlands ],
+    # Outside the Scottish table's scope, so sourced separately: the Isles of
+    # Scilly are a 2-4 day sea/air crossing like the Scottish islands, and the
+    # Isle of Wight is off-mainland per Afida leadership.
     [ "PO", 30..41, :offshore_islands ],
     [ "TR", 21..25, :remote_islands ]
   ].freeze
@@ -76,6 +86,15 @@ class ShippingZone
   # that range (see TRANSIT_LABELS) but plan to its slow end, so a parcel that
   # arrives early is a good surprise while one taking the full four days still
   # meets the promise. Mainland is the only zone that keeps next-working-day.
+  #
+  # This is deliberately SLOWER than DPD sells on the Highlands rows, which are
+  # Two Day; only DPD's HS, ZE and KW15-17 rows are genuinely 2-4 days. Quoting
+  # the slowest off-mainland service for every off-mainland zone keeps one simple
+  # promise that the carrier beats rather than misses. Never "correct" this to
+  # DPD's Two Day for the Highlands without changing the customer-facing copy
+  # too: the label, the delivery page and the order's estimated date all derive
+  # from here, and promising two days to Skye is a commitment we would then have
+  # to keep at the carrier's pace.
   OFF_MAINLAND_TRANSIT_DAYS = 3
 
   TRANSIT_DAYS = {
