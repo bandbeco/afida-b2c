@@ -20,10 +20,6 @@ class ShippingZoneTest < ActiveSupport::TestCase
 
   test "highlands ranges are matched" do
     {
-      "AB31 4AA" => "Aberdeenshire",
-      "AB37 9AA" => "Northern Highlands",
-      "AB45 1AA" => "Banff",
-      "AB55 4AA" => "Keith",
       "FK17 8AA" => "Argyll",
       "IV1 1AA" => "Inverness",
       "IV51 9YB" => "Skye",
@@ -33,13 +29,50 @@ class ShippingZoneTest < ActiveSupport::TestCase
       "KW1 4AA" => "Wick",
       "KW14 7AA" => "Thurso",
       "PA20 0AA" => "Bute",
+      "PA38 4AA" => "Appin",
+      "PA41 7AA" => "Gigha",
+      "PA49 7AA" => "Islay",
+      "PA60 7AA" => "Jura",
       "PA78 6AA" => "Tiree",
+      "PA80 5AA" => "top of the Argyll islands range",
+      "PH16 5AA" => "Pitlochry",
+      "PH18 5AA" => "Blair Atholl",
       "PH19 1AA" => "Dalwhinnie",
       "PH33 6AA" => "Fort William",
       "PH41 4AA" => "Mallaig",
       "PH50 4AA" => "Kinlochleven"
     }.each do |postcode, place|
       assert_equal :highlands, ShippingZone.for(postcode), "expected #{postcode} (#{place}) to be highlands"
+    end
+  end
+
+  # DPD's list carries THREE gaps inside the Argyll/Bute range (PA20-38, PA41-49,
+  # PA60-80), not one continuous band. PA39-40 and PA50-59 are unlisted, so they
+  # take the standard rate; treating PA20-80 as one block surcharged them wrongly.
+  test "the unlisted gaps inside the argyll range stay mainland" do
+    {
+      "PA39 4AA" => "between the PA20-38 and PA41-49 bands",
+      "PA40 4AA" => "between the PA20-38 and PA41-49 bands",
+      "PA50 6AA" => "between the PA41-49 and PA60-80 bands",
+      "PA59 6AA" => "between the PA41-49 and PA60-80 bands"
+    }.each do |postcode, why|
+      assert_equal :mainland, ShippingZone.for(postcode), "expected #{postcode} to be mainland (#{why})"
+    end
+  end
+
+  # Aberdeenshire is NOT on DPD's list at any district. An earlier revision
+  # surcharged AB31-38 and AB41-56, which would have charged the off-mainland
+  # rate to ordinary Aberdeenshire addresses that DPD delivers at standard rate.
+  test "aberdeenshire is mainland at every district" do
+    {
+      "AB10 1AA" => "Aberdeen city",
+      "AB31 4AA" => "Banchory",
+      "AB37 9AA" => "Tomintoul",
+      "AB45 1AA" => "Banff",
+      "AB55 4AA" => "Keith",
+      "AB56 1AA" => "top of the area"
+    }.each do |postcode, place|
+      assert_equal :mainland, ShippingZone.for(postcode), "expected #{postcode} (#{place}) to be mainland"
     end
   end
 
@@ -64,10 +97,9 @@ class ShippingZoneTest < ActiveSupport::TestCase
   end
 
   test "the isle of wight is priced and promised as off-mainland" do
-    # Confirmed by Afida leadership. It is the one range not taken from DPD's
-    # table (which covers Scotland only), so pin the consequence rather than
-    # just the label: the island pays the off-mainland rate, never ships free,
-    # and is not sold next working day.
+    # On DPD's list as PO30-41 and confirmed by Afida leadership. Pin the
+    # consequence rather than just the label: the island pays the off-mainland
+    # rate, never ships free, and is not sold next working day.
     assert_equal Shipping.cost_for_zone_in_pounds(:highlands),
                  Shipping.cost_for_zone_in_pounds(:offshore_islands)
     assert_not ShippingZone.free_shipping?(:offshore_islands)
@@ -88,16 +120,14 @@ class ShippingZoneTest < ActiveSupport::TestCase
   # these, and KA1, PH2, TR8 and TR26 all appear in real production orders.
   test "mainland districts sharing an area with a surcharged range stay mainland" do
     {
-      "AB10 1AA" => "Aberdeen city vs AB31-56",
-      "AB25 1AA" => "Aberdeen city vs AB31-56",
+      "AB10 1AA" => "Aberdeen city, and AB is unlisted entirely",
+      "AB25 1AA" => "Aberdeen city, and AB is unlisted entirely",
       "FK1 1AA" => "Falkirk vs FK17-21",
       "KA1 1UR" => "Kilmarnock vs KA27-28",
-      "KW18 1AA" => "above the KW range",
-      "PA1 1AA" => "Paisley vs PA20-78",
-      "PH1 1AA" => "Perth vs PH19-50",
-      "PH2 6FB" => "Perth vs PH19-50",
-      "PH15 2AA" => "Dundee-serviced band, not Highlands",
-      "PH18 5AA" => "Dundee-serviced band, not Highlands",
+      "PA1 1AA" => "Paisley vs PA20-38",
+      "PH1 1AA" => "Perth vs PH16-50",
+      "PH2 6FB" => "Perth vs PH16-50",
+      "PH15 2AA" => "Aberfeldy, just below the PH16 boundary",
       "PO1 1AA" => "Portsmouth vs PO30-41",
       "PO50 1AA" => "above the Isle of Wight range",
       "TR8 4AB" => "Cornwall mainland vs TR21-25",
@@ -105,6 +135,50 @@ class ShippingZoneTest < ActiveSupport::TestCase
     }.each do |postcode, why|
       assert_equal :mainland, ShippingZone.for(postcode), "expected #{postcode} to be mainland (#{why})"
     end
+  end
+
+  # The whole GB row of DPD's "Islands and regions subject to surcharge" list
+  # (DPD CLASSIC & DPD EXPRESS, 06/2020), transcribed here as the source of
+  # truth. Pinning the entire row rather than sampled postcodes means a future
+  # edit to the zone table is checked against the carrier's document, not
+  # against whichever examples happened to be in the other tests.
+  #
+  # GY, JE and IM are on the list but excluded: they are not GB, so
+  # Shipping::ALLOWED_COUNTRIES refuses them before this lookup is reached.
+  DPD_SURCHARGED_GB = {
+    "BT" => :all,
+    "HS" => :all,
+    "IV" => :all,
+    "KW" => :all,
+    "ZE" => :all,
+    "KA" => [ 27..28 ],
+    "FK" => [ 17..21 ],
+    "PA" => [ 20..38, 41..49, 60..80 ],
+    "PH" => [ 16..50 ],
+    "PO" => [ 30..41 ],
+    "TR" => [ 21..25 ]
+  }.freeze
+
+  # Highest allocated district per area (Royal Mail), so the sweep below asks
+  # only about postcodes that can exist.
+  ALLOCATED_DISTRICTS = {
+    "AB" => 56, "BT" => 94, "FK" => 21, "HS" => 9, "IV" => 63, "KA" => 30,
+    "KW" => 17, "PA" => 80, "PH" => 50, "PO" => 41, "TR" => 27, "ZE" => 3
+  }.freeze
+
+  test "every allocated district matches DPD's published list" do
+    mismatches = ALLOCATED_DISTRICTS.flat_map do |area, highest|
+      (1..highest).filter_map do |district|
+        listed = dpd_surcharged?(area, district)
+        ours = ShippingZone.for("#{area}#{district}") != :mainland
+
+        next if listed == ours
+
+        "#{area}#{district}: DPD says #{listed ? "surcharged" : "standard"}, we say #{ShippingZone.for("#{area}#{district}")}"
+      end
+    end
+
+    assert_empty mismatches, "zone table disagrees with DPD:\n  #{mismatches.join("\n  ")}"
   end
 
   test "handles messy real-world input" do
@@ -224,6 +298,15 @@ class ShippingZoneTest < ActiveSupport::TestCase
   end
 
   private
+
+  # Whether DPD's list surcharges this (area, district), per DPD_SURCHARGED_GB.
+  def dpd_surcharged?(area, district)
+    spec = DPD_SURCHARGED_GB[area]
+    return false unless spec
+    return true if spec == :all
+
+    spec.any? { |range| range.cover?(district) }
+  end
 
   def with_env(key, value)
     original = ENV[key]

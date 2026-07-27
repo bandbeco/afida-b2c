@@ -1,14 +1,26 @@
 # Resolves a UK postcode to a delivery zone.
 #
-# Zones follow DPD's published Scottish Highlands & Islands table (DPD is the
-# carrier named on the delivery page), because DPD's commercial boundary is the
-# one that actually bills us. Local-authority boundaries correlate with it but
-# are not the same thing, so they are deliberately not used here.
+# Zones are transcribed from DPD's published "Islands and regions subject to
+# surcharge" list (DPD CLASSIC & DPD EXPRESS, edition 06/2020), because DPD is
+# the carrier named on the delivery page and its commercial boundary is the one
+# that actually bills us. Local-authority boundaries correlate with it but are
+# not the same thing, so they are deliberately not used here.
 #
-# Boundaries are numeric, not alphabetic: AB31-AB35 is surcharged but AB10
-# (Aberdeen city) is not, and PH19-PH29 is Highlands while PH15-PH18 is
-# Dundee-serviced. So the lookup key is the (area, district) pair, never the
-# area letters alone.
+# The GB row of that list, verbatim:
+#   Northern Ireland: BT, Channel Islands Guernsey and Jersey: GY, JE, Outer
+#   Hebrides: HS, Isle of Man: IM, Scottish Highlands and Isle of Skye: IV,
+#   Orkney Inseln: KW, Shetland Islands: ZE, Firth of Clyde Islands: KA27-28,
+#   Region Argyll and Bute with Loch Lomond and Inner Hebrides: FK17-21,
+#   PA20-38, PA41-49, PA60-80, PH16-50, Isle of Wight: PO30-41,
+#   Isles of Scilly: TR21-25
+#
+# Boundaries are numeric, not alphabetic, and the ranges are NOT contiguous:
+# PA39-40 and PA50-59 fall in gaps between the listed Argyll bands and take the
+# standard rate, while PA38 and PA41 either side of them do not. So the lookup
+# key is the (area, district) pair, never the area letters alone.
+#
+# Aberdeenshire (AB) does not appear on the list at any district and is
+# therefore mainland throughout, despite being geographically remote.
 #
 # This is a pure function of the postcode string: no database, no network, no
 # third-party dependency. Shipping must stay priceable when everything else is
@@ -18,30 +30,41 @@ class ShippingZone
   ZONES = %i[mainland highlands remote_islands northern_ireland offshore_islands].freeze
 
   # Zones matched on the postcode area alone, where every district belongs.
-  # Isle of Man (IM) and the Channel Islands (GY/JE) are absent deliberately:
-  # they are not GB, so Shipping::ALLOWED_COUNTRIES already excludes them.
+  #
+  # Isle of Man (IM) and the Channel Islands (GY/JE) are on DPD's list but absent
+  # here deliberately: they are not GB, so Shipping::ALLOWED_COUNTRIES already
+  # refuses them at checkout and they can never reach this lookup.
+  #
+  # IV is on DPD's list as a whole area but is handled in DISTRICT_RANGE_ZONES
+  # instead, because IV1-63 covers every allocated district anyway and keeping it
+  # numeric documents that.
   WHOLE_AREA_ZONES = {
     "BT" => :northern_ireland,
     "HS" => :remote_islands,
     "ZE" => :remote_islands
   }.freeze
 
-  # Zones matched on an (area, district range) pair, from DPD's table.
+  # Zones matched on an (area, district range) pair, from DPD's list.
   #
-  # The Isle of Wight (PO30-41) is the one exception: DPD's table covers Scotland
-  # only, so it says nothing about the island. Afida leadership confirmed the
-  # Isle of Wight is off-mainland, which is what puts it here. PO1-29 and PO50+
-  # are Portsmouth and Southampton on the mainland, hence the numeric range.
+  # The three PA bands are deliberately separate entries rather than one 20..80
+  # range: DPD lists PA20-38, PA41-49 and PA60-80, leaving PA39-40 and PA50-59
+  # unlisted and therefore standard-rate. Collapsing them would surcharge those
+  # gaps wrongly.
+  #
+  # KW is split by service level, not by DPD's list, which gives the whole area:
+  # Orkney (KW15-17) is a genuine island crossing, so it takes the slower
+  # remote-islands zone while the Caithness mainland (KW1-14) does not. Both are
+  # off-mainland and priced alike, so the split only affects the transit promise.
   DISTRICT_RANGE_ZONES = [
-    [ "AB", 31..38, :highlands ],
-    [ "AB", 41..56, :highlands ],
     [ "FK", 17..21, :highlands ],
     [ "IV",  1..63, :highlands ],
     [ "KA", 27..28, :highlands ],
     [ "KW",  1..14, :highlands ],
     [ "KW", 15..17, :remote_islands ],
-    [ "PA", 20..78, :highlands ],
-    [ "PH", 19..50, :highlands ],
+    [ "PA", 20..38, :highlands ],
+    [ "PA", 41..49, :highlands ],
+    [ "PA", 60..80, :highlands ],
+    [ "PH", 16..50, :highlands ],
     [ "PO", 30..41, :offshore_islands ],
     [ "TR", 21..25, :remote_islands ]
   ].freeze
