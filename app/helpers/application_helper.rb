@@ -59,10 +59,12 @@ module ApplicationHelper
     "Free delivery on mainland UK orders over #{free_shipping_threshold_display}"
   end
 
-  # The companion caveat for the zones excluded from the promise above.
+  # The companion caveat for the zones excluded from the promise above. States
+  # the actual transit range rather than a vague "may take longer", and sources
+  # it from ShippingZone so it can't drift from what the cart quotes.
   def non_mainland_delivery_note
     "Northern Ireland, the Scottish Highlands and offshore islands are charged " \
-      "at a separate rate and may take longer to arrive."
+      "at a separate rate and take #{ShippingZone.transit_label(:highlands)}."
   end
 
   # A ShippingZone in the customer's words, for the cart's delivery calculator.

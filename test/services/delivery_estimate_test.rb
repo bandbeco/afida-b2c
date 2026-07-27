@@ -124,35 +124,35 @@ class DeliveryEstimateTest < ActiveSupport::TestCase
     assert_equal Date.new(2026, 6, 2), estimate(Time.zone.local(2026, 6, 1, 12, 0, 0)).delivery_date
   end
 
-  test "the highlands add a working day on top of the mainland promise" do
-    # Monday 12:00 -> dispatch Mon -> mainland Tue -> Highlands Wednesday.
-    assert_equal Date.new(2026, 6, 3),
+  test "every off-mainland zone is planned to the same day" do
+    # Afida leadership set one off-mainland service level (2-4 working days,
+    # planned to day 4), so no zone is promised sooner than another.
+    placed = Time.zone.local(2026, 6, 1, 12, 0, 0) # Monday
+    dates = (ShippingZone::ZONES - [ :mainland ]).map do |zone|
+      estimate(placed, zone: zone).delivery_date
+    end
+
+    assert_equal 1, dates.uniq.size, "expected one off-mainland promise, got #{dates.uniq.inspect}"
+  end
+
+  test "off-mainland lands on the fourth working day after dispatch" do
+    # Monday 12:00 -> dispatch Mon -> +4 working days -> Friday 5 June.
+    assert_equal Date.new(2026, 6, 5),
                  estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :highlands).delivery_date
   end
 
-  test "northern ireland adds a working day on top of the mainland promise" do
-    assert_equal Date.new(2026, 6, 3),
-                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :northern_ireland).delivery_date
-  end
-
-  test "remote islands take the longest" do
-    # Monday 12:00 -> dispatch Mon -> mainland Tue -> +3 working days -> Friday.
-    assert_equal Date.new(2026, 6, 5),
-                 estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), zone: :remote_islands).delivery_date
-  end
-
-  test "zone transit skips weekends like every other working-day hop" do
-    # Thursday 12:00 -> dispatch Thu -> mainland Fri -> Highlands rolls over the
-    # weekend to Monday rather than landing on Saturday.
-    assert_equal Date.new(2026, 6, 8),
+  test "off-mainland transit skips weekends like every other working-day hop" do
+    # Thursday 12:00 -> dispatch Thu -> +4 working days, hopping the weekend,
+    # lands Wednesday 10 June rather than counting calendar days.
+    assert_equal Date.new(2026, 6, 10),
                  estimate(Time.zone.local(2026, 6, 4, 12, 0, 0), zone: :highlands).delivery_date
   end
 
-  test "zone transit skips bank holidays too" do
-    # Monday 1 June 12:00, with Tuesday 2 June a holiday: dispatch Mon, mainland
-    # hop skips to Wed, Highlands hop lands Thursday.
+  test "off-mainland transit skips bank holidays too" do
+    # Monday 1 June 12:00 with Tuesday 2 June a holiday: dispatch Mon, then four
+    # working days stepping over the holiday lands Monday 8 June.
     holidays = [ Date.new(2026, 6, 2) ]
-    assert_equal Date.new(2026, 6, 4),
+    assert_equal Date.new(2026, 6, 8),
                  estimate(Time.zone.local(2026, 6, 1, 12, 0, 0), holidays, zone: :highlands).delivery_date
   end
 

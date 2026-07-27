@@ -101,12 +101,25 @@ class ShippingZoneTest < ActiveSupport::TestCase
     end
   end
 
+  # Afida leadership set one off-mainland delivery policy: 2-4 working days
+  # everywhere off the mainland, rather than a per-zone transit time. We quote
+  # the range but PLAN to the slow end, so a parcel arriving early is a good
+  # surprise and one taking the full four days still meets the promise.
+
   test "mainland is the only zone shipped next working day" do
     assert_equal 0, ShippingZone.transit_days(:mainland)
-    assert_operator ShippingZone.transit_days(:highlands), :>, 0
-    assert_operator ShippingZone.transit_days(:northern_ireland), :>, 0
-    assert_operator ShippingZone.transit_days(:remote_islands), :>,
-                    ShippingZone.transit_days(:highlands)
+
+    (ShippingZone::ZONES - [ :mainland ]).each do |zone|
+      assert_operator ShippingZone.transit_days(zone), :>, 0,
+                      "#{zone} must not be sold as next working day"
+    end
+  end
+
+  test "every off-mainland zone plans to the slow end of the 2-4 day range" do
+    (ShippingZone::ZONES - [ :mainland ]).each do |zone|
+      assert_equal 3, ShippingZone.transit_days(zone),
+                   "#{zone} should add 3 days on top of the next-day hop, landing on day 4"
+    end
   end
 
   test "mainland zone is deliverable and carries no surcharge" do
@@ -181,23 +194,22 @@ class ShippingZoneTest < ActiveSupport::TestCase
     assert_equal "next working day", ShippingZone.transit_label(:mainland)
   end
 
-  test "zones we cannot reach next day are labelled with their real transit time" do
-    assert_equal "2 working days", ShippingZone.transit_label(:highlands)
-    assert_equal "2 working days", ShippingZone.transit_label(:northern_ireland)
-    assert_equal "4 working days", ShippingZone.transit_label(:remote_islands)
+  test "every off-mainland zone is quoted as the 2-4 day range" do
+    (ShippingZone::ZONES - [ :mainland ]).each do |zone|
+      assert_equal "2-4 working days", ShippingZone.transit_label(zone)
+    end
   end
 
-  test "the label states the same number of days the delivery date is computed from" do
-    # The label rides in the Stripe line-item name while DeliveryEstimate stamps
-    # a single date on the order, so a range label ("2-4 working days") would
-    # contradict the one date the confirmation email states. Both must derive
-    # from TRANSIT_DAYS.
-    ShippingZone::ZONES.each do |zone|
-      expected_days = ShippingZone.transit_days(zone) + 1
-      next if expected_days == 1 # mainland's label is worded, not numbered
+  test "the quoted range covers the day the delivery date is planned to" do
+    # The label is a RANGE while DeliveryEstimate stamps a single date, so the
+    # two can't be asserted equal. What must hold is that the planned date falls
+    # inside the quoted range: quoting 2-4 days and then promising day 5 would be
+    # a contradiction the customer sees on the confirmation email.
+    (ShippingZone::ZONES - [ :mainland ]).each do |zone|
+      planned_day = ShippingZone.transit_days(zone) + 1
 
-      assert_equal "#{expected_days} working days", ShippingZone.transit_label(zone),
-                   "#{zone}'s label must match the #{expected_days} days DeliveryEstimate adds"
+      assert_operator planned_day, :>=, 2, "#{zone} plans earlier than the quoted range"
+      assert_operator planned_day, :<=, 4, "#{zone} plans later than the quoted range"
     end
   end
 

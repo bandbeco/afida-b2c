@@ -96,24 +96,15 @@
                     <td class="py-3 pr-4">Next working day</td>
                     <td class="py-3"><%= delivery_price_display %></td>
                   </tr>
-                  <%# Transit times come from ShippingZone so this table cannot
-                      drift from what the cart quotes and the order promises. %>
-                  <tr class="border-b border-gray-100">
-                    <td class="py-3 pr-4">Northern Ireland, Scottish Highlands</td>
+                  <%# One off-mainland row: Northern Ireland, the Scottish
+                      Highlands and every offshore island share a single service
+                      level and rate. The transit wording comes from ShippingZone
+                      so this table cannot drift from what the cart quotes and
+                      the order promises. %>
+                  <tr>
+                    <td class="py-3 pr-4">Northern Ireland, Scottish Highlands and offshore islands</td>
                     <td class="py-3 pr-4">Any</td>
                     <td class="py-3 pr-4"><%= ShippingZone.transit_label(:highlands).capitalize %></td>
-                    <td class="py-3">Quoted at checkout</td>
-                  </tr>
-                  <tr class="border-b border-gray-100">
-                    <td class="py-3 pr-4">Isle of Wight</td>
-                    <td class="py-3 pr-4">Any</td>
-                    <td class="py-3 pr-4"><%= ShippingZone.transit_label(:offshore_islands).capitalize %></td>
-                    <td class="py-3">Quoted at checkout</td>
-                  </tr>
-                  <tr>
-                    <td class="py-3 pr-4">Scottish islands, Isles of Scilly</td>
-                    <td class="py-3 pr-4">Any</td>
-                    <td class="py-3 pr-4"><%= ShippingZone.transit_label(:remote_islands).capitalize %></td>
                     <td class="py-3">Quoted at checkout</td>
                   </tr>
                 </tbody>
@@ -123,7 +114,7 @@
 
           <div>
             <h3 class="font-medium text-gray-900 mb-2">Dispatch Times</h3>
-            <p class="text-gray-600 text-sm">We aim to dispatch every order received before 2pm (Monday to Friday) on the same day. Unless otherwise specified, mainland UK orders are sent using our next working day service; deliveries to Northern Ireland, the Scottish Highlands and offshore islands take longer in transit.</p>
+            <p class="text-gray-600 text-sm">We aim to dispatch every order received before 2pm (Monday to Friday) on the same day. Unless otherwise specified, mainland UK orders are sent using our next working day service; deliveries to Northern Ireland, the Scottish Highlands and offshore islands take <%= ShippingZone.transit_label(:highlands) %>.</p>
           </div>
 
           <div>

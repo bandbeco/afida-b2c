@@ -379,7 +379,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     build_session_builder(delivery_postcode: "HS1 2DD").create
 
-    assert_equal "Shipping (4 working days)",
+    assert_equal "Shipping (2-4 working days)",
                  shipping_line_item(captured_params).dig(:price_data, :product_data, :name)
   end
 

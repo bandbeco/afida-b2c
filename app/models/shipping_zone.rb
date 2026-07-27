@@ -42,14 +42,20 @@ class ShippingZone
   ].freeze
 
   # Working days to add on top of the standard next-working-day dispatch.
-  # DPD rates HS/ZE/KW15-17 at 2-4 days, so those cannot be sold as next-day at
-  # any price. Mainland is the only zone that keeps the next-working-day promise.
+  #
+  # Afida leadership set ONE off-mainland service level: 2-4 working days
+  # everywhere off the mainland, rather than a per-zone transit time. We quote
+  # that range (see TRANSIT_LABELS) but plan to its slow end, so a parcel that
+  # arrives early is a good surprise while one taking the full four days still
+  # meets the promise. Mainland is the only zone that keeps next-working-day.
+  OFF_MAINLAND_TRANSIT_DAYS = 3
+
   TRANSIT_DAYS = {
     mainland: 0,
-    highlands: 1,
-    northern_ireland: 1,
-    offshore_islands: 1,
-    remote_islands: 3
+    highlands: OFF_MAINLAND_TRANSIT_DAYS,
+    northern_ireland: OFF_MAINLAND_TRANSIT_DAYS,
+    offshore_islands: OFF_MAINLAND_TRANSIT_DAYS,
+    remote_islands: OFF_MAINLAND_TRANSIT_DAYS
   }.freeze
 
   # Per-zone delivery surcharge in pounds, on top of Shipping::STANDARD_COST.
@@ -67,24 +73,22 @@ class ShippingZone
   }.freeze
 
   # Zones where free delivery over the standard threshold still applies.
-  # Mainland only by default: the free-shipping promise is a mainland promise,
-  # which is what the site copy now says.
+  #
+  # Mainland only, confirmed by Afida leadership: there is no free shipping
+  # off-mainland at any order value. The carrier surcharge off-mainland is per
+  # case, so a large order costs MORE to ship, not less; waiving delivery on it
+  # would lose more the bigger the order got. This is what the site copy says.
   FREE_SHIPPING_ZONES = %i[mainland].freeze
 
   # Customer-facing transit wording, shown in the cart and carried in the Stripe
-  # line-item name. Derived from TRANSIT_DAYS rather than written out per zone so
-  # a zone can never be labelled next-day while its transit time says otherwise.
+  # line-item name.
   #
-  # These state the SAME number of days DeliveryEstimate adds, deliberately. DPD
-  # quotes 2-4 days for HS/ZE/KW15-17, and we plan to the slow end (TRANSIT_DAYS
-  # of 3, so 4 working days); labelling it "2-4 working days" while the order
-  # confirmation states a single date at the far end of that range would have the
-  # two promises contradict each other. Quote the date we actually commit to.
-  TRANSIT_LABELS = {
-    0 => "next working day",
-    1 => "2 working days",
-    3 => "4 working days"
-  }.freeze
+  # Off-mainland quotes the 2-4 day RANGE while DeliveryEstimate stamps a single
+  # date planned to day 4. The two are deliberately not the same shape: the range
+  # is what we advertise, the date is what we commit to, and the date sits inside
+  # the range so a customer reading both is never told two contradicting things.
+  MAINLAND_TRANSIT_LABEL = "next working day"
+  OFF_MAINLAND_TRANSIT_LABEL = "2-4 working days"
 
   class << self
     # The zone for a postcode, or :unknown when the postcode cannot be parsed.
@@ -124,10 +128,11 @@ class ShippingZone
       TRANSIT_DAYS.fetch(zone)
     end
 
-    # How long delivery takes to this zone, in customer-facing words.
+    # How long delivery takes to this zone, in customer-facing words. Keyed off
+    # transit_days so an undeliverable zone (which falls to the slowest transit)
+    # can never be labelled next working day.
     def transit_label(zone)
-      days = transit_days(zone)
-      TRANSIT_LABELS.fetch(days) { "#{days + 1} working days" }
+      transit_days(zone).zero? ? MAINLAND_TRANSIT_LABEL : OFF_MAINLAND_TRANSIT_LABEL
     end
 
     # The zone's surcharge in pounds. Reached from Cart#cart_totals on every cart
