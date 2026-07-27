@@ -238,11 +238,15 @@ class OrderTotalsTest < ActiveSupport::TestCase
     assert_nil totals.shipping
   end
 
-  test "remote islands cost more than the highlands for the same order" do
-    highlands = OrderTotals.for(BigDecimal("50.00"), shipping: :charged, zone: :highlands)
-    islands = OrderTotals.for(BigDecimal("50.00"), shipping: :charged, zone: :remote_islands)
+  test "every off-mainland zone costs the same for the same order" do
+    # One off-mainland rate, per the agreed policy. Pinned here as well as in
+    # ShippingZone because this is the figure the customer actually sees.
+    shipping = (ShippingZone::ZONES - [ :mainland ]).map do |zone|
+      OrderTotals.for(BigDecimal("50.00"), shipping: :charged, zone: zone).shipping
+    end
 
-    assert_operator islands.shipping, :>, highlands.shipping
+    assert_equal 1, shipping.uniq.size, "expected one off-mainland rate, got #{shipping.uniq.inspect}"
+    assert_operator shipping.first, :>, OrderTotals.for(BigDecimal("50.00"), shipping: :charged).shipping
   end
 
   # ==========================================================================

@@ -94,11 +94,15 @@ class ShippingTest < ActiveSupport::TestCase
     assert_operator item[:price_data][:unit_amount], :>, Shipping::STANDARD_COST
   end
 
-  test "shipping_line_item surcharges remote islands more than the highlands" do
-    highlands = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :highlands)
-    islands = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :remote_islands)
+  test "shipping_line_item charges every off-mainland zone the same" do
+    # One off-mainland rate, per the agreed policy: the islands are not charged
+    # more than the Highlands, because the customer buys one service level.
+    amounts = (ShippingZone::ZONES - [ :mainland ]).map do |zone|
+      Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: zone)[:price_data][:unit_amount]
+    end
 
-    assert_operator islands[:price_data][:unit_amount], :>, highlands[:price_data][:unit_amount]
+    assert_equal 1, amounts.uniq.size, "expected one off-mainland rate, got #{amounts.uniq.inspect}"
+    assert_operator amounts.first, :>, Shipping::STANDARD_COST
   end
 
   test "shipping_line_item names the zone's real transit time, not next working day" do

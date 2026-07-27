@@ -137,6 +137,23 @@ class ShippingZoneTest < ActiveSupport::TestCase
     end
   end
 
+  test "every off-mainland zone is charged the same surcharge" do
+    # Afida leadership confirmed the only granularity needed is mainland vs
+    # off-mainland, so a per-zone price tier would contradict the agreed policy
+    # (and would show customers different prices for the same service level).
+    surcharges = (ShippingZone::ZONES - [ :mainland ]).map { |z| ShippingZone.surcharge(z) }
+
+    assert_equal 1, surcharges.uniq.size,
+                 "expected one off-mainland surcharge, got #{surcharges.uniq.inspect}"
+  end
+
+  test "off-mainland delivery costs one figure, mainland another" do
+    costs = (ShippingZone::ZONES - [ :mainland ]).map { |z| Shipping.cost_for_zone_in_pounds(z) }
+
+    assert_equal 1, costs.uniq.size, "off-mainland must be a single price, not a range"
+    assert_operator costs.first, :>, Shipping.cost_for_zone_in_pounds(:mainland)
+  end
+
   # The zone lookup only needs the outward code, and "IV51" is the natural thing
   # to type into a "calculate delivery" field. Rejecting it would tell a customer
   # their real postcode wasn't recognised.

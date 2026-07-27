@@ -58,18 +58,26 @@ class ShippingZone
     remote_islands: OFF_MAINLAND_TRANSIT_DAYS
   }.freeze
 
-  # Per-zone delivery surcharge in pounds, on top of Shipping::STANDARD_COST.
+  # Delivery surcharge in pounds, on top of Shipping::STANDARD_COST.
   #
-  # PLACEHOLDER VALUES pending the DPD rate card. They are deliberately
+  # ONE off-mainland figure, not a per-zone tier: Afida leadership confirmed the
+  # only granularity needed is mainland vs off-mainland, so every off-mainland
+  # zone is charged alike (as they are already promised alike, see TRANSIT_DAYS).
+  #
+  # STILL A PLACEHOLDER. The agreed commercial rate is £25 PER CASE, which this
+  # model cannot express: the surcharge here is applied once per order, not per
+  # case. Until per-case pricing lands, this is a flat per-order stand-in, set
   # non-zero so an un-updated deployment over-recovers rather than silently
-  # absorbing the surcharge, which is the current bug. Override per zone with
-  # SHIPPING_SURCHARGE_<ZONE>, e.g. SHIPPING_SURCHARGE_HIGHLANDS=12.50.
+  # absorbing the surcharge (the bug this work exists to fix). Override per zone
+  # with SHIPPING_SURCHARGE_<ZONE>, e.g. SHIPPING_SURCHARGE_HIGHLANDS=25.
+  OFF_MAINLAND_SURCHARGE = "25.00"
+
   DEFAULT_SURCHARGES = {
     mainland: "0",
-    highlands: "12.50",
-    northern_ireland: "12.50",
-    offshore_islands: "12.50",
-    remote_islands: "20.00"
+    highlands: OFF_MAINLAND_SURCHARGE,
+    northern_ireland: OFF_MAINLAND_SURCHARGE,
+    offshore_islands: OFF_MAINLAND_SURCHARGE,
+    remote_islands: OFF_MAINLAND_SURCHARGE
   }.freeze
 
   # Zones where free delivery over the standard threshold still applies.
