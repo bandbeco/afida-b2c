@@ -74,12 +74,15 @@ class ApplicationController < ActionController::Base
   # same destination. Without it the cart would quote mainland shipping and the
   # customer would meet the surcharge for the first time at the payment screen.
   #
-  # A logged-in customer's default address is the fallback, mirroring
-  # CheckoutsController#delivery_postcode_for (which prefers a selected saved
-  # address over the typed field). Without this the cart would show "Free" on a
-  # large order to a saved Highlands address while Stripe charged the surcharge:
-  # exactly the undisclosed jump at the payment screen this work exists to remove.
-  # A typed postcode still wins, since that is the more recent explicit choice.
+  # A logged-in customer's default address is the fallback. Without it the cart
+  # would defer pricing entirely for a customer who has already told us where
+  # they ship, and they'd meet the charge for the first time at the payment
+  # screen. A typed postcode still wins, since it is the more recent explicit
+  # choice.
+  #
+  # CheckoutsController#delivery_postcode_for resolves in exactly this order and
+  # must keep doing so: when it preferred a selected saved address instead, a
+  # customer could be quoted £6.99 on the cart and charged £25 by Stripe.
   def apply_session_delivery_postcode_to_cart
     return unless Current.cart
 
@@ -94,8 +97,15 @@ class ApplicationController < ActionController::Base
   # there), while a signed-in customer can still hold a guest cart (set_current_cart
   # only binds a user cart when Current.user is set). Taking either keeps every
   # surface pricing the same destination.
+  #
+  # Memoized per request: this runs from the set_current_cart before_action on
+  # every authenticated page load, and again from the view helper and the
+  # checkout guard, which would otherwise repeat the same indexed lookup. The
+  # ivar is defined? -guarded so a nil result is cached too.
   def default_address_postcode
+    return @default_address_postcode if defined?(@default_address_postcode)
+
     owner = Current.cart&.user || Current.user
-    owner&.addresses&.default_first&.first&.postcode
+    @default_address_postcode = owner&.addresses&.default_first&.first&.postcode
   end
 end

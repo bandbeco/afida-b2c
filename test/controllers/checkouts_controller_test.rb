@@ -73,6 +73,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   # the cart-page field and be charged mainland rates to a surcharged zone.
 
   test "create refuses checkout when no delivery postcode has been given" do
+    # The cart owner must have no saved address either, or their default one
+    # would supply the destination (which is exactly what the cart prices from).
+    @user.addresses.destroy_all
     set_delivery_postcode("")
     Stripe::Checkout::Session.expects(:create).never
 
@@ -123,6 +126,49 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_response :see_other
+  end
+
+  # The cart and the checkout must resolve the destination the SAME way. They
+  # once disagreed: the cart preferred the typed postcode and fell back to the
+  # customer's default address, while checkout preferred a selected saved
+  # address and fell back to the typed postcode. Two bugs followed.
+
+  test "charges the zone the cart quoted when a saved address is also selected" do
+    # Bug: typing a mainland postcode and then selecting a saved Highlands
+    # address quoted £6.99 on the cart and charged £25 at Stripe, an undisclosed
+    # jump at the payment screen. The cart's quote is the promise, so it wins.
+    skye = @user.addresses.create!(
+      nickname: "Skye #{SecureRandom.hex(4)}", recipient_name: "Jane",
+      line1: "2 Skye Rd", city: "Portree", postcode: "IV51 9YB", country: "GB"
+    )
+    @user.update!(stripe_customer_id: "cus_zone_agree")
+    User.any_instance.stubs(:sync_stripe_customer!)
+    sign_in_as(@user)
+    set_delivery_postcode("WD18 9SB")
+
+    captured = nil
+    Stripe::Checkout::Session.stubs(:create).with { |p| captured = p; true }.returns(build_stripe_session)
+
+    post checkout_path, params: { address_id: skye.id }
+
+    assert_equal "mainland", captured[:metadata][:shipping_zone],
+                 "Stripe must charge the zone the cart quoted, not a different saved address"
+  end
+
+  test "a default saved address satisfies the requirement, as the cart prices from it" do
+    # Bug: the cart enables its checkout button from the customer's DEFAULT
+    # address, but checkout only accepted a SELECTED one. Submitting with a
+    # blank address_id (the "enter a different address" radio) was refused and
+    # bounced back to a cart whose button was still enabled: a dead-end loop.
+    set_delivery_postcode("")
+    @user.update!(stripe_customer_id: "cus_default_addr")
+    User.any_instance.stubs(:sync_stripe_customer!)
+    sign_in_as(@user)
+    stub_stripe_session_create
+
+    post checkout_path, params: { address_id: "" }
+
+    assert_response :see_other, "a customer whose cart priced from their default address must not be refused"
   end
 
   test "create builds line items from cart items" do

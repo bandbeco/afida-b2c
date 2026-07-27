@@ -220,6 +220,32 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert flash[:alert].present?, "expected an explanation the postcode was not recognised"
   end
 
+  test "delivery_postcode discards the previous postcode when a new one is rejected" do
+    # Otherwise the customer is told their postcode wasn't recognised while the
+    # cart quietly keeps quoting (and checkout keeps pricing) the OLD one, which
+    # the field still displays: they'd be shown a price for a destination they
+    # just replaced.
+    get cart_url
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+    assert_equal "BT1 6EE", session[:delivery_postcode]
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "not a postcode" }
+
+    assert_nil session[:delivery_postcode], "a rejected submission must not leave the old destination priced"
+  end
+
+  test "delivery_postcode explains that we do not ship to the Channel Islands" do
+    # "We didn't recognise that postcode" would be untrue and unhelpful: JE2 3AB
+    # is a perfectly valid postcode, we simply do not deliver there.
+    get cart_url
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "JE2 3AB" }
+
+    assert_nil session[:delivery_postcode]
+    assert_match(/don't deliver/i, flash[:alert],
+                 "expected to be told we don't ship there, not that the postcode was unrecognised")
+  end
+
   test "delivery_postcode clears a stored postcode when submitted blank" do
     get cart_url
     post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }

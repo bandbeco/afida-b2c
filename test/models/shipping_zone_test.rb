@@ -218,6 +218,34 @@ class ShippingZoneTest < ActiveSupport::TestCase
     assert_equal :mainland, ShippingZone.for("SW38YU")
   end
 
+  # The Crown Dependencies are not GB, so Shipping::ALLOWED_COUNTRIES refuses
+  # them at Stripe's address screen. That is too late to be the only defence:
+  # resolving them to :mainland made the cart quote £6.99, or FREE over the
+  # threshold, and let checkout build a Stripe session, so the customer only
+  # discovered we don't ship there after clicking through to payment.
+  test "the crown dependencies are not deliverable" do
+    {
+      "IM1 1AA" => "Isle of Man",
+      "IM99 1PS" => "Isle of Man",
+      "GY1 1AA" => "Guernsey",
+      "JE2 3AB" => "Jersey"
+    }.each do |postcode, place|
+      zone = ShippingZone.for(postcode)
+
+      assert_not_equal :mainland, zone, "#{postcode} (#{place}) must not be priced as mainland"
+      assert_not ShippingZone.deliverable?(zone), "#{postcode} (#{place}) is outside GB, so we do not ship there"
+    end
+  end
+
+  test "the crown dependencies never ship free" do
+    # The worst case of the mainland fallback: an order over the threshold to
+    # Douglas or St Helier was quoted free delivery.
+    %w[IM1\ 1AA GY1\ 1AA JE2\ 3AB].each do |postcode|
+      assert_not ShippingZone.free_shipping?(ShippingZone.for(postcode)),
+                 "#{postcode} must never be offered free delivery"
+    end
+  end
+
   test "unparseable input is unknown rather than silently mainland" do
     [ "", "   ", nil, "not a postcode", "12345", "XX" ].each do |input|
       assert_equal :unknown, ShippingZone.for(input), "expected #{input.inspect} to be unknown"

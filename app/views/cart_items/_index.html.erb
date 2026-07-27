@@ -86,11 +86,12 @@
                 the address, so checkout is refused without a destination. Disable
                 the button rather than letting the customer bounce off the guard.
 
-                The default address stands in for the selected one: the radio is
-                pre-checked on the default and the server can't see a client-side
-                change. Picking "enter a different address" and submitting without
-                a postcode still hits the guard, but the cart already prices from
-                the default address, so that case now has a postcode either way. %>
+                This asks the same question CheckoutsController#deliverable_destination?
+                asks, in the same order (typed postcode, then selected address,
+                then the default address). They MUST agree: when they didn't, a
+                customer who picked "enter a different address" saw an enabled
+                button, was refused by the guard, and landed back on a cart whose
+                button was still enabled, with nothing pointing at the fix. %>
             <% destination_known = delivery_destination_known?(Current.cart, address_postcode: cart_owner_default_postcode(Current.cart)) %>
             <div class="mt-4 sm:mt-6">
               <button type="submit"

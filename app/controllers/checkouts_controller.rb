@@ -219,17 +219,31 @@ class CheckoutsController < ApplicationController
 
   private
 
-  # The postcode used to price delivery. A saved address the customer selected is
-  # the better signal (it is the address the order will actually ship to), so it
-  # wins over the typed cart-page field; otherwise fall back to what they entered
-  # to calculate delivery. Nil means mainland pricing, as today.
+  # The postcode used to price delivery.
+  #
+  # This MUST resolve in the same order as the cart preview
+  # (ApplicationController#apply_session_delivery_postcode_to_cart), because the
+  # price the cart quoted is the price we promised. The typed field therefore
+  # wins over a selected saved address, and the customer's default address is
+  # the last resort. The two once disagreed in opposite directions and produced
+  # two bugs: typing a mainland postcode then selecting a saved Highlands
+  # address quoted £6.99 and charged £25, and a customer whose cart priced from
+  # their default address was refused at checkout for not selecting one.
+  #
+  # The selected address is still consulted, so a logged-in customer who picked a
+  # saved address without typing anything is priced from it rather than refused.
+  # Nil means mainland pricing, as today.
   def delivery_postcode_for(address_id)
-    selected_address_postcode(address_id) || session[:delivery_postcode]
+    session[:delivery_postcode].presence ||
+      selected_address_postcode(address_id) ||
+      default_address_postcode
   end
 
-  # Whether we know where this order is going well enough to price it. A selected
-  # saved address counts (it carries its own postcode and is the address the order
-  # ships to), so a logged-in customer never retypes what they already gave us.
+  # Whether we know where this order is going well enough to price it. Mirrors
+  # ApplicationHelper#delivery_destination_known?, which decides whether the
+  # cart's checkout button is offered at all; if these disagree the customer
+  # either meets a guard the button told them they had passed, or is stopped
+  # from checking out on a cart that was priced perfectly well.
   def deliverable_destination?(address_id)
     ShippingZone.deliverable?(ShippingZone.for(delivery_postcode_for(address_id)))
   end

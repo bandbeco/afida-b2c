@@ -35,18 +35,25 @@ class CartsController < ApplicationController
   # where the order is going: line-item prices are fixed when the Stripe session
   # is built, one screen before Stripe collects the address.
   #
-  # A blank submission clears it (back to mainland pricing). An unrecognised
-  # postcode is refused rather than stored, so we never price a destination we
-  # could not identify.
+  # A blank submission clears it (back to deferred pricing). Anything we can't
+  # price is refused AND clears whatever was stored before, so a customer is
+  # never shown a price for a destination they have just replaced.
+  #
+  # The two refusal reasons get different messages because they are different
+  # problems: a typo is worth retrying, whereas JE2 3AB is a perfectly valid
+  # postcode we simply do not deliver to, and telling that customer we didn't
+  # recognise it would send them round a loop that cannot succeed.
   def delivery_postcode
     postcode = params[:delivery_postcode].to_s.strip
+    zone = ShippingZone.for(postcode)
 
     if postcode.blank?
       session.delete(:delivery_postcode)
-    elsif ShippingZone.deliverable?(ShippingZone.for(postcode))
+    elsif ShippingZone.deliverable?(zone)
       session[:delivery_postcode] = postcode
     else
-      flash[:alert] = "We didn't recognise that postcode. Please check it and try again."
+      session.delete(:delivery_postcode)
+      flash[:alert] = delivery_postcode_error(zone)
     end
 
     redirect_to cart_path
@@ -58,6 +65,17 @@ class CartsController < ApplicationController
   end
 
   private
+
+  # Why we refused the postcode, in the customer's terms. :undeliverable means a
+  # valid postcode somewhere we don't ship (the Crown Dependencies), so saying we
+  # didn't recognise it would be untrue and would invite a pointless retry.
+  def delivery_postcode_error(zone)
+    if zone == :undeliverable
+      "Sorry, we don't deliver to the Channel Islands or the Isle of Man."
+    else
+      "We didn't recognise that postcode. Please check it and try again."
+    end
+  end
 
   def eager_load_cart
     # Eager load cart items with their associations to prevent N+1 queries

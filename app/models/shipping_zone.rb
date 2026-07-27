@@ -27,15 +27,23 @@ class ShippingZone
   # HS and ZE are DPD UK's 2-4 Days rows (HS1-9, ZE1-3), which is every allocated
   # district in both areas. BT is outside the Scottish table's scope: Northern
   # Ireland is off-mainland by geography, not by a Scottish surcharge row.
-  #
-  # Isle of Man (IM) and the Channel Islands (GY/JE) are absent deliberately:
-  # they are not GB, so Shipping::ALLOWED_COUNTRIES already refuses them at
-  # checkout and they can never reach this lookup.
   WHOLE_AREA_ZONES = {
     "BT" => :northern_ireland,
     "HS" => :remote_islands,
     "ZE" => :remote_islands
   }.freeze
+
+  # Postcode areas we do not ship to at all: the Isle of Man and the Channel
+  # Islands are Crown Dependencies, not GB, so Shipping::ALLOWED_COUNTRIES
+  # refuses them at Stripe's address screen.
+  #
+  # They are named here rather than left to fall through to :mainland, which
+  # would be the worst possible answer: the cart would quote £6.99 (or FREE over
+  # the threshold) and checkout would build a Stripe session, so the customer
+  # only discovered we don't ship there after clicking through to payment.
+  # Resolving to :undeliverable instead means deliverable? is false, so the cart
+  # never quotes a price and the checkout guard stops the order at the cart.
+  UNDELIVERABLE_AREAS = %w[IM GY JE].freeze
 
   # Zones matched on an (area, district range) pair.
   #
@@ -152,14 +160,17 @@ class ShippingZone
   OFF_MAINLAND_TRANSIT_LABEL = "2-4 working days"
 
   class << self
-    # The zone for a postcode, or :unknown when the postcode cannot be parsed.
+    # The zone for a postcode: :unknown when it cannot be parsed, :undeliverable
+    # for a place we do not ship to, or one of ZONES.
     #
-    # :unknown is distinct from :mainland on purpose. Defaulting unparseable
-    # input to mainland would price the cheapest zone for an address we failed
-    # to understand, so callers decide explicitly (see .deliverable?).
+    # Both non-ZONES answers are distinct from :mainland on purpose. Defaulting
+    # either to mainland would quote the cheapest zone (and free delivery over
+    # the threshold) for an address we either failed to understand or cannot
+    # serve at all, so callers decide explicitly (see .deliverable?).
     def for(postcode)
       area, district = parse(postcode)
       return :unknown unless area
+      return :undeliverable if UNDELIVERABLE_AREAS.include?(area)
 
       return WHOLE_AREA_ZONES.fetch(area) if WHOLE_AREA_ZONES.key?(area)
 
