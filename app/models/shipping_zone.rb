@@ -27,6 +27,11 @@ class ShippingZone
   }.freeze
 
   # Zones matched on an (area, district range) pair, from DPD's table.
+  #
+  # The Isle of Wight (PO30-41) is the one exception: DPD's table covers Scotland
+  # only, so it says nothing about the island. Afida leadership confirmed the
+  # Isle of Wight is off-mainland, which is what puts it here. PO1-29 and PO50+
+  # are Portsmouth and Southampton on the mainland, hence the numeric range.
   DISTRICT_RANGE_ZONES = [
     [ "AB", 31..38, :highlands ],
     [ "AB", 41..56, :highlands ],

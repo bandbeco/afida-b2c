@@ -63,6 +63,26 @@ class ShippingZoneTest < ActiveSupport::TestCase
     assert_equal :offshore_islands, ShippingZone.for("PO41 0AA")
   end
 
+  test "the isle of wight is priced and promised as off-mainland" do
+    # Confirmed by Afida leadership. It is the one range not taken from DPD's
+    # table (which covers Scotland only), so pin the consequence rather than
+    # just the label: the island pays the off-mainland rate, never ships free,
+    # and is not sold next working day.
+    assert_equal Shipping.cost_for_zone_in_pounds(:highlands),
+                 Shipping.cost_for_zone_in_pounds(:offshore_islands)
+    assert_not ShippingZone.free_shipping?(:offshore_islands)
+    assert_equal ShippingZone::OFF_MAINLAND_TRANSIT_LABEL,
+                 ShippingZone.transit_label(:offshore_islands)
+  end
+
+  test "portsmouth and southampton stay mainland either side of the island" do
+    # The PO range is numeric: a false off-mainland match here would charge
+    # ordinary south-coast customers the island rate.
+    assert_equal Shipping.standard_cost_in_pounds, Shipping.cost_for_zone_in_pounds(:mainland).to_f
+    assert_equal :mainland, ShippingZone.for("PO29 9ZZ")
+    assert_equal :mainland, ShippingZone.for("PO42 0AA")
+  end
+
   # The near-miss cases: same postcode area as a surcharged range but a district
   # number outside it. Matching on area letters alone would wrongly surcharge
   # these, and KA1, PH2, TR8 and TR26 all appear in real production orders.
