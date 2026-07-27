@@ -122,29 +122,38 @@ class ShippingZoneTest < ActiveSupport::TestCase
     end
   end
 
-  test "mainland zone is deliverable and carries no surcharge" do
+  test "mainland zone is deliverable and priced at the standard cost" do
     assert ShippingZone.deliverable?(:mainland)
-    assert_equal 0, ShippingZone.surcharge(:mainland)
+    assert_nil ShippingZone.delivery_cost(:mainland),
+               "mainland has no zone price of its own; it falls through to Shipping::STANDARD_COST"
   end
 
   test "unknown zone is not deliverable" do
     assert_not ShippingZone.deliverable?(:unknown)
   end
 
-  test "every non-mainland zone declares a surcharge" do
+  test "every non-mainland zone declares a delivery cost" do
     (ShippingZone::ZONES - [ :mainland ]).each do |zone|
-      assert_not_nil ShippingZone.surcharge(zone), "expected #{zone} to declare a surcharge"
+      assert_not_nil ShippingZone.delivery_cost(zone), "expected #{zone} to declare a delivery cost"
     end
   end
 
-  test "every off-mainland zone is charged the same surcharge" do
+  test "every off-mainland zone is charged the same delivery cost" do
     # Afida leadership confirmed the only granularity needed is mainland vs
     # off-mainland, so a per-zone price tier would contradict the agreed policy
     # (and would show customers different prices for the same service level).
-    surcharges = (ShippingZone::ZONES - [ :mainland ]).map { |z| ShippingZone.surcharge(z) }
+    costs = (ShippingZone::ZONES - [ :mainland ]).map { |z| ShippingZone.delivery_cost(z) }
 
-    assert_equal 1, surcharges.uniq.size,
-                 "expected one off-mainland surcharge, got #{surcharges.uniq.inspect}"
+    assert_equal 1, costs.uniq.size,
+                 "expected one off-mainland delivery cost, got #{costs.uniq.inspect}"
+  end
+
+  test "the off-mainland cost is the whole delivery charge, not an addition to it" do
+    # Afida leadership quoted £25 off-mainland as the TOTAL delivery charge. An
+    # earlier revision read it as a surcharge on top of the £6.99 mainland rate,
+    # which billed £31.99. Pinning the total here so it cannot drift back.
+    assert_equal BigDecimal("25.00"), Shipping.cost_for_zone_in_pounds(:highlands)
+    assert_equal BigDecimal("25.00"), Shipping.cost_for_zone_in_pounds(:northern_ireland)
   end
 
   test "off-mainland delivery costs one figure, mainland another" do
@@ -178,19 +187,19 @@ class ShippingZoneTest < ActiveSupport::TestCase
     end
   end
 
-  test "an env override sets the surcharge" do
-    with_env("SHIPPING_SURCHARGE_HIGHLANDS", "15.00") do
-      assert_equal BigDecimal("15.00"), ShippingZone.surcharge(:highlands)
+  test "an env override sets the delivery cost" do
+    with_env("SHIPPING_COST_HIGHLANDS", "35.00") do
+      assert_equal BigDecimal("35.00"), ShippingZone.delivery_cost(:highlands)
     end
   end
 
   test "a malformed env override falls back to the default instead of raising" do
-    # surcharge is reached from Cart#cart_totals on every cart and drawer render,
-    # so a typo like "12.50GBP" would otherwise 500 the whole storefront rather
-    # than degrade to a sane figure.
-    with_env("SHIPPING_SURCHARGE_HIGHLANDS", "12.50GBP") do
-      assert_equal BigDecimal(ShippingZone::DEFAULT_SURCHARGES.fetch(:highlands)),
-                   ShippingZone.surcharge(:highlands)
+    # delivery_cost is reached from Cart#cart_totals on every cart and drawer
+    # render, so a typo like "25GBP" would otherwise 500 the whole storefront
+    # rather than degrade to a sane figure.
+    with_env("SHIPPING_COST_HIGHLANDS", "25GBP") do
+      assert_equal BigDecimal(ShippingZone::DEFAULT_COSTS.fetch(:highlands)),
+                   ShippingZone.delivery_cost(:highlands)
     end
   end
 

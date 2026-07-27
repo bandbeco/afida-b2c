@@ -25,7 +25,7 @@ module PricingHelper
   # The delivery price qualified as a starting point, e.g. "from £6.99".
   #
   # STANDARD_COST is the MAINLAND price; Northern Ireland, the Scottish Highlands
-  # and the islands pay a surcharge on top (see ShippingZone). Copy that states a
+  # and the islands pay a higher flat rate instead (see ShippingZone). Copy that states a
   # flat price without this qualifier promises a rate we don't charge everyone,
   # which is the same class of claim the free-delivery copy had to be corrected
   # for. Use this wherever a price is quoted before a destination is known.
@@ -33,6 +33,19 @@ module PricingHelper
   # @return [String] e.g. "from £6.99"
   def delivery_price_from_display
     "from #{delivery_price_display}"
+  end
+
+  # The off-mainland delivery price, formatted for display (e.g. "£25.00").
+  #
+  # Every off-mainland zone shares one rate, so :highlands stands for all of them
+  # (ShippingZone pins that they agree). Derived rather than restated so the
+  # published delivery table cannot advertise a price we no longer charge.
+  #
+  # @return [String] e.g. "£25.00"
+  def off_mainland_delivery_price_display
+    ActiveSupport::NumberHelper.number_to_currency(
+      Shipping.cost_for_zone_in_pounds(:highlands), unit: "£"
+    )
   end
 
   # Formats quantity display for cart items and order items

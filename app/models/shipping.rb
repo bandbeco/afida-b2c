@@ -75,11 +75,18 @@ class Shipping
     }
   end
 
-  # The delivery charge to a zone, in pence: the standard cost plus the zone's
-  # surcharge. Rounded rather than truncated so a surcharge like 12.50 can never
-  # lose a penny to float representation.
+  # The delivery charge to a zone, in pence.
+  #
+  # Off-mainland zones declare their own flat charge, which REPLACES the standard
+  # cost rather than adding to it (£25 off-mainland is the total the customer
+  # pays, not a surcharge on top of £6.99). Zones with no charge of their own,
+  # mainland included, fall through to STANDARD_COST. Rounded rather than
+  # truncated so a rate like 25.50 can never lose a penny to representation.
   def self.cost_for_zone(zone)
-    STANDARD_COST + (ShippingZone.surcharge(zone) * 100).round.to_i
+    zone_cost = ShippingZone.delivery_cost(zone)
+    return STANDARD_COST unless zone_cost
+
+    (zone_cost * 100).round.to_i
   end
 
   # The delivery charge to a zone in pounds, for display and for OrderTotals.

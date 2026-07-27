@@ -98,14 +98,14 @@
                   </tr>
                   <%# One off-mainland row: Northern Ireland, the Scottish
                       Highlands and every offshore island share a single service
-                      level and rate. The transit wording comes from ShippingZone
-                      so this table cannot drift from what the cart quotes and
-                      the order promises. %>
+                      level and rate. Both the price and the transit wording come
+                      from ShippingZone so this table cannot drift from what the
+                      cart quotes and the order promises. %>
                   <tr>
                     <td class="py-3 pr-4">Northern Ireland, Scottish Highlands and offshore islands</td>
                     <td class="py-3 pr-4">Any</td>
                     <td class="py-3 pr-4"><%= ShippingZone.transit_label(:highlands).capitalize %></td>
-                    <td class="py-3">Quoted at checkout</td>
+                    <td class="py-3"><%= off_mainland_delivery_price_display %></td>
                   </tr>
                 </tbody>
               </table>

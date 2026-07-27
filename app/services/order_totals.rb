@@ -21,8 +21,8 @@
 #               includes both.
 #
 # The zone: keyword is the destination's ShippingZone (default :mainland). Free
-# delivery is a mainland promise, so a non-mainland order pays the standard cost
-# plus its surcharge however large the subtotal.
+# delivery is a mainland promise, so a non-mainland order pays that zone's own
+# flat rate however large the subtotal.
 #
 # Components are full-precision BigDecimals so display callers can round once, at the
 # view, via number_to_currency (unchanged behaviour). Callers that must persist money
@@ -129,7 +129,7 @@ class OrderTotals
   #
   # Free delivery is a mainland promise: only zones in
   # ShippingZone::FREE_SHIPPING_ZONES can reach zero, so a large order to the
-  # Highlands or Northern Ireland still pays the surcharged rate. This mirrors
+  # Highlands or Northern Ireland still pays the off-mainland rate. This mirrors
   # SessionBuilder#shipping_line_item; the two rules have drifted before, so any
   # change here needs the same change there.
   def shipping

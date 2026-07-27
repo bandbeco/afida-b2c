@@ -140,9 +140,10 @@ class PricingHelperTest < ActionView::TestCase
     assert_equal Shipping.formatted_standard_cost, delivery_price_display
   end
 
-  # The standard price is the MAINLAND price. Non-mainland zones pay a surcharge,
-  # so any copy stating a flat delivery price (including JSON-LD FAQ answers and
-  # meta descriptions on the sample pages) has to say which price it is.
+  # The standard price is the MAINLAND price. Non-mainland zones pay their own
+  # higher flat rate, so any copy stating a flat delivery price (including
+  # JSON-LD FAQ answers and meta descriptions on the sample pages) has to say
+  # which price it is.
 
   test "delivery_price_from_display marks the price as a starting point" do
     assert_equal "from £6.99", delivery_price_from_display
@@ -150,6 +151,24 @@ class PricingHelperTest < ActionView::TestCase
 
   test "delivery_price_from_display tracks the standard cost" do
     assert_includes delivery_price_from_display, delivery_price_display
+  end
+
+  test "off_mainland_delivery_price_display renders the off-mainland rate" do
+    assert_equal "£25.00", off_mainland_delivery_price_display
+  end
+
+  test "off_mainland_delivery_price_display derives from the zone, not a literal" do
+    # The delivery page quotes this figure to customers, so it has to track
+    # ShippingZone rather than restating it: a rate change must not leave the
+    # published table advertising a price we no longer charge.
+    assert_equal ActiveSupport::NumberHelper.number_to_currency(
+      Shipping.cost_for_zone_in_pounds(:highlands), unit: "£"
+    ), off_mainland_delivery_price_display
+  end
+
+  test "off_mainland_delivery_price_display quotes more than the mainland price" do
+    assert_operator Shipping.cost_for_zone_in_pounds(:highlands), :>,
+                    BigDecimal(Shipping.standard_cost_in_pounds.to_s)
   end
 
   # Tests for format_quantity_display

@@ -68,13 +68,14 @@ class ShippingTest < ActiveSupport::TestCase
   end
 
   # ==========================================================================
-  # Zone surcharges. The delivery cost is the standard cost plus the zone's
-  # surcharge, so a non-mainland order stops being priced as if it were local.
+  # Zone pricing. Mainland pays the standard cost; every off-mainland zone pays
+  # its own flat delivery charge instead, so a non-mainland order stops being
+  # priced as if it were local.
   # ==========================================================================
 
   test "shipping_line_item with no zone charges the standard cost" do
     # Callers that don't know the destination (no postcode captured) keep the
-    # existing behaviour rather than guessing a surcharge.
+    # existing behaviour rather than guessing an off-mainland rate.
     item = Shipping.shipping_line_item(tax_rate_id: "txr_123")
 
     assert_equal Shipping::STANDARD_COST, item[:price_data][:unit_amount]
@@ -86,10 +87,12 @@ class ShippingTest < ActiveSupport::TestCase
     assert_equal Shipping::STANDARD_COST, item[:price_data][:unit_amount]
   end
 
-  test "shipping_line_item adds the zone surcharge for a surcharged zone" do
+  test "shipping_line_item charges the zone's own rate off-mainland" do
+    # The off-mainland figure REPLACES the standard cost, it is not added to it:
+    # Afida leadership quoted £25 as the total delivery charge off-mainland.
     item = Shipping.shipping_line_item(tax_rate_id: "txr_123", zone: :highlands)
 
-    expected = Shipping::STANDARD_COST + (ShippingZone.surcharge(:highlands) * 100).to_i
+    expected = (ShippingZone.delivery_cost(:highlands) * 100).to_i
     assert_equal expected, item[:price_data][:unit_amount]
     assert_operator item[:price_data][:unit_amount], :>, Shipping::STANDARD_COST
   end

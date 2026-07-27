@@ -58,32 +58,37 @@ class ShippingZone
     remote_islands: OFF_MAINLAND_TRANSIT_DAYS
   }.freeze
 
-  # Delivery surcharge in pounds, on top of Shipping::STANDARD_COST.
+  # The whole delivery charge in pounds for an off-mainland zone.
   #
-  # ONE off-mainland figure, not a per-zone tier: Afida leadership confirmed the
-  # only granularity needed is mainland vs off-mainland, so every off-mainland
-  # zone is charged alike (as they are already promised alike, see TRANSIT_DAYS).
+  # This REPLACES Shipping::STANDARD_COST rather than adding to it: Afida
+  # leadership quoted £25 off-mainland as the total the customer pays, not as a
+  # surcharge on top of the £6.99 mainland rate. Mainland has no entry here and
+  # falls through to STANDARD_COST, which stays the single definition of the
+  # mainland price.
   #
-  # STILL A PLACEHOLDER. The agreed commercial rate is £25 PER CASE, which this
-  # model cannot express: the surcharge here is applied once per order, not per
-  # case. Until per-case pricing lands, this is a flat per-order stand-in, set
-  # non-zero so an un-updated deployment over-recovers rather than silently
-  # absorbing the surcharge (the bug this work exists to fix). Override per zone
-  # with SHIPPING_SURCHARGE_<ZONE>, e.g. SHIPPING_SURCHARGE_HIGHLANDS=25.
-  OFF_MAINLAND_SURCHARGE = "25.00"
+  # ONE off-mainland figure, not a per-zone tier: the only granularity needed is
+  # mainland vs off-mainland, so every off-mainland zone is charged alike (as
+  # they are already promised alike, see TRANSIT_DAYS).
+  #
+  # STILL A PLACEHOLDER IN SHAPE. The agreed commercial rate is £25 PER CASE,
+  # which this model cannot express: the figure here is applied once per order,
+  # not per case. So a single-case order is billed correctly while a multi-case
+  # one under-recovers. Until per-case pricing lands this is a flat per-order
+  # stand-in. Override per zone with SHIPPING_COST_<ZONE>, e.g.
+  # SHIPPING_COST_HIGHLANDS=25.
+  OFF_MAINLAND_COST = "25.00"
 
-  DEFAULT_SURCHARGES = {
-    mainland: "0",
-    highlands: OFF_MAINLAND_SURCHARGE,
-    northern_ireland: OFF_MAINLAND_SURCHARGE,
-    offshore_islands: OFF_MAINLAND_SURCHARGE,
-    remote_islands: OFF_MAINLAND_SURCHARGE
+  DEFAULT_COSTS = {
+    highlands: OFF_MAINLAND_COST,
+    northern_ireland: OFF_MAINLAND_COST,
+    offshore_islands: OFF_MAINLAND_COST,
+    remote_islands: OFF_MAINLAND_COST
   }.freeze
 
   # Zones where free delivery over the standard threshold still applies.
   #
   # Mainland only, confirmed by Afida leadership: there is no free shipping
-  # off-mainland at any order value. The carrier surcharge off-mainland is per
+  # off-mainland at any order value. The carrier charges us off-mainland per
   # case, so a large order costs MORE to ship, not less; waiving delivery on it
   # would lose more the bigger the order got. This is what the site copy says.
   FREE_SHIPPING_ZONES = %i[mainland].freeze
@@ -143,21 +148,25 @@ class ShippingZone
       transit_days(zone).zero? ? MAINLAND_TRANSIT_LABEL : OFF_MAINLAND_TRANSIT_LABEL
     end
 
-    # The zone's surcharge in pounds. Reached from Cart#cart_totals on every cart
-    # and drawer render, so a malformed env override degrades to the default
-    # rather than raising: a typo in SHIPPING_SURCHARGE_* must not take the
-    # storefront down. The bad value is logged so it doesn't fail silently.
-    def surcharge(zone)
-      return BigDecimal("0") unless deliverable?(zone)
+    # The zone's whole delivery charge in pounds, or nil for a zone that has no
+    # price of its own and so takes Shipping::STANDARD_COST (mainland, and any
+    # undeliverable zone, which callers normalise to mainland before pricing).
+    #
+    # Reached from Cart#cart_totals on every cart and drawer render, so a
+    # malformed env override degrades to the default rather than raising: a typo
+    # in SHIPPING_COST_* must not take the storefront down. The bad value is
+    # logged so it doesn't fail silently.
+    def delivery_cost(zone)
+      default = DEFAULT_COSTS[zone]
+      return nil unless default
 
-      default = DEFAULT_SURCHARGES.fetch(zone)
-      configured = ENV.fetch("SHIPPING_SURCHARGE_#{zone.to_s.upcase}", default)
+      configured = ENV.fetch("SHIPPING_COST_#{zone.to_s.upcase}", default)
 
       begin
         BigDecimal(configured)
       rescue ArgumentError, TypeError
         Rails.logger.error(
-          "[ShippingZone] SHIPPING_SURCHARGE_#{zone.to_s.upcase}=#{configured.inspect} is not a number; using #{default}"
+          "[ShippingZone] SHIPPING_COST_#{zone.to_s.upcase}=#{configured.inspect} is not a number; using #{default}"
         )
         BigDecimal(default)
       end

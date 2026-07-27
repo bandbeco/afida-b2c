@@ -193,7 +193,7 @@ class OrderTotalsTest < ActiveSupport::TestCase
 
   # ==========================================================================
   # Delivery zone. The free-shipping threshold is a mainland promise; other
-  # zones pay the standard cost plus their surcharge however large the order.
+  # zones pay their own flat off-mainland rate however large the order.
   # These figures must mirror Checkout::SessionBuilder's shipping line item,
   # which is the pair that has drifted before.
   # ==========================================================================
@@ -206,25 +206,25 @@ class OrderTotalsTest < ActiveSupport::TestCase
     assert_equal default.total, explicit.total
   end
 
-  test "a surcharged zone below the threshold pays the standard cost plus its surcharge" do
+  test "an off-mainland zone below the threshold pays that zone's flat rate" do
     totals = OrderTotals.for(BigDecimal("96.00"), shipping: :charged, zone: :highlands)
 
-    assert_equal STANDARD_COST + ShippingZone.surcharge(:highlands), totals.shipping
+    assert_equal ShippingZone.delivery_cost(:highlands), totals.shipping
   end
 
-  test "a surcharged zone above the threshold still pays, unlike mainland" do
+  test "an off-mainland zone above the threshold still pays, unlike mainland" do
     # The live bug: two orders over £100 shipped free to Northern Ireland and
     # Skye because the threshold took no account of the destination.
     mainland = OrderTotals.for(BigDecimal("450.00"), shipping: :charged, zone: :mainland)
     highlands = OrderTotals.for(BigDecimal("450.00"), shipping: :charged, zone: :highlands)
 
     assert_equal BigDecimal("0"), mainland.shipping
-    assert_equal STANDARD_COST + ShippingZone.surcharge(:highlands), highlands.shipping
+    assert_equal ShippingZone.delivery_cost(:highlands), highlands.shipping
     assert_operator highlands.total, :>, mainland.total
   end
 
   test "zone shipping is taxed like any other shipping" do
-    # VAT applies to the delivery charge, surcharge included.
+    # VAT applies to the delivery charge at the off-mainland rate too.
     totals = OrderTotals.for(BigDecimal("450.00"), shipping: :charged, zone: :northern_ireland)
 
     expected_vat = (BigDecimal("450.00") + totals.shipping) * BigDecimal(VAT_RATE.to_s)

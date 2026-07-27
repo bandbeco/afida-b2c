@@ -52,11 +52,13 @@ class ShippingZoneProductionDataTest < ActiveSupport::TestCase
     end
   end
 
-  test "only the known non-mainland orders carry a surcharge" do
-    surcharged = (MAINLAND + NON_MAINLAND.keys).reject do |postcode|
-      ShippingZone.surcharge(ShippingZone.for(postcode)).zero?
+  test "only the known non-mainland orders are priced above the standard rate" do
+    standard = Shipping.cost_for_zone(:mainland)
+
+    dearer = (MAINLAND + NON_MAINLAND.keys).select do |postcode|
+      Shipping.cost_for_zone(ShippingZone.for(postcode)) > standard
     end
 
-    assert_equal NON_MAINLAND.keys.sort, surcharged.sort
+    assert_equal NON_MAINLAND.keys.sort, dearer.sort
   end
 end
