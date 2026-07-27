@@ -35,7 +35,7 @@
         <div class="w-full md:w-1/2 lg:w-1/3 bg-gray-100 p-4 sm:p-6 rounded-lg shadow-md">
           <%= render "cart_items/summary", cart: Current.cart %>
 
-          <%= render "cart_items/delivery_calculator", cart: Current.cart, standalone: true %>
+          <%= render "cart_items/delivery_calculator", cart: Current.cart, targetable: true %>
 
           <%# Checkout form with optional address selection. The analytics wiring comes from
               the shared analytics_checkout_form_data so the begin_checkout contract has one home. %>

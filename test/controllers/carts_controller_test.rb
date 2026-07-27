@@ -225,29 +225,21 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#drawer_cart_content form[action=?]", delivery_postcode_cart_path
   end
 
-  test "the drawer omits the non-mainland explainer" do
-    # The drawer is a narrow column where the field, the totals and the checkout
-    # button all have to fit; the explainer pushed them down for a case most
-    # customers aren't in. Entering a postcode still reports the zone and the
-    # transit time, which is the part that applies to them.
+  # Neither cart surface carries the non-mainland explainer any more. It spent
+  # height on a case most customers aren't in, and the field answers the question
+  # better than the paragraph did: entering a postcode reports that customer's own
+  # zone and transit time. The explanation still lives on /delivery-returns.
+  test "neither cart surface carries the non-mainland explainer" do
     get cart_url
     post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
 
     get product_url(products(:one))
-
     assert_select "#drawer_cart_content form[action=?]", delivery_postcode_cart_path
     assert_select "#drawer_cart_content [data-test=non-mainland-note]", count: 0
-  end
-
-  test "the cart page keeps the non-mainland explainer" do
-    # It has room for it, and it's the page a customer lands on from the
-    # drawer's needs-a-postcode link, so the explanation stays reachable.
-    get cart_url
-    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
 
     get cart_url
-
-    assert_select "[data-test=non-mainland-note]"
+    assert_select "form[action=?]", delivery_postcode_cart_path
+    assert_select "[data-test=non-mainland-note]", count: 0
   end
 
   test "a turbo stream submission updates the drawer in place" do
@@ -279,6 +271,25 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_select "turbo-stream[action=replace][target=cart_summary]"
+  end
+
+  test "a turbo stream submission re-renders the cart page's own copy of the field" do
+    # The replacement has to be the CART PAGE's copy, not the drawer's: it is the
+    # copy that carries #delivery_calculator, and Turbo matches the replacement
+    # by that id. Rendering the drawer's copy into that slot would strip the id,
+    # so the NEXT submission would have nothing to target and the field would
+    # silently stop updating after one use.
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_select "turbo-stream[action=replace][target=delivery_calculator]" do
+      assert_select "#delivery_calculator", count: 1,
+                    message: "the replacement must keep the id Turbo targets"
+    end
   end
 
   test "clearing the postcode reprices the re-rendered surfaces, not just the session" do

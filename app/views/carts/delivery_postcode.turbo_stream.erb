@@ -15,6 +15,10 @@
 
 <%# The cart page mounts the calculator outside #cart_summary, so its own copy of
     the field (and the note under it) needs replacing separately. The drawer's
-    copy came along with drawer_cart_content above. %>
+    copy came along with drawer_cart_content above.
+
+    `targetable` re-emits the #delivery_calculator id that Turbo matched to get
+    here. Without it the field updates once and then goes dead, having replaced
+    itself with a copy the next submission has nothing to target. %>
 <%= turbo_stream.replace "delivery_calculator", partial: "cart_items/delivery_calculator",
-                         locals: { cart: Current.cart } %>
+                         locals: { cart: Current.cart, targetable: true } %>

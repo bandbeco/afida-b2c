@@ -5,13 +5,13 @@
     line items before Stripe collects the address, so without a destination the
     cart cannot quote at all and checkout is refused.
 
-    Pass the cart as `cart`. `standalone` marks the cart-page copy, which differs
-    from the drawer's in two ways: it carries the #delivery_calculator id the
-    Turbo Stream targets (the drawer's copy is replaced with the whole drawer, and
-    a shared id would be duplicated on the cart page), and it shows the
-    non-mainland explainer, which the drawer has no height to spare for. %>
-<% standalone = local_assigns.fetch(:standalone, false) %>
-<div class="mt-4 pt-4 border-t border-gray-200" <%= tag.attributes(id: "delivery_calculator") if standalone %>>
+    Pass the cart as `cart`. The two mounts render identically; `targetable`
+    only decides which one owns the #delivery_calculator id that the Turbo Stream
+    replaces. The cart page's copy owns it; the drawer's copy is replaced as part
+    of the whole drawer, and both are on the page together when the drawer is
+    open, so a shared id would be duplicated and Turbo would target the wrong one. %>
+<% targetable = local_assigns.fetch(:targetable, false) %>
+<div class="mt-4 pt-4 border-t border-gray-200" <%= tag.attributes(id: "delivery_calculator") if targetable %>>
   <%= form_with url: delivery_postcode_cart_path, method: :post, class: "space-y-2" do |f| %>
     <%= f.label :delivery_postcode, "Delivery postcode", class: "block text-sm text-gray-700" %>
 
@@ -30,19 +30,13 @@
     <% if flash[:alert].present? %>
       <p class="text-xs text-error" data-test="delivery-postcode-error"><%= flash[:alert] %></p>
     <% elsif cart.delivery_postcode.present? %>
+      <%# Neither surface explains the non-mainland zones up front any more: that
+          paragraph spent height on a case most customers aren't in, and this line
+          answers the same question better by naming the customer's OWN zone and
+          transit time. The general explanation lives on /delivery-returns. %>
       <p class="text-xs text-gray-600" data-test="delivery-zone-note">
         Delivering to <%= delivery_zone_name(cart.delivery_zone) %>,
         <%= ShippingZone.transit_label(cart.delivery_zone) %>.
-      </p>
-    <% elsif standalone %>
-      <%# Cart page only. The drawer is a narrow column where the field, totals
-          and checkout button compete for height, so it omits the explainer for
-          a case most customers aren't in; entering a postcode still reports
-          their own zone and transit time above, which is the part that applies
-          to them. The cart page has the room, and it is where the drawer's
-          needs-a-postcode link lands. %>
-      <p class="text-xs text-gray-500" data-test="non-mainland-note">
-        <%= non_mainland_delivery_note %>
       </p>
     <% end %>
   <% end %>
