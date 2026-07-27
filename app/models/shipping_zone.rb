@@ -70,11 +70,12 @@ class ShippingZone
   # mainland vs off-mainland, so every off-mainland zone is charged alike (as
   # they are already promised alike, see TRANSIT_DAYS).
   #
-  # STILL A PLACEHOLDER IN SHAPE. The agreed commercial rate is £25 PER CASE,
-  # which this model cannot express: the figure here is applied once per order,
-  # not per case. So a single-case order is billed correctly while a multi-case
-  # one under-recovers. Until per-case pricing lands this is a flat per-order
-  # stand-in. Override per zone with SHIPPING_COST_<ZONE>, e.g.
+  # PER ORDER, not per case, by decision: this figure is charged once however
+  # many cases the order contains. The carrier bills us per case, so a bulk
+  # off-mainland order under-recovers by design; Afida leadership chose the
+  # simpler pricing over full recovery for now. Moving to per-case pricing means
+  # multiplying by the case count, not editing this constant, so keep the two
+  # questions separate. Override per zone with SHIPPING_COST_<ZONE>, e.g.
   # SHIPPING_COST_HIGHLANDS=25.
   OFF_MAINLAND_COST = "25.00"
 

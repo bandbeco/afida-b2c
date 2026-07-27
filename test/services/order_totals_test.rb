@@ -238,6 +238,17 @@ class OrderTotalsTest < ActiveSupport::TestCase
     assert_nil totals.shipping
   end
 
+  test "the off-mainland charge is per order, not per case" do
+    # A decision, not an oversight: the carrier bills us per case, but delivery
+    # is charged once per order however many cases it contains. The real Skye
+    # order was 11 cases of £374.80 of goods; it pays one £25, not eleven.
+    small = OrderTotals.for(BigDecimal("34.07"), shipping: :charged, zone: :highlands)
+    bulk = OrderTotals.for(BigDecimal("374.80"), shipping: :charged, zone: :highlands)
+
+    assert_equal small.shipping, bulk.shipping
+    assert_equal ShippingZone.delivery_cost(:highlands), bulk.shipping
+  end
+
   test "every off-mainland zone costs the same for the same order" do
     # One off-mainland rate, per the agreed policy. Pinned here as well as in
     # ShippingZone because this is the figure the customer actually sees.
