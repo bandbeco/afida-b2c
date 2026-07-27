@@ -72,10 +72,5 @@
   </div>
 
   <!-- Cart Drawer -->
-  <div class="drawer-side z-50">
-    <label for="cart-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-    <div class="bg-base-200 w-80 min-h-full p-4">
-      <%= render "shared/drawer_cart_content" %>
-    </div>
-  </div>
+  <%= render "shared/cart_drawer", z_index: "z-50" %>
 </div>

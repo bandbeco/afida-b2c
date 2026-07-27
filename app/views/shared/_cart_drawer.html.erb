@@ -1,0 +1,22 @@
+<%# The cart drawer's slide-out panel: the overlay, the panel box and its sizing.
+    The contents are shared/_drawer_cart_content; this is the shell around them.
+
+    One home for the shell because it is mounted on every page that has a cart
+    drawer, and it used to be pasted into each of them. They drifted: the
+    price-list copy had lost `h-full` and `flex flex-col`, which the content
+    partial depends on for its scroll-the-items-not-the-footer layout, so on
+    that one page the drawer laid out differently for no reason anyone chose.
+
+    `z_index` is the one genuine per-page difference: pages with sticky elements
+    that would otherwise sit above the drawer pass "z-50". %>
+<% z_index = local_assigns.fetch(:z_index, nil) %>
+<div class="drawer-side <%= z_index %>">
+  <label for="cart-drawer" aria-label="Close cart drawer" class="drawer-overlay"></label>
+
+  <%# w-80 on the smallest screens (a wider panel would leave no page visible
+      behind it), stepping up on sm+ so the totals, the postcode field and the
+      checkout button are not competing for a 320px column. %>
+  <div class="bg-base-200 text-base-content h-full w-80 sm:w-96 lg:w-[28rem] p-4 sm:p-6 flex flex-col">
+    <%= render "shared/drawer_cart_content" %>
+  </div>
+</div>

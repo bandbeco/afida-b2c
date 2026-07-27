@@ -210,6 +210,34 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-test=delivery-zone-note]", text: /Northern Ireland/
   end
 
+  # --- the drawer shell ---
+  # The slide-out panel used to be pasted into every page that mounts a drawer.
+  # They drifted: the price-list copy had lost the flex layout the content
+  # partial needs, so that one page laid out differently for no reason anyone
+  # chose. These pin the single shell, since a stray hand-rolled copy would
+  # reintroduce exactly that.
+
+  test "every page mounting the cart drawer renders exactly one shell" do
+    pages = [ root_path, shop_path, price_list_path, product_path(products(:one)) ]
+
+    pages.each do |page|
+      get page
+
+      assert_response :success, "#{page} should render"
+      assert_select "##{'drawer_cart_content'}", count: 1,
+                    message: "#{page} should mount exactly one cart drawer"
+    end
+  end
+
+  test "the drawer panel is wider than a phone column on larger screens" do
+    # The panel steps up from w-80 so the totals, the postcode field and the
+    # checkout button stop competing for a 320px column. Pinned because the
+    # width is what makes the postcode field and the summary readable together.
+    get product_path(products(:one))
+
+    assert_select ".drawer-side div.w-80.sm\\:w-96", count: 1
+  end
+
   # --- the postcode field in the drawer ---
   # The drawer is a checkout entry point in its own right, so it carries the
   # calculator too: sending a customer to /cart to type a postcode drops them out

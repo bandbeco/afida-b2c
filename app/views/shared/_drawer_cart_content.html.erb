@@ -4,8 +4,8 @@
     <%= render "shared/flash_info", message: notice %>
   <% end %>
 
-  <div class="flex items-center justify-between mb-4 flex-shrink-0">
-    <h2 class="flex items-center gap-2">
+  <div class="flex items-center justify-between mb-5 flex-shrink-0">
+    <h2 class="flex items-center gap-2 text-xl sm:text-2xl">
       Cart
       <% if Current.cart && Current.cart.line_items_count > 0 %>
         <span class="bg-primary text-primary-content text-sm px-2.5 py-0.5 rounded-full"><%= Current.cart.line_items_count %></span>
@@ -19,7 +19,7 @@
         <% if cart_item.product.present? %>
           <div class="flex items-center space-x-3 p-3 bg-base-100 rounded-lg">
             <div class="relative flex-shrink-0">
-              <%= product_photo_tag(cart_item.product.primary_photo, alt: cart_item.product.generated_title, class: "w-12 h-12 rounded bg-white object-contain") %>
+              <%= product_photo_tag(cart_item.product.primary_photo, alt: cart_item.product.generated_title, class: "w-16 h-16 rounded bg-white object-contain") %>
               <% if cart_item.sample? %>
                 <%= render "shared/sample_badge", size: :sm %>
               <% end %>
@@ -61,21 +61,32 @@
           /cart for it: shipping is baked into the Stripe line items before Stripe
           collects the address, so without a destination here the drawer's only
           option is a link out of the flow the customer is in. %>
-      <%= render "cart_items/delivery_calculator", cart: Current.cart %>
+      <%# The calculator's own wrapper rules it off from the items above, but
+          nothing separated it from the totals below: the field sat flush against
+          Subtotal, so the first figure read as part of the calculator rather than
+          as the first line of the summary. %>
+      <div class="mb-5">
+        <%= render "cart_items/delivery_calculator", cart: Current.cart %>
+      </div>
 
       <%# Lines come from CartSummary (the same source the cart page uses, mirroring
           OrderSummary for orders) so the labels, order and discount-visibility stay
           consistent across both cart surfaces; the drawer supplies its own compact
-          row markup. The Total carries its own emphasis and extra bottom margin. %>
+          row markup.
+
+          The Total is set apart by size and a rule above it rather than by weight
+          (the project uses no bold or semibold anywhere), so it still reads as the
+          figure that matters on a panel this wide. %>
       <% cart_summary_lines(Current.cart).each do |line| %>
-        <div class="flex justify-between items-center <%= line[:kind] == :total ? "mb-8" : "mb-4" %><%= " text-success" if line[:negative] %>">
-          <span class="font-medium"><%= line[:label] %></span>
-          <span class="<%= "text-lg" if line[:kind] == :total %>"><%= line[:amount] %></span>
+        <% total = line[:kind] == :total %>
+        <div class="flex justify-between items-center <%= total ? "mt-4 pt-4 border-t border-base-300 mb-8" : "mb-3" %><%= " text-success" if line[:negative] %>">
+          <span class="<%= total ? "text-lg" : "text-sm sm:text-base text-gray-600" %>"><%= line[:label] %></span>
+          <span class="<%= total ? "text-xl sm:text-2xl" : "text-sm sm:text-base" %>"><%= line[:amount] %></span>
         </div>
       <% end %>
 
       <div>
-        <%= render "shared/checkout_button", label: "Proceed to Checkout", button_class: "btn btn-primary w-full" %>
+        <%= render "shared/checkout_button", label: "Proceed to Checkout", button_class: "btn btn-primary btn-lg w-full text-base shadow-lg shadow-black/20" %>
       </div>
     </div>
   <% else %>
