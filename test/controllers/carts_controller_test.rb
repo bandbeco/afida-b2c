@@ -320,6 +320,50 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # The cart page's checkout button is disabled when there is no deliverable
+  # destination, and that `disabled` is decided at render time. It sits OUTSIDE
+  # the summary and the calculator, so a Turbo submission that replaced only
+  # those left the button showing the previous answer:
+  #
+  #   - clear a postcode and the button stayed ENABLED, sending the customer
+  #     into a checkout the guard then refuses;
+  #   - enter a valid one and the button stayed DISABLED with "enter your
+  #     postcode above" still under it, while the totals repriced in front of
+  #     them. A dead end on the one path that matters.
+  #
+  # So the stream has to carry the button too, in both directions.
+
+  test "a turbo stream submission enables the cart page's checkout button" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "BT1 6EE" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_select "turbo-stream[action=replace][target=cart_checkout]" do
+      assert_select "button[type=submit][disabled]", count: 0,
+                    message: "a known destination must leave the button usable"
+      assert_select "[data-test=checkout-blocked-note]", count: 0
+    end
+  end
+
+  test "a turbo stream submission re-disables the cart page's checkout button" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_select "turbo-stream[action=replace][target=cart_checkout]" do
+      assert_select "button[type=submit][disabled]", count: 1,
+                    message: "removing the destination must disable checkout again"
+      assert_select "[data-test=checkout-blocked-note]", count: 1
+    end
+  end
+
   test "clearing the postcode reprices the re-rendered surfaces, not just the session" do
     # The before_action can only SET the cart's postcode, never clear it, so
     # without an explicit reprice the drawer would keep quoting the destination

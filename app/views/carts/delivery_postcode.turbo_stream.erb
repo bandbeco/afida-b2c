@@ -22,3 +22,14 @@
     itself with a copy the next submission has nothing to target. %>
 <%= turbo_stream.replace "delivery_calculator", partial: "cart_items/delivery_calculator",
                          locals: { cart: Current.cart, targetable: true } %>
+
+<%# The cart page's checkout button lives outside both blocks above, and whether
+    it is disabled is decided when it renders. Replacing only the totals left it
+    stating the previous answer: still disabled after a valid postcode was
+    entered (a dead end, with the totals repriced right beside it), or still
+    enabled after one was cleared (a checkout the guard then refuses).
+
+    The drawer's button needs no equivalent: it came along with
+    drawer_cart_content. A no-op where the cart page isn't mounted. %>
+<%= turbo_stream.replace "cart_checkout", partial: "cart_items/checkout",
+                         locals: { cart: Current.cart } %>
