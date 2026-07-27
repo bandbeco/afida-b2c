@@ -1,11 +1,17 @@
-<%# The cart-page "calculate delivery" field. Delivery to Northern Ireland, the
-    Scottish Highlands and the offshore islands costs more and takes longer, so
-    the customer gets to see both here rather than meeting a surcharge at the
-    payment screen. The field is optional: leaving it blank prices mainland, and
-    Stripe still collects the real address at checkout.
+<%# The "calculate delivery" field, mounted on the cart page AND in the drawer.
+    Delivery to Northern Ireland, the Scottish Highlands and the offshore islands
+    costs more and takes longer, so the customer sees both here rather than
+    meeting the charge at the payment screen. Shipping is priced into the Stripe
+    line items before Stripe collects the address, so without a destination the
+    cart cannot quote at all and checkout is refused.
 
-    Pass the cart as `cart`. %>
-<div class="mt-4 pt-4 border-t border-gray-200">
+    The drawer's copy is replaced with the whole drawer, so only the cart page's
+    copy carries the #delivery_calculator id the Turbo Stream targets; giving
+    both the same id would put a duplicate id on the cart page.
+
+    Pass the cart as `cart`. `standalone` marks the cart-page copy. %>
+<% standalone = local_assigns.fetch(:standalone, false) %>
+<div class="mt-4 pt-4 border-t border-gray-200" <%= tag.attributes(id: "delivery_calculator") if standalone %>>
   <%= form_with url: delivery_postcode_cart_path, method: :post, class: "space-y-2" do |f| %>
     <%= f.label :delivery_postcode, "Delivery postcode", class: "block text-sm text-gray-700" %>
 
@@ -18,7 +24,12 @@
       <%= f.submit "Calculate", class: "btn btn-sm btn-outline" %>
     </div>
 
-    <% if cart.delivery_postcode.present? %>
+    <%# A refusal is shown here rather than in the flash: this is where the
+        customer is looking, and a Turbo submission from the drawer never
+        re-renders the layout that hosts the flash. %>
+    <% if flash[:alert].present? %>
+      <p class="text-xs text-error" data-test="delivery-postcode-error"><%= flash[:alert] %></p>
+    <% elsif cart.delivery_postcode.present? %>
       <p class="text-xs text-gray-600" data-test="delivery-zone-note">
         Delivering to <%= delivery_zone_name(cart.delivery_zone) %>,
         <%= ShippingZone.transit_label(cart.delivery_zone) %>.

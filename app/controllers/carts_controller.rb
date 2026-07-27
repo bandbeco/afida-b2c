@@ -43,6 +43,11 @@ class CartsController < ApplicationController
   # problems: a typo is worth retrying, whereas JE2 3AB is a perfectly valid
   # postcode we simply do not deliver to, and telling that customer we didn't
   # recognise it would send them round a loop that cannot succeed.
+  # The field is mounted on the cart page AND in the drawer, so a Turbo Stream
+  # request re-renders both surfaces in place. Redirecting a drawer submission
+  # would navigate away and close the drawer, dropping the customer out of the
+  # page they were shopping on, which is the whole reason the field is there.
+  # A non-Turbo request still redirects, so the form works without JS.
   def delivery_postcode
     postcode = params[:delivery_postcode].to_s.strip
     zone = ShippingZone.for(postcode)
@@ -56,7 +61,18 @@ class CartsController < ApplicationController
       flash[:alert] = delivery_postcode_error(zone)
     end
 
-    redirect_to cart_path
+    # The before_action already primed the cart from the PREVIOUS session value,
+    # so re-apply it here or the re-rendered surfaces would quote the old
+    # destination back at the customer.
+    reprice_cart_for_session_postcode
+
+    # html first so a client that sends no usable Accept header (or prefers HTML,
+    # as browsers do without Turbo) gets the redirect rather than a Turbo Stream
+    # body rendered as a page.
+    respond_to do |format|
+      format.html { redirect_to cart_path }
+      format.turbo_stream
+    end
   end
 
   def destroy
@@ -65,6 +81,18 @@ class CartsController < ApplicationController
   end
 
   private
+
+  # Re-apply the (possibly just-changed or just-cleared) session postcode to the
+  # cart before re-rendering. apply_session_delivery_postcode_to_cart can only
+  # set, not clear, so assigning nil here is what makes a cleared or rejected
+  # submission actually drop back to deferred pricing on the re-rendered surfaces
+  # rather than keep quoting the old destination.
+  def reprice_cart_for_session_postcode
+    return unless Current.cart
+
+    Current.cart.delivery_postcode =
+      session[:delivery_postcode].presence || default_address_postcode
+  end
 
   # Why we refused the postcode, in the customer's terms. :undeliverable means a
   # valid postcode somewhere we don't ship (the Crown Dependencies), so saying we

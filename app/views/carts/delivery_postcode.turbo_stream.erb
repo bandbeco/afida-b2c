@@ -1,0 +1,20 @@
+<%# Repricing the cart for a new destination changes the shipping line, and with
+    it VAT and the Total, on BOTH cart surfaces. The field is mounted in each, so
+    each is replaced wholesale rather than patching individual lines: a partial
+    update could leave one surface quoting a destination the other had moved on
+    from. Both replacements are no-ops where that surface isn't mounted.
+
+    A refusal is reported inside the calculator itself rather than through the
+    flash: the flash renders as a bare div in the layout with no id to target,
+    and an inline message sits where the customer is already looking. %>
+<%= turbo_stream.replace "drawer_cart_content" do %>
+  <%= render "shared/drawer_cart_content" %>
+<% end %>
+
+<%= turbo_stream.replace "cart_summary", partial: "cart_items/summary", locals: { cart: Current.cart } %>
+
+<%# The cart page mounts the calculator outside #cart_summary, so its own copy of
+    the field (and the note under it) needs replacing separately. The drawer's
+    copy came along with drawer_cart_content above. %>
+<%= turbo_stream.replace "delivery_calculator", partial: "cart_items/delivery_calculator",
+                         locals: { cart: Current.cart } %>

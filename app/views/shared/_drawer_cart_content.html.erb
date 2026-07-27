@@ -57,6 +57,12 @@
     </div>
 
     <div class="border-t pt-4 flex-shrink-0">
+      <%# The drawer prices delivery itself rather than sending the customer to
+          /cart for it: shipping is baked into the Stripe line items before Stripe
+          collects the address, so without a destination here the drawer's only
+          option is a link out of the flow the customer is in. %>
+      <%= render "cart_items/delivery_calculator", cart: Current.cart %>
+
       <%# Lines come from CartSummary (the same source the cart page uses, mirroring
           OrderSummary for orders) so the labels, order and discount-visibility stay
           consistent across both cart surfaces; the drawer supplies its own compact

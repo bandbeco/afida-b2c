@@ -210,6 +210,96 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-test=delivery-zone-note]", text: /Northern Ireland/
   end
 
+  # --- the postcode field in the drawer ---
+  # The drawer is a checkout entry point in its own right, so it carries the
+  # calculator too: sending a customer to /cart to type a postcode drops them out
+  # of the flow they were in, and the drawer is the surface that survives if the
+  # cart page is ever retired.
+
+  test "the drawer carries the delivery postcode field" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    get product_url(products(:one))
+
+    assert_select "#drawer_cart_content form[action=?]", delivery_postcode_cart_path
+  end
+
+  test "a turbo stream submission updates the drawer in place" do
+    # A redirect would navigate away and close the drawer, losing the customer's
+    # place. The cart mutations already answer with a drawer replacement; this
+    # follows the same contract.
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "BT1 6EE" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match "text/vnd.turbo-stream.html", response.media_type
+    assert_select "turbo-stream[action=replace][target=drawer_cart_content]" do
+      assert_select "[data-test=delivery-zone-note]", text: /Northern Ireland/
+    end
+  end
+
+  test "a turbo stream submission repricing the drawer also refreshes the cart summary" do
+    # The cart page mounts the same field, so a Turbo submission from there must
+    # refresh its summary too, not only the drawer's.
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "BT1 6EE" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_select "turbo-stream[action=replace][target=cart_summary]"
+  end
+
+  test "clearing the postcode reprices the re-rendered surfaces, not just the session" do
+    # The before_action can only SET the cart's postcode, never clear it, so
+    # without an explicit reprice the drawer would keep quoting the destination
+    # the customer just removed.
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_select "turbo-stream[action=replace][target=drawer_cart_content]" do
+      assert_select "[data-test=delivery-zone-note]", count: 0,
+                    text: /Northern Ireland/
+    end
+  end
+
+  test "a non-turbo submission still redirects to the cart" do
+    # Without JS the form is a plain POST, so it must keep working.
+    get cart_url
+
+    post delivery_postcode_cart_url, params: { delivery_postcode: "BT1 6EE" }
+
+    assert_redirected_to cart_path
+  end
+
+  test "a rejected turbo stream submission reports the error without navigating" do
+    get cart_url
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    post delivery_postcode_cart_url,
+         params: { delivery_postcode: "JE2 3AB" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=drawer_cart_content]" do
+      # Shown inline in the drawer, not only in the flash: a Turbo submission
+      # never re-renders the layout that hosts the flash, so a customer working
+      # in the drawer would otherwise see nothing happen at all.
+      assert_select "[data-test=delivery-postcode-error]", text: /don't deliver/i
+    end
+  end
+
   test "delivery_postcode rejects an unparseable postcode without storing it" do
     get cart_url
 
