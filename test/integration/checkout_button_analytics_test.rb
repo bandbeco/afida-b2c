@@ -81,10 +81,15 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
   end
 
   test "the cart-link variant still reports begin_checkout" do
-    # With no delivery postcode the drawer links to the cart instead of POSTing
-    # (checkout would refuse it). That click is still the customer beginning
-    # checkout, so the funnel must not lose the event just because the affordance
-    # changed shape. Uses a fresh session so no postcode is in play.
+    # With no delivery postcode the navbar dropdown links to the cart instead of
+    # POSTing (checkout would refuse it). That click is still the customer
+    # beginning checkout, so the funnel must not lose the event just because the
+    # affordance changed shape. Uses a fresh session so no postcode is in play.
+    #
+    # Asserted on the dropdown, not the drawer: the drawer carries the postcode
+    # field, so it now disables its button instead of linking out, and a disabled
+    # button reports nothing. See the note in shared/_checkout_button.html.erb on
+    # why that trade was accepted.
     reset!
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     post cart_cart_items_path, params: { cart_item: { sku: @product.sku, quantity: 1 } }
@@ -92,7 +97,7 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_response :success
-    assert_select "#drawer_cart_content a[data-test=checkout-needs-postcode]" \
+    assert_select "#cart_counter a[data-test=checkout-needs-postcode]" \
                   "[data-controller='analytics']" \
                   "[data-action='click->analytics#beginCheckout']" \
                   "[data-analytics-cart-value-value]" \

@@ -67,6 +67,16 @@ module ApplicationHelper
       "at a separate rate and take #{ShippingZone.transit_label(:highlands)}."
   end
 
+  # Why the checkout button is disabled, shown under it on the cart page and in
+  # the drawer. One home because the two surfaces are deliberately identical
+  # here: the whole point of disabling the drawer's button rather than linking
+  # out was that it should read the same as the cart page, which two copies of
+  # the sentence would quietly undo. Both say "above" because both mount the
+  # postcode field above the button.
+  def checkout_blocked_note
+    "Enter your delivery postcode above to continue."
+  end
+
   # A ShippingZone in the customer's words, for the cart's delivery calculator.
   # The zone symbols are carrier vocabulary; these are what a customer would
   # recognise as the place they live.
