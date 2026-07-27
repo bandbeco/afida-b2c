@@ -72,6 +72,9 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
   test "successful signup does not show a discount for a samples-only cart" do
     cart = add_item_to_session_cart
     cart.cart_items.update_all(is_sample: true, price: 0)
+    # The Total asserted below is a shipping-inclusive figure, which the cart
+    # only quotes once it knows where the order is going.
+    post delivery_postcode_cart_url, params: { delivery_postcode: "WD18 9SB" }
 
     post email_subscriptions_path,
          params: { email: "samples-discount@example.com" },

@@ -77,6 +77,9 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     cart = Cart.find(session[:cart_id])
     # products(:one) is £10/pack; one pack keeps the cart under the £100 threshold.
     cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    # A destination is required before any price is quoted, so enter one the way
+    # a customer does. Without it the line reads "Calculate at checkout".
+    post delivery_postcode_cart_url, params: { delivery_postcode: "WD18 9SB" }
 
     get cart_url
     assert_response :success
@@ -95,6 +98,9 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
       active: true
     )
     cart.cart_items.create!(product: over_threshold, quantity: 1, price: over_threshold.price)
+    # Free delivery is a MAINLAND promise, so it only appears once the customer
+    # has told us the order is going to the mainland.
+    post delivery_postcode_cart_url, params: { delivery_postcode: "WD18 9SB" }
 
     get cart_url
     assert_response :success

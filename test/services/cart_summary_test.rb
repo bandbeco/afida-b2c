@@ -14,6 +14,11 @@ class CartSummaryTest < ActiveSupport::TestCase
     @cart = Cart.create!
     # £20 subtotal, below the free-shipping threshold so shipping is charged.
     @cart.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
+    # A known mainland destination, because most of these tests are about the
+    # line shape and money format, which need shipping to be QUOTED at all: the
+    # cart defers it until the customer says where the order is going. The
+    # deferral has its own tests below, which use a cart with no postcode.
+    @cart.delivery_postcode = "WD18 9SB"
   end
 
   # A no-discount cart omits the discount line and keeps the canonical order:
@@ -32,6 +37,7 @@ class CartSummaryTest < ActiveSupport::TestCase
   end
 
   test "formats subtotal, vat and total as GBP and shipping via the cart display" do
+    @cart.delivery_postcode = "WD18 9SB" # a known destination, so shipping is quoted
     by_kind = CartSummary.lines(@cart).index_by { |l| l[:kind] }
     # subtotal 20.00, shipping 6.99, vat (20+6.99)*0.2 = 5.398, total summed-rounded.
     assert_equal "£20.00", by_kind[:subtotal][:amount]
@@ -47,20 +53,58 @@ class CartSummaryTest < ActiveSupport::TestCase
 
   # Shipping shows the cart's display string, not a bare amount: "Free" at/above
   # the threshold so the cart and the order surfaces agree on the wording.
-  test "shows free shipping as Free" do
-    free_cart = Cart.create!
-    variant = Product.create!(
-      category: categories(:cups),
-      name: "Free-ship pack",
-      sku: "TEST-CARTSUMMARY-FREE-SHIP",
-      price: Shipping::FREE_SHIPPING_THRESHOLD,
-      pac_size: 1,
-      active: true
-    )
-    free_cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+  #
+  # But "Free" is a MAINLAND promise, so it may only be shown once we know the
+  # destination. Cart#delivery_zone falls back to mainland when no postcode has
+  # been given, which prices the cart but must not be reported to the customer
+  # as a quote: the drawer was showing "Shipping Free" on a cart bound for an
+  # unknown address, which is the same unqualified claim the free-delivery copy
+  # had to be corrected for.
+  test "shows free shipping as Free once the destination is known to be mainland" do
+    free_cart = free_shipping_cart
+    free_cart.delivery_postcode = "WD18 9SB"
 
     shipping = CartSummary.lines(free_cart).find { |l| l[:kind] == :shipping }
     assert_equal "Free", shipping[:amount]
+  end
+
+  test "defers the shipping line until a destination is known" do
+    free_cart = free_shipping_cart # no postcode: free_shipping_cart sets none
+
+    shipping = CartSummary.lines(free_cart).find { |l| l[:kind] == :shipping }
+    assert_equal "Calculate at checkout", shipping[:amount],
+                 "a cart with no postcode must not be quoted a mainland price"
+  end
+
+  test "defers the shipping line on a charged cart with no destination" do
+    # Below the threshold the unqualified figure is £6.99, which is equally a
+    # mainland-only price: off-mainland is dearer, so quoting it before we know
+    # the destination understates the cost.
+    charged = Cart.create!
+    charged.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
+
+    shipping = CartSummary.lines(charged).find { |l| l[:kind] == :shipping }
+
+    assert_equal "Calculate at checkout", shipping[:amount]
+  end
+
+  test "quotes the off-mainland rate once an off-mainland destination is known" do
+    @cart.delivery_postcode = "IV51 9YB"
+
+    shipping = CartSummary.lines(@cart).find { |l| l[:kind] == :shipping }
+    assert_equal ActiveSupport::NumberHelper.number_to_currency(
+      Shipping.cost_for_zone_in_pounds(:highlands)
+    ), shipping[:amount]
+  end
+
+  test "a large off-mainland cart is never shown as Free" do
+    # The live bug in miniature: a £449 order to Skye shipped free. The summary
+    # must not display the mainland promise for a destination that never had it.
+    free_cart = free_shipping_cart
+    free_cart.delivery_postcode = "IV51 9YB"
+
+    shipping = CartSummary.lines(free_cart).find { |l| l[:kind] == :shipping }
+    assert_not_equal "Free", shipping[:amount]
   end
 
   # A discounted cart inserts the discount line AFTER shipping and BEFORE vat, so it
@@ -102,5 +146,23 @@ class CartSummaryTest < ActiveSupport::TestCase
     @cart.discount_rate = 0.10
     non_discount = CartSummary.lines(@cart).reject { |l| l[:kind] == :discount }
     assert non_discount.none? { |l| l[:negative] }, "only the discount line should be negative"
+  end
+
+  private
+
+  # A cart whose subtotal clears the free-shipping threshold, so mainland ships
+  # free and every off-mainland zone still charges.
+  def free_shipping_cart
+    cart = Cart.create!
+    product = Product.create!(
+      category: categories(:cups),
+      name: "Free-ship pack",
+      sku: "TEST-CARTSUMMARY-FREE-SHIP",
+      price: Shipping::FREE_SHIPPING_THRESHOLD,
+      pac_size: 1,
+      active: true
+    )
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+    cart
   end
 end

@@ -1,8 +1,16 @@
 require "test_helper"
 
 class CartTest < ActiveSupport::TestCase
+  # A mainland destination on @cart because most tests here are about the pricing
+  # maths (shipping, VAT, total, discounts), which needs a KNOWN destination to
+  # be quoted at all: Cart defers shipping until the customer says where the
+  # order is going. The deferral itself is covered by its own tests below, which
+  # deliberately use a cart with no postcode.
+  MAINLAND_POSTCODE = "WD18 9SB"
+
   setup do
     @cart = carts(:one)
+    @cart.delivery_postcode = MAINLAND_POSTCODE
     @empty_cart = Cart.create
     @guest_cart = Cart.create
     @user_cart = Cart.create(user: users(:one))
@@ -100,6 +108,7 @@ class CartTest < ActiveSupport::TestCase
     )
     cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
     cart.discount_rate = 0.10
+    cart.delivery_postcode = MAINLAND_POSTCODE
 
     assert_equal 0, cart.shipping_amount
   end
@@ -112,6 +121,7 @@ class CartTest < ActiveSupport::TestCase
     cart = Cart.create
     cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
     cart.discount_rate = 0.10
+    cart.delivery_postcode = MAINLAND_POSTCODE
 
     assert cart.only_samples?
     assert_equal 0, cart.discount_amount
@@ -143,6 +153,7 @@ class CartTest < ActiveSupport::TestCase
     )
     cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
     cart.discount_rate = 0.10
+    cart.delivery_postcode = MAINLAND_POSTCODE
 
     rounded_lines = cart.subtotal_amount.round(2) +
                     cart.shipping_amount.round(2) -
@@ -323,6 +334,8 @@ class CartTest < ActiveSupport::TestCase
       price: variant.price
     )
 
+    cart.delivery_postcode = MAINLAND_POSTCODE
+
     # Should calculate: 2 packs × £100 = £200, which is at/above the £100
     # threshold, so shipping is free and VAT is on the subtotal alone.
     assert_equal 200.00, cart.subtotal_amount
@@ -368,6 +381,8 @@ class CartTest < ActiveSupport::TestCase
       price: variant2.price
     )
 
+    cart.delivery_postcode = MAINLAND_POSTCODE
+
     # Total: £100 + £240 = £340, above the threshold, so shipping is free.
     assert_equal 340.00, cart.subtotal_amount
     assert_equal 0, cart.shipping_amount
@@ -386,6 +401,7 @@ class CartTest < ActiveSupport::TestCase
       active: true
     )
     cart.cart_items.create!(product: variant, quantity: 1, price: variant.price)
+    cart.delivery_postcode = MAINLAND_POSTCODE
 
     assert_equal 0, cart.shipping_amount
     # VAT is on the subtotal alone when shipping is free.
@@ -570,6 +586,42 @@ class CartTest < ActiveSupport::TestCase
     assert_equal :mainland, @cart.delivery_zone
   end
 
+  # Priceable-but-not-quoted. delivery_zone falls back to mainland so nothing
+  # downstream has to handle a nil zone, but until the customer tells us where
+  # this is going we must not present a mainland price as the quote: the drawer
+  # was showing "Shipping Free" and a shipping-inclusive Total on a cart bound
+  # anywhere, understating the cost for every off-mainland customer.
+
+  test "shipping is deferred until a delivery postcode is known" do
+    assert_nil undestined_cart.shipping_amount,
+               "a cart with no destination must not quote a mainland shipping price"
+  end
+
+  test "the deferred total excludes shipping rather than assuming mainland" do
+    # Otherwise the Total silently contains £0 (or £6.99) of mainland shipping
+    # while the Shipping line reads "Calculate at checkout": the customer would
+    # be shown a total that no destination actually produces.
+    cart = undestined_cart
+
+    assert_equal cart.subtotal_amount + cart.vat_amount, cart.total_amount
+  end
+
+  test "the deferred vat is charged on the subtotal alone" do
+    cart = undestined_cart
+    expected = cart.subtotal_amount * BigDecimal(VAT_RATE.to_s)
+
+    assert_equal expected, cart.vat_amount
+  end
+
+  test "setting a delivery postcode starts charging shipping" do
+    cart = undestined_cart
+    before = cart.shipping_amount
+    cart.delivery_postcode = MAINLAND_POSTCODE
+
+    assert_nil before
+    assert_not_nil cart.shipping_amount
+  end
+
   test "setting a non-mainland delivery postcode raises the shipping charge" do
     @cart.delivery_postcode = "BT1 6EE"
 
@@ -633,5 +685,15 @@ class CartTest < ActiveSupport::TestCase
 
     assert_equal :northern_ireland, @cart.delivery_zone
     assert_equal Shipping.cost_for_zone_in_pounds(:northern_ireland), @cart.shipping_amount
+  end
+
+  private
+
+  # A cart with items but no delivery destination: the state a customer is in
+  # after adding to cart from a product page without opening /cart.
+  def undestined_cart
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
+    cart
   end
 end

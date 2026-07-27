@@ -56,8 +56,14 @@ class CartSummary
   end
 
   # "Free" at/above the free-shipping threshold, the currency amount below it, and
-  # "Calculate at checkout" for an empty cart (shipping nil, which never renders the
-  # summary).
+  # "Calculate at checkout" whenever the cart defers shipping (shipping nil): an
+  # empty cart, or one whose delivery destination we have not been told.
+  #
+  # The deferral rule itself lives in Cart#cart_totals, not here, so the deferred
+  # shipping line and the VAT and Total that exclude it can never disagree. A
+  # mainland price is not a quote we can stand behind for an address we haven't
+  # been given: mainland is the cheapest zone and the only one with free
+  # delivery, so showing it early understates every off-mainland customer's cost.
   def shipping_display
     shipping = @cart.shipping_amount
     return "Calculate at checkout" if shipping.nil?

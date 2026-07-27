@@ -228,18 +228,34 @@ class Cart < ApplicationRecord
 
   # The cart's order totals, computed once per request. Memoized like
   # subtotal_amount (and cleared in reload) so vat_amount and total_amount don't
-  # each recompute. :charged once the cart has items, so the previewed shipping,
-  # VAT and total match the Stripe charge; :deferred for an empty cart, which has
-  # nothing to ship and so shows no shipping line (and a £0 total).
+  # each recompute. :charged once the cart has items AND a known destination, so
+  # the previewed shipping, VAT and total match the Stripe charge; :deferred for
+  # an empty cart, which has nothing to ship, and for a cart whose destination we
+  # have not been told.
+  #
+  # Deferring on an unknown destination is deliberate. delivery_zone falls back
+  # to mainland so the cart stays priceable, but mainland is the CHEAPEST zone
+  # and the only one with free delivery, so quoting it before the customer gives
+  # a postcode understates the cost for every off-mainland customer, on the
+  # Shipping line and inside the VAT and Total. Deferring shows "Calculate at
+  # checkout" and keeps shipping out of the total until we can price it honestly.
+  # The cart page's postcode field resolves this, and the drawer's checkout
+  # button links there (shared/_checkout_button gates on the same question).
   def cart_totals
     # ||= wraps the whole body so the cart_items.empty? query only fires on the
     # first call per request; later calls (this backs four public methods) reuse
     # the memoized result.
     @cart_totals ||= begin
-      stance = cart_items.empty? ? :deferred : :charged
+      stance = cart_items.empty? || !delivery_destination_known? ? :deferred : :charged
       OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: applicable_discount_rate,
                                        zone: delivery_zone)
     end
+  end
+
+  # Whether the customer has told us where this cart is going, as opposed to
+  # delivery_zone's priceable mainland fallback.
+  def delivery_destination_known?
+    ShippingZone.deliverable?(ShippingZone.for(delivery_postcode))
   end
 
   # The discount rate that will actually be charged. A samples-only cart pays only
