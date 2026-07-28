@@ -1,0 +1,95 @@
+<% content_for :title, "Checkout | Afida" %>
+<% content_for :head do %>
+  <script src="https://js.stripe.com/v3/"></script>
+<% end %>
+
+<div class="max-w-6xl mx-auto px-4 py-8"
+     data-controller="onsite-checkout"
+     data-onsite-checkout-client-secret-value="<%= @client_secret %>"
+     data-onsite-checkout-publishable-key-value="<%= Rails.configuration.stripe[:publishable_key] %>"
+     data-onsite-checkout-priced-zone-value="<%= @priced_zone %>"
+     data-onsite-checkout-guest-value="<%= Current.user.blank? %>"
+     data-onsite-checkout-prefill-value="<%= {
+       name: @prefill_address&.recipient_name,
+       line1: @prefill_address&.line1,
+       line2: @prefill_address&.line2,
+       city: @prefill_address&.city,
+       postal_code: @prefill_address&.postcode,
+       country: "GB"
+     }.compact.to_json %>">
+
+  <h1 class="text-2xl sm:text-3xl mb-6">Checkout</h1>
+
+  <div class="flex flex-col-reverse md:flex-row gap-8">
+    <div class="w-full md:w-3/5 space-y-6">
+
+      <section>
+        <h2 class="text-lg mb-2">Contact</h2>
+        <% if @customer_email %>
+          <input type="email" value="<%= @customer_email %>" readonly
+                 class="input input-bordered w-full bg-gray-100"
+                 data-onsite-checkout-target="email">
+        <% else %>
+          <input type="email" placeholder="you@example.com" autocomplete="email"
+                 class="input input-bordered w-full"
+                 data-onsite-checkout-target="email"
+                 data-action="blur->onsite-checkout#emailChanged">
+        <% end %>
+      </section>
+
+      <section>
+        <h2 class="text-lg mb-2">Delivery address</h2>
+        <div data-onsite-checkout-target="address"></div>
+        <p class="text-sm text-error mt-2 hidden" data-onsite-checkout-target="zoneWarning">
+          This postcode is in a different delivery zone than your order was priced for.
+          <%= link_to "Return to your basket", cart_path, class: "link" %> to update your
+          delivery postcode and reprice.
+        </p>
+      </section>
+
+      <% if @show_promo %>
+        <section data-onsite-checkout-target="promoSection">
+          <h2 class="text-lg mb-2">Promo code</h2>
+          <div class="flex gap-2" data-onsite-checkout-target="promoForm">
+            <input type="text" placeholder="Enter code" class="input input-bordered input-sm flex-1"
+                   data-onsite-checkout-target="promoInput">
+            <button type="button" class="btn btn-sm btn-outline"
+                    data-action="onsite-checkout#applyPromo">Apply</button>
+          </div>
+          <div class="hidden items-center gap-2" data-onsite-checkout-target="promoApplied">
+            <span class="badge badge-success" data-onsite-checkout-target="promoCode"></span>
+            <button type="button" class="btn btn-xs btn-ghost"
+                    data-action="onsite-checkout#removePromo" aria-label="Remove promo code">&times;</button>
+          </div>
+          <p class="text-xs text-error mt-1 hidden" data-onsite-checkout-target="promoError"></p>
+        </section>
+      <% end %>
+
+      <section>
+        <h2 class="text-lg mb-2">Payment</h2>
+        <div data-onsite-checkout-target="payment"></div>
+      </section>
+
+      <p class="text-sm text-error hidden" data-onsite-checkout-target="error"></p>
+
+      <button type="button" class="btn btn-primary w-full" disabled
+              data-onsite-checkout-target="payButton"
+              data-action="onsite-checkout#pay">
+        Pay now
+      </button>
+
+      <noscript>
+        <p class="text-sm text-error">
+          Checkout needs JavaScript. <%= link_to "Return to your basket", cart_path, class: "link" %>.
+        </p>
+      </noscript>
+    </div>
+
+    <div class="w-full md:w-2/5">
+      <div class="bg-gray-100 p-4 sm:p-6 rounded-lg shadow-md">
+        <%= render "checkouts/summary", cart: Current.cart %>
+        <p class="mt-4 text-sm"><%= link_to "← Back to basket", cart_path, class: "link" %></p>
+      </div>
+    </div>
+  </div>
+</div>

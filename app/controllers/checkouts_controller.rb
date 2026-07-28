@@ -105,6 +105,32 @@ class CheckoutsController < ApplicationController
     end
   end
 
+  # The on-site checkout page. Renders the Stripe session stashed by #create;
+  # performs no Stripe writes, so refresh and back-navigation are free.
+  def show
+    return redirect_to cart_path unless OnsiteCheckout.enabled?
+
+    stash = session[:onsite_checkout]
+    cart = Current.cart
+    return redirect_to cart_path if stash.blank? || cart.blank? || cart.cart_items.empty?
+
+    postcode = session[:delivery_postcode].presence || stash["postcode"]
+    fingerprint = Checkout::CartFingerprint.digest(
+      cart: cart, postcode: postcode, discount_code: session[:discount_code]
+    )
+    if fingerprint != stash["fingerprint"]
+      session.delete(:onsite_checkout)
+      return redirect_to cart_path, notice: "Your basket changed. Continue to payment when you're ready."
+    end
+
+    @client_secret = stash["client_secret"]
+    @priced_zone = stash["zone"]
+    @show_promo = session[:discount_code].blank? && !cart.only_samples?
+    @prefill_address = Current.user&.addresses&.find_by(id: session[:selected_address_id]) ||
+                       Current.user&.addresses&.default_first&.first
+    @customer_email = Current.user&.email_address
+  end
+
   def success
     session_id = params[:session_id]
 

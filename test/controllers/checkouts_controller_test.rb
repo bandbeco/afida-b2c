@@ -118,6 +118,78 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
+  # --- GET /checkout (on-site page) ---
+
+  def stash_onsite_session
+    enable_onsite_checkout
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+    post checkout_path
+    assert_redirected_to checkout_path
+  end
+
+  test "show renders the page from a fresh stash" do
+    stash_onsite_session
+
+    get checkout_path
+
+    assert_response :success
+    assert_match "cs_test_secret_abc", response.body
+    assert_select "[data-controller='onsite-checkout']"
+    assert_select "[data-onsite-checkout-target='payment']"
+    assert_select "[data-onsite-checkout-target='address']"
+    assert_select "[data-onsite-checkout-publishable-key-value]" do |elements|
+      assert elements.first["data-onsite-checkout-publishable-key-value"].present?,
+        "publishable key must reach the page"
+    end
+  end
+
+  test "show redirects to cart when the flag is off" do
+    get checkout_path
+    assert_redirected_to cart_path
+  end
+
+  test "show redirects to cart without a stash" do
+    enable_onsite_checkout
+    get checkout_path
+    assert_redirected_to cart_path
+  end
+
+  test "show bounces a stale stash to the cart and discards it" do
+    stash_onsite_session
+
+    @cart.cart_items.first.update!(quantity: 5)
+
+    get checkout_path
+
+    assert_redirected_to cart_path
+    assert_equal "Your basket changed. Continue to payment when you're ready.", flash[:notice]
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "show shows the promo control only when no server discount and not samples-only" do
+    stash_onsite_session
+    get checkout_path
+    assert_select "[data-onsite-checkout-target='promoSection']"
+  end
+
+  test "invalid welcome coupon renders the alert AND the promo control together" do
+    # The spec's pinned combination: #create fell back to allow_promotion_codes
+    # and deleted the session discount, so the GET page must show the failure
+    # alert while still offering the promo input (the shopper can retype).
+    enable_onsite_checkout
+    post email_subscriptions_path, params: { email: "promo-test@example.com" }
+    Stripe::PromotionCode.stubs(:list).returns(stub(data: []))
+    Stripe::Coupon.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such coupon", nil))
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+
+    post checkout_path
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Your discount code could not be applied", response.body
+    assert_select "[data-onsite-checkout-target='promoSection']"
+  end
+
   # ============================================================================
   # CREATE ACTION TESTS (POST /checkouts)
   # ============================================================================

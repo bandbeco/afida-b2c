@@ -1,0 +1,23 @@
+<%# On-site checkout order summary. Lines come from cart_summary_lines (the same
+    source the cart page uses) for the initial server render; the money values
+    carry data attributes so the onsite-checkout Stimulus controller re-renders
+    them from the Stripe session state (the charging authority) once the SDK is
+    live. Line KINDS map to attributes; keep the kinds in step with CartSummary.
+    Deliberately NOT the #cart_summary id — the cart page's Turbo Streams own it. %>
+<div id="checkout_summary">
+  <h2 class="text-lg sm:text-2xl mb-3 sm:mb-6">Order Summary</h2>
+
+  <% cart_summary_lines(cart).each do |line| %>
+    <% if line[:kind] == :total %>
+      <div class="flex justify-between text-lg sm:text-xl text-gray-800 border-t pt-3 mt-3">
+        <span><%= line[:label] %></span>
+        <span data-onsite-checkout-target="totalLine"><%= line[:amount] %></span>
+      </div>
+    <% else %>
+      <div class="flex justify-between mb-2 text-sm sm:text-base <%= line[:negative] ? "text-success" : "text-gray-700" %>">
+        <span><%= line[:label] %></span>
+        <span data-onsite-checkout-money-kind="<%= line[:kind] %>"><%= line[:amount] %></span>
+      </div>
+    <% end %>
+  <% end %>
+</div>
