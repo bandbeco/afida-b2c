@@ -16,6 +16,7 @@ OKF bundle for the Afida shop project. Conventions live in the repo `CLAUDE.md` 
 
 # Not Yet Retrofitted
 
+* ADRs (`/adr/`) - Architecture decision records (started 2026-07 with the on-site checkout decision).
 * Audits (`/audits/`) - Lighthouse and accessibility audit outputs, mostly JSON/HTML artifacts.
 * Articles (`/articles/`) - Long-form article drafts for the shop.
 * Insights (`/insights/`) - Research notes.
