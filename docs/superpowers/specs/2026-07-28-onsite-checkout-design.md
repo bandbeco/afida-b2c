@@ -74,22 +74,31 @@ Out of scope (later enhancements):
 
 ## Architecture
 
-### Where the flag lives
+### Where the flag lives (POST → redirect → GET)
 
 The flag is checked in `CheckoutsController#create` only.
 
 - **Flag off:** exactly today's behaviour — build a hosted session via
   `Checkout::SessionBuilder`, redirect to `session.url`.
-- **Flag on:** build the session in custom mode (same builder, see Components)
-  and render the checkout page instead of redirecting, passing the session's
-  `client_secret` to the view.
+- **Flag on:** build the session in custom mode (same builder, see
+  Components), stash the Stripe session's id and `client_secret` in the Rails
+  session together with a staleness fingerprint (digest of cart items,
+  delivery postcode, and discount code at build time), then 303-redirect to a
+  new GET checkout page.
+
+The GET page renders from the stash, so refresh and back-navigation are safe
+and never re-trigger session creation, analytics events, or the rate limit.
+If the stash is missing or the fingerprint no longer matches the current cart
+state (cart edited in another tab, postcode or discount changed), the GET
+discards the stash and bounces to the cart with a notice; re-entering
+checkout mints a fresh session. The GET performs no Stripe writes.
 
 All of `#create`'s existing guards and side effects run identically in both
 modes and are unchanged: the empty-cart guard, the `deliverable_destination?`
 postcode gate, the `checkout.started` and `cart.checkout_initiated` events,
 the invalid-discount cleanup, `session[:selected_address_id]`, and the 10/min
-rate limit. The only rendering difference: when `#create` renders instead of
-redirecting, the invalid-discount alert uses `flash.now`.
+rate limit. The invalid-discount alert must survive the redirect to the GET
+page (ordinary `flash`, not `flash.now`).
 
 ### Shipping price and the delivery postcode
 
@@ -127,12 +136,27 @@ from Address Element input the same way the hosted form populates it.
 
 Stripe.js's `initCheckout(clientSecret)` binds to the session. Afida renders
 the order summary (server-rendered from the cart), email field, promo-code
-input, and back-to-cart link with its own markup in the shop's existing layout
-and styles; Stripe's Address Element (shipping mode) and Payment Element
-provide the secure inputs. The SDK is the client-side source of truth for
-totals: promo-code application goes through `applyPromotionCode` and displayed
-totals re-render from the session state the SDK reports, so the page cannot
-diverge from what Stripe charges.
+control, and back-to-cart link with its own markup in the shop's existing
+layout and styles; Stripe's Address Element (shipping mode) and Payment
+Element provide the secure inputs. Stripe.js loads on the checkout page only,
+not site-wide. The SDK is the client-side source of truth for totals:
+promo-code application goes through `applyPromotionCode` and displayed totals
+re-render from the session state the SDK reports, so the page cannot diverge
+from what Stripe charges.
+
+- **Promo control:** input to apply; an applied code renders as a chip with a
+  remove control (`removePromotionCode`), matching the hosted page. Hidden
+  when the welcome discount is server-applied or the cart is samples-only.
+- **Wallets:** Apple Pay / Google Pay appear as options inside the Payment
+  Element (no Express Checkout Element in v1). This keeps one confirm path
+  and means every payment method goes through the Address Element, so the
+  zone guard sees every address. Rejected for v1: top-of-page wallet buttons
+  via Express Checkout Element, whose wallet-sheet addresses bypass the
+  Address Element and would need their own confirm-time zone hook.
+- **Prefill:** logged-in customers get the Address Element seeded from the
+  same selected saved address the builder syncs to Stripe, and their email
+  shown read-only (matching hosted's locked email when `customer:` is set).
+  Guests type an email wired to the SDK's `updateEmail`.
 
 One-time setup outside code: register afida.com and the staging domain for
 Apple Pay in the Stripe dashboard (sandbox and live). This is a rollout
@@ -161,7 +185,9 @@ Server side (changes to existing code):
   `payment_method_types&.first` in the `checkout.completed` event, so Link
   payments may report a different value than hosted mode did — an expected
   analytics shift, not a regression.
-- **`CheckoutsController#create`:** branches on the flag as above.
+- **`CheckoutsController#create`:** branches on the flag as above, plus a new
+  GET action (e.g. `#show`) that renders the page from the stash after the
+  fingerprint check. The stash and fingerprint live in the Rails session.
 - **Zone endpoint:** a small controller action wrapping `ShippingZone.for`,
   returning the zone for a postcode. Read-only, no session state.
 - **Flag:** an ENV var (e.g. `ONSITE_CHECKOUT`), read through one helper
@@ -189,8 +215,9 @@ session exactly as now.
 ## Data flow
 
 Cart page (postcode already captured) → POST `CheckoutsController#create` →
-guards run, events fire, custom-mode session created → checkout page renders
-with client secret → shopper fills email/address (zone guard watches), applies
+guards run, events fire, custom-mode session created and stashed →
+303-redirect to GET checkout page → fingerprint checked, page renders with
+client secret → shopper fills email/address (zone guard watches), applies
 promo code if any, pays → SDK `confirm()` → Stripe redirects to the existing
 success URL with the session ID → order created (or the webhook races it, as
 today, guarded against duplicates).
@@ -206,10 +233,10 @@ today, guarded against duplicates).
   inline by the promo input. (The server-applied welcome discount keeps its
   existing invalid-coupon path: flash + continue without discount.)
 - **Stale session** (sessions expire after 24h; cart changed in another tab):
-  the checkout page is rendered fresh from `#create` on every visit, so each
-  visit gets a session matching the current cart. A confirm on an expired
-  session surfaces an SDK error; the inline message links back to the cart to
-  start again, which mints a new session.
+  the GET page's fingerprint check bounces stale stashes to the cart before
+  render. A session that expires while the page is open surfaces an SDK error
+  on confirm; the inline message links back to the cart to start again, which
+  mints a new session.
 - **JS fails to load / SDK init error:** the page shows a fallback message
   with a link back to the cart; if problems persist, flip the flag and
   everyone is back on hosted Checkout.
@@ -238,9 +265,10 @@ incident; removing the flag and hosted branch is a later cleanup task.
   shopper can retype the code), and a test should pin that combination.
   Existing hosted-mode builder tests must pass unchanged.
 - **Controller tests:** flag off → redirect to Stripe URL (existing tests keep
-  passing); flag on → renders the checkout page with the client secret,
-  guards still fire (empty cart, undeliverable postcode, rate limit), invalid
-  discount uses `flash.now`.
+  passing); flag on → POST stashes and 303-redirects, GET renders with the
+  client secret, guards still fire (empty cart, undeliverable postcode, rate
+  limit), the invalid-discount flash survives the redirect, and a stale or
+  missing stash bounces GET to the cart with a notice.
 - **Zone endpoint test:** postcode → zone mapping, including unparseable
   postcodes.
 - **Success + webhook:** existing tests already cover order creation from a

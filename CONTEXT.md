@@ -23,5 +23,41 @@ The sum of line totals before VAT and before shipping. Each surface knows how to
 _Avoid_: net, pre-tax amount, goods total.
 
 **Free-shipping threshold**:
-The subtotal (excluding VAT) at or above which standard UK delivery is free. A round figure, env-overridable.
+The subtotal (excluding VAT) at or above which delivery is free — a mainland-only promise; off-mainland zones pay delivery at any order value. A round figure, env-overridable.
 _Avoid_: free delivery minimum, free-ship cutoff.
+
+### Delivery
+
+**Shipping zone**:
+The delivery-pricing answer for a UK postcode: mainland, highlands, remote islands, Northern Ireland, or offshore islands — or, outside those, unknown (unparseable) and undeliverable (a place we do not ship to). Off-mainland zones share one delivery price and one transit promise; mainland keeps the standard cost and next-working-day dispatch.
+_Avoid_: region, surcharge area, delivery area.
+
+**Delivery postcode**:
+The postcode the customer gives before payment (typed on the cart page, or taken from a saved address) that the order's shipping price is derived from. Distinct from the postcode in the collected shipping address, which can in principle disagree.
+_Avoid_: shipping postcode, address postcode.
+
+**Priced zone**:
+The shipping zone an order's delivery charge was actually computed from, fixed at the moment the Stripe session is created. Recorded on the order so a later mismatch with the delivered-to address is visible.
+_Avoid_: charged zone, booked zone.
+
+### Checkout
+
+**Hosted checkout**:
+Paying on Stripe's own checkout page, reached by redirect away from afida.com.
+_Avoid_: Stripe portal, external checkout.
+
+**On-site checkout**:
+Paying on a checkout page afida.com renders itself, with Stripe supplying only the secure payment inputs. The customer never leaves the site.
+_Avoid_: embedded checkout (that names Stripe's iframe product, which this is not), custom checkout.
+
+**Zone guard**:
+The best-effort check during on-site checkout that stops payment when the address being entered belongs to a different shipping zone than the priced zone, sending the customer back to reprice instead of charging the wrong delivery. Fails open to hosted-checkout behaviour: mismatch recorded, visible after the fact.
+_Avoid_: postcode check, address validation.
+
+**Welcome discount**:
+The signup 10%-off, applied to the whole order (goods and delivery) before payment begins. Carried by the customer's session from the signup form to checkout; refused for samples-only orders.
+_Avoid_: welcome coupon (a coupon is Stripe's internal object; the discount is the customer-facing thing), WELCOME10 (a promotion code's current name, not the concept).
+
+**Promotion code**:
+A customer-facing code typed at checkout to claim a discount. Distinct from a coupon, Stripe's internal discount object that a promotion code points at; the two have different identifiers, and conflating them has caused real bugs.
+_Avoid_: promo, voucher, coupon code.
