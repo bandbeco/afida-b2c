@@ -41,17 +41,16 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "header dropdown checkout button is an analytics-wired begin_checkout form" do
+  test "the navbar cart icon offers no checkout, so instruments nothing" do
+    # The icon is a plain link to /cart now. It reports no begin_checkout because
+    # clicking it is not beginning checkout: it is opening the cart, where the
+    # instrumented form lives. The drawer and the cart page remain the two
+    # surfaces that can start checkout, and both are wired above.
     get root_url
 
     assert_response :success
-    assert_select "#cart_counter " \
-                  "form[data-controller='analytics']" \
-                  "[data-action='submit->analytics#beginCheckout']" \
-                  "[data-analytics-cart-value-value]" \
-                  "[data-analytics-cart-items-value]" do
-      assert_select "button[type=submit]", text: "Checkout"
-    end
+    assert_select "#cart_counter form[data-controller='analytics']", count: 0
+    assert_select "#cart_counter [data-action*='beginCheckout']", count: 0
   end
 
   test "cart-items data value is valid JSON describing the cart contents" do
@@ -80,16 +79,15 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
                   text: "Proceed to Checkout"
   end
 
-  test "the cart-link variant still reports begin_checkout" do
-    # With no delivery postcode the navbar dropdown links to the cart instead of
-    # POSTing (checkout would refuse it). That click is still the customer
-    # beginning checkout, so the funnel must not lose the event just because the
-    # affordance changed shape. Uses a fresh session so no postcode is in play.
+  test "with no postcode the drawer instruments nothing, having no control to click" do
+    # There is no longer a link variant to instrument. The navbar dropdown was
+    # the last surface that offered checkout without being able to collect a
+    # postcode, and it linked to /cart carrying a begin_checkout on click; with
+    # it gone, a destination-less cart offers only the drawer's disabled button,
+    # which reports nothing by design (see shared/_checkout_button.html.erb).
     #
-    # Asserted on the dropdown, not the drawer: the drawer carries the postcode
-    # field, so it now disables its button instead of linking out, and a disabled
-    # button reports nothing. See the note in shared/_checkout_button.html.erb on
-    # why that trade was accepted.
+    # The funnel loses nothing real: the event now fires where checkout can
+    # actually proceed, rather than on a click that only navigated.
     reset!
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     post cart_cart_items_path, params: { cart_item: { sku: @product.sku, quantity: 1 } }
@@ -97,11 +95,8 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     get root_url
 
     assert_response :success
-    assert_select "#cart_counter a[data-test=checkout-needs-postcode]" \
-                  "[data-controller='analytics']" \
-                  "[data-action='click->analytics#beginCheckout']" \
-                  "[data-analytics-cart-value-value]" \
-                  "[data-analytics-cart-items-value]"
+    assert_select "[data-action*='beginCheckout']", count: 0
+    assert_select "#drawer_cart_content button[type=submit][disabled]", count: 1
   end
 
   test "empty cart renders no checkout form at all" do

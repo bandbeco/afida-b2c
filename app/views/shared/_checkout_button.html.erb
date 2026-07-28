@@ -1,9 +1,12 @@
-<%# locals: (label: "Proceed to Checkout", button_class: "btn btn-primary w-full", collects_postcode: false) %>
-<%# Shared checkout button that fires the GA4 begin_checkout dataLayer event on submit.
-    Used by the cart drawer and the header dropdown so every checkout entry point is
-    instrumented, mirroring the cart-page form (cart_items/_index.html.erb). The form-level
-    analytics wiring comes from analytics_checkout_form_data, the single home for that
-    contract (it also gates the cost on gtm_enabled?).
+<%# locals: (label: "Proceed to Checkout", button_class: "btn btn-primary w-full") %>
+<%# Shared checkout button that fires the GA4 begin_checkout dataLayer event on submit,
+    mirroring the cart-page form (cart_items/_checkout.html.erb). The form-level analytics
+    wiring comes from analytics_checkout_form_data, the single home for that contract
+    (it also gates the cost on gtm_enabled?).
+
+    Rendered by the cart drawer. It was also rendered by the navbar cart dropdown until
+    that was removed; the partial stays shared because the drawer appears on nine pages
+    via shared/_cart_drawer.
 
     turbo: false keeps this a full navigation to the Stripe-bound checkout_path; the
     dataLayer push happens on submit, before the redirect.
@@ -17,37 +20,26 @@
 <% return unless (Current.cart&.line_items_count || 0).positive? %>
 <%# Checkout is refused without a delivery destination it can price (shipping is
     baked into the Stripe line items before Stripe collects the address), so with
-    no destination this offers something other than a POST into a guaranteed
-    rejection. WHICH something depends on whether the caller has a postcode field
-    of its own; the condition matches CheckoutsController#deliverable_destination?
-    (see the note in cart_items/_checkout.html.erb on why they must agree).
+    no destination this disables the button and says what is missing rather than
+    offering a POST into a guaranteed rejection. The condition matches
+    CheckoutsController#deliverable_destination? (see the note in
+    cart_items/_checkout.html.erb on why they must agree).
 
-    `collects_postcode` callers (the drawer) disable the button and say what is
-    missing, exactly as the cart page does: the field is right there, so sending
-    the customer to another page to type something they could type here is a
-    detour, and a link styled as a button reads as though checkout were available.
-
-    Everyone else (the navbar dropdown) keeps the link to the cart. That surface
-    genuinely cannot collect a postcode, so a disabled button would dead-end the
-    main first-time conversion path with nothing to act on. %>
+    Every surface that offers checkout now carries a postcode field, so this can
+    always name the fix in place. There used to be a third branch linking to
+    /cart, for the navbar dropdown that had no field of its own; it went with the
+    dropdown, since a branch no caller can reach is a branch that cannot be
+    trusted to still work. %>
 <% if delivery_destination_known?(Current.cart, address_postcode: cart_owner_default_postcode(Current.cart)) %>
   <%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do %>
     <button type="submit" class="<%= button_class %>"><%= label %></button>
   <% end %>
-<% elsif collects_postcode %>
-  <%# No begin_checkout here, and that is a real cost: the link below reports it
-      on click, a disabled button reports nothing, so this surface stops
-      contributing that signal while it has no destination. Accepted because the
-      cart page's disabled button already behaves this way, and the two surfaces
-      disagreeing on the funnel would be worse than both being quiet. %>
+<% else %>
+  <%# No begin_checkout here, and that is deliberate: the customer cannot begin
+      checkout yet, so reporting that they did would overstate the funnel. The
+      cart page's disabled button behaves the same way. %>
   <button type="submit" class="<%= button_class %>" disabled><%= label %></button>
   <p class="mt-2 text-xs text-center text-gray-600" data-test="drawer-checkout-blocked-note">
     <%= checkout_blocked_note %>
   </p>
-<% else %>
-  <%# Still reports begin_checkout: clicking this IS the customer starting
-      checkout, they just have to give a postcode first, so the funnel must not
-      lose the event just because the affordance is a link. %>
-  <%= link_to label, cart_path, class: button_class,
-              data: analytics_checkout_link_data(Current.cart).merge(test: "checkout-needs-postcode") %>
 <% end %>

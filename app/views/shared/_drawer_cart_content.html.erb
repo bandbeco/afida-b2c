@@ -86,9 +86,7 @@
       <% end %>
 
       <div>
-        <%# collects_postcode: the drawer carries the field above, so it disables
-            the button and says why rather than linking out to the cart page. %>
-        <%= render "shared/checkout_button", label: "Proceed to Checkout", collects_postcode: true, button_class: "btn btn-primary btn-lg w-full text-base shadow-lg shadow-black/20" %>
+        <%= render "shared/checkout_button", label: "Proceed to Checkout", button_class: "btn btn-primary btn-lg w-full text-base shadow-lg shadow-black/20" %>
       </div>
     </div>
   <% else %>

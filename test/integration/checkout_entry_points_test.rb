@@ -5,12 +5,12 @@ require "test_helper"
 # surface offering checkout must therefore route the customer to the postcode
 # field rather than into that refusal.
 #
-# The cart page and the drawer both carry the postcode field, so both disable
-# their own button and say why. The navbar dropdown has no field, so it still
-# routes to the cart to collect one. It appears on every product, collection and
-# price-list page, and a guest who adds to cart and clicks Checkout there without
-# ever opening /cart is the main first-time conversion path, so it must not
-# dead-end.
+# There are exactly two such surfaces, and both carry the postcode field: the
+# cart page and the drawer. Both disable their own button and say why.
+#
+# The navbar cart icon is deliberately not one of them. It was a dropdown
+# offering Checkout without any way to collect a postcode, so it could only ever
+# link to /cart; it is now that link directly.
 class CheckoutEntryPointsTest < ActionDispatch::IntegrationTest
   setup do
     @product = products(:one)
@@ -26,7 +26,6 @@ class CheckoutEntryPointsTest < ActionDispatch::IntegrationTest
     get product_path(@product)
 
     assert_response :success
-    assert_select "#drawer_cart_content [data-test=checkout-needs-postcode]", count: 0
     assert_select "#drawer_cart_content button[type=submit][disabled]", count: 1
     assert_select "#drawer_cart_content [data-test=drawer-checkout-blocked-note]", count: 1
   end
@@ -37,16 +36,16 @@ class CheckoutEntryPointsTest < ActionDispatch::IntegrationTest
 
     get product_path(@product)
 
-    assert_select "[data-test=checkout-needs-postcode]", count: 0
     assert_select "form[action=?][method=post]", checkout_path
+    assert_select "#drawer_cart_content button[type=submit]:not([disabled])", count: 1
   end
 
-  test "the navbar cart dropdown routes to the cart when no postcode is known" do
+  test "the navbar cart icon routes to the cart" do
     add_to_cart
 
     get root_path
 
-    assert_select "[data-test=checkout-needs-postcode]"
+    assert_select "#cart_counter a[href=?]", cart_path
   end
 
   test "a guest checking out from the drawer is never bounced by the guard" do
@@ -81,15 +80,21 @@ class CheckoutEntryPointsTest < ActionDispatch::IntegrationTest
     assert_equal drawer.text.squish, page.text.squish
   end
 
-  test "the navbar dropdown still routes to the cart, having no field of its own" do
-    # The dropdown is the one surface that genuinely cannot collect a postcode,
-    # so the link stays there. Disabling its button instead would dead-end the
-    # main first-time conversion path.
+  test "no surface offers a checkout POST it cannot satisfy" do
+    # The invariant behind all of the above, asserted page-wide rather than per
+    # surface so a NEW entry point cannot reintroduce the original regression
+    # without failing here. With no destination known, nothing on the page may
+    # POST to checkout, because the guard would refuse it.
     add_to_cart
 
-    get root_path
+    get product_path(@product)
 
-    assert_select "#cart_counter [data-test=checkout-needs-postcode]", count: 1
+    assert_select "form[action=?]", checkout_path, count: 0
+
+    set_delivery_postcode("WD18 9SB")
+    get product_path(@product)
+
+    assert_select "form[action=?]", checkout_path, count: 1
   end
 
   test "a logged-in customer's default address satisfies the cart page without typing" do
