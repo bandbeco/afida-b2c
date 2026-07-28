@@ -263,6 +263,17 @@ module StripeTestHelper
     session
   end
 
+  # Custom-mode (on-site checkout) session: no redirect URL, has a client
+  # secret for the on-site page to bind Stripe.js's checkout SDK to.
+  def build_custom_stripe_session
+    stub(
+      id: "sess_custom_123",
+      url: nil,
+      client_secret: "cs_test_secret_abc",
+      payment_status: "unpaid"
+    )
+  end
+
   # Stub Stripe::Checkout::Session.retrieve to return a session
   def stub_stripe_session_retrieve(session_overrides = {})
     session = build_stripe_session(session_overrides)

@@ -54,16 +54,20 @@ class CheckoutsController < ApplicationController
         )
       end
 
+      resolved_postcode = delivery_postcode_for(params[:address_id])
+
       builder = Checkout::SessionBuilder.new(
         cart: cart,
         user: Current.user,
         address_id: params[:address_id],
         discount_code: session[:discount_code],
-        delivery_postcode: delivery_postcode_for(params[:address_id]),
+        delivery_postcode: resolved_postcode,
         datafast_visitor_id: cookies[:datafast_visitor_id],
         datafast_session_id: cookies[:datafast_session_id],
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
-        cancel_url: cancel_checkout_url
+        cancel_url: cancel_checkout_url,
+        ui_mode: OnsiteCheckout.enabled? ? :custom : :hosted,
+        return_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}"
       )
       result = builder.create
 
@@ -74,7 +78,25 @@ class CheckoutsController < ApplicationController
 
       session[:selected_address_id] = result.selected_address_id if result.selected_address_id.present?
 
-      redirect_to result.session.url, allow_other_host: true, status: :see_other
+      if OnsiteCheckout.enabled?
+        # Stash the custom-mode session for GET /checkout to render. The
+        # fingerprint is computed AFTER the invalid-discount cleanup above so
+        # both sides of the later staleness comparison see the same (possibly
+        # cleared) discount code — otherwise an invalid welcome code would
+        # false-bounce every render.
+        session[:onsite_checkout] = {
+          "session_id" => result.session.id,
+          "client_secret" => result.session.client_secret,
+          "fingerprint" => Checkout::CartFingerprint.digest(
+            cart: cart, postcode: resolved_postcode, discount_code: session[:discount_code]
+          ),
+          "postcode" => resolved_postcode,
+          "zone" => result.zone.to_s
+        }
+        redirect_to checkout_path, status: :see_other
+      else
+        redirect_to result.session.url, allow_other_host: true, status: :see_other
+      end
     rescue Stripe::StripeError => e
       session.delete(:discount_code) if builder&.invalid_discount?
       Rails.logger.error("Stripe error: #{e.message}")

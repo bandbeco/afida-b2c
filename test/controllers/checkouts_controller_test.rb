@@ -54,6 +54,70 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       .returns(stub(data: [ stub(id: WELCOME_PROMOTION_CODE_ID, code: WELCOME_PROMOTION_CODE) ]))
   end
 
+  # The controller tests stub the flag seam; OnsiteCheckout's own ENV parsing
+  # is covered in test/models/onsite_checkout_test.rb.
+  def enable_onsite_checkout
+    OnsiteCheckout.stubs(:enabled?).returns(true)
+  end
+
+  # ============================================================================
+  # ON-SITE CHECKOUT (flag on)
+  # ============================================================================
+
+  test "create with flag on builds a custom-mode session and redirects to the checkout page" do
+    enable_onsite_checkout
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_custom_stripe_session)
+
+    post checkout_path
+
+    assert_redirected_to checkout_path
+    assert_response :see_other
+    assert_equal "custom", captured_params[:ui_mode]
+    assert_match %r{/checkout/success\?session_id=\{CHECKOUT_SESSION_ID\}}, captured_params[:return_url]
+    assert_nil captured_params[:success_url]
+
+    stash = session[:onsite_checkout]
+    assert_equal "sess_custom_123", stash["session_id"]
+    assert_equal "cs_test_secret_abc", stash["client_secret"]
+    assert_equal "mainland", stash["zone"]
+    assert stash["fingerprint"].present?
+    assert_equal "WD18 9SB", stash["postcode"]
+  end
+
+  test "create with flag on still refuses an empty cart" do
+    enable_onsite_checkout
+    @cart.cart_items.destroy_all
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "create with flag on still refuses an undeliverable destination" do
+    enable_onsite_checkout
+    set_delivery_postcode("IM1 1AA")
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "create with flag off never stashes" do
+    stub_stripe_session_create
+
+    post checkout_path
+
+    assert_match %r{https://checkout\.stripe\.com}, response.redirect_url
+    assert_nil session[:onsite_checkout]
+  end
+
   # ============================================================================
   # CREATE ACTION TESTS (POST /checkouts)
   # ============================================================================
