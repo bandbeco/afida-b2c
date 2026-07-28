@@ -16,10 +16,12 @@ Rails.application.configure do
 
     # GTM requires unsafe-inline and unsafe-eval for its dynamically injected tags.
     # The external domains cover GTM itself, Google Analytics, Google Ads,
-    # DataFast analytics, Google Customer Reviews, and the Cloudflare challenge platform.
+    # DataFast analytics, Google Customer Reviews, the Cloudflare challenge
+    # platform, and Stripe.js (the on-site checkout page).
     policy.script_src :self,
                       :unsafe_inline,
                       :unsafe_eval,
+                      "https://js.stripe.com",
                       "https://www.googletagmanager.com",
                       "https://www.google-analytics.com",
                       "https://www.googleadservices.com",
@@ -32,6 +34,7 @@ Rails.application.configure do
 
     # connect-src: where JS can send requests (fetch, XHR, WebSocket)
     policy.connect_src :self,
+                       "https://api.stripe.com",
                        "https://www.google-analytics.com",
                        "https://analytics.google.com",
                        "https://www.googletagmanager.com",
@@ -40,8 +43,11 @@ Rails.application.configure do
                        "https://datafa.st",
                        "https://*.sentry.io"
 
-    # frame-src: GTM noscript iframe and Google Customer Reviews
+    # frame-src: GTM noscript iframe, Google Customer Reviews, and Stripe
+    # Elements iframes (on-site checkout)
     policy.frame_src :self,
+                     "https://js.stripe.com",
+                     "https://hooks.stripe.com",
                      "https://www.googletagmanager.com",
                      "https://td.doubleclick.net",
                      "https://apis.google.com"
