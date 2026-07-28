@@ -281,84 +281,62 @@ end
 
 ## Checkout & Orders
 
-### Stripe Checkout Flow
+Two checkout modes share one session builder. Which one a customer gets is
+decided by the `ONSITE_CHECKOUT` env flag (`OnsiteCheckout.enabled?`, read
+live on every call):
 
-**1. Create Checkout Session** (`CheckoutsController#create`):
-```ruby
-cart = Current.cart
+- **Hosted** (flag off): `CheckoutsController#create` builds a Checkout
+  Session and redirects to `session.url` — Stripe's page collects everything.
+- **On-site** (flag on): the same `#create` builds the session with
+  `ui_mode: "custom"`, stashes `{session_id, client_secret, fingerprint,
+  postcode, zone}` in the Rails session, and 303-redirects to `GET /checkout`,
+  which renders the checkout page on afida.com. Stripe.js's checkout SDK
+  (`app/frontend/javascript/controllers/onsite_checkout_controller.js`) binds
+  the page to the session: Payment Element + Shipping Address Element, promo
+  codes via `applyPromotionCode`, and a zone guard that compares the typed
+  postcode's zone (via `GET /shipping_zone`) against the zone the order was
+  priced for. `Checkout::CartFingerprint` invalidates the stash if the cart,
+  postcode, or discount changed since `#create`; a stale stash bounces to the
+  cart. See `docs/superpowers/specs/2026-07-28-onsite-checkout-design.md` and
+  `docs/adr/0001-onsite-checkout-on-checkout-sessions.md`.
 
-# Build line items from cart
-line_items = cart.cart_items.map do |item|
-  {
-    quantity: item.quantity,
-    price_data: {
-      currency: "gbp",
-      product_data: { name: item.product_variant.display_name },
-      unit_amount: (item.price * 100).round, # Stripe uses cents
-      tax_behavior: "exclusive"
-    },
-    tax_rates: [tax_rate.id] # 20% UK VAT
-  }
-end
+### Session creation (`Checkout::SessionBuilder`)
 
-# Create Stripe session
-session = Stripe::Checkout::Session.create(
-  payment_method_types: ["card"],
-  line_items: line_items,
-  mode: "payment",
-  shipping_address_collection: { allowed_countries: ["GB"] },
-  shipping_options: [
-    # Standard shipping: £4.99
-    # Express shipping: £9.99
-  ],
-  success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
-  cancel_url: cancel_checkout_url
-)
+All money math lives in the Stripe session, built by
+`app/services/checkout/session_builder.rb`:
 
-redirect_to session.url
-```
+- **Line items** carry the products AND the delivery charge. Shipping rides as
+  a taxed line item (not a `shipping_option`) so manual tax rates apply VAT to
+  it; it is prepended so it lands in Stripe's first `line_items` page.
+- **Shipping price** comes from `ShippingZone.for(delivery_postcode)` — the
+  postcode captured on the cart page, resolved typed-field-first
+  (`CheckoutsController#delivery_postcode_for`). `#create` refuses to build a
+  session for an unknown or undeliverable destination. The priced zone is
+  recorded in `metadata.shipping_zone`.
+- **Discounts**: a session-carried welcome coupon id is resolved to its
+  promotion code and applied via `discounts:`; with no code,
+  `allow_promotion_codes` lets the customer type one (on Stripe's page in
+  hosted mode, in the on-site promo control in custom mode). Samples-only
+  carts refuse all discounts. An invalid coupon falls back to
+  `allow_promotion_codes` and is reported via `Result#invalid_discount?`.
+- **Mode params** (`ui_mode`/`return_url` vs `success_url`/`cancel_url`, and
+  payment method types: hosted is card-only, custom adds Link with wallets
+  inside the Payment Element) are isolated in `SessionBuilder#mode_params`;
+  everything else is shared by construction. The parity test in
+  `test/services/checkout/session_builder_test.rb` pins this.
 
-**2. Handle Success** (`CheckoutsController#success`):
-```ruby
-# Retrieve Stripe session
-stripe_session = Stripe::Checkout::Session.retrieve(params[:session_id])
+### After payment
 
-# Check if order already exists (prevent duplicates)
-return if Order.exists?(stripe_session_id: stripe_session.id)
-
-# Create order from cart
-order = Order.create!(
-  user: Current.user,
-  email: stripe_session.customer_details.email,
-  stripe_session_id: stripe_session.id,
-  status: "paid",
-  subtotal_amount: cart.subtotal_amount,
-  vat_amount: cart.vat_amount,
-  shipping_amount: (stripe_session.shipping_cost.amount_total / 100.0),
-  total_amount: ...,
-  shipping_name: stripe_session.customer_details.name,
-  shipping_address_line1: stripe_session.customer_details.address.line1,
-  # ... other shipping fields
-)
-
-# Create order items
-cart.cart_items.each do |cart_item|
-  order.order_items.create!(
-    product_variant: cart_item.product_variant,
-    product_name: cart_item.product_variant.display_name,
-    product_sku: cart_item.product_variant.sku,
-    price: cart_item.price,
-    quantity: cart_item.quantity,
-    line_total: cart_item.subtotal_amount
-  )
-end
-
-# Clear cart
-cart.cart_items.destroy_all
-
-# Send confirmation email
-OrderMailer.with(order: order).confirmation_email.deliver_later
-```
+Both modes land on the same success URL with `?session_id=`:
+`CheckoutsController#success` retrieves the session (expanding
+`collected_information` and `line_items.data.price.product`), guards against
+the webhook's duplicate order, creates the order via `Checkout::OrderCreator`,
+clears the cart, and sends confirmation emails plus the Telegram notification.
+The `checkout.session.completed` webhook
+(`app/controllers/webhooks/stripe_controller.rb`) is the fallback that creates
+the order if the redirect never arrives. Zero-total orders complete with
+`payment_status: "no_payment_required"` — every completion gate accepts both
+statuses via `Checkout::COMPLETED_PAYMENT_STATUSES`.
 
 ## Authentication
 
