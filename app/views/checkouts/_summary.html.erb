@@ -7,7 +7,19 @@
 <div id="checkout_summary">
   <h2 class="text-lg sm:text-2xl mb-3 sm:mb-6">Order Summary</h2>
 
-  <% cart_summary_lines(cart).each do |line| %>
+  <% lines = cart_summary_lines(cart) %>
+  <% has_discount = lines.any? { |line| line[:kind] == :discount } %>
+  <% lines.each do |line| %>
+    <% if line[:kind] == :vat && !has_discount %>
+      <%# Hidden placeholder: a promo code applied on-page creates a discount
+          the server never rendered; the Stimulus controller unhides this row
+          and fills it from the Stripe session. %>
+      <div class="hidden justify-between mb-2 text-sm sm:text-base text-success"
+           data-onsite-checkout-target="discountRow">
+        <span>Discount</span>
+        <span data-onsite-checkout-money-kind="discount"></span>
+      </div>
+    <% end %>
     <% if line[:kind] == :total %>
       <div class="flex justify-between text-lg sm:text-xl text-gray-800 border-t pt-3 mt-3">
         <span><%= line[:label] %></span>
