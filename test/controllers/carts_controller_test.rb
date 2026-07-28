@@ -320,6 +320,23 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "the postcode button says what it calculates, on both surfaces" do
+    # "Calculate" alone leaves the object unsaid, next to a field labelled
+    # "Delivery postcode" and a Shipping row reading "Enter postcode". Naming
+    # shipping ties the control to the row it changes.
+    #
+    # Asserted on both surfaces because they render the same partial: the point
+    # is that they cannot drift, so a second copy of the label would fail here.
+    # Both surfaces render the calculator only alongside a non-empty summary.
+    post cart_cart_items_path, params: { cart_item: { sku: @product_variant.sku, quantity: 1 } }
+
+    get cart_url
+    assert_select "#delivery_calculator input[type=submit][value=?]", "Calculate shipping"
+
+    get product_url(@product_variant)
+    assert_select "#drawer_cart_content input[type=submit][value=?]", "Calculate shipping"
+  end
+
   # The cart page's checkout button is disabled when there is no deliverable
   # destination, and that `disabled` is decided at render time. It sits OUTSIDE
   # the summary and the calculator, so a Turbo submission that replaced only
