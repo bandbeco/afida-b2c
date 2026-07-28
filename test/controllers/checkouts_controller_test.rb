@@ -99,9 +99,14 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
-  test "create with flag on still refuses an undeliverable destination" do
+  test "create with flag on still refuses an unknown destination" do
     enable_onsite_checkout
-    set_delivery_postcode("IM1 1AA")
+    # No typed postcode and no saved address to fall back to (an undeliverable
+    # typed postcode is deleted by the cart action, so the fallback chain is
+    # what actually decides — same setup as the hosted guard tests).
+    @user.addresses.destroy_all
+    set_delivery_postcode("")
+    Stripe::Checkout::Session.expects(:create).never
 
     post checkout_path
 
