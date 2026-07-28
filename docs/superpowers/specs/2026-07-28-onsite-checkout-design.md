@@ -135,7 +135,9 @@ totals re-render from the session state the SDK reports, so the page cannot
 diverge from what Stripe charges.
 
 One-time setup outside code: register afida.com and the staging domain for
-Apple Pay in the Stripe dashboard (sandbox and live).
+Apple Pay in the Stripe dashboard (sandbox and live). This is a rollout
+checklist item, not just prose: a missed live-domain registration silently
+hides the wallet button rather than erroring.
 
 ## Components
 
@@ -155,7 +157,10 @@ Server side (changes to existing code):
   on card), leaving the hosted branch untouched. Whether that's expressed as
   `payment_method_types: ["card", "link"]` or dashboard-managed payment
   methods is an implementation choice; the constraint is that hosted-mode
-  sessions are byte-for-byte unaffected.
+  sessions are byte-for-byte unaffected. Note `#success` emits
+  `payment_method_types&.first` in the `checkout.completed` event, so Link
+  payments may report a different value than hosted mode did — an expected
+  analytics shift, not a regression.
 - **`CheckoutsController#create`:** branches on the flag as above.
 - **Zone endpoint:** a small controller action wrapping `ShippingZone.for`,
   returning the zone for a postcode. Read-only, no session state.
@@ -228,6 +233,9 @@ incident; removing the flag and hosted branch is a later cleanup task.
   item** specifically (price by zone, tax rate, prepended position), the
   discount branches (welcome code, no code → `allow_promotion_codes`,
   samples-only refusal, invalid coupon), metadata, and customer details.
+  Include the invalid-coupon fallback as a rendering case: in custom mode
+  that branch shows both the `flash.now` alert and the promo input (the
+  shopper can retype the code), and a test should pin that combination.
   Existing hosted-mode builder tests must pass unchanged.
 - **Controller tests:** flag off → redirect to Stripe URL (existing tests keep
   passing); flag on → renders the checkout page with the client secret,
