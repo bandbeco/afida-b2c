@@ -79,6 +79,11 @@ module StripeTestHelper
       setup_intent = stub(id: "seti_test_#{SecureRandom.hex(12)}", payment_method: payment_method)
     end
 
+    # The payment method that actually paid, as the expanded payment_intent
+    # carries it (retrieve with expand: ["payment_intent.payment_method"]).
+    # Override with payment_method_type: "link" to model a Link payment.
+    payment_intent = stub(payment_method: stub(type: overrides[:payment_method_type] || "card"))
+
     # Build total_details for tax and discount information
     tax_amount = overrides[:amount_tax] || 0
     discount_amount = overrides[:amount_discount] || 0
@@ -146,6 +151,7 @@ module StripeTestHelper
       url: "https://checkout.stripe.com/test/#{session_id}",
       payment_status: overrides[:payment_status] || "paid",
       payment_method_types: overrides[:payment_method_types] || [ "card" ],
+      payment_intent: payment_intent,
       customer_details: customer_details,
       collected_information: collected_information,
       shipping_cost: shipping_cost,

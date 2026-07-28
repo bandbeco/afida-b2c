@@ -26,6 +26,16 @@ class ShippingZonesControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "zone" => "unknown", "deliverable" => false }, response.parsed_body)
   end
 
+  test "does not create a cart row for a cookieless client" do
+    # The route sits outside checkout's rate limit, so a cookieless client
+    # (bot, crawler) must not write an orphan Cart row per hit.
+    assert_no_difference "Cart.count" do
+      get shipping_zone_path, params: { postcode: "WD18 9SB" }
+    end
+
+    assert_response :success
+  end
+
   test "works logged out" do
     get shipping_zone_path, params: { postcode: "SW1A 1AA" }
 

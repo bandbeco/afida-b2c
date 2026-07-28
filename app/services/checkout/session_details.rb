@@ -50,6 +50,19 @@ module Checkout
       zone if ShippingZone.deliverable?(zone.to_sym)
     end
 
+    # The type of the payment method that actually paid the session ("card",
+    # "link", ...), read from the expanded payment_intent; callers must
+    # retrieve the session with expand: ["payment_intent.payment_method"].
+    # The session's payment_method_types is the CONFIGURED list, not the
+    # customer's choice: custom mode configures ["card", "link"], so its first
+    # entry says nothing about how the customer paid. Falls back to "card"
+    # when no expanded intent is present (a zero-total no_payment_required
+    # session has no payment at all, and an unexpanded retrieve returns an id
+    # string), matching what the event recorded before the type was read.
+    def payment_method_type(session)
+      session.try(:payment_intent).try(:payment_method).try(:type) || "card"
+    end
+
     # The Stripe-entered promotion code (the human-typed string, e.g. "SUMMER20"), or
     # nil when none was applied. Deliberately does NOT rescue an unexpected Stripe
     # shape: each caller owns that policy. OrderCreator lets a NoMethodError surface

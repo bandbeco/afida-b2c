@@ -210,6 +210,12 @@ class ShippingZoneTest < ActiveSupport::TestCase
     end
   end
 
+  test "normalise is the canonical form of a typed postcode" do
+    # Shared with Checkout::CartFingerprint, so "the same postcode" means the
+    # same thing to the zone resolver and to the staleness fingerprint.
+    assert_equal "IV51 9XX", ShippingZone.normalise(" iv51  9xx ")
+  end
+
   test "handles messy real-world input" do
     # Bt618he is a real production postcode: no space, mixed case.
     assert_equal :northern_ireland, ShippingZone.for("Bt618he")

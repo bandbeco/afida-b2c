@@ -1,5 +1,13 @@
 # Update Log
 
+## 2026-07-29
+
+* **Update**: [Developer Guide](/developer_guide.md) checkout section: the mode decision is now `OnsiteCheckout.enabled?(session)`, adding a session-sticky production preview (`?onsite_checkout=1` on any URL, `=0` to clear) alongside the global `ONSITE_CHECKOUT` env flag (`onsite-checkout` branch, PR #271).
+
+## 2026-07-28
+
+* **Update**: [On-Site Checkout Plan](/superpowers/plans/2026-07-28-onsite-checkout.md) and the [Developer Guide](/developer_guide.md) gained OKF frontmatter (code-review follow-up on the `onsite-checkout` branch, PR #271). The guide's checkout section, rewritten on that branch for the two checkout modes and shipping zones, was corrected for the review fixes: leaner on-site session stash with a 23 h expiry, `payment_intent.payment_method` expansion so `checkout.completed` records the real payment method, and the destination re-resolved on `GET /checkout` instead of trusting the stash.
+
 ## 2026-07-08
 
 * **Creation**: Adopted OKF v0.1 for `docs/` (Phase 1). Added bundle conventions to repo `CLAUDE.md`, created this log, the root [index](/index.md), and the [SEO index](/seo/index.md).

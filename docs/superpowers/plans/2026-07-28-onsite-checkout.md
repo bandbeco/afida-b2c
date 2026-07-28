@@ -1,3 +1,10 @@
+---
+type: Plan
+description: Task-by-task implementation plan for the on-site Stripe checkout page (ui_mode custom behind the ONSITE_CHECKOUT flag) replacing the hosted redirect.
+status: active
+timestamp: 2026-07-28
+---
+
 # On-Site Checkout Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.

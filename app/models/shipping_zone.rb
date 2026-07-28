@@ -187,6 +187,14 @@ class ShippingZone
       ZONES.include?(zone)
     end
 
+    # The canonical form of a customer-typed postcode: uppercased, trimmed,
+    # internal runs of spaces collapsed. This is what .for matches against and
+    # what Checkout::CartFingerprint hashes, so "the same postcode" means the
+    # same thing to the zone resolver and to the staleness fingerprint.
+    def normalise(postcode)
+      postcode.to_s.upcase.strip.squeeze(" ")
+    end
+
     # Working days on top of the standard next-working-day dispatch.
     #
     # An undeliverable zone falls to the SLOWEST transit rather than 0. Defaulting
@@ -248,7 +256,7 @@ class ShippingZone
     # Accepts a full postcode (via Address::UK_POSTCODE_REGEX, so there is one
     # definition of a valid UK postcode) or an outward code alone.
     def parse(postcode)
-      normalised = postcode.to_s.upcase.strip
+      normalised = normalise(postcode)
       outward = outward_code(normalised)
       return nil unless outward
 

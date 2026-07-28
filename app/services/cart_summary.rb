@@ -27,12 +27,13 @@ class CartSummary
   # that no longer holds the answer.
   DEFERRED_LABEL = "Enter postcode"
 
-  def self.lines(cart)
-    new(cart).lines
+  def self.lines(cart, placeholder_discount: false)
+    new(cart, placeholder_discount: placeholder_discount).lines
   end
 
-  def initialize(cart)
+  def initialize(cart, placeholder_discount: false)
     @cart = cart
+    @placeholder_discount = placeholder_discount
   end
 
   def lines
@@ -40,7 +41,11 @@ class CartSummary
       line(:subtotal, "Subtotal", money(@cart.subtotal_amount)),
       line(:shipping, "Shipping", shipping_display)
     ]
-    result << discount_line if @cart.discount_amount.positive?
+    if @cart.discount_amount.positive?
+      result << discount_line
+    elsif @placeholder_discount
+      result << placeholder_discount_line
+    end
     result << line(:vat, "VAT (#{(VAT_RATE * 100).to_i}%)", money(@cart.vat_amount))
     result << line(:total, "Total", money(@cart.display_total_amount))
     result
@@ -59,6 +64,16 @@ class CartSummary
       amount: "-#{money(@cart.discount_amount)}",
       negative: true
     }
+  end
+
+  # An empty discount row in the discount line's canonical slot, marked
+  # placeholder so the requesting surface renders it hidden. The on-site
+  # checkout page asks for it: a promo code applied on-page creates a discount
+  # the server never rendered, and the page's JS needs a row to unhide without
+  # the view guessing where the discount slot sits. The cart surfaces never
+  # pass the option, so their line set is unchanged.
+  def placeholder_discount_line
+    { kind: :discount, label: "Discount", amount: nil, negative: true, placeholder: true }
   end
 
   # "Free" at/above the free-shipping threshold, the currency amount below it, and

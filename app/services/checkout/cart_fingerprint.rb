@@ -10,7 +10,7 @@ module Checkout
         items: cart.cart_items.order(:id).map do |item|
           [ item.id, item.product_id, item.quantity, item.price.to_s, item.sample?, item.configuration ]
         end,
-        postcode: postcode.to_s.upcase.strip.squeeze(" "),
+        postcode: ShippingZone.normalise(postcode),
         discount_code: discount_code.to_s
       }
       Digest::SHA256.hexdigest(payload.to_json)

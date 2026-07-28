@@ -66,7 +66,7 @@ class CheckoutsController < ApplicationController
         datafast_session_id: cookies[:datafast_session_id],
         success_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}",
         cancel_url: cancel_checkout_url,
-        ui_mode: OnsiteCheckout.enabled? ? :custom : :hosted,
+        ui_mode: OnsiteCheckout.enabled?(session) ? :custom : :hosted,
         return_url: success_checkout_url + "?session_id={CHECKOUT_SESSION_ID}"
       )
       result = builder.create
@@ -76,22 +76,30 @@ class CheckoutsController < ApplicationController
         flash[:alert] = "Your discount code could not be applied. Please continue with your order."
       end
 
-      session[:selected_address_id] = result.selected_address_id if result.selected_address_id.present?
+      if result.selected_address_id.present?
+        session[:selected_address_id] = result.selected_address_id
+      else
+        # A checkout with no selection (e.g. from the cart drawer, whose form
+        # has no address selector) must not inherit one from an earlier
+        # attempt: the on-site page would prefill and zone-guard an address
+        # this checkout wasn't priced from.
+        session.delete(:selected_address_id)
+      end
 
-      if OnsiteCheckout.enabled?
-        # Stash the custom-mode session for GET /checkout to render. The
-        # fingerprint is computed AFTER the invalid-discount cleanup above so
-        # both sides of the later staleness comparison see the same (possibly
-        # cleared) discount code — otherwise an invalid welcome code would
-        # false-bounce every render.
+      if OnsiteCheckout.enabled?(session)
+        # Stash the custom-mode session for GET /checkout to render; only
+        # members #show reads belong here (the stash is cookie payload on
+        # every request). The fingerprint is computed AFTER the
+        # invalid-discount cleanup above so both sides of the later staleness
+        # comparison see the same (possibly cleared) discount code: otherwise
+        # an invalid welcome code would false-bounce every render.
         session[:onsite_checkout] = {
-          "session_id" => result.session.id,
           "client_secret" => result.session.client_secret,
           "fingerprint" => Checkout::CartFingerprint.digest(
             cart: cart, postcode: resolved_postcode, discount_code: session[:discount_code]
           ),
-          "postcode" => resolved_postcode,
-          "zone" => result.zone.to_s
+          "zone" => result.zone.to_s,
+          "created_at" => Time.current.to_i
         }
         redirect_to checkout_path, status: :see_other
       else
@@ -105,16 +113,37 @@ class CheckoutsController < ApplicationController
     end
   end
 
+  # Stripe expires Checkout Sessions 24 hours after creation; past that the
+  # stashed client_secret can only produce a dead page whose "please refresh"
+  # advice re-serves the same expired secret. Bounce just short of Stripe's
+  # line so the customer lands on the cart with a working restart instead.
+  ONSITE_STASH_TTL = 23.hours
+
   # The on-site checkout page. Renders the Stripe session stashed by #create;
   # performs no Stripe writes, so refresh and back-navigation are free.
   def show
-    return redirect_to cart_path unless OnsiteCheckout.enabled?
+    unless OnsiteCheckout.enabled?(session)
+      # Flipping the flag off must not strand a stashed client_secret in the
+      # cookie indefinitely.
+      session.delete(:onsite_checkout)
+      return redirect_to cart_path
+    end
 
     stash = session[:onsite_checkout]
     cart = Current.cart
     return redirect_to cart_path if stash.blank? || cart.blank? || cart.cart_items.empty?
 
-    postcode = session[:delivery_postcode].presence || stash["postcode"]
+    if stash["created_at"].to_i < ONSITE_STASH_TTL.ago.to_i
+      session.delete(:onsite_checkout)
+      return redirect_to cart_path, notice: "Your checkout session expired. Continue to payment when you're ready."
+    end
+
+    # Re-resolve the destination exactly as #create did (typed postcode, then
+    # the stashed address selection, then the default address). Falling back
+    # to a postcode recorded in the stash instead would validate the stash
+    # against itself: a postcode REMOVED from the session after #create went
+    # unnoticed, and the page charged a destination the cart no longer shows.
+    postcode = delivery_postcode_for(session[:selected_address_id])
     fingerprint = Checkout::CartFingerprint.digest(
       cart: cart, postcode: postcode, discount_code: session[:discount_code]
     )
@@ -122,6 +151,12 @@ class CheckoutsController < ApplicationController
       session.delete(:onsite_checkout)
       return redirect_to cart_path, notice: "Your basket changed. Continue to payment when you're ready."
     end
+
+    # The summary must price shipping from the destination the Stripe session
+    # was built from. The before_action resolves the cart's postcode without
+    # the address selection, so a saved-address checkout would otherwise
+    # display a different shipping line than the session charges.
+    cart.delivery_postcode = postcode
 
     @client_secret = stash["client_secret"]
     @priced_zone = stash["zone"]
@@ -142,13 +177,17 @@ class CheckoutsController < ApplicationController
     begin
       stripe_session = Stripe::Checkout::Session.retrieve(
         id: session_id,
-        expand: [ "collected_information", "line_items.data.price.product" ]
+        expand: [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
       )
 
       unless Checkout::COMPLETED_PAYMENT_STATUSES.include?(stripe_session.payment_status)
         flash[:error] = "Payment was not completed successfully"
         return redirect_to cart_path
       end
+
+      # The stash's job ends with payment: without this the paid session's
+      # client_secret would ride every later request's cookie.
+      session.delete(:onsite_checkout)
 
       # Check if order already exists for this session (webhook may have created it)
       existing_order = Order.find_by(stripe_session_id: session_id)
@@ -169,7 +208,7 @@ class CheckoutsController < ApplicationController
       Rails.event.notify("checkout.completed",
         order_id: order.id,
         total: order.total_amount.to_f,
-        payment_method: stripe_session.payment_method_types&.first || "card"
+        payment_method: Checkout::SessionDetails.payment_method_type(stripe_session)
       )
 
       # Emit order.placed event

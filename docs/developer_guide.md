@@ -1,3 +1,10 @@
+---
+type: Guide
+description: Codebase orientation for developers, covering data models, cart and checkout flows, authentication, and common tasks.
+status: active
+timestamp: 2026-07-29
+---
+
 # Developer Guide
 
 This guide provides technical documentation for developers working on the Afida e-commerce application.
@@ -282,22 +289,27 @@ end
 ## Checkout & Orders
 
 Two checkout modes share one session builder. Which one a customer gets is
-decided by the `ONSITE_CHECKOUT` env flag (`OnsiteCheckout.enabled?`, read
-live on every call):
+decided by `OnsiteCheckout.enabled?(session)`: the `ONSITE_CHECKOUT` env flag
+(read live on every call) is the global switch, and a per-session preview flag
+lets you test the on-site mode in production before flipping it globally. Visit
+any URL with `?onsite_checkout=1` to turn the preview on for your browser
+session, `?onsite_checkout=0` to turn it back off (captured by
+`ApplicationController#capture_onsite_checkout_preview`).
 
 - **Hosted** (flag off): `CheckoutsController#create` builds a Checkout
-  Session and redirects to `session.url` — Stripe's page collects everything.
+  Session and redirects to `session.url`; Stripe's page collects everything.
 - **On-site** (flag on): the same `#create` builds the session with
-  `ui_mode: "custom"`, stashes `{session_id, client_secret, fingerprint,
-  postcode, zone}` in the Rails session, and 303-redirects to `GET /checkout`,
+  `ui_mode: "custom"`, stashes `{client_secret, fingerprint, zone,
+  created_at}` in the Rails session, and 303-redirects to `GET /checkout`,
   which renders the checkout page on afida.com. Stripe.js's checkout SDK
   (`app/frontend/javascript/controllers/onsite_checkout_controller.js`) binds
   the page to the session: Payment Element + Shipping Address Element, promo
   codes via `applyPromotionCode`, and a zone guard that compares the typed
   postcode's zone (via `GET /shipping_zone`) against the zone the order was
   priced for. `Checkout::CartFingerprint` invalidates the stash if the cart,
-  postcode, or discount changed since `#create`; a stale stash bounces to the
-  cart. See `docs/superpowers/specs/2026-07-28-onsite-checkout-design.md` and
+  postcode, or discount changed since `#create`; a stale or expired stash
+  (Stripe sessions die at 24h) bounces to the cart.
+  See `docs/superpowers/specs/2026-07-28-onsite-checkout-design.md` and
   `docs/adr/0001-onsite-checkout-on-checkout-sessions.md`.
 
 ### Session creation (`Checkout::SessionBuilder`)
@@ -308,7 +320,7 @@ All money math lives in the Stripe session, built by
 - **Line items** carry the products AND the delivery charge. Shipping rides as
   a taxed line item (not a `shipping_option`) so manual tax rates apply VAT to
   it; it is prepended so it lands in Stripe's first `line_items` page.
-- **Shipping price** comes from `ShippingZone.for(delivery_postcode)` — the
+- **Shipping price** comes from `ShippingZone.for(delivery_postcode)`: the
   postcode captured on the cart page, resolved typed-field-first
   (`CheckoutsController#delivery_postcode_for`). `#create` refuses to build a
   session for an unknown or undeliverable destination. The priced zone is
@@ -329,13 +341,14 @@ All money math lives in the Stripe session, built by
 
 Both modes land on the same success URL with `?session_id=`:
 `CheckoutsController#success` retrieves the session (expanding
-`collected_information` and `line_items.data.price.product`), guards against
+`collected_information`, `line_items.data.price.product`, and
+`payment_intent.payment_method`), guards against
 the webhook's duplicate order, creates the order via `Checkout::OrderCreator`,
 clears the cart, and sends confirmation emails plus the Telegram notification.
 The `checkout.session.completed` webhook
 (`app/controllers/webhooks/stripe_controller.rb`) is the fallback that creates
 the order if the redirect never arrives. Zero-total orders complete with
-`payment_status: "no_payment_required"` — every completion gate accepts both
+`payment_status: "no_payment_required"`; every completion gate accepts both
 statuses via `Checkout::COMPLETED_PAYMENT_STATUSES`.
 
 ## Authentication

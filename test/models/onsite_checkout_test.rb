@@ -19,4 +19,19 @@ class OnsiteCheckoutTest < ActiveSupport::TestCase
       assert_not OnsiteCheckout.enabled?, "expected #{value.inspect} to disable"
     end
   end
+
+  test "a session preview flag enables with the env flag off" do
+    ENV.stubs(:[]).with("ONSITE_CHECKOUT").returns(nil)
+    assert OnsiteCheckout.enabled?({ "onsite_checkout_preview" => true })
+  end
+
+  test "a session without the preview flag does not enable" do
+    ENV.stubs(:[]).with("ONSITE_CHECKOUT").returns(nil)
+    assert_not OnsiteCheckout.enabled?({})
+  end
+
+  test "the env flag enables regardless of the session" do
+    ENV.stubs(:[]).with("ONSITE_CHECKOUT").returns("true")
+    assert OnsiteCheckout.enabled?({})
+  end
 end

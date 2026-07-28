@@ -1,6 +1,13 @@
 <% content_for :title, "Checkout | Afida" %>
 <% content_for :head do %>
-  <script src="https://js.stripe.com/v3/"></script>
+  <%# The VERSIONED bundle, matching the clover API version the stripe gem
+      pins: the legacy /v3/ bundle refuses initCheckoutElementsSdk with
+      "You must upgrade to the Basil release or higher". %>
+  <script src="https://js.stripe.com/clover/stripe.js"></script>
+  <%# Never snapshot this page: a Turbo cache restore would clone the Stripe
+      iframes as dead markup and re-run connect() against them. Back/forward
+      re-renders server-side instead, which #show serves for free. %>
+  <meta name="turbo-cache-control" content="no-cache">
 <% end %>
 
 <div class="max-w-6xl mx-auto px-4 py-8"

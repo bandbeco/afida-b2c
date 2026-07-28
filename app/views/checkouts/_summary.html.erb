@@ -3,30 +3,26 @@
     carry data attributes so the onsite-checkout Stimulus controller re-renders
     them from the Stripe session state (the charging authority) once the SDK is
     live. Line KINDS map to attributes; keep the kinds in step with CartSummary.
-    Deliberately NOT the #cart_summary id — the cart page's Turbo Streams own it. %>
+    placeholder_discount asks CartSummary for a hidden discount row when none is
+    taken, so a promo code applied on-page has a row for the JS to unhide.
+    Deliberately NOT the #cart_summary id: the cart page's Turbo Streams own it. %>
 <div id="checkout_summary">
   <h2 class="text-lg sm:text-2xl mb-3 sm:mb-6">Order Summary</h2>
 
-  <% lines = cart_summary_lines(cart) %>
-  <% has_discount = lines.any? { |line| line[:kind] == :discount } %>
-  <% lines.each do |line| %>
-    <% if line[:kind] == :vat && !has_discount %>
-      <%# Hidden placeholder: a promo code applied on-page creates a discount
-          the server never rendered; the Stimulus controller unhides this row
-          and fills it from the Stripe session. %>
-      <div class="hidden justify-between mb-2 text-sm sm:text-base text-success"
-           data-onsite-checkout-target="discountRow">
-        <span>Discount</span>
-        <span data-onsite-checkout-money-kind="discount"></span>
-      </div>
-    <% end %>
+  <% cart_summary_lines(cart, placeholder_discount: true).each do |line| %>
     <% if line[:kind] == :total %>
       <div class="flex justify-between text-lg sm:text-xl text-gray-800 border-t pt-3 mt-3">
         <span><%= line[:label] %></span>
         <span data-onsite-checkout-target="totalLine"><%= line[:amount] %></span>
       </div>
+    <% elsif line[:kind] == :discount %>
+      <div class="<%= line[:placeholder] ? "hidden" : "flex" %> justify-between mb-2 text-sm sm:text-base text-success"
+           data-onsite-checkout-target="discountRow">
+        <span><%= line[:label] %></span>
+        <span data-onsite-checkout-money-kind="discount"><%= line[:amount] %></span>
+      </div>
     <% else %>
-      <div class="flex justify-between mb-2 text-sm sm:text-base <%= line[:negative] ? "text-success" : "text-gray-700" %>">
+      <div class="flex justify-between mb-2 text-sm sm:text-base text-gray-700">
         <span><%= line[:label] %></span>
         <span data-onsite-checkout-money-kind="<%= line[:kind] %>"><%= line[:amount] %></span>
       </div>

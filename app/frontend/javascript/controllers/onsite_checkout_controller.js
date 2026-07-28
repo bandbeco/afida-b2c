@@ -39,17 +39,38 @@ export default class extends Controller {
         clientSecret: this.clientSecretValue,
         defaultValues: this.defaultValues()
       })
-      this.actions = await this.checkout.loadActions()
+      // loadActions resolves to a {type, actions} result wrapper; the
+      // callable actions (updateEmail, confirm, ...) live one level down.
+      const loaded = await this.checkout.loadActions()
+      if (!loaded?.actions) throw new Error(`loadActions returned type ${loaded?.type}`)
+      this.actions = loaded.actions
     } catch (error) {
       console.error("[onsite-checkout] init failed:", error)
       return this.fatal()
     }
 
-    this.checkout.createPaymentElement().mount(this.paymentTarget)
-    this.checkout.createShippingAddressElement().mount(this.addressTarget)
+    // The awaits above straddle navigation: if the shopper already left the
+    // page, mounting into the departed DOM would leak live Stripe elements.
+    if (!this.element.isConnected) return
+
+    this.paymentElement = this.checkout.createPaymentElement()
+    this.paymentElement.mount(this.paymentTarget)
+    this.addressElement = this.checkout.createShippingAddressElement()
+    this.addressElement.mount(this.addressTarget)
 
     this.checkout.on("change", (session) => this.sessionChanged(session))
     this.sessionChanged(this.actions.getSession())
+  }
+
+  // The page is marked turbo-cache-control no-cache, so leaving always tears
+  // the controller down and Back re-renders server-side; drop timers and
+  // elements here so late SDK callbacks can't fire into the departed DOM.
+  disconnect() {
+    clearTimeout(this.zoneTimer)
+    this.paymentElement?.destroy?.()
+    this.addressElement?.destroy?.()
+    this.paymentElement = this.addressElement = null
+    this.checkout = this.actions = this.session = null
   }
 
   // Prefill for logged-in customers: the saved address #create synced to
@@ -66,6 +87,8 @@ export default class extends Controller {
   // --- session state → page ---
 
   sessionChanged(session) {
+    if (!this.element.isConnected) return // SDK callbacks can outlive the page
+
     this.renderTotals(session)
     this.guardZone(session)
     this.session = session
@@ -112,14 +135,22 @@ export default class extends Controller {
   }
 
   async checkZone(postcode) {
+    let zoneOk = true // fail open (incl. non-200): no worse than hosted checkout today
     try {
       const response = await fetch(`/shipping_zone?postcode=${encodeURIComponent(postcode)}`)
-      if (!response.ok) return
-      const { zone } = await response.json()
-      this.zoneOk = zone === this.pricedZoneValue
+      if (response.ok) {
+        const { zone } = await response.json()
+        zoneOk = zone === this.pricedZoneValue
+      }
     } catch {
-      this.zoneOk = true // fail open: no worse than hosted checkout today
+      // fail open
     }
+
+    // Only the latest postcode owns the verdict: a slow response for an
+    // earlier one must not overwrite it (last-response-wins race).
+    if (postcode !== this.lastCheckedPostcode) return
+
+    this.zoneOk = zoneOk
     this.zoneWarningTarget.classList.toggle("hidden", this.zoneOk)
     this.syncPayButton()
   }
@@ -131,8 +162,11 @@ export default class extends Controller {
     const email = this.emailTarget.value.trim()
     if (!email) return
     try {
-      await this.actions.updateEmail(email)
-    } catch {
+      const result = await this.actions.updateEmail(email)
+      if (result?.error) return this.showError(result.error.message || "Please check your email address.")
+      this.errorTarget.classList.add("hidden")
+    } catch (error) {
+      console.error("[onsite-checkout] updateEmail failed:", error)
       this.showError("Please check your email address.")
     }
   }
@@ -159,7 +193,8 @@ export default class extends Controller {
 
   async removePromo() {
     try {
-      await this.actions.removePromotionCode()
+      const result = await this.actions.removePromotionCode()
+      if (result?.error) throw result.error
     } catch (error) {
       console.error("[onsite-checkout] promo removal failed:", error)
       return
@@ -177,12 +212,19 @@ export default class extends Controller {
     this.payButtonTarget.disabled = true
     this.errorTarget.classList.add("hidden")
 
-    // On success Stripe redirects to return_url; we only come back on error.
-    const result = await this.actions.confirm()
-    if (result?.error) {
+    // On success Stripe redirects to return_url, so the button stays disabled;
+    // any other outcome (a reported error OR a rejection, e.g. a network drop
+    // mid-confirm) must surface a message and re-enable the button, or the
+    // shopper is stuck on a dead Pay button.
+    try {
+      const result = await this.actions.confirm()
+      if (!result?.error) return
       this.showError(result.error.message || "Payment failed. Please try again.")
-      this.syncPayButton()
+    } catch (error) {
+      console.error("[onsite-checkout] confirm failed:", error)
+      this.showError("Payment couldn't be completed. Please check your connection and try again.")
     }
+    this.syncPayButton()
   }
 
   // --- errors ---

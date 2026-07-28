@@ -169,6 +169,21 @@ class CheckoutAddressPrefillTest < ActionDispatch::IntegrationTest
     assert_nil @captured_checkout_params[:customer]
   end
 
+  test "checkout without address_id clears a previously selected address" do
+    Stripe::Customer.stubs(:create).returns(stub(id: "cus_test_clear"))
+    Stripe::Checkout::Session.stubs(:create).returns(stub(url: "https://checkout.stripe.com/test/sess_clear"))
+
+    post checkout_path, params: { address_id: @address.id }
+    assert_equal @address.id.to_s, session[:selected_address_id]
+
+    # A later checkout with no selection (e.g. from the cart drawer) must not
+    # inherit the stale one: the on-site page would prefill and zone-guard an
+    # address this checkout wasn't priced from.
+    post checkout_path
+
+    assert_nil session[:selected_address_id]
+  end
+
   test "guest checkout does not store address selection" do
     sign_out
     # The stubbed @cart (from setup) stands in as the non-empty cart; signed out,
