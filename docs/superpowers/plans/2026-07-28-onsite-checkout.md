@@ -47,7 +47,7 @@
 
 The flag must read ENV **at call time** (no constant memoization) so ops can flip it with an env change + redeploy and tests can stub it.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ruby
 # test/models/onsite_checkout_test.rb
@@ -75,12 +75,12 @@ class OnsiteCheckoutTest < ActiveSupport::TestCase
 end
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `bin/rails test test/models/onsite_checkout_test.rb`
 Expected: FAIL / error with `NameError: uninitialized constant OnsiteCheckout`
 
-- [ ] **Step 3: Write minimal implementation**
+- [x] **Step 3: Write minimal implementation**
 
 ```ruby
 # app/models/onsite_checkout.rb
@@ -98,12 +98,12 @@ class OnsiteCheckout
 end
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `bin/rails test test/models/onsite_checkout_test.rb`
 Expected: PASS (3 runs, 0 failures)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/models/onsite_checkout.rb test/models/onsite_checkout_test.rb
@@ -122,7 +122,7 @@ Custom mode differs from hosted in EXACTLY three ways: `ui_mode: "custom"` + `re
 
 The existing test file's helpers (`build_session`, `build_stripe_session`, `stub_stripe_tax_rate_list`) are the idiom; read its first ~60 lines before starting.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `test/services/checkout/session_builder_test.rb` (inside the existing class, reusing its `setup`):
 
@@ -204,12 +204,12 @@ Add to `test/services/checkout/session_builder_test.rb` (inside the existing cla
 
 Note on `build_session`: the existing helper takes kwargs like `discount_code:`/`delivery_postcode:` and forwards to `Checkout::SessionBuilder.new`. Extend its signature to also forward `ui_mode:` and `return_url:` (defaulting so every existing call is untouched).
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `bin/rails test test/services/checkout/session_builder_test.rb`
 Expected: new tests FAIL (`unknown keyword: :ui_mode` and `NoMethodError: undefined method 'zone'`); ALL existing tests still PASS.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `app/services/checkout/session_builder.rb`:
 
@@ -296,17 +296,17 @@ Constructor — add the two keywords (hosted default keeps every existing caller
 
 Add `:ui_mode, :return_url` to the private `attr_reader` list.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `bin/rails test test/services/checkout/session_builder_test.rb`
 Expected: PASS, including all pre-existing tests.
 
-- [ ] **Step 5: Run the controller tests too** (they drive the builder through `#create`)
+- [x] **Step 5: Run the controller tests too** (they drive the builder through `#create`)
 
 Run: `bin/rails test test/controllers/checkouts_controller_test.rb`
 Expected: PASS unchanged.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/services/checkout/session_builder.rb test/services/checkout/session_builder_test.rb
@@ -322,7 +322,7 @@ git commit -m "Teach SessionBuilder a custom ui_mode sharing all core params"
 - Modify: `config/routes.rb`
 - Test: `test/controllers/shipping_zones_controller_test.rb`
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ruby
 # test/controllers/shipping_zones_controller_test.rb
@@ -362,12 +362,12 @@ class ShippingZonesControllerTest < ActionDispatch::IntegrationTest
 end
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `bin/rails test test/controllers/shipping_zones_controller_test.rb`
 Expected: FAIL with `NameError: undefined local variable or method 'shipping_zone_path'`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `config/routes.rb`, next to `resource :checkout`:
 
@@ -396,12 +396,12 @@ end
 
 (If `allow_unauthenticated_access` is not how public controllers opt out in this app, mirror whatever `CheckoutsController` does — it has `allow_unauthenticated_access` at the top.)
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `bin/rails test test/controllers/shipping_zones_controller_test.rb`
 Expected: PASS (5 runs)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/controllers/shipping_zones_controller.rb config/routes.rb test/controllers/shipping_zones_controller_test.rb
@@ -418,7 +418,7 @@ git commit -m "Add read-only shipping-zone lookup endpoint for the zone guard"
 
 The staleness fingerprint: same cart items + same postcode + same discount code ⇒ same digest. Any input change ⇒ different digest.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ruby
 # test/services/checkout/cart_fingerprint_test.rb
@@ -464,12 +464,12 @@ class Checkout::CartFingerprintTest < ActiveSupport::TestCase
 end
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run: `bin/rails test test/services/checkout/cart_fingerprint_test.rb`
 Expected: FAIL with `NameError: uninitialized constant Checkout::CartFingerprint`
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 ```ruby
 # app/services/checkout/cart_fingerprint.rb
@@ -496,12 +496,12 @@ end
 
 (If `item.sample?` or `item.configuration` doesn't exist on CartItem, check the model — `SessionBuilder#stripe_quantity` calls `item.sample?` and `item.configured?`/`item.configuration["size"]`, so both exist.)
 
-- [ ] **Step 4: Run test to verify it passes**
+- [x] **Step 4: Run test to verify it passes**
 
 Run: `bin/rails test test/services/checkout/cart_fingerprint_test.rb`
 Expected: PASS (6 runs)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/services/checkout/cart_fingerprint.rb test/services/checkout/cart_fingerprint_test.rb
@@ -518,7 +518,7 @@ git commit -m "Add cart fingerprint for on-site checkout staleness checks"
 
 Flag off: byte-for-byte today's behaviour. Flag on: same guards and events, builder in custom mode, stash `{session_id, client_secret, fingerprint, postcode, zone}` under `session[:onsite_checkout]`, 303 to `checkout_path`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Add to `test/controllers/checkouts_controller_test.rb`. The custom-mode Stripe session stub needs a `client_secret`; check `test/support/stripe_test_helper.rb` for `build_stripe_session` — if it doesn't accept overrides, add alongside it:
 
@@ -614,12 +614,12 @@ Use the `OnsiteCheckout.stubs` form. The flag class has its own ENV tests (Task 
   end
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `bin/rails test test/controllers/checkouts_controller_test.rb`
 Expected: the four new tests FAIL (flag-on posts still redirect to checkout.stripe.com; no stash). All existing tests PASS.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `CheckoutsController#create`, capture the resolved postcode once (it's currently computed inline in the builder call), pass mode params to the builder, and branch the redirect. The builder call becomes:
 
@@ -666,12 +666,12 @@ In `CheckoutsController#create`, capture the resolved postcode once (it's curren
 
 Everything above the builder call (guards, `checkout.started`, `cart.checkout_initiated`, rate limit) is untouched. Note the fingerprint is computed AFTER the invalid-discount cleanup so it uses the post-cleanup `session[:discount_code]` — if the welcome code was invalid and deleted, the fingerprint must reflect no-discount, matching what the Stripe session was actually built without... **No — stop.** The Stripe session was built WITH the attempt and fell back to `allow_promotion_codes`; the GET page's recompute will read the (now deleted) `session[:discount_code]` as nil. Computing the stash fingerprint after the delete makes both sides nil ⇒ they match ⇒ no false bounce. That is why the stash block sits below the invalid-discount cleanup. Keep that ordering.
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `bin/rails test test/controllers/checkouts_controller_test.rb`
 Expected: PASS, new and old.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add app/controllers/checkouts_controller.rb test/controllers/checkouts_controller_test.rb test/support/stripe_test_helper.rb
@@ -690,7 +690,7 @@ git commit -m "Stash custom checkout session and redirect to GET checkout page"
 
 `GET /checkout` already routes to `checkouts#show` (empty template today, so it renders a blank page). Give it a real action: flag off or no stash → cart; stale fingerprint → discard stash, bounce to cart with notice; otherwise render.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 ```ruby
   # --- GET /checkout (on-site page) ---
@@ -762,12 +762,12 @@ git commit -m "Stash custom checkout session and redirect to GET checkout page"
   end
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `bin/rails test test/controllers/checkouts_controller_test.rb`
 Expected: new tests FAIL (`show` currently renders the empty template with 200 for everyone).
 
-- [ ] **Step 3: Implement the action**
+- [x] **Step 3: Implement the action**
 
 Add to `CheckoutsController` (above `success`):
 
@@ -801,7 +801,7 @@ Add to `CheckoutsController` (above `success`):
 
 (Verify `email_address` vs `email` on User and `default_first` on the addresses association — both appear in existing code: `session_builder.rb` uses `user.email_address`; `application_controller.rb#default_address_postcode` uses `addresses&.default_first&.first`.)
 
-- [ ] **Step 4: Implement the view**
+- [x] **Step 4: Implement the view**
 
 `app/views/checkouts/show.html.erb`:
 
@@ -932,12 +932,12 @@ Add to `CheckoutsController` (above `success`):
 
 (Check `app/helpers` for where `cart_summary_lines` and `cart_summary_line_dom_id` live and what `line[:kind]` values exist — mirror them; do NOT reuse the `#cart_summary` DOM id, which the cart page's Turbo Streams own.)
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run: `bin/rails test test/controllers/checkouts_controller_test.rb`
 Expected: PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add app/controllers/checkouts_controller.rb app/views/checkouts/show.html.erb app/views/checkouts/_summary.html.erb test/controllers/checkouts_controller_test.rb
@@ -954,13 +954,13 @@ git commit -m "Render the on-site checkout page from the stashed session"
 
 Nothing client-side ever needed the publishable key before (hosted checkout is a redirect), so it may not be wired.
 
-- [ ] **Step 1: Check and wire the publishable key**
+- [x] **Step 1: Check and wire the publishable key**
 
 Run: `grep -rn "publishable" config/ app/ | grep -v node_modules`
 
 If `Rails.configuration.stripe[:publishable_key]` is not populated, add it where the stripe config hash is built (same pattern as `secret_key`, sourced from credentials — see `docs/runbooks/credentials.md` for the vault; sandbox and live keys differ). If the credentials key is missing, add it via `bin/rails credentials:edit` per the runbook and note it in the PR description.
 
-- [ ] **Step 2: Assert it in a test**
+- [x] **Step 2: Assert it in a test**
 
 Add to `test/controllers/checkouts_controller_test.rb`'s "show renders the page from a fresh stash" test:
 
@@ -973,7 +973,7 @@ Add to `test/controllers/checkouts_controller_test.rb`'s "show renders the page 
 
 Run: `bin/rails test test/controllers/checkouts_controller_test.rb` — PASS (fix config until it does).
 
-- [ ] **Step 3: CSP additions**
+- [x] **Step 3: CSP additions**
 
 In `config/initializers/content_security_policy.rb` (currently report-only, so this can't break production, but must be right before the flag flips):
 
@@ -996,7 +996,7 @@ In `config/initializers/content_security_policy.rb` (currently report-only, so t
 
 (Per Stripe's CSP documentation for Stripe.js/Elements: `script-src js.stripe.com`, `frame-src js.stripe.com hooks.stripe.com`, `connect-src api.stripe.com`. Verify against https://docs.stripe.com/security/guide#content-security-policy at implementation time and add any host the report-only console flags on staging.)
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add config/initializers/content_security_policy.rb config/initializers/stripe.rb test/controllers/checkouts_controller_test.rb
@@ -1015,7 +1015,7 @@ No JS test framework exists in this repo; this task is verified by Task 9's syst
 
 **API verification step is part of this task:** the code below targets Stripe.js's checkout SDK ("Elements with Checkout Sessions API", `stripe.initCheckout`) as documented at https://docs.stripe.com/checkout/custom/quickstart and https://docs.stripe.com/js/custom_checkout. Before writing, open those pages and verify these exact names: `initCheckout`, `createPaymentElement`, `createShippingAddressElement`, `session()`, `on("change")`, `updateEmail`, `applyPromotionCode`, `removePromotionCode`, `confirm`, and the shape of `session.total`. Where a name differs, follow the docs — the structure below stands.
 
-- [ ] **Step 1: Write the controller**
+- [x] **Step 1: Write the controller**
 
 ```js
 // app/frontend/javascript/controllers/onsite_checkout_controller.js
@@ -1185,7 +1185,7 @@ export default class extends Controller {
 }
 ```
 
-- [ ] **Step 2: Register it lazily**
+- [x] **Step 2: Register it lazily**
 
 In `app/frontend/entrypoints/application.js`, add to the `lazyControllers` map (alphabetical position, matching the file's style):
 
@@ -1193,12 +1193,12 @@ In `app/frontend/entrypoints/application.js`, add to the `lazyControllers` map (
   "onsite-checkout": () => import("../javascript/controllers/onsite_checkout_controller"),
 ```
 
-- [ ] **Step 3: Verify the build**
+- [x] **Step 3: Verify the build**
 
 Run: `bin/vite build` (or `bin/dev` and load any page watching the console)
 Expected: build succeeds, no import errors.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add app/frontend/javascript/controllers/onsite_checkout_controller.js app/frontend/entrypoints/application.js
@@ -1214,7 +1214,7 @@ git commit -m "Wire the on-site checkout page to Stripe's checkout SDK"
 
 Per the spec: assert the page renders with summary, mount points, and promo control. Do NOT drive the real Stripe iframe in CI (flaky by design); confirm-and-pay is the staging checklist's job. System tests run the app in-process, so Mocha stubs apply.
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 ```ruby
 # test/system/onsite_checkout_page_test.rb
@@ -1250,17 +1250,17 @@ end
 
 Before running: open the cart page views to confirm the real labels for the add-to-cart and checkout buttons and the product path helper, and adjust the three marked lines. If `StripeTestHelper` works in system tests (it's included via `test/support`), prefer `stub_stripe_tax_rate_list` + `build_custom_stripe_session` over the inline stubs above.
 
-- [ ] **Step 2: Run it**
+- [x] **Step 2: Run it**
 
 Run: `bin/rails test:system test/system/onsite_checkout_page_test.rb`
 Expected: PASS. (The Stimulus controller will attempt `initCheckout` against the fake secret and fail in the browser console — the test only asserts server-rendered markup, so that's fine.)
 
-- [ ] **Step 3: Run the full suite**
+- [x] **Step 3: Run the full suite**
 
 Run: `bin/rails test && bin/rails test:system`
 Expected: PASS across the board.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add test/system/onsite_checkout_page_test.rb
@@ -1274,18 +1274,18 @@ git commit -m "Add system test for the on-site checkout page render"
 **Files:**
 - Modify: `docs/developer_guide.md` (the "Checkout & Orders" section, ~lines 282–360)
 
-- [ ] **Step 1: Rewrite the stale section**
+- [x] **Step 1: Rewrite the stale section**
 
 The current section shows a `shipping_options`-based flow (£4.99/£9.99) that predates zones and doesn't match `Checkout::SessionBuilder`. Replace it with an accurate description covering: `Checkout::SessionBuilder` (line items with the prepended taxed shipping line, `ShippingZone` pricing from the cart-page postcode, discounts via promotion-code resolution, `allow_promotion_codes` on the no-code path); the two ui_modes (hosted redirect vs on-site PRG flow: `#create` → stash + fingerprint → `GET /checkout` → Stripe custom-UI SDK → `return_url` to `#success`); the `OnsiteCheckout` ENV flag; and a pointer to the spec and ADR 0001. Pull code snippets from the REAL files, not from memory.
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/developer_guide.md
 git commit -m "Rewrite developer guide checkout section for zones and on-site mode"
 ```
 
-- [ ] **Step 3: Rollout checklist** (record in the PR description; these are ops steps, not code)
+- [x] **Step 3: Rollout checklist** (record in the PR description; these are ops steps, not code)
 
 1. Register **afida.com** and the staging domain for Apple Pay in the Stripe dashboard — **sandbox AND live**. A missed live registration silently hides the wallet button; nothing errors.
 2. Confirm `stripe.publishable_key` exists in BOTH sandbox and live credentials.
