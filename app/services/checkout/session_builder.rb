@@ -1,12 +1,12 @@
 module Checkout
   class SessionBuilder
-    Result = Struct.new(:session, :invalid_discount_code, :selected_address_id, keyword_init: true) do
+    Result = Struct.new(:session, :invalid_discount_code, :selected_address_id, :zone, keyword_init: true) do
       def invalid_discount?
         invalid_discount_code.present?
       end
     end
 
-    def initialize(cart:, user:, address_id:, discount_code:, datafast_visitor_id:, datafast_session_id:, success_url:, cancel_url:, delivery_postcode: nil)
+    def initialize(cart:, user:, address_id:, discount_code:, datafast_visitor_id:, datafast_session_id:, success_url:, cancel_url:, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
       @cart = cart
       @user = user
       @address_id = address_id
@@ -16,6 +16,8 @@ module Checkout
       @datafast_session_id = datafast_session_id
       @success_url = success_url
       @cancel_url = cancel_url
+      @ui_mode = ui_mode
+      @return_url = return_url
     end
 
     # Mirrors Result#invalid_discount? so the controller can clean up session
@@ -32,25 +34,24 @@ module Checkout
       Result.new(
         session: Stripe::Checkout::Session.create(session_params),
         invalid_discount_code: invalid_discount_code,
-        selected_address_id: selected_address_id
+        selected_address_id: selected_address_id,
+        zone: zone
       )
     end
 
     private
 
     attr_reader :cart, :user, :address_id, :discount_code, :delivery_postcode, :datafast_visitor_id,
-                :datafast_session_id, :success_url, :cancel_url, :invalid_discount_code, :selected_address_id
+                :datafast_session_id, :success_url, :cancel_url, :invalid_discount_code, :selected_address_id,
+                :ui_mode, :return_url
 
     def build_session_params
       {
-        payment_method_types: [ "card" ],
         line_items: line_items,
         mode: "payment",
         shipping_address_collection: {
           allowed_countries: Shipping::ALLOWED_COUNTRIES
         },
-        success_url: success_url,
-        cancel_url: cancel_url,
         metadata: {
           cart_id: cart.id.to_s,
           discount_code: discount_code,
@@ -62,7 +63,26 @@ module Checkout
           # rather than re-deriving from the delivered-to postcode.
           shipping_zone: zone.to_s
         }
-      }
+      }.merge(mode_params)
+    end
+
+    # The ONLY params allowed to differ between hosted and custom mode. The
+    # custom (on-site) page shows wallets and Link inside the Payment Element;
+    # hosted stays card-only exactly as it always was.
+    def mode_params
+      if ui_mode == :custom
+        {
+          ui_mode: "custom",
+          return_url: return_url,
+          payment_method_types: [ "card", "link" ]
+        }
+      else
+        {
+          payment_method_types: [ "card" ],
+          success_url: success_url,
+          cancel_url: cancel_url
+        }
+      end
     end
 
     # Product line items plus, unless shipping is free, the taxed shipping line.

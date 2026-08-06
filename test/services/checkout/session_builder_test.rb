@@ -7,6 +7,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     @cart = Cart.create!
     @success_url = "https://example.com/checkout/success?session_id={CHECKOUT_SESSION_ID}"
     @cancel_url = "https://example.com/checkout/cancel"
+    @return_url = "https://example.com/checkout/success?session_id={CHECKOUT_SESSION_ID}"
     stub_stripe_tax_rate_list
   end
 
@@ -437,6 +438,73 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
   # The first non-shipping line item. The shipping line is now prepended, so
   # tests must select the product line by content rather than by position.
+  # --- custom (on-site) mode ---
+
+  test "custom mode differs from hosted only in ui_mode, URLs, and payment methods" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured = []
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured << params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+    build_custom_session
+
+    hosted, custom = captured
+
+    assert_equal "custom", custom[:ui_mode]
+    assert_equal @return_url, custom[:return_url]
+    assert_nil custom[:success_url]
+    assert_nil custom[:cancel_url]
+    assert_equal [ "card", "link" ], custom[:payment_method_types]
+
+    # Everything else must be identical - this is the parity contract the
+    # hosted fallback depends on. Shipping line item drift here costs money.
+    mode_keys = [ :ui_mode, :return_url, :success_url, :cancel_url, :payment_method_types ]
+    assert_equal hosted.except(*mode_keys), custom.except(*mode_keys)
+  end
+
+  test "custom mode pins the shipping line item exactly as hosted does" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_custom_session(delivery_postcode: "IV51 9XX")
+
+    shipping_line = shipping_line_item(captured_params)
+    assert_equal Shipping::LINE_ITEM_FLAG, shipping_line[:price_data][:product_data][:metadata]
+    assert_equal Shipping.cost_for_zone(:highlands), shipping_line[:price_data][:unit_amount]
+    assert_equal "highlands", captured_params[:metadata][:shipping_zone]
+  end
+
+  test "custom mode keeps allow_promotion_codes on the no-code path" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_custom_session
+
+    assert_equal true, captured_params[:allow_promotion_codes]
+  end
+
+  test "result exposes the priced zone" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    Stripe::Checkout::Session.stubs(:create).returns(build_stripe_session)
+
+    assert_equal :highlands, build_session(delivery_postcode: "IV51 9XX").zone
+    assert_equal :mainland, build_session(delivery_postcode: "WD18 9SB").zone
+  end
+
   def product_line_item(captured_params)
     captured_params[:line_items].find do |li|
       li.dig(:price_data, :product_data, :metadata, "shipping_line") != "true"
@@ -449,11 +517,18 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     end
   end
 
-  def build_session(discount_code: nil)
-    build_session_builder(discount_code: discount_code).create
+  def build_session(discount_code: nil, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
+    build_session_builder(
+      discount_code: discount_code, delivery_postcode: delivery_postcode,
+      ui_mode: ui_mode, return_url: return_url
+    ).create
   end
 
-  def build_session_builder(user: nil, address_id: nil, discount_code: nil, delivery_postcode: nil)
+  def build_custom_session(**kwargs)
+    build_session(ui_mode: :custom, return_url: @return_url, **kwargs)
+  end
+
+  def build_session_builder(user: nil, address_id: nil, discount_code: nil, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
     Checkout::SessionBuilder.new(
       cart: @cart,
       user: user,
@@ -463,7 +538,9 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
       datafast_visitor_id: nil,
       datafast_session_id: nil,
       success_url: @success_url,
-      cancel_url: @cancel_url
+      cancel_url: @cancel_url,
+      ui_mode: ui_mode,
+      return_url: return_url
     )
   end
 end

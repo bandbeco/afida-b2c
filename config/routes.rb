@@ -164,6 +164,10 @@ Rails.application.routes.draw do
     get :cancel, on: :collection
   end
 
+  # Read-only postcode→zone lookup for the on-site checkout's zone guard.
+  # Deliberately outside checkout's rate limit: it fires on address keystrokes.
+  resource :shipping_zone, only: [ :show ]
+
   resources :orders, only: [ :show, :index ] do
     member do
       get :confirmation

@@ -62,6 +62,7 @@ const lazyControllers = {
   "password-visibility": () => import("../javascript/controllers/password_visibility_controller"),
   "save-address-prompt": () => import("../javascript/controllers/save_address_prompt_controller"),
   "order-summary-toggle": () => import("../javascript/controllers/order_summary_toggle_controller"),
+  "onsite-checkout": () => import("../javascript/controllers/onsite_checkout_controller"),
   "title-preview": () => import("../javascript/controllers/title_preview_controller"),
   "field-sync": () => import("../javascript/controllers/field_sync_controller"),
   "delivery-countdown": () => import("../javascript/controllers/delivery_countdown_controller"),

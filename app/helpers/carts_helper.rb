@@ -17,8 +17,8 @@ module CartsHelper
   # order_summary_lines). Delegates to CartSummary so the line order, labels, money
   # format and discount-visibility rule live in one place; each surface supplies its
   # own row markup. See CartSummary for the shape of each line.
-  def cart_summary_lines(cart)
-    CartSummary.lines(cart)
+  def cart_summary_lines(cart, placeholder_discount: false)
+    CartSummary.lines(cart, placeholder_discount: placeholder_discount)
   end
 
   # The DOM id for a cart-summary line's amount span on the cart page, kept stable

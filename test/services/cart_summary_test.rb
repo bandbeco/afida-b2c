@@ -152,6 +152,26 @@ class CartSummaryTest < ActiveSupport::TestCase
     assert non_discount.none? { |l| l[:negative] }, "only the discount line should be negative"
   end
 
+  # The on-site checkout page asks for a placeholder so a promo code applied
+  # on-page has a discount row to unhide; the cart surfaces never pass the
+  # option and keep their line set unchanged.
+  test "placeholder_discount emits a placeholder discount row when no discount is taken" do
+    lines = CartSummary.lines(@cart, placeholder_discount: true)
+
+    assert_equal %i[subtotal shipping discount vat total], lines.map { |l| l[:kind] }
+    discount = lines.find { |l| l[:kind] == :discount }
+    assert discount[:placeholder]
+  end
+
+  test "placeholder_discount leaves a real discount line as is" do
+    @cart.discount_rate = 0.10
+
+    discount = CartSummary.lines(@cart, placeholder_discount: true).find { |l| l[:kind] == :discount }
+
+    assert_not discount[:placeholder]
+    assert_equal "Discount (#{CartsHelper::WELCOME_DISCOUNT_PERCENTAGE}%)", discount[:label]
+  end
+
   private
 
   # A cart whose subtotal clears the free-shipping threshold, so mainland ships

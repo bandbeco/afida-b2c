@@ -1,6 +1,7 @@
 class ApplicationController < ActionController::Base
   include Authentication
   include EventContext
+  before_action :capture_onsite_checkout_preview
   before_action :set_current_cart
   before_action :set_nav_categories
   # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
@@ -9,6 +10,21 @@ class ApplicationController < ActionController::Base
   end
 
   private
+
+  # Session-sticky preview of the on-site checkout: any URL with
+  # ?onsite_checkout=1 turns it on for this browser session, ?onsite_checkout=0
+  # back off, so the mode is testable in production without flipping
+  # ONSITE_CHECKOUT globally. CheckoutsController passes the session to
+  # OnsiteCheckout.enabled?, which honours the flag.
+  def capture_onsite_checkout_preview
+    return unless params.key?(:onsite_checkout)
+
+    if OnsiteCheckout.truthy?(params[:onsite_checkout])
+      session[OnsiteCheckout::PREVIEW_SESSION_KEY] = true
+    else
+      session.delete(OnsiteCheckout::PREVIEW_SESSION_KEY)
+    end
+  end
 
   # 301 to a canonical path, carrying the raw query string through unchanged
   # (same semantics as the redirect blocks in config/routes.rb; avoids the

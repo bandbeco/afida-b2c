@@ -454,7 +454,7 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
     stub_stripe_webhook_construct_event(event)
     Stripe::Checkout::Session.expects(:retrieve).with do |args|
-      args[:expand] == [ "collected_information", "line_items.data.price.product" ]
+      args[:expand] == [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
     end.returns(session)
 
     assert_difference "Order.count", 1 do

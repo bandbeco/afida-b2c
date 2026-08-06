@@ -54,6 +54,282 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       .returns(stub(data: [ stub(id: WELCOME_PROMOTION_CODE_ID, code: WELCOME_PROMOTION_CODE) ]))
   end
 
+  # The controller tests stub the flag seam; OnsiteCheckout's own ENV parsing
+  # is covered in test/models/onsite_checkout_test.rb.
+  def enable_onsite_checkout
+    OnsiteCheckout.stubs(:enabled?).returns(true)
+  end
+
+  # ============================================================================
+  # ON-SITE CHECKOUT (flag on)
+  # ============================================================================
+
+  test "create with flag on builds a custom-mode session and redirects to the checkout page" do
+    enable_onsite_checkout
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_custom_stripe_session)
+
+    post checkout_path
+
+    assert_redirected_to checkout_path
+    assert_response :see_other
+    assert_equal "custom", captured_params[:ui_mode]
+    assert_match %r{/checkout/success\?session_id=\{CHECKOUT_SESSION_ID\}}, captured_params[:return_url]
+    assert_nil captured_params[:success_url]
+
+    stash = session[:onsite_checkout]
+    assert_equal "cs_test_secret_abc", stash["client_secret"]
+    assert_equal "mainland", stash["zone"]
+    assert stash["fingerprint"].present?
+    assert_kind_of Integer, stash["created_at"]
+    # The stash is cookie payload on every request: only members #show actually
+    # reads belong in it.
+    assert_nil stash["session_id"]
+    assert_nil stash["postcode"]
+  end
+
+  test "create with flag on still refuses an empty cart" do
+    enable_onsite_checkout
+    @cart.cart_items.destroy_all
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "create with flag on still refuses an unknown destination" do
+    enable_onsite_checkout
+    # No typed postcode and no saved address to fall back to (an undeliverable
+    # typed postcode is deleted by the cart action, so the fallback chain is
+    # what actually decides; same setup as the hosted guard tests).
+    @user.addresses.destroy_all
+    set_delivery_postcode("")
+    Stripe::Checkout::Session.expects(:create).never
+
+    post checkout_path
+
+    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "create with flag off never stashes" do
+    stub_stripe_session_create
+
+    post checkout_path
+
+    assert_match %r{https://checkout\.stripe\.com}, response.redirect_url
+    assert_nil session[:onsite_checkout]
+  end
+
+  # --- preview query param (env flag off throughout; no enabled? stub) ---
+
+  test "onsite_checkout=1 on any page enables the on-site checkout for the session" do
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+
+    get cart_path(onsite_checkout: "1")
+    post checkout_path
+
+    assert_redirected_to checkout_path
+    assert session[:onsite_checkout].present?
+  end
+
+  test "onsite_checkout=0 turns the preview back off" do
+    stub_stripe_session_create
+
+    get cart_path(onsite_checkout: "1")
+    get cart_path(onsite_checkout: "0")
+    post checkout_path
+
+    assert_match %r{https://checkout\.stripe\.com}, response.redirect_url
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "show keeps serving a preview session while the env flag is off" do
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+    get cart_path(onsite_checkout: "1")
+    post checkout_path
+
+    get checkout_path
+
+    assert_response :success
+  end
+
+  # --- GET /checkout (on-site page) ---
+
+  def stash_onsite_session
+    enable_onsite_checkout
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+    post checkout_path
+    assert_redirected_to checkout_path
+  end
+
+  test "show renders the page from a fresh stash" do
+    stash_onsite_session
+
+    get checkout_path
+
+    assert_response :success
+    assert_match "cs_test_secret_abc", response.body
+    assert_select "[data-controller='onsite-checkout']"
+    assert_select "[data-onsite-checkout-target='payment']"
+    assert_select "[data-onsite-checkout-target='address']"
+    assert_select "[data-onsite-checkout-publishable-key-value]" do |elements|
+      assert elements.first["data-onsite-checkout-publishable-key-value"].present?,
+        "publishable key must reach the page"
+    end
+    # A hidden placeholder discount row so an on-page promo code has a row to
+    # unhide.
+    assert_select "div.hidden[data-onsite-checkout-target='discountRow']", count: 1
+  end
+
+  test "show redirects to cart when the flag is off" do
+    get checkout_path
+    assert_redirected_to cart_path
+  end
+
+  test "show redirects to cart without a stash" do
+    enable_onsite_checkout
+    get checkout_path
+    assert_redirected_to cart_path
+  end
+
+  test "show bounces a stale stash to the cart and discards it" do
+    stash_onsite_session
+
+    @cart.cart_items.first.update!(quantity: 5)
+
+    get checkout_path
+
+    assert_redirected_to cart_path
+    assert_equal "Your basket changed. Continue to payment when you're ready.", flash[:notice]
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "show shows the promo control only when no server discount and not samples-only" do
+    stash_onsite_session
+    get checkout_path
+    assert_select "[data-onsite-checkout-target='promoSection']"
+  end
+
+  test "invalid welcome coupon renders the alert AND the promo control together" do
+    # The spec's pinned combination: #create fell back to allow_promotion_codes
+    # and deleted the session discount, so the GET page must show the failure
+    # alert while still offering the promo input (the shopper can retype).
+    enable_onsite_checkout
+    post email_subscriptions_path, params: { email: "promo-test@example.com" }
+    Stripe::PromotionCode.stubs(:list).returns(stub(data: []))
+    Stripe::Coupon.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such coupon", nil))
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+
+    post checkout_path
+    follow_redirect!
+
+    assert_response :success
+    assert_match "Your discount code could not be applied", response.body
+    assert_select "[data-onsite-checkout-target='promoSection']"
+  end
+
+  test "show bounces the stash when the delivery postcode is removed after create" do
+    # The cart owner's saved addresses must not supply a fallback destination,
+    # or removal would just re-resolve to the default address.
+    @user.addresses.destroy_all
+    stash_onsite_session
+
+    set_delivery_postcode("")
+
+    get checkout_path
+
+    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "show prices the summary from the address the session was priced from" do
+    post session_url, params: { email_address: @user.email_address, password: "password" }
+    highlands = @user.addresses.create!(
+      nickname: "Croft", recipient_name: "John Smith", line1: "1 Shore Road",
+      city: "Portree", postcode: "IV51 9XX", country: "GB"
+    )
+    set_delivery_postcode("")
+    enable_onsite_checkout
+    Stripe::Customer.stubs(:create).returns(stub(id: "cus_highlands"))
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+
+    post checkout_path, params: { address_id: highlands.id }
+    assert_redirected_to checkout_path
+
+    get checkout_path
+
+    assert_response :success
+    # The Stripe session carries the Highlands £25 shipping line; the summary
+    # must show the same, not the default address's mainland price.
+    assert_select "[data-onsite-checkout-money-kind='shipping']", text: "£25.00"
+  end
+
+  test "show bounces an expired stash instead of re-serving a dead client secret" do
+    stash_onsite_session
+
+    travel 24.hours do
+      get checkout_path
+
+      assert_redirected_to cart_path
+      assert_match "expired", flash[:notice]
+    end
+
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "show with the flag off discards the stash" do
+    stash_onsite_session
+    OnsiteCheckout.stubs(:enabled?).returns(false)
+
+    get checkout_path
+
+    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "show renders the server discount row with the re-render target" do
+    enable_onsite_checkout
+    stub_welcome_promotion_code
+    post email_subscriptions_path, params: { email: "promo-row@example.com" }
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
+
+    post checkout_path
+    get checkout_path
+
+    assert_response :success
+    assert_select "div.flex[data-onsite-checkout-target='discountRow']", count: 1
+  end
+
+  test "success clears the on-site checkout stash" do
+    stash_onsite_session
+    stripe_session = stub_stripe_session_retrieve(payment_status: "paid")
+
+    get success_checkout_path, params: { session_id: stripe_session.id }
+
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "success logs the payment method that actually paid, not the configured list" do
+    captured = nil
+    stripe_session = build_stripe_session(payment_status: "paid", payment_method_type: "link")
+    Stripe::Checkout::Session.stubs(:retrieve).with do |params|
+      captured = params
+      true
+    end.returns(stripe_session)
+
+    assert_event_reported("checkout.completed", payload: { payment_method: "link" }) do
+      get success_checkout_path, params: { session_id: stripe_session.id }
+    end
+
+    assert_includes captured[:expand], "payment_intent.payment_method"
+  end
+
   # ============================================================================
   # CREATE ACTION TESTS (POST /checkouts)
   # ============================================================================
@@ -388,7 +664,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       ]
     )
     Stripe::Checkout::Session.expects(:retrieve).with do |args|
-      args[:expand] == [ "collected_information", "line_items.data.price.product" ]
+      args[:expand] == [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
     end.returns(session)
 
     assert_difference "Order.count", 1 do

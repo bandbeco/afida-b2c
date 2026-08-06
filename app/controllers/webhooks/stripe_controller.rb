@@ -79,7 +79,7 @@ module Webhooks
       # needed so SessionAmounts can identify the shipping line by its metadata.
       full_session = Stripe::Checkout::Session.retrieve(
         id: session.id,
-        expand: [ "collected_information", "line_items.data.price.product" ]
+        expand: [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
       )
 
       # Extract shipping address
@@ -254,7 +254,7 @@ module Webhooks
       Rails.event.notify("checkout.completed",
         order_id: order.id,
         total: order.total_amount.to_f,
-        payment_method: "card"
+        payment_method: Checkout::SessionDetails.payment_method_type(stripe_session)
       )
     end
   end
