@@ -426,9 +426,16 @@ Expected: 23 `WOULD SET` lines, zero `BADSLUG`/`MISSING`. Review the mapping cho
 
 # Phase 1: Trade-intent commercial surfaces (week of Jul 13)
 
-## Task 7: Render the GEO question heading on category pages (dev)
+## Task 7: Render the GEO question heading on category pages (dev) — DROPPED 2026-07-20
 
-`category_question_heading` (`app/helpers/categories_helper.rb:172`) is fully written, mapped for every slug, and never rendered.
+**Do not do this task.** Attempted 2026-07-20 and abandoned on evidence. `category_question_heading` is not an unrendered leftover: it was deliberately removed from the category page in March by commit `d60461d5` ("Add hero section and buying guide to category pages for SEO depth", closing #106), and that commit added a test, `"show page does not render question heading"` in `test/controllers/categories_controller_test.rb`, specifically to keep it out. Rendering it makes that test fail, so shipping this task means deleting a guard someone wrote on purpose.
+
+The design reason still holds: the hero already displays the category name prominently, so a question heading immediately above the product grid is redundant chrome. Not worth overturning a prior decision for a speculative GEO gain. Recorded in [the audit](/seo/seo-audit-2026-07-19.md) and the [B2B plan](/seo/b2b-organic-growth-plan-2026-07.md) W1.
+
+**Process note for the rest of this roadmap:** this task was written from a grep showing the helper had no callers. A grep proves absence of use, not absence of intent. Check `git log -S` for why something is missing before treating it as an oversight.
+
+<details>
+<summary>Original (superseded) steps</summary>
 
 **Files:**
 - Modify: `app/views/categories/show.html.erb` (between hero section and product grid)
@@ -460,6 +467,8 @@ Expected: 23 `WOULD SET` lines, zero `BADSLUG`/`MISSING`. Review the mapping cho
 git add app/views/categories/show.html.erb test/controllers/categories_controller_test.rb
 git commit -m "Render the question-style GEO heading on category pages"
 ```
+
+</details>
 
 ## Task 8: Trade-intent retitle of all categories (data)
 

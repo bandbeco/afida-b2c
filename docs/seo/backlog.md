@@ -2,12 +2,19 @@
 type: Backlog
 description: Working list of open SEO work, re-prioritised after each 4-week GSC measurement.
 status: active
-timestamp: 2026-06-30
+timestamp: 2026-07-19
 ---
 
 # SEO Backlog
 
-**Last reviewed:** 2026-05-12 (re-prioritised after fresh GSC pull, same day)
+**Last reviewed:** 2026-07-19 (re-prioritised after the 28-day GSC measurement in [SEO Audit 2026-07-19](/seo/seo-audit-2026-07-19.md); day-to-day sequencing lives in the [B2B plan](/seo/b2b-organic-growth-plan-2026-07.md))
+
+**2026-07-19 measurement outcomes, applied below:**
+- **B0 CLOSED (measured, neutral):** the meta rewrite shipped but 28-day CTRs are flat-to-down on 4 of 5 pages (startup-costs 0.25%, paper-napkins 0.10%, pizza-boxes 0.09%, smoothie-cups 0.58% up, catering 0.21% up on a tiny base). No further blog-meta CTR work.
+- **B0b PARTIAL:** blog→shop CTA targets are now populated on 40/40 published posts. Still open: reciprocal collection→blog links and product-slug link wiring (plan W5).
+- **B1 RESOLVED, gate FAILED:** coffee-shops earns clicks now (5/28d, pos 11.3, position flat) but restaurants is 0 clicks at pos 15.1. Per the decision rule, **B2 buying-guide batch 2 stays paused**. The one positive signal (coffee-shops clicks) routes effort to retitles + internal links, not new guides.
+- **B5 RESOLVED via the B2B plan:** takeaway SERP is structurally lost (exact-match domain); no content spend.
+- **B3/B4 escalated:** unpublished drafts now 89 (31 in May, 82 on Jul 7). Outrank gate-or-kill decision is overdue.
 **Owner:** Laurent
 **Cadence:** Re-prioritise after each 4-week GSC measurement.
 

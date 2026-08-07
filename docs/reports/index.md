@@ -13,6 +13,7 @@ Strategy documents, point-in-time analyses, and work records.
 * [SEO Audit 2026-07-02](/reports/seo-audit-2026-07-02.md) - Found the June category rename 404s, the compounding organic trend, and purchase-goal undertracking.
 * [Bestsellers March to June 2026](/reports/bestsellers-2026-03-to-06.md) - Top products by revenue, units and orders from the production database.
 * [Timesheet June 2026](/reports/timesheet-2026-06.md) - Measured-elapsed billable hours for June 2026.
+* [Timesheet July 2026](/reports/timesheet-2026-07.md) - Measured-elapsed billable hours for July 2026.
 
 # Superseded
 

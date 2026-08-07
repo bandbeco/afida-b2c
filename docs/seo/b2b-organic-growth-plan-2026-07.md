@@ -78,7 +78,7 @@ The SERP winners' pattern, applied to Afida's 33 categories + key collections:
 
 - **Meta titles:** `[Product] | Wholesale UK | [size range] | Afida` style; work in "bulk"/"by the case" and the size range (e.g. "Soup Containers & Lids | Wholesale UK | 8oz-32oz | Afida"). Keep the December keyword doc's terms but lead with the trade modifier, not "eco".
 - **Meta descriptions:** name the buyer and the economics: case size, price-per-case or per-unit anchor, next-day delivery, free delivery threshold. This is what wins the click on these SERPs.
-- **Render the question-style H2:** `category_question_heading` (categories_helper.rb:131) is written and tested but never rendered; it adds a keyword-rich, AI-answer-friendly heading for free.
+- ~~**Render the question-style H2:** `category_question_heading` is written and tested but never rendered.~~ **Dropped 2026-07-20.** It is not an unrendered leftover: it was deliberately removed from the category page in March (commit `d60461d5`, hero + buying guide, closing #106), and `categories_controller_test.rb` carries a "show page does not render question heading" test guarding that decision. The hero already carries the category name prominently, so a second question heading above the grid is redundant chrome. Not worth overturning a prior design decision for a speculative GEO gain.
 - Data plumbing exists (pricing_tiers, pac_size) if we want per-case pricing shown on-page; the meta rewrite itself is a data change, not code.
 
 **Measure:** positions on the "wholesale term set" (one term per category from the Ahrefs doc) + category-page clicks, at each 4-weekly pull.
