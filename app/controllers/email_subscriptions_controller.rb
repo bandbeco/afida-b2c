@@ -16,12 +16,18 @@ class EmailSubscriptionsController < ApplicationController
     end
 
     # One eligibility rule, defined on the model, explained differently per reason.
+    # Exhaustive on purpose: :blank_email is already handled by the guards above, but
+    # leaving it to fall through would mean a reordering of those guards silently
+    # proceeded to find_or_initialize_by(email: nil) instead of refusing.
     case EmailSubscription.discount_ineligibility_reason(@email)
     when :already_claimed
       render_already_claimed
       return
     when :has_previous_orders
       render_not_eligible
+      return
+    when :blank_email
+      render_validation_error
       return
     end
 

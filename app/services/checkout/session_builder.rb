@@ -211,6 +211,10 @@ module Checkout
       # own first_time_transaction restriction enforces that case.
       if discount_code.present? && !welcome_discount_allowed?
         session_params[:metadata].delete(:discount_code)
+        # Refusing THIS coupon must not withdraw the promo-code field itself: the
+        # switch governs every code, so a repeat customer denied the welcome coupon
+        # must still be able to type a current campaign code.
+        session_params[:allow_promotion_codes] = true
         return discount_code.presence
       end
 
@@ -234,6 +238,10 @@ module Checkout
     # GRANTED, always before the order that spends it). Only a completed ORDER means
     # this is no longer a first order.
     #
+    # Only COMPLETED orders count: a pending order never paid, and a cancelled or
+    # refunded one was reversed, so counting either would permanently burn a
+    # legitimately claimed discount for someone whose first attempt fell through.
+    #
     # Orders are matched by ACCOUNT as well as by email: a customer can check out as a
     # guest under a different address than they registered with, so neither signal
     # alone is enough. Unknown (guest) customers pass here and are caught by Stripe's
@@ -241,7 +249,8 @@ module Checkout
     def welcome_discount_allowed?
       return true unless user
 
-      !Order.where(user_id: user.id).or(Order.where(email: user.email_address)).exists?
+      scope = Order.where(status: Order::COMPLETED_STATUSES)
+      !scope.where(user_id: user.id).or(scope.where(email: user.email_address)).exists?
     end
 
     # The session carries the Stripe coupon id (the single source of truth in

@@ -30,6 +30,12 @@ class Order < ApplicationRecord
     REQUIRED_SHIPPING_KEYS.map { |key| shipping[key] }
   end
 
+  # Statuses that count as a purchase the customer actually kept. Excludes pending
+  # (never paid), cancelled and refunded (paid then reversed). Anything deciding
+  # "has this customer bought before?" must filter on these, or an abandoned or
+  # refunded attempt counts as a purchase.
+  COMPLETED_STATUSES = %w[paid processing shipped delivered].freeze
+
   enum :status, {
     pending: "pending",
     paid: "paid",
@@ -170,7 +176,7 @@ class Order < ApplicationRecord
   # recognized after a customer creates or uses an account. This is a site-wide
   # Google Ads customer signal, not an organization-scoped acquisition metric.
   def new_customer?
-    scope = Order.where(status: %w[paid processing shipped delivered]).where.not(id: id)
+    scope = Order.where(status: COMPLETED_STATUSES).where.not(id: id)
     scope = scope.where(user_id: user_id).or(scope.where(email: email)) if user_id.present?
     scope = scope.where(email: email) if user_id.blank?
     !scope.exists?

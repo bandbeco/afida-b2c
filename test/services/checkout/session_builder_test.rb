@@ -135,6 +135,59 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert result.invalid_discount?
   end
 
+  # Refusing the stale welcome coupon must not also take away the promo-code field.
+  # allow_promotion_codes governs EVERY code, so a repeat customer who is (correctly)
+  # denied the welcome coupon must still be able to type a current campaign code.
+  test "still offers the promo code field when the welcome coupon is refused" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    user = users(:one)
+    user.stubs(:sync_stripe_customer!)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(user: user, discount_code: "coupon_abc").create
+
+    assert_nil captured_params[:discounts]
+    assert captured_params[:allow_promotion_codes],
+      "a refused welcome coupon must not withdraw the promo-code field"
+  end
+
+  # A cancelled or refunded order is not a purchase kept, and a pending one never paid
+  # at all. Counting them would permanently burn a legitimately claimed discount for
+  # someone whose first attempt fell through.
+  test "an unpaid or reversed order does not burn the welcome coupon" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    user = users(:user_without_orders)
+    user.stubs(:sync_stripe_customer!)
+    %w[cancelled refunded pending].each_with_index do |status, i|
+      Order.create!(
+        user: user, email: user.email_address, status: status,
+        stripe_session_id: "sess_reversed_#{i}", order_number: "ORDER-REV-#{i}",
+        subtotal_amount: 10, vat_amount: 2, shipping_amount: 3, total_amount: 15,
+        shipping_name: "Test", shipping_address_line1: "1 Test St",
+        shipping_city: "London", shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+      )
+    end
+    Stripe::PromotionCode.stubs(:list)
+      .with(has_entries(coupon: "coupon_abc"))
+      .returns(stub(data: [ stub(id: "promo_welcome", code: "WELCOME10") ]))
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session_builder(user: user, discount_code: "coupon_abc").create
+
+    assert_equal [ { promotion_code: "promo_welcome" } ], captured_params[:discounts]
+    assert_not result.invalid_discount?
+  end
+
   # The signup form stamps discount_claimed_at the moment the coupon is GRANTED, which
   # is always before the order that spends it. The spend-time guard must therefore not
   # treat "claimed" as "used up", or no one could ever redeem a coupon they just

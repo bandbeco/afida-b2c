@@ -95,8 +95,12 @@ module Checkout
     # lookup is softened here.
     def resolve_promotion_code(promotion_code_id)
       Stripe::PromotionCode.retrieve(promotion_code_id)&.code
-    rescue Stripe::StripeError => e
-      Rails.logger.warn("Could not resolve promotion code #{promotion_code_id}: #{e.message}")
+    rescue StandardError => e
+      # Deliberately broader than Stripe::StripeError. This runs while creating an
+      # order the customer has ALREADY PAID for, purely to recover a display field, so
+      # nothing it can raise (a socket error escaping the gem, a shape change) may cost
+      # the order. Callers already treat nil as "no code recorded".
+      Rails.logger.warn("Could not resolve promotion code #{promotion_code_id}: #{e.class}: #{e.message}")
       nil
     end
   end
