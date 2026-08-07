@@ -70,14 +70,34 @@ module Checkout
     # order); the webhook rescues it to nil so a malformed discount can't fail a
     # paid order over a cosmetic field.
     def promotion_code(session)
-      session
+      promo = session
         .total_details
         &.breakdown
         &.discounts
         &.first
         &.discount
         &.promotion_code
-        &.code
+
+      # Both order-creation paths expand total_details.breakdown (without it the
+      # breakdown is nil and no code is readable at all), but expanding the breakdown
+      # does NOT expand the nested promotion_code: Stripe returns that as a bare
+      # "promo_..." ID string, so resolve it. Calling .code on the String returned nil,
+      # silently dropping the code from 13 of 22 live welcome-coupon orders and hiding
+      # repeat use of a one-time coupon. An already-expanded object is still handled.
+      return resolve_promotion_code(promo) if promo.is_a?(String)
+
+      promo&.code
+    end
+
+    # A cosmetic field must never fail a paid order, so an unresolvable ID degrades to
+    # nil (the same value callers already treat as "no code"). The traversal in
+    # promotion_code still propagates an unexpected session SHAPE; only the network
+    # lookup is softened here.
+    def resolve_promotion_code(promotion_code_id)
+      Stripe::PromotionCode.retrieve(promotion_code_id)&.code
+    rescue Stripe::StripeError => e
+      Rails.logger.warn("Could not resolve promotion code #{promotion_code_id}: #{e.message}")
+      nil
     end
   end
 end

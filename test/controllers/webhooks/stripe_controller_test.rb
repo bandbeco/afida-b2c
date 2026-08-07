@@ -437,6 +437,34 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_equal "WELCOME5", order.discount_code
   end
 
+  # total_details.breakdown is NOT returned unless explicitly expanded: without it the
+  # discount breakdown is nil, so the promotion code cannot be read at all and the order
+  # records no discount_code (13 of 22 live welcome-coupon orders were blank this way).
+  test "expands the discount breakdown so the promotion code is readable" do
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    session = build_stripe_session(
+      id: "sess_webhook_breakdown",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s },
+      amount_subtotal: 1000,
+      amount_tax: 200,
+      amount_total: 1200,
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 1000) ]
+    )
+
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.expects(:retrieve).with do |args|
+      args[:expand].include?("total_details.breakdown")
+    end.returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+  end
+
   test "expands nested line item product so the shipping line is identifiable" do
     cart = Cart.create!
     cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
@@ -454,7 +482,8 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
     stub_stripe_webhook_construct_event(event)
     Stripe::Checkout::Session.expects(:retrieve).with do |args|
-      args[:expand] == [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
+      args[:expand] == [ "collected_information", "line_items.data.price.product",
+                        "payment_intent.payment_method", "total_details.breakdown" ]
     end.returns(session)
 
     assert_difference "Order.count", 1 do

@@ -177,7 +177,11 @@ class CheckoutsController < ApplicationController
     begin
       stripe_session = Stripe::Checkout::Session.retrieve(
         id: session_id,
-        expand: [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
+        # total_details.breakdown is omitted unless expanded, and without it the
+        # discount breakdown is nil, so the promotion code cannot be read and the
+        # order records no discount_code.
+        expand: [ "collected_information", "line_items.data.price.product",
+                 "payment_intent.payment_method", "total_details.breakdown" ]
       )
 
       unless Checkout::COMPLETED_PAYMENT_STATUSES.include?(stripe_session.payment_status)

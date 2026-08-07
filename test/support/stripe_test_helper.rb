@@ -88,9 +88,22 @@ module StripeTestHelper
     tax_amount = overrides[:amount_tax] || 0
     discount_amount = overrides[:amount_discount] || 0
 
-    # Build breakdown with promotion code discounts (used when customer enters a code)
+    # Build breakdown with promotion code discounts (used when customer enters a code).
+    #
+    # Stripe returns discount.promotion_code in one of two shapes, and both occur in
+    # production:
+    #   - an EXPANDED object carrying .code, when the retrieve asked for it
+    #   - a bare promotion-code ID STRING ("promo_..."), when it did not
+    # Neither order-creation path expands it, so the string shape is the real-world
+    # default. Pass promotion_code_id: to build it.
     breakdown_discounts = []
-    if overrides[:promotion_code].present?
+    if overrides[:promotion_code_id].present?
+      discount_obj = stub(
+        amount: discount_amount,
+        discount: stub(promotion_code: overrides[:promotion_code_id])
+      )
+      breakdown_discounts << discount_obj
+    elsif overrides[:promotion_code].present?
       promo_coupon = stub(name: overrides[:promotion_code])
       promo = stub(code: overrides[:promotion_code], coupon: promo_coupon)
       discount_obj = stub(

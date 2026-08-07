@@ -51,6 +51,26 @@ class Checkout::SessionDetailsTest < ActiveSupport::TestCase
     assert_nil Checkout::SessionDetails.promotion_code(session)
   end
 
+  # Neither order-creation path expands total_details.breakdown, so Stripe returns
+  # discount.promotion_code as a bare "promo_..." ID string. Calling .code on a String
+  # returns nil, which silently dropped the code from 13 of 22 live welcome-coupon
+  # orders. Resolve the ID to its human-typed code instead.
+  test "promotion_code resolves an unexpanded promotion-code ID to its code" do
+    session = build_stripe_session(amount_discount: 573, promotion_code_id: "promo_1Tjf7K")
+    Stripe::PromotionCode.expects(:retrieve).with("promo_1Tjf7K").returns(stub(code: "WELCOME10"))
+
+    assert_equal "WELCOME10", Checkout::SessionDetails.promotion_code(session)
+  end
+
+  # A lookup failure must not cost us the code's absence being distinguishable, but it
+  # also must never fail a paid order: callers treat nil as "no code recorded".
+  test "promotion_code returns nil when the promotion-code lookup fails" do
+    session = build_stripe_session(amount_discount: 573, promotion_code_id: "promo_missing")
+    Stripe::PromotionCode.expects(:retrieve).raises(Stripe::InvalidRequestError.new("no such code", nil))
+
+    assert_nil Checkout::SessionDetails.promotion_code(session)
+  end
+
   # The traversal does NOT rescue: an unexpected Stripe shape surfaces so each caller
   # can apply its own policy (OrderCreator lets it raise so a success failure is
   # visible; the webhook rescues it to nil so a cosmetic field can't fail a paid order).

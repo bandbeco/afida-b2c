@@ -480,7 +480,11 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @cart.id.to_s, captured_params[:metadata][:cart_id]
   end
 
-  test "create includes customer email for authenticated users" do
+  # Authenticated checkouts without a selected address keep customer_email (attaching
+  # `customer` would prefill a saved address the customer did not pick), but must still
+  # have Stripe persist a Customer so per-customer coupon restrictions have an identity
+  # to key on: a one-time coupon was otherwise redeemable indefinitely.
+  test "create includes customer email and asks stripe to create a customer for authenticated users" do
     Current.stubs(:user).returns(@user)
 
     captured_params = nil
@@ -493,10 +497,14 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     post checkout_path
 
     assert_equal @user.email_address, captured_params[:customer_email]
+    assert_equal "always", captured_params[:customer_creation]
+    assert_nil captured_params[:customer]
     assert_equal @user.id, captured_params[:client_reference_id]
   end
 
-  test "create does not include customer details for guest users" do
+  # A guest carries no known identity, but Stripe must still persist a Customer for
+  # whoever pays, so the coupon restriction can match them on a later order.
+  test "create asks stripe to create a customer for guest users" do
     captured_params = nil
     session = build_stripe_session
     Stripe::Checkout::Session.stubs(:create).with do |params|
@@ -508,6 +516,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_nil captured_params[:customer_email]
     assert_nil captured_params[:client_reference_id]
+    assert_equal "always", captured_params[:customer_creation]
   end
 
   test "create includes UK shipping address collection" do
@@ -664,7 +673,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       ]
     )
     Stripe::Checkout::Session.expects(:retrieve).with do |args|
-      args[:expand] == [ "collected_information", "line_items.data.price.product", "payment_intent.payment_method" ]
+      # total_details.breakdown must be expanded or the discount breakdown comes back
+      # nil and the order records no discount_code (see SessionDetails.promotion_code).
+      args[:expand] == [ "collected_information", "line_items.data.price.product",
+                        "payment_intent.payment_method", "total_details.breakdown" ]
     end.returns(session)
 
     assert_difference "Order.count", 1 do

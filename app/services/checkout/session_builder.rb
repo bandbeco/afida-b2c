@@ -204,12 +204,37 @@ module Checkout
         return discount_code.presence
       end
 
+      # The welcome coupon is injected into the session at signup and can sit in the
+      # cookie for its full lifetime, so eligibility is re-checked when it is actually
+      # spent rather than only when it was granted. Only a customer we can identify is
+      # checked here; a guest's email is unknown until Stripe collects it, so Stripe's
+      # own first_time_transaction restriction enforces that case.
+      if discount_code.present? && !welcome_discount_allowed?
+        session_params[:metadata].delete(:discount_code)
+        return discount_code.presence
+      end
+
       if discount_code.present?
         apply_session_discount(session_params)
       else
+        # Left on for everyone: this switch governs EVERY promotion code, not just the
+        # welcome one, so gating it on welcome-coupon eligibility would silently
+        # withdraw future campaign codes from repeat customers. Per-coupon limits are
+        # Stripe's job (first_time_transaction on the welcome code).
         session_params[:allow_promotion_codes] = true
         nil
       end
+    end
+
+    # Whether the session-carried welcome coupon may still be spent. A prior order means
+    # this is no longer a first order, counting orders linked to the ACCOUNT as well as
+    # ones matching the account email: a customer can check out as a guest under a
+    # different address than they registered with, so neither signal alone is enough.
+    # Unknown (guest) customers pass here and are caught by Stripe's restriction.
+    def welcome_discount_allowed?
+      return true unless user
+
+      !Order.where(user_id: user.id).or(Order.where(email: user.email_address)).exists?
     end
 
     # The session carries the Stripe coupon id (the single source of truth in
@@ -238,15 +263,31 @@ module Checkout
       discount_code
     end
 
+    # Every session must end up tied to a Stripe Customer, because Stripe's coupon
+    # restrictions (first_time_transaction, max_redemptions_per_customer) are keyed to
+    # one. Sessions that carried only customer_email, or nothing at all, created no
+    # Customer, so every checkout looked like a first-time party and a one-time coupon
+    # could be redeemed indefinitely. A known user reuses their Customer; a guest gets
+    # customer_creation: "always" so Stripe persists one from the email it collects.
     def apply_customer_details(session_params)
-      return nil unless user
+      unless user
+        session_params[:customer_creation] = "always"
+        return nil
+      end
 
       session_params[:client_reference_id] = user.id
 
       if address_id.present?
         apply_selected_address(session_params)
       else
+        # Deliberately NOT attaching the Stripe Customer here. Passing `customer` makes
+        # Stripe prefill that customer's saved address, and reaching this branch means
+        # they chose to enter a different address (or never selected one), so
+        # prefilling would override that choice. customer_email keeps the address page
+        # blank while customer_creation still has Stripe persist a Customer, which is
+        # the part coupon restrictions key on.
         session_params[:customer_email] = user.email_address
+        session_params[:customer_creation] = "always"
         nil
       end
     end
@@ -255,6 +296,7 @@ module Checkout
       address = user.addresses.find_by(id: address_id)
       unless address
         session_params[:customer_email] = user.email_address
+        session_params[:customer_creation] = "always"
         return nil
       end
 

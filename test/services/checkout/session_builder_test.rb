@@ -57,7 +57,12 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_match "12oz (5,000 units)", line_item[:price_data][:product_data][:name]
   end
 
-  test "builds guest checkout session without customer details" do
+  # A guest still carries no pre-known identity (Stripe collects the email on its own
+  # page), but the session MUST ask Stripe to persist a Customer for whoever pays.
+  # Without one, every guest checkout looks like a brand-new party to Stripe, so the
+  # welcome coupon's first_time_transaction restriction matches nothing and a guest can
+  # redeem a one-time code repeatedly (three live orders did exactly this).
+  test "builds guest checkout session without customer details but asks Stripe to create a customer" do
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
 
     captured_params = nil
@@ -72,6 +77,85 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_nil captured_params[:customer]
     assert_nil captured_params[:customer_email]
     assert_nil captured_params[:client_reference_id]
+    assert_equal "always", captured_params[:customer_creation]
+  end
+
+  # A logged-in customer who selected no address keeps customer_email (attaching
+  # `customer` would make Stripe prefill the saved address they chose not to use), but
+  # must still ask Stripe to persist a Customer so coupon restrictions have an identity
+  # to key on. Previously this path created no Customer at all.
+  test "asks stripe to create a customer for a logged-in checkout with no selected address" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    user = users(:one)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session_builder(user: user).create
+
+    assert_equal user.email_address, captured_params[:customer_email]
+    assert_equal "always", captured_params[:customer_creation]
+    # customer and customer_email are mutually exclusive in the Stripe API, and an
+    # explicit customer would prefill the address this branch deliberately leaves blank.
+    assert_nil captured_params[:customer]
+  end
+
+  # The welcome coupon is injected into the session at signup and can sit there for the
+  # cookie's lifetime, so eligibility must be re-checked when it is actually spent, not
+  # only when it was granted. A logged-in customer who has since ordered is no longer a
+  # first-time customer, and the session coupon must not still discount their order.
+  # Guests are covered by Stripe's first_time_transaction restriction instead, since
+  # their email is unknown until Stripe collects it.
+  test "refuses the session welcome coupon for a customer who already has an order" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    user = users(:one)
+    user.update!(stripe_customer_id: "cus_known")
+    user.stubs(:sync_stripe_customer!)
+    # users(:one) OWNS orders(:one), but that order was placed under a different email
+    # (user1@example.com). A repeat customer must be recognised by either signal:
+    # matching on the account email alone would miss their own order history.
+    assert Order.exists?(user_id: user.id)
+    assert_not Order.exists?(email: user.email_address)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session_builder(user: user, discount_code: "coupon_abc").create
+
+    assert_nil captured_params[:discounts]
+    assert_nil captured_params[:metadata][:discount_code]
+    # Reported as not applied so the controller clears it from the session, exactly as
+    # it does for an invalid coupon.
+    assert result.invalid_discount?
+  end
+
+  # Eligibility is only re-checked for someone we can identify. A first-time logged-in
+  # customer must still get the coupon they legitimately claimed.
+  test "applies the session welcome coupon for a logged-in customer with no prior orders" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    user = users(:user_without_orders)
+    user.stubs(:sync_stripe_customer!)
+    assert_not Order.exists?(email: user.email_address)
+    Stripe::PromotionCode.stubs(:list)
+      .with(has_entries(coupon: "coupon_abc"))
+      .returns(stub(data: [ stub(id: "promo_welcome", code: "WELCOME10") ]))
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session_builder(user: user, discount_code: "coupon_abc").create
+
+    assert_equal [ { promotion_code: "promo_welcome" } ], captured_params[:discounts]
+    assert_not result.invalid_discount?
   end
 
   test "resolves the coupon id to its promotion code, applies it, and records the code name" do
