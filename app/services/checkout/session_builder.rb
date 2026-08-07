@@ -226,11 +226,18 @@ module Checkout
       end
     end
 
-    # Whether the session-carried welcome coupon may still be spent. A prior order means
-    # this is no longer a first order, counting orders linked to the ACCOUNT as well as
-    # ones matching the account email: a customer can check out as a guest under a
-    # different address than they registered with, so neither signal alone is enough.
-    # Unknown (guest) customers pass here and are caught by Stripe's restriction.
+    # Whether the session-carried welcome coupon may still be spent.
+    #
+    # Deliberately NOT EmailSubscription.eligible_for_discount?: that rule also refuses
+    # an email whose discount_claimed_at is set, which is exactly the state of every
+    # customer arriving here legitimately (the signup form stamps it when the coupon is
+    # GRANTED, always before the order that spends it). Only a completed ORDER means
+    # this is no longer a first order.
+    #
+    # Orders are matched by ACCOUNT as well as by email: a customer can check out as a
+    # guest under a different address than they registered with, so neither signal
+    # alone is enough. Unknown (guest) customers pass here and are caught by Stripe's
+    # first_time_transaction restriction instead.
     def welcome_discount_allowed?
       return true unless user
 

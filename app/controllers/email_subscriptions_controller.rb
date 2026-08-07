@@ -15,14 +15,12 @@ class EmailSubscriptionsController < ApplicationController
       return
     end
 
-    # Check if email has already claimed the discount
-    if EmailSubscription.discount_already_claimed?(@email)
+    # One eligibility rule, defined on the model, explained differently per reason.
+    case EmailSubscription.discount_ineligibility_reason(@email)
+    when :already_claimed
       render_already_claimed
       return
-    end
-
-    # Check if email has previous orders
-    if Order.exists?(email: @email)
+    when :has_previous_orders
       render_not_eligible
       return
     end

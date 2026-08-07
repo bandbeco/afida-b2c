@@ -135,6 +135,32 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert result.invalid_discount?
   end
 
+  # The signup form stamps discount_claimed_at the moment the coupon is GRANTED, which
+  # is always before the order that spends it. The spend-time guard must therefore not
+  # treat "claimed" as "used up", or no one could ever redeem a coupon they just
+  # claimed. Only a completed ORDER ends eligibility.
+  test "applies the session welcome coupon to the very order that claims it" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    user = users(:user_without_orders)
+    user.stubs(:sync_stripe_customer!)
+    EmailSubscription.create!(email: user.email_address, source: "cart_discount",
+                              discount_claimed_at: Time.current)
+    Stripe::PromotionCode.stubs(:list)
+      .with(has_entries(coupon: "coupon_abc"))
+      .returns(stub(data: [ stub(id: "promo_welcome", code: "WELCOME10") ]))
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    result = build_session_builder(user: user, discount_code: "coupon_abc").create
+
+    assert_equal [ { promotion_code: "promo_welcome" } ], captured_params[:discounts]
+    assert_not result.invalid_discount?
+  end
+
   # Eligibility is only re-checked for someone we can identify. A first-time logged-in
   # customer must still get the coupon they legitimately claimed.
   test "applies the session welcome coupon for a logged-in customer with no prior orders" do

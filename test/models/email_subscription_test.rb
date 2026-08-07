@@ -111,6 +111,54 @@ class EmailSubscriptionTest < ActiveSupport::TestCase
   end
 
   # =============================================================================
+  # discount_ineligibility_reason: the single definition of eligibility
+  # =============================================================================
+
+  # The controller needs to tell the two refusals apart to render different
+  # messages, and the checkout guard needs the same rule at spend time. One method
+  # returning the REASON serves both without either re-deriving the rule inline.
+  test "discount_ineligibility_reason is nil for an eligible email" do
+    assert_nil EmailSubscription.discount_ineligibility_reason("brand-new@example.com")
+  end
+
+  test "discount_ineligibility_reason is nil for a newsletter-only subscriber" do
+    assert_nil EmailSubscription.discount_ineligibility_reason("subscribed@example.com")
+  end
+
+  test "discount_ineligibility_reason reports an already-claimed discount" do
+    assert_equal :already_claimed,
+                 EmailSubscription.discount_ineligibility_reason("claimed@example.com")
+  end
+
+  test "discount_ineligibility_reason reports previous orders" do
+    assert_equal :has_previous_orders,
+                 EmailSubscription.discount_ineligibility_reason("user1@example.com")
+  end
+
+  # A claimed discount is reported ahead of order history: someone who claimed and
+  # then ordered should be told they already used it, not that they are a returning
+  # customer who never had one.
+  test "discount_ineligibility_reason prefers already_claimed over previous orders" do
+    EmailSubscription.create!(email: "user1@example.com", source: "cart_discount",
+                              discount_claimed_at: Time.current)
+
+    assert_equal :already_claimed,
+                 EmailSubscription.discount_ineligibility_reason("user1@example.com")
+  end
+
+  test "discount_ineligibility_reason reports a blank email as invalid" do
+    assert_equal :blank_email, EmailSubscription.discount_ineligibility_reason(nil)
+    assert_equal :blank_email, EmailSubscription.discount_ineligibility_reason("   ")
+  end
+
+  test "discount_ineligibility_reason is case-insensitive" do
+    assert_equal :already_claimed,
+                 EmailSubscription.discount_ineligibility_reason("CLAIMED@EXAMPLE.COM")
+    assert_equal :has_previous_orders,
+                 EmailSubscription.discount_ineligibility_reason("USER1@EXAMPLE.COM")
+  end
+
+  # =============================================================================
   # T007b: discount_already_claimed? Tests
   # =============================================================================
 
