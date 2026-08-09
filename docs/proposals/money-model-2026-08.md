@@ -9,6 +9,7 @@ timestamp: 2026-08-09
 
 **Source framework:** Alex Hormozi, *$100M Money Models* (2025).
 **Prepared:** 2026-08-09, from a full read of the book plus production data pulled the same day.
+**Companion:** the [Grand Slam Offer Proposal](/proposals/grand-slam-offer-2026-08.md) applies the earlier *$100M Offers* book to the front end (the first offer a prospect sees); this document covers the sequence after the first purchase.
 
 ## The framework in one paragraph
 
