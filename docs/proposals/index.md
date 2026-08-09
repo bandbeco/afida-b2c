@@ -6,6 +6,7 @@ Client-facing proposals and their supporting annexes. The 2025 partnership packa
 
 * [Money Model Proposal (August 2026)](/proposals/money-model-2026-08.md) - Hormozi offer-sequence framework applied to afida.com; prioritises continuity (scheduled reorders), free-framed offers, and sample-to-prescription follow-up.
 * [Grand Slam Offer Proposal (August 2026)](/proposals/grand-slam-offer-2026-08.md) - Companion front-end proposal from Hormozi's *$100M Offers*: compose existing assets (next-day delivery, samples, compatible-lids data) into named, incomparable offers, led by a new-opening Grand Slam Offer for the lead monitor.
+* [Leads Proposal (August 2026)](/proposals/leads-2026-08.md) - Third of the Hormozi trilogy, from *$100M Leads*: open the unused free advertising channels (warm outreach to the trade book, referral asks at purchase, cold outreach to lead-monitor openings, partner white-labelling) with the sample box as the lead magnet; paid ads stay gated on repeat purchase.
 
 # Partnership Package (2025, superseded)
 

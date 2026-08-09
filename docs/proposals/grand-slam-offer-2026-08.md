@@ -9,7 +9,7 @@ timestamp: 2026-08-09
 
 **Source framework:** Alex Hormozi, *$100M Offers* (2021).
 **Prepared:** 2026-08-09, from a full read of the book.
-**Companion to:** the [Money Model Proposal](/proposals/money-model-2026-08.md). That document applies the *sequencing* book (what to offer after the first purchase: continuity, upsells, downsells). This one applies the earlier book to the first offer itself: what a prospect sees before they have ever bought.
+**Companion to:** the [Money Model Proposal](/proposals/money-model-2026-08.md). That document applies the *sequencing* book (what to offer after the first purchase: continuity, upsells, downsells). This one applies the earlier book to the first offer itself: what a prospect sees before they have ever bought. The [Leads Proposal](/proposals/leads-2026-08.md) covers the third layer: how strangers find out the offer exists.
 
 ## The framework in one paragraph
 
