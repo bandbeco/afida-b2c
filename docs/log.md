@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-09
+
+* **Creation**: [Money Model Proposal (August 2026)](/proposals/money-model-2026-08.md). Applies Hormozi's *$100M Money Models* offer-sequence framework to afida.com. Diagnosis from production data (120 paid orders / £96 AOV over 180 days; 86 of 99 customers bought exactly once; 1 active reorder schedule): the attraction layer works but the model ends at the first purchase. Six plays prioritised, led by continuity bonuses on the existing reorder-schedule machinery, free-framed reframes of the welcome offer and quantity tiers, and a sample-to-prescription funnel tied to the lead monitor.
+
 ## 2026-07-31
 
 * **Update**: [Timesheet July 2026](/reports/timesheet-2026-07.md) extended through 29 Jul, picking up the on-site checkout build (28 Jul session plus the 29 Jul hardening commit): 20.00 h development (19 sessions over 14 active days). Owner then waived all non-code lines, so July bills development only: 20.0 h at £50/h, invoiced as AFIDA-2026-07.
