@@ -1,0 +1,17 @@
+{
+  "slug": "independent-cafes",
+  "name": "Independent Cafés",
+  "audience": "Owner-operated cafés, lifestyle café businesses, brunch spots",
+  "pain_points": [
+    "Tight margins make every packaging penny count",
+    "Need to stand out visually against chain competitors",
+    "Customers expect compostable or recyclable packaging",
+    "Juggling dine-in tableware and takeaway packaging simultaneously"
+  ],
+  "top_products": ["cups-and-lids", "cold-food-and-salads", "napkins", "bags-and-wraps"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "Natasha's Law allergen labelling for pre-packed food"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–2,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

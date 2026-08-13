@@ -1,0 +1,17 @@
+{
+  "slug": "pub-kitchens",
+  "name": "Pub Kitchens",
+  "audience": "Pub landlords with food service, pub kitchen managers, traditional pub grub operators",
+  "pain_points": [
+    "Takeaway trade grew post-COVID and now needs proper packaging",
+    "Sunday roast and pie packaging must keep food hot during delivery",
+    "Beer garden service in summer needs disposable plates and cutlery",
+    "Budget is tight — food is often secondary to drinks revenue"
+  ],
+  "top_products": ["hot-food", "tableware", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed pub meals", "Calorie labelling for pubs with 250+ employees"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "low"
+}

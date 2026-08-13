@@ -1,0 +1,17 @@
+{
+  "slug": "breakfast-cafes",
+  "name": "Breakfast Cafés",
+  "audience": "Greasy spoon operators, breakfast café owners, full English and brunch businesses",
+  "pain_points": [
+    "Early morning trade means packaging must be ready before dawn",
+    "Hot food containers for fry-ups must handle grease and steam",
+    "Builder's tea in high volumes needs affordable, sturdy cups",
+    "Takeaway breakfast wraps and baps need foil or greaseproof wrapping"
+  ],
+  "top_products": ["hot-food", "cups-and-lids", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed breakfast items", "Food hygiene rating display requirements"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (2,000–6,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "low"
+}

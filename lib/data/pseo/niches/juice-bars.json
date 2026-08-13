@@ -1,0 +1,17 @@
+{
+  "slug": "juice-bars",
+  "name": "Juice Bars",
+  "audience": "Fresh juice bar owners, cold-pressed juice businesses, health drink retailers",
+  "pain_points": [
+    "Health-conscious brand image demands eco-friendly packaging",
+    "Juice leaks are a constant complaint — lids and seals must be reliable",
+    "High turnover of cups during peak hours",
+    "Customers often want to see the product — clear cups are preferred"
+  ],
+  "top_products": ["cups-and-lids", "straws", "cold-food-and-salads", "napkins"],
+  "compliance_concerns": ["Plastic straw ban (England 2023)", "Natasha's Law allergen labelling for pre-packed juices"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

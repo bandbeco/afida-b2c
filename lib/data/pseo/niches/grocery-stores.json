@@ -1,0 +1,17 @@
+{
+  "slug": "grocery-stores",
+  "name": "Grocery Stores",
+  "audience": "Independent grocery store owners, neighbourhood shop operators, ethnic grocery retailers",
+  "pain_points": [
+    "Carrier bag charge means stocking paper and reusable alternatives",
+    "Fresh produce bags are high-volume consumables",
+    "Deli and hot food counters need separate packaging ranges",
+    "Competing with supermarkets on price means packaging costs must be low"
+  ],
+  "top_products": ["bags-and-wraps", "supplies-and-essentials", "cold-food-and-salads", "hot-food"],
+  "compliance_concerns": ["Single-use carrier bag charge (minimum 10p)", "Food Information Regulations for pre-packed goods"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (3,000–10,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "low"
+}

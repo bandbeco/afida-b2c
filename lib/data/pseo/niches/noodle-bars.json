@@ -1,0 +1,17 @@
+{
+  "slug": "noodle-bars",
+  "name": "Noodle Bars",
+  "audience": "Noodle bar owners, ramen shop operators, Asian street food businesses",
+  "pain_points": [
+    "Hot soup and broth containers must be completely leak-proof",
+    "Chopsticks and spoons are essential add-ons with each order",
+    "Steam from hot noodles can weaken cheap packaging",
+    "Fast casual service means packaging must be grab-and-go friendly"
+  ],
+  "top_products": ["hot-food", "cups-and-lids", "tableware", "bags-and-wraps"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (soy, gluten, shellfish)", "Single-use plastics ban — polystyrene soup containers"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium (2,000–6,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

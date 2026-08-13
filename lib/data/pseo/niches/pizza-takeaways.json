@@ -1,0 +1,17 @@
+{
+  "slug": "pizza-takeaways",
+  "name": "Pizza Takeaways",
+  "audience": "Independent pizza shop owners, takeaway-only pizza businesses, late-night pizza operators",
+  "pain_points": [
+    "Pizza boxes are the single biggest packaging expense",
+    "Grease resistance is non-negotiable — cheap boxes fall apart",
+    "Delivery drivers need stackable, sturdy packaging",
+    "Side items (garlic bread, dips) need separate containers"
+  ],
+  "top_products": ["pizza-boxes", "hot-food", "bags-and-wraps", "napkins"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed items", "Food hygiene rating display requirements"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Medium (3,000–10,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

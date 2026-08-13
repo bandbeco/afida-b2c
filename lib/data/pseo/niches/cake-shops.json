@@ -1,0 +1,17 @@
+{
+  "slug": "cake-shops",
+  "name": "Cake Shops",
+  "audience": "Cake shop owners, custom cake businesses, celebration cake bakers",
+  "pain_points": [
+    "Large cake boxes must be sturdy enough to transport safely",
+    "Variety of cake sizes means stocking multiple box dimensions",
+    "Cupcake inserts and individual cake containers add complexity",
+    "Customers expect premium unboxing experiences for celebration cakes"
+  ],
+  "top_products": ["cold-food-and-salads", "bags-and-wraps", "napkins", "supplies-and-essentials"],
+  "compliance_concerns": ["Natasha's Law allergen labelling (nuts, eggs, dairy)", "Food hygiene rating display requirements"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small (500–2,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

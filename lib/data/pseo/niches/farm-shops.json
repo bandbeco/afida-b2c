@@ -1,0 +1,17 @@
+{
+  "slug": "farm-shops",
+  "name": "Farm Shops",
+  "audience": "Farm shop owners, rural retail operators, farm-to-fork businesses with on-site shops",
+  "pain_points": [
+    "Artisan and homemade products need packaging that reflects quality",
+    "Wide product range (jams, pies, cheeses, baked goods) means many packaging formats",
+    "Seasonal produce peaks create variable packaging demand",
+    "Customers expect brown paper and natural-look packaging to match the farm brand"
+  ],
+  "top_products": ["bags-and-wraps", "cold-food-and-salads", "hot-food", "supplies-and-essentials"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for all pre-packed items", "Food Information Regulations (weight, ingredients, origin)"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Small-medium (1,000–4,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "high"
+}

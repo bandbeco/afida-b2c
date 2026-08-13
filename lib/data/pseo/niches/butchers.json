@@ -1,0 +1,17 @@
+{
+  "slug": "butchers",
+  "name": "Butchers",
+  "audience": "Independent butcher shop owners, family-run butcheries, artisan meat suppliers",
+  "pain_points": [
+    "Butcher paper and trays are used in very high volumes daily",
+    "Meat packaging must prevent leaks and maintain hygiene",
+    "Carrier bags need to be sturdy enough for heavy meat purchases",
+    "Christmas and Easter peaks require significant advance ordering"
+  ],
+  "top_products": ["bags-and-wraps", "supplies-and-essentials", "hot-food", "tableware"],
+  "compliance_concerns": ["Food Information Regulations (weight, origin, best-before)", "Single-use carrier bag charge (minimum 10p)"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium (3,000–8,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "medium"
+}

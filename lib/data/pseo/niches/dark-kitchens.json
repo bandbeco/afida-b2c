@@ -1,0 +1,17 @@
+{
+  "slug": "dark-kitchens",
+  "name": "Dark Kitchens",
+  "audience": "Dark kitchen operators, multi-brand delivery kitchen managers, cloud kitchen entrepreneurs",
+  "pain_points": [
+    "Running multiple virtual brands means stocking different packaging per brand",
+    "Packaging must survive 30+ minute delivery journeys without degrading",
+    "Speed of packing is critical during peak delivery hours",
+    "Cost per order is scrutinised — every penny of packaging affects unit economics"
+  ],
+  "top_products": ["hot-food", "bags-and-wraps", "cold-food-and-salads", "cups-and-lids"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for all pre-packed meals", "Food Standards Agency registration for each virtual brand"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium-large (5,000–20,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

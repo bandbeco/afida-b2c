@@ -1,0 +1,17 @@
+{
+  "slug": "garden-centre-cafes",
+  "name": "Garden Centre Cafés",
+  "audience": "Garden centre café managers, destination garden centre operators, nursery restaurant teams",
+  "pain_points": [
+    "Older customer demographic expects proper tableware, even disposable",
+    "Scone and cake trade means high napkin and cake box usage",
+    "Weekend and bank holiday peaks require buffer stock",
+    "Eco-conscious gardening customers expect green packaging choices"
+  ],
+  "top_products": ["tableware", "cups-and-lids", "napkins", "cold-food-and-salads"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed cakes and sandwiches", "Food hygiene rating display requirements"],
+  "order_frequency": "Monthly",
+  "avg_order_size": "Medium (2,000–8,000 units per SKU)",
+  "sustainability_pressure": "high",
+  "branding_interest": "medium"
+}

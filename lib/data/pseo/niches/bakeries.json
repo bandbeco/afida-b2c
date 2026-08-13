@@ -1,0 +1,17 @@
+{
+  "slug": "bakeries",
+  "name": "Bakeries",
+  "audience": "Artisan bakery owners, high-street bakeries, bread and pastry shops",
+  "pain_points": [
+    "Bread bags and pastry boxes are used in high volumes daily",
+    "Window patching on bags lets customers see the product — essential for sales",
+    "Greaseproof paper is needed for pastries, croissants, and doughnuts",
+    "Allergen labelling on pre-packed baked goods is complex with many ingredients"
+  ],
+  "top_products": ["bags-and-wraps", "cold-food-and-salads", "napkins", "supplies-and-essentials"],
+  "compliance_concerns": ["Natasha's Law allergen labelling for pre-packed baked goods", "Food Information Regulations (ingredient listing)"],
+  "order_frequency": "Weekly",
+  "avg_order_size": "Medium (3,000–10,000 units per SKU)",
+  "sustainability_pressure": "medium",
+  "branding_interest": "high"
+}

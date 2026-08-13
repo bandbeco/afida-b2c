@@ -1,0 +1,17 @@
+{
+  "slug": "convenience-stores",
+  "name": "Convenience Stores",
+  "audience": "Convenience store owners, corner shop operators, newsagent-cum-food retailers",
+  "pain_points": [
+    "Limited shelf space means packaging must be compact to store",
+    "Hot food counters (pasties, sausage rolls) need warming-compatible packaging",
+    "Carrier bags are a significant ongoing cost post-charge legislation",
+    "Sandwich and meal deal packaging must comply with allergen rules"
+  ],
+  "top_products": ["bags-and-wraps", "hot-food", "cold-food-and-salads", "supplies-and-essentials"],
+  "compliance_concerns": ["Single-use carrier bag charge (minimum 10p)", "Natasha's Law allergen labelling for pre-packed food", "HFSS display restrictions"],
+  "order_frequency": "Bi-weekly",
+  "avg_order_size": "Small-medium (1,000–5,000 units per SKU)",
+  "sustainability_pressure": "low",
+  "branding_interest": "low"
+}

@@ -1,0 +1,221 @@
+<% content_for :title, @page[:meta][:seo_title] %>
+<% content_for :meta_description, @page[:meta][:seo_description] %>
+
+<% content_for :og_tags_custom, true %>
+<% content_for :twitter_tags_custom, true %>
+<% content_for :head do %>
+  <%= canonical_url(pseo_business_type_url(business_type: @page[:meta][:slug])) %>
+
+  <meta name="keywords" content="<%= @page[:meta][:keywords].join(', ') %>">
+
+  <%# Open Graph %>
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= @page[:meta][:seo_title] %>">
+  <meta property="og:description" content="<%= @page[:meta][:seo_description] %>">
+  <meta property="og:url" content="<%= pseo_business_type_url(business_type: @page[:meta][:slug]) %>">
+  <meta property="og:site_name" content="Afida">
+
+  <%# Twitter Card %>
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="<%= @page[:meta][:seo_title] %>">
+  <meta name="twitter:description" content="<%= @page[:meta][:seo_description] %>">
+
+  <%# Structured Data: BreadcrumbList %>
+  <script type="application/ld+json">
+    <%= breadcrumb_structured_data([
+      { name: "Home", url: root_url },
+      { name: @page[:meta][:business_type], url: pseo_business_type_url(business_type: @page[:meta][:slug]) }
+    ]).html_safe %>
+  </script>
+
+  <%# Structured Data: FAQPage %>
+  <script type="application/ld+json">
+    <%= raw({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": @page[:faqs].map { |faq|
+        {
+          "@type": "Question",
+          "name": faq[:question],
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": faq[:answer]
+          }
+        }
+      }
+    }.to_json) %>
+  </script>
+<% end %>
+
+<%# ==================== HERO SECTION ==================== %>
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-neutral-900 overflow-hidden">
+  <%# Subtle dot pattern background %>
+  <div class="absolute inset-0 opacity-[0.04]" aria-hidden="true"></div>
+
+  <%# Decorative glows %>
+  <div class="absolute -top-20 -right-20 w-96 h-96 bg-[#79ebc0] rounded-full blur-[140px] opacity-15" aria-hidden="true"></div>
+  <div class="absolute -bottom-20 -left-20 w-72 h-72 bg-[#79ebc0] rounded-full blur-[120px] opacity-10" aria-hidden="true"></div>
+
+  <div class="container mx-auto px-4 py-16 lg:py-24 relative z-10">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="!text-4xl sm:!text-5xl lg:!text-6xl text-white mb-6">
+        <%= @page[:hero][:headline] %>
+      </h1>
+
+      <p class="text-xl text-[#79ebc0] mb-8">
+        <%= @page[:hero][:subheadline] %>
+      </p>
+
+      <p class="text-lg text-gray-300 leading-relaxed max-w-3xl mx-auto mb-10">
+        <%= @page[:hero][:intro] %>
+      </p>
+
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <%= link_to shop_path, class: "btn btn-primary btn-lg" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          Shop <%= @page[:meta][:business_type] %> Packaging
+        <% end %>
+        <%= link_to samples_path, class: "btn btn-outline btn-lg border border-white/20 text-white hover:bg-white/10 hover:border-white/40" do %>
+          Get Free Samples
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ==================== PACKAGING NEEDS ==================== %>
+<section class="py-12 sm:py-16" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+  <div class="container mx-auto px-4">
+    <div class="text-center mb-10">
+      <h2 class="text-3xl md:text-4xl mb-4">What <%= @page[:meta][:business_type] %> Need</h2>
+      <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="packaging-needs">
+      <% @page[:packaging_needs].each do |need| %>
+        <div class="bg-base-100 rounded-2xl border border-base-200 p-6 hover:shadow-lg transition-shadow" data-testid="packaging-card">
+          <h3 class="text-xl mb-3"><%= need[:category] %></h3>
+          <p class="text-base-content/70 mb-4"><%= need[:why_it_matters] %></p>
+
+          <div class="bg-base-200 rounded-xl p-4 mb-4">
+            <p class="text-sm text-base-content/60 mb-1">Buying tip</p>
+            <p class="text-sm text-base-content/80"><%= need[:buying_tip] %></p>
+          </div>
+
+          <% if need[:recommended_products].present? %>
+            <div class="flex flex-wrap gap-2">
+              <% need[:recommended_products].each do |product_slug| %>
+                <%= link_to product_slug.titleize.gsub("-", " "),
+                      shop_path(q: product_slug.gsub("-", " ")),
+                      class: "badge badge-outline badge-sm gap-1 hover:badge-primary transition-colors" %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ==================== SUSTAINABILITY SECTION ==================== %>
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] bg-neutral-900 overflow-hidden" data-testid="sustainability-section">
+  <div class="absolute -top-32 -left-32 w-80 h-80 bg-[#79ebc0] rounded-full blur-[140px] opacity-10" aria-hidden="true"></div>
+
+  <div class="container mx-auto px-4 py-12 sm:py-16 relative z-10" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+    <div class="text-center mb-10">
+      <h2 class="text-3xl md:text-4xl text-white mb-4">Sustainability Options</h2>
+      <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full mb-6"></div>
+      <p class="text-lg text-gray-300 max-w-3xl mx-auto"><%= @page[:sustainability_section][:intro] %></p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
+      <% @page[:sustainability_section][:options].each do |option| %>
+        <div class="bg-white/5 border border-white/10 rounded-2xl p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-full bg-[#79ebc0]/15 border border-[#79ebc0]/30 flex items-center justify-center flex-shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-[#79ebc0]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg text-white mb-2"><%= option[:name] %></h3>
+              <p class="text-sm text-gray-400"><%= option[:benefit] %></p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+
+<%# ==================== SOCIAL PROOF ==================== %>
+<section class="py-8" data-testid="social-proof">
+  <div class="container mx-auto px-4">
+    <div class="text-center">
+      <p class="text-base-content/60 mb-4"><%= @page[:social_proof][:testimonial_angle] %></p>
+      <div class="flex flex-wrap justify-center gap-6 items-center">
+        <% @page[:social_proof][:relevant_clients].each do |client_name| %>
+          <% logo_file = find_client_logo(client_name) %>
+          <% if logo_file %>
+            <%= vite_image_tag "images/logos/#{logo_file}",
+                  alt: "#{client_name} - Afida client",
+                  class: "h-10 w-auto object-contain grayscale hover:grayscale-0 transition-all duration-300" %>
+          <% else %>
+            <span class="text-base-content/40 text-sm"><%= client_name %></span>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ==================== FAQ SECTION ==================== %>
+<section class="py-12 sm:py-16 bg-base-200" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+  <div class="container mx-auto px-4">
+    <div class="max-w-3xl mx-auto">
+      <div class="text-center mb-10">
+        <h2 class="text-3xl md:text-4xl mb-4">Frequently Asked Questions</h2>
+        <div class="w-24 h-1 bg-[#79ebc0] mx-auto rounded-full"></div>
+      </div>
+
+      <div class="space-y-2">
+        <% @page[:faqs].each_with_index do |faq, i| %>
+          <div class="collapse collapse-arrow bg-base-100 rounded-xl">
+            <input type="radio" name="pseo-faq" <%= "checked" if i == 0 %> />
+            <div class="collapse-title text-lg"><%= faq[:question] %></div>
+            <div class="collapse-content">
+              <p class="text-base-content/70"><%= faq[:answer] %></p>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%# ==================== CTA SECTION ==================== %>
+<section class="w-screen relative left-[50%] right-[50%] -mx-[50vw] -mb-16 bg-neutral-900 overflow-hidden" data-testid="cta-section">
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-[#79ebc0] rounded-full blur-[200px] opacity-[0.08]" aria-hidden="true"></div>
+
+  <div class="container mx-auto px-4 py-16 lg:py-24 relative z-10" data-controller="scroll-reveal" data-scroll-reveal-self-value="true">
+    <div class="max-w-3xl mx-auto text-center">
+      <h2 class="text-white text-3xl md:text-4xl mb-4">Ready to Order?</h2>
+      <p class="text-xl text-gray-400 mb-8">
+        Get everything your <%= @page[:meta][:business_type].downcase %> needs — eco-friendly, competitively priced, delivered fast. Free delivery over £100.
+      </p>
+      <div class="flex flex-col sm:flex-row justify-center gap-4">
+        <%= link_to shop_path, class: "btn btn-primary btn-lg" do %>
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+          Shop <%= @page[:meta][:business_type] %> Packaging
+        <% end %>
+        <%= link_to samples_path, class: "btn btn-outline btn-lg border border-white/20 text-white hover:bg-white/10 hover:border-white/40" do %>
+          Get Free Samples
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
