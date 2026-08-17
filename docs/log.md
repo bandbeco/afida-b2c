@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-17
+
+* **Creation**: [Hormozi Trilogy Implementation Plan](/plans/2026-08-17-hormozi-trilogy-implementation.md). Consolidates the three August 2026 Hormozi proposals' interlocking build orders into one four-phase checklist (now / next / then / gated) with per-item ownership (dev retainer vs Afida leadership), the deliberately-unplanned items, and the shared monthly scoreboard. Records groundwork already done: reorder-schedule expiry dead-end fix (master `1d8c0d58`) and the zombie schedule repair. Plans index updated.
+
 ## 2026-08-09
 
 * **Creation**: [Leads Proposal (August 2026)](/proposals/leads-2026-08.md). Completes the Hormozi trilogy, applying *$100M Leads* (2023) to the layer before the offer: how strangers find out it exists. Diagnosis: Afida works a fraction of one of the book's four advertising channels (content), while warm outreach, cold outreach and all four lead getters sit at zero, and those are the free ones. Six plays, led by warm outreach over the trade book and lapsed buyers, a two-sided product-denominated referral ask at purchase, and an outreach last mile for the lead monitor (new-opening kit as the cold offer); sample request adopted as the engaged-lead unit; paid ads stay gated on repeat purchase per the book's own LTGP:CAC rule. Proposals index updated.
