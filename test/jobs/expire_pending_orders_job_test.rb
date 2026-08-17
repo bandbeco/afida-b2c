@@ -98,6 +98,20 @@ class ExpirePendingOrdersJobTest < ActiveJob::TestCase
     assert_equal 10.days.ago.to_date + 2.weeks, @schedule.next_scheduled_date
   end
 
+  test "expiring a pending order advances the schedule past the pending-order lead window" do
+    # If the job has been down a few days, clearing only "today" could land the
+    # schedule closer than the 3-day lead CreatePendingOrdersJob needs
+    @schedule.update!(frequency: :every_week, next_scheduled_date: 12.days.ago.to_date)
+    create_pending_order(scheduled_for: 12.days.ago.to_date)
+
+    ExpirePendingOrdersJob.perform_now
+
+    @schedule.reload
+    assert @schedule.next_scheduled_date > Date.current + ReorderSchedule::PENDING_ORDER_LEAD_DAYS,
+      "advanced date #{@schedule.next_scheduled_date} is inside the lead window"
+    assert_equal 12.days.ago.to_date + 3.weeks, @schedule.next_scheduled_date
+  end
+
   test "expiring a pending order does not advance a paused schedule" do
     @schedule.update!(next_scheduled_date: 10.days.ago.to_date)
     create_pending_order(scheduled_for: 10.days.ago.to_date)

@@ -7,6 +7,12 @@ class ReorderSchedule < ApplicationRecord
 
   accepts_nested_attributes_for :reorder_schedule_items, allow_destroy: true
 
+  # Days before delivery that CreatePendingOrdersJob creates the pending order
+  # and sends the reminder. It matches next_scheduled_date exactly, once a day,
+  # so any date this model picks must sit strictly beyond this lead or no
+  # pending order will ever be created for it.
+  PENDING_ORDER_LEAD_DAYS = 3
+
   enum :frequency, {
     every_week: 0,
     every_two_weeks: 1,
@@ -39,7 +45,8 @@ class ReorderSchedule < ApplicationRecord
   # Resume a paused schedule with choice of when to send next delivery
   # @param resume_type [Symbol] :asap (default) or :original_schedule
   #   - :asap - Next delivery based on frequency from today
-  #   - :original_schedule - Keep original schedule, advancing if date has passed
+  #   - :original_schedule - Keep original cadence, advancing any date too near
+  #     (or past) to still get a pending order
   def resume!(resume_type: :asap)
     next_date = case resume_type
     when :original_schedule
@@ -84,11 +91,13 @@ class ReorderSchedule < ApplicationRecord
     end
   end
 
-  # Walk the cadence forward from next_scheduled_date until it lands in the
-  # future; returns next_scheduled_date unchanged if it is already future
+  # Walk the cadence forward from next_scheduled_date until it clears the
+  # pending-order lead window (strictly beyond today + PENDING_ORDER_LEAD_DAYS;
+  # landing exactly on the boundary races the same-hour job ordering). Returns
+  # next_scheduled_date unchanged if it already clears the window.
   def next_future_date
     date = next_scheduled_date
-    date = calculate_next_date(from: date) while date <= Date.current
+    date = calculate_next_date(from: date) while date <= Date.current + PENDING_ORDER_LEAD_DAYS
     date
   end
 

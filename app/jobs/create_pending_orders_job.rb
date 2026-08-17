@@ -3,7 +3,7 @@
 class CreatePendingOrdersJob < ApplicationJob
   queue_as :default
 
-  DAYS_BEFORE_DELIVERY = 3
+  DAYS_BEFORE_DELIVERY = ReorderSchedule::PENDING_ORDER_LEAD_DAYS
 
   # Finds all active schedules due in DAYS_BEFORE_DELIVERY days
   # and creates pending orders for them with current prices

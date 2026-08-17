@@ -313,6 +313,44 @@ class ReorderScheduleTest < ActiveSupport::TestCase
     assert_equal Date.current + 1.month, @schedule.next_scheduled_date
   end
 
+  test "advance_past_due! clears the pending-order lead window" do
+    # 12 days overdue on a weekly cadence would land on today + 2 if the loop
+    # only cleared today; CreatePendingOrdersJob matches next_scheduled_date ==
+    # today + 3 exactly, so that date would never generate a pending order
+    @schedule.frequency = :every_week
+    @schedule.next_scheduled_date = 12.days.ago.to_date
+    @schedule.save!
+
+    @schedule.advance_past_due!
+
+    assert_equal 12.days.ago.to_date + 3.weeks, @schedule.next_scheduled_date
+    assert @schedule.next_scheduled_date > Date.current + ReorderSchedule::PENDING_ORDER_LEAD_DAYS
+  end
+
+  test "advance_past_due! does not land exactly on the lead boundary" do
+    # Landing on today + 3 is a race: both 6am jobs run in nondeterministic
+    # order, so CreatePendingOrdersJob may already have run today
+    @schedule.frequency = :every_week
+    @schedule.next_scheduled_date = 11.days.ago.to_date
+    @schedule.save!
+
+    @schedule.advance_past_due!
+
+    assert_equal 11.days.ago.to_date + 3.weeks, @schedule.next_scheduled_date
+  end
+
+  test "resume! with original_schedule advances a date inside the lead window" do
+    @schedule.frequency = :every_week
+    @schedule.status = :paused
+    @schedule.next_scheduled_date = 2.days.from_now.to_date
+    @schedule.paused_at = 1.day.ago
+    @schedule.save!
+
+    @schedule.resume!(resume_type: :original_schedule)
+
+    assert_equal 2.days.from_now.to_date + 1.week, @schedule.next_scheduled_date
+  end
+
   test "advance_past_due! leaves a future-dated schedule untouched" do
     @schedule.frequency = :every_week
     @schedule.next_scheduled_date = 2.days.from_now.to_date
