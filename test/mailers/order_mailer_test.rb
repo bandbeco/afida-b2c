@@ -226,6 +226,52 @@ class OrderMailerTest < ActionMailer::TestCase
     assert_match @order.email, body
   end
 
+  # The address blocks render via OrderAddress (shared with the order pages and
+  # PDF): "Bill to" appears only when a billing address was collected, and as a
+  # "Same as delivery address" note when it matches shipping.
+  test "ops_confirmation_email omits the billing block when none was collected" do
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") } || email
+    %w[text/html text/plain].each do |type|
+      part = content_part.parts.find { |p| p.content_type.include?(type) }
+      assert_no_match(/Bill to/i, part.body.to_s, "#{type} part should have no billing block")
+    end
+  end
+
+  test "ops_confirmation_email includes a distinct billing address in both parts" do
+    @order.update_columns(
+      billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") } || email
+    %w[text/html text/plain].each do |type|
+      part = content_part.parts.find { |p| p.content_type.include?(type) }
+      assert_match(/Bill to/i, part.body.to_s, "#{type} part missing billing header")
+      assert_match "1 Finance Row", part.body.to_s, "#{type} part missing billing address"
+    end
+  end
+
+  test "ops_confirmation_email notes when billing matches the delivery address" do
+    @order.update_columns(
+      billing_name: @order.shipping_name,
+      billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2,
+      billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code,
+      billing_country: @order.shipping_country
+    )
+    email = OrderMailer.with(order: @order).ops_confirmation_email
+
+    content_part = email.parts.find { |p| p.content_type.include?("multipart/alternative") } || email
+    %w[text/html text/plain].each do |type|
+      part = content_part.parts.find { |p| p.content_type.include?(type) }
+      assert_match "Same as delivery address", part.body.to_s, "#{type} part missing same-as note"
+    end
+  end
+
   test "ops_confirmation_email links to the admin order page" do
     email = OrderMailer.with(order: @order).ops_confirmation_email
 

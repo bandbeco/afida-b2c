@@ -116,6 +116,43 @@ class Admin::OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: /Discount/, count: 0
   end
 
+  # The address block renders via OrderAddress (shared with the storefront
+  # pages, ops email and PDF): billing appears only when collected, and as a
+  # "Same as delivery address" note when it matches the delivery address.
+  test "show renders the shipping address and no billing block by default" do
+    get admin_order_path(@regular_order), headers: @headers
+
+    assert_response :success
+    assert_match @regular_order.shipping_address_line1, response.body
+    assert_no_match(/Billing Address/, response.body)
+  end
+
+  test "show renders a distinct billing address when one was collected" do
+    @regular_order.update_columns(
+      billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+    get admin_order_path(@regular_order), headers: @headers
+
+    assert_match "Billing Address", response.body
+    assert_match "1 Finance Row", response.body
+  end
+
+  test "show renders a same-as-delivery note when billing matches shipping" do
+    @regular_order.update_columns(
+      billing_name: @regular_order.shipping_name,
+      billing_address_line1: @regular_order.shipping_address_line1,
+      billing_address_line2: @regular_order.shipping_address_line2,
+      billing_city: @regular_order.shipping_city,
+      billing_postal_code: @regular_order.shipping_postal_code,
+      billing_country: @regular_order.shipping_country
+    )
+    get admin_order_path(@regular_order), headers: @headers
+
+    assert_match "Same as delivery address", response.body
+    assert_equal 1, response.body.scan(@regular_order.shipping_address_line1).count
+  end
+
   test "show displays effective sample SKU for sample items" do
     get admin_order_path(@sample_only_order), headers: @headers
 

@@ -137,7 +137,12 @@ class OrderPdfGenerator
 
   def add_details_section(pdf)
     column_width = (pdf.bounds.width - 30) / 2
-    section_height = 100
+    # The right column also carries a billing block when one was collected;
+    # both boxes share the measured height so the columns stay aligned. The
+    # height is measured from the actual lines (as add_price_summary sizes from
+    # its row count) because a bounding_box too small for its content makes
+    # Prawn treat the box bottom as a page edge and break onto a second page.
+    section_height = address_section_height(pdf, column_width)
 
     # Left column: Order details
     pdf.bounding_box([ 0, pdf.cursor ], width: column_width, height: section_height) do
@@ -150,22 +155,45 @@ class OrderPdfGenerator
       add_detail_row(pdf, "Email", @order.email) if @order.email.present?
     end
 
-    # Right column: Shipping address
+    # Right column: Shipping (and, when collected, billing) address
     pdf.bounding_box([ column_width + 30, pdf.cursor + section_height ], width: column_width, height: section_height) do
-      add_section_header(pdf, "Shipping Address")
-      pdf.move_down 8
+      add_address_block(pdf, "Shipping Address", OrderAddress.shipping_lines(@order))
 
-      pdf.fill_color TEXT_DARK
-      pdf.text @order.shipping_name.to_s, size: 10, style: :bold
-      pdf.move_down 3
-      pdf.fill_color TEXT_GRAY
-      pdf.text @order.shipping_address_line1.to_s, size: 10
-      pdf.text @order.shipping_address_line2.to_s, size: 10 if @order.shipping_address_line2.present?
-      pdf.text "#{@order.shipping_city}, #{@order.shipping_postal_code}".strip, size: 10
-      pdf.text @order.shipping_country.to_s, size: 10
+      if @order.billing_address?
+        pdf.move_down 10
+        add_address_block(pdf, "Billing Address", OrderAddress.billing_lines(@order))
+      end
     end
 
     pdf.fill_color TEXT_DARK
+  end
+
+  def add_address_block(pdf, title, lines)
+    add_section_header(pdf, title)
+    pdf.move_down 8
+
+    lines.each_with_index do |line, index|
+      pdf.fill_color(index.zero? ? TEXT_DARK : TEXT_GRAY)
+      pdf.text line, size: 10
+      pdf.move_down 3 if index.zero?
+    end
+  end
+
+  # Measured height of the right column's content (add_address_block must stay
+  # in step), with the left column's fixed rows as the floor. height_of wraps
+  # against the column width, so long address lines that break count in full.
+  def address_section_height(pdf, column_width)
+    height = address_block_height(pdf, "Shipping Address", OrderAddress.shipping_lines(@order), column_width)
+    if @order.billing_address?
+      height += 10 + address_block_height(pdf, "Billing Address", OrderAddress.billing_lines(@order), column_width)
+    end
+
+    [ height + 4, 100 ].max
+  end
+
+  def address_block_height(pdf, title, lines, column_width)
+    pdf.height_of(title, size: 11, width: column_width) + 8 +
+      lines.sum { |line| pdf.height_of(line, size: 10, width: column_width) } + 3
   end
 
   def add_section_header(pdf, title)

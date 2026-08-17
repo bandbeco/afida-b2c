@@ -28,6 +28,9 @@ module Checkout
 
     def order_attributes(shipping_address)
       amounts = Checkout::SessionAmounts.from(stripe_session)
+      # {} when the session carries none (fail open, unlike shipping): billing
+      # is display-only, so its absence must never cost a paid order.
+      billing_address = Checkout::SessionDetails.billing_address(stripe_session)
       attributes = {
         user: user,
         organization: user&.organization,
@@ -47,6 +50,12 @@ module Checkout
         shipping_city: shipping_address[:city],
         shipping_postal_code: shipping_address[:postal_code],
         shipping_country: shipping_address[:country],
+        billing_name: billing_address[:name],
+        billing_address_line1: billing_address[:line1],
+        billing_address_line2: billing_address[:line2],
+        billing_city: billing_address[:city],
+        billing_postal_code: billing_address[:postal_code],
+        billing_country: billing_address[:country],
         # The zone the order was priced against, not the zone of the collected
         # address: the order records what the customer was charged. Nil falls
         # back to deriving from the postcode (see Order#delivery_zone).

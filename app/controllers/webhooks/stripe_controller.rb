@@ -88,6 +88,9 @@ module Webhooks
 
       # Extract shipping address
       shipping = Checkout::SessionDetails.shipping_address(full_session)
+      # {} when the session carries none (fail open, unlike shipping): billing
+      # is display-only, so its absence must never cost a paid order.
+      billing = Checkout::SessionDetails.billing_address(full_session)
 
       # Guard the permanent failure upstream (as OrderCreator does on the success
       # path): a completed session with no shipping_details would build an order with
@@ -143,6 +146,12 @@ module Webhooks
           shipping_city: shipping[:city],
           shipping_postal_code: shipping[:postal_code],
           shipping_country: shipping[:country],
+          billing_name: billing[:name],
+          billing_address_line1: billing[:line1],
+          billing_address_line2: billing[:line2],
+          billing_city: billing[:city],
+          billing_postal_code: billing[:postal_code],
+          billing_country: billing[:country],
           # The zone the order was priced against (see SessionDetails), not the
           # zone of the collected address, so the order records what was charged.
           shipping_zone: Checkout::SessionDetails.shipping_zone(full_session)

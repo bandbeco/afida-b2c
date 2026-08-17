@@ -130,6 +130,65 @@ class OrderTest < ActiveSupport::TestCase
     assert_not_includes address, "nil"
   end
 
+  test "billing address fields are optional" do
+    order = Order.new(@valid_attributes)
+    assert order.valid?
+    assert_nil order.billing_name
+  end
+
+  test "billing_address? is false when no billing was collected" do
+    assert_not @order.billing_address?
+  end
+
+  test "billing_address? is true when billing was collected" do
+    @order.billing_address_line1 = "5 Analytical Way"
+    assert @order.billing_address?
+  end
+
+  test "billing_same_as_shipping? is true when all fields match" do
+    @order.assign_attributes(
+      billing_name: @order.shipping_name,
+      billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2,
+      billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code,
+      billing_country: @order.shipping_country
+    )
+    assert @order.billing_same_as_shipping?
+  end
+
+  # Stripe populates billing_name (customer_details.name) independently of the
+  # shipping recipient (cardholder vs recipient, abbreviated vs full name), so
+  # comparing names would make the same-address case look different for most
+  # real orders. Only the address decides.
+  test "billing_same_as_shipping? is true when only the name differs" do
+    @order.assign_attributes(
+      billing_name: "Accounts Payable",
+      billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2,
+      billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code,
+      billing_country: @order.shipping_country
+    )
+    assert @order.billing_same_as_shipping?
+  end
+
+  test "billing_same_as_shipping? is false when the address differs" do
+    @order.assign_attributes(
+      billing_name: @order.shipping_name,
+      billing_address_line1: "1 Finance Row",
+      billing_address_line2: @order.shipping_address_line2,
+      billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code,
+      billing_country: @order.shipping_country
+    )
+    assert_not @order.billing_same_as_shipping?
+  end
+
+  test "billing_same_as_shipping? is false when there is no billing address" do
+    assert_not @order.billing_same_as_shipping?
+  end
+
   test "display_number formats order_number with hash" do
     assert_equal "##{@order.order_number}", @order.display_number
   end

@@ -56,6 +56,43 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal 24.0, order.total_amount.to_f
   end
 
+  test "records the billing address when the session carries one" do
+    stripe_session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2000,
+      amount_tax: 400,
+      amount_total: 2400,
+      billing_name: "Accounts Payable",
+      billing_address: { line1: "1 Finance Row", city: "Manchester", postal_code: "M1 1AA", country: "GB" },
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 2000) ]
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal "Accounts Payable", order.billing_name
+    assert_equal "1 Finance Row", order.billing_address_line1
+    assert_nil order.billing_address_line2
+    assert_equal "Manchester", order.billing_city
+    assert_equal "M1 1AA", order.billing_postal_code
+    assert_equal "GB", order.billing_country
+  end
+
+  test "still creates the order when the session carries no billing address" do
+    stripe_session = build_stripe_session(
+      customer_email: "buyer@example.com",
+      amount_subtotal: 2000,
+      amount_tax: 400,
+      amount_total: 2400,
+      billing_address: nil,
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 2000) ]
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_nil order.billing_name
+    assert_not order.billing_address?
+  end
+
   test "stamps the delivery zone from the address Stripe collected" do
     # The zone is recorded on the order so what the customer was charged and
     # promised survives any later change to the zone table or rate card.

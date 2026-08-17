@@ -97,6 +97,31 @@ class Order < ApplicationRecord
     address_parts.join(", ")
   end
 
+  # Whether a billing address was recorded. Orders predating billing collection
+  # (and sessions where Stripe returned none) have nothing - display surfaces
+  # must render no billing block at all, not an empty one.
+  def billing_address?
+    billing_address_line1.present?
+  end
+
+  # Whether the billing address matches the delivery address, so display
+  # surfaces can show a "Same as delivery address" note instead of repeating
+  # the block. Deliberately IGNORES the name: Stripe populates billing_name
+  # (customer_details.name) independently of the shipping recipient (cardholder
+  # vs recipient, abbreviated vs full name), so including it would make the
+  # same-address case look different for most real orders. Plain string
+  # equality otherwise - a case or whitespace mismatch just renders a
+  # redundant-but-correct block.
+  def billing_same_as_shipping?
+    return false unless billing_address?
+
+    billing_address_line1 == shipping_address_line1 &&
+      billing_address_line2 == shipping_address_line2 &&
+      billing_city == shipping_city &&
+      billing_postal_code == shipping_postal_code &&
+      billing_country == shipping_country
+  end
+
   def display_number
     "##{order_number}"
   end

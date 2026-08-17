@@ -64,16 +64,20 @@
 
   <tr>
     <td style="padding: 20px 30px;">
-      <h2 style="font-size: 18px; font-weight: 600; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Ship to</h2>
+      <h2 style="font-size: 18px; font-weight: 500; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Ship to</h2>
       <p style="font-size: 15px; color: #374151; margin: 16px 0 0 0; line-height: 1.6;">
-        <%= @order.shipping_name %><br>
-        <%= @order.shipping_address_line1 %><br>
-        <% if @order.shipping_address_line2.present? %>
-          <%= @order.shipping_address_line2 %><br>
+        <% shipping_address_lines(@order).each do |line| %>
+          <%= line %><br>
         <% end %>
-        <%= @order.shipping_city %>, <%= @order.shipping_postal_code %><br>
-        <%= @order.shipping_country %>
       </p>
+      <% if show_billing_address?(@order) %>
+        <h2 style="font-size: 18px; font-weight: 500; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 24px;">Bill to</h2>
+        <p style="font-size: 15px; color: #374151; margin: 16px 0 0 0; line-height: 1.6;">
+          <% billing_address_lines(@order).each do |line| %>
+            <%= line %><br>
+          <% end %>
+        </p>
+      <% end %>
       <p style="font-size: 15px; color: #374151; margin: 12px 0 0 0;">
         Email: <a href="mailto:<%= @order.email %>" style="color: #111827;"><%= @order.email %></a>
       </p>

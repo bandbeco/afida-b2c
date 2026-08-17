@@ -21,6 +21,59 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     assert pdf_data.length > 0
   end
 
+  # The details section renders addresses via OrderAddress; existing PDF tests
+  # assert generation rather than extracted text, so these guard the billing
+  # branches (distinct address and same-as-shipping note) the same way.
+  test "generates pdf for an order with a distinct billing address" do
+    @order.update_columns(
+      billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+
+    pdf_data = OrderPdfGenerator.new(@order).generate
+
+    assert pdf_data.length > 0
+  end
+
+  # The details section sizes its bounding box from the address line counts; a
+  # box too small for full shipping + distinct billing blocks makes Prawn treat
+  # the box bottom as a page edge and break the whole layout onto page 2.
+  test "a full shipping and distinct billing address stay on one page" do
+    @order.update_columns(
+      shipping_name: "Alexandra Featherstonehaugh",
+      shipping_address_line1: "Unit 14, Riverside Business Park",
+      shipping_address_line2: "Lower Mortlake Road",
+      shipping_city: "Richmond upon Thames",
+      shipping_postal_code: "TW9 2ND",
+      shipping_country: "GB",
+      billing_name: "Accounts Payable Department",
+      billing_address_line1: "1 Finance Row",
+      billing_address_line2: "Floor 2",
+      billing_city: "Manchester",
+      billing_postal_code: "M1 1AA",
+      billing_country: "GB"
+    )
+
+    pdf_data = OrderPdfGenerator.new(@order).generate
+
+    assert_match "/Count 1", pdf_data, "expected a single-page PDF"
+  end
+
+  test "generates pdf when billing matches the delivery address" do
+    @order.update_columns(
+      billing_name: @order.shipping_name,
+      billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2,
+      billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code,
+      billing_country: @order.shipping_country
+    )
+
+    pdf_data = OrderPdfGenerator.new(@order).generate
+
+    assert pdf_data.length > 0
+  end
+
   # T012: Test file size under 500KB
   test "pdf file size is under 500kb" do
     generator = OrderPdfGenerator.new(@order)

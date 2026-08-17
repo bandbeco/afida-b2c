@@ -86,6 +86,55 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
   end
 
   # T013: User viewing another user's order (denied)
+  # The address block renders via OrderAddress, shared with the admin page,
+  # ops email and PDF: shipping always, billing only when collected, and a
+  # "Same as delivery address" note instead of a duplicate block.
+  test "show renders the shipping address and no billing block by default" do
+    sign_in @user_one
+    get order_url(@order_one)
+    assert_response :success
+    assert_match @order_one.shipping_address_line1, response.body
+    assert_no_match(/Billing Address/, response.body)
+  end
+
+  test "show renders a distinct billing address when one was collected" do
+    @order_one.update_columns(
+      billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+    sign_in @user_one
+    get order_url(@order_one)
+    assert_match "Billing Address", response.body
+    assert_match "1 Finance Row", response.body
+  end
+
+  test "show renders a same-as-delivery note when billing matches shipping" do
+    @order_one.update_columns(
+      billing_name: @order_one.shipping_name,
+      billing_address_line1: @order_one.shipping_address_line1,
+      billing_address_line2: @order_one.shipping_address_line2,
+      billing_city: @order_one.shipping_city,
+      billing_postal_code: @order_one.shipping_postal_code,
+      billing_country: @order_one.shipping_country
+    )
+    sign_in @user_one
+    get order_url(@order_one)
+    assert_match "Billing Address", response.body
+    assert_match "Same as delivery address", response.body
+    assert_equal 1, response.body.scan(@order_one.shipping_address_line1).count
+  end
+
+  test "confirmation renders a billing address when one was collected" do
+    @order_one.update_columns(
+      billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+    sign_in @user_one
+    get confirmation_order_url(@order_one)
+    assert_match "Billing Address", response.body
+    assert_match "1 Finance Row", response.body
+  end
+
   test "show redirects when accessing another user's order" do
     sign_in @user_one
     get order_url(@order_two)  # order_two belongs to user_two

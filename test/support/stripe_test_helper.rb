@@ -63,10 +63,30 @@ module StripeTestHelper
       shipping_details: shipping_details
     )
 
+    # Billing lives on customer_details (billing_address_collection populates it;
+    # see Checkout::SessionDetails.billing_address). Stripe defaults billing to the
+    # shipping address unless the customer enters a different one, so the fixture
+    # does the same; pass billing_name:/billing_address: to diverge, or an explicit
+    # billing_address: nil to model a session where none was collected.
+    billing_name = overrides.key?(:billing_name) ? overrides[:billing_name] : customer_name
+    billing_address_hash =
+      if overrides.key?(:billing_address)
+        overrides[:billing_address] && {
+          line1: overrides[:billing_address][:line1],
+          line2: overrides[:billing_address][:line2],
+          city: overrides[:billing_address][:city],
+          postal_code: overrides[:billing_address][:postal_code],
+          country: overrides[:billing_address][:country]
+        }
+      else
+        address_hash
+      end
+    billing_address = billing_address_hash && stub(**billing_address_hash)
+
     customer_details = stub(
       email: customer_email,
-      name: customer_name,
-      address: address
+      name: billing_name,
+      address: billing_address
     )
 
     shipping_cost = legacy_shipping_amount ? stub(amount_total: legacy_shipping_amount) : nil
@@ -139,8 +159,8 @@ module StripeTestHelper
       payment_status: overrides[:payment_status] || "paid",
       customer_details: {
         email: customer_email,
-        name: customer_name,
-        address: address_hash
+        name: billing_name,
+        address: billing_address_hash
       },
       collected_information: {
         shipping_details: {

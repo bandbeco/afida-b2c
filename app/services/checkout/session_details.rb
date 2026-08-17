@@ -1,6 +1,6 @@
 module Checkout
   # The single home for deriving the non-money Order fields from a completed Stripe
-  # Checkout session: the shipping address and the promotion code. Both
+  # Checkout session: the shipping and billing addresses and the promotion code. Both
   # order-creation paths (Checkout::OrderCreator on the success redirect and the
   # Stripe webhook fallback) call these, so the two can't drift in how they read a
   # session. Money figures live in SessionAmounts; the required-field presence check
@@ -27,6 +27,36 @@ module Checkout
 
       {
         name: shipping[:name],
+        line1: address[:line1],
+        line2: address[:line2],
+        city: address[:city],
+        postal_code: address[:postal_code],
+        country: address[:country]
+      }
+    end
+
+    # Maps the session's customer details (name + address) to the billing_* hash the
+    # Order is built from, or {} when absent. Unlike shipping, billing does NOT live
+    # under collected_information: billing_address_collection populates
+    # customer_details on the completed session. Must fail open with no counterpart
+    # to Order.required_shipping_values - sessions predating billing collection,
+    # Link/wallet flows reusing a stored address, and zero-total sessions can all
+    # legitimately carry no billing address, and none of that may block an order
+    # the customer has already paid for.
+    def billing_address(session)
+      session_hash = session.to_hash.with_indifferent_access
+
+      customer_details = session_hash[:customer_details]
+      return {} unless customer_details
+
+      customer_details = customer_details.with_indifferent_access if customer_details.respond_to?(:with_indifferent_access)
+      address = customer_details[:address]
+      return {} unless address
+
+      address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
+
+      {
+        name: customer_details[:name],
         line1: address[:line1],
         line2: address[:line2],
         city: address[:city],

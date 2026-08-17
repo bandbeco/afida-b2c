@@ -1,0 +1,29 @@
+<%# The storefront address card body, shared by orders/show and
+    orders/confirmation so the two stay identical (mirroring orders/_summary
+    for the money lines). Lines come from OrderAddress via OrdersHelper: the
+    billing block renders only when a billing address was collected, and shows
+    a "Same as delivery address" note instead of duplicating the block. %>
+<div class="p-6">
+  <div class="text-gray-900">
+    <% shipping_address_lines(order).each_with_index do |line, index| %>
+      <p class="<%= "font-medium" if index.zero? %>"><%= line %></p>
+    <% end %>
+  </div>
+
+  <% if show_billing_address?(order) %>
+    <div class="mt-4 pt-4 border-t">
+      <p class="text-sm text-gray-600 mb-1">Billing Address</p>
+      <div class="text-gray-900">
+        <% billing_address_lines(order).each do |line| %>
+          <p><%= line %></p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="mt-4 pt-4 border-t">
+    <p class="text-sm text-gray-600">
+      Email: <%= order.email %>
+    </p>
+  </div>
+</div>
