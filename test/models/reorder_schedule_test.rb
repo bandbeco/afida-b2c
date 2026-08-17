@@ -291,6 +291,38 @@ class ReorderScheduleTest < ActiveSupport::TestCase
     assert_equal Date.current + 3.months, @schedule.next_scheduled_date
   end
 
+  test "advance_past_due! advances an overdue schedule to the next future date on cadence" do
+    @schedule.frequency = :every_week
+    @schedule.next_scheduled_date = 3.weeks.ago.to_date
+    @schedule.save!
+
+    @schedule.advance_past_due!
+
+    expected = 3.weeks.ago.to_date + 4.weeks
+    assert_equal expected, @schedule.next_scheduled_date
+    assert @schedule.next_scheduled_date > Date.current
+  end
+
+  test "advance_past_due! advances a schedule due today" do
+    @schedule.frequency = :every_month
+    @schedule.next_scheduled_date = Date.current
+    @schedule.save!
+
+    @schedule.advance_past_due!
+
+    assert_equal Date.current + 1.month, @schedule.next_scheduled_date
+  end
+
+  test "advance_past_due! leaves a future-dated schedule untouched" do
+    @schedule.frequency = :every_week
+    @schedule.next_scheduled_date = 2.days.from_now.to_date
+    @schedule.save!
+
+    @schedule.advance_past_due!
+
+    assert_equal 2.days.from_now.to_date, @schedule.next_scheduled_date
+  end
+
   # ==========================================================================
   # Subtotal
   # ==========================================================================

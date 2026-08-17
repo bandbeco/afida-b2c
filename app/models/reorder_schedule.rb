@@ -43,15 +43,19 @@ class ReorderSchedule < ApplicationRecord
   def resume!(resume_type: :asap)
     next_date = case resume_type
     when :original_schedule
-      # Advance original schedule until it's in the future
-      date = next_scheduled_date
-      date = calculate_next_date(from: date) while date <= Date.current
-      date
+      next_future_date
     else # :asap
       calculate_next_date(from: Date.current)
     end
 
     update!(status: :active, paused_at: nil, next_scheduled_date: next_date)
+  end
+
+  # CreatePendingOrdersJob matches next_scheduled_date exactly (due_in_days),
+  # so an overdue schedule is invisible to it until moved to a future date.
+  def advance_past_due!
+    return if next_scheduled_date > Date.current
+    update!(next_scheduled_date: next_future_date)
   end
 
   def cancel!
@@ -78,6 +82,14 @@ class ReorderSchedule < ApplicationRecord
     if remaining_items.empty?
       errors.add(:base, "Schedule must have at least one item. Pause or cancel instead.")
     end
+  end
+
+  # Walk the cadence forward from next_scheduled_date until it lands in the
+  # future; returns next_scheduled_date unchanged if it is already future
+  def next_future_date
+    date = next_scheduled_date
+    date = calculate_next_date(from: date) while date <= Date.current
+    date
   end
 
   def calculate_next_date(from: next_scheduled_date)

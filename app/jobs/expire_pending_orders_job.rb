@@ -20,7 +20,14 @@ class ExpirePendingOrdersJob < ApplicationJob
 
   def expire_pending_order(pending_order)
     pending_order.expire!
+    advance_schedule(pending_order.reorder_schedule)
     send_expiration_email(pending_order)
+  end
+
+  # Without this an active schedule whose reminder went unanswered would stay
+  # overdue forever and never generate another pending order
+  def advance_schedule(schedule)
+    schedule.advance_past_due! if schedule.active?
   end
 
   def send_expiration_email(pending_order)

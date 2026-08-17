@@ -83,6 +83,54 @@ class ExpirePendingOrdersJobTest < ActiveJob::TestCase
   end
 
   # ==========================================================================
+  # Schedule Advancement
+  # ==========================================================================
+
+  test "expiring a pending order advances an overdue active schedule to a future date" do
+    @schedule.update!(frequency: :every_week, next_scheduled_date: 10.days.ago.to_date)
+    create_pending_order(scheduled_for: 10.days.ago.to_date)
+
+    ExpirePendingOrdersJob.perform_now
+
+    @schedule.reload
+    assert @schedule.next_scheduled_date > Date.current,
+      "schedule should be advanced past today, got #{@schedule.next_scheduled_date}"
+    assert_equal 10.days.ago.to_date + 2.weeks, @schedule.next_scheduled_date
+  end
+
+  test "expiring a pending order does not advance a paused schedule" do
+    @schedule.update!(next_scheduled_date: 10.days.ago.to_date)
+    create_pending_order(scheduled_for: 10.days.ago.to_date)
+    @schedule.update!(status: :paused, paused_at: Time.current)
+
+    ExpirePendingOrdersJob.perform_now
+
+    @schedule.reload
+    assert_equal 10.days.ago.to_date, @schedule.next_scheduled_date
+  end
+
+  test "expiring a pending order does not advance a cancelled schedule" do
+    @schedule.update!(next_scheduled_date: 10.days.ago.to_date)
+    create_pending_order(scheduled_for: 10.days.ago.to_date)
+    @schedule.update!(status: :cancelled, cancelled_at: Time.current)
+
+    ExpirePendingOrdersJob.perform_now
+
+    @schedule.reload
+    assert_equal 10.days.ago.to_date, @schedule.next_scheduled_date
+  end
+
+  test "expiring a pending order leaves an already future-dated schedule untouched" do
+    @schedule.update!(next_scheduled_date: 5.days.from_now.to_date)
+    create_pending_order(scheduled_for: 10.days.ago.to_date)
+
+    ExpirePendingOrdersJob.perform_now
+
+    @schedule.reload
+    assert_equal 5.days.from_now.to_date, @schedule.next_scheduled_date
+  end
+
+  # ==========================================================================
   # Edge Cases
   # ==========================================================================
 
