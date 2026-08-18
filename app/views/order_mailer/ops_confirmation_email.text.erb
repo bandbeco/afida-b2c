@@ -18,10 +18,16 @@ ITEMS TO PICK
 
 SHIP TO
 -------
-<%= @order.shipping_name %>
-<%= @order.shipping_address_line1 %>
-<% if @order.shipping_address_line2.present? %><%= @order.shipping_address_line2 %>
-<% end %><%= @order.shipping_city %>, <%= @order.shipping_postal_code %>
-<%= @order.shipping_country %>
+<% shipping_address_lines(@order).each do |line| -%>
+<%= line[:text] %>
+<% end -%>
+<% if @order.billing_address? -%>
+
+BILL TO
+-------
+<% billing_address_lines(@order).each do |line| -%>
+<%= line[:text] %>
+<% end -%>
+<% end -%>
 
 Email: <%= @order.email %>

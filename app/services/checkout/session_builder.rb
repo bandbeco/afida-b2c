@@ -52,6 +52,11 @@ module Checkout
         shipping_address_collection: {
           allowed_countries: Shipping::ALLOWED_COUNTRIES
         },
+        # Stripe's default ("auto") collects only the fields the payment method
+        # needs, which for cards is a bare country dropdown; "required" makes
+        # both the hosted page and the custom-mode Payment Element collect the
+        # full billing address, persisted on the order as billing_*.
+        billing_address_collection: "required",
         metadata: {
           cart_id: cart.id.to_s,
           discount_code: discount_code,

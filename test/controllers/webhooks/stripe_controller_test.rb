@@ -283,6 +283,64 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_with(job: TelegramOrderNotificationJob, args: [ order.id ])
   end
 
+  test "creates order with the collected billing address" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_with_billing",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s },
+      amount_total: 3500,
+      amount_tax: 500,
+      billing_name: "Accounts Payable",
+      billing_address: { line1: "1 Finance Row", city: "Manchester", postal_code: "M1 1AA", country: "GB" }
+    )
+
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    order = Order.find_by(stripe_session_id: "sess_with_billing")
+    assert_equal "Accounts Payable", order.billing_name
+    assert_equal "1 Finance Row", order.billing_address_line1
+    assert_equal "Manchester", order.billing_city
+    assert_equal "M1 1AA", order.billing_postal_code
+    assert_equal "GB", order.billing_country
+  end
+
+  test "creates order without a billing address when the session carries none" do
+    cart = Cart.create!
+    product = products(:one)
+    cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+
+    session = build_stripe_session(
+      id: "sess_without_billing",
+      payment_status: "paid",
+      metadata: { cart_id: cart.id.to_s },
+      amount_total: 3500,
+      amount_tax: 500,
+      billing_address: nil
+    )
+
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_difference "Order.count", 1 do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    order = Order.find_by(stripe_session_id: "sess_without_billing")
+    assert_nil order.billing_name
+    assert_not order.billing_address?
+  end
+
   test "rolls back the order when an order item fails, leaving no item-less paid order" do
     # The order and its items must be created atomically: a mid-loop OrderItem
     # failure must not leave a committed paid order with missing items.

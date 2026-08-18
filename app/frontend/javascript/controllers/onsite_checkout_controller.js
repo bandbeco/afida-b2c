@@ -15,7 +15,7 @@ import { Controller } from "@hotwired/stimulus"
 // discount, VAT, and total.
 export default class extends Controller {
   static targets = [
-    "email", "address", "payment", "payButton", "error",
+    "email", "address", "billingAddress", "payment", "payButton", "error",
     "totalLine", "discountRow", "zoneWarning",
     "promoSection", "promoForm", "promoInput", "promoApplied", "promoCode", "promoError"
   ]
@@ -37,7 +37,12 @@ export default class extends Controller {
       this.stripe = Stripe(this.publishableKeyValue)
       this.checkout = await this.stripe.initCheckoutElementsSdk({
         clientSecret: this.clientSecretValue,
-        defaultValues: this.defaultValues()
+        defaultValues: this.defaultValues(),
+        // Puts Stripe's "same as shipping" checkbox on the billing element so
+        // most shoppers never type their address twice. Documented as the
+        // default when both address elements share one Elements instance, but
+        // the clover SDK does not apply it unless set explicitly.
+        elementsOptions: { syncAddressCheckbox: "billing" }
       })
       // loadActions resolves to a {type, actions} result wrapper; the
       // callable actions (updateEmail, confirm, ...) live one level down.
@@ -57,6 +62,13 @@ export default class extends Controller {
     this.paymentElement.mount(this.paymentTarget)
     this.addressElement = this.checkout.createShippingAddressElement()
     this.addressElement.mount(this.addressTarget)
+    // The session sets billing_address_collection "required", and in custom
+    // mode the Payment Element does NOT collect billing: without this element
+    // canConfirm never turns true and the Pay button stays dead. Sharing the
+    // Elements instance with the shipping element gives it Stripe's own
+    // "same as shipping" checkbox (syncAddressCheckbox defaults to billing).
+    this.billingAddressElement = this.checkout.createBillingAddressElement()
+    this.billingAddressElement.mount(this.billingAddressTarget)
 
     this.checkout.on("change", (session) => this.sessionChanged(session))
     this.sessionChanged(this.actions.getSession())
@@ -69,7 +81,8 @@ export default class extends Controller {
     clearTimeout(this.zoneTimer)
     this.paymentElement?.destroy?.()
     this.addressElement?.destroy?.()
-    this.paymentElement = this.addressElement = null
+    this.billingAddressElement?.destroy?.()
+    this.paymentElement = this.addressElement = this.billingAddressElement = null
     this.checkout = this.actions = this.session = null
   }
 

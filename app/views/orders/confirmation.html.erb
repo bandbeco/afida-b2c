@@ -118,23 +118,7 @@
           <h2 class="text-xl text-gray-900">Shipping Address</h2>
         </div>
 
-        <div class="p-6">
-          <div class="text-gray-900">
-            <p><%= @order.shipping_name %></p>
-            <p><%= @order.shipping_address_line1 %></p>
-            <% if @order.shipping_address_line2.present? %>
-              <p><%= @order.shipping_address_line2 %></p>
-            <% end %>
-            <p><%= @order.shipping_city %>, <%= @order.shipping_postal_code %></p>
-            <p><%= @order.shipping_country %></p>
-          </div>
-
-          <div class="mt-4 pt-4 border-t">
-            <p class="text-sm text-gray-600">
-              Email: <%= @order.email %>
-            </p>
-          </div>
-        </div>
+        <%= render "orders/address", order: @order %>
       </div>
     </div>
 

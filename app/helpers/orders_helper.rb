@@ -22,6 +22,19 @@ module OrdersHelper
     OrderSummary.lines(order)
   end
 
+  # The order's addresses as ordered {kind:, text:} display lines, shared by
+  # the same surfaces as order_summary_lines. See OrderAddress for the line
+  # shape and the billing rules (empty when none collected, a "Same as
+  # delivery address" note when identical); gate billing blocks on
+  # order.billing_address? directly.
+  def shipping_address_lines(order)
+    OrderAddress.shipping_lines(order)
+  end
+
+  def billing_address_lines(order)
+    OrderAddress.billing_lines(order)
+  end
+
   # Our SKU for an order item, with the supplier SKU appended in parentheses when
   # known, e.g. "VEG-CC-9-7 (R300S-VW)". Used in internal ops views so admins can
   # cross-reference our catalogue against a supplier's. Prefers the SKU snapshot

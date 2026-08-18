@@ -418,6 +418,34 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert captured_params[:shipping_address_collection]
   end
 
+  test "collects a required billing address in hosted mode" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_session
+
+    assert_equal "required", captured_params[:billing_address_collection]
+  end
+
+  test "collects a required billing address in custom mode" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
+
+    build_custom_session
+
+    assert_equal "required", captured_params[:billing_address_collection]
+  end
+
   test "does not expose intermediate checkout state readers" do
     builder = build_session_builder(discount_code: "WELCOME5")
 

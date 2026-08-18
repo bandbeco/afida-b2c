@@ -178,6 +178,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='onsite-checkout']"
     assert_select "[data-onsite-checkout-target='payment']"
     assert_select "[data-onsite-checkout-target='address']"
+    # With billing_address_collection "required", custom mode must mount its
+    # own Billing Address Element or canConfirm never turns true (dead Pay
+    # button); the Payment Element does not collect billing in this mode.
+    assert_select "[data-onsite-checkout-target='billingAddress']"
     assert_select "[data-onsite-checkout-publishable-key-value]" do |elements|
       assert elements.first["data-onsite-checkout-publishable-key-value"].present?,
         "publishable key must reach the page"

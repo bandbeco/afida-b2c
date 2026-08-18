@@ -77,6 +77,18 @@
         <div data-onsite-checkout-target="payment"></div>
       </section>
 
+      <%# The session is created with billing_address_collection "required", and
+          in custom mode the Payment Element does NOT collect billing: this
+          Billing Address Element must be mounted or canConfirm never turns
+          true and the Pay button stays dead. Stripe renders its own "same as
+          shipping" checkbox here (elementsOptions syncAddressCheckbox defaults
+          to the billing element) because both address elements share the one
+          Elements instance. %>
+      <section>
+        <h2 class="text-lg mb-2">Billing address</h2>
+        <div data-onsite-checkout-target="billingAddress"></div>
+      </section>
+
       <p class="text-sm text-error hidden" data-onsite-checkout-target="error"></p>
 
       <button type="button" class="btn btn-primary w-full" disabled

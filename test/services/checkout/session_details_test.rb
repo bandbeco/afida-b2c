@@ -37,6 +37,84 @@ class Checkout::SessionDetailsTest < ActiveSupport::TestCase
     assert_equal({}, Checkout::SessionDetails.shipping_address(session))
   end
 
+  # --- billing_address ---
+
+  test "billing_address maps customer_details to the order fields" do
+    session = build_stripe_session(
+      billing_name: "Ada Lovelace Ltd",
+      billing_address: { line1: "1 Finance Row", city: "Manchester", postal_code: "M1 1AA", country: "GB" }
+    )
+
+    billing = Checkout::SessionDetails.billing_address(session)
+
+    assert_equal "Ada Lovelace Ltd", billing[:name]
+    assert_equal "1 Finance Row", billing[:line1]
+    assert_nil billing[:line2]
+    assert_equal "Manchester", billing[:city]
+    assert_equal "M1 1AA", billing[:postal_code]
+    assert_equal "GB", billing[:country]
+  end
+
+  test "billing_address defaults to the shipping address like Stripe does" do
+    session = build_stripe_session(
+      shipping_name: "Ada Lovelace",
+      shipping_address: { line1: "5 Analytical Way", line2: "Engine House", city: "London", postal_code: "EC1A 1AA", country: "GB" }
+    )
+
+    billing = Checkout::SessionDetails.billing_address(session)
+
+    assert_equal "5 Analytical Way", billing[:line1]
+    assert_equal "London", billing[:city]
+  end
+
+  test "billing_address returns an empty hash when customer_details carries no address" do
+    session = build_stripe_session(billing_address: nil)
+
+    assert_equal({}, Checkout::SessionDetails.billing_address(session))
+  end
+
+  test "billing_address returns an empty hash when the session has no customer_details" do
+    session = stub(to_hash: { collected_information: {} })
+
+    assert_equal({}, Checkout::SessionDetails.billing_address(session))
+  end
+
+  # --- order_address_attributes ---
+
+  test "order_address_attributes maps both addresses to order columns in one pass" do
+    session = build_stripe_session(
+      shipping_name: "Ada Lovelace",
+      shipping_address: { line1: "5 Analytical Way", line2: "Engine House", city: "London", postal_code: "EC1A 1AA", country: "GB" },
+      billing_name: "Ada Lovelace Ltd",
+      billing_address: { line1: "1 Finance Row", city: "Manchester", postal_code: "M1 1AA", country: "GB" }
+    )
+
+    attributes = Checkout::SessionDetails.order_address_attributes(session)
+
+    assert_equal "Ada Lovelace", attributes[:shipping_name]
+    assert_equal "5 Analytical Way", attributes[:shipping_address_line1]
+    assert_equal "Engine House", attributes[:shipping_address_line2]
+    assert_equal "London", attributes[:shipping_city]
+    assert_equal "EC1A 1AA", attributes[:shipping_postal_code]
+    assert_equal "GB", attributes[:shipping_country]
+    assert_equal "Ada Lovelace Ltd", attributes[:billing_name]
+    assert_equal "1 Finance Row", attributes[:billing_address_line1]
+    assert_nil attributes[:billing_address_line2]
+    assert_equal "Manchester", attributes[:billing_city]
+    assert_equal "M1 1AA", attributes[:billing_postal_code]
+    assert_equal "GB", attributes[:billing_country]
+  end
+
+  test "order_address_attributes leaves billing columns nil when the session has no billing" do
+    session = build_stripe_session(billing_address: nil)
+
+    attributes = Checkout::SessionDetails.order_address_attributes(session)
+
+    assert_equal "Test Customer", attributes[:shipping_name]
+    assert_nil attributes[:billing_name]
+    assert_nil attributes[:billing_address_line1]
+  end
+
   # --- promotion_code ---
 
   test "promotion_code returns the code from the discount breakdown" do
