@@ -188,4 +188,20 @@ class LegacyRedirectsTest < ActionDispatch::IntegrationTest
     get "/product-page/12oz-340ml-double-wall-ripple-paper-hot-cup?utm_source=google"
     assert_redirected_to "/products/ripple-wall-coffee-cups-12oz-340ml-kraft-paper?utm_source=google"
   end
+
+  # /vegware split the brand-term rankings with /collections/vegware (the page
+  # sat ~9 positions behind the collection); one URL now accumulates all the
+  # vegware/stockist signals.
+  test "vegware landing page 301s to the vegware collection" do
+    get "/vegware"
+
+    assert_equal 301, response.status
+    assert_redirected_to "/collections/vegware"
+  end
+
+  test "preserves query parameters on the vegware redirect" do
+    get "/vegware?utm_source=google"
+
+    assert_redirected_to "/collections/vegware?utm_source=google"
+  end
 end

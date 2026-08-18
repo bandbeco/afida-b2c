@@ -90,7 +90,10 @@ Rails.application.routes.draw do
       post :request_pack
     end
   end
-  get "vegware", to: "pages#vegware"
+  # /vegware split brand-term rankings with /collections/vegware (the page sat
+  # ~9 positions behind the collection); one URL now accumulates all the
+  # vegware/stockist signals.
+  get "vegware", to: redirect(status: 301) { |_params, req| "/collections/vegware#{req.query_string.present? ? "?#{req.query_string}" : ""}" }
   get "about", to: "pages#about"
   get "contact", to: "pages#contact"
   get "terms-conditions", to: "pages#terms_conditions"

@@ -10,10 +10,10 @@ class VegwareStockistBannerTest < ActionDispatch::IntegrationTest
     assert_select "[data-testid='vegware-stockist-banner']", text: /Official Stockist/
   end
 
-  test "vegware stockist banner links to vegware page" do
+  test "vegware stockist banner links to the vegware collection" do
     get root_url
     assert_response :success
-    assert_select "[data-testid='vegware-stockist-banner'] a[href=?]", "/vegware"
+    assert_select "[data-testid='vegware-stockist-banner'] a[href=?]", "/collections/vegware"
   end
 
   test "vegware stockist banner has a dismiss button" do
