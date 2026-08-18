@@ -348,8 +348,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   # --- PATCH /checkout (live shipping reprice from the on-site page) ---
 
+  # The client_secret is the tab's proof that it is the stashed session (the
+  # superseded-tab tests below send a different one, or none).
   def reprice_params(postcode)
-    { postcode: postcode }
+    { postcode: postcode, client_secret: "cs_test_secret_abc" }
   end
 
   def stub_reprice_stripe_calls
@@ -491,6 +493,36 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :conflict
     assert_nil session[:onsite_checkout]
+  end
+
+  # Two checkout tabs share one Rails session, and every POST /checkout
+  # re-stashes: the stash then names the NEWER tab's Stripe session, while the
+  # older tab still holds (and could pay) its own. Its reprices must be
+  # refused, not applied to a session its page isn't showing - and the stash
+  # must survive, because it belongs to the newer tab, which is healthy.
+  test "update from a tab whose session was superseded conflicts and keeps the stash" do
+    stash_onsite_session
+    Stripe::Checkout::Session.expects(:list_line_items).never
+    Stripe::Checkout::Session.expects(:update).never
+
+    patch checkout_path,
+          params: { postcode: "IV1 1AA", client_secret: "cs_test_secret_superseded" }, as: :json
+
+    assert_response :conflict
+    assert_equal "sess_custom_123", session[:onsite_checkout]["session_id"]
+    assert_equal "WD18 9SB", session[:delivery_postcode]
+    assert_equal "mainland", session[:onsite_checkout]["zone"]
+  end
+
+  test "update without the tab's client secret conflicts and keeps the stash" do
+    stash_onsite_session
+    Stripe::Checkout::Session.expects(:list_line_items).never
+    Stripe::Checkout::Session.expects(:update).never
+
+    patch checkout_path, params: { postcode: "IV1 1AA" }, as: :json
+
+    assert_response :conflict
+    assert_equal "sess_custom_123", session[:onsite_checkout]["session_id"]
   end
 
   test "update conflicts when Stripe reports the session no longer updatable" do

@@ -203,6 +203,20 @@ class CheckoutsController < ApplicationController
       return render json: { error: "This checkout has expired." }, status: :gone
     end
 
+    # The stash names the only Stripe session this endpoint may update, but it
+    # is shared by every checkout tab in the browser, and each POST /checkout
+    # rewrites it: an OLDER tab's reprice would otherwise update the NEWER
+    # tab's session while its own page keeps displaying (and could pay) the
+    # session it actually holds. The tab proves it is the stashed one with its
+    # client_secret; a mismatch refuses the write and KEEPS the stash, which
+    # belongs to the newer, healthy tab. (live-observed 2026-08-18)
+    unless ActiveSupport::SecurityUtils.secure_compare(
+      params[:client_secret].to_s, stash["client_secret"].to_s
+    )
+      return render json: { error: "This checkout was reopened in another tab or window. Please return to your basket." },
+                    status: :conflict
+    end
+
     # The stash must still describe the cart as it stands, checked with the
     # DESTINATION THE SESSION WAS LAST PRICED FOR (resolved exactly as #show
     # does). Skipping this and recomputing the fingerprint from the changed

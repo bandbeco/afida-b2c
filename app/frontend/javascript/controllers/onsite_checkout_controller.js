@@ -199,7 +199,12 @@ export default class extends Controller {
             "Accept": "application/json",
             "X-CSRF-Token": document.querySelector("[name='csrf-token']")?.content
           },
-          body: JSON.stringify({ postcode })
+          // The client_secret proves THIS tab holds the stashed session: a
+          // newer checkout tab in the same browser re-stashes on create, and
+          // without the proof this older tab's reprice would update the newer
+          // tab's session while this page keeps showing its own. The server
+          // answers 409 and this tab retires to the cart.
+          body: JSON.stringify({ postcode, client_secret: this.clientSecretValue })
         })
 
         if (resp.ok) {
