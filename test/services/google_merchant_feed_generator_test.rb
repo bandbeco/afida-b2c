@@ -181,6 +181,77 @@ class GoogleMerchantFeedGeneratorTest < ActiveSupport::TestCase
     end
   end
 
+  # The map's values are pinned against Google's official en-GB taxonomy file
+  # (taxonomy-with-ids.en-GB.txt). The previous ids were silently WRONG for the
+  # entire feed: 4003 (used for napkins) is "Martial Arts Uniforms", 4005 (all
+  # food containers) is "Kitchen Tongs", 4002 (plates) is "Squash Rackets",
+  # 2228 (gloves) does not exist at all. Any future edit must come with the
+  # id's real taxonomy path looked up in that file, not pattern-matched from
+  # neighbouring entries.
+  test "GOOGLE_TAXONOMY_MAP carries the verified en-GB taxonomy ids" do
+    expected = {
+      # Cups & Accessories
+      "hot-cups" => "5099",              # Food Service > Disposable Tableware > Disposable Cups
+      "cold-cups-and-lids" => "5099",
+      "ice-cream-cups" => "5099",
+      "cups-and-accessories" => "5099",
+      "hot-cup-lids" => "8059",          # Food Service > Disposable Lids
+      "cup-accessories" => "7088",       # Food Service > Disposable Serving Accessories
+      "straws" => "5043",                # Party Supplies > Drinking Straws & Stirrers
+      "branded-products" => "5099",      # custom-printed cups
+      # Food Containers
+      "food-containers" => "5097",       # Food Service > Takeaway Containers
+      "food-containers-and-lids" => "5097",
+      "takeaway-boxes" => "5097",
+      "soup-containers" => "5097",
+      "pizza-boxes" => "5097",
+      "bagasse-containers" => "5097",
+      "aluminium-containers" => "5097",
+      "portion-pots-and-lids" => "5097",
+      "bowls-and-lids" => "5098",        # Food Service > Disposable Tableware > Disposable Bowls
+      # Cold Food & Salads
+      "cold-food-and-salads" => "5097",
+      "salad-boxes" => "5097",
+      "deli-containers" => "5097",
+      "sandwich-and-wrap-boxes" => "5097",
+      # Tableware
+      "tableware" => "4632",             # Food Service > Disposable Tableware
+      "plates-and-bowls" => "5101",      # Food Service > Disposable Tableware > Disposable Plates
+      "cutlery" => "5100",               # Food Service > Disposable Tableware > Disposable Cutlery
+      "napkins" => "3846",               # Household Paper Products > Paper Serviettes
+      # Bags & Wraps
+      "bags" => "1837",                  # Retail > Paper & Plastic Shopping Bags
+      "bags-and-wraps" => "1837",
+      "natureflex-bags" => "3591",       # Food Storage > Food Storage Bags
+      "greaseproof-and-wraps" => "5642", # Food Wraps > Parchment Paper
+      # Supplies & Essentials
+      "bin-liners" => "2374",            # Household Supplies > Rubbish Bags
+      "gloves-and-cleaning" => "623",    # Household Cleaning Supplies
+      "labels-and-stickers" => "960",    # Office Supplies > Labels & Tags
+      "till-rolls" => "5919",            # Receipt & Adding Machine Paper Rolls
+      "supplies-and-essentials" => "623"
+    }
+
+    assert_equal expected, GoogleMerchantFeedGenerator::GOOGLE_TAXONOMY_MAP
+  end
+
+  # branded-products is a top-level category (no parent to fall back to); its
+  # products shipped with NO google_product_category until it was mapped.
+  test "a branded-products item carries a google_product_category" do
+    product = Product.create!(
+      name: "Branded Cup", sku: "TEST-BRANDED-CUP", price: 50, pac_size: 1000,
+      active: true, category: categories(:branded)
+    )
+    attach_product_photo(product)
+
+    generator = GoogleMerchantFeedGenerator.new(Product.where(id: product.id))
+    xml = Nokogiri::XML(generator.generate_xml)
+
+    google_category = xml.at_xpath("//item/g:google_product_category", "g" => "http://base.google.com/ns/1.0")
+    assert_not_nil google_category, "branded products must not ship uncategorised"
+    assert_equal "5099", google_category.text
+  end
+
   test "optimized description has first 160 chars with key info" do
     product = products(:one)
     attach_product_photo(product)

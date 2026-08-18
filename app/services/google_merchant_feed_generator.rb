@@ -1,44 +1,57 @@
 class GoogleMerchantFeedGenerator
-  # Google Product Taxonomy IDs mapped to category slugs
+  # Google Product Taxonomy IDs mapped to category slugs.
   # Full taxonomy: https://www.google.com/basepages/producttype/taxonomy-with-ids.en-GB.txt
+  #
+  # Every id below is looked up in that file, and the test suite pins the whole
+  # map. The previous ids were plausible-looking but WRONG across the entire
+  # feed (4003 "napkins" was Martial Arts Uniforms, 4005 "food containers" was
+  # Kitchen Tongs, 2228 did not exist), so never add an entry without quoting
+  # the id's real taxonomy path from the file.
+  #
+  # Products resolve via their own category slug first, then the parent's
+  # (google_product_category_for), so parent entries double as fallbacks for
+  # any future child category.
   GOOGLE_TAXONOMY_MAP = {
     # Cups & Accessories
-    "hot-cups" => "2951",          # Food Service > Cups (Disposable)
-    "cold-cups-and-lids" => "2951", # Food Service > Cups (Disposable)
-    "cup-lids" => "2951",          # Food Service > Cups (Disposable)
-    "cup-accessories" => "2951",   # Food Service > Cups (Disposable)
-    "ice-cream-cups" => "2951",    # Food Service > Cups (Disposable)
-    "straws" => "4216",            # Food Service > Straws
-    "cups-and-accessories" => "2951", # Food Service > Cups (Disposable)
+    "hot-cups" => "5099",              # Business & Industrial > Food Service > Disposable Tableware > Disposable Cups
+    "cold-cups-and-lids" => "5099",    # Disposable Cups
+    "ice-cream-cups" => "5099",        # Disposable Cups
+    "cups-and-accessories" => "5099",  # Disposable Cups (parent)
+    "hot-cup-lids" => "8059",          # Business & Industrial > Food Service > Disposable Lids
+    "cup-accessories" => "7088",       # Business & Industrial > Food Service > Disposable Serving Accessories
+    "straws" => "5043",                # Arts & Entertainment > Party & Celebration > Party Supplies > Drinking Straws & Stirrers
+    "branded-products" => "5099",      # custom-printed cups -> Disposable Cups
     # Food Containers
-    "food-containers-and-lids" => "4005", # Food Service > Food Containers (Disposable)
-    "takeaway-boxes" => "4005",    # Food Service > Food Containers (Disposable)
-    "soup-containers" => "4005",   # Food Service > Food Containers (Disposable)
-    "pizza-boxes" => "4005",       # Food Service > Food Containers (Disposable)
-    "bagasse-containers" => "4005", # Food Service > Food Containers (Disposable)
-    "food-containers" => "4005",   # Food Service > Food Containers (Disposable) — top-level parent
+    "food-containers" => "5097",       # Business & Industrial > Food Service > Takeaway Containers (parent)
+    "food-containers-and-lids" => "5097", # Takeaway Containers
+    "takeaway-boxes" => "5097",        # Takeaway Containers
+    "soup-containers" => "5097",       # Takeaway Containers
+    "pizza-boxes" => "5097",           # Takeaway Containers
+    "bagasse-containers" => "5097",    # Takeaway Containers
+    "aluminium-containers" => "5097",  # Takeaway Containers
+    "portion-pots-and-lids" => "5097", # Takeaway Containers
+    "bowls-and-lids" => "5098",        # Business & Industrial > Food Service > Disposable Tableware > Disposable Bowls
     # Cold Food & Salads
-    "salad-boxes" => "4005",       # Food Service > Food Containers (Disposable)
-    "deli-containers" => "4005",   # Food Service > Food Containers (Disposable)
-    "sandwich-and-wrap-boxes" => "4005", # Food Service > Food Containers (Disposable)
-    "cold-food-and-salads" => "4005",    # Food Service > Food Containers (Disposable)
+    "cold-food-and-salads" => "5097",  # Takeaway Containers (parent)
+    "salad-boxes" => "5097",           # Takeaway Containers
+    "deli-containers" => "5097",       # Takeaway Containers
+    "sandwich-and-wrap-boxes" => "5097", # Takeaway Containers
     # Tableware
-    "cutlery" => "4004",           # Food Service > Cutlery (Disposable)
-    "napkins" => "4003",           # Food Service > Napkins (Disposable)
-    "plates-and-bowls" => "4002",  # Food Service > Plates (Disposable)
-    "aluminium-containers" => "4005", # Food Service > Food Containers (Disposable)
-    "tableware" => "4002",         # Food Service > Plates (Disposable)
+    "tableware" => "4632",             # Business & Industrial > Food Service > Disposable Tableware (parent)
+    "plates-and-bowls" => "5101",      # Disposable Tableware > Disposable Plates
+    "cutlery" => "5100",               # Disposable Tableware > Disposable Cutlery
+    "napkins" => "3846",               # Home & Garden > Household Supplies > Household Paper Products > Paper Serviettes
     # Bags & Wraps
-    "bags" => "4279",              # Food Service > Bags (Disposable)
-    "natureflex-bags" => "4279",   # Food Service > Bags (Disposable)
-    "greaseproof-and-wraps" => "4279", # Food Service > Bags (Disposable)
-    "bags-and-wraps" => "4279",    # Food Service > Bags (Disposable)
+    "bags" => "1837",                  # Business & Industrial > Retail > Paper & Plastic Shopping Bags
+    "bags-and-wraps" => "1837",        # Paper & Plastic Shopping Bags (parent)
+    "natureflex-bags" => "3591",       # Home & Garden > Kitchen & Dining > Food Storage > Food Storage Bags
+    "greaseproof-and-wraps" => "5642", # Home & Garden > Kitchen & Dining > Food Storage > Food Wraps > Parchment Paper
     # Supplies & Essentials
-    "bin-liners" => "623",         # Bin Liners
-    "gloves-and-cleaning" => "2228", # Cleaning Supplies
-    "labels-and-stickers" => "956", # Labels
-    "till-rolls" => "959",         # Receipt Paper
-    "supplies-and-essentials" => "623"
+    "bin-liners" => "2374",            # Home & Garden > Household Supplies > Rubbish Bags
+    "gloves-and-cleaning" => "623",    # Home & Garden > Household Supplies > Household Cleaning Supplies
+    "labels-and-stickers" => "960",    # Office Supplies > General Office Supplies > Labels & Tags
+    "till-rolls" => "5919",            # Office Supplies > ... > Receipt & Adding Machine Paper Rolls
+    "supplies-and-essentials" => "623" # Household Cleaning Supplies (parent catch-all)
   }.freeze
 
   def initialize(products = Product.includes(:category, :product_family).with_attached_product_photo.active)
