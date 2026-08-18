@@ -48,9 +48,8 @@
         <h2 class="text-lg mb-2">Delivery address</h2>
         <div data-onsite-checkout-target="address"></div>
         <p class="text-sm text-error mt-2 hidden" data-onsite-checkout-target="zoneWarning">
-          This postcode is in a different delivery zone than your order was priced for.
-          <%= link_to "Return to your basket", cart_path, class: "link" %> to update your
-          delivery postcode and reprice.
+          We couldn't confirm delivery pricing for this postcode. Please re-enter
+          your delivery address, or <%= link_to "return to your basket", cart_path, class: "link" %>.
         </p>
       </section>
 

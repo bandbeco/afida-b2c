@@ -94,15 +94,11 @@ class CartsController < ApplicationController
       session[:delivery_postcode].presence || default_address_postcode
   end
 
-  # Why we refused the postcode, in the customer's terms. :undeliverable means a
-  # valid postcode somewhere we don't ship (the Crown Dependencies), so saying we
-  # didn't recognise it would be untrue and would invite a pointless retry.
+  # Why we refused the postcode, in the customer's terms. The copy lives on
+  # ShippingZone so the checkout page's live reprice explains a refusal in
+  # exactly the same words.
   def delivery_postcode_error(zone)
-    if zone == :undeliverable
-      "Sorry, we don't deliver to the Channel Islands or the Isle of Man."
-    else
-      "We didn't recognise that postcode. Please check it and try again."
-    end
+    ShippingZone.refusal_message(zone)
   end
 
   def eager_load_cart

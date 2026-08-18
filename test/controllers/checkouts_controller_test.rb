@@ -86,9 +86,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "mainland", stash["zone"]
     assert stash["fingerprint"].present?
     assert_kind_of Integer, stash["created_at"]
-    # The stash is cookie payload on every request: only members #show actually
-    # reads belong in it.
-    assert_nil stash["session_id"]
+    # The session id is the reprice endpoint's authority for WHICH Stripe
+    # session may be updated - the client never sends one. Beyond that the
+    # stash is cookie payload on every request, so nothing else rides along.
+    assert_equal "sess_custom_123", stash["session_id"]
     assert_nil stash["postcode"]
   end
 
@@ -102,19 +103,19 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
-  test "create with flag on still refuses an unknown destination" do
+  test "create with flag on and no destination proceeds priced as mainland" do
     enable_onsite_checkout
-    # No typed postcode and no saved address to fall back to (an undeliverable
-    # typed postcode is deleted by the cart action, so the fallback chain is
-    # what actually decides; same setup as the hosted guard tests).
+    # No typed postcode and no saved address to fall back to. The page reprices
+    # from the address the customer types, so an unknown destination is a
+    # mainland seed, not a refusal (see the guard tests below).
     @user.addresses.destroy_all
     set_delivery_postcode("")
-    Stripe::Checkout::Session.expects(:create).never
+    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
 
     post checkout_path
 
-    assert_redirected_to cart_path
-    assert_nil session[:onsite_checkout]
+    assert_redirected_to checkout_path
+    assert_equal "mainland", session[:onsite_checkout]["zone"]
   end
 
   test "create with flag off never stashes" do
@@ -297,6 +298,183 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
+  # --- PATCH /checkout (live shipping reprice from the on-site page) ---
+
+  # The address details the Stimulus controller posts alongside the postcode.
+  def reprice_params(postcode)
+    { postcode: postcode, name: "Jane Tester", line1: "1 High St", city: "Testtown", country: "GB" }
+  end
+
+  def stub_reprice_stripe_calls
+    Stripe::Checkout::Session.stubs(:list_line_items)
+      .returns(stub(auto_paging_each: [ stripe_product_line_item(amount_subtotal: 2000, id: "li_prod") ].each))
+    @update_capture = {}
+    capture = @update_capture
+    Stripe::Checkout::Session.stubs(:update).with do |id, params|
+      capture[:id] = id
+      capture[:params] = params
+      true
+    end.returns(build_custom_stripe_session)
+  end
+
+  test "update reprices the stashed session for the typed postcode" do
+    stash_onsite_session
+    stub_reprice_stripe_calls
+
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal "highlands", body["zone"]
+    assert_equal "£25.00", body["shipping_amount"]
+
+    # The stash names the only session this endpoint may ever touch.
+    assert_equal "sess_custom_123", @update_capture[:id]
+    assert_equal "Jane Tester", @update_capture[:params][:collected_information][:shipping_details][:name]
+
+    # Coherence writes: the typed postcode becomes the session postcode (so the
+    # cart and GET /checkout resolve the same destination) and the stash's zone
+    # and fingerprint move with it.
+    assert_equal "IV1 1AA", session[:delivery_postcode]
+    stash = session[:onsite_checkout]
+    assert_equal "highlands", stash["zone"]
+    assert_equal Checkout::CartFingerprint.digest(cart: @cart, postcode: "IV1 1AA", discount_code: nil),
+                 stash["fingerprint"]
+  end
+
+  test "the checkout page still renders after a reprice instead of false-bouncing" do
+    stash_onsite_session
+    stub_reprice_stripe_calls
+
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+    get checkout_path
+
+    assert_response :success
+    assert_select "[data-onsite-checkout-priced-zone-value='highlands']"
+  end
+
+  test "update with an unchanged zone records the address without rebuilding line items" do
+    stash_onsite_session
+    Stripe::Checkout::Session.expects(:list_line_items).never
+    @update_capture = {}
+    capture = @update_capture
+    Stripe::Checkout::Session.stubs(:update).with do |id, params|
+      capture[:id] = id
+      capture[:params] = params
+      true
+    end.returns(build_custom_stripe_session)
+
+    patch checkout_path, params: reprice_params("SW1A 1AA"), as: :json
+
+    assert_response :success
+    refute @update_capture[:params].key?(:line_items)
+    assert_equal "£6.99", response.parsed_body["shipping_amount"]
+  end
+
+  test "update reports free shipping for a qualifying order" do
+    @cart.cart_items.create!(product: products(:two), quantity: 1, price: 150.00)
+    stash_onsite_session
+    stub_reprice_stripe_calls
+
+    patch checkout_path, params: reprice_params("SW1A 1AA"), as: :json
+
+    assert_response :success
+    assert_equal "Free", response.parsed_body["shipping_amount"]
+  end
+
+  test "update refuses an undeliverable postcode and changes nothing" do
+    stash_onsite_session
+    Stripe::Checkout::Session.expects(:update).never
+
+    patch checkout_path, params: reprice_params("JE2 3AB"), as: :json
+
+    assert_response :unprocessable_entity
+    assert_match "don't deliver", response.parsed_body["error"]
+    assert_equal "WD18 9SB", session[:delivery_postcode]
+    assert_equal "mainland", session[:onsite_checkout]["zone"]
+  end
+
+  test "update refuses an unparseable postcode with retry copy" do
+    stash_onsite_session
+    Stripe::Checkout::Session.expects(:update).never
+
+    patch checkout_path, params: reprice_params("NOT A POSTCODE"), as: :json
+
+    assert_response :unprocessable_entity
+    assert_match "didn't recognise", response.parsed_body["error"]
+  end
+
+  test "update without a stash is gone" do
+    enable_onsite_checkout
+
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+    assert_response :gone
+  end
+
+  test "update with the flag off is gone" do
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+    assert_response :gone
+  end
+
+  test "update on an expired stash is gone and discards it" do
+    stash_onsite_session
+
+    travel 24.hours do
+      patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+      assert_response :gone
+    end
+
+    assert_nil session[:onsite_checkout]
+  end
+
+  # Without this pre-check a reprice would recompute the fingerprint from the
+  # CHANGED cart and overwrite the stash, masking exactly the staleness GET
+  # /checkout's bounce exists to catch: the customer would pay the old total
+  # for a basket the page no longer shows.
+  test "update on a cart that changed since create conflicts and discards the stash" do
+    stash_onsite_session
+    @cart.cart_items.create!(product: products(:two), quantity: 1, price: 5.00)
+    Stripe::Checkout::Session.expects(:update).never
+
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+    assert_response :conflict
+    assert_nil session[:onsite_checkout]
+  end
+
+  test "update conflicts when Stripe reports the session no longer updatable" do
+    stash_onsite_session
+    Stripe::Checkout::Session.stubs(:list_line_items)
+      .returns(stub(auto_paging_each: [ stripe_product_line_item(amount_subtotal: 2000, id: "li_prod") ].each))
+    Stripe::Checkout::Session.stubs(:update)
+      .raises(Stripe::InvalidRequestError.new("This Checkout Session is no longer open", nil, http_status: 400))
+
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+    assert_response :conflict
+    # Nothing was written: the priced zone stays what the customer will be
+    # charged, and the page's zone guard keeps Pay blocked on a mismatch.
+    assert_equal "WD18 9SB", session[:delivery_postcode]
+    assert_equal "mainland", session[:onsite_checkout]["zone"]
+  end
+
+  test "update surfaces other Stripe failures as retryable without writing state" do
+    stash_onsite_session
+    Stripe::Checkout::Session.stubs(:list_line_items)
+      .returns(stub(auto_paging_each: [ stripe_product_line_item(amount_subtotal: 2000, id: "li_prod") ].each))
+    Stripe::Checkout::Session.stubs(:update)
+      .raises(Stripe::APIConnectionError.new("connection failed"))
+
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+
+    assert_response :unprocessable_entity
+    assert_match "try again", response.parsed_body["error"]
+    assert_equal "mainland", session[:onsite_checkout]["zone"]
+  end
+
   test "show renders the server discount row with the re-render target" do
     enable_onsite_checkout
     stub_welcome_promotion_code
@@ -347,27 +525,31 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{https://checkout\.stripe\.com/test/sess_}, response.redirect_url
   end
 
-  # --- delivery destination is required ---
-  # Shipping is priced into the line items before Stripe collects the address, so
-  # checkout must know the destination first. Without this a customer could skip
-  # the cart-page field and be charged mainland rates to a surcharged zone.
+  # --- delivery destination guard ---
+  # An UNKNOWN destination no longer blocks checkout: SessionBuilder prices it
+  # mainland and the on-site page reprices from the address the customer
+  # actually types (hosted fallback accepts the mainland-default gap, a
+  # deliberate trade for not stranding customers who never met a postcode
+  # field). A destination we KNOW we cannot serve is still refused: no reprice
+  # can ever fix an order whose only address is the Isle of Man.
 
-  test "create refuses checkout when no delivery postcode has been given" do
-    # The cart owner must have no saved address either, or their default one
-    # would supply the destination (which is exactly what the cart prices from).
+  test "create without any destination proceeds priced as mainland" do
     @user.addresses.destroy_all
     set_delivery_postcode("")
-    Stripe::Checkout::Session.expects(:create).never
+
+    captured_params = nil
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      captured_params = params
+      true
+    end.returns(build_stripe_session)
 
     post checkout_path
 
-    assert_redirected_to cart_path
-    assert flash[:alert].present?, "expected the customer to be told why checkout stopped"
+    assert_response :see_other
+    assert_equal "mainland", captured_params[:metadata][:shipping_zone]
   end
 
-  test "create refuses checkout when a selected address has an unusable postcode" do
-    # A saved address is trusted over the typed field, so it must be checked too:
-    # a non-UK or malformed saved postcode can't be priced.
+  test "create with an unparseable saved postcode proceeds priced as mainland" do
     set_delivery_postcode("")
     sign_in_as(@user)
     address = @user.addresses.create!(
@@ -378,11 +560,33 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
       postcode: "00000",
       country: "FR"
     )
-    Stripe::Checkout::Session.expects(:create).never
+    @user.update!(stripe_customer_id: "cus_zone_guard")
+    User.any_instance.stubs(:sync_stripe_customer!)
+    stub_stripe_session_create
 
     post checkout_path, params: { address_id: address.id }
 
+    assert_response :see_other
+  end
+
+  test "create still refuses a destination we know we cannot serve" do
+    set_delivery_postcode("")
+    sign_in_as(@user)
+    @user.addresses.create!(
+      nickname: "Jersey #{SecureRandom.hex(4)}",
+      recipient_name: "Jane",
+      line1: "1 St",
+      city: "St Helier",
+      postcode: "JE2 3AB",
+      country: "GB",
+      default: true
+    )
+    Stripe::Checkout::Session.expects(:create).never
+
+    post checkout_path
+
     assert_redirected_to cart_path
+    assert flash[:alert].present?, "expected the customer to be told why checkout stopped"
   end
 
   test "a selected saved address satisfies the requirement without a typed postcode" do

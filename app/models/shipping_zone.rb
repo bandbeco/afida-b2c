@@ -243,6 +243,21 @@ class ShippingZone
       FREE_SHIPPING_ZONES.include?(zone)
     end
 
+    # Why we refused a postcode, in the customer's terms. The two refusal
+    # reasons get different messages because they are different problems: a
+    # typo is worth retrying, whereas JE2 3AB is a perfectly valid postcode we
+    # simply do not deliver to, and telling that customer we didn't recognise
+    # it would send them round a loop that cannot succeed. Shared by the cart's
+    # postcode field and the checkout page's live reprice so the two surfaces
+    # can never explain the same refusal differently.
+    def refusal_message(zone)
+      if zone == :undeliverable
+        "Sorry, we don't deliver to the Channel Islands or the Isle of Man."
+      else
+        "We didn't recognise that postcode. Please check it and try again."
+      end
+    end
+
     private
 
     # An outward code on its own, e.g. "IV51" or "BT1". The zone lookup needs

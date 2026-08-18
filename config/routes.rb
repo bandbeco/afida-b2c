@@ -159,7 +159,7 @@ Rails.application.routes.draw do
 
   resources :email_subscriptions, only: [ :create ]
 
-  resource :checkout, only: [ :show, :create ] do
+  resource :checkout, only: [ :show, :create, :update ] do
     get :success, on: :collection
     get :cancel, on: :collection
   end

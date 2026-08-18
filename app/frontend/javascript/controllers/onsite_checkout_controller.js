@@ -3,16 +3,22 @@ import { Controller } from "@hotwired/stimulus"
 // On-site checkout: binds the page to a Stripe Checkout Session (ui_mode:
 // "custom") created server-side. Stripe's SDK owns the money math; this
 // controller mounts the secure elements, mirrors session totals into the
-// summary, applies/removes promo codes, guards the shipping zone, and
-// confirms. API per https://docs.stripe.com/js/custom_checkout.
+// summary, reprices shipping from the typed delivery address, applies/removes
+// promo codes, and confirms. API per https://docs.stripe.com/js/custom_checkout.
 //
-// Money lines: only total, VAT, and discount re-render from the SDK. The goods
-// subtotal and shipping lines stay server-rendered on purpose - shipping rides
-// as a Stripe LINE ITEM (see Checkout::SessionBuilder), so the SDK's
-// session.total.subtotal INCLUDES shipping and would mislabel our goods-only
-// "Subtotal" row. Neither can change on-page in v1 (no cart editing, no
-// shipping choice); only a promo code moves money, and that moves exactly
-// discount, VAT, and total.
+// Money lines: total, VAT, and discount re-render from the SDK; shipping
+// re-renders from the reprice response (shipping rides as a Stripe LINE ITEM,
+// see Checkout::SessionBuilder, so the SDK cannot report it separately - and
+// session.total.subtotal INCLUDES it, which is why the goods-only "Subtotal"
+// row stays server-rendered and never moves; there is no on-page cart editing).
+//
+// Shipping reprice: the session is created with
+// permissions.update_shipping_details=server_only, so Stripe hands every
+// completed shipping-details form to onShippingDetailsChange and this
+// controller PATCHes /checkout - the ONLY path by which the typed address and
+// its shipping price reach the session. Accepting resolves the callback and
+// the SDK refreshes totals in place; rejecting surfaces the message on the
+// address element and canConfirm stays false.
 export default class extends Controller {
   static targets = [
     "email", "address", "billingAddress", "payment", "payButton", "error",
@@ -42,7 +48,11 @@ export default class extends Controller {
         // most shoppers never type their address twice. Documented as the
         // default when both address elements share one Elements instance, but
         // the clover SDK does not apply it unless set explicitly.
-        elementsOptions: { syncAddressCheckbox: "billing" }
+        elementsOptions: { syncAddressCheckbox: "billing" },
+        // Required under permissions.update_shipping_details=server_only:
+        // Stripe calls this with every completed shipping-details form instead
+        // of syncing the address itself.
+        onShippingDetailsChange: (event) => this.shippingDetailsChanged(event)
       })
       // loadActions resolves to a {type, actions} result wrapper; the
       // callable actions (updateEmail, confirm, ...) live one level down.
@@ -133,10 +143,77 @@ export default class extends Controller {
   }
 
   syncPayButton() {
-    this.payButtonTarget.disabled = !this.zoneOk || this.session?.canConfirm === false
+    this.payButtonTarget.disabled =
+      this.repricing || !this.zoneOk || this.session?.canConfirm === false
   }
 
-  // --- zone guard (best-effort; any failure fails open) ---
+  // --- shipping reprice (the server is the only writer of shipping details) ---
+
+  // Resolves Stripe's onShippingDetailsChange callback. Fail-CLOSED on money:
+  // only a 200 (the server repriced the session) accepts; every other outcome
+  // rejects, which keeps Stripe from recording the address and canConfirm from
+  // turning true, so a failed reprice can never be paid at the old price.
+  async shippingDetailsChanged(event) {
+    const details = event?.shippingDetails || {}
+    const address = details.address || {}
+
+    this.repricing = true
+    this.syncPayButton()
+    try {
+      const response = await fetch("/checkout", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-CSRF-Token": document.querySelector("[name='csrf-token']")?.content
+        },
+        body: JSON.stringify({
+          postcode: address.postal_code,
+          name: details.name,
+          line1: address.line1,
+          line2: address.line2,
+          city: address.city,
+          country: address.country
+        })
+      })
+
+      if (response.ok) {
+        const { zone, shipping_amount } = await response.json()
+        this.pricedZoneValue = zone
+        this.updateMoneyLine("shipping", shipping_amount)
+        this.zoneOk = true
+        this.zoneWarningTarget.classList.add("hidden")
+        return { type: "accept" }
+      }
+
+      // The stash is gone or stale (basket changed, checkout expired): this
+      // page can no longer complete, so the cart is the only working restart.
+      if (response.status === 409 || response.status === 410) {
+        window.location.assign("/cart")
+        return { type: "reject", errorMessage: "This checkout is no longer active." }
+      }
+
+      const body = await response.json().catch(() => ({}))
+      return {
+        type: "reject",
+        errorMessage: body.error || "We couldn't update delivery for that address. Please try again."
+      }
+    } catch (error) {
+      console.error("[onsite-checkout] reprice failed:", error)
+      return {
+        type: "reject",
+        errorMessage: "We couldn't update delivery. Please check your connection and try again."
+      }
+    } finally {
+      this.repricing = false
+      this.syncPayButton()
+    }
+  }
+
+  // --- zone guard (fail-safe layer behind the reprice; failures fail open) ---
+  // The reprice is the pricing authority; this guard only catches a session
+  // whose priced zone somehow drifted from the typed postcode anyway (a missed
+  // callback, a reprice the server refused after the address already synced).
 
   guardZone(session) {
     const postcode = session?.shippingAddress?.address?.postal_code

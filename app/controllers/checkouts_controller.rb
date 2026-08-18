@@ -2,6 +2,9 @@ class CheckoutsController < ApplicationController
   allow_unauthenticated_access
   before_action :resume_session
   rate_limit to: 10, within: 1.minute, only: :create, with: -> { redirect_to cart_path, alert: "Too many checkout attempts. Please wait before trying again." }
+  # Looser than :create - a reprice fires once per completed address, but one
+  # customer correcting typos can legitimately produce a burst.
+  rate_limit to: 30, within: 1.minute, only: :update, with: -> { render json: { error: "Too many attempts. Please wait a moment." }, status: :too_many_requests }
 
   def create
     cart = Current.cart
@@ -13,13 +16,15 @@ class CheckoutsController < ApplicationController
       return redirect_to cart_path, alert: "Your cart is empty."
     end
 
-    # Refuse to build a session without a destination we can price. Shipping is
-    # baked into the line items here, one screen before Stripe collects the
-    # address, so an unknown destination would be charged mainland rates however
-    # far the parcel is actually going.
-    unless deliverable_destination?(params[:address_id])
+    # An UNKNOWN destination is allowed through: SessionBuilder prices it
+    # mainland and the on-site page reprices from the address the customer
+    # actually types (the hosted fallback accepts the mainland-default gap
+    # rather than stranding customers who never met a postcode field). A
+    # destination we KNOW we cannot serve is still refused - no reprice can fix
+    # an order whose only address is somewhere we don't ship.
+    if refused_destination?(params[:address_id])
       return redirect_to cart_path,
-                         alert: "Please enter your delivery postcode so we can calculate delivery."
+                         alert: ShippingZone.refusal_message(:undeliverable)
     end
 
     # Kept outside the begin block so the rescue path can inspect builder state
@@ -95,6 +100,9 @@ class CheckoutsController < ApplicationController
         # an invalid welcome code would false-bounce every render.
         session[:onsite_checkout] = {
           "client_secret" => result.session.client_secret,
+          # The reprice endpoint updates whichever session this names and no
+          # other: the client never sends a session id.
+          "session_id" => result.session.id,
           "fingerprint" => Checkout::CartFingerprint.digest(
             cart: cart, postcode: resolved_postcode, discount_code: session[:discount_code]
           ),
@@ -164,6 +172,88 @@ class CheckoutsController < ApplicationController
     @prefill_address = Current.user&.addresses&.find_by(id: session[:selected_address_id]) ||
                        Current.user&.addresses&.default_first&.first
     @customer_email = Current.user&.email_address
+  end
+
+  # Live shipping reprice for the on-site page: the customer completed (or
+  # changed) their delivery address in the Stripe element, and under
+  # permissions.update_shipping_details=server_only this endpoint is the ONLY
+  # way that address - and the shipping price it implies - reaches the Stripe
+  # session. JSON in, JSON out; the Stimulus controller resolves Stripe's
+  # shipping-details callback from the response.
+  #
+  # Failure stance is fail-CLOSED on money: any refusal or error writes
+  # nothing, so the stash keeps the zone the session actually charges and the
+  # page's zone guard keeps Pay blocked on a mismatch. We can never fail open
+  # into undercharging.
+  def update
+    stash = session[:onsite_checkout]
+    cart = Current.cart
+
+    unless OnsiteCheckout.enabled?(session) && stash.present? && stash["session_id"].present? &&
+           cart.present? && cart.cart_items.any?
+      return render json: { error: "This checkout is no longer active." }, status: :gone
+    end
+
+    if stash["created_at"].to_i < ONSITE_STASH_TTL.ago.to_i
+      session.delete(:onsite_checkout)
+      return render json: { error: "This checkout has expired." }, status: :gone
+    end
+
+    # The stash must still describe the cart as it stands, checked with the
+    # DESTINATION THE SESSION WAS LAST PRICED FOR (resolved exactly as #show
+    # does). Skipping this and recomputing the fingerprint from the changed
+    # cart would overwrite the stash and mask exactly the staleness #show's
+    # bounce exists to catch: the customer would pay the old total for a
+    # basket the page no longer shows.
+    priced_postcode = delivery_postcode_for(session[:selected_address_id])
+    priced_fingerprint = Checkout::CartFingerprint.digest(
+      cart: cart, postcode: priced_postcode, discount_code: session[:discount_code]
+    )
+    if priced_fingerprint != stash["fingerprint"]
+      session.delete(:onsite_checkout)
+      return render json: { error: "Your basket changed. Please return to it and check out again." },
+                    status: :conflict
+    end
+
+    postcode = params[:postcode].to_s.strip
+
+    begin
+      result = Checkout::SessionRepricer.new(
+        stripe_session_id: stash["session_id"],
+        cart: cart,
+        postcode: postcode,
+        shipping_details: shipping_details_params(postcode),
+        priced_zone: stash["zone"]
+      ).call
+    rescue Checkout::SessionRepricer::UndeliverableZone => e
+      return render json: { error: ShippingZone.refusal_message(e.zone) }, status: :unprocessable_entity
+    rescue Stripe::InvalidRequestError => e
+      # The session completed or expired under us (e.g. Pay racing the reprice).
+      Rails.logger.warn("Checkout reprice conflict: #{e.message}")
+      return render json: { error: "This checkout can no longer be updated. Please refresh the page." },
+                    status: :conflict
+    rescue Stripe::StripeError => e
+      Rails.logger.error("Checkout reprice failed: #{e.message}")
+      return render json: { error: "We couldn't update delivery for that address. Please try again." },
+                    status: :unprocessable_entity
+    end
+
+    # Coherence writes, only after Stripe accepted the update: the typed
+    # postcode becomes the session postcode (delivery_postcode_for resolves the
+    # typed value first, so #show's re-derived fingerprint matches the one
+    # stored here), and the stash's zone follows the price now on the session.
+    session[:delivery_postcode] = postcode
+    session[:onsite_checkout] = stash.merge(
+      "zone" => result.zone.to_s,
+      "fingerprint" => Checkout::CartFingerprint.digest(
+        cart: cart, postcode: postcode, discount_code: session[:discount_code]
+      )
+    )
+
+    render json: {
+      zone: result.zone.to_s,
+      shipping_amount: formatted_shipping_amount(result.shipping_pence)
+    }
   end
 
   def success
@@ -330,13 +420,37 @@ class CheckoutsController < ApplicationController
       default_address_postcode
   end
 
-  # Whether we know where this order is going well enough to price it. Mirrors
-  # ApplicationHelper#delivery_destination_known?, which decides whether the
-  # cart's checkout button is offered at all; if these disagree the customer
-  # either meets a guard the button told them they had passed, or is stopped
-  # from checking out on a cart that was priced perfectly well.
-  def deliverable_destination?(address_id)
-    ShippingZone.deliverable?(ShippingZone.for(delivery_postcode_for(address_id)))
+  # Whether the destination we WOULD price from is one we know we cannot serve.
+  # Only :undeliverable refuses; :unknown (no postcode anywhere, or an
+  # unparseable one) proceeds priced as mainland - see the comment at the call
+  # site in #create.
+  def refused_destination?(address_id)
+    ShippingZone.for(delivery_postcode_for(address_id)) == :undeliverable
+  end
+
+  # The shipping details recorded on the Stripe session, pass-through from what
+  # the address element collected. The typed postcode rides in its canonical
+  # slot; the rest is display data Stripe echoes back on the completed session.
+  def shipping_details_params(postcode)
+    permitted = params.permit(:name, :line1, :line2, :city, :country)
+    {
+      name: permitted[:name],
+      address: {
+        line1: permitted[:line1],
+        line2: permitted[:line2],
+        city: permitted[:city],
+        postal_code: postcode,
+        country: permitted[:country].presence || "GB"
+      }
+    }
+  end
+
+  # "Free" or the currency amount, matching CartSummary's shipping line so the
+  # page's repriced shipping row reads exactly like the server-rendered one.
+  def formatted_shipping_amount(pence)
+    return "Free" if pence.zero?
+
+    ActiveSupport::NumberHelper.number_to_currency(pence / 100.0, unit: "£")
   end
 
   def selected_address_postcode(address_id)
