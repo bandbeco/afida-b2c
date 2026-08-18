@@ -72,22 +72,18 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
   test "successful signup does not show a discount for a samples-only cart" do
     cart = add_item_to_session_cart
     cart.cart_items.update_all(is_sample: true, price: 0)
-    # The Total asserted below is a shipping-inclusive figure, which the cart
-    # only quotes once it knows where the order is going.
-    post delivery_postcode_cart_url, params: { delivery_postcode: "WD18 9SB" }
 
     post email_subscriptions_path,
          params: { email: "samples-discount@example.com" },
          headers: { "Accept" => "text/vnd.turbo-stream.html" }
 
     assert_response :success
-    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
-    expected_total = (cost + cost * BigDecimal(VAT_RATE.to_s)).round(2)
     assert_select "turbo-stream[action=replace][target=cart_summary]" do
-      # No discount line (no leading-minus amount), and the Total is full shipping + VAT.
+      # No discount line (no leading-minus amount). Shipping is deferred to
+      # checkout on every cart surface now, so the samples-only Total is £0.00
+      # - the point stands that it is never a reduced figure.
       assert_select "#discount_amount", count: 0
-      assert_select "#grand_total",
-                    text: /#{Regexp.escape(ActiveSupport::NumberHelper.number_to_currency(expected_total))}/
+      assert_select "#grand_total", text: /£0\.00/
     end
   end
 

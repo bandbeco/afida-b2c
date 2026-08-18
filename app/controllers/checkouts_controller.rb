@@ -22,7 +22,7 @@ class CheckoutsController < ApplicationController
     # rather than stranding customers who never met a postcode field). A
     # destination we KNOW we cannot serve is still refused - no reprice can fix
     # an order whose only address is somewhere we don't ship.
-    if refused_destination?(params[:address_id])
+    if refused_destination?
       return redirect_to cart_path,
                          alert: ShippingZone.refusal_message(:undeliverable)
     end
@@ -59,12 +59,11 @@ class CheckoutsController < ApplicationController
         )
       end
 
-      resolved_postcode = delivery_postcode_for(params[:address_id])
+      resolved_postcode = delivery_postcode_for
 
       builder = Checkout::SessionBuilder.new(
         cart: cart,
         user: Current.user,
-        address_id: params[:address_id],
         discount_code: session[:discount_code],
         delivery_postcode: resolved_postcode,
         datafast_visitor_id: cookies[:datafast_visitor_id],
@@ -79,16 +78,6 @@ class CheckoutsController < ApplicationController
       if result.invalid_discount?
         session.delete(:discount_code)
         flash[:alert] = "Your discount code could not be applied. Please continue with your order."
-      end
-
-      if result.selected_address_id.present?
-        session[:selected_address_id] = result.selected_address_id
-      else
-        # A checkout with no selection (e.g. from the cart drawer, whose form
-        # has no address selector) must not inherit one from an earlier
-        # attempt: the on-site page would prefill and zone-guard an address
-        # this checkout wasn't priced from.
-        session.delete(:selected_address_id)
       end
 
       if OnsiteCheckout.enabled?(session)
@@ -147,11 +136,11 @@ class CheckoutsController < ApplicationController
     end
 
     # Re-resolve the destination exactly as #create did (typed postcode, then
-    # the stashed address selection, then the default address). Falling back
-    # to a postcode recorded in the stash instead would validate the stash
-    # against itself: a postcode REMOVED from the session after #create went
-    # unnoticed, and the page charged a destination the cart no longer shows.
-    postcode = delivery_postcode_for(session[:selected_address_id])
+    # the default address). Falling back to a postcode recorded in the stash
+    # instead would validate the stash against itself: a destination that
+    # CHANGED after #create (a default address edited in another tab) went
+    # unnoticed, and the page charged a destination it no longer shows.
+    postcode = delivery_postcode_for
     fingerprint = Checkout::CartFingerprint.digest(
       cart: cart, postcode: postcode, discount_code: session[:discount_code]
     )
@@ -223,7 +212,7 @@ class CheckoutsController < ApplicationController
     # cart would overwrite the stash and mask exactly the staleness #show's
     # bounce exists to catch: the customer would pay the old total for a
     # basket the page no longer shows.
-    priced_postcode = delivery_postcode_for(session[:selected_address_id])
+    priced_postcode = delivery_postcode_for
     priced_fingerprint = Checkout::CartFingerprint.digest(
       cart: cart, postcode: priced_postcode, discount_code: session[:discount_code]
     )
@@ -426,52 +415,36 @@ class CheckoutsController < ApplicationController
 
   private
 
-  # The postcode used to price delivery.
-  #
-  # This MUST resolve in the same order as the cart preview
-  # (ApplicationController#apply_session_delivery_postcode_to_cart), because the
-  # price the cart quoted is the price we promised. The typed field therefore
-  # wins over a selected saved address, and the customer's default address is
-  # the last resort. The two once disagreed in opposite directions and produced
-  # two bugs: typing a mainland postcode then selecting a saved Highlands
-  # address quoted £6.99 and charged £25, and a customer whose cart priced from
-  # their default address was refused at checkout for not selecting one.
-  #
-  # The selected address is still consulted, so a logged-in customer who picked a
-  # saved address without typing anything is priced from it rather than refused.
-  # Nil means mainland pricing, as today.
-  def delivery_postcode_for(address_id)
-    session[:delivery_postcode].presence ||
-      selected_address_postcode(address_id) ||
-      default_address_postcode
+  # The postcode used to price delivery: the one typed at the checkout page
+  # (PATCH /checkout is its only writer, and it survives that Stripe session),
+  # falling back to the customer's default address. Nil means mainland pricing.
+  # #create, #show and #update must all resolve through this so the priced
+  # session, the rendered summary and the reprice pre-check can never disagree
+  # about where the order is going.
+  def delivery_postcode_for
+    session[:delivery_postcode].presence || default_address_postcode
   end
 
   # Whether the destination we WOULD price from is one we know we cannot serve.
   # Only :undeliverable refuses; :unknown (no postcode anywhere, or an
   # unparseable one) proceeds priced as mainland - see the comment at the call
   # site in #create.
-  def refused_destination?(address_id)
-    ShippingZone.for(delivery_postcode_for(address_id)) == :undeliverable
+  def refused_destination?
+    ShippingZone.for(delivery_postcode_for) == :undeliverable
   end
 
   # The saved address mounted into the Stripe element - but only when it
   # matches the postcode the session is priced from. A completed prefill fires
   # the on-mount reprice, so mounting an address with a DIFFERENT postcode
-  # (typed postcodes outrank saved addresses in delivery_postcode_for) would
-  # auto-reprice and silently overwrite the postcode the customer typed, and
-  # visibly move the total while they touched nothing. The element starts
-  # blank instead; picking a saved address there is an explicit choice.
+  # (typed postcodes outrank the default address in delivery_postcode_for)
+  # would auto-reprice and silently overwrite the postcode the customer typed,
+  # and visibly move the total while they touched nothing. The element starts
+  # blank instead; Stripe's own "Use a saved address" (from the attached
+  # Customer) makes picking one an explicit choice.
   def prefill_address_for(priced_postcode)
-    address = Current.user&.addresses&.find_by(id: session[:selected_address_id]) ||
-              Current.user&.addresses&.default_first&.first
+    address = Current.user&.addresses&.default_first&.first
     return address if address.nil? || priced_postcode.nil?
 
     address if ShippingZone.normalise(address.postcode) == ShippingZone.normalise(priced_postcode)
-  end
-
-  def selected_address_postcode(address_id)
-    return nil if address_id.blank? || Current.user.blank?
-
-    Current.user.addresses.find_by(id: address_id)&.postcode
   end
 end

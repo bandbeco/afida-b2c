@@ -17,8 +17,6 @@ class OnsiteCheckoutPageTest < ApplicationSystemTestCase
     click_on "Add to Cart", match: :first
 
     visit cart_path
-    fill_in "Delivery postcode", with: "WD18 9SB"
-    click_on "Calculate shipping"
     click_on "Proceed to Checkout"
 
     assert_current_path checkout_path

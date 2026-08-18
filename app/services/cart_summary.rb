@@ -21,11 +21,10 @@
 # The discount-visibility rule (only when a discount is actually taken) and the
 # money format match OrderSummary exactly.
 class CartSummary
-  # What the Shipping line reads before a destination is known. It names the
-  # action the customer can take right there: both cart surfaces now carry the
-  # postcode field, so the old "Calculate at checkout" pointed at a later step
-  # that no longer holds the answer.
-  DEFERRED_LABEL = "Enter postcode"
+  # What the Shipping line reads before a destination is known - on the cart
+  # surfaces, always: they carry no postcode field, and checkout is the step
+  # that collects the address and prices delivery live.
+  DEFERRED_LABEL = "Calculated at checkout"
 
   def self.lines(cart, placeholder_discount: false)
     new(cart, placeholder_discount: placeholder_discount).lines

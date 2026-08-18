@@ -1,15 +1,14 @@
 module Checkout
   class SessionBuilder
-    Result = Struct.new(:session, :invalid_discount_code, :selected_address_id, :zone, keyword_init: true) do
+    Result = Struct.new(:session, :invalid_discount_code, :zone, keyword_init: true) do
       def invalid_discount?
         invalid_discount_code.present?
       end
     end
 
-    def initialize(cart:, user:, address_id:, discount_code:, datafast_visitor_id:, datafast_session_id:, success_url:, cancel_url:, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
+    def initialize(cart:, user:, discount_code:, datafast_visitor_id:, datafast_session_id:, success_url:, cancel_url:, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
       @cart = cart
       @user = user
-      @address_id = address_id
       @discount_code = discount_code
       @delivery_postcode = delivery_postcode
       @datafast_visitor_id = datafast_visitor_id
@@ -29,20 +28,19 @@ module Checkout
     def create
       session_params = build_session_params
       @invalid_discount_code = apply_discount(session_params)
-      @selected_address_id = apply_customer_details(session_params)
+      apply_customer_details(session_params)
 
       Result.new(
         session: Stripe::Checkout::Session.create(session_params),
         invalid_discount_code: invalid_discount_code,
-        selected_address_id: selected_address_id,
         zone: zone
       )
     end
 
     private
 
-    attr_reader :cart, :user, :address_id, :discount_code, :delivery_postcode, :datafast_visitor_id,
-                :datafast_session_id, :success_url, :cancel_url, :invalid_discount_code, :selected_address_id,
+    attr_reader :cart, :user, :discount_code, :delivery_postcode, :datafast_visitor_id,
+                :datafast_session_id, :success_url, :cancel_url, :invalid_discount_code,
                 :ui_mode, :return_url
 
     def build_session_params
@@ -287,42 +285,32 @@ module Checkout
     # restrictions (first_time_transaction, max_redemptions_per_customer) are keyed to
     # one. Sessions that carried only customer_email, or nothing at all, created no
     # Customer, so every checkout looked like a first-time party and a one-time coupon
-    # could be redeemed indefinitely. A known user reuses their Customer; a guest gets
-    # customer_creation: "always" so Stripe persists one from the email it collects.
+    # could be redeemed indefinitely. A guest gets customer_creation: "always" so
+    # Stripe persists one from the email it collects.
+    #
+    # A logged-in customer with a known Customer id gets it attached directly: besides
+    # anchoring coupon restrictions, this is what makes Stripe offer "Use a saved
+    # address" on the checkout page, which is the only address-selection surface now
+    # that the cart collects nothing. The Customer's shipping address is kept fresh by
+    # the default-address sync (Address#sync_stripe_customer -> StripeCustomerSyncJob),
+    # never at checkout time. Without a Customer id yet, customer_email + creation
+    # "always" persists one; the sync job records an id once a default address exists.
     def apply_customer_details(session_params)
       unless user
         session_params[:customer_creation] = "always"
-        return nil
+        return
       end
 
       session_params[:client_reference_id] = user.id
 
-      if address_id.present?
-        apply_selected_address(session_params)
+      if user.stripe_customer_id.present?
+        # customer and customer_email/customer_creation are mutually exclusive
+        # in the Stripe API.
+        session_params[:customer] = user.stripe_customer_id
       else
-        # Deliberately NOT attaching the Stripe Customer here. Passing `customer` makes
-        # Stripe prefill that customer's saved address, and reaching this branch means
-        # they chose to enter a different address (or never selected one), so
-        # prefilling would override that choice. customer_email keeps the address page
-        # blank while customer_creation still has Stripe persist a Customer, which is
-        # the part coupon restrictions key on.
         session_params[:customer_email] = user.email_address
         session_params[:customer_creation] = "always"
-        nil
       end
-    end
-
-    def apply_selected_address(session_params)
-      address = user.addresses.find_by(id: address_id)
-      unless address
-        session_params[:customer_email] = user.email_address
-        session_params[:customer_creation] = "always"
-        return nil
-      end
-
-      user.sync_stripe_customer!(address: address)
-      session_params[:customer] = user.stripe_customer_id
-      address_id
     end
 
     def tax_rate

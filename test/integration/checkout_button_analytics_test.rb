@@ -17,11 +17,6 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     # Seed a cart into the session by adding an item (mirrors cart_items_controller_test).
     post cart_cart_items_path, params: { cart_item: { sku: @product.sku, quantity: 1 } }
-    # Checkout needs a delivery destination before it will accept a POST, so the
-    # entry points only render a submitting FORM once one is known. These tests
-    # are about the analytics wiring on that form; the link variant (no postcode
-    # yet) has its own test below.
-    post delivery_postcode_cart_path, params: { delivery_postcode: "WD18 9SB" }
   end
 
   teardown do
@@ -77,26 +72,6 @@ class CheckoutButtonAnalyticsTest < ActionDispatch::IntegrationTest
     assert_select "#drawer_cart_content form[data-controller='analytics']", count: 0
     assert_select "#drawer_cart_content form[action='#{checkout_path}'] button[type=submit]",
                   text: "Proceed to Checkout"
-  end
-
-  test "with no postcode the drawer instruments nothing, having no control to click" do
-    # There is no longer a link variant to instrument. The navbar dropdown was
-    # the last surface that offered checkout without being able to collect a
-    # postcode, and it linked to /cart carrying a begin_checkout on click; with
-    # it gone, a destination-less cart offers only the drawer's disabled button,
-    # which reports nothing by design (see shared/_checkout_button.html.erb).
-    #
-    # The funnel loses nothing real: the event now fires where checkout can
-    # actually proceed, rather than on a click that only navigated.
-    reset!
-    Rails.application.config.x.gtm_container_id = "GTM-TEST123"
-    post cart_cart_items_path, params: { cart_item: { sku: @product.sku, quantity: 1 } }
-
-    get root_url
-
-    assert_response :success
-    assert_select "[data-action*='beginCheckout']", count: 0
-    assert_select "#drawer_cart_content button[type=submit][disabled]", count: 1
   end
 
   test "empty cart renders no checkout form at all" do

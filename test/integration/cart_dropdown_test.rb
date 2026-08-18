@@ -27,12 +27,11 @@ class CartLinkTest < ActionDispatch::IntegrationTest
   end
 
   test "the cart icon offers no checkout control of its own" do
-    # Checkout is offered where a postcode can be given: the cart page and the
-    # drawer. A third entry point here would be a fourth thing to keep in step
-    # with the delivery guard, for no reach the cart link does not already have.
+    # Checkout is offered on the cart page and in the drawer. A third entry
+    # point here would be one more surface to keep in step, for no reach the
+    # cart link does not already have.
     Rails.application.config.x.gtm_container_id = "GTM-TEST123"
     post cart_cart_items_path, params: { cart_item: { sku: products(:one).sku, quantity: 1 } }
-    post delivery_postcode_cart_path, params: { delivery_postcode: "WD18 9SB" }
 
     get root_url
 

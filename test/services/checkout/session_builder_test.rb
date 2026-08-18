@@ -71,20 +71,19 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
       true
     end.returns(build_stripe_session)
 
-    result = build_session
+    build_session
 
-    assert_nil result.selected_address_id
     assert_nil captured_params[:customer]
     assert_nil captured_params[:customer_email]
     assert_nil captured_params[:client_reference_id]
     assert_equal "always", captured_params[:customer_creation]
   end
 
-  # A logged-in customer who selected no address keeps customer_email (attaching
-  # `customer` would make Stripe prefill the saved address they chose not to use), but
-  # must still ask Stripe to persist a Customer so coupon restrictions have an identity
-  # to key on. Previously this path created no Customer at all.
-  test "asks stripe to create a customer for a logged-in checkout with no selected address" do
+  # A logged-in customer with no Stripe Customer yet checks out via customer_email,
+  # but must still ask Stripe to persist a Customer so coupon restrictions have an
+  # identity to key on. Their Customer id is minted elsewhere (the default-address
+  # sync job); once present, the next checkout attaches it directly.
+  test "asks stripe to create a customer for a logged-in checkout without a stripe customer" do
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
     user = users(:one)
 
@@ -451,14 +450,16 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     assert_respond_to builder, :invalid_discount?
     assert_not_respond_to builder, :invalid_discount_code
-    assert_not_respond_to builder, :selected_address_id
   end
 
-  test "uses selected saved address as Stripe customer for logged-in checkout" do
+  # Attaching the known Customer is what makes Stripe offer "Use a saved address"
+  # on the checkout page (the cart no longer collects an address), and what coupon
+  # restrictions key on. The customer's shipping address is synced by the
+  # default-address callback (StripeCustomerSyncJob), never at checkout time.
+  test "attaches the known stripe customer for a logged-in checkout" do
     user = users(:one)
-    address = addresses(:office)
-    user.update!(stripe_customer_id: "cus_saved_address")
-    user.expects(:sync_stripe_customer!).with(address: address).once
+    user.update!(stripe_customer_id: "cus_known")
+    user.expects(:sync_stripe_customer!).never
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
 
     captured_params = nil
@@ -467,11 +468,12 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
       true
     end.returns(build_stripe_session)
 
-    result = build_session_builder(user: user, address_id: address.id).create
+    build_session_builder(user: user).create
 
-    assert_equal address.id, result.selected_address_id
-    assert_equal "cus_saved_address", captured_params[:customer]
+    assert_equal "cus_known", captured_params[:customer]
+    assert_equal user.id, captured_params[:client_reference_id]
     assert_nil captured_params[:customer_email]
+    assert_nil captured_params[:customer_creation]
   end
 
   # ==========================================================================
@@ -738,11 +740,10 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     build_session(ui_mode: :custom, return_url: @return_url, **kwargs)
   end
 
-  def build_session_builder(user: nil, address_id: nil, discount_code: nil, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
+  def build_session_builder(user: nil, discount_code: nil, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)
     Checkout::SessionBuilder.new(
       cart: @cart,
       user: user,
-      address_id: address_id,
       discount_code: discount_code,
       delivery_postcode: delivery_postcode,
       datafast_visitor_id: nil,

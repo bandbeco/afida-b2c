@@ -47,13 +47,13 @@ class Cart < ApplicationRecord
     @cart_totals = nil
   end
 
-  # The delivery postcode the customer entered on the cart page, so the preview
-  # can price the real destination instead of assuming mainland. Like
-  # discount_rate it is injected per request from the session rather than stored:
-  # the cart is a preview, and the order records the address Stripe collects.
-  # Assigning it clears the memoized totals so shipping, VAT and the total all
-  # move together. It survives reload for the same reason discount_rate does (the
-  # sample-limit validator reloads the cart mid-request).
+  # The delivery destination, injected per request rather than stored (the cart
+  # is a preview; the order records the address Stripe collects). Only the
+  # checkout page sets it now (CheckoutsController#show, from the destination
+  # its Stripe session was priced for); cart surfaces leave it unset and defer
+  # shipping. Assigning it clears the memoized totals so shipping, VAT and the
+  # total all move together. It survives reload for the same reason
+  # discount_rate does (the sample-limit validator reloads the cart mid-request).
   attr_reader :delivery_postcode
 
   def delivery_postcode=(postcode)
@@ -247,10 +247,9 @@ class Cart < ApplicationRecord
   # to mainland so the cart stays priceable, but mainland is the CHEAPEST zone
   # and the only one with free delivery, so quoting it before the customer gives
   # a postcode understates the cost for every off-mainland customer, on the
-  # Shipping line and inside the VAT and Total. Deferring shows "Calculate at
-  # checkout" and keeps shipping out of the total until we can price it honestly.
-  # The cart page's postcode field resolves this, and the drawer's checkout
-  # button links there (shared/_checkout_button gates on the same question).
+  # Shipping line and inside the VAT and Total. Deferring shows "Calculated at
+  # checkout" and keeps shipping out of the total until the checkout page can
+  # price it honestly from the address the customer types there.
   def cart_totals
     # ||= wraps the whole body so the cart_items.empty? query only fires on the
     # first call per request; later calls (this backs four public methods) reuse

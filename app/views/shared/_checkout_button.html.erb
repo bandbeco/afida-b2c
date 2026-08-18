@@ -18,30 +18,9 @@
     Current.cart would otherwise crash on total_amount). No cart, no checkout button. Uses
     the memoized line_items_count rather than cart_items.any? to avoid an extra SELECT 1. %>
 <% return unless (Current.cart&.line_items_count || 0).positive? %>
-<%# With no delivery destination this disables the button and says what is
-    missing, keeping the priced cart preview honest (the cart cannot reprice an
-    unknown destination; the checkout page can and does). The server no longer
-    refuses an unknown destination - CheckoutsController#refused_destination?
-    only refuses one we know we cannot serve, pricing the unknown as mainland -
-    so this gate is stricter than the guard behind it, and goes when the cart
-    calculator does (Phase C of the live-reprice plan; see the note in
-    cart_items/_checkout.html.erb).
-
-    Every surface that offers checkout now carries a postcode field, so this can
-    always name the fix in place. There used to be a third branch linking to
-    /cart, for the navbar dropdown that had no field of its own; it went with the
-    dropdown, since a branch no caller can reach is a branch that cannot be
-    trusted to still work. %>
-<% if delivery_destination_known?(Current.cart, address_postcode: cart_owner_default_postcode(Current.cart)) %>
-  <%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do %>
-    <button type="submit" class="<%= button_class %>"><%= label %></button>
-  <% end %>
-<% else %>
-  <%# No begin_checkout here, and that is deliberate: the customer cannot begin
-      checkout yet, so reporting that they did would overstate the funnel. The
-      cart page's disabled button behaves the same way. %>
-  <button type="submit" class="<%= button_class %>" disabled><%= label %></button>
-  <p class="mt-2 text-xs text-center text-gray-600" data-test="drawer-checkout-blocked-note">
-    <%= checkout_blocked_note %>
-  </p>
+<%# Always a submitting form: the cart no longer knows the destination, so
+    nothing gates checkout here. Shipping is priced live on the checkout page
+    from the address the customer types there. %>
+<%= form_with url: checkout_path, method: :post, data: analytics_checkout_form_data(Current.cart) do %>
+  <button type="submit" class="<%= button_class %>"><%= label %></button>
 <% end %>

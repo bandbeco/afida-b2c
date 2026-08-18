@@ -20,16 +20,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # Stub UK VAT tax rate lookup (used by controller)
     stub_stripe_tax_rate_list
 
-    # Checkout requires a delivery destination (see the guard tests below), so
-    # give every other test a mainland one. Those tests are about discounts,
-    # line items and Stripe wiring, not about where the parcel is going.
-    set_delivery_postcode("WD18 9SB")
-  end
-
-  # Store a delivery postcode in the session the way the cart page does. The
-  # session isn't writable from an integration test, so go through the route.
-  def set_delivery_postcode(postcode)
-    post delivery_postcode_cart_path, params: { delivery_postcode: postcode }
+    # With no typed postcode (only PATCH /checkout writes one now), the
+    # destination resolves from the cart owner's default fixture address:
+    # SW1A 1AA, mainland. Tests about discounts, line items and Stripe wiring
+    # ride on that; zone-specific tests set their own destination.
   end
 
   # The welcome coupon id the app stores in the session, read from the test
@@ -109,7 +103,6 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # from the address the customer types, so an unknown destination is a
     # mainland seed, not a refusal (see the guard tests below).
     @user.addresses.destroy_all
-    set_delivery_postcode("")
     Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
 
     post checkout_path
@@ -239,13 +232,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-onsite-checkout-target='promoSection']"
   end
 
-  test "show bounces the stash when the delivery postcode is removed after create" do
-    # The cart owner's saved addresses must not supply a fallback destination,
-    # or removal would just re-resolve to the default address.
-    @user.addresses.destroy_all
+  test "show bounces the stash when the resolved destination changes after create" do
+    # The destination re-resolves on every render (typed postcode, then the
+    # default address); a default address whose postcode changed after create
+    # means the session no longer charges the destination the page would show.
     stash_onsite_session
 
-    set_delivery_postcode("")
+    addresses(:office).update!(postcode: "IV1 1AA")
 
     get checkout_path
 
@@ -253,25 +246,20 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
-  test "show prices the summary from the address the session was priced from" do
-    post session_url, params: { email_address: @user.email_address, password: "password" }
-    highlands = @user.addresses.create!(
+  test "show prices the summary from the destination the session was priced from" do
+    # The default address is the destination the session is priced from now
+    # that nothing else supplies one before checkout.
+    @user.addresses.create!(
       nickname: "Croft", recipient_name: "John Smith", line1: "1 Shore Road",
-      city: "Portree", postcode: "IV51 9XX", country: "GB"
+      city: "Portree", postcode: "IV51 9XX", country: "GB", default: true
     )
-    set_delivery_postcode("")
-    enable_onsite_checkout
-    Stripe::Customer.stubs(:create).returns(stub(id: "cus_highlands"))
-    Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
-
-    post checkout_path, params: { address_id: highlands.id }
-    assert_redirected_to checkout_path
+    stash_onsite_session
 
     get checkout_path
 
     assert_response :success
     # The Stripe session carries the Highlands £25 shipping line; the summary
-    # must show the same, not the default address's mainland price.
+    # must show the same, not a mainland price.
     assert_select "[data-onsite-checkout-money-kind='shipping']", text: "£25.00"
   end
 
@@ -279,10 +267,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # No postcode anywhere (the cart owner's default address is a fallback, so
     # it must go too): SessionBuilder priced the Stripe session mainland (£6.99
     # shipping line), and the SDK paints VAT and Total from that session. A
-    # deferred "Enter postcode" row would sit beside a Total that silently
-    # includes shipping the lines above it don't show.
+    # deferred shipping row would sit beside a Total that silently includes
+    # shipping the lines above it don't show.
     @user.addresses.destroy_all
-    set_delivery_postcode("")
     stash_onsite_session
 
     get checkout_path
@@ -293,11 +280,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "show does not prefill a saved address when a typed postcode outranks it" do
     post session_url, params: { email_address: @user.email_address, password: "password" }
-    # Typed WD18 wins the pricing (delivery_postcode_for), but the default
-    # saved address is SW1A: prefilling it would complete the element on mount
-    # and auto-reprice, silently overwriting the postcode the customer typed.
-    set_delivery_postcode("WD18 9SB")
     stash_onsite_session
+    # Typing WD18 on the page wins the pricing (delivery_postcode_for), but the
+    # default saved address is SW1A: prefilling it would complete the element
+    # on mount and auto-reprice, silently overwriting the typed postcode.
+    patch checkout_path, params: reprice_params("WD18 9SB"), as: :json
+    assert_response :success
 
     get checkout_path
 
@@ -310,10 +298,11 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "show still prefills the saved address whose postcode matches the typed one" do
     post session_url, params: { email_address: @user.email_address, password: "password" }
+    stash_onsite_session
     # Same postcode, differently cased and spaced: normalisation says it is the
     # address the session was priced from, so the convenience prefill stays.
-    set_delivery_postcode("sw1a 1aa")
-    stash_onsite_session
+    patch checkout_path, params: reprice_params("sw1a 1aa"), as: :json
+    assert_response :success
 
     get checkout_path
 
@@ -440,7 +429,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_match "don't deliver", response.parsed_body["error"]
-    assert_equal "WD18 9SB", session[:delivery_postcode]
+    assert_nil session[:delivery_postcode]
     assert_equal "mainland", session[:onsite_checkout]["zone"]
   end
 
@@ -510,7 +499,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :conflict
     assert_equal "sess_custom_123", session[:onsite_checkout]["session_id"]
-    assert_equal "WD18 9SB", session[:delivery_postcode]
+    assert_nil session[:delivery_postcode]
     assert_equal "mainland", session[:onsite_checkout]["zone"]
   end
 
@@ -537,7 +526,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_response :conflict
     # Nothing was written: the priced zone stays what the customer will be
     # charged, and the page's zone guard keeps Pay blocked on a mismatch.
-    assert_equal "WD18 9SB", session[:delivery_postcode]
+    assert_nil session[:delivery_postcode]
     assert_equal "mainland", session[:onsite_checkout]["zone"]
   end
 
@@ -615,7 +604,6 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "create without any destination proceeds priced as mainland" do
     @user.addresses.destroy_all
-    set_delivery_postcode("")
 
     captured_params = nil
     Stripe::Checkout::Session.stubs(:create).with do |params|
@@ -629,28 +617,25 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "mainland", captured_params[:metadata][:shipping_zone]
   end
 
-  test "create with an unparseable saved postcode proceeds priced as mainland" do
-    set_delivery_postcode("")
+  test "create with an unparseable default postcode proceeds priced as mainland" do
     sign_in_as(@user)
-    address = @user.addresses.create!(
+    @user.addresses.create!(
       nickname: "Bad postcode #{SecureRandom.hex(4)}",
       recipient_name: "Jane",
       line1: "1 St",
       city: "Somewhere",
       postcode: "00000",
-      country: "FR"
+      country: "FR",
+      default: true
     )
-    @user.update!(stripe_customer_id: "cus_zone_guard")
-    User.any_instance.stubs(:sync_stripe_customer!)
     stub_stripe_session_create
 
-    post checkout_path, params: { address_id: address.id }
+    post checkout_path
 
     assert_response :see_other
   end
 
   test "create still refuses a destination we know we cannot serve" do
-    set_delivery_postcode("")
     sign_in_as(@user)
     @user.addresses.create!(
       nickname: "Jersey #{SecureRandom.hex(4)}",
@@ -669,70 +654,24 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert flash[:alert].present?, "expected the customer to be told why checkout stopped"
   end
 
-  test "a selected saved address satisfies the requirement without a typed postcode" do
-    set_delivery_postcode("")
-    address = addresses(:office)
-    @user.update!(stripe_customer_id: "cus_zone_guard")
-    User.any_instance.stubs(:sync_stripe_customer!)
+  # The postcode typed at the checkout page (the only typed destination left)
+  # outlives that Stripe session: a customer who typed IV1, went back to the
+  # basket, and checked out again must be priced highlands from the start, not
+  # re-seeded from their mainland default address.
+  test "create prices from the postcode typed at a previous checkout" do
     sign_in_as(@user)
-    stub_stripe_session_create
+    stash_onsite_session
+    stub_reprice_stripe_calls
+    patch checkout_path, params: reprice_params("IV1 1AA"), as: :json
+    assert_response :success
 
-    post checkout_path, params: { address_id: address.id }
-
-    assert_response :see_other
-    assert_match %r{https://checkout\.stripe\.com/test/sess_}, response.redirect_url
-  end
-
-  test "checkout proceeds once a postcode has been given" do
-    set_delivery_postcode("BT1 6EE")
-    stub_stripe_session_create
+    captured = nil
+    Stripe::Checkout::Session.stubs(:create).with { |p| captured = p; true }.returns(build_custom_stripe_session)
 
     post checkout_path
 
-    assert_response :see_other
-  end
-
-  # The cart and the checkout must resolve the destination the SAME way. They
-  # once disagreed: the cart preferred the typed postcode and fell back to the
-  # customer's default address, while checkout preferred a selected saved
-  # address and fell back to the typed postcode. Two bugs followed.
-
-  test "charges the zone the cart quoted when a saved address is also selected" do
-    # Bug: typing a mainland postcode and then selecting a saved Highlands
-    # address quoted £6.99 on the cart and charged £25 at Stripe, an undisclosed
-    # jump at the payment screen. The cart's quote is the promise, so it wins.
-    skye = @user.addresses.create!(
-      nickname: "Skye #{SecureRandom.hex(4)}", recipient_name: "Jane",
-      line1: "2 Skye Rd", city: "Portree", postcode: "IV51 9YB", country: "GB"
-    )
-    @user.update!(stripe_customer_id: "cus_zone_agree")
-    User.any_instance.stubs(:sync_stripe_customer!)
-    sign_in_as(@user)
-    set_delivery_postcode("WD18 9SB")
-
-    captured = nil
-    Stripe::Checkout::Session.stubs(:create).with { |p| captured = p; true }.returns(build_stripe_session)
-
-    post checkout_path, params: { address_id: skye.id }
-
-    assert_equal "mainland", captured[:metadata][:shipping_zone],
-                 "Stripe must charge the zone the cart quoted, not a different saved address"
-  end
-
-  test "a default saved address satisfies the requirement, as the cart prices from it" do
-    # Bug: the cart enables its checkout button from the customer's DEFAULT
-    # address, but checkout only accepted a SELECTED one. Submitting with a
-    # blank address_id (the "enter a different address" radio) was refused and
-    # bounced back to a cart whose button was still enabled: a dead-end loop.
-    set_delivery_postcode("")
-    @user.update!(stripe_customer_id: "cus_default_addr")
-    User.any_instance.stubs(:sync_stripe_customer!)
-    sign_in_as(@user)
-    stub_stripe_session_create
-
-    post checkout_path, params: { address_id: "" }
-
-    assert_response :see_other, "a customer whose cart priced from their default address must not be refused"
+    assert_equal "highlands", captured[:metadata][:shipping_zone],
+                 "Stripe must charge the zone of the postcode the customer typed"
   end
 
   test "create builds line items from cart items" do
@@ -768,11 +707,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @cart.id.to_s, captured_params[:metadata][:cart_id]
   end
 
-  # Authenticated checkouts without a selected address keep customer_email (attaching
-  # `customer` would prefill a saved address the customer did not pick), but must still
-  # have Stripe persist a Customer so per-customer coupon restrictions have an identity
-  # to key on: a one-time coupon was otherwise redeemable indefinitely.
-  test "create includes customer email and asks stripe to create a customer for authenticated users" do
+  # Authenticated checkouts without a Stripe Customer yet keep customer_email, but
+  # must still have Stripe persist a Customer so per-customer coupon restrictions have
+  # an identity to key on: a one-time coupon was otherwise redeemable indefinitely.
+  # (With a known Customer id, SessionBuilder attaches it instead - covered in
+  # session_builder_test.)
+  test "create includes customer email and asks stripe to create a customer for users without a stripe customer" do
     Current.stubs(:user).returns(@user)
 
     captured_params = nil

@@ -218,7 +218,6 @@ class StripeLiveCheckoutTest < ActionDispatch::IntegrationTest
     Checkout::SessionBuilder.new(
       cart: cart,
       user: nil,
-      address_id: nil,
       discount_code: discount_code,
       datafast_visitor_id: nil,
       datafast_session_id: nil,
