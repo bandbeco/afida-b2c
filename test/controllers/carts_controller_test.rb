@@ -221,6 +221,48 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-test=checkout-blocked-note]", count: 0
   end
 
+  # "Don't forget lids" reminder
+
+  test "cart page suggests the default lid for a lidless container" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cup = products(:branded_cup_8oz) # mapped to flat_lid_8oz (default) + domed_lid_8oz
+    cart.cart_items.create!(product: cup, quantity: 1, price: cup.price)
+
+    get cart_url
+
+    assert_response :success
+    assert_select "#lid-reminder" do
+      assert_select "input[name='cart_item[sku]'][value=?]", products(:flat_lid_8oz).sku
+      assert_select "input[name='cart_item[from_cart_page]']"
+    end
+  end
+
+  test "cart page shows no lid reminder when a compatible lid is already in the cart" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cup = products(:branded_cup_8oz)
+    lid = products(:domed_lid_8oz)
+    cart.cart_items.create!(product: cup, quantity: 1, price: cup.price)
+    cart.cart_items.create!(product: lid, quantity: 1, price: lid.price)
+
+    get cart_url
+
+    assert_response :success
+    assert_select "#lid-reminder", count: 0
+  end
+
+  test "cart page shows no lid reminder for products without compatible lids" do
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+
+    get cart_url
+
+    assert_response :success
+    assert_select "#lid-reminder", count: 0
+  end
+
   private
 
   def sign_in_as(user)

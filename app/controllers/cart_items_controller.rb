@@ -9,6 +9,10 @@ class CartItemsController < ApplicationController
   def create
     @cart = Current.cart
 
+    # Adds submitted from the cart page itself (the lid reminder) re-render
+    # the whole cart frame so the page reflects the new item immediately.
+    @refresh_cart_page = params.dig(:cart_item, :from_cart_page).present?
+
     if params[:configuration].present?
       # Configured product (branded cups)
       create_configured_cart_item
@@ -339,7 +343,7 @@ class CartItemsController < ApplicationController
   end
 
   def cart_item_params
-    params.expect(cart_item: [ :sku, :quantity ])
+    params.expect(cart_item: [ :sku, :quantity, :from_cart_page ])
   end
 
   def scalar_param?(value)

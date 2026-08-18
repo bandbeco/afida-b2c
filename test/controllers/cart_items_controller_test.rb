@@ -370,6 +370,24 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/turbo-stream action="replace" target="drawer_cart_content"/, @response.body)
   end
 
+  test "create turbo_stream from the cart page re-renders the cart frame" do
+    post cart_cart_items_path,
+         params: { cart_item: { sku: products(:flat_lid_8oz).sku, quantity: 1, from_cart_page: "1" } },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match(/turbo-stream action="update" target="cart"/, @response.body)
+  end
+
+  test "create turbo_stream from a product page does not re-render the cart frame" do
+    post cart_cart_items_path,
+         params: { cart_item: { sku: products(:flat_lid_8oz).sku, quantity: 1 } },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_no_match(/turbo-stream action="update" target="cart"/, @response.body)
+  end
+
   test "destroying cart item shows product name in notice" do
     cart_item = @cart.cart_items.create!(
       product: @product_variant,

@@ -1,0 +1,44 @@
+<%# "Don't forget lids" nudge: one card per suggested lid (Cart#lid_suggestions
+    dedupes containers that share a lid). Submitting re-renders the #cart frame
+    via cart_item[from_cart_page], so a satisfied suggestion disappears. %>
+<% if suggestions.any? %>
+  <div id="lid-reminder" class="mt-4 md:mt-6">
+    <h2 class="text-lg font-medium mb-1">Don't forget lids</h2>
+    <p class="text-sm text-base-content/70 mb-3">These lids fit items in your cart:</p>
+
+    <div class="flex flex-col gap-3">
+      <% suggestions.each do |suggestion| %>
+        <% lid = suggestion.lid %>
+        <div class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4">
+          <div class="flex items-start gap-3 sm:gap-4">
+            <div class="flex-shrink-0 w-20 h-20">
+              <%= product_photo_tag lid.primary_photo, alt: lid.generated_title, class: "w-full h-full object-contain", loading: "lazy" %>
+            </div>
+
+            <div class="flex-1 min-w-0">
+              <h3 class="text-base mb-1 leading-tight"><%= lid.generated_title %></h3>
+              <p class="text-sm text-base-content/70 mb-1">
+                Fits <%= suggestion.containers.map(&:generated_title).to_sentence %>
+              </p>
+              <p class="text-sm sm:text-base text-gray-900">
+                <%= number_to_currency(lid.price) %> / pack of <%= number_with_delimiter(lid.pac_size) %>
+              </p>
+
+              <%= form_with url: cart_cart_items_path, method: :post, class: "flex flex-col sm:flex-row gap-2 mt-3" do |f| %>
+                <%= f.hidden_field "cart_item[sku]", value: lid.sku %>
+                <%= f.hidden_field "cart_item[from_cart_page]", value: "1" %>
+                <%= f.select "cart_item[quantity]",
+                             options_for_select((1..10).map { |packs|
+                               [ "#{packs} #{'pack'.pluralize(packs)} (#{number_with_delimiter(lid.pac_size.to_i * packs)} units)", packs ]
+                             }, 1),
+                             {},
+                             class: "w-full sm:w-auto px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white" %>
+                <%= f.submit "Add to Cart", class: "w-full sm:w-auto px-3 sm:px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors cursor-pointer" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

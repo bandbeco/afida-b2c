@@ -91,6 +91,11 @@ class Cart < ApplicationRecord
   end
 
   # Total quantity of all items in cart (sum of quantities, not distinct items)
+  # "Don't forget lids" suggestions for the cart page; see LidSuggestions.
+  def lid_suggestions
+    LidSuggestions.new(self).to_a
+  end
+
   # e.g., 4 of the same SKU = 4, not 1
   # Memoized to prevent repeated database calls within same request
   def items_count
