@@ -12,27 +12,10 @@ module Checkout
     # is built from, or {} when the session carries no shipping details (a permanent
     # failure both callers guard via Order.required_shipping_values). Uses
     # to_hash.with_indifferent_access for defensive hash access (Stripe objects nest
-    # inconsistently across API versions).
+    # inconsistently across API versions); with_indifferent_access deep-converts, so
+    # nested hashes need no further coercion.
     def shipping_address(session)
-      session_hash = session.to_hash.with_indifferent_access
-
-      shipping = session_hash.dig(:collected_information, :shipping_details)
-      return {} unless shipping
-
-      shipping = shipping.with_indifferent_access if shipping.respond_to?(:with_indifferent_access)
-      address = shipping[:address]
-      return {} unless address
-
-      address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
-
-      {
-        name: shipping[:name],
-        line1: address[:line1],
-        line2: address[:line2],
-        city: address[:city],
-        postal_code: address[:postal_code],
-        country: address[:country]
-      }
+      shipping_address_from(session.to_hash.with_indifferent_access)
     end
 
     # Maps the session's customer details (name + address) to the billing_* hash the
@@ -44,19 +27,55 @@ module Checkout
     # legitimately carry no billing address, and none of that may block an order
     # the customer has already paid for.
     def billing_address(session)
-      session_hash = session.to_hash.with_indifferent_access
+      billing_address_from(session.to_hash.with_indifferent_access)
+    end
 
+    # Both addresses mapped to the Order's shipping_*/billing_* column names in
+    # one pass: the single source both order-creation paths merge into their
+    # Order.create! attributes, so a new address field can never be wired into
+    # the success redirect but forgotten on the webhook (or vice versa). One
+    # to_hash conversion covers both reads - the expanded session is large
+    # (line items, payment intent), so callers should not convert it twice.
+    def order_address_attributes(session)
+      session_hash = session.to_hash.with_indifferent_access
+      shipping = shipping_address_from(session_hash)
+      billing = billing_address_from(session_hash)
+
+      {
+        shipping_name: shipping[:name],
+        shipping_address_line1: shipping[:line1],
+        shipping_address_line2: shipping[:line2],
+        shipping_city: shipping[:city],
+        shipping_postal_code: shipping[:postal_code],
+        shipping_country: shipping[:country],
+        billing_name: billing[:name],
+        billing_address_line1: billing[:line1],
+        billing_address_line2: billing[:line2],
+        billing_city: billing[:city],
+        billing_postal_code: billing[:postal_code],
+        billing_country: billing[:country]
+      }
+    end
+
+    def shipping_address_from(session_hash)
+      shipping = session_hash.dig(:collected_information, :shipping_details)
+      return {} unless shipping
+
+      extract_address(name: shipping[:name], address: shipping[:address])
+    end
+
+    def billing_address_from(session_hash)
       customer_details = session_hash[:customer_details]
       return {} unless customer_details
 
-      customer_details = customer_details.with_indifferent_access if customer_details.respond_to?(:with_indifferent_access)
-      address = customer_details[:address]
+      extract_address(name: customer_details[:name], address: customer_details[:address])
+    end
+
+    def extract_address(name:, address:)
       return {} unless address
 
-      address = address.with_indifferent_access if address.respond_to?(:with_indifferent_access)
-
       {
-        name: customer_details[:name],
+        name: name,
         line1: address[:line1],
         line2: address[:line2],
         city: address[:city],

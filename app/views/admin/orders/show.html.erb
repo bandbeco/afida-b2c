@@ -134,18 +134,18 @@
           <h2 class="card-title text-lg mb-4">Shipping Address</h2>
 
           <div class="text-sm">
-            <% shipping_address_lines(@order).each_with_index do |line, index| %>
-              <p class="<%= index.zero? ? "font-medium" : "text-base-content/80" %>"><%= line %></p>
+            <% shipping_address_lines(@order).each do |line| %>
+              <p class="<%= line[:kind] == :name ? "font-medium" : "text-base-content/80" %>"><%= line[:text] %></p>
             <% end %>
           </div>
 
-          <% if show_billing_address?(@order) %>
+          <% if @order.billing_address? %>
             <div class="divider my-2"></div>
 
             <p class="text-sm text-base-content/60 mb-1">Billing Address</p>
             <div class="text-sm">
               <% billing_address_lines(@order).each do |line| %>
-                <p class="text-base-content/80"><%= line %></p>
+                <p class="text-base-content/80"><%= line[:text] %></p>
               <% end %>
             </div>
           <% end %>

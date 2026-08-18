@@ -67,14 +67,14 @@
       <h2 style="font-size: 18px; font-weight: 500; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px;">Ship to</h2>
       <p style="font-size: 15px; color: #374151; margin: 16px 0 0 0; line-height: 1.6;">
         <% shipping_address_lines(@order).each do |line| %>
-          <%= line %><br>
+          <%= line[:text] %><br>
         <% end %>
       </p>
-      <% if show_billing_address?(@order) %>
+      <% if @order.billing_address? %>
         <h2 style="font-size: 18px; font-weight: 500; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-top: 24px;">Bill to</h2>
         <p style="font-size: 15px; color: #374151; margin: 16px 0 0 0; line-height: 1.6;">
           <% billing_address_lines(@order).each do |line| %>
-            <%= line %><br>
+            <%= line[:text] %><br>
           <% end %>
         </p>
       <% end %>

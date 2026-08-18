@@ -19,14 +19,14 @@ ITEMS TO PICK
 SHIP TO
 -------
 <% shipping_address_lines(@order).each do |line| -%>
-<%= line %>
+<%= line[:text] %>
 <% end -%>
-<% if show_billing_address?(@order) -%>
+<% if @order.billing_address? -%>
 
 BILL TO
 -------
 <% billing_address_lines(@order).each do |line| -%>
-<%= line %>
+<%= line[:text] %>
 <% end -%>
 <% end -%>
 

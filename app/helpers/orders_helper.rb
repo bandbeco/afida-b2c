@@ -22,19 +22,17 @@ module OrdersHelper
     OrderSummary.lines(order)
   end
 
-  # The order's addresses as ordered display lines, shared by the same surfaces
-  # as order_summary_lines. See OrderAddress for the billing rules (empty when
-  # none collected, a "Same as delivery address" note when identical).
+  # The order's addresses as ordered {kind:, text:} display lines, shared by
+  # the same surfaces as order_summary_lines. See OrderAddress for the line
+  # shape and the billing rules (empty when none collected, a "Same as
+  # delivery address" note when identical); gate billing blocks on
+  # order.billing_address? directly.
   def shipping_address_lines(order)
     OrderAddress.shipping_lines(order)
   end
 
   def billing_address_lines(order)
     OrderAddress.billing_lines(order)
-  end
-
-  def show_billing_address?(order)
-    order.billing_address?
   end
 
   # Our SKU for an order item, with the supplier SKU appended in parentheses when

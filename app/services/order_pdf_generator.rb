@@ -9,6 +9,16 @@ class OrderPdfGenerator
   TEXT_DARK = "1F2937".freeze          # Near black for headings
   TEXT_GRAY = "6B7280".freeze          # Gray for secondary text
   LIGHT_GRAY = "F3F4F6".freeze         # Table alternating row
+
+  # Address block typography, shared by add_address_block (render) and
+  # address_block_height (measure) so the measured bounding box can never
+  # drift from what is drawn - an undersized box makes Prawn treat its bottom
+  # as a page edge and break the whole layout onto a second page.
+  SECTION_HEADER_SIZE = 11
+  ADDRESS_LINE_SIZE = 10
+  ADDRESS_TITLE_GAP = 8
+  ADDRESS_NAME_GAP = 3
+  ADDRESS_BLOCK_GAP = 10
   BORDER_GRAY = "E5E7EB".freeze        # Subtle borders
 
   COMPANY_NAME = "Afida".freeze
@@ -137,12 +147,13 @@ class OrderPdfGenerator
 
   def add_details_section(pdf)
     column_width = (pdf.bounds.width - 30) / 2
+    shipping_lines = OrderAddress.shipping_lines(@order)
+    billing_lines = OrderAddress.billing_lines(@order)
     # The right column also carries a billing block when one was collected;
     # both boxes share the measured height so the columns stay aligned. The
-    # height is measured from the actual lines (as add_price_summary sizes from
-    # its row count) because a bounding_box too small for its content makes
-    # Prawn treat the box bottom as a page edge and break onto a second page.
-    section_height = address_section_height(pdf, column_width)
+    # height is measured from the same lines that render (as add_price_summary
+    # sizes from its row count).
+    section_height = address_section_height(pdf, column_width, shipping_lines, billing_lines)
 
     # Left column: Order details
     pdf.bounding_box([ 0, pdf.cursor ], width: column_width, height: section_height) do
@@ -157,48 +168,58 @@ class OrderPdfGenerator
 
     # Right column: Shipping (and, when collected, billing) address
     pdf.bounding_box([ column_width + 30, pdf.cursor + section_height ], width: column_width, height: section_height) do
-      add_address_block(pdf, "Shipping Address", OrderAddress.shipping_lines(@order))
+      add_address_block(pdf, "Shipping Address", shipping_lines)
 
-      if @order.billing_address?
-        pdf.move_down 10
-        add_address_block(pdf, "Billing Address", OrderAddress.billing_lines(@order))
+      if billing_lines.any?
+        pdf.move_down ADDRESS_BLOCK_GAP
+        add_address_block(pdf, "Billing Address", billing_lines)
       end
     end
 
     pdf.fill_color TEXT_DARK
   end
 
+  # Only :name lines get the dark emphasis and trailing gap; :address and
+  # :note lines (incl. the same-as-delivery note) render plain gray, matching
+  # the other surfaces.
   def add_address_block(pdf, title, lines)
     add_section_header(pdf, title)
-    pdf.move_down 8
+    pdf.move_down ADDRESS_TITLE_GAP
 
-    lines.each_with_index do |line, index|
-      pdf.fill_color(index.zero? ? TEXT_DARK : TEXT_GRAY)
-      pdf.text line, size: 10
-      pdf.move_down 3 if index.zero?
+    lines.each do |line|
+      name = line[:kind] == :name
+      pdf.fill_color(name ? TEXT_DARK : TEXT_GRAY)
+      pdf.text line[:text], size: ADDRESS_LINE_SIZE
+      pdf.move_down ADDRESS_NAME_GAP if name
     end
   end
 
-  # Measured height of the right column's content (add_address_block must stay
-  # in step), with the left column's fixed rows as the floor. height_of wraps
-  # against the column width, so long address lines that break count in full.
-  def address_section_height(pdf, column_width)
-    height = address_block_height(pdf, "Shipping Address", OrderAddress.shipping_lines(@order), column_width)
-    if @order.billing_address?
-      height += 10 + address_block_height(pdf, "Billing Address", OrderAddress.billing_lines(@order), column_width)
+  # Measured height of the right column's content, with the left column's
+  # fixed rows as the floor. height_of wraps against the column width, so long
+  # address lines that break count in full. The per-block ADDRESS_NAME_GAP is
+  # an allowance: blocks without a :name line render without the gap, so the
+  # box can only be over-sized, never under.
+  def address_section_height(pdf, column_width, shipping_lines, billing_lines)
+    height = address_block_height(pdf, "Shipping Address", shipping_lines, column_width)
+    if billing_lines.any?
+      height += ADDRESS_BLOCK_GAP + address_block_height(pdf, "Billing Address", billing_lines, column_width)
     end
 
     [ height + 4, 100 ].max
   end
 
   def address_block_height(pdf, title, lines, column_width)
-    pdf.height_of(title, size: 11, width: column_width) + 8 +
-      lines.sum { |line| pdf.height_of(line, size: 10, width: column_width) } + 3
+    # Titles render bold (add_section_header); measure them bold too, or a
+    # wrapping title would be undercounted.
+    pdf.height_of(title, size: SECTION_HEADER_SIZE, style: :bold, width: column_width) +
+      ADDRESS_TITLE_GAP +
+      lines.sum { |line| pdf.height_of(line[:text], size: ADDRESS_LINE_SIZE, width: column_width) } +
+      ADDRESS_NAME_GAP
   end
 
   def add_section_header(pdf, title)
     pdf.fill_color PRIMARY_DARK
-    pdf.text title, size: 11, style: :bold
+    pdf.text title, size: SECTION_HEADER_SIZE, style: :bold
     pdf.fill_color TEXT_DARK
   end
 
