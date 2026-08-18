@@ -2,12 +2,20 @@
 type: Backlog
 description: Working list of open SEO work, re-prioritised after each 4-week GSC measurement.
 status: active
-timestamp: 2026-07-19
+timestamp: 2026-08-18
 ---
 
 # SEO Backlog
 
-**Last reviewed:** 2026-07-19 (re-prioritised after the 28-day GSC measurement in [SEO Audit 2026-07-19](/seo/seo-audit-2026-07-19.md); day-to-day sequencing lives in the [B2B plan](/seo/b2b-organic-growth-plan-2026-07.md))
+**Last reviewed:** 2026-08-18 (re-prioritised after the 28-day GSC measurement in [SEO Measurement Checkpoint 2026-08-18](/seo/seo-audit-2026-08-18.md); day-to-day sequencing lives in the [B2B plan](/seo/b2b-organic-growth-plan-2026-07.md))
+
+**2026-08-18 measurement outcomes, applied below:**
+- **W1 retitles: no click effect at 4 weeks.** Category clicks fell 27 to 15; wholesale bucket still 0 clicks. Do not iterate titles; the constraint is position, not copy.
+- **B1 gate FAILED a second time:** restaurants +1 click / +1.9 positions (rule needs ≥3), coffee-shops flat. **B2 stays paused.** First movement on restaurants though; re-check next pull.
+- **Napkins block: rankings without clicks** (pos 2.5-8.9 across the family, 0 clicks, mostly AI-shaped queries). Replication on other categories is ON HOLD until it earns a click.
+- **Blog refresh (07-21): pizza post win** (3 to 10 clicks at flat pos 8), other 3 posts neutral. Confirms CTR work only pays on page-1 positions with real query volume; does not reopen B0.
+- **Rename equity: consolidation complete, level lower.** Old URLs gone from the index; new ice-cream-cups at 4 clicks / pos 14.6 vs old's 12 / 9.8. Nothing further to do but watch.
+- **New priority order: ship Task 18 (merchant-feed taxonomy fix) and Task 11 (/vegware consolidation) first.** Both were confirmed unshipped; merchant listings are the only high-CTR surface (26.1%) and vegware is the one improving head-term lane.
 
 **2026-07-19 measurement outcomes, applied below:**
 - **B0 CLOSED (measured, neutral):** the meta rewrite shipped but 28-day CTRs are flat-to-down on 4 of 5 pages (startup-costs 0.25%, paper-napkins 0.10%, pizza-boxes 0.09%, smoothie-cups 0.58% up, catering 0.21% up on a tiny base). No further blog-meta CTR work.

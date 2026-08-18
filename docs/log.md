@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-18
+
+* **Creation**: [SEO Measurement Checkpoint 2026-08-18](/seo/seo-audit-2026-08-18.md). The ~Aug-16 28-day GSC pull the July audit committed to, read directly from the GSC UI. Verdicts: W1 category retitles produced no click effect (27 to 15 clicks, position is the constraint); napkins-restaurants content ranks page-1 across its family but is clickless (AI-shaped queries), so replication is on hold; the July blog refresh scored one clear win (pizza post 3 to 10 clicks at flat position) and three neutrals; June rename equity is fully consolidated but at a lower level (new ice-cream-cups 4 clicks / pos 14.6 vs old 12 / 9.8); B1 gate failed a second time so guide batch 2 stays paused; quick_add indexing decaying on schedule (876, target ~755). Also corrects the record: Roadmap Tasks 11 (/vegware consolidation) and 18 (merchant-feed taxonomy) never shipped and are now the top next plays. Backlog re-prioritised, SEO index updated. Note: the doc's §4 is now the bundle's first written record of the 2026-07-21 blog refresh.
+
 ## 2026-08-17
 
 * **Creation**: [Hormozi Trilogy Implementation Plan](/plans/2026-08-17-hormozi-trilogy-implementation.md). Consolidates the three August 2026 Hormozi proposals' interlocking build orders into one four-phase checklist (now / next / then / gated) with per-item ownership (dev retainer vs Afida leadership), the deliberately-unplanned items, and the shared monthly scoreboard. Records groundwork already done: reorder-schedule expiry dead-end fix (master `1d8c0d58`) and the zombie schedule repair. Plans index updated.

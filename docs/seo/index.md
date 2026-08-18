@@ -6,6 +6,7 @@ Organic growth for afida.com: strategy, working backlog, keyword research, and s
 
 * [B2B Organic Growth Plan 2026-07](/seo/b2b-organic-growth-plan-2026-07.md) - Operative plan: win high-intent UK B2B queries (wholesale/bulk modifiers, brand-stockist terms) on commercial pages.
 * [SEO Audit 2026-07-19](/seo/seo-audit-2026-07-19.md) - Full audit + GSC 28-day measurement checkpoint: 404 recovery to baseline, B1 gate failed, B0 rewrite neutral, plan-item scoreboard, re-prioritised opportunities.
+* [SEO Measurement Checkpoint 2026-08-18](/seo/seo-audit-2026-08-18.md) - 28-day GSC checkpoint: W1 retitles no click effect, napkins ranks but clickless, blog-refresh pizza win, rename equity consolidated at a lower level, B1 gate failed again; Tasks 18/11 promoted to next plays.
 * [SEO Backlog](/seo/backlog.md) - Working list of open SEO work; re-prioritised after each 4-week GSC measurement.
 
 # Research
