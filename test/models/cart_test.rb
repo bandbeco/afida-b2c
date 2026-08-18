@@ -575,12 +575,12 @@ class CartTest < ActiveSupport::TestCase
     assert_includes url, "/cart/resume"
   end
 
-  # --- delivery postcode (the cart-page "calculate delivery" field) ---
-  # The cart page asks for a postcode so the customer sees a real delivery price
-  # before checkout, rather than discovering a surcharge at the payment screen.
-  # Like discount_rate this is per-request state injected by the controller, not
-  # a column: it belongs to the browsing session, and the order still records the
-  # address Stripe collects.
+  # --- delivery postcode ---
+  # Injected by the checkout page (its only writer) so the summary prices the
+  # destination the Stripe session charges. Like discount_rate this is
+  # per-request state injected by the controller, not a column: it belongs to
+  # the browsing session, and the order still records the address Stripe
+  # collects.
 
   test "delivery_zone is mainland until a postcode is set" do
     assert_equal :mainland, @cart.delivery_zone
@@ -620,6 +620,18 @@ class CartTest < ActiveSupport::TestCase
 
     assert_nil before
     assert_not_nil cart.shipping_amount
+  end
+
+  test "setting price_unknown_destination reprices already-computed totals" do
+    # Totals are memoized per request; the flag must clear them like its
+    # sibling delivery_postcode= does, or a read that happens before the
+    # checkout page sets it would freeze the deferred stance.
+    cart = undestined_cart
+    assert_nil cart.shipping_amount # deferred, and now memoized
+
+    cart.price_unknown_destination = true
+
+    assert_equal Shipping.cost_for_zone_in_pounds(:mainland), cart.shipping_amount
   end
 
   test "setting a non-mainland delivery postcode raises the shipping charge" do

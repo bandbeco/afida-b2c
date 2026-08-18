@@ -68,27 +68,11 @@ module Checkout
       [ 0, 0 ]
     end
 
+    # The classifier (and its unexpanded-product raise) lives in
+    # SessionLineItems, shared with SessionRepricer: both money paths must
+    # read "which line is shipping" identically.
     def shipping_line_item
-      line_items.find { |item| shipping_line?(item) }
-    end
-
-    # The shipping line is identified by its expanded product metadata, set when
-    # the session is built, so a renamed display label or a product coincidentally
-    # named "Shipping" never matches.
-    #
-    # A String product means price.product was returned as a bare id (the caller
-    # omitted the nested expand); raise so the missing expand is caught rather than
-    # silently treating the shipping line as a product. Items with no price at all
-    # (e.g. the webhook's bare stubs) are tolerated and simply don't match.
-    def shipping_line?(item)
-      return false unless item.respond_to?(:price)
-
-      product = item.price&.product
-      raise UnexpandedLineItemError, "line item product not expanded (id: #{product})" if product.is_a?(String)
-      return false unless product.respond_to?(:[])
-
-      # Reference the writer's flag so a rename can't silently desync the two.
-      product["metadata"]&.[](Shipping::LINE_ITEM_FLAG_KEY) == Shipping::LINE_ITEM_FLAG_VALUE
+      line_items.find { |item| SessionLineItems.shipping?(item) }
     end
 
     def legacy_shipping_cost
@@ -114,19 +98,14 @@ module Checkout
         end
     end
 
-    # The line items after the embedded first page, fetched via the dedicated
-    # endpoint (retrieve does not auto-paginate). starting_after avoids re-fetching
-    # the page Stripe already returned. If the embedded page was empty (has_more true
-    # but no data, a defensive edge), there is no boundary item, so list from the
-    # start instead of dereferencing nil. A Stripe error propagates to the caller's
-    # handler rather than being treated as "no shipping line".
+    # The line items after the embedded first page, via the shared paged fetch.
+    # starting_after avoids re-fetching the page Stripe already returned. If
+    # the embedded page was empty (has_more true but no data, a defensive
+    # edge), there is no boundary item, so list from the start instead of
+    # dereferencing nil. A Stripe error propagates to the caller's handler
+    # rather than being treated as "no shipping line".
     def line_items_after(last_embedded_item)
-      params = { expand: [ "data.price.product" ] }
-      params[:starting_after] = last_embedded_item.id if last_embedded_item
-      Stripe::Checkout::Session
-        .list_line_items(@session.id, **params)
-        .auto_paging_each
-        .to_a
+      SessionLineItems.list(@session.id, starting_after: last_embedded_item&.id)
     end
 
     def amount_subtotal

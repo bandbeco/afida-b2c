@@ -232,6 +232,14 @@ export default class extends Controller {
 
       if (repriced && seq === this.repriceSeq) {
         this.lastRepricedPostcode = postcode
+        // The server just priced this postcode authoritatively, so the zone
+        // guard has nothing to confirm for it: cancel a zone check already
+        // pending for it and seed the guard's dedup key (both lanes normalise)
+        // so the SDK refetch that follows the reprice doesn't schedule
+        // another. A missed or failed reprice never seeds, so the guard's
+        // independence as a fail-safe stands.
+        if (postcode === this.lastCheckedPostcode) clearTimeout(this.zoneTimer)
+        this.lastCheckedPostcode = postcode
         this.pricedZoneValue = repriced.zone
         this.updateMoneyLine("shipping", repriced.shipping_amount)
         this.zoneOk = true
@@ -266,7 +274,9 @@ export default class extends Controller {
   // callback, a reprice the server refused after the address already synced).
 
   guardZone(session) {
-    const postcode = session?.shippingAddress?.address?.postal_code
+    // Normalised so the dedup key matches the reprice lane's (which seeds it
+    // on success); the server parses any spelling.
+    const postcode = this.normalisePostcode(session?.shippingAddress?.address?.postal_code)
     if (!postcode || postcode === this.lastCheckedPostcode) return
 
     this.lastCheckedPostcode = postcode

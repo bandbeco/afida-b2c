@@ -5,9 +5,12 @@ module Checkout
   # another tab, postcode retyped, discount claimed), the stash must be
   # discarded rather than charged. Same inputs ⇒ same digest.
   class CartFingerprint
-    def self.digest(cart:, postcode:, discount_code:)
+    # items: pass an already-loaded `cart.cart_items.order(:id)` set when the
+    # caller computes several digests per request (the reprice endpoint), so
+    # each digest does not re-query; same records, same digest.
+    def self.digest(cart:, postcode:, discount_code:, items: nil)
       payload = {
-        items: cart.cart_items.order(:id).map do |item|
+        items: (items || cart.cart_items.order(:id)).map do |item|
           [ item.id, item.product_id, item.quantity, item.price.to_s, item.sample?, item.configuration ]
         end,
         postcode: ShippingZone.normalise(postcode),

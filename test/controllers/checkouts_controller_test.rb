@@ -81,9 +81,13 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert stash["fingerprint"].present?
     assert_kind_of Integer, stash["created_at"]
     # The session id is the reprice endpoint's authority for WHICH Stripe
-    # session may be updated - the client never sends one. Beyond that the
-    # stash is cookie payload on every request, so nothing else rides along.
+    # session may be updated - the client never sends one. The shipping the
+    # session charges is frozen here too, so the same-zone reprice
+    # short-circuit can quote it without recomputing from live constants.
+    # Beyond that the stash is cookie payload on every request, so nothing
+    # else rides along.
     assert_equal "sess_custom_123", stash["session_id"]
+    assert_equal 699, stash["shipping_pence"]
     assert_nil stash["postcode"]
   end
 
@@ -378,6 +382,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "IV1 1AA", session[:delivery_postcode]
     stash = session[:onsite_checkout]
     assert_equal "highlands", stash["zone"]
+    assert_equal 2500, stash["shipping_pence"]
     assert_equal Checkout::CartFingerprint.digest(cart: @cart, postcode: "IV1 1AA", discount_code: nil),
                  stash["fingerprint"]
   end
@@ -408,6 +413,38 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "SW1A 1AA", session[:delivery_postcode]
     assert_equal Checkout::CartFingerprint.digest(cart: @cart, postcode: "SW1A 1AA", discount_code: nil),
                  session[:onsite_checkout]["fingerprint"]
+  end
+
+  test "update's same-zone short-circuit quotes the shipping the session charges, not current constants" do
+    stash_onsite_session
+    # Simulate a shipping-price deploy between create and the address edit: the
+    # live quote rule changes, but the session's frozen line item does not, so
+    # the page must keep displaying what Stripe will actually charge.
+    Checkout::SessionRepricer.stubs(:shipping_pence).returns(999)
+
+    patch checkout_path, params: reprice_params("SW1A 1AA"), as: :json
+
+    assert_response :success
+    assert_equal "£6.99", response.parsed_body["shipping_amount"]
+  end
+
+  test "update's same-zone short-circuit runs one cart_items query" do
+    # The emptiness guard and both fingerprints (pre-check and post-write)
+    # share one loaded set, and the short-circuit quotes shipping from the
+    # stash, so this hot endpoint hits cart_items exactly once.
+    stash_onsite_session
+    selects = []
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      sql = payload[:sql].to_s
+      selects << sql if sql.start_with?("SELECT") && sql.include?("cart_items")
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      patch checkout_path, params: reprice_params("SW1A 1AA"), as: :json
+    end
+
+    assert_response :success
+    assert_equal 1, selects.size, "expected one cart_items query, got:\n#{selects.join("\n")}"
   end
 
   test "update reports free shipping for a qualifying order" do

@@ -81,32 +81,12 @@ module Checkout
       Shipping.shipping_line_item(tax_rate_id: tax_rate.id, zone: zone)
     end
 
+    # A shipping line misread as a product line here would be RETAINED by id
+    # alongside the new shipping line - a silent double-charge - so the
+    # classifier (and its unexpanded-product raise) lives in SessionLineItems,
+    # shared with SessionAmounts.
     def product_lines
-      current_line_items.reject { |item| shipping_line?(item) }
-    end
-
-    # All line items on the session, paged in full: the shipping line is
-    # prepended at creation but Stripe does not promise an order, so correctness
-    # must not depend on it landing in the first page.
-    def current_line_items
-      Stripe::Checkout::Session
-        .list_line_items(stripe_session_id, expand: [ "data.price.product" ])
-        .auto_paging_each
-        .to_a
-    end
-
-    # Same identification rule (and hardening) as SessionAmounts: the flag the
-    # session builder stamped on the shipping line's product metadata, never
-    # the display name. A String product means price.product came back as a
-    # bare id (the expand above was dropped); raise so the mistake is caught,
-    # because a shipping line misread as a product line would be RETAINED by id
-    # alongside the new shipping line - a silent double-charge.
-    def shipping_line?(item)
-      product = item.price&.product
-      raise SessionAmounts::UnexpandedLineItemError, "line item product not expanded (id: #{product})" if product.is_a?(String)
-      return false unless product.respond_to?(:[])
-
-      product["metadata"]&.[](Shipping::LINE_ITEM_FLAG_KEY) == Shipping::LINE_ITEM_FLAG_VALUE
+      SessionLineItems.list(stripe_session_id).reject { |item| SessionLineItems.shipping?(item) }
     end
 
     def tax_rate

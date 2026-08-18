@@ -70,7 +70,15 @@ class Cart < ApplicationRecord
   # delivery_zone's fallback instead. Cart surfaces never set this: for them
   # the deferred stance stays the honest one (mainland is the cheapest zone,
   # so quoting it early understates every off-mainland customer's cost).
-  attr_accessor :price_unknown_destination
+  # Assigning it clears the memoized totals like delivery_postcode= does, so a
+  # read that happened before the flag was set cannot freeze the deferred
+  # stance for the request.
+  attr_reader :price_unknown_destination
+
+  def price_unknown_destination=(value)
+    @price_unknown_destination = value
+    @cart_totals = nil
+  end
 
   # The destination zone for the entered postcode. Falls back to mainland when no
   # postcode has been entered or it cannot be parsed: the cart is a preview and

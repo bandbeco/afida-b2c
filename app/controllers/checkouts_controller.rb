@@ -96,6 +96,10 @@ class CheckoutsController < ApplicationController
             cart: cart, postcode: resolved_postcode, discount_code: session[:discount_code]
           ),
           "zone" => result.zone.to_s,
+          # What the session's frozen shipping line charges, so the same-zone
+          # reprice short-circuit can quote it without recomputing from live
+          # constants (which a deploy could have changed mid-checkout).
+          "shipping_pence" => Checkout::SessionRepricer.shipping_pence(zone: result.zone, cart: cart),
           "created_at" => Time.current.to_i
         }
         redirect_to checkout_path, status: :see_other
@@ -110,12 +114,6 @@ class CheckoutsController < ApplicationController
     end
   end
 
-  # Stripe expires Checkout Sessions 24 hours after creation; past that the
-  # stashed client_secret can only produce a dead page whose "please refresh"
-  # advice re-serves the same expired secret. Bounce just short of Stripe's
-  # line so the customer lands on the cart with a working restart instead.
-  ONSITE_STASH_TTL = 23.hours
-
   # The on-site checkout page. Renders the Stripe session stashed by #create;
   # performs no Stripe writes, so refresh and back-navigation are free.
   def show
@@ -126,28 +124,25 @@ class CheckoutsController < ApplicationController
       return redirect_to cart_path
     end
 
-    stash = session[:onsite_checkout]
     cart = Current.cart
-    return redirect_to cart_path if stash.blank? || cart.blank? || cart.cart_items.empty?
-
-    if stash["created_at"].to_i < ONSITE_STASH_TTL.ago.to_i
-      session.delete(:onsite_checkout)
-      return redirect_to cart_path, notice: "Your checkout session expired. Continue to payment when you're ready."
-    end
-
     # Re-resolve the destination exactly as #create did (typed postcode, then
-    # the default address). Falling back to a postcode recorded in the stash
-    # instead would validate the stash against itself: a destination that
-    # CHANGED after #create (a default address edited in another tab) went
-    # unnoticed, and the page charged a destination it no longer shows.
+    # the default address); StashedSession validates the stash against it
+    # rather than against a postcode of its own. A destination that CHANGED
+    # after #create (a default address edited in another tab) means the page
+    # would charge a destination it no longer shows.
     postcode = delivery_postcode_for
-    fingerprint = Checkout::CartFingerprint.digest(
-      cart: cart, postcode: postcode, discount_code: session[:discount_code]
+    verdict = Checkout::StashedSession.revalidate(
+      session: session, cart: cart, postcode: postcode, discount_code: session[:discount_code]
     )
-    if fingerprint != stash["fingerprint"]
-      session.delete(:onsite_checkout)
+    case verdict.state
+    when :absent
+      return redirect_to cart_path
+    when :expired
+      return redirect_to cart_path, notice: "Your checkout session expired. Continue to payment when you're ready."
+    when :stale
       return redirect_to cart_path, notice: "Your basket changed. Continue to payment when you're ready."
     end
+    stash = verdict.stash
 
     # The summary must price shipping from the destination the Stripe session
     # was built from. The before_action resolves the cart's postcode without
@@ -179,18 +174,32 @@ class CheckoutsController < ApplicationController
   # page's zone guard keeps Pay blocked on a mismatch. We can never fail open
   # into undercharging.
   def update
-    stash = session[:onsite_checkout]
     cart = Current.cart
 
-    unless OnsiteCheckout.enabled?(session) && stash.present? && stash["session_id"].present? &&
-           cart.present? && cart.cart_items.any?
+    unless OnsiteCheckout.enabled?(session)
       return render json: { error: "This checkout is no longer active." }, status: :gone
     end
 
-    if stash["created_at"].to_i < ONSITE_STASH_TTL.ago.to_i
-      session.delete(:onsite_checkout)
+    # The stash must still describe the cart as it stands, checked with the
+    # DESTINATION THE SESSION WAS LAST PRICED FOR (resolved exactly as #show
+    # does, in the shared StashedSession rules). Recomputing the fingerprint
+    # from the changed cart instead would overwrite the stash and mask exactly
+    # the staleness #show's bounce exists to catch: the customer would pay the
+    # old total for a basket the page no longer shows.
+    priced_postcode = delivery_postcode_for
+    verdict = Checkout::StashedSession.revalidate(
+      session: session, cart: cart, postcode: priced_postcode, discount_code: session[:discount_code]
+    )
+    case verdict.state
+    when :absent
+      return render json: { error: "This checkout is no longer active." }, status: :gone
+    when :expired
       return render json: { error: "This checkout has expired." }, status: :gone
+    when :stale
+      return render json: { error: "Your basket changed. Please return to it and check out again." },
+                    status: :conflict
     end
+    stash = verdict.stash
 
     # The stash names the only Stripe session this endpoint may update, but it
     # is shared by every checkout tab in the browser, and each POST /checkout
@@ -203,22 +212,6 @@ class CheckoutsController < ApplicationController
       params[:client_secret].to_s, stash["client_secret"].to_s
     )
       return render json: { error: "This checkout was reopened in another tab or window. Please return to your basket." },
-                    status: :conflict
-    end
-
-    # The stash must still describe the cart as it stands, checked with the
-    # DESTINATION THE SESSION WAS LAST PRICED FOR (resolved exactly as #show
-    # does). Skipping this and recomputing the fingerprint from the changed
-    # cart would overwrite the stash and mask exactly the staleness #show's
-    # bounce exists to catch: the customer would pay the old total for a
-    # basket the page no longer shows.
-    priced_postcode = delivery_postcode_for
-    priced_fingerprint = Checkout::CartFingerprint.digest(
-      cart: cart, postcode: priced_postcode, discount_code: session[:discount_code]
-    )
-    if priced_fingerprint != stash["fingerprint"]
-      session.delete(:onsite_checkout)
-      return render json: { error: "Your basket changed. Please return to it and check out again." },
                     status: :conflict
     end
 
@@ -250,20 +243,26 @@ class CheckoutsController < ApplicationController
       end
     end
 
+    # The short-circuit branch never priced anything: quote the amount frozen
+    # in the stash, not today's constants - a shipping-price deploy
+    # mid-checkout would otherwise display a price the session's frozen line
+    # item does not charge. Stashes written before the key existed fall back
+    # to the live quote (correct until their 23h TTL passes the deploy).
+    shipping_pence ||= stash["shipping_pence"] || Checkout::SessionRepricer.shipping_pence(zone: zone, cart: cart)
+
     # Coherence writes, only after Stripe accepted (or needed no) update: the
     # typed postcode becomes the session postcode (delivery_postcode_for
     # resolves the typed value first, so #show's re-derived fingerprint matches
-    # the one stored here), and the stash's zone follows the session's price.
+    # the one stored here), and the stash's zone and shipping follow the
+    # session's price. The fingerprint reuses the validator's loaded items.
     session[:delivery_postcode] = postcode
     session[:onsite_checkout] = stash.merge(
       "zone" => zone.to_s,
+      "shipping_pence" => shipping_pence,
       "fingerprint" => Checkout::CartFingerprint.digest(
-        cart: cart, postcode: postcode, discount_code: session[:discount_code]
+        cart: cart, postcode: postcode, discount_code: session[:discount_code], items: verdict.items
       )
     )
-
-    # The short-circuit branch never priced anything, so quote the zone here.
-    shipping_pence ||= Checkout::SessionRepricer.shipping_pence(zone: zone, cart: cart)
 
     render json: {
       zone: zone.to_s,
