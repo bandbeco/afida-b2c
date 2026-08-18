@@ -1,4 +1,4 @@
-<%# Compatible Lids Section - For Cup Products %>
+<%# Compatible Lids Section - any non-lid product can be mapped to the lids that fit it %>
 <%# This form is separate from the main product form to avoid nested form issues %>
 <div class="collapse collapse-arrow border border-neutral rounded-md mt-8">
   <input type="checkbox" id="compatible-lids-collapse" />
@@ -9,43 +9,47 @@
   <div class="collapse-content">
     <fieldset class="fieldset">
       <p class="text-sm text-base-content/70 mb-4">
-        Select which lid products are compatible with this cup. Check all lids that fit this cup, and select one as the default (recommended) option.
+        Check every lid that fits this product and pick one as the default (the default is what the cart suggests). The default only counts if its lid is checked.
       </p>
 
       <%
-        # Get all lid products
-        all_lids = Product.where("LOWER(name) LIKE ?", "%lid%")
-                         .where.not(id: product.id)
-                         .order(:name)
         current_lid_ids = product.compatible_lids.pluck(:id)
         default_lid_id = product.product_compatible_lids.find_by(default: true)&.compatible_lid_id
       %>
 
       <%= form_with url: update_compatible_lids_admin_product_path(product), method: :patch, local: true do |f| %>
-        <% if all_lids.empty? %>
+        <% if @lid_candidates_by_family.blank? %>
           <p class="text-sm text-base-content/60">
             No lid products found. Create lid products first.
           </p>
         <% else %>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-            <% all_lids.each do |lid| %>
-              <label class="flex items-start gap-3 p-3 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors">
-                <%= check_box_tag 'lid_ids[]', lid.id, current_lid_ids.include?(lid.id), class: "checkbox checkbox-primary mt-1", id: "lid_#{lid.id}" %>
-                <div class="flex-1">
-                  <div class="font-medium"><%= lid.name %></div>
-                  <div class="text-sm text-base-content/60">
-                    SKU: <%= lid.sku %>
-                  </div>
-                </div>
-                <% if current_lid_ids.include?(lid.id) %>
-                  <label class="flex items-center gap-1 text-sm">
-                    <%= radio_button_tag 'default_lid_id', lid.id, default_lid_id == lid.id, class: "radio radio-primary radio-sm" %>
-                    <span class="text-xs text-base-content/60">Default</span>
+          <% @lid_candidates_by_family.each do |family, lids| %>
+            <div data-lid-family-group class="mb-4">
+              <h4 class="text-sm uppercase tracking-wide text-base-content/60 mb-2"><%= family&.name || "No family" %></h4>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <% lids.each do |lid| %>
+                  <label class="flex items-start gap-3 p-3 border border-base-300 rounded-lg cursor-pointer hover:bg-base-200 transition-colors">
+                    <%= check_box_tag 'lid_ids[]', lid.id, current_lid_ids.include?(lid.id), class: "checkbox checkbox-primary mt-1", id: "lid_#{lid.id}" %>
+                    <div class="flex-1">
+                      <div class="font-medium">
+                        <%= lid.name %>
+                        <% unless lid.active? %>
+                          <span class="badge badge-sm badge-ghost ml-1">inactive</span>
+                        <% end %>
+                      </div>
+                      <div class="text-sm text-base-content/60">
+                        SKU: <%= lid.sku %><%= " · #{lid.size}" if lid.size.present? %>
+                      </div>
+                    </div>
+                    <label class="flex items-center gap-1 text-sm">
+                      <%= radio_button_tag 'default_lid_id', lid.id, default_lid_id == lid.id, class: "radio radio-primary radio-sm" %>
+                      <span class="text-xs text-base-content/60">Default</span>
+                    </label>
                   </label>
                 <% end %>
-              </label>
-            <% end %>
-          </div>
+              </div>
+            </div>
+          <% end %>
 
           <%= f.submit "Save Compatible Lids", class: "btn btn-primary" %>
         <% end %>

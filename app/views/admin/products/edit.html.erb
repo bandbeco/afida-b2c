@@ -6,7 +6,8 @@
   <%= render "form", product: @product %>
 
   <%# Compatible Lids Section - Separate from product form to avoid nested form issues %>
-  <% if @product.persisted? && @product.name.downcase.include?('cup') && !@product.name.downcase.include?('lid') %>
+  <%# Any non-lid product can take compatible lids (cups, soup containers, bowls...) %>
+  <% if @product.persisted? && !@product.lid_product? %>
     <%= render 'compatible_lids', product: @product %>
   <% end %>
 </div>

@@ -479,4 +479,65 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for='product_supplier_sku'] .required-marker", false,
                   "supplier_sku is optional and must not be marked required"
   end
+
+  test "edit renders the compatible lids panel for any non-lid product" do
+    get edit_admin_product_path(products(:one)), headers: @headers
+
+    assert_response :success
+    assert_select "form[action=?]", update_compatible_lids_admin_product_path(products(:one))
+  end
+
+  test "edit does not render the compatible lids panel for lid products" do
+    get edit_admin_product_path(products(:flat_lid_8oz)), headers: @headers
+
+    assert_response :success
+    assert_select "form[action=?]", update_compatible_lids_admin_product_path(products(:flat_lid_8oz)), count: 0
+  end
+
+  test "edit does not render the compatible lids panel for bare-size-named lids in a lid family" do
+    get edit_admin_product_path(products(:paper_lid_80mm)), headers: @headers
+
+    assert_response :success
+    assert_select "form[action=?]", update_compatible_lids_admin_product_path(products(:paper_lid_80mm)), count: 0
+  end
+
+  test "edit groups lid candidates by product family" do
+    get edit_admin_product_path(products(:branded_cup_8oz)), headers: @headers
+
+    assert_response :success
+    assert_select "[data-lid-family-group]", minimum: 2
+    assert_select "[data-lid-family-group]", text: /Paper Sip Lids for Hot Cups/
+  end
+
+  test "edit renders a default radio for unchecked lid candidates" do
+    get edit_admin_product_path(products(:branded_cup_8oz)), headers: @headers
+
+    unchecked_lid = products(:paper_lid_80mm)
+    assert_select "input[type=radio][name='default_lid_id'][value='#{unchecked_lid.id}']"
+  end
+
+  test "update_compatible_lids can set a newly checked lid as default in one save" do
+    cup = products(:single_wall_8oz_white)
+    lid = products(:sip_lid_8oz)
+
+    patch update_compatible_lids_admin_product_path(cup),
+          params: { lid_ids: [ lid.id ], default_lid_id: lid.id },
+          headers: @headers
+
+    assert_redirected_to edit_admin_product_path(cup)
+    row = cup.product_compatible_lids.find_by(compatible_lid_id: lid.id)
+    assert row.default?, "Newly checked lid should be saved as the default"
+  end
+
+  test "update_compatible_lids promotes a new default when the default lid is unchecked" do
+    cup = products(:branded_cup_8oz)
+    # Fixture: flat_lid_8oz is the default, domed_lid_8oz is not.
+    patch update_compatible_lids_admin_product_path(cup),
+          params: { lid_ids: [ products(:domed_lid_8oz).id ] },
+          headers: @headers
+
+    rows = cup.product_compatible_lids.reload
+    assert_equal [ products(:domed_lid_8oz).id ], rows.map(&:compatible_lid_id)
+    assert rows.first.default?, "Remaining lid should be promoted to default"
+  end
 end

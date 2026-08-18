@@ -43,7 +43,16 @@ module Admin
 
     # GET /products/1/edit
     def edit
-      # Product is the main entity now - just loading for editing
+      # Lid candidates for the Compatible Lids panel, grouped by family so the
+      # ~130-product list stays scannable. Unscoped: inactive lids keep their
+      # mappings visible in admin even though the storefront hides them.
+      @lid_candidates_by_family = Product.unscoped
+                                         .lid_candidates
+                                         .where.not(id: @product.id)
+                                         .includes(:product_family)
+                                         .order(:name)
+                                         .group_by(&:product_family)
+                                         .sort_by { |family, _| [ family ? 0 : 1, family&.name.to_s ] }
     end
 
     # POST /products
@@ -250,6 +259,13 @@ module Admin
       if default_lid_id.present? && selected_lid_ids.include?(default_lid_id)
         @product.product_compatible_lids.update_all(default: false)
         @product.product_compatible_lids.find_by(compatible_lid_id: default_lid_id)&.update!(default: true)
+      end
+
+      # A save that unchecked the default (or named no default) must not leave
+      # the product defaultless; promote the first remaining lid.
+      remaining = @product.product_compatible_lids.reload
+      if remaining.any? && remaining.none?(&:default?)
+        remaining.min_by(&:sort_order).update!(default: true)
       end
 
       redirect_to edit_admin_product_path(@product), notice: "Updated compatible lids"

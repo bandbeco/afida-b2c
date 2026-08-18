@@ -1337,4 +1337,22 @@ class ProductTest < ActiveSupport::TestCase
 
     assert_nil product.oz_size_token
   end
+
+  test "lid_candidates includes products named lid" do
+    assert_includes Product.lid_candidates, products(:flat_lid_8oz)
+  end
+
+  test "lid_candidates includes bare-size-named products in a lid family" do
+    assert_includes Product.lid_candidates, products(:paper_lid_80mm)
+  end
+
+  test "lid_candidates excludes cups" do
+    assert_not_includes Product.lid_candidates, products(:single_wall_8oz_white)
+  end
+
+  test "lid_product? mirrors the lid_candidates rule" do
+    assert products(:flat_lid_8oz).lid_product?
+    assert products(:paper_lid_80mm).lid_product?
+    assert_not products(:single_wall_8oz_white).lid_product?
+  end
 end
