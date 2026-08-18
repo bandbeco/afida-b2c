@@ -27,3 +27,4 @@ Successor to the [Matching Lids Configurator plan](/plans/2025-11-06-matching-li
 ## Status
 
 - 2026-08-18: All code phases built on branch `compatible-lids-overhaul` (tests green, 3,045 runs). Data prune, deploy and pipeline run pending.
+- 2026-08-18 (later): Prod prune APPLIED via kamal-exec runner: 112 of 182 rows deleted (70 remain), 10 defaults re-promoted, templates skipped. Deliberate deviation: the four `VEG-CUP-DW-*` cups were excluded because their family-seeded rows are known-correct (the cups share the 89/79-series rim their names encode; the old regex hid them only because the Vegware lid names carry no oz token), so the deploy will surface correct lids on those four pages as a bonus. Live-verified behaviour-invisible on 12WSW and 12RPTRC pages (served lid SKUs identical pre/post). Deploy and pipeline still pending.
