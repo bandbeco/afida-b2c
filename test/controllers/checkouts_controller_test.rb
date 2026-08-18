@@ -275,6 +275,54 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-onsite-checkout-money-kind='shipping']", text: "£25.00"
   end
 
+  test "show with no destination prices the summary as the session does, not deferred" do
+    # No postcode anywhere (the cart owner's default address is a fallback, so
+    # it must go too): SessionBuilder priced the Stripe session mainland (£6.99
+    # shipping line), and the SDK paints VAT and Total from that session. A
+    # deferred "Enter postcode" row would sit beside a Total that silently
+    # includes shipping the lines above it don't show.
+    @user.addresses.destroy_all
+    set_delivery_postcode("")
+    stash_onsite_session
+
+    get checkout_path
+
+    assert_response :success
+    assert_select "[data-onsite-checkout-money-kind='shipping']", text: "£6.99"
+  end
+
+  test "show does not prefill a saved address when a typed postcode outranks it" do
+    post session_url, params: { email_address: @user.email_address, password: "password" }
+    # Typed WD18 wins the pricing (delivery_postcode_for), but the default
+    # saved address is SW1A: prefilling it would complete the element on mount
+    # and auto-reprice, silently overwriting the postcode the customer typed.
+    set_delivery_postcode("WD18 9SB")
+    stash_onsite_session
+
+    get checkout_path
+
+    assert_response :success
+    assert_select "[data-onsite-checkout-prefill-value]" do |elements|
+      refute_includes elements.first["data-onsite-checkout-prefill-value"], "line1",
+        "an address the session was not priced from must not prefill"
+    end
+  end
+
+  test "show still prefills the saved address whose postcode matches the typed one" do
+    post session_url, params: { email_address: @user.email_address, password: "password" }
+    # Same postcode, differently cased and spaced: normalisation says it is the
+    # address the session was priced from, so the convenience prefill stays.
+    set_delivery_postcode("sw1a 1aa")
+    stash_onsite_session
+
+    get checkout_path
+
+    assert_response :success
+    assert_select "[data-onsite-checkout-prefill-value]" do |elements|
+      assert_includes elements.first["data-onsite-checkout-prefill-value"], "123 High Street"
+    end
+  end
+
   test "show bounces an expired stash instead of re-serving a dead client secret" do
     stash_onsite_session
 

@@ -26,6 +26,15 @@ class Shipping
   # in-memory hash matches how SessionAmounts reads it back: LINE_ITEM_FLAG[KEY].
   LINE_ITEM_FLAG = { LINE_ITEM_FLAG_KEY => LINE_ITEM_FLAG_VALUE }.freeze
 
+  # THE free-delivery rule: free shipping is a mainland promise gated on the
+  # products subtotal (in pounds, gross of discounts - a discount must not tip
+  # an order back under the threshold). SessionBuilder, SessionRepricer and
+  # OrderTotals all delegate here; when each carried its own copy they drifted,
+  # and orders shipped free to the Highlands.
+  def self.free_shipping?(zone:, subtotal:)
+    ShippingZone.free_shipping?(zone) && subtotal >= FREE_SHIPPING_THRESHOLD
+  end
+
   # Standard shipping cost in pounds, e.g. 6.99. Single conversion point from
   # the pence-denominated STANDARD_COST so display code never repeats the maths.
   def self.standard_cost_in_pounds

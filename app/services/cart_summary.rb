@@ -31,6 +31,15 @@ class CartSummary
     new(cart, placeholder_discount: placeholder_discount).lines
   end
 
+  # "Free" or the formatted amount (in pounds): the display rule for a KNOWN
+  # shipping charge. Shared with the checkout reprice endpoint so the row its
+  # JS rewrites can never drift in format from the one rendered here.
+  def self.format_shipping(amount)
+    return "Free" if amount.zero?
+
+    ActiveSupport::NumberHelper.number_to_currency(amount, unit: "£")
+  end
+
   def initialize(cart, placeholder_discount: false)
     @cart = cart
     @placeholder_discount = placeholder_discount
@@ -89,7 +98,7 @@ class CartSummary
     shipping = @cart.shipping_amount
     return DEFERRED_LABEL if shipping.nil?
 
-    shipping.zero? ? "Free" : money(shipping)
+    self.class.format_shipping(shipping)
   end
 
   # One money formatter for every cart surface, matching OrderSummary's, so the cart

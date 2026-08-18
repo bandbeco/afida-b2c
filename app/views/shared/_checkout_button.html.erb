@@ -18,12 +18,14 @@
     Current.cart would otherwise crash on total_amount). No cart, no checkout button. Uses
     the memoized line_items_count rather than cart_items.any? to avoid an extra SELECT 1. %>
 <% return unless (Current.cart&.line_items_count || 0).positive? %>
-<%# Checkout is refused without a delivery destination it can price (shipping is
-    baked into the Stripe line items before Stripe collects the address), so with
-    no destination this disables the button and says what is missing rather than
-    offering a POST into a guaranteed rejection. The condition matches
-    CheckoutsController#deliverable_destination? (see the note in
-    cart_items/_checkout.html.erb on why they must agree).
+<%# With no delivery destination this disables the button and says what is
+    missing, keeping the priced cart preview honest (the cart cannot reprice an
+    unknown destination; the checkout page can and does). The server no longer
+    refuses an unknown destination - CheckoutsController#refused_destination?
+    only refuses one we know we cannot serve, pricing the unknown as mainland -
+    so this gate is stricter than the guard behind it, and goes when the cart
+    calculator does (Phase C of the live-reprice plan; see the note in
+    cart_items/_checkout.html.erb).
 
     Every surface that offers checkout now carries a postcode field, so this can
     always name the fix in place. There used to be a third branch linking to

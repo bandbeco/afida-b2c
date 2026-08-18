@@ -163,14 +163,18 @@ class CheckoutsController < ApplicationController
     # The summary must price shipping from the destination the Stripe session
     # was built from. The before_action resolves the cart's postcode without
     # the address selection, so a saved-address checkout would otherwise
-    # display a different shipping line than the session charges.
+    # display a different shipping line than the session charges. With no
+    # destination at all the session still charges a concrete zone
+    # (SessionBuilder's mainland fallback), so the summary prices that instead
+    # of deferring: a deferred shipping line beside the SDK-painted total
+    # (which includes shipping) would not add up.
     cart.delivery_postcode = postcode
+    cart.price_unknown_destination = true
 
     @client_secret = stash["client_secret"]
     @priced_zone = stash["zone"]
     @show_promo = session[:discount_code].blank? && !cart.only_samples?
-    @prefill_address = Current.user&.addresses&.find_by(id: session[:selected_address_id]) ||
-                       Current.user&.addresses&.default_first&.first
+    @prefill_address = prefill_address_for(postcode)
     @customer_email = Current.user&.email_address
   end
 
@@ -225,11 +229,12 @@ class CheckoutsController < ApplicationController
     # needs no call at all; only the session-side records move (a different
     # postcode within the zone still changes the fingerprint). This is also
     # what makes the on-mount reprice of a prefilled address free.
+    shipping_pence = nil
     if zone.to_s != stash["zone"]
       begin
-        Checkout::SessionRepricer.new(
+        shipping_pence = Checkout::SessionRepricer.new(
           stripe_session_id: stash["session_id"], cart: cart, postcode: postcode
-        ).call
+        ).call.shipping_pence
       rescue Stripe::InvalidRequestError => e
         # The session completed or expired under us (e.g. Pay racing the reprice).
         Rails.logger.warn("Checkout reprice conflict: #{e.message}")
@@ -254,11 +259,12 @@ class CheckoutsController < ApplicationController
       )
     )
 
+    # The short-circuit branch never priced anything, so quote the zone here.
+    shipping_pence ||= Checkout::SessionRepricer.shipping_pence(zone: zone, cart: cart)
+
     render json: {
       zone: zone.to_s,
-      shipping_amount: formatted_shipping_amount(
-        Checkout::SessionRepricer.shipping_pence(zone: zone, cart: cart)
-      )
+      shipping_amount: CartSummary.format_shipping(shipping_pence / 100.0)
     }
   end
 
@@ -434,12 +440,19 @@ class CheckoutsController < ApplicationController
     ShippingZone.for(delivery_postcode_for(address_id)) == :undeliverable
   end
 
-  # "Free" or the currency amount, matching CartSummary's shipping line so the
-  # page's repriced shipping row reads exactly like the server-rendered one.
-  def formatted_shipping_amount(pence)
-    return "Free" if pence.zero?
+  # The saved address mounted into the Stripe element - but only when it
+  # matches the postcode the session is priced from. A completed prefill fires
+  # the on-mount reprice, so mounting an address with a DIFFERENT postcode
+  # (typed postcodes outrank saved addresses in delivery_postcode_for) would
+  # auto-reprice and silently overwrite the postcode the customer typed, and
+  # visibly move the total while they touched nothing. The element starts
+  # blank instead; picking a saved address there is an explicit choice.
+  def prefill_address_for(priced_postcode)
+    address = Current.user&.addresses&.find_by(id: session[:selected_address_id]) ||
+              Current.user&.addresses&.default_first&.first
+    return address if address.nil? || priced_postcode.nil?
 
-    ActiveSupport::NumberHelper.number_to_currency(pence / 100.0, unit: "£")
+    address if ShippingZone.normalise(address.postcode) == ShippingZone.normalise(priced_postcode)
   end
 
   def selected_address_postcode(address_id)

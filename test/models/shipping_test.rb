@@ -26,6 +26,23 @@ class ShippingTest < ActiveSupport::TestCase
   end
 
   # ==========================================================================
+  # free_shipping?: THE free-delivery rule. SessionBuilder, SessionRepricer and
+  # OrderTotals all delegate here; the copies drifted before this existed.
+  # ==========================================================================
+
+  test "free_shipping? is true for a mainland order at or above the threshold" do
+    assert Shipping.free_shipping?(zone: :mainland, subtotal: Shipping::FREE_SHIPPING_THRESHOLD)
+  end
+
+  test "free_shipping? is false below the threshold" do
+    refute Shipping.free_shipping?(zone: :mainland, subtotal: Shipping::FREE_SHIPPING_THRESHOLD - 1)
+  end
+
+  test "free_shipping? is false off-mainland regardless of subtotal" do
+    refute Shipping.free_shipping?(zone: :highlands, subtotal: Shipping::FREE_SHIPPING_THRESHOLD * 10)
+  end
+
+  # ==========================================================================
   # shipping_line_item: shipping is charged as a taxed Stripe line item so that,
   # under manual tax rates, Stripe applies VAT to the delivery charge too.
   # ==========================================================================

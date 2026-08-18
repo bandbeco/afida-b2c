@@ -62,6 +62,16 @@ class Cart < ApplicationRecord
     @cart_totals = nil
   end
 
+  # Set (only) by the on-site checkout page: its Stripe session always charges
+  # a concrete zone, even when no destination is known yet (SessionBuilder
+  # prices the unknown as mainland), and the page paints VAT and Total from
+  # that session. Deferring here would render a shipping line that disagrees
+  # with the total beside it, so the page asks cart_totals to price
+  # delivery_zone's fallback instead. Cart surfaces never set this: for them
+  # the deferred stance stays the honest one (mainland is the cheapest zone,
+  # so quoting it early understates every off-mainland customer's cost).
+  attr_accessor :price_unknown_destination
+
   # The destination zone for the entered postcode. Falls back to mainland when no
   # postcode has been entered or it cannot be parsed: the cart is a preview and
   # the field is optional, so an unrecognised postcode must not block the customer.
@@ -246,7 +256,8 @@ class Cart < ApplicationRecord
     # first call per request; later calls (this backs four public methods) reuse
     # the memoized result.
     @cart_totals ||= begin
-      stance = cart_items.empty? || !delivery_destination_known? ? :deferred : :charged
+      priceable = delivery_destination_known? || price_unknown_destination
+      stance = cart_items.empty? || !priceable ? :deferred : :charged
       OrderTotals.for(subtotal_amount, shipping: stance, discount_rate: applicable_discount_rate,
                                        zone: delivery_zone)
     end

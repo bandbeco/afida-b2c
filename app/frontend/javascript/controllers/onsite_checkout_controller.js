@@ -17,10 +17,11 @@ import { Controller } from "@hotwired/stimulus"
 // actions.runServerUpdate() so the SDK refetches the session and refreshes
 // totals after the server rebuilds the shipping line item. The address itself
 // syncs to Stripe client-side as it always has - the server owns only the
-// price. While a reprice is in flight the Pay button is locked, and the zone
+// price. While a reprice is in flight the Pay button is locked, a FAILED
+// reprice locks it too (fail closed) until a retry succeeds, and the zone
 // guard below independently blocks Pay whenever the typed postcode's zone
-// disagrees with the zone the session is priced for, so a missed or failed
-// reprice cannot be paid at the wrong price.
+// disagrees with the zone the session is priced for, so a missed reprice
+// cannot be paid at the wrong price either.
 // (permissions.update_shipping_details=server_only is deliberately NOT used:
 // the clover elements SDK rejects onShippingDetailsChange at init, and under
 // server_only it throws when applying defaultValues - see SessionBuilder.)
@@ -160,17 +161,26 @@ export default class extends Controller {
   shippingAddressChanged(event) {
     if (!event?.complete) return
 
-    const postcode = event.value?.address?.postal_code
+    const postcode = this.normalisePostcode(event.value?.address?.postal_code)
     if (!postcode || postcode === this.lastRepricedPostcode || postcode === this.inFlightPostcode) return
 
     this.reprice(postcode)
   }
 
+  // Mirrors ShippingZone.normalise server-side, so two spellings of the same
+  // postcode ("iv1 1aa" vs "IV1 1AA") dedupe to one reprice instead of burning
+  // requests against the endpoint's rate limit.
+  normalisePostcode(postcode) {
+    return (postcode || "").toUpperCase().trim().replace(/ +/g, " ")
+  }
+
   // Fail-CLOSED on money: only a 200 (the server repriced, or confirmed the
-  // zone unchanged) updates the priced zone; on any failure the zone guard
-  // still compares the typed postcode against the OLD priced zone and blocks
-  // Pay on a mismatch. The PATCH rides inside actions.runServerUpdate() so
-  // the SDK refetches the session afterwards and re-renders totals.
+  // zone unchanged) updates the priced zone; any failure locks Pay directly
+  // (zoneOk = false) - the zone guard cannot be the backstop here, because it
+  // fails OPEN and shares failure modes with this request (the app briefly
+  // down, the customer's network dropping). The PATCH rides inside
+  // actions.runServerUpdate() so the SDK refetches the session afterwards and
+  // re-renders totals.
   async reprice(postcode) {
     // Only the latest reprice owns the verdict: a slow response for an earlier
     // postcode must not overwrite a later one (same rule as checkZone).
@@ -225,13 +235,23 @@ export default class extends Controller {
       }
     } catch (error) {
       // Thrown from the update function (server refusal / network drop), or by
-      // runServerUpdate itself (e.g. timeout). The priced zone is unchanged,
-      // so the zone guard keeps Pay blocked while the typed zone disagrees.
-      this.showError(error?.message || "We couldn't update delivery. Please try again.")
+      // runServerUpdate itself (e.g. timeout). The typed address may now be in
+      // a zone the session is not priced for, so lock Pay until a retry
+      // succeeds (editing any address field re-fires the reprice) or the zone
+      // guard positively confirms the typed zone matches the priced one.
+      if (seq === this.repriceSeq) {
+        this.zoneOk = false
+        this.showError(error?.message || "We couldn't update delivery. Please check your address and try again.")
+      }
     } finally {
-      this.inFlightPostcode = null
-      this.repricing = false
-      this.syncPayButton()
+      // Guarded like the success block: a superseded reprice resolving late
+      // must not clear the in-flight flags (unlocking Pay, and re-arming the
+      // dedup) while the latest reprice is still running.
+      if (seq === this.repriceSeq) {
+        this.inFlightPostcode = null
+        this.repricing = false
+        this.syncPayButton()
+      }
     }
   }
 
@@ -264,6 +284,12 @@ export default class extends Controller {
     // Only the latest postcode owns the verdict: a slow response for an
     // earlier one must not overwrite it (last-response-wins race).
     if (postcode !== this.lastCheckedPostcode) return
+    // And the reprice lane outranks this one while it has a PATCH in flight:
+    // this comparison may have read the priced zone that reprice is about to
+    // replace, and applying it would clobber the fresh verdict with a stale
+    // one - then stick, because both lanes dedupe by postcode. The reprice's
+    // own outcome sets zoneOk either way (success true, failure false).
+    if (this.repricing) return
 
     this.zoneOk = zoneOk
     this.zoneWarningTarget.classList.toggle("hidden", this.zoneOk)

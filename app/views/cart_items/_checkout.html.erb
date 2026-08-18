@@ -56,15 +56,19 @@
     <% end %>
 
     <%# Delivery is priced into the Stripe line items before Stripe collects
-        the address, so checkout is refused without a destination. Disable
-        the button rather than letting the customer bounce off the guard.
+        the address, so this gate still asks for a destination it can price
+        (typed postcode, then selected address, then the default address) and
+        disables the button without one.
 
-        This asks the same question CheckoutsController#deliverable_destination?
-        asks, in the same order (typed postcode, then selected address,
-        then the default address). They MUST agree: when they didn't, a
-        customer who picked "enter a different address" saw an enabled
-        button, was refused by the guard, and landed back on a cart whose
-        button was still enabled, with nothing pointing at the fix. %>
+        The server is deliberately LOOSER than this gate:
+        CheckoutsController#refused_destination? refuses only a destination we
+        know we cannot serve, and prices an unknown one as mainland - the
+        on-site page reprices from the address the customer actually types.
+        So a stale form that slips past this gate proceeds instead of bouncing
+        off a guard. The gate itself goes when the cart calculator does
+        (Phase C of the live-reprice plan): until then it keeps the priced
+        cart preview honest, since the CART cannot reprice an unknown
+        destination the way the checkout page can. %>
     <% destination_known = delivery_destination_known?(cart, address_postcode: cart_owner_default_postcode(cart)) %>
     <div class="mt-4 sm:mt-6">
       <button type="submit"

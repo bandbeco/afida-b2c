@@ -124,14 +124,8 @@ class OrderTotals
   end
 
   # nil when deferred (no shipping line yet); 0 or the zone's cost when charged.
-  # Keyed off the gross subtotal so a discount can't tip an order back below the
-  # free-shipping threshold, matching SessionBuilder (which checks cart.subtotal_amount).
-  #
-  # Free delivery is a mainland promise: only zones in
-  # ShippingZone::FREE_SHIPPING_ZONES can reach zero, so a large order to the
-  # Highlands or Northern Ireland still pays the off-mainland rate. This mirrors
-  # SessionBuilder#shipping_line_item; the two rules have drifted before, so any
-  # change here needs the same change there.
+  # The free-delivery rule itself lives in Shipping.free_shipping? (shared with
+  # SessionBuilder and SessionRepricer; the copies drifted before it existed).
   def shipping
     return nil if @shipping_stance == :deferred
     return BigDecimal("0") if free_shipping?
@@ -140,6 +134,6 @@ class OrderTotals
   end
 
   def free_shipping?
-    ShippingZone.free_shipping?(@zone) && @subtotal >= Shipping::FREE_SHIPPING_THRESHOLD
+    Shipping.free_shipping?(zone: @zone, subtotal: @subtotal)
   end
 end

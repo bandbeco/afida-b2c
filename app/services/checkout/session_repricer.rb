@@ -32,14 +32,13 @@ module Checkout
       end
     end
 
-    # The delivery charge for this cart to this zone, in pence. Mirrors
-    # SessionBuilder#shipping_line_item's rule (and OrderTotals'): free
-    # delivery is a mainland promise gated on the products subtotal. Public so
-    # the reprice endpoint can quote a zone it did not need to reprice (the
+    # The delivery charge for this cart to this zone, in pence. Public so the
+    # reprice endpoint can quote a zone it did not need to reprice (the
     # same-zone short-circuit).
     def self.shipping_pence(zone:, cart:)
-      free = ShippingZone.free_shipping?(zone) && cart.subtotal_amount >= Shipping::FREE_SHIPPING_THRESHOLD
-      free ? 0 : Shipping.cost_for_zone(zone)
+      return 0 if Shipping.free_shipping?(zone: zone, subtotal: cart.subtotal_amount)
+
+      Shipping.cost_for_zone(zone)
     end
 
     def initialize(stripe_session_id:, cart:, postcode:)
@@ -96,10 +95,15 @@ module Checkout
         .to_a
     end
 
-    # Same identification rule as SessionAmounts: the flag the session builder
-    # stamped on the shipping line's product metadata, never the display name.
+    # Same identification rule (and hardening) as SessionAmounts: the flag the
+    # session builder stamped on the shipping line's product metadata, never
+    # the display name. A String product means price.product came back as a
+    # bare id (the expand above was dropped); raise so the mistake is caught,
+    # because a shipping line misread as a product line would be RETAINED by id
+    # alongside the new shipping line - a silent double-charge.
     def shipping_line?(item)
       product = item.price&.product
+      raise SessionAmounts::UnexpandedLineItemError, "line item product not expanded (id: #{product})" if product.is_a?(String)
       return false unless product.respond_to?(:[])
 
       product["metadata"]&.[](Shipping::LINE_ITEM_FLAG_KEY) == Shipping::LINE_ITEM_FLAG_VALUE

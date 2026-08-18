@@ -107,6 +107,19 @@ class Checkout::SessionRepricerTest < ActiveSupport::TestCase
     assert_equal items.map(&:id), retained
   end
 
+  test "raises when a line item's product comes back as a bare id" do
+    # A String product means the nested expand was dropped: the flag metadata
+    # is unreadable, so the shipping line would silently pass as a product line
+    # and its id be retained alongside a NEW shipping line (double-charge).
+    # Same hardening as SessionAmounts#shipping_line?.
+    stub_line_items(stub(id: "li_ship_old", price: stub(product: "prod_unexpanded")))
+    Stripe::Checkout::Session.expects(:update).never
+
+    assert_raises(Checkout::SessionAmounts::UnexpandedLineItemError) do
+      reprice(postcode: "IV1 1AA")
+    end
+  end
+
   test "reports the shipping charge in pence, zero when the order ships free" do
     @cart.cart_items.create!(product: products(:two), quantity: 1, price: 150.00)
     stub_line_items(stripe_product_line_item(amount_subtotal: 16_000, id: "li_prod"))

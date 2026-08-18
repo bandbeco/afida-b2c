@@ -170,22 +170,15 @@ module Checkout
       item.product.pac_size.blank? || item.product.pac_size.zero?
     end
 
-    # The taxed shipping line item, or nil when the order ships free. Keyed off the
-    # subtotal vs the free-shipping threshold and the destination zone, the same
-    # rule OrderTotals uses for the displayed totals - keep the two in step.
-    # Samples-only carts have a £0 subtotal (samples are free), which is below the
-    # threshold, so they correctly still pay shipping.
-    #
-    # Free delivery is a mainland promise, so a large order to a surcharged zone
-    # still gets a shipping line. This is the fix for orders that shipped free to
-    # Northern Ireland and the Highlands.
+    # The taxed shipping line item, or nil when the order ships free
+    # (Shipping.free_shipping? is the one rule, shared with OrderTotals and
+    # SessionRepricer). Samples-only carts have a £0 subtotal (samples are
+    # free), which is below the threshold, so they correctly still pay shipping.
     def shipping_line_item
       return @shipping_line_item if defined?(@shipping_line_item)
 
-      free = ShippingZone.free_shipping?(zone) && cart.subtotal_amount >= Shipping::FREE_SHIPPING_THRESHOLD
-
       @shipping_line_item =
-        unless free
+        unless Shipping.free_shipping?(zone: zone, subtotal: cart.subtotal_amount)
           Shipping.shipping_line_item(tax_rate_id: tax_rate.id, zone: zone)
         end
     end
