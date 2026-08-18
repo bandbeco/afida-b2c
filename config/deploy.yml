@@ -42,6 +42,10 @@ env:
     # When you start using multiple servers, you should split out job processing to a dedicated machine.
     SOLID_QUEUE_IN_PUMA: true
     APP_HOST: afida.com
+    # Checkout renders on afida.com (Stripe custom UI) instead of redirecting
+    # to Stripe's hosted page. Rollback lever: remove/zero this and re-boot
+    # the app (read live from ENV, no code change needed). See OnsiteCheckout.
+    ONSITE_CHECKOUT: "1"
     LOGTAIL_SOURCE_TOKEN: "Uj21nX6NXHtoW9qzwg6nG4hn"
     LOGTAIL_INGESTING_HOST: "s1679295.eu-nbg-2.betterstackdata.com"
 
