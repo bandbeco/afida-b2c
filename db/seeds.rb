@@ -50,12 +50,11 @@ puts "  Created/Updated category: Branded Products (branded-products)"
 # Load products from consolidated CSV
 load Rails.root.join('db', 'seeds', 'products_from_csv.rb')
 
-# Load branded product pricing seed (must run before lid_compatibility)
+# Load branded product pricing seed
 load Rails.root.join('db', 'seeds', 'branded_product_pricing.rb')
 
-# Populate lid compatibility relationships (cups → lids)
-# Runs after branded products exist so they get lid compatibility too
-load Rails.root.join('db', 'seeds', 'lid_compatibility.rb')
+# Lid compatibility is admin-curated production data (product_compatible_lids);
+# it is deliberately not seeded so reseeding can never wipe the curated rows.
 
 # Load branded product photos (after branded products are created)
 load Rails.root.join('db', 'seeds', 'branded_product_photos.rb')

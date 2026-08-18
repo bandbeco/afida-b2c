@@ -262,10 +262,5 @@ namespace :branded_products do
     puts "Branded product import complete!"
     puts "  Total products: #{total_products}"
     puts "  Total pricing entries: #{total_pricing}"
-
-    # Populate lid compatibility
-    puts ""
-    puts "Populating lid compatibility..."
-    Rake::Task["lid_compatibility:populate"].invoke
   end
 end

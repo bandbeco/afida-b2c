@@ -336,6 +336,14 @@ class Product < ApplicationRecord
     nil
   end
 
+  # Lowercase "8oz"-style token from the free-text size, falling back to the
+  # generated title. Used to match branded-template lid candidates to the
+  # configurator's selected cup size; ProductSizeParser handles ml volumes and
+  # is not a substitute because lids are labelled by oz, not volume.
+  def oz_size_token
+    (size.to_s[/\d+oz/i] || generated_title[/\d+oz/i])&.downcase
+  end
+
   META_TITLE_BENEFIT_PRIORITY = [ "Compostable", "Recyclable", "Biodegradable", "Plastic Free" ].freeze
   META_TITLE_MAX_LENGTH = 60
 

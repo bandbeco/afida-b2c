@@ -1,8 +1,36 @@
 namespace :lid_compatibility do
-  desc "Populate product_compatible_lids table with default compatibility relationships"
-  task populate: :environment do
-    load Rails.root.join("db", "seeds", "lid_compatibility.rb")
-    puts "\nRun 'rails lid_compatibility:report' to see the full compatibility matrix"
+  # One-time cleanup before the storefront stopped size-filtering curated lids
+  # at render time: rewrites family-seeded join rows to the set the old regex
+  # filter actually displayed, so removing the filter changes nothing visually.
+  # Branded templates are skipped: one template spans many cup sizes and its
+  # rows are filtered per selected size by the configurator at runtime.
+  desc "Delete join rows whose lid oz size mismatches the product's (dry run unless APPLY=1)"
+  task prune_size_mismatched: :environment do
+    apply = ENV["APPLY"] == "1"
+    puts apply ? "Applying prune..." : "DRY RUN (set APPLY=1 to write)"
+    deleted_total = 0
+
+    product_ids = ProductCompatibleLid.unscoped.distinct.pluck(:product_id)
+    Product.unscoped.where(id: product_ids, product_type: "standard").find_each do |product|
+      rows = ProductCompatibleLid.where(product_id: product.id).includes(:compatible_lid).order(:sort_order)
+      product_token = product.oz_size_token
+      doomed, kept = rows.partition { |row| product_token.nil? || row.compatible_lid.oz_size_token != product_token }
+      next if doomed.empty?
+
+      puts "#{product.name} [#{product.sku}] (#{product_token || 'no oz token'})"
+      puts "  removing: #{doomed.map { |r| r.compatible_lid.sku }.join(', ')}"
+      puts "  keeping:  #{kept.any? ? kept.map { |r| r.compatible_lid.sku }.join(', ') : '(none)'}"
+      deleted_total += doomed.size
+      next unless apply
+
+      lost_default = doomed.any?(&:default?)
+      doomed.each(&:destroy!)
+      if lost_default && kept.any?
+        kept.min_by(&:sort_order).update!(default: true)
+      end
+    end
+
+    puts "#{apply ? 'Deleted' : 'Would delete'} #{deleted_total} rows; #{ProductCompatibleLid.count} remain"
   end
 
   desc "Display lid compatibility report"

@@ -1313,4 +1313,28 @@ class ProductTest < ActiveSupport::TestCase
 
     assert_equal 1, product.minimum_order_units
   end
+
+  test "oz_size_token extracts the oz token from the size field" do
+    product = Product.new(size: "8oz / 227ml")
+
+    assert_equal "8oz", product.oz_size_token
+  end
+
+  test "oz_size_token falls back to the generated title when size has no oz token" do
+    product = Product.new(name: "Flat Lid - 12oz", size: "90mm")
+
+    assert_equal "12oz", product.oz_size_token
+  end
+
+  test "oz_size_token normalizes to lowercase" do
+    product = Product.new(size: "16OZ / 454ml")
+
+    assert_equal "16oz", product.oz_size_token
+  end
+
+  test "oz_size_token is nil when no oz token exists anywhere" do
+    product = Product.new(name: "Napkins", size: "33cm")
+
+    assert_nil product.oz_size_token
+  end
 end
