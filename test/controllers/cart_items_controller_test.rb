@@ -377,6 +377,19 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match(/turbo-stream action="update" target="cart"/, @response.body)
+    assert_no_match(/<turbo-frame id="cart"/, @response.body,
+                    "updating the #cart frame must not nest another #cart frame inside it")
+  end
+
+  test "destroy turbo_stream does not nest a duplicate cart frame" do
+    cart_item = @cart.cart_items.create!(product: @product_variant, quantity: 2, price: @product_variant.price)
+
+    delete cart_cart_item_path(cart_item), headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match(/turbo-stream action="update" target="cart"/, @response.body)
+    assert_no_match(/<turbo-frame id="cart"/, @response.body,
+                    "updating the #cart frame must not nest another #cart frame inside it")
   end
 
   test "create turbo_stream from a product page does not re-render the cart frame" do

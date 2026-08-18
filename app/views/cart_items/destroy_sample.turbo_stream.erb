@@ -21,5 +21,5 @@
 <%# Update cart items list (cart page). The whole #cart frame is re-rendered, so the
     summary totals refresh with it; no per-line updates needed. %>
 <%= turbo_stream.update "cart" do %>
-  <%= render partial: "cart_items/index", locals: { cart_items: Current.cart.cart_items.includes(:product).order('products.name ASC') } %>
+  <%= render partial: "cart_items/cart_contents", locals: { cart_items: Current.cart.cart_items.includes(:product).order('products.name ASC') } %>
 <% end %>

@@ -336,17 +336,21 @@ class Product < ApplicationRecord
     nil
   end
 
-  # A product counts as a lid when "lid" appears in its own name or its
-  # family's name: real lid products often carry bare size names ("80mm",
-  # "4oz (62mm)") with "Lids" only in the family. Used by the admin
-  # compatible-lids picker (candidates) and its gate (lids don't get lids).
+  # A product counts as a lid when the word "lid"/"lids" appears in its own
+  # name or its family's name: real lid products often carry bare size names
+  # ("80mm", "4oz (62mm)") with "Lids" only in the family. Whole-word so names
+  # like "Solid" never match. Used by the admin compatible-lids picker
+  # (candidates) and its gate (lids don't get lids). Keep the SQL regex and
+  # LID_WORD in sync.
+  LID_WORD = /\blids?\b/i
+
   scope :lid_candidates, -> {
     left_joins(:product_family)
-      .where("products.name ILIKE :term OR product_families.name ILIKE :term", term: "%lid%")
+      .where("products.name ~* :re OR product_families.name ~* :re", re: '\mlids?\M')
   }
 
   def lid_product?
-    name.match?(/lid/i) || product_family&.name&.match?(/lid/i) || false
+    name.match?(LID_WORD) || product_family&.name&.match?(LID_WORD) || false
   end
 
   # Lowercase "8oz"-style token from the free-text size, falling back to the

@@ -51,4 +51,24 @@ class ProductCompatibleLidTest < ActiveSupport::TestCase
     assert_not first.default, "First should no longer be default"
     assert second.default, "Second should be default"
   end
+
+  test "destroying the default row promotes the lowest sort_order survivor" do
+    # Fixtures: flat_lid_8oz is the default (sort_order 1), domed_lid_8oz is not (sort_order 2)
+    product_compatible_lids(:one).destroy!
+
+    assert product_compatible_lids(:two).reload.default?,
+           "Remaining lid should be promoted to default"
+  end
+
+  test "destroying a non-default row leaves the default untouched" do
+    product_compatible_lids(:two).destroy!
+
+    assert product_compatible_lids(:one).reload.default?
+  end
+
+  test "destroying the last row promotes nothing" do
+    product_compatible_lids(:two).destroy!
+
+    assert_nothing_raised { product_compatible_lids(:one).destroy! }
+  end
 end

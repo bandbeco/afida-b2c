@@ -27,13 +27,14 @@ namespace :lids do
     other = known - slugs
     puts "Categories present but not exported as containers: #{other.join(', ')}"
 
+    # Union computed as id sets so the customized_instance exclusion applies
+    # to BOTH branches (a naive .or scopes the exclusion to one side only).
     already_mapped_ids = ProductCompatibleLid.unscoped.distinct.pluck(:product_id)
+    in_category_ids = Product.active.joins(:category).where(categories: { slug: slugs }).ids
     containers = Product.active
+                        .where(id: in_category_ids | already_mapped_ids)
                         .where.not(product_type: "customized_instance")
-                        .joins(:category).where(categories: { slug: slugs })
-                        .or(Product.active.where(id: already_mapped_ids))
-                        .includes(:product_family, :category, :product_compatible_lids)
-                        .distinct
+                        .includes(:product_family, :category, product_compatible_lids: :compatible_lid)
                         .reject(&:lid_product?)
     lids = Product.active.lid_candidates.includes(:product_family, :category)
 

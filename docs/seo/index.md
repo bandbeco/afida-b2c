@@ -11,6 +11,7 @@ Organic growth for afida.com: strategy, working backlog, keyword research, and s
 
 # Research
 
+* [Ahrefs Extraction 2026-08-18](/seo/ahrefs-extraction-2026-08-18.md) - One-month Ahrefs Lite burst: authority is not the constraint, commercial page coverage is; 444-keyword content gap, SERP evidence, spam-link spike; raw data in `data/ahrefs-2026-08/`.
 * [Ahrefs Keyword Research: Collections & Sample Packs](/seo/ahrefs-keyword-research-2025-01-17.md) - UK keyword and volume research for collections and sample packs; a source for the B2B plan.
 * [Keyword Targeting Strategy](/seo/keyword-targeting-strategy.md) - Per-category UK keyword targets and on-page placement rules; superseded by the [B2B plan](/seo/b2b-organic-growth-plan-2026-07.md)'s wholesale-modifier targeting.
 

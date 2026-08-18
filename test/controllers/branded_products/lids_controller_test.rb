@@ -81,6 +81,26 @@ class BrandedProducts::LidsControllerTest < ActionDispatch::IntegrationTest
     assert json["lids"].length > 0, "Other active 8oz lids should still be returned"
   end
 
+  test "matches a composed size param by its oz token" do
+    get branded_products_compatible_lids_path,
+        params: { product_id: @cup_product.id, size: "8oz Red" },
+        as: :json
+
+    json = JSON.parse(response.body)
+
+    assert json["lids"].length > 0, "Expected '8oz Red' to match 8oz lids"
+  end
+
+  test "returns no lids for a size param without an oz token" do
+    get branded_products_compatible_lids_path,
+        params: { product_id: @cup_product.id, size: "Large" },
+        as: :json
+
+    json = JSON.parse(response.body)
+
+    assert_equal [], json["lids"]
+  end
+
   test "matches size case-insensitively" do
     get branded_products_compatible_lids_path,
         params: { product_id: @cup_product.id, size: "8OZ" },

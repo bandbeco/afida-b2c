@@ -54,6 +54,19 @@ class LidSuggestionsTest < ActiveSupport::TestCase
     assert_equal [ @cup, other_cup ].sort_by(&:id), suggestions.first.containers.sort_by(&:id)
   end
 
+  test "lists a container once even when it has two cart line items" do
+    # Tiered pricing legitimately creates two rows for one product at different prices
+    tiered_cup = products(:single_wall_8oz_white)
+    ProductCompatibleLid.create!(product: tiered_cup, compatible_lid: products(:flat_lid_8oz), sort_order: 0, default: true)
+    add_to_cart(tiered_cup)
+    @cart.cart_items.create!(product: tiered_cup, quantity: 3, price: 24.00)
+
+    suggestions = LidSuggestions.new(@cart).to_a
+
+    assert_equal 1, suggestions.length
+    assert_equal [ tiered_cup ], suggestions.first.containers
+  end
+
   test "ignores sample items" do
     @cup.update!(sample_eligible: true)
     add_to_cart(@cup, is_sample: true)

@@ -1350,6 +1350,16 @@ class ProductTest < ActiveSupport::TestCase
     assert_not_includes Product.lid_candidates, products(:single_wall_8oz_white)
   end
 
+  test "lid matching requires a whole word, not a substring" do
+    solid = Product.create!(
+      category: categories(:cups), name: "Solid Wood Cutlery", sku: "TEST-SOLID-01",
+      price: 10, active: true, product_type: "standard"
+    )
+
+    assert_not_includes Product.lid_candidates, solid
+    assert_not solid.lid_product?
+  end
+
   test "lid_product? mirrors the lid_candidates rule" do
     assert products(:flat_lid_8oz).lid_product?
     assert products(:paper_lid_80mm).lid_product?

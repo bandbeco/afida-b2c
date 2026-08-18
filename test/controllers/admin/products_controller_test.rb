@@ -516,6 +516,16 @@ class Admin::ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type=radio][name='default_lid_id'][value='#{unchecked_lid.id}']"
   end
 
+  test "failed product update still renders the compatible lids panel with candidates" do
+    cup = products(:branded_cup_8oz)
+
+    patch admin_product_path(cup), params: { product: { name: "" } }, headers: @headers
+
+    assert_response :unprocessable_entity
+    assert_select "form[action=?]", update_compatible_lids_admin_product_path(cup)
+    assert_select "[data-lid-family-group]", minimum: 1
+  end
+
   test "update_compatible_lids can set a newly checked lid as default in one save" do
     cup = products(:single_wall_8oz_white)
     lid = products(:sip_lid_8oz)

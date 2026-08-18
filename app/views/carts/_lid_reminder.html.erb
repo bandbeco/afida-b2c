@@ -20,8 +20,9 @@
               <p class="text-sm text-base-content/70 mb-1">
                 Fits <%= suggestion.containers.map(&:generated_title).to_sentence %>
               </p>
+              <% pac_size = lid.pac_size.to_i.positive? ? lid.pac_size : 1000 %>
               <p class="text-sm sm:text-base text-gray-900">
-                <%= number_to_currency(lid.price) %> / pack of <%= number_with_delimiter(lid.pac_size) %>
+                <%= number_to_currency(lid.price) %> / pack of <%= number_with_delimiter(pac_size) %>
               </p>
 
               <%= form_with url: cart_cart_items_path, method: :post, class: "flex flex-col sm:flex-row gap-2 mt-3" do |f| %>
@@ -29,7 +30,7 @@
                 <%= f.hidden_field "cart_item[from_cart_page]", value: "1" %>
                 <%= f.select "cart_item[quantity]",
                              options_for_select((1..10).map { |packs|
-                               [ "#{packs} #{'pack'.pluralize(packs)} (#{number_with_delimiter(lid.pac_size.to_i * packs)} units)", packs ]
+                               [ "#{packs} #{'pack'.pluralize(packs)} (#{number_with_delimiter(pac_size * packs)} units)", packs ]
                              }, 1),
                              {},
                              class: "w-full sm:w-auto px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white" %>

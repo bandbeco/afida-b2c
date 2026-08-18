@@ -238,6 +238,23 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "cart page lid reminder falls back to a 1000-unit pack when the lid has no pac_size" do
+    products(:flat_lid_8oz).update!(pac_size: nil)
+    get cart_url
+    cart = Cart.find(session[:cart_id])
+    cup = products(:branded_cup_8oz)
+    cart.cart_items.create!(product: cup, quantity: 1, price: cup.price)
+
+    get cart_url
+
+    assert_response :success
+    assert_select "#lid-reminder" do
+      assert_no_match(/\(0 units\)/, css_select("#lid-reminder").to_s)
+      assert_match(/1 pack \(1,000 units\)/, css_select("#lid-reminder").to_s)
+      assert_match(/pack of 1,000/, css_select("#lid-reminder").to_s)
+    end
+  end
+
   test "cart page shows no lid reminder when a compatible lid is already in the cart" do
     get cart_url
     cart = Cart.find(session[:cart_id])

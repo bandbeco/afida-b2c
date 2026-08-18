@@ -23,11 +23,8 @@ namespace :lid_compatibility do
       deleted_total += doomed.size
       next unless apply
 
-      lost_default = doomed.any?(&:default?)
+      # Destroying a default promotes a survivor via the model callback
       doomed.each(&:destroy!)
-      if lost_default && kept.any?
-        kept.min_by(&:sort_order).update!(default: true)
-      end
     end
 
     puts "#{apply ? 'Deleted' : 'Would delete'} #{deleted_total} rows; #{ProductCompatibleLid.count} remain"
@@ -48,7 +45,7 @@ namespace :lid_compatibility do
 
     if cups_with_lids.empty?
       puts "\nNo lid compatibility data found."
-      puts "Run 'rails lid_compatibility:populate' to populate default relationships."
+      puts "Populate via the lids: pipeline (lids:export_inventory -> lids:propose_mappings -> lids:apply_mappings) or the admin Compatible Lids panel."
       return
     end
 

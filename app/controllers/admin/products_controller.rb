@@ -43,16 +43,7 @@ module Admin
 
     # GET /products/1/edit
     def edit
-      # Lid candidates for the Compatible Lids panel, grouped by family so the
-      # ~130-product list stays scannable. Unscoped: inactive lids keep their
-      # mappings visible in admin even though the storefront hides them.
-      @lid_candidates_by_family = Product.unscoped
-                                         .lid_candidates
-                                         .where.not(id: @product.id)
-                                         .includes(:product_family)
-                                         .order(:name)
-                                         .group_by(&:product_family)
-                                         .sort_by { |family, _| [ family ? 0 : 1, family&.name.to_s ] }
+      load_lid_candidates
     end
 
     # POST /products
@@ -71,6 +62,7 @@ module Admin
       if @product.update(product_params)
         redirect_to admin_products_path, notice: "Product was successfully updated.", status: :see_other
       else
+        load_lid_candidates
         render :edit, status: :unprocessable_entity
       end
     end
@@ -158,13 +150,8 @@ module Admin
       pcl = @product.product_compatible_lids.find_by(compatible_lid: lid)
 
       if pcl
-        was_default = pcl.default?
+        # Destroying the default promotes a survivor via the model callback
         pcl.destroy!
-
-        # If we removed the default lid, set the first remaining lid as default
-        if was_default && @product.product_compatible_lids.any?
-          @product.product_compatible_lids.order(:sort_order).first.update!(default: true)
-        end
 
         redirect_to edit_admin_product_path(@product), notice: "Removed #{lid.name} from compatible lids"
       else
@@ -272,6 +259,21 @@ module Admin
     end
 
     private
+
+    # Lid candidates for the Compatible Lids panel, grouped by family so the
+    # ~130-product list stays scannable. Unscoped: inactive lids keep their
+    # mappings visible in admin even though the storefront hides them. Needed
+    # by every render of the edit template (edit and update's failure path).
+    def load_lid_candidates
+      @lid_candidates_by_family = Product.unscoped
+                                         .lid_candidates
+                                         .where.not(id: @product.id)
+                                         .includes(:product_family)
+                                         .order(:name)
+                                         .group_by(&:product_family)
+                                         .sort_by { |family, _| [ family ? 0 : 1, family&.name.to_s ] }
+    end
+
     # Use callbacks to share common setup or constraints between actions.
     def set_product
       @product = Product.unscoped.find_by!(slug: params.expect(:id))

@@ -15,8 +15,10 @@ module BrandedProducts
                         .active
 
       if params[:size].present?
-        wanted = params[:size].downcase
-        lids = lids.select { |lid| lid.oz_size_token == wanted }
+        # Match on the oz token so composed sizes ("8oz Red") still resolve; a
+        # size with no oz token matches nothing, mirroring the old behaviour.
+        wanted = params[:size][/\d+oz/i]&.downcase
+        lids = wanted ? lids.select { |lid| lid.oz_size_token == wanted } : []
       end
 
       render json: { lids: lids.map { |lid| lid_json(lid) } }

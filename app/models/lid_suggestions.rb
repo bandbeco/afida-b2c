@@ -24,10 +24,15 @@ class LidSuggestions
   attr_reader :cart
 
   def cart_products
+    # uniq: tiered pricing can put the same product on two cart line items
     @cart_products ||= cart.cart_items
                            .non_samples
-                           .includes(product: { compatible_lids: { product_photo_attachment: :blob } })
+                           .includes(product: { compatible_lids: [
+                             { product_photo_attachment: :blob },
+                             { lifestyle_photo_attachment: :blob }
+                           ] })
                            .map(&:product)
+                           .uniq
   end
 
   def suggested_lid_for(container, cart_product_ids)
