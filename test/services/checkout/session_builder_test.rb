@@ -631,7 +631,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
   # tests must select the product line by content rather than by position.
   # --- custom (on-site) mode ---
 
-  test "custom mode differs from hosted only in ui_mode, URLs, payment methods, and permissions" do
+  test "custom mode differs from hosted only in ui_mode, URLs, and payment methods" do
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
 
     captured = []
@@ -653,15 +653,15 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     # Everything else must be identical - this is the parity contract the
     # hosted fallback depends on. Shipping line item drift here costs money.
-    mode_keys = [ :ui_mode, :return_url, :success_url, :cancel_url, :payment_method_types, :permissions ]
+    mode_keys = [ :ui_mode, :return_url, :success_url, :cancel_url, :payment_method_types ]
     assert_equal hosted.except(*mode_keys), custom.except(*mode_keys)
   end
 
-  # server_only routes every shipping-details write through PATCH /checkout
-  # (the live reprice); without it Stripe would sync the typed address client-side
-  # and the page could confirm against a price the server never saw. Hosted mode
-  # must NOT send permissions: Stripe rejects the param outside embedded/custom.
-  test "custom mode restricts shipping-details updates to the server; hosted sends no permissions" do
+  # permissions.update_shipping_details=server_only must never come back: the
+  # clover elements SDK applies defaultValues (and contact picks) by calling
+  # updateShippingAddress internally, which that permission forbids - init
+  # throws and the checkout page dies for every customer.
+  test "neither mode restricts shipping-details updates" do
     @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
 
     captured = []
@@ -673,10 +673,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     build_session
     build_custom_session
 
-    hosted, custom = captured
-
-    assert_equal({ update_shipping_details: "server_only" }, custom[:permissions])
-    assert_nil hosted[:permissions]
+    captured.each { |params| assert_nil params[:permissions] }
   end
 
   test "custom mode pins the shipping line item exactly as hosted does" do

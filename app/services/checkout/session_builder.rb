@@ -79,13 +79,13 @@ module Checkout
         {
           ui_mode: "custom",
           return_url: return_url,
-          payment_method_types: [ "card", "link" ],
-          # Every shipping-details write must come through PATCH /checkout (the
-          # live reprice), which is what keeps the charged shipping line and the
-          # delivered-to address in step. Client-side sync would let the two
-          # diverge silently. Stripe rejects this param outside embedded/custom,
-          # so it must never leak into the hosted branch.
-          permissions: { update_shipping_details: "server_only" }
+          payment_method_types: [ "card", "link" ]
+          # Deliberately NOT permissions.update_shipping_details=server_only:
+          # the clover elements SDK applies defaultValues (and contact picks) by
+          # calling updateShippingAddress internally, which that permission
+          # forbids - init throws and the page dies. Address sync stays
+          # client-side; PATCH /checkout owns only the PRICE (line items +
+          # metadata zone), guarded by the page's zone check.
         }
       else
         {

@@ -300,9 +300,8 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   # --- PATCH /checkout (live shipping reprice from the on-site page) ---
 
-  # The address details the Stimulus controller posts alongside the postcode.
   def reprice_params(postcode)
-    { postcode: postcode, name: "Jane Tester", line1: "1 High St", city: "Testtown", country: "GB" }
+    { postcode: postcode }
   end
 
   def stub_reprice_stripe_calls
@@ -328,9 +327,11 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "highlands", body["zone"]
     assert_equal "£25.00", body["shipping_amount"]
 
-    # The stash names the only session this endpoint may ever touch.
+    # The stash names the only session this endpoint may ever touch. The
+    # update carries only price concerns; the SDK syncs the address itself.
     assert_equal "sess_custom_123", @update_capture[:id]
-    assert_equal "Jane Tester", @update_capture[:params][:collected_information][:shipping_details][:name]
+    assert_nil @update_capture[:params][:collected_information]
+    assert_equal({ shipping_zone: "highlands" }, @update_capture[:params][:metadata])
 
     # Coherence writes: the typed postcode becomes the session postcode (so the
     # cart and GET /checkout resolve the same destination) and the stash's zone
@@ -353,22 +354,21 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-onsite-checkout-priced-zone-value='highlands']"
   end
 
-  test "update with an unchanged zone records the address without rebuilding line items" do
+  # A different postcode in the SAME zone needs no Stripe call (the shipping
+  # line is already right) but must still move the session postcode and the
+  # fingerprint, or GET /checkout would bounce a perfectly healthy stash.
+  test "update with an unchanged zone skips Stripe but still records the postcode" do
     stash_onsite_session
     Stripe::Checkout::Session.expects(:list_line_items).never
-    @update_capture = {}
-    capture = @update_capture
-    Stripe::Checkout::Session.stubs(:update).with do |id, params|
-      capture[:id] = id
-      capture[:params] = params
-      true
-    end.returns(build_custom_stripe_session)
+    Stripe::Checkout::Session.expects(:update).never
 
     patch checkout_path, params: reprice_params("SW1A 1AA"), as: :json
 
     assert_response :success
-    refute @update_capture[:params].key?(:line_items)
     assert_equal "£6.99", response.parsed_body["shipping_amount"]
+    assert_equal "SW1A 1AA", session[:delivery_postcode]
+    assert_equal Checkout::CartFingerprint.digest(cart: @cart, postcode: "SW1A 1AA", discount_code: nil),
+                 session[:onsite_checkout]["fingerprint"]
   end
 
   test "update reports free shipping for a qualifying order" do

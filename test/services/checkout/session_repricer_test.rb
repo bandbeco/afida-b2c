@@ -107,25 +107,6 @@ class Checkout::SessionRepricerTest < ActiveSupport::TestCase
     assert_equal items.map(&:id), retained
   end
 
-  # Under permissions.update_shipping_details=server_only the client can NEVER
-  # sync the typed address to Stripe itself, so even a no-op reprice must still
-  # record the shipping details on the session or confirm() has no address.
-  # Only the line-item rebuild (and its list round-trip) is skipped: the same
-  # cart (fingerprint-checked by the caller) and the same zone always produce
-  # the same shipping line.
-  test "an unchanged zone records the address without rebuilding line items" do
-    Stripe::Checkout::Session.expects(:list_line_items).never
-
-    captured = capture_update
-
-    result = reprice(postcode: "SW1A 1AA", priced_zone: "mainland")
-
-    assert_equal :mainland, result.zone
-    refute captured[:params].key?(:line_items)
-    assert captured[:params][:collected_information].present?
-    assert_equal({ shipping_zone: "mainland" }, captured[:params][:metadata])
-  end
-
   test "reports the shipping charge in pence, zero when the order ships free" do
     @cart.cart_items.create!(product: products(:two), quantity: 1, price: 150.00)
     stub_line_items(stripe_product_line_item(amount_subtotal: 16_000, id: "li_prod"))
@@ -135,7 +116,7 @@ class Checkout::SessionRepricerTest < ActiveSupport::TestCase
     assert_equal 0, reprice(postcode: "SW1A 1AA").shipping_pence
   end
 
-  test "sends the shipping details and priced zone in the same update call" do
+  test "records the priced zone on the session metadata in the same update call" do
     stub_line_items(
       stripe_shipping_line_item(amount_subtotal: 699, id: "li_ship_old"),
       stripe_product_line_item(amount_subtotal: 1000, id: "li_prod")
@@ -143,31 +124,23 @@ class Checkout::SessionRepricerTest < ActiveSupport::TestCase
 
     captured = capture_update
 
-    details = {
-      name: "Test Customer",
-      address: { line1: "1 High St", line2: nil, city: "Inverness", postal_code: "IV1 1AA", country: "GB" }
-    }
-    reprice(postcode: "IV1 1AA", shipping_details: details)
+    reprice(postcode: "IV1 1AA")
 
     assert_equal SESSION_ID, captured[:id]
-    assert_equal({ shipping_details: details }, captured[:params][:collected_information])
     assert_equal({ shipping_zone: "highlands" }, captured[:params][:metadata])
+    # The address is deliberately absent: the Stripe SDK syncs it client-side;
+    # this update owns only the price.
+    assert_nil captured[:params][:collected_information]
   end
 
   private
 
-  def reprice(postcode:, shipping_details: default_details(postcode), priced_zone: nil)
+  def reprice(postcode:)
     Checkout::SessionRepricer.new(
       stripe_session_id: SESSION_ID,
       cart: @cart,
-      postcode: postcode,
-      shipping_details: shipping_details,
-      priced_zone: priced_zone
+      postcode: postcode
     ).call
-  end
-
-  def default_details(postcode)
-    { name: "Test Customer", address: { line1: "1 High St", city: "Testtown", postal_code: postcode, country: "GB" } }
   end
 
   # The repricer pages with auto_paging_each, so the list stub answers that

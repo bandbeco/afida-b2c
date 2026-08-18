@@ -2,12 +2,11 @@
 
 module Checkout
   # Reprices an OPEN custom-mode Checkout Session for the destination the
-  # customer typed on the on-site checkout page, in one Stripe update: the
-  # shipping line item is rebuilt for the new zone, the typed address is
-  # recorded as the session's collected shipping details (the session is
-  # created with permissions.update_shipping_details=server_only, so this is
-  # the only way the address reaches Stripe), and metadata.shipping_zone is
-  # rewritten so the completed order records the zone it was actually charged.
+  # customer typed on the on-site checkout page: the taxed shipping line item
+  # is rebuilt for the new zone and metadata.shipping_zone is rewritten so the
+  # completed order records the zone it was actually charged. The address
+  # itself is NOT written here - the Stripe SDK syncs it client-side, exactly
+  # as on the hosted page; this service owns only the price.
   #
   # Stripe's line_items update is a full retransmit: a line listed as {id:} is
   # retained, a line with price_data is added, and a line whose id is omitted
@@ -33,42 +32,41 @@ module Checkout
       end
     end
 
-    # priced_zone is the zone the session's line items were last built for (the
-    # controller's stash). When the typed postcode resolves to that same zone
-    # the shipping line is already right, so the rebuild (and its line-item
-    # listing round-trip) is skipped - but the update itself still happens:
-    # under server_only the client cannot sync the address, so this call is the
-    # only way the typed shipping details ever reach the session.
-    def initialize(stripe_session_id:, cart:, postcode:, shipping_details:, priced_zone: nil)
+    # The delivery charge for this cart to this zone, in pence. Mirrors
+    # SessionBuilder#shipping_line_item's rule (and OrderTotals'): free
+    # delivery is a mainland promise gated on the products subtotal. Public so
+    # the reprice endpoint can quote a zone it did not need to reprice (the
+    # same-zone short-circuit).
+    def self.shipping_pence(zone:, cart:)
+      free = ShippingZone.free_shipping?(zone) && cart.subtotal_amount >= Shipping::FREE_SHIPPING_THRESHOLD
+      free ? 0 : Shipping.cost_for_zone(zone)
+    end
+
+    def initialize(stripe_session_id:, cart:, postcode:)
       @stripe_session_id = stripe_session_id
       @cart = cart
       @postcode = postcode
-      @shipping_details = shipping_details
-      @priced_zone = priced_zone
     end
 
     def call
       zone = ShippingZone.for(postcode)
       raise UndeliverableZone, zone unless ShippingZone.deliverable?(zone)
 
-      params = {
-        collected_information: { shipping_details: shipping_details },
+      session = Stripe::Checkout::Session.update(stripe_session_id, {
+        line_items: rebuilt_line_items(zone),
         metadata: { shipping_zone: zone.to_s }
-      }
-      params[:line_items] = rebuilt_line_items(zone) unless zone.to_s == priced_zone.to_s
-
-      session = Stripe::Checkout::Session.update(stripe_session_id, params)
+      })
 
       Result.new(
         zone: zone,
         session: session,
-        shipping_pence: free_shipping?(zone) ? 0 : Shipping.cost_for_zone(zone)
+        shipping_pence: self.class.shipping_pence(zone: zone, cart: cart)
       )
     end
 
     private
 
-    attr_reader :stripe_session_id, :cart, :postcode, :shipping_details, :priced_zone
+    attr_reader :stripe_session_id, :cart, :postcode
 
     # The new shipping line (unless the order now ships free), then every
     # product line retained untouched by id. Prepending keeps the shipping line
@@ -76,16 +74,8 @@ module Checkout
     # optimisation SessionBuilder makes for SessionAmounts.
     def rebuilt_line_items(zone)
       items = product_lines.map { |line| { id: line.id } }
-      items.unshift(shipping_line(zone)) unless free_shipping?(zone)
+      items.unshift(shipping_line(zone)) unless self.class.shipping_pence(zone: zone, cart: cart).zero?
       items
-    end
-
-    # Mirrors SessionBuilder#shipping_line_item's rule (and OrderTotals'): free
-    # delivery is a mainland promise gated on the products subtotal. The CART
-    # subtotal is authoritative here, not Stripe's line amounts - the controller
-    # has already fingerprint-checked that the cart still matches the session.
-    def free_shipping?(zone)
-      ShippingZone.free_shipping?(zone) && cart.subtotal_amount >= Shipping::FREE_SHIPPING_THRESHOLD
     end
 
     def shipping_line(zone)
