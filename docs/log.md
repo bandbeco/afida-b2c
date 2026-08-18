@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-18
+
+* **Update**: Rebasing the `lead-monitor` branch onto master surfaced two ADRs both numbered 0001. The on-site checkout ADR (recorded 2026-07-28, after the 2026-07-15 lead-discovery record) is now [0002](/adr/0002-onsite-checkout-on-checkout-sessions.md) and gained OKF frontmatter and an [ADR index](/adr/index.md) entry, bringing it under the curated `adr/` area this branch introduces.
+
 ## 2026-08-17
 
 * **Creation**: [Hormozi Trilogy Implementation Plan](/plans/2026-08-17-hormozi-trilogy-implementation.md). Consolidates the three August 2026 Hormozi proposals' interlocking build orders into one four-phase checklist (now / next / then / gated) with per-item ownership (dev retainer vs Afida leadership), the deliberately-unplanned items, and the shared monthly scoreboard. Records groundwork already done: reorder-schedule expiry dead-end fix (master `1d8c0d58`) and the zombie schedule repair. Plans index updated.

@@ -1,3 +1,10 @@
+---
+type: ADR
+description: On-site checkout keeps creating Stripe Checkout Sessions (ui_mode custom) instead of moving to Payment Intents, so Stripe stays the sole authority on money math.
+status: active
+timestamp: 2026-07-28
+---
+
 # On-site checkout builds on Checkout Sessions (custom UI), not Payment Intents
 
 When checkout moved onto afida.com (2026-07, on-site checkout spec), we kept
