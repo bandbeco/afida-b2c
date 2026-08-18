@@ -6,6 +6,7 @@ Dated feature and design plans. Statuses were researched against git history and
 
 * [B2B Organic Roadmap 2026-07](/plans/2026-07-07-b2b-organic-roadmap.md) - Task-by-task execution of the [B2B organic growth strategy](/seo/b2b-organic-growth-plan-2026-07.md).
 * [Hormozi Trilogy Implementation 2026-08](/plans/2026-08-17-hormozi-trilogy-implementation.md) - Consolidated four-phase checklist merging the build orders of the three Hormozi proposals (Money Model, Grand Slam Offer, Leads).
+* [Compatible Lids Overhaul](/plans/2026-08-18-compatible-lids-overhaul.md) - Curated join table as sole lid-display truth, admin opened to all container types, cart lid reminder, propose/review/apply data pipeline.
 
 # Shipped
 
@@ -18,7 +19,7 @@ Dated feature and design plans. Statuses were researched against git history and
 * [Advertising Optimization](/plans/2025-11-06-advertising-optimization.md) - Shopping feed enhancements and conversion tracking; roughly half shipped as designed.
 * [Comprehensive SEO Implementation](/plans/2025-11-06-comprehensive-seo-implementation.md) - Programmatic SEO foundation: structured data, sitemap, robots, canonicals, metas.
 * [FAQ Section](/plans/2025-11-06-faq-section.md) - YAML-backed FAQ page with FAQPage schema; per-category DB FAQs came later.
-* [Matching Lids Configurator](/plans/2025-11-06-matching-lids-configurator.md) - Compatible-lids join table and configurator step.
+* [Matching Lids Configurator](/plans/2025-11-06-matching-lids-configurator.md) - Compatible-lids join table and configurator step; superseded by the [2026-08 overhaul](/plans/2026-08-18-compatible-lids-overhaul.md).
 * [Admin Ordering Controls Design](/plans/2025-11-08-admin-ordering-controls-design.md) - acts_as_list ordering for categories and products.
 * [Admin Ordering Controls](/plans/2025-11-08-admin-ordering-controls.md) - Task breakdown for the ordering controls.
 * [Category Page Lighthouse Audit](/plans/2025-11-24-category-page-lighthouse-audit-design.md) - Audit workflow; outputs live in `/audits/`.

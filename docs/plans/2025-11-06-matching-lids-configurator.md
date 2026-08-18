@@ -1,8 +1,9 @@
 ---
 type: Plan
 description: Implementation plan for a relational compatible-lids join table and a configurator step offering matching lid selection for branded cups.
-status: shipped
-timestamp: 2025-11-07
+status: superseded
+superseded_by: /plans/2026-08-18-compatible-lids-overhaul.md
+timestamp: 2026-08-18
 ---
 
 # Matching Lids Configurator Implementation Plan
