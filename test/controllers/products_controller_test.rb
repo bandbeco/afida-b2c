@@ -342,6 +342,27 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show renders every curated compatible lid regardless of size token" do
+    cup = products(:single_wall_12oz_white)
+    ProductCompatibleLid.create!(product: cup, compatible_lid: products(:flat_lid_8oz), sort_order: 0)
+
+    get product_url(cup.slug)
+
+    assert_response :success
+    assert_select "[data-lid-sku='#{products(:flat_lid_8oz).sku}']"
+  end
+
+  test "show does not render inactive compatible lids" do
+    cup = products(:branded_cup_8oz)
+    products(:flat_lid_8oz).update!(active: false)
+
+    get product_url(cup.slug)
+
+    assert_response :success
+    assert_select "[data-lid-sku='#{products(:flat_lid_8oz).sku}']", count: 0
+    assert_select "[data-lid-sku='#{products(:domed_lid_8oz).sku}']"
+  end
+
   test "show eager loads attachments for related products and compatible lids" do
     # branded_cup_8oz has two compatible lids (flat_lid_8oz, domed_lid_8oz),
     # both matching by size, so the show page renders the compatible-lids

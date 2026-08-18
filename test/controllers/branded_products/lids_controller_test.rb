@@ -57,6 +57,40 @@ class BrandedProducts::LidsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], json["lids"]
   end
 
+  test "returns every join-table lid when size is omitted" do
+    get branded_products_compatible_lids_path,
+        params: { product_id: @cup_product.id },
+        as: :json
+
+    assert_response :success
+    json = JSON.parse(response.body)
+
+    assert_equal @cup_product.compatible_lids.count, json["lids"].length
+  end
+
+  test "excludes inactive lids" do
+    products(:flat_lid_8oz).update!(active: false)
+
+    get branded_products_compatible_lids_path,
+        params: { product_id: @cup_product.id, size: "8oz" },
+        as: :json
+
+    json = JSON.parse(response.body)
+
+    assert_not_includes json["lids"].map { |lid| lid["sku"] }, products(:flat_lid_8oz).sku
+    assert json["lids"].length > 0, "Other active 8oz lids should still be returned"
+  end
+
+  test "matches size case-insensitively" do
+    get branded_products_compatible_lids_path,
+        params: { product_id: @cup_product.id, size: "8OZ" },
+        as: :json
+
+    json = JSON.parse(response.body)
+
+    assert json["lids"].length > 0, "Expected 8OZ to match 8oz lids"
+  end
+
   test "returns lids with required attributes" do
     get branded_products_compatible_lids_path,
         params: { product_id: @cup_product.id, size: "8oz" },

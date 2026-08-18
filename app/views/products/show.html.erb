@@ -302,14 +302,9 @@
           <%# Compatible Lids Section (inline, above add to cart) %>
           <% if @compatible_products.present? && @compatible_products.any? %>
             <div class="mt-6"
-                 data-controller="compatible-lids"
-                 data-compatible-lids-product-id-value="<%= @product.id %>">
+                 data-controller="compatible-lids">
               <h3 class="text-lg font-medium mb-2">Add matching lids <span class="text-sm font-normal text-base-content/60">(optional)</span></h3>
               <p class="text-sm text-base-content/70 mb-4">Complete your order with compatible lids</p>
-
-              <div id="lids-loading" class="text-center py-4" style="display:none;">
-                <span class="loading loading-spinner loading-md"></span>
-              </div>
 
               <div class="flex flex-col gap-3" data-compatible-lids-target="container">
                 <% @compatible_products.each do |lid| %>
