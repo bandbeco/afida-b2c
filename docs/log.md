@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-19
+
+* **Incident**: Verification-email suppression. Production attribution (session user-agents and signup cadence) confirmed an active subscription-bombing run: 69 signups on 2026-08-19 against a ~1/day baseline, one shared user-agent across 73 sessions, victims' real addresses each mailed once from hello@afida.com. Stopgap shipped: `SUPPRESS_VERIFICATION_EMAILS` kill switch in `RegistrationMailer#verify_email_address` (NullMail; order/password mail untouched), set via `deploy.yml` env so the next ordinary deploy without it re-enables sending. Long-term fix is PR #284 (honeypot + send throttles + trusted_proxies) plus a Cloudflare challenge on POST /signup, both pending.
+
 ## 2026-08-18
 
 * **Update**: [SEO Measurement Checkpoint 2026-08-18](/seo/seo-audit-2026-08-18.md). Next-play 2 shipped same day: the `/vegware` to `/collections/vegware` 301 consolidation (commit `948f9e76`, deployed, live-verified one-hop with query preservation; stockist banner re-pointed, landing page + controller action deleted). The brand lane's signals now accumulate on the single buyable page.

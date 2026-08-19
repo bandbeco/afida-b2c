@@ -46,6 +46,10 @@ env:
     # to Stripe's hosted page. Rollback lever: remove/zero this and re-boot
     # the app (read live from ENV, no code change needed). See OnsiteCheckout.
     ONSITE_CHECKOUT: "1"
+    # Emergency stop for verification mail during the 2026-08-19 subscription-bombing
+    # incident (see docs/runbooks/verification-email-throttling.md). Remove once the
+    # signup hardening (PR #284 + Cloudflare challenge) is live.
+    SUPPRESS_VERIFICATION_EMAILS: "true"
     LOGTAIL_SOURCE_TOKEN: "Uj21nX6NXHtoW9qzwg6nG4hn"
     LOGTAIL_INGESTING_HOST: "s1679295.eu-nbg-2.betterstackdata.com"
 

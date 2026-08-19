@@ -116,4 +116,28 @@ class RegistrationMailerTest < ActionMailer::TestCase
       RegistrationMailer.welcome(@user).deliver_now
     end
   end
+
+  # ===========================================================================
+  # SUPPRESS_VERIFICATION_EMAILS kill switch
+  # ===========================================================================
+  # Emergency stop for the subscription-bombing pattern: bots feed victims'
+  # addresses through /signup and every registration mails a stranger from our
+  # domain. The switch suppresses only this mailer action; order confirmations
+  # and password resets are untouched. See /runbooks/verification-email-throttling.md.
+
+  test "verify_email_address sends nothing while the kill switch is set" do
+    ENV["SUPPRESS_VERIFICATION_EMAILS"] = "true"
+
+    assert_no_emails do
+      RegistrationMailer.verify_email_address(@user).deliver_now
+    end
+  ensure
+    ENV.delete("SUPPRESS_VERIFICATION_EMAILS")
+  end
+
+  test "verify_email_address delivers normally when the kill switch is unset" do
+    assert_emails 1 do
+      RegistrationMailer.verify_email_address(@user).deliver_now
+    end
+  end
 end
