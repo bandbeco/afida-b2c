@@ -1,6 +1,12 @@
 class EmailSubscriptionsController < ApplicationController
   allow_unauthenticated_access
 
+  # This endpoint sends no mail itself, but every accepted signup is pushed to Klaviyo
+  # as a "Subscribed" profile, and a Klaviyo flow will then mail that address. Left
+  # unthrottled it is an open relay by proxy, so the per-IP ceiling is generous enough
+  # for a shared office address and still bounds automated submission.
+  rate_limit to: 10, within: 1.hour, only: :create, with: -> { render_rate_limited }
+
   def create
     @email = email_param&.strip&.downcase
 
@@ -134,6 +140,19 @@ class EmailSubscriptionsController < ApplicationController
         )
       end
       format.html { redirect_to cart_path, alert: "This discount is for new customers only." }
+    end
+  end
+
+  def render_rate_limited
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.replace(
+          "discount-signup",
+          partial: "email_subscriptions/cart_signup_form",
+          locals: { error: "Too many attempts. Please try again later." }
+        ), status: :too_many_requests
+      end
+      format.html { redirect_to cart_path, alert: "Too many attempts. Please try again later." }
     end
   end
 

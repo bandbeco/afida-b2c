@@ -292,3 +292,14 @@ body {
 .scrollbar-visible::-webkit-scrollbar-thumb:hover {
   background-color: #9ca3af;
 }
+
+/* Honeypot field on the signup form. Positioned out of view rather than display:none
+   or hidden, both of which the more careful bots know to skip. Paired with
+   RegistrationsController::HONEYPOT_FIELD. */
+.honeypot-field {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
