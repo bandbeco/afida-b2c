@@ -52,6 +52,8 @@ kamal app exec -p --reuse --quiet 'bin/rails runner "
 "'
 ```
 
+**Rows written before 2026-08-19 record a Cloudflare edge node, not the visitor.** afida.com is fronted by Cloudflare and `config.action_dispatch.trusted_proxies` was unset, so `request.remote_ip` resolved to whichever edge node relayed the request — which also meant every per-IP throttle in the app shared a handful of buckets. `config/initializers/trusted_proxies.rb` fixes it going forward; historical IPs in `sessions` cannot be recovered, so the original incident is not attributable from that column.
+
 See [Deploying to Production](/runbooks/deploying.md) for kamal access. Note that `config/deploy.yml` pins `~/.ssh/id_ed25519` with `keys_only: true`, which is machine-specific: it only resolves on the laptop the server was provisioned from.
 
 ## Known gaps
