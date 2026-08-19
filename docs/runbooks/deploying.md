@@ -2,7 +2,7 @@
 type: Runbook
 description: How to deploy to production and why plain kamal deploy silently fails; boot by version and verify the served HTML.
 status: active
-timestamp: 2026-07-08
+timestamp: 2026-08-19
 ---
 
 # Deploying to Production
@@ -13,14 +13,15 @@ timestamp: 2026-07-08
 
 ## The procedure
 
-1. Build and push as usual.
-2. Deploy the web role directly by version, bypassing the accessory step:
+Deploy with the role restricted to web, which skips the failing accessory step entirely:
 
-   ```
-   kamal app boot --version=<git-sha> --roles=web
-   ```
+```
+kamal deploy --roles=web
+```
 
-3. Verify by fetching a page and checking the served HTML actually changed (a fingerprinted asset path, or the specific change you shipped). Never trust the command's exit code alone.
+(An older version of this runbook prescribed `kamal build push` followed by `kamal app boot --version=<git-sha> --roles=web`; the single command above is the proper form.)
+
+Verify by fetching a page and checking the served HTML actually changed (a fingerprinted asset path, or the specific change you shipped). Never trust the command's exit code alone.
 
 ## Related
 
