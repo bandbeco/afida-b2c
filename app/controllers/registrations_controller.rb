@@ -4,11 +4,22 @@ class RegistrationsController < ApplicationController
   # Bots fill every input they find. This one is hidden from people (see the
   # .honeypot-field rule in custom-styles.css) and left unlabelled in the model, so
   # anything arriving in it came from something that did not render the page.
-  HONEYPOT_FIELD = :company_website
+  #
+  # The name is deliberately meaningless. Anything resembling company/website/url is
+  # pattern-matched by password managers and browser profile autofill, several of which
+  # ignore autocomplete="off"; a genuine customer whose manager filled it would be
+  # dropped as silently as a bot.
+  HONEYPOT_FIELD = :secondary_reference
 
   # Shared by the real signup and by the honeypot refusal, which must be
   # indistinguishable from it.
   SIGNUP_NOTICE = "Please check your email for verification instructions."
+
+  # Nothing in the app gates on email_address_verified, so a suppressed verification
+  # email leaves a working account — but pointing someone at an inbox we never sent to
+  # sends them hunting for a message that does not exist.
+  VERIFICATION_UNAVAILABLE_NOTICE =
+    "Account created. We could not send your verification email just now, so please request a new one shortly."
 
   # If Authentication concern is not in ApplicationController, include it:
   # include Authentication
@@ -30,9 +41,9 @@ class RegistrationsController < ApplicationController
 
     if @user.save
       start_new_session_for @user
-      deliver_verification_email(@user)
+      sent = deliver_verification_email(@user)
 
-      redirect_to root_path, notice: SIGNUP_NOTICE
+      redirect_to root_path, notice: sent ? SIGNUP_NOTICE : VERIFICATION_UNAVAILABLE_NOTICE
     else
       render :new, status: :unprocessable_entity
     end
@@ -47,7 +58,13 @@ class RegistrationsController < ApplicationController
   # Answers exactly as a successful signup would. Telling a bot which field gave it
   # away is all the feedback it needs to stop filling that field.
   def discard_honeypot_submission
-    return if params.dig(:user, HONEYPOT_FIELD).blank?
+    # Not params.dig: Parameters#dig delegates to Hash#dig, so a scalar :user (which is
+    # exactly the shape junk automated traffic sends) raises TypeError and turns an
+    # unauthenticated endpoint into a 500. Let the malformed body fall through to
+    # user_params, which refuses it as a 400.
+    submitted = params[:user]
+    return unless submitted.is_a?(ActionController::Parameters)
+    return if submitted[HONEYPOT_FIELD].blank?
 
     Rails.logger.warn(
       "[registrations] honeypot tripped ip=#{request.remote_ip} ua=#{request.user_agent.inspect}"

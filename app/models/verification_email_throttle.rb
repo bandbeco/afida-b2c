@@ -22,10 +22,17 @@ class VerificationEmailThrottle
   NAMESPACE = "verification_email"
 
   class << self
-    # Records one intended send and reports whether it is within budget. The per-user
-    # bucket is charged first and short-circuits, so a single looping attacker spends
-    # only its own allowance and cannot drain the global one on its own rejections.
+    # Records one intended send and reports whether it is within budget.
+    #
+    # The global bucket is read before the user's is charged, and charged after it. Both
+    # halves of that ordering matter: a send the global ceiling will refuse sends no
+    # mail, so charging someone's small hourly allowance for it would keep them locked
+    # out after the global window clears; and charging the user first thereafter means a
+    # single looping attacker spends only its own allowance rather than draining the
+    # domain's on its own rejections.
     def allow?(user)
+      return false if global_spent >= global_hourly_limit
+
       consume("user:#{user.id}", per_user_hourly_limit) && consume("global", global_hourly_limit)
     end
 
@@ -42,6 +49,11 @@ class VerificationEmailThrottle
     # and for anything that wants to report how close to the ceiling we are.
     def global_spent
       Rails.cache.read("#{NAMESPACE}:global").to_i
+    end
+
+    # Sends charged against one user's bucket in the current window.
+    def user_spent(user)
+      Rails.cache.read("#{NAMESPACE}:user:#{user.id}").to_i
     end
 
     private

@@ -61,6 +61,19 @@ class VerificationEmailThrottleTest < ActiveSupport::TestCase
     assert_equal 1, VerificationEmailThrottle.global_spent
   end
 
+  # The mirror of the test above. A user turned away because the domain-wide ceiling is
+  # spent has not caused any mail to be sent, so charging their small hourly allowance
+  # for it would keep them locked out after the global window clears.
+  test "a send refused by the global ceiling does not consume the user's budget" do
+    VerificationEmailThrottle.stubs(:per_user_hourly_limit).returns(3)
+    VerificationEmailThrottle.stubs(:global_hourly_limit).returns(1)
+
+    VerificationEmailThrottle.allow?(@other_user)
+
+    assert_not VerificationEmailThrottle.allow?(@user)
+    assert_equal 0, VerificationEmailThrottle.user_spent(@user)
+  end
+
   # Matches Rails' own rate_limit semantics: when the cache cannot count
   # (increment returns nil), requests are allowed rather than everyone locked out.
   test "fails open when the cache store cannot count" do

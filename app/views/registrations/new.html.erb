@@ -82,7 +82,8 @@
           <%= text_field_tag "user[#{RegistrationsController::HONEYPOT_FIELD}]", nil,
                 id: "user_#{RegistrationsController::HONEYPOT_FIELD}",
                 tabindex: -1,
-                autocomplete: "off" %>
+                autocomplete: "off",
+                data: { "1p-ignore": true, lpignore: true, form_type: "other" } %>
         </div>
 
         <div class="form-control mt-5" data-controller="password-visibility">

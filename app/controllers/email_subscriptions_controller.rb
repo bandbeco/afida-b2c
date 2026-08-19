@@ -5,7 +5,7 @@ class EmailSubscriptionsController < ApplicationController
   # as a "Subscribed" profile, and a Klaviyo flow will then mail that address. Left
   # unthrottled it is an open relay by proxy, so the per-IP ceiling is generous enough
   # for a shared office address and still bounds automated submission.
-  rate_limit to: 10, within: 1.hour, only: :create, with: -> { render_rate_limited }
+  rate_limit to: 10, within: 1.hour, only: :create, store: LiveCacheStore, with: -> { render_rate_limited }
 
   def create
     @email = email_param&.strip&.downcase
