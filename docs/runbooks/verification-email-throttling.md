@@ -52,13 +52,32 @@ kamal app exec -p --reuse --quiet 'bin/rails runner "
 "'
 ```
 
+**kamal-proxy's logs carry the real client address even when the Rails-side records do not.** Each request line logs both `client_addr` (the TCP peer — a Cloudflare edge) and `remote_addr` (the original client from the forwarded chain). `docker logs kamal-proxy` on the web host is therefore the primary attribution source; note its rotation is tight (a few hours), so capture early.
+
+```
+docker logs kamal-proxy 2>&1 | grep '"/signup"' \
+  | sed -E 's/.*"time":"([^"]*)".*"status":([0-9]+).*"method":"([A-Z]+)".*"remote_addr":"([^"]*)".*/\1 \3 \2 \4/'
+```
+
 **Rows written before 2026-08-19 record a Cloudflare edge node, not the visitor.** afida.com is fronted by Cloudflare and `config.action_dispatch.trusted_proxies` was unset, so `request.remote_ip` resolved to whichever edge node relayed the request — which also meant every per-IP throttle in the app shared a handful of buckets. `config/initializers/trusted_proxies.rb` fixes it going forward; historical IPs in `sessions` cannot be recovered, so the original incident is not attributable from that column.
 
 See [Deploying to Production](/runbooks/deploying.md) for kamal access. Note that `config/deploy.yml` pins `~/.ssh/id_ed25519` with `keys_only: true`, which is machine-specific: it only resolves on the laptop the server was provisioned from.
 
-## Known gaps
+## The 2026-08-19 incident, attributed
 
-* The original incident was never attributed. Neither the `To:` headers of the BCC'd copies nor the query above was read, so whether this was resend-looping or a distributed signup run is still open.
+Resolved via kamal-proxy logs on the evening of 2026-08-19 (the earlier "never attributed" note is superseded). It was a scripted subscription-bombing run against strangers' real addresses: 69 signups that day versus a ~1/day baseline, all unverified, one static Chrome-124/Windows user-agent. Each cycle was `GET /signup` (CSRF token scrape) followed 0.5–1.5s later by the `POST`, one cycle every 5–15 minutes, and the bot fetched no page assets — a bare HTTP client, not a browser. Interspersed 422s were re-submissions of already-registered addresses.
+
+Six exit IPs across three cheap-VPS/proxy ASNs, all geo-claimed US but registered elsewhere:
+
+| Network | ASN | Exit IPs | Abuse contact |
+| --- | --- | --- | --- |
+| NetCrafters OU (Estonia), `2a01:e5c0:9000::/36` | AS203273 | `2a01:e5c0:{9f19,9e40,995f,936c}::2` | abuse@netcrafters.host |
+| Cloud Software FZCO (Dubai), `95.182.89.0/24` | AS211273 | `95.182.89.76` | abuse@hostvds.com |
+| CGI GLOBAL LIMITED (HK), `95.182.114.0/24` | AS56971 | `95.182.114.251` | abuse@cloudbackbone.net |
+
+The author sits behind a rented rotating proxy pool, so attribution ends at these networks; reporting to the abuse contacts (with the kamal-proxy log lines as evidence) is the remaining lever. The run continued after the `SUPPRESS_VERIFICATION_EMAILS` deploy — the bot still receives success responses; it simply no longer causes any mail.
+
+## Known gaps
 * There is no working way for a visitor to request a new verification email. `EmailAddressVerificationsController#create` exists and is throttled, but its only caller — the button in `app/views/email_address_verifications/show.html.erb` — posts to the member route without a token and would raise `UrlGenerationError`, and that template never renders because `#show` always redirects. Anyone whose send is suppressed therefore has no self-service recovery, which is tolerable only because nothing gates on verification.
 * `EmailAddressVerificationsController#show` requires authentication, so a verification link opened in a different browser bounces to sign-in.
 * Consider moving transactional mail to a dedicated sending subdomain so `afida.com` reputation cannot be damaged by this class of abuse at all.
