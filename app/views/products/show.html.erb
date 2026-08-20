@@ -81,10 +81,18 @@
   <div class="drawer-content">
     <div class="container mx-auto min-h-screen py-4 pb-8">
 
-      <div class="flex flex-col lg:flex-row gap-8 lg:gap-12">
+      <%# items-start is what makes the pin below possible: flex children stretch
+          to the tallest sibling by default, and a full-height column has nothing
+          to scroll within. %>
+      <div class="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-12">
 
-        <%# Image Section %>
-        <div class="lg:w-1/2 flex-shrink-0"
+        <%# Image Section. Pinned on wide screens, where the media column is much
+            shorter than the buy column and would otherwise scroll away, leaving
+            the buyer deciding on lids and quantity beside empty space. Phones
+            stack the columns, so there the image scrolls off as normal rather
+            than eating the viewport the buy box needs. %>
+        <div data-test="product-media"
+             class="lg:w-1/2 flex-shrink-0 lg:sticky lg:top-4"
              data-controller="product-card-hover"
              data-action="mouseenter->product-card-hover#mouseenter mouseleave->product-card-hover#mouseleave">
           <div class="bg-white rounded-lg overflow-hidden relative">
