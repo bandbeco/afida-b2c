@@ -50,6 +50,19 @@ class ProductAttachBlockTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # Curation names one default lid. If that lid is deactivated the cue has to
+  # move to a lid the buyer can actually order, not vanish with it.
+  test "the popular cue moves to an active lid when the default is deactivated" do
+    @lid.update!(active: false)
+
+    get product_path(@container)
+
+    assert_select "[data-test='attach-popular-cue']", count: 1
+    assert_select "[data-test='attach-row']" do |rows|
+      assert_match(/most popular/i, rows.first.text)
+    end
+  end
+
   test "a container page shows at most four lids and no disclosure" do
     5.times do |i|
       lid = Product.create!(category: @lid.category, name: "Extra Lid #{i}",

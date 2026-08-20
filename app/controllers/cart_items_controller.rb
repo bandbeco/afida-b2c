@@ -293,7 +293,10 @@ class CartItemsController < ApplicationController
       @cart_item, @sample_replaced = add_to_cart(product, cart_item_params[:quantity].to_i, price)
 
       companions.each do |companion, quantity|
-        item, = add_to_cart(companion, quantity, companion.price)
+        item, companion_replaced_sample = add_to_cart(companion, quantity, companion.price)
+        # A sample displaced by a companion is still a sample the buyer loses,
+        # and silently is how they find out at the payment screen.
+        @sample_replaced ||= companion_replaced_sample
         added_companions << [ companion, item ]
       end
     end
@@ -332,12 +335,17 @@ class CartItemsController < ApplicationController
         redirect_to cart_path, notice: notice
       end
     end
-  rescue ActiveRecord::RecordInvalid
-    # Transaction rolled back - sample not removed, cart item not saved
+  rescue ActiveRecord::RecordInvalid => e
+    # Transaction rolled back - sample not removed, cart item not saved.
+    # The failing record comes off the exception rather than @cart_item: when
+    # the primary add is what failed, the assignment above never completed and
+    # @cart_item is still nil, which would turn a handled validation failure
+    # into a 500.
     @sample_replaced = false
+    errors = e.record&.errors&.full_messages.presence || [ "please try again" ]
     respond_to do |format|
       format.turbo_stream
-      format.html { redirect_back fallback_location: product_path(product), alert: "Could not add item to cart: #{@cart_item.errors.full_messages.join(', ')}" }
+      format.html { redirect_back fallback_location: product_path(product), alert: "Could not add item to cart: #{errors.join(', ')}" }
     end
   end
 

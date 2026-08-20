@@ -20,13 +20,13 @@ class ProductsController < ApplicationController
   end
 
   def show
+    # The reverse (container) side is deliberately not preloaded here: it is
+    # only ever read for a product with no lids of its own, so eager-loading it
+    # would pull a mapping and its photo blobs on every container page and throw
+    # the result away. It is loaded below, only when that branch is taken.
     @product = Product.active
                       .includes(:category, :product_family, :product_compatible_lids,
                                 compatible_lids: [
-                                  { product_photo_attachment: :blob },
-                                  { lifestyle_photo_attachment: :blob }
-                                ],
-                                compatible_containers: [
                                   { product_photo_attachment: :blob },
                                   { lifestyle_photo_attachment: :blob }
                                 ])
@@ -50,15 +50,29 @@ class ProductsController < ApplicationController
     # hiding the buyer's tray would read as "doesn't fit", so the full list
     # renders with the tail behind a disclosure).
     active_lids = @product.compatible_lids.select(&:active?)
-    @default_lid_id = @product.product_compatible_lids.find(&:default?)&.compatible_lid_id
     # The curated default leads: it is the lid most buyers of this container
-    # take, so it earns the first row and the popularity cue.
+    # take, so it earns the first row and the popularity cue. Resolved against
+    # the lids actually on offer, because a deactivated default would otherwise
+    # take the cue out of the list with it and leave the block with none.
+    active_lid_ids = active_lids.map(&:id)
+    curated_default = @product.product_compatible_lids
+                              .select(&:default?)
+                              .map(&:compatible_lid_id)
+                              .find { |id| active_lid_ids.include?(id) }
+    @default_lid_id = curated_default || active_lid_ids.first
     @compatible_products = active_lids
       .each_with_index
       .sort_by { |lid, index| [ lid.id == @default_lid_id ? 0 : 1, index ] }
       .map(&:first)
       .first(ATTACH_ROWS_VISIBLE)
-    @compatible_containers = @compatible_products.any? ? [] : @product.compatible_containers.to_a
+    @compatible_containers =
+      if @compatible_products.any?
+        []
+      else
+        @product.compatible_containers
+                .includes(product_photo_attachment: :blob, lifestyle_photo_attachment: :blob)
+                .to_a
+      end
 
     # Related products from the same family (for "See Also" section)
     @related_products = @product.siblings(limit: 4)

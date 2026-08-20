@@ -289,6 +289,7 @@
                          fit_label: "Fits this #{@product.category.name.singularize.downcase}",
                          link_names: false,
                          visible_count: nil,
+                         disclosure_noun: "matching lids",
                          highlighted_id: @default_lid_id %>
             <% elsif @compatible_containers.any? %>
               <%= render "products/attach_block",
@@ -298,6 +299,7 @@
                          fit_label: "This lid fits it",
                          link_names: true,
                          visible_count: ProductsController::ATTACH_ROWS_VISIBLE,
+                         disclosure_noun: "compatible containers",
                          highlighted_id: nil %>
             <% end %>
 

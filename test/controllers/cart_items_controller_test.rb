@@ -131,6 +131,46 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert @cart.cart_items.find_by(product: sample_product).price.positive?
   end
 
+  # Losing a free sample without being told is the kind of thing a buyer only
+  # notices at the payment screen, so the notice has to cover companions too and
+  # not just the primary product.
+  test "the buyer is told when a companion displaced their sample" do
+    sample_product = products(:sample_cup_8oz)
+    @cart.cart_items.create!(product: sample_product, quantity: 1, price: 0, is_sample: true)
+
+    post cart_cart_items_path, params: {
+      cart_item: { sku: @product_variant.sku, quantity: 1 },
+      companions: [ { sku: sample_product.sku, quantity: 1 } ]
+    }
+
+    assert_match(/sample removed/i, flash[:notice].to_s)
+  end
+
+  # A failed save is a validation failure, not a crash: the rescue has to be
+  # able to describe it even when the primary item is what failed.
+  test "a failed add reports the error instead of raising" do
+    product = products(:one)
+    CartItem.any_instance.stubs(:save!).raises(ActiveRecord::RecordInvalid.new(CartItem.new))
+
+    post cart_cart_items_path, params: { cart_item: { sku: product.sku, quantity: 1 } }
+
+    assert_response :redirect
+    assert_match(/could not add item/i, flash[:alert].to_s)
+  end
+
+  test "a failed add over turbo_stream renders without raising" do
+    product = products(:one)
+    CartItem.any_instance.stubs(:save!).raises(ActiveRecord::RecordInvalid.new(CartItem.new))
+
+    post cart_cart_items_path,
+         params: { cart_item: { sku: product.sku, quantity: 1 } },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_no_match(/add_to_cart/, @response.body,
+                    "a rolled-back add has no item to report to analytics")
+  end
+
   # The compatibility mapping decides what the page renders, never what the cart
   # accepts: prices resolve server-side, so an unmapped pair is harmless and the
   # endpoint stays reusable for cross-sells that have no mapping at all.

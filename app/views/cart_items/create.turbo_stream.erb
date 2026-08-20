@@ -7,14 +7,18 @@
 <%= turbo_stream.replace "drawer_cart_content", partial: "shared/drawer_cart_content",
       locals: { notice: @sample_replaced ? "Sample replaced with regular item" : nil } %>
 
-<%# GA4 E-commerce: add_to_cart event %>
+<%# GA4 E-commerce: add_to_cart event.
+    Skipped when the add failed: this template also renders the rollback case,
+    where there is no saved item to report. %>
 <%# Using append_all to head ensures script executes with Turbo Streams %>
-<%= turbo_stream.append_all "head" do %>
-  <script>
-    <%= ecommerce_add_to_cart_event(
-          @cart_item.product,
-          quantity: @cart_item.quantity,
-          value: @cart_item.subtotal_amount
-        ) %>
-  </script>
+<% if @cart_item&.persisted? %>
+  <%= turbo_stream.append_all "head" do %>
+    <script>
+      <%= ecommerce_add_to_cart_event(
+            @cart_item.product,
+            quantity: @cart_item.quantity,
+            value: @cart_item.subtotal_amount
+          ) %>
+    </script>
+  <% end %>
 <% end %>

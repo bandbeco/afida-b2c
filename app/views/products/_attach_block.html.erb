@@ -19,6 +19,11 @@
       link_names      - whether companion names link to their product pages
       visible_count   - cards shown before the disclosure (nil = show all)
       highlighted_id  - product id that carries the "most popular" cue
+      disclosure_noun - plural noun for the "show all N" button ("lids",
+                        "compatible containers"); every other string here is
+                        passed in, and this one has to be too or capping the
+                        container side would offer "show all N containers" on a
+                        page listing lids
 %>
 <% return if companions.blank? %>
 
@@ -125,7 +130,7 @@
             data-attach-companions-target="disclosure"
             data-action="click->attach-companions#showAll"
             class="btn btn-ghost btn-sm mt-3">
-      Show all <%= companions.size %> compatible containers
+      Show all <%= companions.size %> <%= disclosure_noun %>
     </button>
   <% end %>
 </div>
