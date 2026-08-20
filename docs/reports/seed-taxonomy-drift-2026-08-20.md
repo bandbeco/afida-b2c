@@ -60,18 +60,38 @@ the backfill map in `20260708123508_backfill_category_slug_redirects.rb`, and
 [Category Retitles (W1)](/seo/category-retitles-2026-07-20.md), whose 17 retitled
 + 10 untouched leaves + 6 parents = 33 "live-verified by curl".
 
-Two items remain unconfirmed against production:
+Two items were unconfirmed at first pass. **Both are now settled** against
+`https://afida.com/sitemap.xml`, read 2026-08-20, which lists exactly 33 category
+URLs and is therefore the authority — production, not the March migration:
 
-1. **`hot-cup-lids` vs `cup-lids`.** Seeded as `hot-cup-lids`, following
-   `GOOGLE_TAXONOMY_MAP` (test-pinned, re-keyed in full 2026-08-18) and the
-   retitles doc. If correct, `categories_helper.rb` (`RELATED_CATEGORIES`,
-   `CATEGORY_QUESTION_HEADINGS`) and `config/category_faqs.yml` still key off the
-   dead `cup-lids`, so that page silently loses a cross-link and its FAQs.
-2. **`aluminium-containers` parent.** Seeded under `tableware` (hierarchy
-   migration + helper grouping); the merchant-feed comment blocks place it under
-   Food Containers, but those group by Google taxonomy id, not parentage.
+1. **`hot-cup-lids` is live**, confirming the seeded slug. So the three places
+   still keying off `cup-lids` were genuinely stale, and each failed silently:
+   `RELATED_CATEGORIES` rendered one fewer tile on four pages,
+   `CATEGORY_QUESTION_HEADINGS` fell back, and `rake categories:seed_faqs`
+   printed `SKIP: No category with slug 'cup-lids'`, leaving that page with no
+   FAQ block and no FAQPage schema. All three are fixed.
+   `20260319223300_populate_cup_lids_buying_guide.rb` is deliberately left alone:
+   it is historical, it ran while the slug was still `cup-lids`, and the later
+   rename carried its `buying_guide` across with the record.
+2. **`aluminium-containers` sits under `food-containers`, not `tableware`** — the
+   first pass seeded it wrongly. The merchant-feed grouping was right and the
+   hierarchy migration is simply out of date, having created it under
+   `tableware` before a later admin move. Corrected, so `tableware` has 3
+   subcategories and `food-containers` 8.
 
-One `Category.pluck(:slug, :parent_id)` from production settles both.
+The live tree is now pinned verbatim as `LIVE_TAXONOMY` in
+`test/data/seed_data_test.rb`, alongside three new tests asserting that every
+slug referenced by `RELATED_CATEGORIES`, `CATEGORY_QUESTION_HEADINGS` and
+`config/category_faqs.yml` actually exists — the class of silent drift that
+caused this.
+
+**Lesson for future reconstruction:** `create_category_hierarchy` is a snapshot
+of March, not a description of the taxonomy. Categories have been renamed and
+re-parented through the admin UI since, and only production records that.
+
+Two FAQ gaps surfaced while checking: `config/category_faqs.yml` has no entry for
+`bowls-and-lids` or `portion-pots-and-lids`, both created after that file was
+written. Content task, not a drift bug.
 
 `branded-packaging` was deliberately excluded: `create_category_hierarchy_test.rb`
 names it, but that test asserts only against its own constants, the migration

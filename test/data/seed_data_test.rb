@@ -92,6 +92,61 @@ class SeedDataTest < Minitest::Test
     end
   end
 
+  # The live taxonomy, read from https://afida.com/sitemap.xml on 2026-08-20.
+  # This is the authority the CSV is reconstructed against — production, not the
+  # March hierarchy migration, which is now out of date (it put
+  # aluminium-containers under tableware; production has it under
+  # food-containers).
+  LIVE_TAXONOMY = {
+    "bags-and-wraps" => %w[bags greaseproof-and-wraps natureflex-bags],
+    "cold-food-and-salads" => %w[deli-containers salad-boxes sandwich-and-wrap-boxes],
+    "cups-and-accessories" => %w[cold-cups-and-lids cup-accessories hot-cup-lids hot-cups ice-cream-cups straws],
+    "food-containers" => %w[aluminium-containers bagasse-containers bowls-and-lids food-containers-and-lids
+                            pizza-boxes portion-pots-and-lids soup-containers takeaway-boxes],
+    "supplies-and-essentials" => %w[bin-liners gloves-and-cleaning labels-and-stickers till-rolls],
+    "tableware" => %w[cutlery napkins plates-and-bowls]
+  }.freeze
+
+  test "categories.csv matches the live production taxonomy" do
+    seeded = category_rows.reject { |r| r["parent_slug"].blank? }
+      .group_by { |r| r["parent_slug"] }
+      .transform_values { |rows| rows.map { |r| r["slug"] }.sort }
+
+    assert_equal LIVE_TAXONOMY.keys.sort, parent_rows.map { |r| r["slug"] }.sort
+    LIVE_TAXONOMY.each do |parent, children|
+      assert_equal children.sort, seeded[parent] || [],
+        "#{parent}'s subcategories drifted from production"
+    end
+  end
+
+  # === Slugs referenced elsewhere in the app =============================
+  #
+  # Three separate places key off category slugs and all fail silently when a
+  # slug is renamed: the related-category tiles just render fewer, the question
+  # heading falls back, and `rake categories:seed_faqs` prints SKIP and moves on.
+
+  test "every slug in RELATED_CATEGORIES is a real category" do
+    referenced = CategoriesHelper::RELATED_CATEGORIES.keys +
+                 CategoriesHelper::RELATED_CATEGORIES.values.flatten
+    unknown = referenced.uniq - category_slugs
+
+    assert_empty unknown, "RELATED_CATEGORIES references slugs no category has: #{unknown.join(', ')}"
+  end
+
+  test "every slug in CATEGORY_QUESTION_HEADINGS is a real category" do
+    unknown = CategoriesHelper::CATEGORY_QUESTION_HEADINGS.keys - category_slugs
+
+    assert_empty unknown, "CATEGORY_QUESTION_HEADINGS references slugs no category has: #{unknown.join(', ')}"
+  end
+
+  test "every key in category_faqs.yml is a real category" do
+    keys = YAML.load_file(Rails.root.join("config", "category_faqs.yml")).keys
+    unknown = keys - category_slugs - [ "branded-products" ]
+
+    assert_empty unknown,
+      "category_faqs.yml keys categories that do not exist, so categories:seed_faqs silently skips them: #{unknown.join(', ')}"
+  end
+
   # === Route / redirect collisions =======================================
 
   test "no seeded slug is reserved by a permanent redirect" do
