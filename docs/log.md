@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-20
+
+* **Ship**: Verification emails re-enabled behind the new throttles. PR #284 (honeypot + per-user/global send budgets + Cloudflare `trusted_proxies`) merged to master, the suppress branch merged on top, and the `SUPPRESS_VERIFICATION_EMAILS` line removed from `deploy.yml` — the mailer guard stays in code as a standing emergency lever, now documented in [Verification Email Throttling](/runbooks/verification-email-throttling.md). Remaining hardening (user-side, Cloudflare dashboard): Managed Challenge on POST /signup, then Turnstile on the form.
+
 ## 2026-08-19
 
 * **Incident**: Verification-email suppression. Production attribution (session user-agents and signup cadence) confirmed an active subscription-bombing run: 69 signups on 2026-08-19 against a ~1/day baseline, one shared user-agent across 73 sessions, victims' real addresses each mailed once from hello@afida.com. Stopgap shipped: `SUPPRESS_VERIFICATION_EMAILS` kill switch in `RegistrationMailer#verify_email_address` (NullMail; order/password mail untouched), set via `deploy.yml` env so the next ordinary deploy without it re-enables sending. Long-term fix is PR #284 (honeypot + send throttles + trusted_proxies) plus a Cloudflare challenge on POST /signup, both pending.

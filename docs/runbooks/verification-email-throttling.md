@@ -2,7 +2,7 @@
 type: Runbook
 description: How verification-email sending is bounded, what trips each limit, and what to do when legitimate signups are being refused.
 status: active
-timestamp: 2026-08-19
+timestamp: 2026-08-20
 ---
 
 # Verification Email Throttling
@@ -40,6 +40,10 @@ Symptom: users report never receiving a verification email, and the log carries 
 
 Budgets live in `Rails.cache` (solid_cache in production) on a one-hour expiry, so they self-clear. There is no manual reset; if you must clear one early, delete the `verification_email:*` keys.
 
+## Emergency kill switch
+
+`RegistrationMailer#verify_email_address` returns `NullMail` when `SUPPRESS_VERIFICATION_EMAILS` is set, stopping every verification email while leaving order and password mail untouched. Signups still succeed and accounts still work. To pull it: add `SUPPRESS_VERIFICATION_EMAILS: "true"` under `env.clear` in `config/deploy.yml` and redeploy; remove the line and redeploy to restore sending. Used 2026-08-19 during the bombing run, lifted 2026-08-20 once the three layers above were live.
+
 ## Attribution
 
 `Session` records `ip_address` and `user_agent` at creation, and registration always opens a session, so every signup leaves a fingerprint:
@@ -61,7 +65,7 @@ docker logs kamal-proxy 2>&1 | grep '"/signup"' \
 
 **Rows written before 2026-08-19 record a Cloudflare edge node, not the visitor.** afida.com is fronted by Cloudflare and `config.action_dispatch.trusted_proxies` was unset, so `request.remote_ip` resolved to whichever edge node relayed the request — which also meant every per-IP throttle in the app shared a handful of buckets. `config/initializers/trusted_proxies.rb` fixes it going forward; historical IPs in `sessions` cannot be recovered, so the original incident is not attributable from that column.
 
-See [Deploying to Production](/runbooks/deploying.md) for kamal access. Note that `config/deploy.yml` pins `~/.ssh/id_ed25519` with `keys_only: true`, which is machine-specific: it only resolves on the laptop the server was provisioned from.
+See [Deploying to Production](/runbooks/deploying.md) for kamal access. `config/deploy.yml` lists both machines' keys (`~/.ssh/id_ed25519` from the provisioning laptop, `~/.ssh/afida_hetzner` via the 1Password agent) with `keys_only: true`, so kamal works from either machine.
 
 ## The 2026-08-19 incident, attributed
 
