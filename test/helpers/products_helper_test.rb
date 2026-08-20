@@ -269,6 +269,36 @@ class ProductsHelperTest < ActionView::TestCase
     assert_equal "£41.31", card_price_line(product)
   end
 
+  # pdp_unit_price tests
+
+  test "pdp_unit_price quotes the pack rate in pence" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 26.60, pac_size: 1000)
+
+    assert_equal "2.7p / unit", pdp_unit_price(product)
+  end
+
+  test "pdp_unit_price uses pounds at or above a pound" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 620.00, pac_size: 500)
+
+    assert_equal "£1.24 / unit", pdp_unit_price(product)
+  end
+
+  test "pdp_unit_price is blank for a single-unit product" do
+    product = products(:one)
+    product.update!(pricing_tiers: nil, price: 41.31, pac_size: 1)
+
+    assert_nil pdp_unit_price(product)
+  end
+
+  test "pdp_unit_price quotes the given tier rather than the product price" do
+    product = products(:one)
+
+    assert_equal "2.1p / unit",
+                 pdp_unit_price(product, tier: { "quantity" => 25000, "price" => "519.00" })
+  end
+
   # search_price_line tests (issue #248)
 
   test "search_price_line pairs the pack price with a per-unit rate" do

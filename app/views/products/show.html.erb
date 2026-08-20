@@ -140,12 +140,23 @@
             <%= @product.generated_title %>
           </h1>
 
-          <%# Price Display %>
-          <div class="flex items-center justify-center lg:justify-start gap-2 flex-wrap mt-3">
+          <%# Price Display: pack price paired with the per-unit rate buyers
+              compare across suppliers. Tiered products seed from the tier the
+              tier controller pre-selects, then it keeps both in step. %>
+          <div class="flex items-baseline justify-center lg:justify-start gap-3 flex-wrap mt-3">
             <% if has_tiers %>
+              <% seed_tier = @product.pricing_tiers.last %>
               <p class="text-xl" data-pricing-tier-target="priceDisplay">
                 From <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
               </p>
+              <% unit_price = pdp_unit_price(@product, tier: seed_tier) %>
+              <% if unit_price %>
+                <p class="text-base text-base-content/60"
+                   data-test="pdp-unit-price"
+                   data-pricing-tier-target="unitPriceDisplay">
+                  <%= unit_price %>
+                </p>
+              <% end %>
             <% else %>
               <p class="text-xl">
                 <% if @product.pac_size && @product.pac_size > 1 %>
@@ -154,6 +165,12 @@
                   <%= number_to_currency(@product.price) %>
                 <% end %>
               </p>
+              <% unit_price = pdp_unit_price(@product) %>
+              <% if unit_price %>
+                <p class="text-base text-base-content/60" data-test="pdp-unit-price">
+                  <%= unit_price %>
+                </p>
+              <% end %>
             <% end %>
           </div>
 

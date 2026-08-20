@@ -28,7 +28,8 @@ export default class extends Controller {
   static targets = [
     "tierCard", "input", "totalDisplay", "priceDisplay",
     "pacSizeDisplay", "quantityInput", "priceInput",
-    "pacSizeInput", "unitsDisplay", "addToCartButton"
+    "pacSizeInput", "unitsDisplay", "addToCartButton",
+    "unitPriceDisplay"
   ]
 
   static values = {
@@ -86,6 +87,13 @@ export default class extends Controller {
       const label = this.selectedPacSize >= 100 ? "Case" : "Pack"
       this.priceDisplayTarget.textContent =
         `${this.formatCurrency(this.selectedPrice)} / ${label} of ${this.formatNumber(this.selectedPacSize)}`
+    }
+
+    // Keep the per-unit rate in step with the selected tier: it is the number
+    // buyers compare, so it must never describe a tier they are not buying.
+    if (this.hasUnitPriceDisplayTarget) {
+      this.unitPriceDisplayTarget.textContent =
+        `${this.formatUnitPrice(this.selectedPrice / this.selectedPacSize)} / unit`
     }
 
     // Enable add to cart button
@@ -148,6 +156,15 @@ export default class extends Controller {
       style: "currency",
       currency: "GBP"
     }).format(amount)
+  }
+
+  // Mirrors ProductsHelper#format_unit_price: pence with one decimal below a
+  // pound, currency above, so the server seed and the live update read alike.
+  formatUnitPrice(amount) {
+    if (amount >= 1) return this.formatCurrency(amount)
+
+    const pence = Math.round(amount * 1000) / 10
+    return `${pence}p`
   }
 
   formatNumber(num) {

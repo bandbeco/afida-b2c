@@ -101,6 +101,23 @@ module ProductsHelper
     end
   end
 
+  # The per-unit rate as the product page and its attach rows quote it: "1.5p /
+  # unit". Nil when the product is sold as single units, where the per-unit rate
+  # is just the price again. Tiered products quote the tier they open on (the
+  # largest case, which the tier controller pre-selects) rather than a "from"
+  # range, so the comparison number always matches the option in play.
+  def pdp_unit_price(product, tier: nil)
+    if tier.present?
+      quantity = tier["quantity"].to_i
+      return nil unless quantity > 1
+      return "#{format_unit_price(BigDecimal(tier['price'].to_s) / quantity)} / unit"
+    end
+
+    return nil unless product.pac_size.to_i > 1
+
+    "#{format_unit_price(product.unit_price)} / unit"
+  end
+
   # " · Yp per unit" for a multi-unit pack, blank for a single-unit pack where
   # the per-unit price is just the price itself.
   def per_unit_suffix(product)
