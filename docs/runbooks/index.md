@@ -7,6 +7,7 @@ Operational knowledge for running and maintaining the Afida shop: procedures and
 * [Deploying to Production](/runbooks/deploying.md) - Why plain kamal deploy silently fails and how to boot by version and verify the served HTML.
 * [Rails Credentials](/runbooks/credentials.md) - The shared production vault, how to edit it safely, and how test credentials behave in CI.
 * [Verification Email Throttling](/runbooks/verification-email-throttling.md) - The honeypot and the two sending budgets, what trips each, and what to do when genuine signups are refused.
+* [Local Test Database Privileges](/runbooks/local-test-database.md) - Why fixture loading needs a privileged PostgreSQL role, the narrow grant that avoids superuser, and the boot-time check that now says so.
 
 # Integrations
 

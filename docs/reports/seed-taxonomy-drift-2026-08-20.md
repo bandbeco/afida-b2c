@@ -153,10 +153,19 @@ is rejected, a subcategory taking `cups-and-lids` is allowed, renaming the live
 top level is rejected, and `db:seed` still completes (6 parents / 27
 subcategories) with seven children holding now-reserved slugs.
 
-The model tests for this could not be executed locally — every fixture-loading
-test in this repo errors here because Postgres will not let this role disable
-referential integrity — so they are written for CI and the behaviour above was
-confirmed through `bin/rails runner` instead.
+The model tests for this could not be executed at the time of writing: every
+fixture-loading test errored, so they were written for CI and the behaviour above
+was confirmed through `bin/rails runner` instead. They have since been run —
+see the correction below.
+
+**Correction (2026-08-20).** That blockage was diagnosed wrongly here. It was
+never a fixture problem: the local PostgreSQL role simply lacked the privilege to
+defer foreign-key checks, so Rails' alphabetical fixture insert (`addresses`
+before `users`) violated a foreign key and reported it as a bad fixture. The
+fixtures were always valid. Root cause, both remedies, and the boot-time check
+that now reports it in one line are in
+[Local Test Database Privileges](/runbooks/local-test-database.md). The model
+tests in `test/models/category_test.rb` now run locally and pass.
 
 Note for whoever touches the fixtures: `test/fixtures/categories.yml` has
 top-level `straws` and `cutlery` rows. Fixture loading bypasses validation so
