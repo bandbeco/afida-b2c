@@ -29,9 +29,9 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
   end
 
   # The hint is worth more as a countdown than as a poster: a buyer £12 short
-  # will top up, a buyer told only "over £100" has to work it out. The server
-  # supplies the threshold and what the cart already holds; the page counts down
-  # as the selection changes.
+  # will top up, a buyer told only "over £100" has to work it out. The gap is
+  # measured against the cart alone, so the server supplies the threshold and
+  # what the cart already holds and nothing else.
   test "the buy box carries the threshold and the cart's current subtotal" do
     get product_path(@product)
 
@@ -40,28 +40,18 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
     assert_select "[data-free-delivery-target='message']"
   end
 
-  # Without an opening figure the hint would wait for the buyer's first click
-  # before correcting itself, so someone arriving with a full cart would be told
-  # to reach a threshold they had already passed.
-  test "the hint knows what the page opens on before any interaction" do
+  # The countdown measures the cart, not the page. What the buy box is offering
+  # to add is not money the buyer has spent, so it must not move the figure and
+  # the page's opening total has no business being in the markup.
+  test "the hint does not carry what the page would add" do
     get product_path(@product)
 
-    assert_select "[data-free-delivery-opening-total-value=?]",
-                  @product.pricing_tiers.last["price"].to_f.to_s
-  end
-
-  test "a flat-priced product opens on its pack price" do
-    lid = products(:flat_lid_8oz)
-
-    get product_path(lid)
-
-    assert_select "[data-free-delivery-opening-total-value=?]", lid.price.to_f.to_s
+    assert_select "[data-free-delivery-opening-total-value]", count: 0
   end
 
   # With an empty cart the hint states the rule rather than counting down,
-  # because "add £61 more" would mean £61 on top of a page total the buyer has
-  # not committed to. The client repeats this wording in that state, so the two
-  # must not drift apart.
+  # because there is no spend to count down from. The client repeats this
+  # wording in that state, so the two must not drift apart.
   test "the server-rendered hint states the rule rather than a countdown" do
     get product_path(@product)
 

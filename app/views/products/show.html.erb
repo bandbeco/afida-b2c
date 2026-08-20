@@ -138,21 +138,15 @@
         <div class="lg:w-1/2 text-center lg:text-left"
              data-free-delivery-threshold-value="<%= free_shipping_threshold_amount %>"
              data-free-delivery-cart-subtotal-value="<%= (Current.cart&.subtotal_amount || 0).to_f %>"
-             <%# What the page opens on, so the hint is right before the buyer
-                 touches anything. Tiered products open on the largest tier,
-                 which is the one the tier controller pre-selects. %>
-             data-free-delivery-opening-total-value="<%= (has_tiers ? @product.pricing_tiers.last["price"] : @product.price).to_f %>"
              <% if has_tiers %>
                data-controller="pricing-tier sticky-atc free-delivery"
-               data-action="attach-companions:changed->pricing-tier#companionsChanged
-                            buy-box:totalChanged->free-delivery#totalChanged"
+               data-action="attach-companions:changed->pricing-tier#companionsChanged"
                data-pricing-tier-tiers-value="<%= @product.pricing_tiers.to_json %>"
                data-pricing-tier-default-price-value="<%= @product.price.to_f %>"
                data-pricing-tier-default-pac-size-value="<%= @product.pac_size || 1 %>"
              <% else %>
                data-controller="quantity-selector sticky-atc free-delivery"
-               data-action="attach-companions:changed->quantity-selector#companionsChanged
-                            buy-box:totalChanged->free-delivery#totalChanged"
+               data-action="attach-companions:changed->quantity-selector#companionsChanged"
                data-quantity-selector-price-value="<%= @product.price.to_f %>"
                data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>"
              <% end %>>
@@ -373,8 +367,8 @@
 
           <%# Free delivery counts down rather than posts a rule: a buyer told
               they are £12 short tops up, a buyer told only "over £100" has to
-              work it out. The threshold and what the cart already holds come
-              from the server; the client subtracts the on-page selection.
+              work it out. The gap is measured against the cart alone: what this
+              page is offering to add is not money the buyer has spent.
               Checkout stays the only authority on what is actually charged, and
               the promise stays mainland-qualified because this page does not
               know the destination. %>

@@ -76,9 +76,6 @@ export default class extends Controller {
       const totalUnits = quantity * this.pacSizeValue
       this.unitsDisplayTarget.textContent = `(${this.formatNumber(totalUnits)} units)`
     }
-
-    // What this page would add to the cart, for the free-delivery countdown.
-    this.dispatch("totalChanged", { detail: { total }, prefix: "buy-box" })
   }
 
   formatCurrency(amount) {
