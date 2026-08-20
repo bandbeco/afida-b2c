@@ -88,6 +88,112 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # POST /cart/cart_items with companions (the PDP attach block: one submit adds
+  # the product plus every ticked add-on)
+  test "adds companion items alongside the primary product in one request" do
+    lid = products(:flat_lid_8oz)
+
+    assert_difference("CartItem.count", 2) do
+      post cart_cart_items_path, params: {
+        cart_item: { sku: @product_variant.sku, quantity: 2 },
+        companions: [ { sku: lid.sku, quantity: 3 } ]
+      }
+    end
+
+    assert_equal 2, @cart.cart_items.find_by(product: @product_variant).quantity
+    assert_equal 3, @cart.cart_items.find_by(product: lid).quantity
+  end
+
+  test "companion quantities merge into an existing line for the same product" do
+    lid = products(:flat_lid_8oz)
+    @cart.cart_items.create!(product: lid, quantity: 1, price: lid.price)
+
+    assert_difference("CartItem.count", 1) do
+      post cart_cart_items_path, params: {
+        cart_item: { sku: @product_variant.sku, quantity: 1 },
+        companions: [ { sku: lid.sku, quantity: 4 } ]
+      }
+    end
+
+    assert_equal 5, @cart.cart_items.find_by(product: lid).quantity
+  end
+
+  test "a companion replaces a sample of the same product" do
+    sample_product = products(:sample_cup_8oz)
+    @cart.cart_items.create!(product: sample_product, quantity: 1, price: 0, is_sample: true)
+
+    post cart_cart_items_path, params: {
+      cart_item: { sku: @product_variant.sku, quantity: 1 },
+      companions: [ { sku: sample_product.sku, quantity: 1 } ]
+    }
+
+    assert_equal 0, @cart.cart_items.samples.count
+    assert @cart.cart_items.find_by(product: sample_product).price.positive?
+  end
+
+  # The compatibility mapping decides what the page renders, never what the cart
+  # accepts: prices resolve server-side, so an unmapped pair is harmless and the
+  # endpoint stays reusable for cross-sells that have no mapping at all.
+  test "accepts a companion that is not mapped to the primary product" do
+    unmapped = products(:napkin_small_white)
+
+    assert_difference("CartItem.count", 2) do
+      post cart_cart_items_path, params: {
+        cart_item: { sku: @product_variant.sku, quantity: 1 },
+        companions: [ { sku: unmapped.sku, quantity: 1 } ]
+      }
+    end
+  end
+
+  test "skips unknown companion SKUs without failing the primary add" do
+    assert_difference("CartItem.count", 1) do
+      post cart_cart_items_path, params: {
+        cart_item: { sku: @product_variant.sku, quantity: 1 },
+        companions: [ { sku: "NO-SUCH-SKU", quantity: 1 } ]
+      }
+    end
+
+    assert_redirected_to cart_path
+  end
+
+  test "skips inactive companion products" do
+    inactive = products(:inactive_product)
+
+    assert_difference("CartItem.count", 1) do
+      post cart_cart_items_path, params: {
+        cart_item: { sku: @product_variant.sku, quantity: 1 },
+        companions: [ { sku: inactive.sku, quantity: 1 } ]
+      }
+    end
+
+    assert_nil @cart.cart_items.find_by(product: inactive)
+  end
+
+  test "ignores a companion with a non-positive quantity" do
+    lid = products(:flat_lid_8oz)
+
+    assert_difference("CartItem.count", 1) do
+      post cart_cart_items_path, params: {
+        cart_item: { sku: @product_variant.sku, quantity: 1 },
+        companions: [ { sku: lid.sku, quantity: 0 } ]
+      }
+    end
+  end
+
+  # Companions are add-ons to a product being bought, never an order of their
+  # own; the attach block always submits a primary item alongside them.
+  test "rejects a companions-only submission with no primary product" do
+    lid = products(:flat_lid_8oz)
+
+    assert_no_difference("CartItem.count") do
+      post cart_cart_items_path, params: {
+        companions: [ { sku: lid.sku, quantity: 1 } ]
+      }
+    end
+
+    assert_response :bad_request
+  end
+
   # PATCH /cart/cart_items/:id (update)
   test "should update cart item quantity" do
     cart_item = @cart.cart_items.create!(

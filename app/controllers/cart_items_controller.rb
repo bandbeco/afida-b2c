@@ -283,29 +283,19 @@ class CartItemsController < ApplicationController
     end
 
     # Wrap in transaction to ensure sample removal and item creation are atomic
-    # If save fails, sample won't be lost
+    # If save fails, sample won't be lost. Companions (the lids ticked in the
+    # product page's attach block) ride the same transaction: the whole
+    # selection lands in the cart or none of it does.
+    companions = companion_items
+    added_companions = []
+
     ActiveRecord::Base.transaction do
-      # If sample exists for this product, remove it (regular item replaces sample)
-      sample_items = @cart.cart_items.samples.where(product: product)
-      @sample_replaced = sample_items.exists?
-      sample_items.destroy_all
+      @cart_item, @sample_replaced = add_to_cart(product, cart_item_params[:quantity].to_i, price)
 
-      # Find existing non-sample cart item for this product (and same tier price)
-      # Tier products can have separate line items at different price points
-      @cart_item = @cart.cart_items.non_samples.find_by(product: product, price: price)
-
-      # If no matching item exists, create a new one
-      @cart_item ||= @cart.cart_items.build(product: product)
-
-      if @cart_item.new_record?
-        @cart_item.quantity = cart_item_params[:quantity].to_i || 1
-        @cart_item.price = price
-      else
-        @cart_item.quantity += (cart_item_params[:quantity].to_i || 1)
+      companions.each do |companion, quantity|
+        item, = add_to_cart(companion, quantity, companion.price)
+        added_companions << [ companion, item ]
       end
-
-      # Use save! to raise on failure and trigger rollback
-      @cart_item.save!
     end
 
     # Emit cart event for standard product addition
@@ -315,6 +305,15 @@ class CartItemsController < ApplicationController
       quantity: @cart_item.quantity,
       is_sample: false
     )
+
+    added_companions.each do |companion, item|
+      Rails.event.notify("cart.item_added",
+        product_id: companion.id,
+        product_sku: companion.sku,
+        quantity: item.quantity,
+        is_sample: false
+      )
+    end
 
     # Transaction succeeded
     respond_to do |format|
@@ -339,6 +338,52 @@ class CartItemsController < ApplicationController
     respond_to do |format|
       format.turbo_stream
       format.html { redirect_back fallback_location: product_path(product), alert: "Could not add item to cart: #{@cart_item.errors.full_messages.join(', ')}" }
+    end
+  end
+
+  # Adds one product to the cart at a resolved price, applying the two rules
+  # every add obeys: a regular item replaces a sample of the same product, and a
+  # repeat add at the same price merges into the existing line rather than
+  # opening a second one. Returns the item and whether it displaced a sample.
+  def add_to_cart(product, quantity, price)
+    quantity = 1 if quantity < 1
+
+    sample_items = @cart.cart_items.samples.where(product: product)
+    sample_replaced = sample_items.exists?
+    sample_items.destroy_all
+
+    # Tier products can have separate line items at different price points, so
+    # the price is part of the match.
+    item = @cart.cart_items.non_samples.find_by(product: product, price: price)
+    item ||= @cart.cart_items.build(product: product, price: price, quantity: 0)
+    item.quantity += quantity
+    item.save!
+
+    [ item, sample_replaced ]
+  end
+
+  # Products ticked in the product page's attach block, resolved to active
+  # records. The compatibility mapping governs what that block renders, not what
+  # the cart accepts: any active SKU is welcome (prices resolve server-side) and
+  # anything unknown, inactive or zero-quantity is skipped rather than failing
+  # the add the buyer actually asked for.
+  def companion_items
+    raw = params[:companions]
+    return [] unless raw.respond_to?(:each)
+
+    entries = raw.respond_to?(:values) ? raw.values : raw
+
+    entries.filter_map do |entry|
+      next unless entry.respond_to?(:[])
+
+      sku = entry[:sku]
+      quantity = entry[:quantity].to_i
+      next unless scalar_param?(sku) && sku.present? && quantity.positive?
+
+      product = Product.active.find_by(sku: sku)
+      next unless product
+
+      [ product, quantity ]
     end
   end
 
