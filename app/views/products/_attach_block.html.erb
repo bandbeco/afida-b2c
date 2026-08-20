@@ -19,7 +19,7 @@
 <% visible_count ||= companions.size %>
 <% hidden_count = [ companions.size - visible_count, 0 ].max %>
 
-<div data-test="attach-block" class="mt-6" data-controller="attach-companions">
+<div data-test="attach-block" class="mt-6 text-left" data-controller="attach-companions">
   <h3 class="text-lg font-medium mb-1"><%= heading %> <span class="text-sm text-base-content/60">(optional)</span></h3>
   <p class="text-sm text-base-content/70 mb-4"><%= subheading %></p>
 
@@ -27,8 +27,11 @@
     <% companions.each_with_index do |companion, index| %>
       <% pac_size = companion.pac_size.to_i.positive? ? companion.pac_size : 1 %>
       <% hidden_row = index >= visible_count %>
+      <%# text-left is explicit: the buy column centres its title and price, and
+          an inherited centre alignment turns each row's name, cue and prices
+          into a stack of centred fragments that cannot be scanned down. %>
       <label data-test="attach-row"
-             class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4 flex items-start gap-3 sm:gap-4 cursor-pointer <%= "hidden" if hidden_row %>"
+             class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4 flex items-start gap-3 sm:gap-4 cursor-pointer text-left <%= "hidden" if hidden_row %>"
              <%= "data-attach-companions-target=hiddenRow" if hidden_row %>>
         <input type="checkbox"
                class="checkbox checkbox-primary mt-1 flex-shrink-0"

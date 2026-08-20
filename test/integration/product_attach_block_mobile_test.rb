@@ -19,4 +19,14 @@ class ProductAttachBlockMobileTest < ActionDispatch::IntegrationTest
       assert_select "[data-test='attach-row-controls'].max-md\\:pr-20"
     end
   end
+
+  # The buy column is centre-aligned for the title and price. Inherited by the
+  # attach rows it centres every name, cue and price, which is why the block
+  # reads as a wall of text rather than a list you can run your eye down.
+  test "attach rows are left-aligned regardless of the buy column's alignment" do
+    get product_path(@container)
+
+    assert_select "[data-test='attach-block'].text-left"
+    assert_select "[data-test='attach-row'].text-left"
+  end
 end
