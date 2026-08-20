@@ -28,6 +28,18 @@ class ProductSampleCtaTest < ActionDispatch::IntegrationTest
     assert_select "[data-test='product-sample-cta']", text: /Try before you buy/i
   end
 
+  # The sample route sits below Add to Cart as a secondary action. An outlined
+  # brand-mint button reads as a second primary competing with the real one, so
+  # it takes the quiet ghost treatment instead.
+  test "the sample button is quiet, not a second primary" do
+    get product_path(@sample_eligible)
+
+    assert_select "[data-test='product-sample-cta'] button[type='submit']" do |buttons|
+      assert_match(/btn-ghost/, buttons.first["class"])
+      assert_no_match(/btn-primary/, buttons.first["class"])
+    end
+  end
+
   test "does not render sample CTA on a non-sample-eligible product" do
     get product_path(@non_sample_eligible)
 

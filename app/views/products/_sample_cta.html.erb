@@ -17,7 +17,10 @@
                   class: "flex-shrink-0" do |f| %>
       <%= hidden_field_tag :product_id, product.id %>
       <%= hidden_field_tag :sample, "true" %>
-      <button type="submit" class="btn btn-outline btn-primary btn-sm whitespace-nowrap">
+      <%# Ghost, not an outlined primary: this sits below Add to Cart, and a
+          second mint button beside the real one splits the decision. The ring
+          keeps it legible as a control without competing for the eye. %>
+      <button type="submit" class="btn btn-ghost btn-sm whitespace-nowrap ring-1 ring-base-content/30 hover:ring-base-content/60">
         Order a free sample
       </button>
     <% end %>
