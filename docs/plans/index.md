@@ -7,6 +7,7 @@ Dated feature and design plans. Statuses were researched against git history and
 * [B2B Organic Roadmap 2026-07](/plans/2026-07-07-b2b-organic-roadmap.md) - Task-by-task execution of the [B2B organic growth strategy](/seo/b2b-organic-growth-plan-2026-07.md).
 * [Hormozi Trilogy Implementation 2026-08](/plans/2026-08-17-hormozi-trilogy-implementation.md) - Consolidated four-phase checklist merging the build orders of the three Hormozi proposals (Money Model, Grand Slam Offer, Leads).
 * [Gap Coverage Plan 2026-08](/plans/2026-08-19-gap-coverage-plan.md) - Closes the Ahrefs content gap with rankable commercial pages: batch 1 is eight category retargets plus three new pages, gated on the 2026-10-15 GSC checkpoint.
+* [Product Copy and Specs 2026-08](/plans/2026-08-21-product-copy-and-specs.md) - Replaces formulaic product descriptions with facts in three sequenced moves: promote fit into the spec table from the curated mappings, fix the spec vocabulary, then cut the prose back.
 
 # Shipped
 

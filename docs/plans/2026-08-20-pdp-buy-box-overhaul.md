@@ -45,6 +45,10 @@ The bespoke per-lid `fetch` controller is deleted. The mobile sticky bar submits
 
 HTTP seam only: what a GET renders and what a POST does to the cart. Block-level integration tests per concern (attach block, unit price, live total wiring, buy-box order, free-delivery data), controller tests for the companion contract, model tests for the reverse association and the certification split. The live-total arithmetic and checkbox interactivity are not system-tested; the repo keeps system tests sparse and the behaviour was verified live instead.
 
+## Shipped
+
+Merged to master and deployed 2026-08-21 (ff `d28c3d42..d1e6f88f`, 19 commits; `kamal deploy --roles=web`, which sidesteps the postgres accessory host that aborts a full `kamal deploy` before the `:latest` retag). Live-verified on served HTML: attach cards and the companions field on container pages, the reverse "fits these containers" block with a correct "Show all 9 compatible containers" disclosure on lid pages, unit price on the price line, spec tiles, and the pinned media column.
+
 ## Found during the live check
 
 * The free-delivery hint only recomputed on a selection change, so a buyer arriving with a full cart was told to reach a threshold they had already passed until they touched something. Fixed by handing the controller the total the page opens on, with a regression test at the HTTP seam.
