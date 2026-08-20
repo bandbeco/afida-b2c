@@ -195,7 +195,8 @@ def lids_propose_for_family(family_name, members, lid_inventory_text, api_key)
   attempts = 0
   begin
     attempts += 1
-    response = HTTP.headers(
+    response = HTTP.timeout(connect: 10, write: 30, read: 300)
+                   .headers(
       "x-api-key" => api_key,
       "anthropic-version" => "2023-06-01",
       "content-type" => "application/json"
