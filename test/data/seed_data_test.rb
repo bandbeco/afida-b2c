@@ -1,0 +1,106 @@
+require "test_helper"
+require "csv"
+
+# Guards the seed data files against taxonomy drift.
+#
+# `bin/rails db:prepare` on a fresh database loads db/schema.rb and runs seeds —
+# it never runs migrations. So db/migrate/20260306204621_create_category_hierarchy.rb
+# (which built the nested taxonomy) does NOT execute for a new developer, and the
+# seed CSVs must therefore describe the CURRENT taxonomy on their own rather than
+# the flat pre-migration state they were originally written as.
+#
+# These assertions are pure file/constant checks, so this inherits Minitest::Test
+# rather than ActiveSupport::TestCase: no database, no fixtures, no records.
+class SeedDataTest < Minitest::Test
+  extend ActiveSupport::Testing::Declarative
+
+  CATEGORIES_CSV = Rails.root.join("lib", "data", "categories.csv")
+  PRODUCTS_CSV = Rails.root.join("lib", "data", "products.csv")
+
+  # Slugs that config/routes.rb 301s at the single-segment /categories/:slug path.
+  # Parsed from the routes file so this test cannot drift from it.
+  ROUTE_REDIRECTED_SLUGS = Rails.root.join("config", "routes.rb").read
+    .scan(%r{^\s*get\s+"/categories/([a-z0-9-]+)",\s+to:\s+redirect}).flatten.freeze
+
+  def category_rows
+    @category_rows ||= CSV.read(CATEGORIES_CSV, headers: true).map(&:to_h)
+  end
+
+  def category_slugs
+    @category_slugs ||= category_rows.map { |r| r["slug"] }
+  end
+
+  def parent_rows
+    category_rows.select { |r| r["parent_slug"].blank? }
+  end
+
+  def child_rows
+    category_rows.reject { |r| r["parent_slug"].blank? }
+  end
+
+  # === Structure =========================================================
+
+  test "categories.csv has a parent_slug column" do
+    assert_includes CSV.read(CATEGORIES_CSV, headers: true).headers, "parent_slug",
+      "categories.csv cannot express the nested taxonomy without a parent_slug column"
+  end
+
+  test "every category row has a name and a slug" do
+    category_rows.each do |row|
+      assert row["name"].present?, "row #{row.inspect} is missing a name"
+      assert row["slug"].present?, "row #{row.inspect} is missing a slug"
+    end
+  end
+
+  test "category slugs are unique" do
+    duplicates = category_slugs.tally.select { |_slug, count| count > 1 }.keys
+    assert_empty duplicates, "duplicate slugs in categories.csv: #{duplicates.join(', ')}"
+  end
+
+  test "every parent_slug resolves to a top-level row" do
+    top_level = parent_rows.map { |r| r["slug"] }
+
+    child_rows.each do |row|
+      assert_includes top_level, row["parent_slug"],
+        "#{row['slug']} names parent #{row['parent_slug'].inspect}, which is not a top-level row"
+    end
+  end
+
+  test "taxonomy is 6 parents and 27 subcategories" do
+    assert_equal 6, parent_rows.size, "expected 6 top-level categories"
+    assert_equal 27, child_rows.size, "expected 27 subcategories"
+  end
+
+  # === Route / redirect collisions =======================================
+
+  test "no seeded slug is reserved by a permanent redirect" do
+    collisions = category_slugs & Category::RESERVED_REDIRECT_SLUGS
+    assert_empty collisions,
+      "categories.csv seeds slugs rejected by Category's reserved-slug validation: #{collisions.join(', ')}"
+  end
+
+  test "no top-level slug is shadowed by a static category redirect" do
+    shadowed = parent_rows.map { |r| r["slug"] } & ROUTE_REDIRECTED_SLUGS
+    assert_empty shadowed,
+      "these top-level slugs would be 301'd away by config/routes.rb before the app runs: #{shadowed.join(', ')}"
+  end
+
+  # === Products ==========================================================
+
+  test "every product's category_slug exists in categories.csv" do
+    missing = CSV.read(PRODUCTS_CSV, headers: true)
+      .map { |r| r["category_slug"] }.compact.uniq - category_slugs
+
+    assert_empty missing,
+      "products.csv references categories that seeds never create: #{missing.join(', ')}"
+  end
+
+  test "products attach to leaf categories, never to parents" do
+    parent_slugs = parent_rows.map { |r| r["slug"] }
+    attached_to_parents = CSV.read(PRODUCTS_CSV, headers: true)
+      .map { |r| r["category_slug"] }.compact.uniq & parent_slugs
+
+    assert_empty attached_to_parents,
+      "products.csv attaches products to top-level categories: #{attached_to_parents.join(', ')}"
+  end
+end

@@ -18,16 +18,36 @@ namespace :categories do
       errors: []
     }
 
-    CSV.foreach(csv_file, headers: true) do |row|
-      slug = row["slug"]&.strip
-      next if slug.blank?
+    rows = CSV.read(csv_file, headers: true).map(&:to_h)
+
+    # Parents first: a subcategory cannot resolve its parent_slug until the
+    # parent row exists. Mirrors the two-pass load in db/seeds.rb.
+    # partition, not sort_by: Ruby's sort is not stable, and CSV row order sets
+    # acts_as_list positions on first create.
+    parents_first = rows.reject { |r| r["slug"].to_s.strip.blank? }
+                        .partition { |r| r["parent_slug"].blank? }
+                        .flatten(1)
+    parents = {}
+
+    parents_first.each do |row|
+      slug = row["slug"].strip
+      parent_slug = row["parent_slug"]&.strip
 
       begin
+        parent =
+          if parent_slug.blank?
+            nil
+          else
+            parents[parent_slug] || Category.find_by(slug: parent_slug) ||
+              raise("names unknown parent #{parent_slug.inspect}")
+          end
+
         category = Category.find_or_initialize_by(slug: slug)
         is_new = category.new_record?
 
         category.assign_attributes(
           name: row["name"]&.strip&.gsub(/\s+/, " "),
+          parent: parent,
           meta_title: row["meta_title"]&.strip,
           meta_description: row["meta_description"]&.strip&.gsub(/\s+/, " "),
           description: row["description"]&.strip
@@ -35,6 +55,7 @@ namespace :categories do
 
         if category.changed?
           category.save!
+          parents[slug] = category if parent_slug.blank?
           if is_new
             stats[:categories_created] += 1
             puts "  Created: #{category.name} (#{slug})"
@@ -43,6 +64,7 @@ namespace :categories do
             puts "  Updated: #{category.name} (#{slug})"
           end
         else
+          parents[slug] = category if parent_slug.blank?
           puts "  Unchanged: #{category.name} (#{slug})"
         end
 

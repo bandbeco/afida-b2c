@@ -1,0 +1,92 @@
+---
+type: Report
+description: Why bin/setup stopped seeding, the reconstructed 33-category taxonomy the seed CSVs now carry, and the two open slug questions.
+status: shipped
+timestamp: 2026-08-20
+---
+
+# Seed taxonomy drift, 2026-08-20
+
+**Symptom:** `bin/setup` aborted seeding. `Category` rejected five slugs in
+`lib/data/categories.csv` (`cups-and-lids`, `takeaway-containers`,
+`takeaway-extras`, `plates-trays`, `bagasse-eco-range`) via
+`RESERVED_REDIRECT_SLUGS`, added in `69ffee4f`.
+
+## Root cause
+
+`bin/rails db:prepare` on a fresh database loads `db/schema.rb` and runs seeds —
+it **never runs migrations**. The nested taxonomy was built by
+`db/migrate/20260306204621_create_category_hierarchy.rb`, so that migration does
+not execute for a new developer. The seed CSVs were the *input* to it: the flat
+March taxonomy.
+
+Every developer set up since March therefore received a flat, five-months-stale
+category tree. The reserved-slug validation did not cause the drift — it turned a
+silent wrong into a loud failure. `products.csv` compounded it: all 98 products
+hung off seven flat slugs, three of them reserved, so unblocking the categories
+alone would have skipped 64 products while `bin/setup` reported success.
+
+## Fix
+
+`categories.csv` gained a `parent_slug` column and now carries the current
+33-row taxonomy (6 parents + 27 subcategories). `db/seeds.rb` and
+`lib/tasks/import_categories.rake` load it in two passes (parents, then
+children). `products.csv` was remapped onto leaf categories: 64 of 98 rows moved.
+
+Three flat categories split rather than renaming 1:1 — a wholesale rename per the
+March migration would be wrong today, because later admin work subdivided them:
+
+| Flat slug | Now |
+|---|---|
+| cups-and-lids (36) | hot-cups 17, cold-cups-and-lids 11, hot-cup-lids 8 |
+| takeaway-containers (16) | bowls-and-lids 8, soup-containers 5, takeaway-boxes 3 |
+| takeaway-extras (12) | cup-accessories 4, bags 4, cutlery 4 |
+
+The `takeaway-extras` split replays the regex rules in the hierarchy migration's
+`redistribute_takeaway_extras` verbatim, so seed data lands where that migration
+actually put those products (12/12 matched, no fallbacks).
+
+`test/data/seed_data_test.rb` pins the shape: parent resolution, the 6/27 counts,
+no seeded slug reserved, no top-level slug shadowed by a static route redirect,
+and every `products.csv` slug resolving to a leaf. It reads files and constants
+only — no database, no fixtures.
+
+## Reconstruction and its assumptions
+
+Production was not reachable, so the taxonomy was reconstructed from four
+independent in-repo sources that agree on exactly 33: the hierarchy migration,
+`CATEGORY_QUESTION_HEADINGS` / `RELATED_CATEGORIES` in `categories_helper.rb`,
+the backfill map in `20260708123508_backfill_category_slug_redirects.rb`, and
+[Category Retitles (W1)](/seo/category-retitles-2026-07-20.md), whose 17 retitled
++ 10 untouched leaves + 6 parents = 33 "live-verified by curl".
+
+Two items remain unconfirmed against production:
+
+1. **`hot-cup-lids` vs `cup-lids`.** Seeded as `hot-cup-lids`, following
+   `GOOGLE_TAXONOMY_MAP` (test-pinned, re-keyed in full 2026-08-18) and the
+   retitles doc. If correct, `categories_helper.rb` (`RELATED_CATEGORIES`,
+   `CATEGORY_QUESTION_HEADINGS`) and `config/category_faqs.yml` still key off the
+   dead `cup-lids`, so that page silently loses a cross-link and its FAQs.
+2. **`aluminium-containers` parent.** Seeded under `tableware` (hierarchy
+   migration + helper grouping); the merchant-feed comment blocks place it under
+   Food Containers, but those group by Google taxonomy id, not parentage.
+
+One `Category.pluck(:slug, :parent_id)` from production settles both.
+
+`branded-packaging` was deliberately excluded: `create_category_hierarchy_test.rb`
+names it, but that test asserts only against its own constants, the migration
+never creates it, `/branded-packaging` is a route that 301s to `/branding`, and
+`shop_page_filters_test.rb` asserts it must not appear.
+
+## Still open
+
+`RESERVED_REDIRECT_SLUGS` is mis-scoped in both directions. `config/routes.rb`
+statically 301s 12 single-segment `/categories/:slug` paths, but only 5 are
+listed. The other 7 are live *subcategory* slugs whose canonical URL is nested,
+so the flat redirect never shadows them — correct today, but nothing stops a
+future **top-level** category from claiming one and being 301'd away before the
+app runs. Conversely the validation is unconditional, so it also rejects the 5 as
+subcategory slugs, where they would be safe. The precise rule is *a top-level
+category's slug must not collide with a static one-segment category redirect*:
+scope the validation to `parent_id.nil?` and source it from the full list of 12.
+Not required to unblock `bin/setup`; wants its own commit and test.
