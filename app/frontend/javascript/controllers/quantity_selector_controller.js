@@ -24,6 +24,14 @@ export default class extends Controller {
   }
 
   connect() {
+    this.companionTotal = 0
+    this.updateTotal()
+  }
+
+  // Companions ticked in the attach block are part of what this submit buys, so
+  // the Total has to include them: it is the last number read before committing.
+  companionsChanged(event) {
+    this.companionTotal = event.detail.total || 0
     this.updateTotal()
   }
 
@@ -53,7 +61,7 @@ export default class extends Controller {
     const quantity = parseInt(this.inputTarget.value, 10) || 1
 
     // Update total display
-    const total = quantity * this.priceValue
+    const total = quantity * this.priceValue + (this.companionTotal || 0)
     if (this.hasTotalDisplayTarget) {
       this.totalDisplayTarget.textContent = this.formatCurrency(total)
     }

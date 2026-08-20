@@ -39,11 +39,20 @@ export default class extends Controller {
   }
 
   connect() {
+    this.companionTotal = 0
+
     // Tiers are sorted ascending by quantity, so last = largest case.
     // Pre-select the largest quantity option (best value) by default.
     if (this.tierCardTargets.length > 0) {
       this.selectTierCard(this.tierCardTargets[this.tierCardTargets.length - 1])
     }
+  }
+
+  // Companions ticked in the attach block are part of what this submit buys, so
+  // the Total has to include them: it is the last number read before committing.
+  companionsChanged(event) {
+    this.companionTotal = event.detail.total || 0
+    this.updateTotal()
   }
 
   selectTier(event) {
@@ -135,7 +144,7 @@ export default class extends Controller {
     if (!this.selectedPrice) return
 
     const quantity = parseInt(this.inputTarget.value, 10) || 1
-    const total = quantity * this.selectedPrice
+    const total = quantity * this.selectedPrice + (this.companionTotal || 0)
 
     if (this.hasTotalDisplayTarget) {
       this.totalDisplayTarget.textContent = this.formatCurrency(total)

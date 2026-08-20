@@ -127,11 +127,13 @@
         <div class="lg:w-1/2 text-center lg:text-left"
              <% if has_tiers %>
                data-controller="pricing-tier sticky-atc"
+               data-action="attach-companions:changed->pricing-tier#companionsChanged"
                data-pricing-tier-tiers-value="<%= @product.pricing_tiers.to_json %>"
                data-pricing-tier-default-price-value="<%= @product.price.to_f %>"
                data-pricing-tier-default-pac-size-value="<%= @product.pac_size || 1 %>"
              <% else %>
                data-controller="quantity-selector sticky-atc"
+               data-action="attach-companions:changed->quantity-selector#companionsChanged"
                data-quantity-selector-price-value="<%= @product.price.to_f %>"
                data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>"
              <% end %>>
@@ -351,7 +353,12 @@
               </div>
 
               <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 border-t border-base-200">
-                <p class="text-base sm:text-lg">Total (excl. VAT)</p>
+                <p class="text-base sm:text-lg">
+                  Total (excl. VAT)
+                  <% if @compatible_products.any? || @compatible_containers.any? %>
+                    <span class="block text-sm text-base-content/60">Includes anything ticked above</span>
+                  <% end %>
+                </p>
                 <% if has_tiers %>
                   <p class="text-xl sm:text-2xl" data-pricing-tier-target="totalDisplay">
                     <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
