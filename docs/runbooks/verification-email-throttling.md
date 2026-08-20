@@ -13,13 +13,17 @@ Added 2026-08-19 after ~10 "Verify your email address" emails arrived at `hello@
 
 Every one of these messages leaves with `from: hello@afida.com`. If the form is being used to mail addresses the sender chose, the reputational damage lands on our sending domain, not on the attacker. A burned sending domain takes weeks to rebuild and silently degrades order confirmations along the way.
 
-## The three layers
+## The defense layers
 
 | Layer | Where | Limit | Stops |
 | --- | --- | --- | --- |
+| Edge challenge | Cloudflare WAF rule `challenge-signup-posts` (Managed Challenge on `POST /signup`) | n/a | Bare HTTP clients — they never reach the app |
+| Origin lockdown | Hetzner Cloud firewall `web-cloudflare-origin` on b2c-app (80/443 from Cloudflare ranges only) | n/a | Bypassing Cloudflare by hitting 195.201.16.125 directly |
 | Honeypot | `RegistrationsController::HONEYPOT_FIELD` | n/a | Bots that fill every input |
 | Per-user budget | `VerificationEmailThrottle::PER_USER_HOURLY_LIMIT` | 3/hour | Resend-endpoint looping |
 | Global ceiling | `VerificationEmailThrottle::GLOBAL_HOURLY_LIMIT` | 50/hour | Distributed signup runs |
+
+The edge and origin layers were added 2026-08-20, after the 2026-08-19 bot resumed post-deploy and sailed past the honeypot (it replays a fixed payload scraped before the hidden field existed — zero `honeypot tripped` lines against six successful signups). The WAF rule lives in the zone's custom ruleset alongside two unrelated `skip` rules (internal API, Outrank webhook); a bot-style `curl -X POST https://afida.com/signup` must return 403 with `cf-mitigated: challenge`. The firewall's Cloudflare ranges must stay in sync with `config/initializers/trusted_proxies.rb`. b2c-db needs no firewall: it has no public IP (private network `10.0.0.3` only).
 
 The honeypot is a hidden `secondary_reference` field. Anything arriving in it did not render the page, so the submission is dropped and answered with the **same** notice a real signup gets — a bot told which field caught it simply stops filling that field. The name is deliberately meaningless: anything resembling company/website/url gets pattern-matched by password managers and browser autofill, several of which ignore `autocomplete="off"`, and a customer whose manager filled it would be dropped as silently as a bot.
 
