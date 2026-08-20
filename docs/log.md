@@ -2,6 +2,8 @@
 
 ## 2026-08-20
 
+* **Correction**: The db "accessory host" `188.34.197.99` in `config/deploy.yml` was not our server. b2c-db has no public IP (private network only, `10.0.0.3`); its former public address was recycled by Hetzner to an unrelated customer's machine, which is what plain `kamal deploy` had been password-prompting against all along. deploy.yml and `docs/LAUNCH_CHECKLIST.md` now point at `10.0.0.3` with the history noted. Firewalling: b2c-db needs no Hetzner Cloud firewall (no public interface to filter — the console refuses for exactly that reason); only b2c-app gets the Cloudflare-ranges firewall.
+
 * **Ship**: Verification emails re-enabled behind the new throttles. PR #284 (honeypot + per-user/global send budgets + Cloudflare `trusted_proxies`) merged to master, the suppress branch merged on top, and the `SUPPRESS_VERIFICATION_EMAILS` line removed from `deploy.yml` — the mailer guard stays in code as a standing emergency lever, now documented in [Verification Email Throttling](/runbooks/verification-email-throttling.md). Remaining hardening (user-side, Cloudflare dashboard): Managed Challenge on POST /signup, then Turnstile on the form.
 
 ## 2026-08-19

@@ -61,7 +61,7 @@ env:
 
     # Match this to any external database server to configure Active Record correctly
     # Use shop-db for a db accessory server on same machine via local kamal docker network.
-    # DB_HOST: 188.34.197.99
+    # DB_HOST: 10.0.0.3
 
     # Log everything from Rails
     # RAILS_LOG_LEVEL: debug
@@ -121,7 +121,12 @@ ssh:
 accessories:
   db:
     image: postgres:16
-    host: 188.34.197.99
+    # b2c-db has no public IP: it is only reachable at 10.0.0.3 on the Hetzner
+    # private network, so accessory commands must run from inside that network
+    # (e.g. via an SSH jump through b2c-app). The address 188.34.197.99 that
+    # used to sit here was the db server's long-gone public IP, since recycled
+    # by Hetzner to an unrelated customer — never point kamal at it again.
+    host: 10.0.0.3
     port: "5432:5432"
     env:
       clear:

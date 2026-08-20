@@ -85,7 +85,7 @@ Configure in `.kamal/secrets`:
 - [ ] Set up Google Analytics 4 property
 
 ### 6. Database Setup
-- [ ] Ensure PostgreSQL server (188.34.197.99) is accessible from web server
+- [ ] Ensure PostgreSQL server (b2c-db, private-only at 10.0.0.3) is accessible from web server
 - [ ] Create production databases:
   - [ ] `shop_production` (main database)
   - [ ] `shop_production_cache` (Solid Cache)
@@ -275,7 +275,7 @@ bin/kamal rollback
 
 ### Server Details
 - **Web Server:** 195.201.16.125
-- **Database Server:** 188.34.197.99:5432
+- **Database Server:** b2c-db, 10.0.0.3:5432 (Hetzner private network only; no public IP)
 
 ### Credentials
 ```bash
