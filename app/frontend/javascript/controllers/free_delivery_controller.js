@@ -46,17 +46,33 @@ export default class extends Controller {
   render() {
     if (!this.hasMessageTarget || !this.thresholdValue) return
 
-    const remaining = this.thresholdValue - this.cartSubtotalValue - this.pageTotal
+    // The gap counts the cart plus what this page would add, because ticking a
+    // lid genuinely moves the buyer closer. But the sentence has to match what
+    // they have actually committed to: with an empty cart, "add £61 more" reads
+    // as £61 on top of a £39 they have not bought yet. Only once something is
+    // in the cart is "more" true.
+    const selection = this.cartSubtotalValue + this.pageTotal
+    const remaining = this.thresholdValue - selection
 
-    this.messageTarget.textContent = remaining > 0
-      ? `Add ${this.formatCurrency(remaining)} more for free mainland UK delivery`
-      : "This order qualifies for free mainland UK delivery"
+    if (remaining <= 0) {
+      this.messageTarget.textContent = "This order qualifies for free mainland UK delivery"
+    } else if (this.cartSubtotalValue > 0) {
+      this.messageTarget.textContent =
+        `Add ${this.formatCurrency(remaining)} more for free mainland UK delivery`
+    } else {
+      // The threshold is a round figure, so it reads without decimals here,
+      // matching the server-rendered copy this replaces on connect.
+      this.messageTarget.textContent =
+        `Free mainland UK delivery on orders over ${this.formatCurrency(this.thresholdValue, 0)}`
+    }
   }
 
-  formatCurrency(amount) {
+  formatCurrency(amount, decimals = 2) {
     return new Intl.NumberFormat("en-GB", {
       style: "currency",
-      currency: "GBP"
+      currency: "GBP",
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals
     }).format(amount)
   }
 }

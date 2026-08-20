@@ -58,6 +58,17 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
     assert_select "[data-free-delivery-opening-total-value=?]", lid.price.to_f.to_s
   end
 
+  # With an empty cart the hint states the rule rather than counting down,
+  # because "add £61 more" would mean £61 on top of a page total the buyer has
+  # not committed to. The client repeats this wording in that state, so the two
+  # must not drift apart.
+  test "the server-rendered hint states the rule rather than a countdown" do
+    get product_path(@product)
+
+    assert_select "[data-test='free-delivery-hint']", text: /over £100/i
+    assert_select "[data-test='free-delivery-hint']", text: /\Aadd /i, count: 0
+  end
+
   test "the cart subtotal reflects what is already in the cart" do
     lid = products(:flat_lid_8oz)
     post cart_cart_items_path, params: { cart_item: { sku: lid.sku, quantity: 2 } }
