@@ -124,16 +124,23 @@
 
         <%# Content Section %>
         <% has_tiers = @product.pricing_tiers.present? %>
+        <%# The buy column owns the shared state: quantity or tier drives the
+            Total, the attach block feeds into it, and the free-delivery
+            countdown watches the resulting figure. %>
         <div class="lg:w-1/2 text-center lg:text-left"
+             data-free-delivery-threshold-value="<%= free_shipping_threshold_amount %>"
+             data-free-delivery-cart-subtotal-value="<%= (Current.cart&.subtotal_amount || 0).to_f %>"
              <% if has_tiers %>
-               data-controller="pricing-tier sticky-atc"
-               data-action="attach-companions:changed->pricing-tier#companionsChanged"
+               data-controller="pricing-tier sticky-atc free-delivery"
+               data-action="attach-companions:changed->pricing-tier#companionsChanged
+                            buy-box:totalChanged->free-delivery#totalChanged"
                data-pricing-tier-tiers-value="<%= @product.pricing_tiers.to_json %>"
                data-pricing-tier-default-price-value="<%= @product.price.to_f %>"
                data-pricing-tier-default-pac-size-value="<%= @product.pac_size || 1 %>"
              <% else %>
-               data-controller="quantity-selector sticky-atc"
-               data-action="attach-companions:changed->quantity-selector#companionsChanged"
+               data-controller="quantity-selector sticky-atc free-delivery"
+               data-action="attach-companions:changed->quantity-selector#companionsChanged
+                            buy-box:totalChanged->free-delivery#totalChanged"
                data-quantity-selector-price-value="<%= @product.price.to_f %>"
                data-quantity-selector-pac-size-value="<%= @product.pac_size || 1 %>"
              <% end %>>
@@ -404,11 +411,19 @@
             </div>
           <% end %>
 
-          <div data-test="free-delivery-hint" class="mt-3 flex items-center justify-center gap-2 text-base text-base-content/80">
+          <%# Free delivery counts down rather than posts a rule: a buyer told
+              they are £12 short tops up, a buyer told only "over £100" has to
+              work it out. The threshold and what the cart already holds come
+              from the server; the client subtracts the on-page selection.
+              Checkout stays the only authority on what is actually charged, and
+              the promise stays mainland-qualified because this page does not
+              know the destination. %>
+          <div data-test="free-delivery-hint"
+               class="mt-3 flex items-center justify-center gap-2 text-base text-base-content/80">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM3 4h2l2 11h11l2-7H7"/>
             </svg>
-            <span>Free delivery on mainland UK orders over <span data-test="free-delivery-amount" class="text-success"><%= free_shipping_threshold_display %></span></span>
+            <span data-free-delivery-target="message">Free delivery on mainland UK orders over <span data-test="free-delivery-amount" class="text-success"><%= free_shipping_threshold_display %></span></span>
           </div>
 
           <%= render "products/trust_strip" %>

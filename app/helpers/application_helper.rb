@@ -50,6 +50,12 @@ module ApplicationHelper
     Shipping.formatted_free_shipping_threshold
   end
 
+  # The same threshold as a number, for the client-side countdown. Kept beside
+  # the display version so both read the one checkout constant.
+  def free_shipping_threshold_amount
+    Shipping::FREE_SHIPPING_THRESHOLD.to_f
+  end
+
   # The free-delivery claim, qualified by zone. Free delivery is a mainland
   # promise (ShippingZone::FREE_SHIPPING_ZONES), so the copy has to say so:
   # an unqualified claim is one we cannot keep for Northern Ireland, the

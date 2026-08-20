@@ -27,4 +27,25 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
 
     assert_select "[data-test='free-delivery-hint']", text: /mainland UK/i
   end
+
+  # The hint is worth more as a countdown than as a poster: a buyer £12 short
+  # will top up, a buyer told only "over £100" has to work it out. The server
+  # supplies the threshold and what the cart already holds; the page counts down
+  # as the selection changes.
+  test "the buy box carries the threshold and the cart's current subtotal" do
+    get product_path(@product)
+
+    assert_select "[data-free-delivery-threshold-value='100.0']"
+    assert_select "[data-free-delivery-cart-subtotal-value='0.0']"
+    assert_select "[data-free-delivery-target='message']"
+  end
+
+  test "the cart subtotal reflects what is already in the cart" do
+    lid = products(:flat_lid_8oz)
+    post cart_cart_items_path, params: { cart_item: { sku: lid.sku, quantity: 2 } }
+
+    get product_path(@product)
+
+    assert_select "[data-free-delivery-cart-subtotal-value=?]", (lid.price * 2).to_f.to_s
+  end
 end
