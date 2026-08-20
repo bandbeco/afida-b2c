@@ -16,7 +16,7 @@ class ProductAttachBlockMobileTest < ActionDispatch::IntegrationTest
     get product_path(@container)
 
     assert_select "[data-test='attach-row']" do
-      assert_select "[data-test='attach-row-controls'].max-md\\:pr-20"
+      assert_select "[data-test='attach-row-details'].max-md\\:pr-20"
     end
   end
 

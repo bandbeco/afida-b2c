@@ -11,14 +11,19 @@ import { Controller } from "@hotwired/stimulus"
  *
  * Selection changes are announced so the buy box's total can include them.
  *
+ * Cards stay compact until wanted: ticking one reveals its pack price and pack
+ * count, so the block costs little height while unengaged but never hides the
+ * fit reassurance behind a click.
+ *
  * Targets:
- * - checkbox: One per companion row
- * - quantity: The pack-count select beside each checkbox
- * - hiddenRow: Rows folded away behind the disclosure
+ * - checkbox: One per companion card
+ * - quantity: The pack-count select inside each card
+ * - details: The pack price and quantity, revealed on tick
+ * - hiddenRow: Cards folded away behind the disclosure
  * - disclosure: The "show all" button
  */
 export default class extends Controller {
-  static targets = ["checkbox", "quantity", "hiddenRow", "disclosure"]
+  static targets = ["checkbox", "quantity", "details", "hiddenRow", "disclosure"]
 
   connect() {
     this.announce()
@@ -30,12 +35,17 @@ export default class extends Controller {
 
     const checkbox = row.querySelector("input[type=checkbox]")
     const quantity = row.querySelector("select")
+    const details = row.querySelector("[data-attach-companions-target='details']")
 
     if (checkbox && quantity) {
       quantity.disabled = !checkbox.checked
       if (checkbox.checked && event.target === checkbox) {
         quantity.value = this.matchingQuantity(quantity)
       }
+    }
+
+    if (checkbox && details) {
+      details.classList.toggle("hidden", !checkbox.checked)
     }
 
     this.announce()

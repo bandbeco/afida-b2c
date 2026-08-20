@@ -1,17 +1,23 @@
-<%# The attach block: companion products offered as checkbox rows inside the
+<%# The attach block: companion products offered as checkbox cards inside the
     main add-to-cart form, so one submit buys the product and everything ticked.
 
     Shared by both directions of the curated compatibility mapping. Container
     pages offer lids; lid pages offer the containers they fit, and link those
     names out because a buyer checking fit may want the container's dimensions.
 
+    The card face carries only what a buyer chooses on (what it is, whether it
+    fits, the rate they compare on). Pack price and pack count are detail for a
+    companion they have actually picked, so they ride along hidden and appear on
+    tick: the block stays short enough that the buy box keeps its shape, without
+    putting the fit reassurance behind a click.
+
     Locals:
       companions      - products to offer
       heading         - block heading
       subheading      - one line under it
-      fit_label       - the reassurance each row carries
+      fit_label       - the reassurance each card carries
       link_names      - whether companion names link to their product pages
-      visible_count   - rows shown before the disclosure (nil = show all)
+      visible_count   - cards shown before the disclosure (nil = show all)
       highlighted_id  - product id that carries the "most popular" cue
 %>
 <% return if companions.blank? %>
@@ -21,79 +27,78 @@
 
 <div data-test="attach-block" class="mt-6 text-left" data-controller="attach-companions">
   <h3 class="text-lg font-medium mb-1"><%= heading %> <span class="text-sm text-base-content/60">(optional)</span></h3>
-  <p class="text-sm text-base-content/70 mb-4"><%= subheading %></p>
+  <p class="text-sm text-base-content/70 mb-3"><%= subheading %></p>
 
-  <div class="flex flex-col gap-3">
+  <%# Two across on anything wider than a phone: it halves the block's height
+      for the same number of companions, which is what keeps Add to Cart within
+      reach of the quantity stepper. %>
+  <div data-test="attach-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
     <% companions.each_with_index do |companion, index| %>
       <% pac_size = companion.pac_size.to_i.positive? ? companion.pac_size : 1 %>
-      <% hidden_row = index >= visible_count %>
+      <% hidden_card = index >= visible_count %>
       <%# text-left is explicit: the buy column centres its title and price, and
-          an inherited centre alignment turns each row's name, cue and prices
-          into a stack of centred fragments that cannot be scanned down. %>
+          an inherited centre alignment turns each card's name, cue and price
+          into centred fragments that cannot be scanned down. %>
       <label data-test="attach-row"
-             class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4 flex items-start gap-3 sm:gap-4 cursor-pointer text-left <%= "hidden" if hidden_row %>"
-             <%= "data-attach-companions-target=hiddenRow" if hidden_row %>>
+             class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 flex items-start gap-3 cursor-pointer text-left <%= "hidden" if hidden_card %>"
+             <%= "data-attach-companions-target=hiddenRow" if hidden_card %>>
         <input type="checkbox"
-               class="checkbox checkbox-primary mt-1 flex-shrink-0"
+               class="checkbox checkbox-primary checkbox-sm mt-0.5 flex-shrink-0"
                name="companions[<%= index %>][sku]"
                value="<%= companion.sku %>"
                data-attach-companions-target="checkbox"
                data-companion-price="<%= companion.price.to_f %>"
                data-action="change->attach-companions#toggle" />
 
-        <div class="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20">
+        <div class="flex-shrink-0 w-12 h-12">
           <% if companion.primary_photo&.attached? %>
-            <%= image_tag companion.primary_photo.variant(resize_to_limit: [ 200, 200 ]),
+            <%= image_tag companion.primary_photo.variant(resize_to_limit: [ 150, 150 ]),
                           alt: companion.generated_title,
                           class: "w-full h-full object-contain",
                           loading: "lazy" %>
           <% else %>
-            <div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-2xl" aria-hidden="true">📦</div>
+            <div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-xl" aria-hidden="true">📦</div>
           <% end %>
         </div>
 
         <div class="flex-1 min-w-0">
-          <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-            <h4 class="text-base leading-tight">
-              <% if link_names %>
-                <%= link_to companion.generated_title, product_path(companion), class: "link link-hover" %>
-              <% else %>
-                <%= companion.generated_title %>
-              <% end %>
-            </h4>
-            <% if highlighted_id && companion.id == highlighted_id %>
-              <span data-test="attach-popular-cue" class="badge badge-sm badge-outline">Most popular</span>
-            <% end %>
-          </div>
-
-          <p class="text-sm text-base-content/70 mt-0.5"><%= fit_label %></p>
-
-          <div class="flex flex-wrap items-baseline gap-x-2 mt-1">
-            <% unit_price = pdp_unit_price(companion) %>
-            <% if unit_price %>
-              <p class="text-base text-gray-900"><%= unit_price %></p>
-              <p class="text-sm text-base-content/60">
-                <%= number_to_currency(companion.price) %> / pack of <%= number_with_delimiter(pac_size) %>
-              </p>
+          <h4 class="text-sm leading-snug">
+            <% if link_names %>
+              <%= link_to companion.generated_title, product_path(companion), class: "link link-hover" %>
             <% else %>
-              <p class="text-base text-gray-900"><%= number_to_currency(companion.price) %></p>
+              <%= companion.generated_title %>
             <% end %>
-          </div>
+          </h4>
 
-          <%# The floating WhatsApp button is fixed to the bottom-right corner and
-              paints above the page, so a full-width control here runs underneath
-              it and a tap meant for the quantity opens a chat instead. The right
-              padding keeps the row's own controls clear of that corner on the
-              narrow screens where the two would otherwise meet. %>
-          <div data-test="attach-row-controls" class="mt-2 max-md:pr-20">
+          <p class="text-xs text-base-content/70 mt-0.5">
+            <%= fit_label %><% if highlighted_id && companion.id == highlighted_id %>
+              <span data-test="attach-popular-cue"> · Most popular</span>
+            <% end %>
+          </p>
+
+          <% unit_price = pdp_unit_price(companion) %>
+          <p class="text-sm text-gray-900 mt-1">
+            <%= unit_price || number_to_currency(companion.price) %>
+          </p>
+
+          <%# Revealed on tick. The pack price answers "what will this cost me",
+              which only becomes the question once the companion is wanted, and
+              the WhatsApp button is fixed to this corner on narrow screens, so
+              the control keeps clear of it. %>
+          <div data-test="attach-row-details"
+               data-attach-companions-target="details"
+               class="hidden mt-2 max-md:pr-20">
+            <p class="text-xs text-base-content/60 mb-1">
+              <%= number_to_currency(companion.price) %> / pack of <%= number_with_delimiter(pac_size) %>
+            </p>
             <label class="sr-only" for="companion-quantity-<%= companion.id %>">
               Packs of <%= companion.generated_title %>
             </label>
-            <%# Quantity rides along disabled until the row is ticked, so an
-                unticked row cannot contribute a companion to the submission. %>
+            <%# Quantity rides along disabled until the card is ticked, so an
+                unticked card cannot contribute a companion to the submission. %>
             <select id="companion-quantity-<%= companion.id %>"
                     name="companions[<%= index %>][quantity]"
-                    class="select select-bordered select-sm w-full sm:w-auto"
+                    class="select select-bordered select-sm w-full"
                     data-attach-companions-target="quantity"
                     data-action="change->attach-companions#toggle"
                     disabled>
