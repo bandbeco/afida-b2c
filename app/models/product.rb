@@ -40,6 +40,19 @@ class Product < ApplicationRecord
   has_many :product_compatible_lids, dependent: :destroy
   has_many :compatible_lids, through: :product_compatible_lids, source: :compatible_lid
 
+  # The mirror image: the container -> lid join read backwards, so a lid page can
+  # answer "what does this fit?" without a second curation surface. Curation
+  # stays one-directional; this is a derived view of the same rows.
+  has_many :container_compatible_lids,
+           class_name: "ProductCompatibleLid",
+           foreign_key: :compatible_lid_id,
+           inverse_of: :compatible_lid,
+           dependent: :destroy
+  has_many :compatible_containers,
+           -> { active },
+           through: :container_compatible_lids,
+           source: :product
+
   # Branded product pricing tiers
   has_many :branded_product_prices, dependent: :destroy
 

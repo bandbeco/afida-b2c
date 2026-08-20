@@ -71,4 +71,29 @@ class ProductCompatibleLidTest < ActiveSupport::TestCase
 
     assert_nothing_raised { product_compatible_lids(:one).destroy! }
   end
+
+  # The container -> lid join is the only curated direction. Lid pages read it
+  # backwards to answer "what does this lid fit?", so the reverse view must come
+  # from the same rows rather than a second curation surface.
+  test "a lid lists the containers mapped to it" do
+    lid = products(:flat_lid_8oz)
+
+    assert_includes lid.compatible_containers, products(:branded_cup_8oz)
+  end
+
+  test "compatible_containers excludes inactive containers" do
+    lid = products(:flat_lid_8oz)
+    products(:branded_cup_8oz).update!(active: false)
+
+    assert_not_includes lid.compatible_containers, products(:branded_cup_8oz)
+  end
+
+  test "compatible_containers honours the join sort order" do
+    lid = products(:flat_lid_8oz)
+    ProductCompatibleLid.create!(product: products(:two), compatible_lid: lid, sort_order: 1)
+    ProductCompatibleLid.create!(product: products(:one), compatible_lid: lid, sort_order: 0)
+
+    assert_equal [ products(:one), products(:two), products(:branded_cup_8oz) ],
+                 lid.compatible_containers.to_a
+  end
 end
