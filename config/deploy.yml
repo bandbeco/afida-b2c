@@ -101,10 +101,17 @@ builder:
 # Use a different ssh user than root
 # Pin the exact key: the 1Password agent offers too many keys and the host's
 # MaxAuthTries kills the connection ("Too many authentication failures").
+# Machine-specific: net-ssh drops listed key files that do not exist on the machine
+# running kamal (net-ssh key_manager.rb prepare_identities_from_files), so each entry
+# serves one machine. id_ed25519 is the original deploy key. afida_hetzner is an empty
+# stub whose real private half lives in the 1Password SSH agent; net-ssh reads the
+# adjacent .pub and signs via the agent (SSH_AUTH_SOCK must point at
+# ~/.1password/agent.sock).
 ssh:
   keys_only: true
   keys:
     - ~/.ssh/id_ed25519
+    - ~/.ssh/afida_hetzner
 
 # Use accessory services (secrets come from .kamal/secrets).
 accessories:

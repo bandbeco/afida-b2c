@@ -345,4 +345,31 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
       password: "password"
     }
   end
+
+  # =============================================================================
+  # Rate limiting
+  # =============================================================================
+
+  # This endpoint sends no mail itself, but each accepted signup becomes a Klaviyo
+  # profile that a flow will mail, so an unbounded endpoint is an open relay by proxy.
+  # The limit is declared with LiveCacheStore rather than the framework default so it
+  # is reachable here at all: rate_limit binds `store:` when the class is loaded, which
+  # under the test env's :null_store makes every throttle inert.
+  test "refuses newsletter signups past the hourly per-IP limit" do
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+
+    10.times do |n|
+      post email_subscriptions_path, params: { email: "within#{n}@example.com" }
+      assert_not_equal 429, response.status, "request #{n + 1} should be within the limit"
+    end
+
+    assert_no_difference "EmailSubscription.count" do
+      post email_subscriptions_path, params: { email: "overlimit@example.com" }
+    end
+
+    assert_redirected_to cart_path
+  ensure
+    Rails.cache = original_cache
+  end
 end

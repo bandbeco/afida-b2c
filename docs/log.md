@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-08-19
+
+* **Creation**: [Verification Email Throttling](/runbooks/verification-email-throttling.md). Response to a burst of ~10 verification emails in 47 minutes landing in `hello@afida.com` (visible there because `RegistrationMailer` BCCs that address, so the inbox mirrors every registration — the newsletter form, first suspected, sends no mail at all). Three layers shipped: a honeypot field on `/signup` answered indistinguishably from success; a per-user hourly budget closing the previously unthrottled resend endpoint, which one session could loop without bound; and a global hourly ceiling as the blast-radius cap against distributed runs. The newsletter endpoint also gained a per-IP limit — it sends no mail itself but pushes profiles to Klaviyo, which does. Runbooks index updated. The incident itself was never attributed: neither the BCC `To:` headers nor the production session/IP query was read.
+
 ## 2026-08-18
 
 * **Update**: [SEO Measurement Checkpoint 2026-08-18](/seo/seo-audit-2026-08-18.md). Next-play 2 shipped same day: the `/vegware` to `/collections/vegware` 301 consolidation (commit `948f9e76`, deployed, live-verified one-hop with query preservation; stockist banner re-pointed, landing page + controller action deleted). The brand lane's signals now accumulate on the single buyable page.
