@@ -1,0 +1,43 @@
+<%# Quantity stepper for the buy box.
+
+    One bordered shell holds both buttons and the field, so the group reads as a
+    single control. The buttons deliberately carry no .btn class: the site-wide
+    pill radius applies to every button, and a pill either side of a square
+    field is what made this look like three parts that had come apart.
+
+    Locals:
+      controller - the Stimulus controller driving the buy box
+                   ("quantity-selector" or "pricing-tier")
+%>
+<div class="inline-flex items-stretch rounded-lg border border-base-content/25 overflow-hidden bg-white">
+  <button type="button"
+          class="px-4 flex items-center justify-center text-base-content/70 hover:bg-base-200 hover:text-base-content transition-colors cursor-pointer"
+          data-action="click-><%= controller %>#decrement"
+          aria-label="Decrease quantity">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M20 12H4" />
+    </svg>
+  </button>
+
+  <%# The dividers are the field's own side borders, so there is exactly one
+      line between each part rather than two overlapping ones. %>
+  <input type="number"
+         id="quantity"
+         name="quantity"
+         value="1"
+         min="1"
+         max="999"
+         class="w-16 text-center border-x border-base-content/25 py-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-inset"
+         data-<%= controller %>-target="input"
+         data-action="change-><%= controller %>#updateTotal"
+         aria-label="Quantity">
+
+  <button type="button"
+          class="px-4 flex items-center justify-center text-base-content/70 hover:bg-base-200 hover:text-base-content transition-colors cursor-pointer"
+          data-action="click-><%= controller %>#increment"
+          aria-label="Increase quantity">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+    </svg>
+  </button>
+</div>

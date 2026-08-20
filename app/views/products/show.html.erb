@@ -251,34 +251,7 @@
             <div class="mt-6">
               <label for="quantity" class="block text-lg font-medium mb-2">Quantity</label>
               <div class="flex items-center justify-center lg:justify-start gap-4">
-                <div class="join">
-                  <button type="button"
-                          class="join-item btn btn-outline"
-                          data-action="click->pricing-tier#decrement"
-                          aria-label="Decrease quantity">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <input type="number"
-                         id="quantity"
-                         name="quantity"
-                         value="1"
-                         min="1"
-                         max="999"
-                         class="join-item input input-bordered w-20 text-center"
-                         data-pricing-tier-target="input"
-                         data-action="change->pricing-tier#updateTotal"
-                         aria-label="Quantity">
-                  <button type="button"
-                          class="join-item btn btn-outline"
-                          data-action="click->pricing-tier#increment"
-                          aria-label="Increase quantity">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
+                <%= render "products/quantity_stepper", controller: "pricing-tier" %>
                 <span class="text-base-content/60" data-pricing-tier-target="unitsDisplay"></span>
               </div>
             </div>
@@ -287,34 +260,7 @@
             <div class="mt-6">
               <label for="quantity" class="block text-lg font-medium mb-2">Quantity</label>
               <div class="flex items-center justify-center lg:justify-start gap-4">
-                <div class="join">
-                  <button type="button"
-                          class="join-item btn btn-outline"
-                          data-action="click->quantity-selector#decrement"
-                          aria-label="Decrease quantity">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" />
-                    </svg>
-                  </button>
-                  <input type="number"
-                         id="quantity"
-                         name="quantity"
-                         value="1"
-                         min="1"
-                         max="999"
-                         class="join-item input input-bordered w-20 text-center"
-                         data-quantity-selector-target="input"
-                         data-action="change->quantity-selector#updateTotal"
-                         aria-label="Quantity">
-                  <button type="button"
-                          class="join-item btn btn-outline"
-                          data-action="click->quantity-selector#increment"
-                          aria-label="Increase quantity">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
+                <%= render "products/quantity_stepper", controller: "quantity-selector" %>
                 <% if @product.pac_size && @product.pac_size > 1 %>
                   <span class="text-base-content/60" data-quantity-selector-target="unitsDisplay">
                     (<%= number_with_delimiter(@product.pac_size) %> units)
