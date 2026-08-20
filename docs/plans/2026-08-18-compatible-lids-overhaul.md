@@ -1,8 +1,8 @@
 ---
 type: Plan
 description: Overhaul of the compatible-lids feature; curated join table as sole truth, admin opened to all container types, cart lid reminder, and a propose/review/apply data pipeline.
-status: active
-timestamp: 2026-08-18
+status: shipped
+timestamp: 2026-08-20
 ---
 
 # Compatible Lids Overhaul
@@ -26,6 +26,7 @@ Successor to the [Matching Lids Configurator plan](/plans/2025-11-06-matching-li
 
 ## Status
 
+- 2026-08-20: SHIPPED end to end. Branch rebased onto the incident-hardened master, merged (ff to `23dfa764`) and redeployed (the interim master-only deploy had rolled the overhaul off prod for ~half a day). Pipeline run complete: 205 containers + 126 lids exported, LLM proposals reviewed with two rules from Laurent (never touch already-mapped containers; Vegware containers take Vegware lids only), 350 mappings applied (82 → 432, purely additive, idempotency re-run all zeros). Live-verified on soup-container and Vegware cup pages. Ops note: kamal auth on this machine now rides the 1Password SSH agent (`keys_only: false` + `SSH_AUTH_SOCK` to the 1Password socket); net-ssh does not read `IdentityAgent` from ssh config.
 - 2026-08-18: All code phases built on branch `compatible-lids-overhaul` (tests green, 3,045 runs). Data prune, deploy and pipeline run pending.
 - 2026-08-19: DEPLOYED (image `7acc1b56`, the branch head incl. review fixes) and live-verified: pruned cup pages serve identical lid SKUs, the four Vegware cup pages now show their 89/79-series lids (the prune exception paying off), the configurator endpoint size-filters correctly (8oz → 80mm lids, 12oz → 90mm), cart page healthy. Note: master not yet fast-forwarded to the deployed sha. Pipeline run pending.
 - 2026-08-18 (later): Prod prune APPLIED via kamal-exec runner: 112 of 182 rows deleted (70 remain), 10 defaults re-promoted, templates skipped. Deliberate deviation: the four `VEG-CUP-DW-*` cups were excluded because their family-seeded rows are known-correct (the cups share the 89/79-series rim their names encode; the old regex hid them only because the Vegware lid names carry no oz token), so the deploy will surface correct lids on those four pages as a bonus. Live-verified behaviour-invisible on 12WSW and 12RPTRC pages (served lid SKUs identical pre/post). Deploy and pipeline still pending.

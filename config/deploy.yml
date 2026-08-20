@@ -112,9 +112,10 @@ builder:
 # adjacent .pub and signs via the agent (SSH_AUTH_SOCK must point at
 # ~/.1password/agent.sock).
 ssh:
-  keys_only: true
+  # keys_only stays off so the 1Password SSH agent (via SSH_AUTH_SOCK) can
+  # authenticate; the key file below is the other machine's deploy key.
+  keys_only: false
   keys:
-    - ~/.ssh/id_ed25519
     - ~/.ssh/afida_hetzner
 
 # Use accessory services (secrets come from .kamal/secrets).

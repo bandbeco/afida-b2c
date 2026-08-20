@@ -6,7 +6,6 @@ Dated feature and design plans. Statuses were researched against git history and
 
 * [B2B Organic Roadmap 2026-07](/plans/2026-07-07-b2b-organic-roadmap.md) - Task-by-task execution of the [B2B organic growth strategy](/seo/b2b-organic-growth-plan-2026-07.md).
 * [Hormozi Trilogy Implementation 2026-08](/plans/2026-08-17-hormozi-trilogy-implementation.md) - Consolidated four-phase checklist merging the build orders of the three Hormozi proposals (Money Model, Grand Slam Offer, Leads).
-* [Compatible Lids Overhaul](/plans/2026-08-18-compatible-lids-overhaul.md) - Curated join table as sole lid-display truth, admin opened to all container types, cart lid reminder, propose/review/apply data pipeline.
 * [Gap Coverage Plan 2026-08](/plans/2026-08-19-gap-coverage-plan.md) - Closes the Ahrefs content gap with rankable commercial pages: batch 1 is eight category retargets plus three new pages, gated on the 2026-10-15 GSC checkpoint.
 
 # Shipped
@@ -47,6 +46,7 @@ Dated feature and design plans. Statuses were researched against git history and
 * [Structured Events](/plans/2026-01-16-structured-events-design.md) - Rails.event structured reporting flowing to Logtail.
 * [Collections and Curated Samples](/plans/2026-01-17-collections-and-curated-samples.md) - Audience-based Collections and curated sample packs.
 * [Outrank Webhook Integration](/plans/outrank-webhook-integration.md) - Webhook creating draft BlogPosts from Outrank content.
+* [Compatible Lids Overhaul](/plans/2026-08-18-compatible-lids-overhaul.md) - Curated join table as sole lid-display truth, admin opened to all container types, cart lid reminder, propose/review/apply data pipeline; shipped 2026-08-20 with 432 curated mappings.
 
 # Superseded
 
