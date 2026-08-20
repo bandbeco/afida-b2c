@@ -342,6 +342,16 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "show titles each compatible lid card with the lid's own name" do
+    get product_url(products(:branded_cup_8oz).slug)
+
+    assert_response :success
+    # Fixture cup maps to two lids whose names differ; each card must carry
+    # its lid's title, not a shared material/size string.
+    assert_select "h4", text: /#{Regexp.escape(products(:flat_lid_8oz).generated_title)}/
+    assert_select "h4", text: /#{Regexp.escape(products(:domed_lid_8oz).generated_title)}/
+  end
+
   test "show renders every curated compatible lid regardless of size token" do
     cup = products(:single_wall_12oz_white)
     ProductCompatibleLid.create!(product: cup, compatible_lid: products(:flat_lid_8oz), sort_order: 0)

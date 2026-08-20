@@ -325,7 +325,7 @@
                       <%# Content %>
                       <div class="flex-1 min-w-0">
                         <h4 class="text-base sm:text-lg mb-1 leading-tight">
-                          <%= [lid.material, lid.size].compact.join(' · ') %> compatible
+                          <%= lid.generated_title %>
                         </h4>
                         <p class="text-sm sm:text-base text-gray-900">
                           <%= number_to_currency(lid.price) %> / pack of <%= number_with_delimiter(lid.pac_size) %>
