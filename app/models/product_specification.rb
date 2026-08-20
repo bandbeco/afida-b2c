@@ -15,6 +15,13 @@ class ProductSpecification
     { label: "Size",     attribute: :size }
   ].freeze
 
+  # Tokens the certifications column carries that nobody actually certifies.
+  # They describe what the material does, so they belong beside Material rather
+  # than beside FSC and EN 13432, where they read as a padded claim. Anything
+  # unrecognised is left alone: a real certification we have not seen before
+  # must not be quietly demoted.
+  MATERIAL_PROPERTIES = [ "recyclable" ].freeze
+
   def initialize(product)
     @product = product
   end
@@ -28,18 +35,17 @@ class ProductSpecification
   end
 
   def materials
-    MATERIAL_FIELDS.each_with_object([]) do |field, acc|
+    rows = MATERIAL_FIELDS.each_with_object([]) do |field, acc|
       value = @product.public_send(field[:attribute])
       next if value.blank?
       acc << { label: field[:label], value: value }
     end
+
+    rows + material_properties.map { |property| { label: property, value: "Yes" } }
   end
 
   def certifications
-    raw = @product.certifications
-    return [] if raw.blank?
-
-    raw.split(",").map(&:strip).reject(&:blank?)
+    declared_certifications.reject { |token| material_property?(token) }
   end
 
   def dimensions?
@@ -56,5 +62,22 @@ class ProductSpecification
 
   def any?
     dimensions? || materials? || certifications?
+  end
+
+  private
+
+  def declared_certifications
+    raw = @product.certifications
+    return [] if raw.blank?
+
+    raw.split(",").map(&:strip).reject(&:blank?)
+  end
+
+  def material_properties
+    declared_certifications.select { |token| material_property?(token) }
+  end
+
+  def material_property?(token)
+    MATERIAL_PROPERTIES.include?(token.downcase)
   end
 end

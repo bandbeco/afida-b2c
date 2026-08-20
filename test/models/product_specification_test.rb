@@ -110,6 +110,39 @@ class ProductSpecificationTest < ActiveSupport::TestCase
     assert_equal [ "FSC", "Compostable" ], spec.certifications
   end
 
+  # Recyclability is a property of the material, not a certification anyone
+  # awarded. Listed under Certifications beside FSC and EN 13432 it reads as a
+  # padded claim, which is exactly the wrong impression for buyers who chose
+  # this shop on its environmental credentials.
+  test "#certifications leaves out material properties" do
+    spec = ProductSpecification.new(product_with(
+      certifications: "FSC, Recyclable, EN 13432"
+    ))
+    assert_equal [ "FSC", "EN 13432" ], spec.certifications
+  end
+
+  test "material properties join the materials rows" do
+    spec = ProductSpecification.new(product_with(
+      material: "Kraft paper", certifications: "FSC, Recyclable"
+    ))
+
+    assert_includes spec.materials, { label: "Recyclable", value: "Yes" }
+  end
+
+  test "an unrecognised token stays a certification" do
+    spec = ProductSpecification.new(product_with(certifications: "Home Compostable"))
+
+    assert_equal [ "Home Compostable" ], spec.certifications
+  end
+
+  test "a product whose only certification is a material property still shows materials" do
+    spec = ProductSpecification.new(product_with(certifications: "Recyclable"))
+
+    refute spec.certifications?
+    assert spec.materials?
+    assert spec.any?
+  end
+
   # ---- group predicates and #any? ----
 
   test "#any? is false when dimensions, materials, and certifications are all empty" do

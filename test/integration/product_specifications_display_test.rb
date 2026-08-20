@@ -68,6 +68,21 @@ class ProductSpecificationsDisplayTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "recyclability reads as a material property, not a certification" do
+    @product.update_columns(
+      material: "Kraft paper",
+      certifications: "FSC, Recyclable"
+    )
+
+    get product_path(@product)
+
+    assert_select "[data-test='specifications-materials']" do
+      assert_select "dt", text: "Recyclable"
+      assert_select "dd [data-test='certification-badge']", count: 1
+      assert_select "dd [data-test='certification-badge']", text: "FSC"
+    end
+  end
+
   test "does not render the specifications section when all spec fields are blank" do
     @product.update_columns(
       length_in_mm: nil, width_in_mm: nil, height_in_mm: nil,
