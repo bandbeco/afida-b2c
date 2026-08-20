@@ -18,7 +18,16 @@ namespace :categories do
       errors: []
     }
 
-    rows = CSV.read(csv_file, headers: true).map(&:to_h)
+    csv = CSV.read(csv_file, headers: true)
+
+    # Without this column every row looks top-level, and `parent:` below would
+    # move all 33 categories to the root, breaking every nested category URL.
+    unless csv.headers.include?("parent_slug")
+      puts "Error: #{csv_file} is missing the parent_slug column — refusing to flatten the taxonomy"
+      exit 1
+    end
+
+    rows = csv.map(&:to_h)
 
     # Parents first: a subcategory cannot resolve its parent_slug until the
     # parent row exists. Mirrors the two-pass load in db/seeds.rb.
@@ -45,13 +54,15 @@ namespace :categories do
         category = Category.find_or_initialize_by(slug: slug)
         is_new = category.new_record?
 
-        category.assign_attributes(
-          name: row["name"]&.strip&.gsub(/\s+/, " "),
-          parent: parent,
-          meta_title: row["meta_title"]&.strip,
-          meta_description: row["meta_description"]&.strip&.gsub(/\s+/, " "),
-          description: row["description"]&.strip
-        )
+        # A blank cell means "no opinion", not "clear it". Most rows ship blank
+        # and rely on the model's meta_*_with_fallback, and production holds
+        # copy this file does not — assigning nil would wipe it.
+        attributes = { name: row["name"]&.strip&.gsub(/\s+/, " "), parent: parent }
+        attributes[:meta_title] = row["meta_title"].strip if row["meta_title"].present?
+        attributes[:meta_description] = row["meta_description"].strip.gsub(/\s+/, " ") if row["meta_description"].present?
+        attributes[:description] = row["description"].strip if row["description"].present?
+
+        category.assign_attributes(attributes)
 
         if category.changed?
           category.save!
@@ -89,6 +100,10 @@ namespace :categories do
     end
 
     puts "=" * 60
+
+    # A per-row rescue plus a zero exit status makes a run that skipped half the
+    # taxonomy indistinguishable from a clean one to any calling script.
+    exit 1 if stats[:errors].any?
   end
 
   desc "Validate category SEO data coverage"

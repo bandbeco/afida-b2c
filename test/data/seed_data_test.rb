@@ -71,6 +71,27 @@ class SeedDataTest < Minitest::Test
     assert_equal 27, child_rows.size, "expected 27 subcategories"
   end
 
+  # Titles shipped to production on 2026-07-20 and live-verified there
+  # (docs/seo/category-retitles-2026-07-20.md). These five rows inherit their
+  # copy from a flat category that the June restructure renamed, so it is easy
+  # to reintroduce the pre-retitle value the W1 pass superseded.
+  RETITLED_2026_07_20 = {
+    "hot-cups"         => "Takeaway Coffee Cups & Lids | Wholesale UK | Afida",
+    "straws"           => "Paper Straws | Wholesale UK | Bubble Tea & Slush | Afida",
+    "bags"             => "Paper Carrier Bags | Flat & Twisted Handle | Bulk UK | Afida",
+    "plates-and-bowls" => "Disposable Plates & Bowls | Bagasse, Catering Bulk | Afida",
+    "cutlery"          => "Wooden Cutlery | Birchwood Forks, Knives & Spoons | Afida"
+  }.freeze
+
+  test "ported meta titles are the shipped retitles, not their superseded predecessors" do
+    RETITLED_2026_07_20.each do |slug, expected|
+      row = category_rows.find { |r| r["slug"] == slug }
+      assert row, "categories.csv has no #{slug} row"
+      assert_equal expected, row["meta_title"],
+        "#{slug} carries a meta_title the 2026-07-20 retitle superseded"
+    end
+  end
+
   # === Route / redirect collisions =======================================
 
   test "no seeded slug is reserved by a permanent redirect" do

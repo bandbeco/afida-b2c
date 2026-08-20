@@ -78,6 +78,36 @@ names it, but that test asserts only against its own constants, the migration
 never creates it, `/branded-packaging` is a route that 301s to `/branding`, and
 `shop_page_filters_test.rb` asserts it must not appear.
 
+## Review follow-ups (applied)
+
+A code-review pass over the branch found five defects, all fixed:
+
+* **Blank CSV cells nulled production copy.** Both writers assigned
+  `meta_title`/`meta_description`/`description` unconditionally, so
+  `rake categories:import` — the documented SEO-metadata path — would have
+  cleared those fields on the 23 rows this file ships blank. Both now assign only
+  what the CSV carries; a blank cell means "no opinion", not "clear it".
+* **Five ported titles were pre-retitle values.** `hot-cups`, `straws`, `bags`,
+  `plates-and-bowls` and `cutlery` inherited copy from the flat categories they
+  descend from, which is the *Before* column of
+  [Category Retitles (W1)](/seo/category-retitles-2026-07-20.md). They now carry
+  the shipped values, pinned by `RETITLED_2026_07_20` in the seed test.
+* **Re-seeding an existing database left dead categories in the nav.** Seeding
+  never deletes, so a database predating the restructure keeps the old flat
+  top-level rows, which sort ahead of the real parents in the nav and footer and
+  link to paths `routes.rb` 301s away. `db/seeds.rb` now warns, listing each
+  orphan with its position and product count. It does not delete: that is a
+  judgement call for whoever reads the warning.
+* **A missing `parent_slug` column silently flattened the taxonomy.** Both
+  loaders now refuse to run without it.
+* **The rake task swallowed structural errors and exited 0.** An unknown parent
+  landed in the blanket per-row `rescue`, so a run that skipped half the taxonomy
+  looked clean to a calling script. It now exits non-zero when any row failed.
+
+The review also re-raised the `hot-cup-lids` question above, adding one source:
+`20260319223300_populate_cup_lids_buying_guide.rb` keys off `cup-lids` too. That
+does not settle it — production is still the only authority.
+
 ## Still open
 
 `RESERVED_REDIRECT_SLUGS` is mis-scoped in both directions. `config/routes.rb`
