@@ -42,8 +42,13 @@
       <label data-test="attach-row"
              class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 flex items-start gap-3 cursor-pointer text-left <%= "hidden" if hidden_card %>"
              <%= "data-attach-companions-target=hiddenRow" if hidden_card %>>
+        <%# The box is the only mark that a card is selectable, so its unchecked
+            border has to be visible: the brand mint on white measures 1.45:1,
+            well under the 3:1 WCAG asks of a control. A neutral border carries
+            the unchecked state and the mint takes over as the checked fill,
+            where it reads against black. %>
         <input type="checkbox"
-               class="checkbox checkbox-primary checkbox-sm mt-0.5 flex-shrink-0"
+               class="checkbox checkbox-sm border-2 border-base-content/70 checked:border-primary checked:bg-primary checked:text-primary-content mt-0.5 flex-shrink-0"
                name="companions[<%= index %>][sku]"
                value="<%= companion.sku %>"
                data-attach-companions-target="checkbox"

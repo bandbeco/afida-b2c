@@ -46,6 +46,20 @@ class ProductAttachBlockCompactTest < ActionDispatch::IntegrationTest
     assert_select "[data-test='attach-row-details'].hidden"
   end
 
+  # The checkbox is the only thing marking a card as selectable, and the brand
+  # mint on white measures 1.45:1, under the 3:1 WCAG asks of a control. The
+  # unchecked box needs a neutral border a buyer can actually see; the mint
+  # belongs to the checked state, where it reads against the fill.
+  test "the unchecked checkbox uses a visible neutral border, not the brand mint" do
+    get product_path(@container)
+
+    assert_select "[data-test='attach-row'] input[type=checkbox]" do |boxes|
+      assert_no_match(/checkbox-primary/, boxes.first["class"],
+                      "checkbox-primary renders the unchecked border in brand mint")
+      assert_match(/border-base-content/, boxes.first["class"])
+    end
+  end
+
   test "the companion checkbox still submits from the compact card" do
     get product_path(@container)
 
