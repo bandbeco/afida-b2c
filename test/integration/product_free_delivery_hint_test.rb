@@ -40,6 +40,24 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
     assert_select "[data-free-delivery-target='message']"
   end
 
+  # Without an opening figure the hint would wait for the buyer's first click
+  # before correcting itself, so someone arriving with a full cart would be told
+  # to reach a threshold they had already passed.
+  test "the hint knows what the page opens on before any interaction" do
+    get product_path(@product)
+
+    assert_select "[data-free-delivery-opening-total-value=?]",
+                  @product.pricing_tiers.last["price"].to_f.to_s
+  end
+
+  test "a flat-priced product opens on its pack price" do
+    lid = products(:flat_lid_8oz)
+
+    get product_path(lid)
+
+    assert_select "[data-free-delivery-opening-total-value=?]", lid.price.to_f.to_s
+  end
+
   test "the cart subtotal reflects what is already in the cart" do
     lid = products(:flat_lid_8oz)
     post cart_cart_items_path, params: { cart_item: { sku: lid.sku, quantity: 2 } }

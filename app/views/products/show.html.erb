@@ -130,6 +130,10 @@
         <div class="lg:w-1/2 text-center lg:text-left"
              data-free-delivery-threshold-value="<%= free_shipping_threshold_amount %>"
              data-free-delivery-cart-subtotal-value="<%= (Current.cart&.subtotal_amount || 0).to_f %>"
+             <%# What the page opens on, so the hint is right before the buyer
+                 touches anything. Tiered products open on the largest tier,
+                 which is the one the tier controller pre-selects. %>
+             data-free-delivery-opening-total-value="<%= (has_tiers ? @product.pricing_tiers.last["price"] : @product.price).to_f %>"
              <% if has_tiers %>
                data-controller="pricing-tier sticky-atc free-delivery"
                data-action="attach-companions:changed->pricing-tier#companionsChanged
