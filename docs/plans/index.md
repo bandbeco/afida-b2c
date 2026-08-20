@@ -47,6 +47,7 @@ Dated feature and design plans. Statuses were researched against git history and
 * [Collections and Curated Samples](/plans/2026-01-17-collections-and-curated-samples.md) - Audience-based Collections and curated sample packs.
 * [Outrank Webhook Integration](/plans/outrank-webhook-integration.md) - Webhook creating draft BlogPosts from Outrank content.
 * [Compatible Lids Overhaul](/plans/2026-08-18-compatible-lids-overhaul.md) - Curated join table as sole lid-display truth, admin opened to all container types, cart lid reminder, propose/review/apply data pipeline; shipped 2026-08-20 with 432 curated mappings.
+* [Product Page Buy Box Overhaul](/plans/2026-08-20-pdp-buy-box-overhaul.md) - One primary CTA, lids attached as checkbox rows in the main form, the reverse fits-these-containers view on lid pages, per-unit pricing, live total and a counting-down free-delivery hint.
 
 # Superseded
 
