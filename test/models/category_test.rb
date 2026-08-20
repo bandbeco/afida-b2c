@@ -299,6 +299,30 @@ class CategoryTest < ActiveSupport::TestCase
     assert_includes category.errors[:slug].join, "reserved"
   end
 
+  test "a top-level slug cannot take any statically redirected category slug" do
+    category = categories(:cups)
+    category.slug = "napkins"
+
+    assert_not category.valid?
+    assert_includes category.errors[:slug].join, "reserved"
+  end
+
+  test "a subcategory may take a slug that is reserved only at the top level" do
+    category = categories(:child_hot_cups)
+    category.slug = "cups-and-lids"
+
+    assert category.valid?, category.errors.full_messages.join(", ")
+  end
+
+  test "promoting a subcategory to top level is rejected when its slug is reserved" do
+    category = Category.create!(name: "Napkins", slug: "napkins", parent: categories(:parent_hot_food))
+
+    category.parent = nil
+
+    assert_not category.valid?
+    assert_includes category.errors[:slug].join, "reserved"
+  end
+
   test "a slug held only by slug history can be reclaimed" do
     category = categories(:cups)
     category.slug = "cups-and-drinks"

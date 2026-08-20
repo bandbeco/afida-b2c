@@ -1,16 +1,25 @@
 class Category < ApplicationRecord
   BRANDED_PRODUCTS_SLUG = "branded-products".freeze
 
-  # Old slugs that config/routes.rb still 301s at the route layer (legacy flat
-  # category paths). A category taking one of these slugs would have its
-  # canonical URL hijacked by the static redirect before the app ever runs.
+  # Every slug config/routes.rb 301s at the single-segment /categories/:slug
+  # path. A TOP-LEVEL category taking one of these would have its canonical URL
+  # hijacked by the static redirect before the app ever runs.
+  #
+  # Subcategories are deliberately exempt: their canonical URL is
+  # /categories/:parent_slug/:slug, which a one-segment redirect never matches.
+  # That is not hypothetical — seven of these are held by live subcategories
+  # today (a flat /categories/straws 301s to the nested straws page), which is
+  # why the guard is scoped to parent_id.nil? rather than applied to every row.
+  #
   # Renamed slugs handled by slug history (CategorySlugRedirect) do NOT belong
   # here: reclaiming those is safe because the shadowing redirect row is
   # removed automatically. Keep in sync with the redirect map in
-  # config/routes.rb.
+  # config/routes.rb; test/data/seed_data_test.rb parses that file and checks
+  # the seed data against it.
   RESERVED_REDIRECT_SLUGS = %w[
-    cups-and-lids takeaway-containers takeaway-extras plates-trays
-    bagasse-eco-range
+    cups-and-lids ice-cream-cups napkins pizza-boxes straws
+    takeaway-containers takeaway-extras plates-trays bagasse-eco-range
+    takeaway-boxes cutlery bags
   ].freeze
 
   acts_as_list scope: :parent_id
@@ -28,8 +37,12 @@ class Category < ApplicationRecord
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
   validates :slug, format: { with: /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/, message: "must contain only lowercase letters, numbers, and hyphens" },
-                   exclusion: { in: RESERVED_REDIRECT_SLUGS, message: "is reserved by a permanent redirect (see config/routes.rb)" },
                    if: :slug_changed?
+  # Also fires on re-parenting: promoting a subcategory to the top level moves
+  # its canonical URL onto the shadowed one-segment path even if the slug itself
+  # never changes.
+  validates :slug, exclusion: { in: RESERVED_REDIRECT_SLUGS, message: "is reserved by a permanent redirect (see config/routes.rb)" },
+                   if: -> { (slug_changed? || parent_id_changed?) && parent_id.nil? }
   validate :parent_cannot_be_self
   validate :max_nesting_depth
 

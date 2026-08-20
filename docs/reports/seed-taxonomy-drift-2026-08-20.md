@@ -128,15 +128,37 @@ The review also re-raised the `hot-cup-lids` question above, adding one source:
 `20260319223300_populate_cup_lids_buying_guide.rb` keys off `cup-lids` too. That
 does not settle it — production is still the only authority.
 
-## Still open
+## Resolved: the reserved-slug guard
 
-`RESERVED_REDIRECT_SLUGS` is mis-scoped in both directions. `config/routes.rb`
-statically 301s 12 single-segment `/categories/:slug` paths, but only 5 are
-listed. The other 7 are live *subcategory* slugs whose canonical URL is nested,
-so the flat redirect never shadows them — correct today, but nothing stops a
-future **top-level** category from claiming one and being 301'd away before the
-app runs. Conversely the validation is unconditional, so it also rejects the 5 as
-subcategory slugs, where they would be safe. The precise rule is *a top-level
-category's slug must not collide with a static one-segment category redirect*:
-scope the validation to `parent_id.nil?` and source it from the full list of 12.
-Not required to unblock `bin/setup`; wants its own commit and test.
+`RESERVED_REDIRECT_SLUGS` was mis-scoped in both directions and is now fixed.
+`config/routes.rb` statically 301s **12** single-segment `/categories/:slug`
+paths; only 5 were listed.
+
+* **Under-inclusive.** The other 7 are held by live *subcategories*, whose
+  canonical URL is nested, so nothing is shadowed today. But nothing stopped a
+  future top-level category from claiming one and being 301'd away before the
+  app ran.
+* **Over-inclusive.** The validation was unconditional, so it also rejected the 5
+  as subcategory slugs, where they are perfectly safe.
+
+The list now carries all 12 and the exclusion is scoped to
+`(slug_changed? || parent_id_changed?) && parent_id.nil?`. The
+`parent_id_changed?` half matters on its own: promoting a subcategory to the top
+level moves its canonical URL onto the shadowed one-segment path even when the
+slug never changes, which the slug-only condition would have missed entirely.
+
+Verified against a seeded scratch database: a new top-level `napkins` or `straws`
+is rejected, a subcategory taking `cups-and-lids` is allowed, renaming the live
+`straws` subcategory still works, promoting the live `napkins` subcategory to the
+top level is rejected, and `db:seed` still completes (6 parents / 27
+subcategories) with seven children holding now-reserved slugs.
+
+The model tests for this could not be executed locally — every fixture-loading
+test in this repo errors here because Postgres will not let this role disable
+referential integrity — so they are written for CI and the behaviour above was
+confirmed through `bin/rails runner` instead.
+
+Note for whoever touches the fixtures: `test/fixtures/categories.yml` has
+top-level `straws` and `cutlery` rows. Fixture loading bypasses validation so
+they still load, but building an equivalent record through ActiveRecord now
+fails, which is the intended behaviour.

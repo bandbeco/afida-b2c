@@ -149,10 +149,24 @@ class SeedDataTest < Minitest::Test
 
   # === Route / redirect collisions =======================================
 
-  test "no seeded slug is reserved by a permanent redirect" do
-    collisions = category_slugs & Category::RESERVED_REDIRECT_SLUGS
+  test "no top-level seeded slug is reserved by a permanent redirect" do
+    collisions = parent_rows.map { |r| r["slug"] } & Category::RESERVED_REDIRECT_SLUGS
     assert_empty collisions,
-      "categories.csv seeds slugs rejected by Category's reserved-slug validation: #{collisions.join(', ')}"
+      "categories.csv seeds top-level slugs rejected by Category's reserved-slug validation: #{collisions.join(', ')}"
+  end
+
+  test "subcategories may hold reserved slugs, and several do" do
+    held = child_rows.map { |r| r["slug"] } & Category::RESERVED_REDIRECT_SLUGS
+
+    # A reserved slug only shadows a top-level category; nested URLs are safe.
+    # If this ever empties out, the guard has been over-tightened again.
+    refute_empty held,
+      "expected live subcategories to hold reserved slugs (e.g. straws, napkins)"
+  end
+
+  test "RESERVED_REDIRECT_SLUGS matches the static redirects in routes.rb" do
+    assert_equal ROUTE_REDIRECTED_SLUGS.sort, Category::RESERVED_REDIRECT_SLUGS.sort,
+      "the constant and config/routes.rb have drifted — they are documented as kept in sync"
   end
 
   test "no top-level slug is shadowed by a static category redirect" do
