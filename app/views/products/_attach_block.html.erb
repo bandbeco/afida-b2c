@@ -77,7 +77,12 @@
             <% end %>
           </div>
 
-          <div class="mt-2">
+          <%# The floating WhatsApp button is fixed to the bottom-right corner and
+              paints above the page, so a full-width control here runs underneath
+              it and a tap meant for the quantity opens a chat instead. The right
+              padding keeps the row's own controls clear of that corner on the
+              narrow screens where the two would otherwise meet. %>
+          <div data-test="attach-row-controls" class="mt-2 max-md:pr-20">
             <label class="sr-only" for="companion-quantity-<%= companion.id %>">
               Packs of <%= companion.generated_title %>
             </label>
