@@ -143,6 +143,56 @@ class ProductSpecificationTest < ActiveSupport::TestCase
     assert spec.any?
   end
 
+  # Size already reads "9oz / 255ml", so a Volume row saying "255 ml" beside it
+  # is the same fact twice, and it was the only row holding the Dimensions
+  # column open on 65 products.
+  test "#dimensions drops a volume the size already states" do
+    spec = ProductSpecification.new(product_with(volume_in_ml: 255, size: "9oz / 255ml"))
+
+    assert_empty spec.dimensions.select { |row| row[:label] == "Volume" }
+  end
+
+  test "#dimensions keeps a volume the size does not mention" do
+    spec = ProductSpecification.new(product_with(volume_in_ml: 255, size: "Large"))
+
+    assert_includes spec.dimensions.map { |row| row[:label] }, "Volume"
+  end
+
+  test "#dimensions keeps volume when there is no size at all" do
+    spec = ProductSpecification.new(product_with(volume_in_ml: 255))
+
+    assert_includes spec.dimensions.map { |row| row[:label] }, "Volume"
+  end
+
+  # A buyer comparing two products reads one list. Splitting six facts across
+  # two headed columns, one of which often holds a single row, is filing rather
+  # than presenting.
+  test "#rows presents every spec as one ordered list" do
+    spec = ProductSpecification.new(product_with(
+      material: "rPET", colour: "Clear", size: "9oz / 255ml",
+      length_in_mm: 95, certifications: "Recyclable"
+    ))
+
+    labels = spec.rows.map { |row| row[:label] }
+
+    assert_equal labels.uniq, labels
+    assert_includes labels, "Material"
+    assert_includes labels, "Length"
+    assert_includes labels, "Recyclable"
+  end
+
+  test "#rows leads with what a buyer identifies the product by" do
+    spec = ProductSpecification.new(product_with(
+      material: "rPET", size: "9oz / 255ml", length_in_mm: 95
+    ))
+
+    assert_equal "Size", spec.rows.first[:label]
+  end
+
+  test "#rows is empty when nothing is known" do
+    assert_empty ProductSpecification.new(product_with).rows
+  end
+
   # ---- group predicates and #any? ----
 
   test "#any? is false when dimensions, materials, and certifications are all empty" do
