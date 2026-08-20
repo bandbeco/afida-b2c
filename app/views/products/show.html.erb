@@ -303,144 +303,98 @@
             </div>
           <% end %>
 
-          <%# Custom Inquiry CTA %>
-          <div class="mt-6">
-            <div class="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <p class="font-sm">Can't find what you're looking for?</p>
-                <p class="text-xs">Need a different size, quantity, or material ...</p>
-              </div>
-              <%= link_to "Get in touch", contact_path, class: "link link-hover underline font-medium whitespace-nowrap" %>
-            </div>
-          </div>
-
-          <%= render "products/sample_cta", product: @product %>
-
-          <%# Compatible Lids Section (inline, above add to cart) %>
-          <% if @compatible_products.present? && @compatible_products.any? %>
-            <div class="mt-6"
-                 data-controller="compatible-lids">
-              <h3 class="text-lg font-medium mb-2">Add matching lids <span class="text-sm font-normal text-base-content/60">(optional)</span></h3>
-              <p class="text-sm text-base-content/70 mb-4">Complete your order with compatible lids</p>
-
-              <div class="flex flex-col gap-3" data-compatible-lids-target="container">
-                <% @compatible_products.each do |lid| %>
-                  <div class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4">
-                    <div class="flex items-start gap-3 sm:gap-4">
-                      <%# Image %>
-                      <div class="flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24">
-                        <% if lid.primary_photo&.attached? %>
-                          <%= image_tag lid.primary_photo.variant(resize_to_limit: [200, 200]),
-                                        alt: lid.generated_title,
-                                        class: "w-full h-full object-contain",
-                                        loading: "lazy" %>
-                        <% else %>
-                          <div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-3xl">📦</div>
-                        <% end %>
-                      </div>
-
-                      <%# Content %>
-                      <div class="flex-1 min-w-0">
-                        <h4 class="text-base sm:text-lg mb-1 leading-tight">
-                          <%= lid.generated_title %>
-                        </h4>
-                        <p class="text-sm sm:text-base text-gray-900">
-                          <%= number_to_currency(lid.price) %> / pack of <%= number_with_delimiter(lid.pac_size) %>
-                        </p>
-
-                        <%# Actions %>
-                        <div class="flex flex-col gap-2 mt-3">
-                          <select class="w-full px-2 sm:px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
-                                  data-lid-quantity="<%= lid.sku %>">
-                            <% (1..10).each do |num_packs| %>
-                              <% total_units = lid.pac_size * num_packs %>
-                              <option value="<%= num_packs %>">
-                                <%= num_packs %> <%= num_packs == 1 ? 'pack' : 'packs' %> (<%= number_with_delimiter(total_units) %> units)
-                              </option>
-                            <% end %>
-                          </select>
-                          <button type="button"
-                                  class="w-full px-3 sm:px-4 py-2 text-sm font-medium text-black bg-primary hover:bg-primary-focus rounded-md transition-colors cursor-pointer"
-                                  data-action="click->compatible-lids#addLidToCart"
-                                  data-lid-sku="<%= lid.sku %>"
-                                  data-lid-name="<%= lid.generated_title %>">
-                            Add to Cart
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-
-          <%# Order Summary & Add to Cart %>
-          <div class="mt-6 space-y-2">
-            <div class="flex items-center gap-2 justify-center lg:justify-start text-sm sm:text-base" data-controller="delivery-countdown" data-delivery-countdown-cutoff-at-value="<%= @delivery_estimate.cutoff_at.iso8601 %>">
-              <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-              </svg>
-              <%# The date is the mainland promise: we don't know the visitor's
-                  address yet, and Northern Ireland, the Highlands and the
-                  islands take longer. The cart's delivery calculator gives the
-                  real date once a postcode is entered. %>
-              <span>
-                Delivery to mainland UK <span class="text-gray-900"><%= @delivery_estimate.formatted %></span>.
-                Order within <span data-delivery-countdown-target="countdown" class="text-green-600 font-medium"></span>.
-              </span>
-            </div>
-
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 border-t border-base-200">
-              <p class="text-base sm:text-lg">Total (excl. VAT)</p>
-              <% if has_tiers %>
-                <p class="text-xl sm:text-2xl" data-pricing-tier-target="totalDisplay">
-                  <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
-                </p>
-              <% else %>
-                <p class="text-xl sm:text-2xl" data-quantity-selector-target="totalDisplay">
-                  <%= number_to_currency(@product.price) %>
-                </p>
-              <% end %>
-            </div>
-          </div>
-
-          <%# Add to Cart Form %>
+          <%# Add to Cart Form. It wraps the attach block, the delivery promise
+              and the total so one submit buys the product plus everything
+              ticked, and so the last number read before committing includes
+              the whole selection. Nothing interrupts quantity -> attach ->
+              total -> Add to Cart; the contact and sample routes wait below. %>
           <%= form_with url: cart_cart_items_path,
                         method: :post,
                         id: "add-to-cart-form",
-                        data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", turbo: true },
-                        class: "mt-4" do |f| %>
+                        data: { controller: "cart-drawer", action: "turbo:submit-end->cart-drawer#open", turbo: true } do |f| %>
             <%= hidden_field_tag "cart_item[sku]", @product.sku %>
-            <% if has_tiers %>
-              <input type="hidden"
-                     name="cart_item[quantity]"
-                     data-pricing-tier-target="quantityInput"
-                     value="1" />
-              <input type="hidden"
-                     name="cart_item[tier_price]"
-                     data-pricing-tier-target="priceInput"
-                     value="" />
-              <input type="hidden"
-                     name="cart_item[tier_pac_size]"
-                     data-pricing-tier-target="pacSizeInput"
-                     value="" />
-              <button type="submit" class="btn btn-primary btn-lg w-full"
-                      data-pricing-tier-target="addToCartButton"
-                      data-sticky-atc-target="mainButton"
-                      disabled>
-                Add to Cart
-              </button>
-            <% else %>
-              <input type="hidden"
-                     name="cart_item[quantity]"
-                     data-quantity-selector-target="quantityInput"
-                     value="1" />
-              <button type="submit" class="btn btn-primary btn-lg w-full"
-                      data-sticky-atc-target="mainButton">
-                Add to Cart
-              </button>
+
+            <% if @compatible_products.any? %>
+              <%= render "products/attach_block",
+                         companions: @compatible_products,
+                         heading: "Add matching lids",
+                         subheading: "Complete your order with lids that fit.",
+                         fit_label: "Fits this #{@product.category.name.singularize.downcase}",
+                         link_names: false,
+                         visible_count: nil,
+                         highlighted_id: @default_lid_id %>
+            <% elsif @compatible_containers.any? %>
+              <%= render "products/attach_block",
+                         companions: @compatible_containers,
+                         heading: "Fits these containers",
+                         subheading: "This lid is matched to the containers below. Add them together.",
+                         fit_label: "This lid fits it",
+                         link_names: true,
+                         visible_count: ProductsController::ATTACH_ROWS_VISIBLE,
+                         highlighted_id: nil %>
             <% end %>
+
+            <%# Order Summary %>
+            <div class="mt-6 space-y-2">
+              <div class="flex items-center gap-2 justify-center lg:justify-start text-sm sm:text-base" data-controller="delivery-countdown" data-delivery-countdown-cutoff-at-value="<%= @delivery_estimate.cutoff_at.iso8601 %>">
+                <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+                <%# The date is the mainland promise: we don't know the visitor's
+                    address yet, and Northern Ireland, the Highlands and the
+                    islands take longer. The cart's delivery calculator gives the
+                    real date once a postcode is entered. %>
+                <span>
+                  Delivery to mainland UK <span class="text-gray-900"><%= @delivery_estimate.formatted %></span>.
+                  Order within <span data-delivery-countdown-target="countdown" class="text-green-600 font-medium"></span>.
+                </span>
+              </div>
+
+              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pt-4 border-t border-base-200">
+                <p class="text-base sm:text-lg">Total (excl. VAT)</p>
+                <% if has_tiers %>
+                  <p class="text-xl sm:text-2xl" data-pricing-tier-target="totalDisplay">
+                    <%= number_to_currency(@product.pricing_tiers.first["price"].to_f) %>
+                  </p>
+                <% else %>
+                  <p class="text-xl sm:text-2xl" data-quantity-selector-target="totalDisplay">
+                    <%= number_to_currency(@product.price) %>
+                  </p>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <% if has_tiers %>
+                <input type="hidden"
+                       name="cart_item[quantity]"
+                       data-pricing-tier-target="quantityInput"
+                       value="1" />
+                <input type="hidden"
+                       name="cart_item[tier_price]"
+                       data-pricing-tier-target="priceInput"
+                       value="" />
+                <input type="hidden"
+                       name="cart_item[tier_pac_size]"
+                       data-pricing-tier-target="pacSizeInput"
+                       value="" />
+                <button type="submit" class="btn btn-primary btn-lg w-full"
+                        data-pricing-tier-target="addToCartButton"
+                        data-sticky-atc-target="mainButton"
+                        disabled>
+                  Add to Cart
+                </button>
+              <% else %>
+                <input type="hidden"
+                       name="cart_item[quantity]"
+                       data-quantity-selector-target="quantityInput"
+                       value="1" />
+                <button type="submit" class="btn btn-primary btn-lg w-full"
+                        data-sticky-atc-target="mainButton">
+                  Add to Cart
+                </button>
+              <% end %>
+            </div>
           <% end %>
 
           <div data-test="free-delivery-hint" class="mt-3 flex items-center justify-center gap-2 text-base text-base-content/80">
@@ -451,6 +405,21 @@
           </div>
 
           <%= render "products/trust_strip" %>
+
+          <%# Secondary routes, after the primary action rather than through it:
+              a quote for what we don't stock, and a sample for buyers who want
+              to see it first. %>
+          <%= render "products/sample_cta", product: @product %>
+
+          <div class="mt-4">
+            <div class="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <div>
+                <p class="font-sm">Can't find what you're looking for?</p>
+                <p class="text-xs">Need a different size, quantity, or material ...</p>
+              </div>
+              <%= link_to "Get in touch", contact_path, class: "link link-hover underline font-medium whitespace-nowrap" %>
+            </div>
+          </div>
 
           <%# Sticky Add-to-Cart Bar (mobile only) %>
           <div data-sticky-atc-target="stickyBar"

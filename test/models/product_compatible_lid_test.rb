@@ -88,12 +88,17 @@ class ProductCompatibleLidTest < ActiveSupport::TestCase
     assert_not_includes lid.compatible_containers, products(:branded_cup_8oz)
   end
 
-  test "compatible_containers honours the join sort order" do
+  # sort_order ranks lids inside one container, so it cannot rank containers
+  # against each other. The lid page hides the tail behind a disclosure, so the
+  # list has to come back in the same order on every load.
+  test "compatible_containers come back in a stable order" do
     lid = products(:flat_lid_8oz)
     ProductCompatibleLid.create!(product: products(:two), compatible_lid: lid, sort_order: 1)
     ProductCompatibleLid.create!(product: products(:one), compatible_lid: lid, sort_order: 0)
 
-    assert_equal [ products(:one), products(:two), products(:branded_cup_8oz) ],
-                 lid.compatible_containers.to_a
+    first_load = lid.compatible_containers.map(&:id)
+
+    assert_equal first_load, lid.reload.compatible_containers.map(&:id)
+    assert_equal [ products(:branded_cup_8oz), products(:one), products(:two) ].map(&:id), first_load
   end
 end

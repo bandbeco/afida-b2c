@@ -1,0 +1,113 @@
+<%# The attach block: companion products offered as checkbox rows inside the
+    main add-to-cart form, so one submit buys the product and everything ticked.
+
+    Shared by both directions of the curated compatibility mapping. Container
+    pages offer lids; lid pages offer the containers they fit, and link those
+    names out because a buyer checking fit may want the container's dimensions.
+
+    Locals:
+      companions      - products to offer
+      heading         - block heading
+      subheading      - one line under it
+      fit_label       - the reassurance each row carries
+      link_names      - whether companion names link to their product pages
+      visible_count   - rows shown before the disclosure (nil = show all)
+      highlighted_id  - product id that carries the "most popular" cue
+%>
+<% return if companions.blank? %>
+
+<% visible_count ||= companions.size %>
+<% hidden_count = [ companions.size - visible_count, 0 ].max %>
+
+<div data-test="attach-block" class="mt-6" data-controller="attach-companions">
+  <h3 class="text-lg font-medium mb-1"><%= heading %> <span class="text-sm text-base-content/60">(optional)</span></h3>
+  <p class="text-sm text-base-content/70 mb-4"><%= subheading %></p>
+
+  <div class="flex flex-col gap-3">
+    <% companions.each_with_index do |companion, index| %>
+      <% pac_size = companion.pac_size.to_i.positive? ? companion.pac_size : 1 %>
+      <% hidden_row = index >= visible_count %>
+      <label data-test="attach-row"
+             class="bg-white border-2 border-gray-200 rounded-lg hover:border-primary transition-colors p-3 sm:p-4 flex items-start gap-3 sm:gap-4 cursor-pointer <%= "hidden" if hidden_row %>"
+             <%= "data-attach-companions-target=hiddenRow" if hidden_row %>>
+        <input type="checkbox"
+               class="checkbox checkbox-primary mt-1 flex-shrink-0"
+               name="companions[<%= index %>][sku]"
+               value="<%= companion.sku %>"
+               data-attach-companions-target="checkbox"
+               data-companion-price="<%= companion.price.to_f %>"
+               data-action="change->attach-companions#toggle" />
+
+        <div class="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20">
+          <% if companion.primary_photo&.attached? %>
+            <%= image_tag companion.primary_photo.variant(resize_to_limit: [ 200, 200 ]),
+                          alt: companion.generated_title,
+                          class: "w-full h-full object-contain",
+                          loading: "lazy" %>
+          <% else %>
+            <div class="w-full h-full bg-gray-100 flex items-center justify-center rounded text-2xl" aria-hidden="true">📦</div>
+          <% end %>
+        </div>
+
+        <div class="flex-1 min-w-0">
+          <div class="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+            <h4 class="text-base leading-tight">
+              <% if link_names %>
+                <%= link_to companion.generated_title, product_path(companion), class: "link link-hover" %>
+              <% else %>
+                <%= companion.generated_title %>
+              <% end %>
+            </h4>
+            <% if highlighted_id && companion.id == highlighted_id %>
+              <span data-test="attach-popular-cue" class="badge badge-sm badge-outline">Most popular</span>
+            <% end %>
+          </div>
+
+          <p class="text-sm text-base-content/70 mt-0.5"><%= fit_label %></p>
+
+          <div class="flex flex-wrap items-baseline gap-x-2 mt-1">
+            <% unit_price = pdp_unit_price(companion) %>
+            <% if unit_price %>
+              <p class="text-base text-gray-900"><%= unit_price %></p>
+              <p class="text-sm text-base-content/60">
+                <%= number_to_currency(companion.price) %> / pack of <%= number_with_delimiter(pac_size) %>
+              </p>
+            <% else %>
+              <p class="text-base text-gray-900"><%= number_to_currency(companion.price) %></p>
+            <% end %>
+          </div>
+
+          <div class="mt-2">
+            <label class="sr-only" for="companion-quantity-<%= companion.id %>">
+              Packs of <%= companion.generated_title %>
+            </label>
+            <%# Quantity rides along disabled until the row is ticked, so an
+                unticked row cannot contribute a companion to the submission. %>
+            <select id="companion-quantity-<%= companion.id %>"
+                    name="companions[<%= index %>][quantity]"
+                    class="select select-bordered select-sm w-full sm:w-auto"
+                    data-attach-companions-target="quantity"
+                    data-action="change->attach-companions#toggle"
+                    disabled>
+              <% (1..10).each do |packs| %>
+                <option value="<%= packs %>">
+                  <%= packs %> <%= "pack".pluralize(packs) %> (<%= number_with_delimiter(pac_size * packs) %> units)
+                </option>
+              <% end %>
+            </select>
+          </div>
+        </div>
+      </label>
+    <% end %>
+  </div>
+
+  <% if hidden_count.positive? %>
+    <button type="button"
+            data-test="attach-disclosure"
+            data-attach-companions-target="disclosure"
+            data-action="click->attach-companions#showAll"
+            class="btn btn-ghost btn-sm mt-3">
+      Show all <%= companions.size %> compatible containers
+    </button>
+  <% end %>
+</div>

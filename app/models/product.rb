@@ -48,8 +48,13 @@ class Product < ApplicationRecord
            foreign_key: :compatible_lid_id,
            inverse_of: :compatible_lid,
            dependent: :destroy
+  # sort_order ranks lids within one container, so it says nothing about how
+  # containers rank against each other; the join's default ordering has to go or
+  # it decides this list arbitrarily. Position then name keeps the lid page
+  # stable, which matters because the tail sits behind a disclosure and rows
+  # must not shuffle between page loads.
   has_many :compatible_containers,
-           -> { active },
+           -> { active.reorder(:position, :name) },
            through: :container_compatible_lids,
            source: :product
 

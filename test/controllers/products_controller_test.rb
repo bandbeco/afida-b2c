@@ -359,7 +359,7 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     get product_url(cup.slug)
 
     assert_response :success
-    assert_select "[data-lid-sku='#{products(:flat_lid_8oz).sku}']"
+    assert_select "[data-test='attach-row'] input[value='#{products(:flat_lid_8oz).sku}']"
   end
 
   test "show does not render inactive compatible lids" do
@@ -369,8 +369,8 @@ class ProductsControllerTest < ActionDispatch::IntegrationTest
     get product_url(cup.slug)
 
     assert_response :success
-    assert_select "[data-lid-sku='#{products(:flat_lid_8oz).sku}']", count: 0
-    assert_select "[data-lid-sku='#{products(:domed_lid_8oz).sku}']"
+    assert_select "[data-test='attach-row'] input[value='#{products(:flat_lid_8oz).sku}']", count: 0
+    assert_select "[data-test='attach-row'] input[value='#{products(:domed_lid_8oz).sku}']"
   end
 
   test "show eager loads attachments for related products and compatible lids" do
