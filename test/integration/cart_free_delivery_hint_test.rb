@@ -186,4 +186,75 @@ class CartFreeDeliveryHintTest < ActionDispatch::IntegrationTest
 
     assert_select "#drawer_cart_content #free_delivery_hint", count: 0
   end
+
+  # --- the progress bar -------------------------------------------------
+
+  # The bar is what makes the gap legible without arithmetic: £43.96 means
+  # nothing until you know whether it is most of the way or barely started.
+  test "the band plots the cart's progress toward the threshold" do
+    add_lid(2)
+
+    get cart_path
+
+    assert_select "#cart_free_delivery_hint[data-progress='30']"
+    assert_select "#cart_free_delivery_hint [data-test='free-delivery-progress'][value='30'][max='100']"
+  end
+
+  # The anchors are what turn the fill from an impression into a measure.
+  test "the bar states what has been spent and what against" do
+    lid = add_lid(2)
+
+    get cart_path
+
+    assert_select "#cart_free_delivery_hint [data-test='free-delivery-spent']",
+      text: number_to_currency(lid.price * 2)
+    assert_select "#cart_free_delivery_hint", text: /£100/
+  end
+
+  # An empty cart has no spend to plot. A bar pinned at zero under "orders over
+  # £100" states a starting line nobody has crossed, which discourages.
+  test "an empty cart gets the promise without a bar" do
+    get product_path(products(:single_wall_8oz_white))
+
+    assert_select "#free_delivery_hint[data-test='free-delivery-hint']"
+    assert_select "#free_delivery_hint [data-test='free-delivery-progress']", count: 0
+  end
+
+  test "a qualifying cart fills the bar and drops the threshold anchors" do
+    add_lid(10)
+
+    get cart_path
+
+    assert_select "#cart_free_delivery_hint [data-test='free-delivery-progress'][value='100']"
+    assert_select "#cart_free_delivery_hint [data-test='free-delivery-spent']", count: 0
+  end
+
+  # The bar and the sentence are two renderings of one rule, exactly as the tint
+  # is. A full bar beside "Add £0.01 more" would be the same contradiction.
+  test "the bar stops short of full while the sentence still asks for money" do
+    lid = products(:flat_lid_8oz)
+    # 6 packs at £15 = £90, then a part-pack via a second product to land just
+    # under: simplest honest route is a cart worth £99.99 exactly.
+    post cart_cart_items_path, params: { cart_item: { sku: lid.sku, quantity: 6 } }
+    cart = Cart.find(session[:cart_id])
+    cart.cart_items.first.update!(price: BigDecimal("16.665"))
+
+    get cart_path
+
+    hint = css_select("#cart_free_delivery_hint").first
+    assert_equal "false", hint["data-qualified"]
+    assert_equal "99", hint["data-progress"],
+      "the bar read #{hint['data-progress']}% on a cart a penny short"
+    assert_select "#cart_free_delivery_hint", text: /Add £0\.01 more/
+  end
+
+  # The bar carries a real width without an inline style: the project forbids
+  # them, so value/max on a native <progress> is what sets the fill.
+  test "the bar sets its fill without an inline style" do
+    add_lid(2)
+
+    get cart_path
+
+    assert_select "#cart_free_delivery_hint [data-test='free-delivery-progress'][style]", count: 0
+  end
 end

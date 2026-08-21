@@ -95,13 +95,37 @@ module ApplicationHelper
     cart_subtotal.to_d >= Shipping::FREE_SHIPPING_THRESHOLD
   end
 
+  # How far the cart has come toward the threshold, as a whole percent, for the
+  # nudge's progress bar. Clamped to 0..100 because the value is rendered as a
+  # width: past the threshold the bar is simply full, and a negative subtotal
+  # must not invert it.
+  #
+  # Rounded DOWN rather than to nearest, so a cart a penny short reads 99 and
+  # not a full bar beside the words "Add £0.01 more". That is the same rule
+  # free_delivery_qualified? applies to the tint: nothing in this band may claim
+  # a threshold the cart has not actually reached.
+  def free_delivery_progress(cart_subtotal)
+    subtotal = cart_subtotal.to_d
+    return 0 if subtotal <= 0
+    return 100 if free_delivery_qualified?(subtotal)
+
+    ratio = subtotal / Shipping::FREE_SHIPPING_THRESHOLD * 100
+    ratio.floor.clamp(0, 100)
+  end
+
   # Marks the money figure inside a delivery sentence so it can be scanned at a
   # glance. Escapes the sentence first, then wraps the currency run, so this
   # stays safe for any string the nudge produces.
+  #
+  # success-CONTENT, not success. DaisyUI's `success` is the bright mint used
+  # for the bar fill and the icon, and it measures 1.84:1 against the band's
+  # near-white background: fine for a shape, under the 4.5:1 AA floor for text,
+  # and this is the one word in the sentence a buyer actually scans for.
+  # success-content is the same hue darkened, at 9.45:1.
   def highlight_money(sentence)
     escaped = ERB::Util.html_escape(sentence)
     marked = escaped.to_str.sub(/£[\d,]+(?:\.\d{2})?/) do |amount|
-      %(<span data-test="free-delivery-amount" class="text-success">#{amount}</span>)
+      %(<span data-test="free-delivery-amount" class="text-success-content">#{amount}</span>)
     end
     marked.html_safe
   end

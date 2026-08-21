@@ -6,8 +6,14 @@
     Treated as a status band rather than another line of grey copy: it is the
     only thing under the button that CHANGES as the buyer shops, and sitting at
     the same weight as the static trust and sample blocks below made it read as
-    the first line of that stack. The tint tracks state, so closing the gap is
-    visible at a glance rather than needing to be read.
+    the first line of that stack.
+
+    The band shows PROGRESS, not just a sentence. A nudge whose only content is
+    a number asks the buyer to hold the threshold in their head to know whether
+    £43.96 is nearly there or nowhere near; the bar answers that at a glance,
+    and it visibly moves as the cart grows, which is the thing a countdown is
+    for. The tint tracks state on top of it, so closing the gap reads without
+    being read.
 
     Mounted on the PDP buy box, in the cart drawer and in the cart page's
     summary column; the stream replacements are harmless no-ops on pages that do
@@ -26,21 +32,62 @@
 <% spacing = local_assigns.fetch(:spacing, "mt-5") %>
 <% subtotal = Current.cart&.subtotal_amount || 0 %>
 <% qualified = free_delivery_qualified?(subtotal) %>
+<% progress = free_delivery_progress(subtotal) %>
+<%# An empty cart has no spend to plot, so it gets the promise alone: a bar
+    pinned at zero under "orders over £100" states a starting line nobody has
+    crossed yet, which is discouraging rather than motivating. %>
+<% show_bar = subtotal.to_d.positive? %>
 <div id="<%= dom_id %>"
      data-test="free-delivery-hint"
      data-qualified="<%= qualified %>"
-     class="<%= spacing %> flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3 text-base
-            <%= qualified ? "border-success/30 bg-success/10" : "border-base-300 bg-base-200" %>">
-  <% if qualified %>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
-    </svg>
-  <% else %>
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM3 4h2l2 11h11l2-7H7"/>
-    </svg>
+     data-progress="<%= progress %>"
+     class="<%= spacing %> rounded-xl border px-4 py-3.5
+            <%= qualified ? "border-success/40 bg-success/10" : "border-base-300 bg-base-200" %>">
+  <div class="flex items-center gap-3">
+    <%# The icon sits in its own tinted tile rather than floating beside the
+        sentence. At icon size alone it read as stranded next to a label that
+        wraps to two lines, having nothing to align to; the tile gives it a
+        shape of its own and anchors the row. %>
+    <span class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg
+                 <%= qualified ? "bg-success/25 text-success-content" : "bg-success/15 text-success-content" %>">
+      <% if qualified %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+        </svg>
+      <% else %>
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM3 4h2l2 11h11l2-7H7"/>
+        </svg>
+      <% end %>
+    </span>
+
+    <%# The money figure carries the emphasis: it is the part a buyer scans for,
+        whether it is the threshold or the gap left to close. Left-aligned, so a
+        sentence that wraps stacks against the tile instead of centring itself
+        into a ragged block. %>
+    <span class="text-left text-base leading-snug"><%= highlight_money(free_delivery_nudge(subtotal)) %></span>
+  </div>
+
+  <% if show_bar %>
+    <%# A native <progress>: the fill is set by value/max, so the width needs no
+        inline style (the project forbids them) and the element carries its own
+        meaning for assistive tech. aria-label rather than a visible label,
+        because the sentence above already says what it measures. %>
+    <progress class="progress progress-success mt-3 h-1.5 w-full bg-base-300"
+              value="<%= progress %>"
+              max="100"
+              aria-label="Progress toward free mainland UK delivery"
+              data-test="free-delivery-progress"></progress>
+
+    <% unless qualified %>
+      <%# The bar's anchors. Without them the fill is an impression rather than
+          a measure: these say what has been spent and what it is being measured
+          against. Dropped once qualified, where the bar is full and the
+          threshold has stopped being the point. %>
+      <div class="mt-1.5 flex justify-between text-xs text-gray-500">
+        <span data-test="free-delivery-spent"><%= number_to_currency(subtotal) %></span>
+        <span><%= free_shipping_threshold_display %></span>
+      </div>
+    <% end %>
   <% end %>
-  <%# The money figure carries the emphasis: it is the part a buyer scans for,
-      whether it is the threshold or the gap left to close. %>
-  <span><%= highlight_money(free_delivery_nudge(subtotal)) %></span>
 </div>
