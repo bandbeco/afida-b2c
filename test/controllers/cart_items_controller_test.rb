@@ -252,6 +252,37 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 5, cart_item.quantity
   end
 
+  # Crossing the coupon's £100 minimum by changing quantity must re-render the
+  # signup SUCCESS BOX, not just the summary. Updating only the #discount_savings
+  # figure left the box's wording stale ("Add £X more to use it") on a cart that
+  # now qualifies, contradicting the discount line right next to it.
+  test "raising quantity past the minimum refreshes the success box wording" do
+    cart_item = @cart.cart_items.create!(product: @product_variant, quantity: 1, price: 10.00)
+    post email_subscriptions_path, params: { email: "cross-minimum@example.com" }
+
+    patch cart_cart_item_path(cart_item), params: { cart_item: { quantity: 11 } },
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match "discount-signup", @response.body
+    assert_match "automatically applied at checkout", @response.body
+    assert_no_match(/more to use it/, @response.body)
+  end
+
+  # And the reverse: dropping below the minimum must stop promising the saving.
+  test "lowering quantity below the minimum refreshes the success box wording" do
+    cart_item = @cart.cart_items.create!(product: @product_variant, quantity: 11, price: 10.00)
+    post email_subscriptions_path, params: { email: "drop-minimum@example.com" }
+
+    patch cart_cart_item_path(cart_item), params: { cart_item: { quantity: 1 } },
+          headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match "discount-signup", @response.body
+    assert_match "more to use it", @response.body
+    assert_no_match(/automatically applied at checkout/, @response.body)
+  end
+
   test "should remove item when quantity set to zero" do
     cart_item = @cart.cart_items.create!(
       product: @product_variant,
@@ -778,9 +809,10 @@ class CartItemsControllerTest < ActionDispatch::IntegrationTest
   # rate, so the welcome discount vanished from the summary (wrong VAT/total)
   # until a full page load. The discount must survive the sample add.
   test "adding a sample keeps the welcome discount in the cart summary" do
-    # A paid item so the cart has a discountable subtotal.
+    # A paid subtotal above the coupon's £100 Stripe minimum, or there would be
+    # no discount to preserve (11 x £9.99 = £109.89).
     post cart_cart_items_path, params: {
-      cart_item: { sku: @product_variant.sku, quantity: 1 }
+      cart_item: { sku: @product_variant.sku, quantity: 11 }
     }
     # Claim the welcome discount, which stores the code in the session.
     post email_subscriptions_path, params: { email: "sample-discount@example.com" }

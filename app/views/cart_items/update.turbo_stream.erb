@@ -30,12 +30,15 @@
     the cart page rendered initially. %>
 <%= turbo_stream.replace "cart_summary", partial: "cart_items/summary", locals: { cart: Current.cart } %>
 
-<%# Update discount savings if a discount is active (it lives in the signup success
-    box, outside #cart_summary). %>
-<% if session[:discount_code].present? && Current.cart.subtotal_amount.positive? %>
-  <%= turbo_stream.update "discount_savings" do %>
-    <%= number_to_currency(welcome_discount_savings(Current.cart), unit: "£") %>
-  <% end %>
+<%# Replace the whole signup success box (it lives outside #cart_summary), not just
+    the savings figure. Its WORDING depends on the cart clearing the coupon's £100
+    minimum, so a quantity change that crosses the threshold in either direction has
+    to re-render the box: patching only the number left "Add £X more to use it" on a
+    cart that now qualifies, contradicting the discount line beside it. %>
+<% if session[:discount_code].present? && Current.cart.cart_items.any? %>
+  <%= turbo_stream.replace "discount-signup",
+        partial: "email_subscriptions/success",
+        locals: { cart: Current.cart } %>
 <% end %>
 
 <%# The free-delivery countdown reads the cart, so it refreshes with it. A no-op
