@@ -12,6 +12,46 @@ module CartsHelper
     WELCOME_DISCOUNT_PERCENTAGE
   end
 
+  # The minimum order the welcome discount requires, as copy (e.g. "£100").
+  #
+  # Stripe is what actually enforces this: restrictions.minimum_amount on the
+  # WELCOME10 promotion code. The figure is read from the shared threshold
+  # constant so the on-site copy cannot drift from the Stripe restriction or
+  # from the free-delivery message that quotes the same number. If the Stripe
+  # restriction changes, change FREE_SHIPPING_THRESHOLD (or split the two apart
+  # deliberately) rather than editing the views.
+  def welcome_discount_minimum
+    Shipping.formatted_free_shipping_threshold
+  end
+
+  # The one-line condition shown wherever the discount is offered, so the offer
+  # is never stated without its qualifier.
+  def welcome_discount_terms
+    "On first orders over #{welcome_discount_minimum}."
+  end
+
+  # Whether this cart currently clears the minimum.
+  #
+  # Compares the PRODUCTS subtotal, matching Shipping.free_shipping?. Stripe
+  # evaluates its own minimum against the session total (shipping included), so
+  # a cart just under the threshold that pays delivery can satisfy Stripe while
+  # this returns false. That direction is deliberate: it under-promises on site
+  # and the customer gets the discount anyway, which is far better than the
+  # reverse.
+  def welcome_discount_qualifies?(cart)
+    return false unless cart
+
+    cart.subtotal_amount >= Shipping::FREE_SHIPPING_THRESHOLD
+  end
+
+  # How much more is needed to unlock the discount; zero once qualified.
+  def welcome_discount_shortfall(cart)
+    return Shipping::FREE_SHIPPING_THRESHOLD unless cart
+
+    remaining = Shipping::FREE_SHIPPING_THRESHOLD - cart.subtotal_amount
+    remaining.positive? ? remaining : 0
+  end
+
   # The cart-totals summary as an ordered list of display lines, the single source
   # of truth shared by the cart page and the cart drawer (the cart-side twin of
   # order_summary_lines). Delegates to CartSummary so the line order, labels, money

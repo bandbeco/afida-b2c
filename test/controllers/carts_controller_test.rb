@@ -147,7 +147,9 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
   test "cart page shows the discount line when a welcome code is in the session" do
     get cart_url
     cart = Cart.find(session[:cart_id])
-    cart.cart_items.create!(product: products(:one), quantity: 1, price: products(:one).price)
+    # 11 units clears the coupon's £100 Stripe minimum; below it the discount is
+    # correctly not previewed (see the minimum-order tests on Cart).
+    cart.cart_items.create!(product: products(:one), quantity: 11, price: 10.00)
     # Claim the welcome discount, which stores the code in the session.
     post email_subscriptions_path, params: { email: "cart-discount-test@example.com" }
 

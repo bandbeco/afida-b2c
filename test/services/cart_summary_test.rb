@@ -113,23 +113,23 @@ class CartSummaryTest < ActiveSupport::TestCase
   # A discounted cart inserts the discount line AFTER shipping and BEFORE vat, so it
   # visibly applies to subtotal + shipping (the welcome coupon is whole-order).
   test "with a discount inserts the discount line after shipping, before vat" do
-    @cart.discount_rate = 0.10
+    @cart = discountable_cart
     kinds = CartSummary.lines(@cart).map { |l| l[:kind] }
     assert_equal %i[subtotal shipping discount vat total], kinds
   end
 
   test "shows the discount as a negative GBP amount and flags it negative" do
-    @cart.discount_rate = 0.10
+    @cart = discountable_cart
     discount = CartSummary.lines(@cart).find { |l| l[:kind] == :discount }
-    # 10% of (20 + 6.99) = 2.699 -> -£2.70.
-    assert_equal "-£2.70", discount[:amount]
+    # £110 subtotal, free shipping at that spend: 10% of 110 = £11.00.
+    assert_equal "-£11.00", discount[:amount]
     assert_equal true, discount[:negative]
   end
 
   # The cart labels the discount with the percentage (it has no Stripe code at
   # preview time), unlike OrderSummary which uses the recorded code.
   test "labels the discount with the welcome percentage" do
-    @cart.discount_rate = 0.10
+    @cart = discountable_cart
     discount = CartSummary.lines(@cart).find { |l| l[:kind] == :discount }
     assert_equal "Discount (#{CartsHelper::WELCOME_DISCOUNT_PERCENTAGE}%)", discount[:label]
   end
@@ -163,7 +163,7 @@ class CartSummaryTest < ActiveSupport::TestCase
   end
 
   test "placeholder_discount leaves a real discount line as is" do
-    @cart.discount_rate = 0.10
+    @cart = discountable_cart
 
     discount = CartSummary.lines(@cart, placeholder_discount: true).find { |l| l[:kind] == :discount }
 
@@ -186,6 +186,20 @@ class CartSummaryTest < ActiveSupport::TestCase
       active: true
     )
     cart.cart_items.create!(product: product, quantity: 1, price: product.price)
+    cart
+  end
+
+  private
+
+  # A cart carrying a REAL discount: the welcome coupon is refused by Stripe
+  # below £100 (restrictions.minimum_amount), and Cart mirrors that, so a
+  # discount line only exists at or above the threshold. 11 x £10.00 = £110.00,
+  # which also ships free.
+  def discountable_cart
+    cart = Cart.create!
+    cart.cart_items.create!(product: products(:one), quantity: 11, price: 10.00)
+    cart.delivery_postcode = "WD18 9SB"
+    cart.discount_rate = 0.10
     cart
   end
 end

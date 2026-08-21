@@ -286,8 +286,14 @@ class Cart < ApplicationRecord
   # a cart so a coupon can't reduce that shipping charge. The preview mirrors that
   # by dropping the injected rate to zero, otherwise it would show a discount Stripe
   # will not apply (a -£x line on the shipping, with a lower VAT and total).
+  # Also zero below the welcome coupon's minimum order: Stripe enforces a £100
+  # restrictions.minimum_amount on the WELCOME10 promotion code and refuses the
+  # code outright underneath it, so previewing a discount here would promise a
+  # saving the customer cannot have (and understate VAT and the total with it).
+  # Compared against the products subtotal, matching Shipping.free_shipping?.
   def applicable_discount_rate
     return 0 if only_samples?
+    return 0 if subtotal_amount < Shipping::FREE_SHIPPING_THRESHOLD
 
     discount_rate || 0
   end

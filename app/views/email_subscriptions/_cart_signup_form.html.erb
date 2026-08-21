@@ -6,7 +6,7 @@
     </svg>
     <h3 class="font-medium text-base-content">Get <%= welcome_discount_percentage %>% off your first order</h3>
   </div>
-  <p class="text-sm text-base-content/70 mb-3">Sign up for news and exclusive offers</p>
+  <p class="text-sm text-base-content/70 mb-3">(valid on all orders over <%= welcome_discount_minimum %>)</p>
 
   <%= form_with url: email_subscriptions_path, method: :post, data: { turbo: true, controller: "discount-signup", action: "submit->discount-signup#submit" } do |f| %>
     <div class="flex gap-2">

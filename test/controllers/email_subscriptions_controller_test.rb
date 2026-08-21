@@ -41,7 +41,11 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
   # discount line and the reduced total arrive together. It keys off the freshly
   # stored session code, so the cart has to be given the discount rate before rendering.
   test "successful signup refreshes the cart summary with the discount" do
-    add_item_to_session_cart
+    # 4 units (£104) clears the coupon's £100 Stripe minimum; below it there is
+    # correctly no discount line to refresh.
+    post cart_cart_items_path, params: {
+      cart_item: { sku: products(:single_wall_8oz_white).sku, quantity: 4 }
+    }
 
     post email_subscriptions_path,
          params: { email: "summary-refresh@example.com" },
@@ -85,6 +89,52 @@ class EmailSubscriptionsControllerTest < ActionDispatch::IntegrationTest
       assert_select "#discount_amount", count: 0
       assert_select "#grand_total", text: /£0\.00/
     end
+  end
+
+  # The welcome coupon carries a £100 Stripe minimum (restrictions.minimum_amount
+  # on the WELCOME10 promotion code). Below it Stripe REFUSES the code outright,
+  # so the preview must not show a saving the customer cannot have - the same
+  # rule the samples-only case above enforces.
+  test "successful signup does not show a discount below the minimum order" do
+    add_item_to_session_cart  # 1 x £26.00, under the £100 minimum
+
+    post email_subscriptions_path,
+         params: { email: "under-minimum@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=cart_summary]" do
+      assert_select "#discount_amount", count: 0
+    end
+  end
+
+  # Above the minimum the discount is real and must still be previewed.
+  test "successful signup shows the discount at or above the minimum order" do
+    post cart_cart_items_path, params: {
+      cart_item: { sku: products(:single_wall_8oz_white).sku, quantity: 4 }
+    }  # 4 x £26.00 = £104.00
+
+    post email_subscriptions_path,
+         params: { email: "over-minimum@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_select "turbo-stream[action=replace][target=cart_summary]" do
+      assert_select "#discount_amount", text: /-/
+    end
+  end
+
+  # The success box must state the condition rather than promise the discount
+  # outright, so a customer under the threshold is not told it "will be applied".
+  test "signup success box states the minimum order condition" do
+    add_item_to_session_cart
+
+    post email_subscriptions_path,
+         params: { email: "terms-copy@example.com" },
+         headers: { "Accept" => "text/vnd.turbo-stream.html" }
+
+    assert_response :success
+    assert_match(/£100/, response.body)
   end
 
   # =============================================================================

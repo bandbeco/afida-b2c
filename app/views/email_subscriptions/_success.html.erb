@@ -3,15 +3,30 @@
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success" viewBox="0 0 20 20" fill="currentColor">
       <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
     </svg>
-    <h3 class="font-medium text-success">You're in! <%= welcome_discount_percentage %>% off applied</h3>
+    <h3 class="font-medium text-success">You're in!<% if local_assigns[:cart] && welcome_discount_qualifies?(cart) %> <%= welcome_discount_percentage %>% off applied<% else %> <%= welcome_discount_percentage %>% off saved<% end %></h3>
   </div>
-  <p class="text-sm text-base-content/70">
-    Your discount will be automatically applied at checkout.
-    <% if local_assigns[:cart] && cart&.subtotal_amount&.positive? %>
+  <%# The coupon carries a £100 Stripe minimum, so the promise is conditional:
+      below it Stripe refuses the code outright and no saving is coming. Show the
+      shortfall instead, which is both honest and the nudge to qualify. %>
+  <% if local_assigns[:cart] && welcome_discount_qualifies?(cart) %>
+    <p class="text-sm text-base-content/70">
+      Your discount will be automatically applied at checkout.
       <br>
-      <span class="text-success font-medium">
+      <span class="text-success">
         You'll save <span id="discount_savings"><%= number_to_currency(welcome_discount_savings(cart), unit: "£") %></span> on this order!
       </span>
-    <% end %>
-  </p>
+    </p>
+  <% elsif local_assigns[:cart] && cart&.subtotal_amount&.positive? %>
+    <p class="text-sm text-base-content/70">
+      Your code is saved. It applies to first orders over <%= welcome_discount_minimum %>.
+      <br>
+      <span class="text-base-content">
+        Add <span id="discount_savings"><%= number_to_currency(welcome_discount_shortfall(cart), unit: "£") %></span> more to use it.
+      </span>
+    </p>
+  <% else %>
+    <p class="text-sm text-base-content/70">
+      Your code is saved. It applies to first orders over <%= welcome_discount_minimum %>.
+    </p>
+  <% end %>
 </div>

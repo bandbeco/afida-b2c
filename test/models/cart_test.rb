@@ -72,26 +72,31 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 0, @cart.discount_amount
   end
 
+  # Uses a cart that clears the £100 minimum: below it the coupon is refused by
+  # Stripe and the preview correctly shows no discount at all (see
+  # "discount is not applied below the minimum order").
   test "discount_amount applies the injected rate to subtotal plus shipping" do
-    # cart :one subtotal is £20, shipping £6.99 (below threshold). 10% of 26.99 = 2.699.
-    @cart.discount_rate = 0.10
-    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    # £104 subtotal ships free at/above the threshold, so the whole-order base is
+    # 104 + 0. 10% of 104 = 10.40.
+    cart = qualifying_cart
+    cart.discount_rate = 0.10
 
-    assert_equal (BigDecimal("20.0") + cost) * BigDecimal("0.1"), @cart.discount_amount
-    assert_equal BigDecimal("2.699"), @cart.discount_amount
+    assert_equal BigDecimal("104.0"), cart.subtotal_amount
+    assert_equal 0, cart.shipping_amount
+    assert_equal BigDecimal("10.40"), cart.discount_amount
   end
 
   test "an injected discount reduces VAT and total but leaves subtotal and shipping" do
-    # subtotal 20, shipping 6.99 (below threshold). Whole-order discount = 10% of
-    # 26.99 = 2.699. VAT base = 26.99 - 2.699 = 24.291 -> VAT 4.8582;
-    # total = 24.291 + 4.8582 = 29.1492.
-    @cart.discount_rate = 0.10
-    cost = BigDecimal(Shipping.standard_cost_in_pounds.to_s)
+    # subtotal 104, shipping free at that spend. Whole-order discount = 10% of
+    # 104 = 10.40. VAT base = 104 - 10.40 = 93.60 -> VAT 18.72;
+    # total = 93.60 + 18.72 = 112.32.
+    cart = qualifying_cart
+    cart.discount_rate = 0.10
 
-    assert_equal BigDecimal("20.0"), @cart.subtotal_amount
-    assert_equal cost, @cart.shipping_amount
-    assert_equal BigDecimal("4.8582"), @cart.vat_amount
-    assert_equal BigDecimal("29.1492"), @cart.total_amount
+    assert_equal BigDecimal("104.0"), cart.subtotal_amount
+    assert_equal 0, cart.shipping_amount
+    assert_equal BigDecimal("18.72"), cart.vat_amount
+    assert_equal BigDecimal("112.32"), cart.total_amount
   end
 
   test "an injected discount never reintroduces shipping below the threshold" do
@@ -140,14 +145,16 @@ class CartTest < ActiveSupport::TestCase
   # visible lines and with the charge.
   test "display_total_amount equals the sum of the rounded summary lines" do
     cart = Cart.create
-    # £85.70 subtotal + £6.99 shipping, 10% welcome coupon: the figures from the
-    # original bug. Full-precision total 100.1052 would render as £100.11, but the
-    # rounded lines (85.70 + 6.99 - 9.27 + 16.68) sum to £100.10, matching Stripe.
+    # £100.03 subtotal, free shipping at that spend, 10% welcome coupon. Same
+    # penny-drift shape as the original bug (which used £85.70 + £6.99, a basket
+    # that no longer clears the coupon's £100 minimum): the rounded lines
+    # (100.03 - 10.00 + 18.01) sum to £108.04 while the full-precision total
+    # 108.0324 rounds to £108.03.
     variant = Product.create!(
       category: categories(:cups),
       name: "Penny pack",
       sku: "TEST-CART-DISPLAY-TOTAL",
-      price: BigDecimal("85.70"),
+      price: BigDecimal("100.03"),
       pac_size: 1,
       active: true
     )
@@ -160,11 +167,11 @@ class CartTest < ActiveSupport::TestCase
                     cart.discount_amount.round(2) +
                     cart.vat_amount.round(2)
 
-    assert_equal BigDecimal("100.10"), rounded_lines
-    assert_equal BigDecimal("100.10"), cart.display_total_amount
+    assert_equal BigDecimal("108.04"), rounded_lines
+    assert_equal BigDecimal("108.04"), cart.display_total_amount
     # The full-precision total still rounds to a different penny, which is the bug
     # display_total_amount exists to avoid showing as the Total line.
-    assert_equal BigDecimal("100.11"), cart.total_amount.round(2)
+    assert_equal BigDecimal("108.03"), cart.total_amount.round(2)
   end
 
   test "display_total_amount matches the rounded total when there is no rounding drift" do
@@ -180,12 +187,14 @@ class CartTest < ActiveSupport::TestCase
 
   test "setting discount_rate after totals are memoized recomputes them" do
     # Reading totals first memoizes them at the zero-discount rate; setting the rate
-    # must invalidate that so the discount is reflected.
-    @cart.total_amount # memoize at 0% discount
-    @cart.discount_rate = 0.10
+    # must invalidate that so the discount is reflected. Uses a cart above the
+    # coupon's £100 minimum, or there would be no discount to recompute.
+    cart = qualifying_cart
+    cart.total_amount # memoize at 0% discount
+    cart.discount_rate = 0.10
 
-    assert_equal BigDecimal("2.699"), @cart.discount_amount
-    assert_equal BigDecimal("29.1492"), @cart.total_amount
+    assert_equal BigDecimal("10.40"), cart.discount_amount
+    assert_equal BigDecimal("112.32"), cart.total_amount
   end
 
   # Regression: the discount rate is injected by the controller from the session,
@@ -194,14 +203,15 @@ class CartTest < ActiveSupport::TestCase
   # customer with the welcome discount who adds a sample sees the discount vanish
   # from the cart preview until the next full page load.
   test "reload preserves the injected discount_rate" do
-    @cart.discount_rate = 0.10
-    @cart.total_amount # memoize totals at the discounted rate
+    cart = qualifying_cart
+    cart.discount_rate = 0.10
+    cart.total_amount # memoize totals at the discounted rate
 
-    @cart.reload
+    cart.reload
 
-    assert_equal 0.10, @cart.discount_rate
-    assert_equal BigDecimal("2.699"), @cart.discount_amount
-    assert_equal BigDecimal("29.1492"), @cart.total_amount
+    assert_equal 0.10, cart.discount_rate
+    assert_equal BigDecimal("10.40"), cart.discount_amount
+    assert_equal BigDecimal("112.32"), cart.total_amount
   end
 
   test "items_count is memoized within request" do
@@ -465,6 +475,26 @@ class CartTest < ActiveSupport::TestCase
     assert_equal 3, cart.sample_count
   end
 
+  # The welcome coupon carries a £100 Stripe minimum (restrictions.minimum_amount
+  # on the WELCOME10 promotion code). Below it Stripe refuses the code outright,
+  # so the preview must not show a discount, a reduced VAT or a reduced total -
+  # the same rule only_samples? enforces for samples-only carts.
+  test "discount is not applied below the minimum order" do
+    @cart.discount_rate = 0.10
+
+    assert_equal BigDecimal("20.0"), @cart.subtotal_amount
+    assert_equal 0, @cart.discount_amount
+  end
+
+  test "discount applies at or above the minimum order" do
+    cart = Cart.create
+    cart.cart_items.create!(product: products(:single_wall_8oz_white), quantity: 4, price: 26.0)
+    cart.discount_rate = 0.10
+
+    assert_equal BigDecimal("104.0"), cart.subtotal_amount
+    assert cart.discount_amount.positive?
+  end
+
   test "only_samples? returns true when cart has only sample items" do
     cart = Cart.create
 
@@ -706,6 +736,17 @@ class CartTest < ActiveSupport::TestCase
   def undestined_cart
     cart = Cart.create!
     cart.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
+    cart
+  end
+
+  private
+
+  # A cart that clears the welcome coupon's £100 minimum: 4 x £26.00 = £104.00,
+  # which also ships free, so the whole-order discount base is the subtotal alone.
+  def qualifying_cart
+    cart = Cart.create
+    cart.cart_items.create!(product: products(:single_wall_8oz_white), quantity: 4, price: 26.0)
+    cart.delivery_postcode = MAINLAND_POSTCODE
     cart
   end
 end
