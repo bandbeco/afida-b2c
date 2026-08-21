@@ -9,54 +9,68 @@
     emphasis of a coloured panel without the alarm of an error. %>
 <% kind = local_assigns.fetch(:kind, :notice) %>
 <%
+  # Each kind keeps its own tint. The toast floats over page content now, so the
+  # tinted panel sits on an opaque wrapper: the old 10% wash on its own let the
+  # navbar read straight through and wrecked the text contrast.
   palette = {
-    nudge:  "bg-primary/10 border-primary/30 text-base-content",
-    notice: "bg-info/10 border-info/30 text-base-content",
-    alert:  "bg-error/10 border-error/40 text-base-content"
+    nudge:  "bg-primary/15 border-primary/40 text-base-content",
+    notice: "bg-info/15 border-info/40 text-base-content",
+    alert:  "bg-error/15 border-error/50 text-base-content"
   }.fetch(kind)
 
   icon_colour = { nudge: "text-primary", notice: "text-info", alert: "text-error" }.fetch(kind)
 %>
 
-<div data-test="flash-region" class="mx-auto w-full max-w-3xl px-4 pt-4">
-  <div data-test="flash-<%= kind == :alert ? 'alert' : 'notice' %>"
+<%# DaisyUI's toast container is position:fixed, so a flash arriving or timing
+    out never reflows the page beneath it. Anchored top-right, it simply covers
+    whatever it lands on rather than being nudged clear of the header, and it
+    caps itself at calc(100vw - 2rem) so it still fits a phone.
+
+    z-[70] clears the sticky/dropdown layers (the header sits at z-50/z-60) so
+    the flash is never painted underneath them, while staying below the modals
+    and the cookie banner, which must stay on top of everything. %>
+<div data-test="flash-region" class="toast toast-top toast-end z-[70]">
+  <div class="max-w-sm overflow-hidden rounded-lg bg-base-100 shadow-lg"
        data-controller="auto-dismiss"
        data-auto-dismiss-delay-value="<%= kind == :alert ? 8000 : 6000 %>"
-       data-turbo-temporary
-       role="<%= kind == :alert ? 'alert' : 'status' %>"
-       class="flex items-start gap-3 rounded-lg border <%= palette %> p-4 shadow-sm">
+       data-auto-dismiss-animation-value="slide-right"
+       data-turbo-temporary>
+    <div data-test="flash-<%= kind == :alert ? 'alert' : 'notice' %>"
+         role="<%= kind == :alert ? 'alert' : 'status' %>"
+         class="flex items-start gap-3 rounded-lg border <%= palette %> p-4">
 
-    <span data-test="flash-icon" class="shrink-0 <%= icon_colour %>">
-      <% if kind == :nudge %>
-        <%# The nudge is the one flash worth a moment of warmth: it is telling
-            someone how to save money, not that something went wrong. %>
-        <span class="text-xl leading-none" aria-hidden="true">🎁</span>
-      <% elsif kind == :alert %>
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+      <span data-test="flash-icon" class="shrink-0 <%= icon_colour %>">
+        <% if kind == :nudge %>
+          <%# The nudge is the one flash worth a moment of warmth: it is telling
+              someone how to save money, not that something went wrong. %>
+          <span class="text-xl leading-none" aria-hidden="true">🎁</span>
+        <% elsif kind == :alert %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+        <% else %>
+          <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        <% end %>
+      </span>
+
+      <p class="flex-1 text-sm leading-relaxed"><%= message %></p>
+
+      <%# Dismissal is explicit as well as timed: a customer re-reading a
+          shortfall should not have to wait for it to fade, and one who wants it
+          gone should not have to reload. %>
+      <button type="button"
+              data-test="flash-dismiss"
+              data-action="auto-dismiss#dismiss"
+              class="shrink-0 rounded p-1 text-base-content/50 transition-colors hover:bg-base-content/10 hover:text-base-content"
+              aria-label="Dismiss">
+        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
-      <% else %>
-        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      <% end %>
-    </span>
-
-    <p class="flex-1 text-sm leading-relaxed"><%= message %></p>
-
-    <%# Dismissal is explicit as well as timed: a customer re-reading a
-        shortfall should not have to wait for it to fade, and one who wants it
-        gone should not have to reload. %>
-    <button type="button"
-            data-test="flash-dismiss"
-            data-action="auto-dismiss#dismiss"
-            class="shrink-0 rounded p-1 text-base-content/50 transition-colors hover:bg-base-content/10 hover:text-base-content"
-            aria-label="Dismiss">
-      <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
+      </button>
+    </div>
   </div>
 </div>

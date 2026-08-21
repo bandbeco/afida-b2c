@@ -2,17 +2,27 @@ import { Controller } from "@hotwired/stimulus"
 
 /**
  * Auto Dismiss Controller
- * Automatically removes an element after a configurable delay
+ * Automatically removes an element after a configurable delay.
  *
  * Usage:
  *   <div data-controller="auto-dismiss" data-auto-dismiss-delay-value="3000">
  *     This will disappear after 3 seconds
  *   </div>
  *
- * With slide animation:
+ * With slide animation ("slide-left" exits left, "slide-right" exits right;
+ * both arrive from the right):
  *   <div data-controller="auto-dismiss"
- *        data-auto-dismiss-animation-value="slide-left">
+ *        data-auto-dismiss-animation-value="slide-right">
+ *
+ * Animation is carried by classes from stylesheets/components/auto_dismiss.css,
+ * not by assigning element.style: the project forbids inline styles, and that
+ * rule does not stop applying because the styles are written from JavaScript.
  */
+
+// Kept in step with the transition durations in auto_dismiss.css, so the node
+// is removed only once it has finished animating out.
+const REMOVAL_DELAY_MS = 300
+
 export default class extends Controller {
   static values = {
     delay: { type: Number, default: 3000 },
@@ -20,15 +30,8 @@ export default class extends Controller {
   }
 
   connect() {
-    // Slide in from right if using slide animation
-    if (this.animationValue === "slide-left") {
-      this.element.style.transform = "translateX(100%)"
-      this.element.style.opacity = "0"
-      // Force reflow
-      this.element.offsetHeight
-      this.element.style.transition = "transform 0.3s ease-out, opacity 0.3s ease-out"
-      this.element.style.transform = "translateX(0)"
-      this.element.style.opacity = "1"
+    if (this.slideClass) {
+      this.element.classList.add(`${this.slideClass}-in`)
     }
 
     this.timeout = setTimeout(() => {
@@ -45,19 +48,22 @@ export default class extends Controller {
     }
   }
 
+  // Null for the default fade, so callers opt into sliding by name.
+  get slideClass() {
+    if (this.animationValue === "slide-left") return "auto-dismiss-slide"
+    if (this.animationValue === "slide-right") return "auto-dismiss-slide-right"
+    return null
+  }
+
   dismiss() {
     // Guard against already-removed elements
     if (!this.element.isConnected) return
 
-    if (this.animationValue === "slide-left") {
-      // Slide out to the left
-      this.element.style.transition = "transform 0.3s ease-in, opacity 0.3s ease-in"
-      this.element.style.transform = "translateX(-100%)"
-      this.element.style.opacity = "0"
+    if (this.slideClass) {
+      this.element.classList.remove(`${this.slideClass}-in`)
+      this.element.classList.add(`${this.slideClass}-out`)
     } else {
-      // Default fade out
-      this.element.style.transition = "opacity 0.3s ease-out"
-      this.element.style.opacity = "0"
+      this.element.classList.add("auto-dismiss-fade-out")
     }
 
     this.removeTimeout = setTimeout(() => {
@@ -65,6 +71,6 @@ export default class extends Controller {
       if (this.element.isConnected) {
         this.element.remove()
       }
-    }, 300)
+    }, REMOVAL_DELAY_MS)
   }
 }

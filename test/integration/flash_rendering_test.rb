@@ -13,8 +13,10 @@ class FlashRenderingTest < ActionDispatch::IntegrationTest
     delete cart_url
     follow_redirect!
 
+    # auto-dismiss rides the opaque wrapper that the tinted panel sits on, so
+    # the whole toast slides out as one piece.
+    assert_select "[data-test=flash-region] [data-controller~=auto-dismiss]", count: 1
     assert_select "[data-test=flash-notice]" do
-      assert_select "[data-controller~=auto-dismiss]", count: 1
       assert_select "[data-test=flash-icon]", count: 1
       assert_select "[data-test=flash-dismiss]", count: 1
     end
@@ -24,10 +26,12 @@ class FlashRenderingTest < ActionDispatch::IntegrationTest
     delete cart_url
     follow_redirect!
 
-    # A rounded, max-width container: the old bar spanned the viewport edge to
-    # edge with square corners, which is what made it read as an error state.
+    # A rounded, corner-anchored panel: the old bar spanned the viewport edge
+    # to edge with square corners, which is what made it read as an error
+    # state. DaisyUI's .toast already caps itself at calc(100vw - 2rem), so the
+    # panel only needs its own comfortable reading width.
     assert_select "[data-test=flash-notice].rounded-lg", count: 1
-    assert_select "[data-test=flash-region].max-w-3xl", count: 1
+    assert_select "[data-test=flash-region] .max-w-sm", count: 1
   end
 
   test "uses no bold or semibold weights" do
@@ -69,6 +73,69 @@ class FlashRenderingTest < ActionDispatch::IntegrationTest
     %i[nudge notice alert].each do |kind|
       assert_match(/data-test="flash-dismiss"/, render_flash(kind, "x"), "#{kind} should be dismissible")
       assert_match(/auto-dismiss/, render_flash(kind, "x"), "#{kind} should time out")
+    end
+  end
+
+  # The flash used to render as a block element at the top of <body>, above the
+  # banner and navbar, so its arrival pushed the entire page down and its
+  # auto-dismissal snapped it back up: two layout shifts per message, the second
+  # landing while the customer is still reading or mid-click.
+  test "the flash overlays the page instead of displacing it" do
+    delete cart_url
+    follow_redirect!
+
+    assert_select "[data-test=flash-region].toast", count: 1,
+      message: "the flash region should be a DaisyUI toast, which is position:fixed"
+  end
+
+  test "the flash toast is pinned to the top right" do
+    delete cart_url
+    follow_redirect!
+
+    assert_select "[data-test=flash-region].toast-top", count: 1
+    assert_select "[data-test=flash-region].toast-end", count: 1
+    assert_select "[data-test=flash-region].toast-center", count: 0
+  end
+
+  # The toast overlays whatever is beneath it rather than being nudged clear of
+  # the header, so it needs no bespoke offset stylesheet.
+  test "the toast keeps DaisyUI's own corner offset" do
+    assert_not Rails.root.join("app/frontend/stylesheets/components/flash_toast.css").exist?,
+      "positioning should come from DaisyUI, not a bespoke offset rule"
+  end
+
+  # It arrives from the right edge it is anchored to.
+  test "the flash slides in from the right" do
+    delete cart_url
+    follow_redirect!
+
+    assert_select "[data-test=flash-region] [data-auto-dismiss-animation-value=slide-right]", count: 1
+  end
+
+  test "the flash region no longer reserves layout width in the document flow" do
+    delete cart_url
+    follow_redirect!
+
+    # mx-auto was the in-flow centring of the old block element. The toast
+    # container does its own positioning, and the width now belongs to the
+    # panel inside it.
+    assert_select "[data-test=flash-region].mx-auto", count: 0
+  end
+
+  # A fixed toast has to declare its own stacking order; the old in-flow bar
+  # never needed one because it occupied real space. Without this the flash is
+  # painted underneath the header, which sits at z-50/z-60.
+  test "the flash toast stacks above the header" do
+    delete cart_url
+    follow_redirect!
+
+    assert_select "[data-test=flash-region].z-\\[70\\]", count: 1
+  end
+
+  test "every kind renders inside the toast container" do
+    %i[nudge notice alert].each do |kind|
+      html = render_flash(kind, "x")
+      assert_match(/toast toast-top toast-end/, html, "#{kind} should be toasted")
     end
   end
 

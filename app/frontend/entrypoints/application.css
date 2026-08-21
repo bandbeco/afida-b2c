@@ -7,4 +7,5 @@
 @import "../stylesheets/patterns.css";
 @import "../stylesheets/components/quick_add_modal.css";
 @import "../stylesheets/components/cookie_policy.css";
+@import "../stylesheets/components/auto_dismiss.css";
 @import "../stylesheets/confirm_dialog.css";

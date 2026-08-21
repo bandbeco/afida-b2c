@@ -1,0 +1,67 @@
+/* Auto-dismiss exit animations
+ *
+ * The dismissal states for elements driven by auto_dismiss_controller.js.
+ * These live here rather than in the controller because the project forbids
+ * inline styles, and a controller assigning element.style.transform is
+ * writing inline styles from JavaScript.
+ *
+ * Two slide variants, differing only in which edge they exit by: slide-left
+ * leaves to the left (samples product card), slide-right returns out the right
+ * edge it arrived from (the flash toast, which is anchored top-right).
+ *
+ * Durations must stay in step with REMOVAL_DELAY_MS in the controller, which
+ * waits for the transition before removing the node from the DOM.
+ */
+
+.auto-dismiss-fade-out {
+  transition: opacity 0.3s ease-out;
+  opacity: 0;
+}
+
+.auto-dismiss-slide-in {
+  animation: auto-dismiss-slide-in 0.3s ease-out;
+}
+
+.auto-dismiss-slide-out {
+  transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+/* slide-right: arrives and leaves by the right edge. Used by the flash toast,
+ * which is anchored top-right, so leaving leftward would send it across the
+ * page instead of back out the side it came from. */
+.auto-dismiss-slide-right-in {
+  animation: auto-dismiss-slide-in 0.3s ease-out;
+}
+
+.auto-dismiss-slide-right-out {
+  transition: transform 0.3s ease-in, opacity 0.3s ease-in;
+  transform: translateX(100%);
+  opacity: 0;
+}
+
+@keyframes auto-dismiss-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Respect a reduced-motion preference: the element still leaves, it just
+ * does not travel to get there. */
+@media (prefers-reduced-motion: reduce) {
+  .auto-dismiss-slide-in,
+  .auto-dismiss-slide-out,
+  .auto-dismiss-slide-right-in,
+  .auto-dismiss-slide-right-out,
+  .auto-dismiss-fade-out {
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+    transform: none;
+  }
+}
