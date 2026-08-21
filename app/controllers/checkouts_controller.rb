@@ -77,11 +77,11 @@ class CheckoutsController < ApplicationController
 
       if result.invalid_discount?
         session.delete(:discount_code)
-        # A below-minimum discount is a nudge, not a fault: the layout renders
-        # flash[:alert] as a red error bar, which misreads "spend £54 more" as
-        # something having gone wrong. Everything else genuinely is a refusal.
+        # A below-minimum discount is a nudge, not a fault: an error bar
+        # misreads "spend £54 more" as something having gone wrong, so it gets
+        # the dedicated :nudge slot. Everything else genuinely is a refusal.
         if result.discount_refusal_reason == :below_minimum
-          flash[:notice] = discount_refusal_message(result, cart)
+          flash[:nudge] = discount_refusal_message(result, cart)
         else
           flash[:alert] = discount_refusal_message(result, cart)
         end

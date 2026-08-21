@@ -87,8 +87,11 @@
   <body class="flex flex-col h-screen" data-controller="search-modal">
     <%= render "layouts/google_tag_manager_noscript" %>
 
-    <%= tag.div notice, class: "alert alert-info", data: { turbo_temporary: true } if notice %>
-    <%= tag.div alert, class: "alert alert-error", data: { turbo_temporary: true } if alert %>
+    <%# flash[:nudge] is a notice that is good news (e.g. "you are £54 from a
+        10% discount"), so it is styled with emphasis rather than alarm. %>
+    <%= render "shared/flash", message: flash[:nudge], kind: :nudge if flash[:nudge] %>
+    <%= render "shared/flash", message: notice, kind: :notice if notice %>
+    <%= render "shared/flash", message: alert, kind: :alert if alert %>
 
     <%# Global toast container for Turbo Stream notifications. top-40 clears
         the full header (banner + nav links + search bar) so toasts never

@@ -1454,10 +1454,12 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # A shortfall is a nudge, not a fault, so it must not be rendered in the
     # red alert-error bar the layout gives flash[:alert].
     assert_nil flash[:alert], "a below-minimum discount is not an error"
-    assert_match(/£100/, flash[:notice], "the minimum should be named")
-    assert_match(/10% discount/, flash[:notice], "what they are missing out on should be named")
-    assert_match(/Add £54\.00/, flash[:notice], "the shortfall is the actionable part")
-    assert_no_match(/could not be applied/i, flash[:notice])
+    # Its own slot, so the layout can style it as good news rather than as a
+    # neutral notice or a failure.
+    assert_match(/£100/, flash[:nudge], "the minimum should be named")
+    assert_match(/10% discount/, flash[:nudge], "what they are missing out on should be named")
+    assert_match(/Add £54\.00/, flash[:nudge], "the shortfall is the actionable part")
+    assert_no_match(/could not be applied/i, flash[:nudge])
   end
 
   test "create explains a samples-only cart rather than blaming the code" do

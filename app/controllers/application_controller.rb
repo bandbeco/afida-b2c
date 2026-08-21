@@ -1,4 +1,9 @@
 class ApplicationController < ActionController::Base
+  # A notice that is actively good news (e.g. "you are £54 from a 10% discount"),
+  # given its own slot so the layout can style it with emphasis instead of the
+  # alarm of an error or the neutrality of a plain notice.
+  add_flash_types :nudge
+
   include Authentication
   include EventContext
   before_action :capture_onsite_checkout_preview
