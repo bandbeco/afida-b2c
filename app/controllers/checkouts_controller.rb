@@ -77,7 +77,14 @@ class CheckoutsController < ApplicationController
 
       if result.invalid_discount?
         session.delete(:discount_code)
-        flash[:alert] = "Your discount code could not be applied. Please continue with your order."
+        # A below-minimum discount is a nudge, not a fault: the layout renders
+        # flash[:alert] as a red error bar, which misreads "spend £54 more" as
+        # something having gone wrong. Everything else genuinely is a refusal.
+        if result.discount_refusal_reason == :below_minimum
+          flash[:notice] = discount_refusal_message(result, cart)
+        else
+          flash[:alert] = discount_refusal_message(result, cart)
+        end
       end
 
       if OnsiteCheckout.enabled?(session)
@@ -413,6 +420,38 @@ class CheckoutsController < ApplicationController
   end
 
   private
+
+  # What to tell a customer whose discount was dropped.
+  #
+  # The old blanket "could not be applied" stated a failure and gave them nothing
+  # to act on. Each refusal has a different remedy (or none), and the
+  # below-minimum case in particular is worth spelling out: naming the shortfall
+  # turns an apology into a reason to add to the order, which is what the £100
+  # floor exists for.
+  #
+  # An unrecognised reason falls back to the old wording rather than raising: a
+  # customer mid-checkout should never be blocked by a missing string.
+  def discount_refusal_message(result, cart)
+    case result.discount_refusal_reason
+    when :below_minimum
+      shortfall = helpers.welcome_discount_shortfall(cart)
+      minimum = helpers.welcome_discount_minimum
+      percentage = helpers.welcome_discount_percentage
+
+      if shortfall.positive?
+        "Your #{percentage}% discount needs an order of #{minimum} or more. " \
+          "Add #{helpers.number_to_currency(shortfall, unit: "£")} to your order to use it."
+      else
+        "Your #{percentage}% discount needs an order of #{minimum} or more, before delivery."
+      end
+    when :samples_only
+      "Samples are already free, so the discount does not apply to a samples-only order."
+    when :not_first_order
+      "Your #{helpers.welcome_discount_percentage}% discount is for first orders only."
+    else
+      "Your discount code could not be applied. Please continue with your order."
+    end
+  end
 
   # The postcode used to price delivery: the one typed at the checkout page
   # (PATCH /checkout is its only writer, and it survives that Stripe session),

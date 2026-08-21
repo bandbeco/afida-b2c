@@ -1435,6 +1435,45 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil flash[:error]
   end
 
+  # The flash the customer actually reads. "Could not be applied" states a
+  # failure and offers nothing to do about it; naming the reason turns the
+  # commonest case into a nudge, since the shortfall is exactly the information
+  # that would change their order.
+  test "create explains a below-minimum discount with the shortfall" do
+    post cart_cart_items_path, params: {
+      cart_item: { sku: products(:single_wall_8oz_white).sku, quantity: 1 }
+    }
+    post email_subscriptions_path, params: { email: "shortfall-flash@example.com" }
+    stub_welcome_promotion_code
+    Stripe::Checkout::Session.stubs(:create)
+      .raises(StripeErrors.promotion_code_amount_insufficient)
+      .then.returns(build_stripe_session)
+
+    post checkout_path
+
+    # A shortfall is a nudge, not a fault, so it must not be rendered in the
+    # red alert-error bar the layout gives flash[:alert].
+    assert_nil flash[:alert], "a below-minimum discount is not an error"
+    assert_match(/£100/, flash[:notice], "the minimum should be named")
+    assert_match(/10% discount/, flash[:notice], "what they are missing out on should be named")
+    assert_match(/Add £54\.00/, flash[:notice], "the shortfall is the actionable part")
+    assert_no_match(/could not be applied/i, flash[:notice])
+  end
+
+  test "create explains a samples-only cart rather than blaming the code" do
+    # is_sample is set by the sample endpoints, not the ordinary add-to-cart
+    # path, so the samples-only cart is built directly.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+    assert @cart.reload.only_samples?, "setup: the cart should be samples-only"
+    post email_subscriptions_path, params: { email: "samples-flash@example.com" }
+    Stripe::Checkout::Session.stubs(:create).returns(build_stripe_session)
+
+    post checkout_path
+
+    assert_match(/sample/i, flash[:alert])
+  end
+
   # The live trap, end to end. Stripe evaluates the welcome coupon's £100
   # minimum only when the session is created, so a sub-£100 basket carrying the
   # code was refused there. The raise landed in the rescue whose guard is

@@ -1,6 +1,6 @@
 module Checkout
   class SessionBuilder
-    Result = Struct.new(:session, :invalid_discount_code, :zone, keyword_init: true) do
+    Result = Struct.new(:session, :invalid_discount_code, :discount_refusal_reason, :zone, keyword_init: true) do
       def invalid_discount?
         invalid_discount_code.present?
       end
@@ -25,14 +25,23 @@ module Checkout
       invalid_discount_code.present?
     end
 
+    # Why the discount was dropped, so the customer can be told something
+    # actionable instead of a blanket failure. nil when nothing was refused.
+    attr_reader :discount_refusal_reason
+
     def create
       session_params = build_session_params
       @invalid_discount_code = apply_discount(session_params)
       apply_customer_details(session_params)
 
+      # create_stripe_session can drop the coupon (and set the reason) on retry,
+      # so the session is built BEFORE the result reads either.
+      stripe_session = create_stripe_session(session_params)
+
       Result.new(
-        session: create_stripe_session(session_params),
+        session: stripe_session,
         invalid_discount_code: invalid_discount_code,
+        discount_refusal_reason: discount_refusal_reason,
         zone: zone
       )
     end
@@ -218,6 +227,7 @@ module Checkout
 
       Rails.logger.warn("Stripe refused discount '#{discount_code}': #{e.message}")
       @invalid_discount_code = discount_code.presence
+      @discount_refusal_reason = :below_minimum
       Stripe::Checkout::Session.create(without_discount(session_params))
     end
 
@@ -252,6 +262,7 @@ module Checkout
       # as not applied via the return value, mirroring the invalid-coupon path.
       if cart.only_samples?
         session_params[:metadata].delete(:discount_code)
+        @discount_refusal_reason = :samples_only if discount_code.present?
         return discount_code.presence
       end
 
@@ -266,6 +277,7 @@ module Checkout
         # switch governs every code, so a repeat customer denied the welcome coupon
         # must still be able to type a current campaign code.
         session_params[:allow_promotion_codes] = true
+        @discount_refusal_reason = :not_first_order
         return discount_code.presence
       end
 
@@ -327,6 +339,7 @@ module Checkout
       # Do not persist unusable customer input to Stripe metadata.
       session_params[:metadata].delete(:discount_code)
       session_params[:allow_promotion_codes] = true
+      @discount_refusal_reason = :unusable_code
       discount_code
     end
 

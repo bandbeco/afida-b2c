@@ -279,6 +279,69 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
   end
 
 
+  # --- WHY a discount was dropped ---
+  #
+  # The controller can only explain the refusal to the customer if it is told the
+  # reason, and the amount case in particular is worth saying out loud: "spend £X
+  # more" is a nudge, whereas the old blanket "could not be applied" reads as a
+  # fault and gives them nothing to act on.
+
+  test "reports the reason when the order is below the coupon minimum" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    stub_welcome_promotion_code
+    Stripe::Checkout::Session.stubs(:create)
+      .raises(amount_insufficient_error)
+      .then.returns(build_stripe_session)
+
+    result = build_session(discount_code: "WELCOME5")
+
+    assert_equal :below_minimum, result.discount_refusal_reason
+  end
+
+  test "reports the reason when the cart holds only samples" do
+    @cart.cart_items.create!(product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true)
+    Stripe::Checkout::Session.stubs(:create).returns(build_stripe_session)
+
+    result = build_session(discount_code: "WELCOME5")
+
+    assert_equal :samples_only, result.discount_refusal_reason
+  end
+
+  test "reports the reason when the customer has already had a first order" do
+    # orders(:one) is already a PAID order for this user, which is what
+    # welcome_discount_allowed? refuses on.
+    user = users(:one)
+    assert_includes Order::COMPLETED_STATUSES, orders(:one).status
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    Stripe::Checkout::Session.stubs(:create).returns(build_stripe_session)
+
+    result = build_session_builder(user: user, discount_code: "WELCOME5").create
+
+    assert_equal :not_first_order, result.discount_refusal_reason
+  end
+
+  test "reports the reason when the code itself does not resolve" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    Stripe::PromotionCode.stubs(:list).returns(stub(data: []))
+    Stripe::Coupon.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such coupon", nil))
+    Stripe::Checkout::Session.stubs(:create).returns(build_stripe_session)
+
+    result = build_session(discount_code: "WELCOME5")
+
+    assert_equal :unusable_code, result.discount_refusal_reason
+  end
+
+  test "reports no refusal reason when the discount applies" do
+    @cart.cart_items.create!(product: products(:one), quantity: 11, price: 10.00)
+    stub_welcome_promotion_code
+    Stripe::Checkout::Session.stubs(:create).returns(build_stripe_session)
+
+    result = build_session(discount_code: "WELCOME5")
+
+    assert_not result.invalid_discount?
+    assert_nil result.discount_refusal_reason
+  end
+
   # --- the coupon's own conditions failing at Session.create ---
   #
   # apply_discount only checks the things the app can know: samples, and whether
