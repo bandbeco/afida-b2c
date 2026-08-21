@@ -380,15 +380,15 @@
           <div class="mt-8 pt-6 border-t border-base-200">
             <%= render "products/sample_cta", product: @product %>
 
-          <div class="mt-4">
-            <div class="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div>
-                <p class="font-sm">Can't find what you're looking for?</p>
-                <p class="text-xs">Need a different size, quantity, or material ...</p>
+            <div class="mt-4">
+              <div class="bg-base-200 rounded-lg p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <p class="font-sm">Can't find what you're looking for?</p>
+                  <p class="text-xs">Need a different size, quantity, or material ...</p>
+                </div>
+                <%= link_to "Get in touch", contact_path, class: "link link-hover underline font-medium whitespace-nowrap" %>
               </div>
-              <%= link_to "Get in touch", contact_path, class: "link link-hover underline font-medium whitespace-nowrap" %>
             </div>
-          </div>
           </div>
 
           <%# Sticky Add-to-Cart Bar (mobile only) %>

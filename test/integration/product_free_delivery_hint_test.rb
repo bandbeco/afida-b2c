@@ -102,6 +102,18 @@ class ProductFreeDeliveryHintTest < ActionDispatch::IntegrationTest
     end
   end
 
+  # The tint and the sentence are two renderings of one rule, so they must not
+  # be able to disagree. A band tinted "not yet" beside the words "qualifies"
+  # reads as a broken page.
+  test "the band's tint agrees with its sentence" do
+    lid = products(:flat_lid_8oz)
+    post cart_cart_items_path, params: { cart_item: { sku: lid.sku, quantity: 10 } }
+
+    get product_path(@product)
+
+    assert_select "[data-test='free-delivery-hint'][data-qualified='true']", text: /qualifies/i
+  end
+
   # A buyer arriving with a full cart must see the state their cart is actually
   # in, not the empty-cart rule waiting for an interaction to correct it.
   test "the hint reflects what is already in the cart on first render" do

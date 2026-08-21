@@ -7,9 +7,10 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
 
   # DELETE /cart
   #
-  # Emptying the cart is a real button in the UI, and it ran against an @cart
-  # that this controller never assigned, so every click 500'd on nil. Every
-  # other action here reads Current.cart; so does this one now.
+  # This ran against an @cart that the controller never assigns, so the route
+  # raised NoMethodError on nil for every request it received. Nothing in the UI
+  # links to it today, which is how a permanently broken endpoint went
+  # unnoticed; these tests exist so it stays working if something does.
   test "should empty the cart" do
     post cart_cart_items_url, params: { cart_item: { sku: @product_variant.sku, quantity: 2 } }
     cart = Cart.find(session[:cart_id])

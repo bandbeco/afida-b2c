@@ -50,12 +50,6 @@ module ApplicationHelper
     Shipping.formatted_free_shipping_threshold
   end
 
-  # The same threshold as a number, for the client-side countdown. Kept beside
-  # the display version so both read the one checkout constant.
-  def free_shipping_threshold_amount
-    Shipping::FREE_SHIPPING_THRESHOLD.to_f
-  end
-
   # The free-delivery claim, qualified by zone. Free delivery is a mainland
   # promise (ShippingZone::FREE_SHIPPING_ZONES), so the copy has to say so:
   # an unqualified claim is one we cannot keep for Northern Ireland, the
@@ -75,12 +69,30 @@ module ApplicationHelper
   # (see Cart#subtotal_amount). The claim stays mainland-qualified in every
   # state because no page rendering this knows the destination.
   def free_delivery_nudge(cart_subtotal)
-    remaining = Shipping::FREE_SHIPPING_THRESHOLD - cart_subtotal.to_d
+    subtotal = cart_subtotal.to_d
+    return free_delivery_promise if subtotal <= 0
+    return "This order qualifies for free mainland UK delivery" if free_delivery_qualified?(subtotal)
 
-    return free_delivery_promise if cart_subtotal.to_d <= 0
-    return "This order qualifies for free mainland UK delivery" if remaining <= 0
-
+    # Rounded UP, and never below a penny. The gap can be a fraction of a penny
+    # (cart_items.price is scale-4 and configured items divide a total by a
+    # quantity), and rounding that to "Add £0.00 more" asks for nothing, while
+    # rounding it away entirely would promise free delivery that checkout then
+    # refuses. Asking for the penny that actually closes it is the only honest
+    # option left.
+    remaining = (Shipping::FREE_SHIPPING_THRESHOLD - subtotal).ceil(2)
     "Add #{number_to_currency(remaining)} more for free mainland UK delivery"
+  end
+
+  # Whether a cart has reached the threshold, decided EXACTLY as
+  # Shipping.free_shipping? decides it. Deliberately unrounded: rounding here
+  # would let the page promise free delivery for a cart a fraction of a penny
+  # short, and checkout would then charge for it. A promise the buyer sees
+  # broken at payment costs more than an awkward figure in the nudge.
+  #
+  # The hint partial tints itself from this, so the colour and the words are one
+  # decision rather than two expressions of the same rule in two files.
+  def free_delivery_qualified?(cart_subtotal)
+    cart_subtotal.to_d >= Shipping::FREE_SHIPPING_THRESHOLD
   end
 
   # Marks the money figure inside a delivery sentence so it can be scanned at a

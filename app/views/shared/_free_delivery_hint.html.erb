@@ -11,7 +11,8 @@
 
     Mounted on the PDP buy box; the stream replacements are harmless no-ops on
     pages that do not carry it. %>
-<% qualified = (Current.cart&.subtotal_amount || 0) >= Shipping::FREE_SHIPPING_THRESHOLD %>
+<% subtotal = Current.cart&.subtotal_amount || 0 %>
+<% qualified = free_delivery_qualified?(subtotal) %>
 <div id="free_delivery_hint"
      data-test="free-delivery-hint"
      data-qualified="<%= qualified %>"
@@ -28,5 +29,5 @@
   <% end %>
   <%# The money figure carries the emphasis: it is the part a buyer scans for,
       whether it is the threshold or the gap left to close. %>
-  <span><%= highlight_money(free_delivery_nudge(Current.cart&.subtotal_amount || 0)) %></span>
+  <span><%= highlight_money(free_delivery_nudge(subtotal)) %></span>
 </div>
