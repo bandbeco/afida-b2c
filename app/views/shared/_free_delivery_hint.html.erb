@@ -9,14 +9,27 @@
     the first line of that stack. The tint tracks state, so closing the gap is
     visible at a glance rather than needing to be read.
 
-    Mounted on the PDP buy box; the stream replacements are harmless no-ops on
-    pages that do not carry it. %>
+    Mounted on the PDP buy box, in the cart drawer and in the cart page's
+    summary column; the stream replacements are harmless no-ops on pages that do
+    not carry it.
+
+    `id` exists because two of those surfaces share a document: the drawer is
+    mounted on the PDP (and on every shop, collection and category page), so a
+    fixed id would put two copies of it under one name and leave the streams
+    replacing an arbitrary one. The buy box keeps the original
+    `free_delivery_hint`, since the streams that target it by name are already
+    deployed; the cart surfaces pass their own. %>
+<% dom_id = local_assigns.fetch(:id, "free_delivery_hint") %>
+<%# The band's own spacing belongs to the surface around it, not to the band:
+    mt-5 is the gap under the buy box's button, and the cart surfaces sit it
+    against a totals block instead. %>
+<% spacing = local_assigns.fetch(:spacing, "mt-5") %>
 <% subtotal = Current.cart&.subtotal_amount || 0 %>
 <% qualified = free_delivery_qualified?(subtotal) %>
-<div id="free_delivery_hint"
+<div id="<%= dom_id %>"
      data-test="free-delivery-hint"
      data-qualified="<%= qualified %>"
-     class="mt-5 flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3 text-base
+     class="<%= spacing %> flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3 text-base
             <%= qualified ? "border-success/30 bg-success/10" : "border-base-300 bg-base-200" %>">
   <% if qualified %>
     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">

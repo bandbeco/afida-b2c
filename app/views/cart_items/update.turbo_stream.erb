@@ -42,5 +42,12 @@
 <% end %>
 
 <%# The free-delivery countdown reads the cart, so it refreshes with it. A no-op
-    on pages that do not mount the hint. %>
+    on pages that do not mount the hint.
+    The buy box's copy and the cart page's are separate targets: unlike destroy,
+    this stream does not re-render the #cart frame, so the cart page's band is
+    only refreshed by naming it. The drawer's copy rides along inside
+    #drawer_cart_content above. %>
 <%= turbo_stream.replace "free_delivery_hint", partial: "shared/free_delivery_hint" %>
+<%= turbo_stream.replace "cart_free_delivery_hint",
+      partial: "shared/free_delivery_hint",
+      locals: { id: "cart_free_delivery_hint", spacing: "mt-4" } %>

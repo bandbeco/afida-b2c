@@ -30,6 +30,24 @@
     <div class="w-full md:w-1/2 lg:w-1/3 bg-gray-100 p-4 sm:p-6 rounded-lg shadow-md">
       <%= render "cart_items/summary", cart: Current.cart %>
 
+      <%# The countdown, under the totals and above the checkout control, for the
+          same reason the drawer carries one: the Shipping line immediately above
+          reads "Calculated at checkout", so without this the page says nothing
+          about the one lever the buyer controls at the moment they decide
+          whether to check out or keep shopping.
+
+          Mounted OUTSIDE #cart_summary on purpose. That block is replaced
+          wholesale by the cart streams, and this band is replaced by its own;
+          nesting it would put two streams in one response competing for the
+          same markup. It also keeps the band clear of the summary partial,
+          which the DRAWER renders too: putting it in there would give the PDP
+          two hints under one id.
+
+          Its own id rather than the buy box's, so the update stream can name it
+          separately. destroy/destroy_sample/create re-render the whole #cart
+          frame and carry it along; update does not, and names it explicitly. %>
+      <%= render "shared/free_delivery_hint", id: "cart_free_delivery_hint", spacing: "mt-4" %>
+
       <%= render "cart_items/checkout", cart: Current.cart %>
 
       <div class="mt-4 flex justify-center">

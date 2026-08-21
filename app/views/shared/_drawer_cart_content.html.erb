@@ -67,11 +67,29 @@
           figure that matters on a panel this wide. %>
       <% cart_summary_lines(Current.cart).each do |line| %>
         <% total = line[:kind] == :total %>
-        <div class="flex justify-between items-center <%= total ? "mt-4 pt-4 border-t border-base-300 mb-8" : "mb-3" %><%= " text-success" if line[:negative] %>">
+        <%# The total's generous gap below it was holding the checkout button
+            clear of the figures. The countdown band now occupies that space, so
+            the gap closes to the band's own margin. %>
+        <div class="flex justify-between items-center <%= total ? "mt-4 pt-4 border-t border-base-300 mb-5" : "mb-3" %><%= " text-success" if line[:negative] %>">
           <span class="<%= total ? "text-lg" : "text-sm sm:text-base text-gray-600" %>"><%= line[:label] %></span>
           <span class="<%= total ? "text-xl sm:text-2xl" : "text-sm sm:text-base" %>"><%= line[:amount] %></span>
         </div>
       <% end %>
+
+      <%# The countdown, directly above the checkout control. The drawer opens on
+          every add-to-cart, so this is the surface the nudge is seen on most and
+          the one where the buyer is best placed to act on it: they are already
+          shopping, and the panel closes back onto the page they were browsing.
+
+          It also answers the Shipping line right above it. That line reads
+          "Calculated at checkout" (the cart collects no destination), which
+          leaves delivery looking like a cost still waiting at payment; the
+          qualified state says plainly that it is not.
+
+          Its own id, because this partial is replaced wholesale by the same
+          streams that replace the buy box's #free_delivery_hint, and on the PDP
+          both are in the document at once. %>
+      <%= render "shared/free_delivery_hint", id: "drawer_free_delivery_hint", spacing: "mb-4" %>
 
       <div>
         <%= render "shared/checkout_button", label: "Proceed to Checkout", button_class: "btn btn-primary btn-lg w-full text-base shadow-lg shadow-black/20" %>
