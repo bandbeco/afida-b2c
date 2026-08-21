@@ -1,0 +1,32 @@
+<%# The free-delivery countdown, refreshed by turbo_stream whenever the cart
+    changes (see cart_items/*.turbo_stream.erb). Rendered server-side from the
+    one helper so the sentence cannot drift between its initial render and its
+    replacements, and so the arithmetic lives next to the rule it mirrors.
+
+    Treated as a status band rather than another line of grey copy: it is the
+    only thing under the button that CHANGES as the buyer shops, and sitting at
+    the same weight as the static trust and sample blocks below made it read as
+    the first line of that stack. The tint tracks state, so closing the gap is
+    visible at a glance rather than needing to be read.
+
+    Mounted on the PDP buy box; the stream replacements are harmless no-ops on
+    pages that do not carry it. %>
+<% qualified = (Current.cart&.subtotal_amount || 0) >= Shipping::FREE_SHIPPING_THRESHOLD %>
+<div id="free_delivery_hint"
+     data-test="free-delivery-hint"
+     data-qualified="<%= qualified %>"
+     class="mt-5 flex items-center justify-center gap-2.5 rounded-lg border px-4 py-3 text-base
+            <%= qualified ? "border-success/30 bg-success/10" : "border-base-300 bg-base-200" %>">
+  <% if qualified %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.4" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+    </svg>
+  <% else %>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2" aria-hidden="true">
+      <path stroke-linecap="round" stroke-linejoin="round" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zm10 0a2 2 0 11-4 0 2 2 0 014 0zM3 4h2l2 11h11l2-7H7"/>
+    </svg>
+  <% end %>
+  <%# The money figure carries the emphasis: it is the part a buyer scans for,
+      whether it is the threshold or the gap left to close. %>
+  <span><%= highlight_money(free_delivery_nudge(Current.cart&.subtotal_amount || 0)) %></span>
+</div>

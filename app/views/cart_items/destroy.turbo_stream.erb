@@ -22,3 +22,7 @@
     <%= ecommerce_remove_from_cart_event_for_product(@product, quantity: @removed_quantity, value: @removed_value) %>
   </script>
 <% end %>
+
+<%# The free-delivery countdown reads the cart, so it refreshes with it. A no-op
+    on pages that do not mount the hint. %>
+<%= turbo_stream.replace "free_delivery_hint", partial: "shared/free_delivery_hint" %>

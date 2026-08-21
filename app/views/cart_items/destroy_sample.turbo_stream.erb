@@ -23,3 +23,7 @@
 <%= turbo_stream.update "cart" do %>
   <%= render partial: "cart_items/cart_contents", locals: { cart_items: Current.cart.cart_items.includes(:product).order('products.name ASC') } %>
 <% end %>
+
+<%# The free-delivery countdown reads the cart, so it refreshes with it. A no-op
+    on pages that do not mount the hint. %>
+<%= turbo_stream.replace "free_delivery_hint", partial: "shared/free_delivery_hint" %>

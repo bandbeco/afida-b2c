@@ -47,7 +47,6 @@ const lazyControllers = {
   "quantity-selector": () => import("../javascript/controllers/quantity_selector_controller"),
   "pricing-tier": () => import("../javascript/controllers/pricing_tier_controller"),
   "attach-companions": () => import("../javascript/controllers/attach_companions_controller"),
-  "free-delivery": () => import("../javascript/controllers/free_delivery_controller"),
   "faq-search": () => import("../javascript/controllers/faq_search_controller"),
   "header-search": () => import("../javascript/controllers/header_search_controller"),
   "nested-form": () => import("../javascript/controllers/nested_form_controller"),
