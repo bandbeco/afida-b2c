@@ -6,9 +6,9 @@
 <div data-test="product-sample-cta" class="mt-4 rounded-xl border-2 border-dashed border-primary/40 bg-primary/5 p-4">
   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
     <div class="flex-1">
-      <p class="text-base">Try before you buy</p>
+      <p class="text-base">Try this product before you buy it</p>
       <p class="text-sm text-base-content/70 mt-1">
-        Order this as a free sample. You only pay for delivery.
+        Add this as a free sample. You only pay for delivery.
       </p>
     </div>
     <%= form_with url: cart_cart_items_path,
@@ -20,8 +20,12 @@
       <%# Ghost, not an outlined primary: this sits below Add to Cart, and a
           second mint button beside the real one splits the decision. The ring
           keeps it legible as a control without competing for the eye. %>
+      <%# Names the action it performs: this adds to the cart and opens the
+          drawer, it does not place an order. "Order a free sample" promised a
+          finished transaction at the moment a buyer is weighing what the click
+          commits them to. %>
       <button type="submit" class="btn btn-ghost btn-sm whitespace-nowrap ring-1 ring-base-content/30 hover:ring-base-content/60">
-        Order a free sample
+        Add a free sample to cart
       </button>
     <% end %>
   </div>

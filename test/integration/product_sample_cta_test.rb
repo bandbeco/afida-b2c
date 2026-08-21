@@ -18,14 +18,26 @@ class ProductSampleCtaTest < ActionDispatch::IntegrationTest
     assert_select "[data-test='product-sample-cta'] form" do
       assert_select "input[name='product_id'][value=?]", @sample_eligible.id.to_s
       assert_select "input[name='sample'][value='true']"
-      assert_select "button[type='submit']", text: /Order a free sample/i
+      assert_select "button[type='submit']", text: /add a free sample to cart/i
+    end
+  end
+
+  # The control adds to the cart and opens the drawer; it does not place an
+  # order. "Order a free sample" promised a completed transaction at exactly
+  # the moment a buyer is judging what the click commits them to.
+  test "sample CTA names the action it actually performs" do
+    get product_path(@sample_eligible)
+
+    assert_select "[data-test='product-sample-cta'] button[type='submit']" do |buttons|
+      assert_no_match(/\border\b/i, buttons.first.text,
+                      "the sample button should not claim to place an order")
     end
   end
 
   test "sample CTA explains why a buyer would want a sample" do
     get product_path(@sample_eligible)
 
-    assert_select "[data-test='product-sample-cta']", text: /Try before you buy/i
+    assert_select "[data-test='product-sample-cta']", text: /Try this product before you buy it/i
   end
 
   # The sample route sits below Add to Cart as a secondary action. An outlined
