@@ -31,7 +31,7 @@ module Checkout
       apply_customer_details(session_params)
 
       Result.new(
-        session: Stripe::Checkout::Session.create(session_params),
+        session: create_stripe_session(session_params),
         invalid_discount_code: invalid_discount_code,
         zone: zone
       )
@@ -194,6 +194,55 @@ module Checkout
         resolved = ShippingZone.for(delivery_postcode)
         ShippingZone.deliverable?(resolved) ? resolved : :mainland
       end
+    end
+
+    # apply_discount can only check what the app knows (samples, and whether this
+    # customer has already had a first order). The coupon's own RESTRICTIONS live
+    # in Stripe (minimum_amount, first_time_transaction) and are evaluated here,
+    # at creation, so a code that resolved perfectly can still be refused.
+    #
+    # That refusal used to abort checkout entirely. Because the lookup had
+    # SUCCEEDED, invalid_discount? was false, so the controller's rescue never
+    # cleared the code: the customer bounced to the cart with Stripe's raw error
+    # and hit the same wall on every retry, with no UI to drop the code. A
+    # sub-£100 basket carrying the welcome code simply could not be bought.
+    #
+    # So we give up the coupon and keep the sale. The customer still owns the
+    # code for an order that qualifies, and reporting it through
+    # invalid_discount_code makes the controller clear it from the session, which
+    # is what stops the loop.
+    def create_stripe_session(session_params)
+      Stripe::Checkout::Session.create(session_params)
+    rescue Stripe::InvalidRequestError => e
+      raise unless discount_refused?(e) && session_params.key?(:discounts)
+
+      Rails.logger.warn("Stripe refused discount '#{discount_code}': #{e.message}")
+      @invalid_discount_code = discount_code.presence
+      Stripe::Checkout::Session.create(without_discount(session_params))
+    end
+
+    # Stripe signals a refused-by-its-own-conditions coupon with a distinct error
+    # code, so a card, network or configuration failure still surfaces as the
+    # real error it is instead of being retried into silence.
+    DISCOUNT_REFUSAL_CODES = %w[
+      promotion_code_amount_insufficient
+      coupon_expired
+      promotion_code_not_active
+    ].freeze
+
+    def discount_refused?(error)
+      DISCOUNT_REFUSAL_CODES.include?(error.code.to_s)
+    end
+
+    # Only the coupon is surrendered: line items, shipping and customer wiring are
+    # untouched, or the retry would sell a different order than the one priced.
+    # The promo-code FIELD stays on, so the customer can still type a current
+    # campaign code on the Stripe page.
+    def without_discount(session_params)
+      params = session_params.except(:discounts)
+      params[:metadata] = params[:metadata].except(:discount_code)
+      params[:allow_promotion_codes] = true
+      params
     end
 
     def apply_discount(session_params)

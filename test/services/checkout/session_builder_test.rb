@@ -278,6 +278,95 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_not captured_params[:metadata].key?(:discount_code)
   end
 
+
+  # --- the coupon's own conditions failing at Session.create ---
+  #
+  # apply_discount only checks the things the app can know: samples, and whether
+  # this customer has already had a first order. The coupon's RESTRICTIONS
+  # (minimum_amount, first_time_transaction) live in Stripe and are only
+  # evaluated when the session is actually created, so a code that resolves
+  # perfectly can still be refused one call later.
+  #
+  # That refusal used to kill the whole checkout: the raise escaped, and because
+  # the lookup had SUCCEEDED, invalid_discount? was false, so nothing cleared the
+  # code from the session. The customer bounced back to the cart with Stripe's raw
+  # error and hit the identical wall on every retry, with no way to drop the code.
+  # A sub-£100 basket carrying the welcome code was simply unable to check out.
+  #
+  # So an unusable coupon is dropped and the sale proceeds: buying is worth more
+  # than the discount, and the customer keeps the code for a qualifying order.
+  test "drops a coupon Stripe refuses at session creation and completes the checkout" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    stub_welcome_promotion_code
+
+    attempts = 0
+    Stripe::Checkout::Session.stubs(:create).with do |_params|
+      attempts += 1
+      true
+    end.raises(amount_insufficient_error).then.returns(build_stripe_session)
+
+    result = build_session(discount_code: "WELCOME5")
+
+    assert_equal 2, attempts, "the session should be retried once without the coupon"
+    assert_not_nil result.session, "the customer should still get a checkout session"
+    assert result.invalid_discount?, "the dropped code must be reported so the controller clears it"
+  end
+
+  test "retries without the discount but keeps the rest of the session identical" do
+    # Only the coupon is given up. Line items, shipping and the customer wiring
+    # must survive, or the retry would quietly sell a different order.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    stub_welcome_promotion_code
+
+    seen = []
+    attempts = 0
+    Stripe::Checkout::Session.stubs(:create).with do |params|
+      seen << params.deep_dup
+      attempts += 1
+      true
+    end.raises(amount_insufficient_error).then.returns(build_stripe_session)
+
+    build_session(discount_code: "WELCOME5")
+
+    first, second = seen
+    assert_equal first[:line_items], second[:line_items]
+    assert_nil second[:discounts], "the refused coupon must not be re-sent"
+    assert_not second[:metadata].key?(:discount_code)
+    assert_equal true, second[:allow_promotion_codes],
+                 "dropping this coupon must not withdraw the promo-code field"
+  end
+
+  test "does not retry a Stripe failure unrelated to the discount" do
+    # A card/network/config failure is a real error and must still surface;
+    # swallowing it behind a retry would hide genuine breakage.
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    stub_welcome_promotion_code
+
+    attempts = 0
+    Stripe::Checkout::Session.stubs(:create).with do |_params|
+      attempts += 1
+      true
+    end.raises(Stripe::InvalidRequestError.new("Something else broke", nil))
+
+    assert_raises(Stripe::InvalidRequestError) do
+      build_session(discount_code: "WELCOME5")
+    end
+    assert_equal 1, attempts, "only a discount refusal should be retried"
+  end
+
+  test "does not retry when the session carried no discount at all" do
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    attempts = 0
+    Stripe::Checkout::Session.stubs(:create).with do |_params|
+      attempts += 1
+      true
+    end.raises(amount_insufficient_error)
+
+    assert_raises(Stripe::InvalidRequestError) { build_session }
+    assert_equal 1, attempts
+  end
+
   test "does not apply a discount code to a samples-only cart" do
     # Samples are free; a samples-only order pays only shipping. A coupon would
     # discount (or zero) that shipping, so discounts are refused entirely.
@@ -727,6 +816,23 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     captured_params[:line_items].find do |li|
       li.dig(:price_data, :product_data, :metadata, "shipping_line") == "true"
     end
+  end
+
+  # A resolvable promotion code for the coupon, so apply_discount succeeds and
+  # the refusal happens where it really does: at Session.create.
+  def stub_welcome_promotion_code
+    Stripe::PromotionCode.stubs(:list)
+      .returns(stub(data: [ stub(id: "promo_test", code: "WELCOME10") ]))
+  end
+
+  # Stripe's refusal when a coupon's restrictions.minimum_amount is not met.
+  # The code is what identifies it; the message is Stripe's own wording.
+  def amount_insufficient_error
+    Stripe::InvalidRequestError.new(
+      "This promotion code cannot be redeemed because the order amount is too low.",
+      :promotion_code,
+      code: "promotion_code_amount_insufficient"
+    )
   end
 
   def build_session(discount_code: nil, delivery_postcode: nil, ui_mode: :hosted, return_url: nil)

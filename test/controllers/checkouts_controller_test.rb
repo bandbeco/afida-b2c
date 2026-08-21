@@ -583,6 +583,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   test "show renders the server discount row with the re-render target" do
     enable_onsite_checkout
+    # Above the coupon's £100 Stripe minimum, or there is no discount row to
+    # render (the setup cart is £20).
+    @cart_item.update!(quantity: 11)
     stub_welcome_promotion_code
     post email_subscriptions_path, params: { email: "promo-row@example.com" }
     Stripe::Checkout::Session.stubs(:create).returns(build_custom_stripe_session)
@@ -1430,6 +1433,29 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to cart_path
     assert_not_nil flash[:error]
+  end
+
+  # The live trap, end to end. Stripe evaluates the welcome coupon's £100
+  # minimum only when the session is created, so a sub-£100 basket carrying the
+  # code was refused there. The raise landed in the rescue whose guard is
+  # builder&.invalid_discount?, which was FALSE (the code resolved fine, its
+  # CONDITIONS failed), so the code was never cleared and the customer met the
+  # identical error on every retry with no way to remove it.
+  test "create completes the checkout when Stripe refuses the coupon as below its minimum" do
+    post email_subscriptions_path, params: { email: "below-minimum@example.com" }
+    assert_equal welcome_coupon_id, session[:discount_code]
+    stub_welcome_promotion_code
+
+    stripe_session = build_stripe_session
+    Stripe::Checkout::Session.stubs(:create)
+      .raises(StripeErrors.promotion_code_amount_insufficient)
+      .then.returns(stripe_session)
+
+    post checkout_path
+
+    assert_redirected_to stripe_session.url
+    assert_nil session[:discount_code], "the unusable code must be cleared, or the loop repeats"
+    assert_nil flash[:error], "the customer is checking out, not failing"
   end
 
   test "create clears invalid discount before handling later Stripe session errors" do

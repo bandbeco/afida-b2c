@@ -407,6 +407,18 @@ module StripeTestHelper
       Stripe::APIError.new("An error occurred with our API")
     end
 
+    # Stripe's refusal when a coupon's restrictions.minimum_amount is not met.
+    # The distinguishing signal is the error CODE, which is what the builder
+    # keys its drop-the-coupon retry on.
+    def self.promotion_code_amount_insufficient
+      Stripe::InvalidRequestError.new(
+        "This promotion code cannot be redeemed because the order amount is too low.",
+        :promotion_code,
+        code: "promotion_code_amount_insufficient",
+        http_status: 400
+      )
+    end
+
     def self.rate_limit_error
       Stripe::RateLimitError.new("Too many requests")
     end
