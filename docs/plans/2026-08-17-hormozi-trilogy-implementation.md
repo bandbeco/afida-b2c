@@ -30,8 +30,9 @@ The confirmation page is the shared surface: the continuity bonus card and the r
 
 ## Phase 2: next
 
-* [ ] **Cart-level compatible-lids upsell** (Money Model play 2, dev). Surface the lids prompt in the cart, not only on product pages.
-* [ ] **Free-delivery nudge in the cart** (Money Model play 2, dev). AOV £96 against the £100 threshold: "add £4 for free delivery" line.
+* [x] **Cart-level compatible-lids upsell** (Money Model play 2, dev). Shipped with the compatible-lids overhaul (master `23dfa764`, deployed 2026-08-20): 432 curated mappings, so lids now surface for every relevant SKU across the catalogue, plus the cart reminder.
+* [x] **Free-delivery nudge on the product page** (Money Model play 2, dev). AOV £96 against the £100 threshold: a status band under the buy box counting down the gap, refreshed over Turbo Streams as the cart changes, rendered from one `free_delivery_nudge` helper so the sentence cannot drift.
+* [ ] **Free-delivery nudge in the cart and cart drawer** (Money Model play 2, dev, in progress 2026-08-21). Same partial mounted on the two cart surfaces, where "Shipping: Calculated at checkout" is otherwise a dead end; each of the three coexisting copies needs its own DOM id so the streams cannot blank the wrong one. Covered by `test/integration/cart_free_delivery_hint_test.rb` (11 passing).
 * [ ] **Welcome offer reframed as free product** (Money Model play 2, dev). Test "free sleeve of lids with your first cup order" or free delivery against the 10% coupon at the same margin cost.
 * [ ] **Quantity tiers rendered as "buy 4 cases, get 1 free"** (Money Model play 2, dev). Same maths as the existing `pricing_tiers` per-unit break, better story.
 * [ ] **MAGIC naming pass over the sample flow and welcome offer** (Grand Slam play 5, dev). "Free samples" becomes "Free Café Packaging Starter Kit (choose 6, delivered tomorrow)"; the reframed welcome offer gets a name; batched with the reframes above.
