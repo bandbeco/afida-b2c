@@ -43,9 +43,13 @@
           which the DRAWER renders too: putting it in there would give the PDP
           two hints under one id.
 
-          Its own id rather than the buy box's, so the update stream can name it
-          separately. destroy/destroy_sample/create re-render the whole #cart
-          frame and carry it along; update does not, and names it explicitly. %>
+          Its own id rather than the buy box's, so the streams can name it
+          separately. destroy and destroy_sample re-render the whole #cart frame
+          and carry the band along; update and create_sample name it explicitly.
+          create re-renders the frame only when @refresh_cart_page is set (an
+          add submitted WITH from_cart_page, today just the lid reminder), which
+          is the only create reachable while this page is on screen. A new
+          create entry point added here must send that flag or name the band. %>
       <%= render "shared/free_delivery_hint", id: "cart_free_delivery_hint", spacing: "mt-4" %>
 
       <%= render "cart_items/checkout", cart: Current.cart %>

@@ -257,4 +257,50 @@ class CartFreeDeliveryHintTest < ActionDispatch::IntegrationTest
 
     assert_select "#cart_free_delivery_hint [data-test='free-delivery-progress'][style]", count: 0
   end
+
+  # --- every cart mutation must refresh every mounted band ---------------
+
+  # Each mutation either names cart_free_delivery_hint or re-renders the #cart
+  # frame that carries it. destroy_sample re-renders the frame; create_sample
+  # did neither, which made it the one stream in the family that would leave the
+  # cart page's band stale. Samples are only addable from the PDP and /samples
+  # today, so that was latent rather than live; pinned here so a sample control
+  # added to the cart page cannot reintroduce it silently.
+  test "adding a sample refreshes the cart page's band" do
+    sample = products(:single_wall_8oz_white)
+    assert sample.sample_eligible?, "fixture is not sample-eligible"
+
+    # product_id, not cart_item[sku]: create_sample_cart_item looks the product
+    # up by id (see sample_params). Posting the standard shape 400s, which would
+    # make this pass against an empty body.
+    post cart_cart_items_path,
+         params: { product_id: sample.id, sample: "true" },
+         as: :turbo_stream
+
+    assert_response :success
+    body = response.body
+    assert body.present?, "no stream rendered, so this asserts nothing"
+    refreshes_band = body.include?("cart_free_delivery_hint") ||
+                     Nokogiri::HTML5.fragment(body).css("turbo-stream").any? { |s| s["target"] == "cart" }
+
+    assert refreshes_band,
+      "create_sample neither named cart_free_delivery_hint nor re-rendered #cart"
+  end
+
+  # A samples-only cart holds items but no spend: samples are built at price 0,
+  # so line_items_count is positive while subtotal_amount is zero. The drawer's
+  # guard is the item count, so the band renders; the bar's guard is the
+  # subtotal, so it correctly does not. The buyer is shown the plain rule rather
+  # than a bar pinned at zero or a countdown from money nobody has spent.
+  test "a samples-only cart gets the rule without a bar" do
+    sample = products(:single_wall_8oz_white)
+    post cart_cart_items_path, params: { product_id: sample.id, sample: "true" }
+    assert_equal 0, Cart.find(session[:cart_id]).subtotal_amount
+
+    get root_path
+
+    assert_select "#drawer_free_delivery_hint", text: /over £100/i
+    assert_select "#drawer_free_delivery_hint [data-test='free-delivery-progress']", count: 0
+    assert_select "#drawer_free_delivery_hint[data-qualified='false']"
+  end
 end

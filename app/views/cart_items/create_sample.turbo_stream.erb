@@ -29,5 +29,13 @@
 <% end %>
 
 <%# The free-delivery countdown reads the cart, so it refreshes with it. A no-op
-    on pages that do not mount the hint. %>
+    on pages that do not mount the hint.
+    Both targets named, as in update: this stream does not re-render the #cart
+    frame the way destroy_sample does, so the cart page's band is only refreshed
+    by naming it. Samples are addable from the PDP and /samples today, neither of
+    which mounts that band, but the asymmetry with destroy_sample is what would
+    make a sample control on the cart page silently stale. %>
 <%= turbo_stream.replace "free_delivery_hint", partial: "shared/free_delivery_hint" %>
+<%= turbo_stream.replace "cart_free_delivery_hint",
+      partial: "shared/free_delivery_hint",
+      locals: { id: "cart_free_delivery_hint", spacing: "mt-4" } %>
