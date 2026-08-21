@@ -29,9 +29,14 @@ class CartsController < ApplicationController
     redirect_to cart_path
   end
 
+  # Empties the cart rather than deleting it. The record carries the visitor's
+  # session binding, its recovery token and any applied discount, so destroying
+  # it would strand session[:cart_id] on a deleted row and silently mint a new
+  # cart on the next request.
   def destroy
-    @cart.destroy
-    redirect_to root_path, notice: "Cart was successfully destroyed."
+    Current.cart.cart_items.destroy_all
+
+    redirect_to root_path, notice: "Your cart is now empty."
   end
 
   private

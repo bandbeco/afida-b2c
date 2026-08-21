@@ -5,6 +5,44 @@ class CartsControllerTest < ActionDispatch::IntegrationTest
     @product_variant = products(:one)
   end
 
+  # DELETE /cart
+  #
+  # Emptying the cart is a real button in the UI, and it ran against an @cart
+  # that this controller never assigned, so every click 500'd on nil. Every
+  # other action here reads Current.cart; so does this one now.
+  test "should empty the cart" do
+    post cart_cart_items_url, params: { cart_item: { sku: @product_variant.sku, quantity: 2 } }
+    cart = Cart.find(session[:cart_id])
+    assert_equal 1, cart.cart_items.count
+
+    delete cart_url
+
+    assert_redirected_to root_path
+    assert_equal 0, cart.reload.cart_items.count
+  end
+
+  # Destroying the record left session[:cart_id] pointing at a deleted row, so
+  # the next request had to fall back to building a fresh cart. Emptying the
+  # items keeps the visitor's cart identity, and with it any recovery link and
+  # applied discount.
+  test "emptying the cart keeps the same cart" do
+    get cart_url
+    cart_id = session[:cart_id]
+
+    delete cart_url
+
+    get cart_url
+    assert_equal cart_id, session[:cart_id]
+  end
+
+  test "emptying an already empty cart is harmless" do
+    get cart_url
+
+    delete cart_url
+
+    assert_redirected_to root_path
+  end
+
   # GET /cart
   test "should show cart for guest" do
     get cart_url
