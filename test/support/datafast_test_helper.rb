@@ -123,15 +123,6 @@ module DatafastTestHelper
     stub_request(:post, DATAFAST_AI_CRAWLS_ENDPOINT).to_timeout
   end
 
-  # Asserts an AI crawl was tracked, optionally matching payload fields
-  def assert_datafast_ai_crawl_tracked(href: nil, user_agent: nil)
-    assert_requested :post, DATAFAST_AI_CRAWLS_ENDPOINT do |req|
-      body = JSON.parse(req.body)
-      (href.nil? || body["href"] == href) &&
-        (user_agent.nil? || body.dig("ai", "userAgent") == user_agent)
-    end
-  end
-
   # Asserts no AI crawls were tracked
   def assert_no_datafast_ai_crawls_tracked
     assert_not_requested :post, DATAFAST_AI_CRAWLS_ENDPOINT

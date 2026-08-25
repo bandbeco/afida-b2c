@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "http"
-
 # Reports AI crawler visits (GPTBot, ClaudeBot, PerplexityBot, ...) to
 # DataFast's bot traffic API. These crawlers never run the client-side
 # analytics script, so they are invisible to normal pageview tracking and
@@ -15,11 +13,6 @@ require "http"
 #
 class DatafastBotTrafficService
   ENDPOINT = "https://datafa.st/api/ai-crawls"
-  # Must match the data-website-id / data-domain of the client-side script tag
-  # in app/views/layouts/application.html.erb.
-  WEBSITE_ID = "dfid_1CWdt0k6kD3HqR911G1Im"
-  DOMAIN = "afida.com"
-  TIMEOUT_SECONDS = 5
 
   class << self
     # @param href [String] Full URL the crawler requested
@@ -46,7 +39,7 @@ class DatafastBotTrafficService
     end
 
     send_crawl
-  rescue HTTP::Error, HTTP::TimeoutError => e
+  rescue HTTP::Error => e
     log_error("HTTP error: #{e.class} - #{e.message}")
     false
   rescue StandardError => e
@@ -57,9 +50,7 @@ class DatafastBotTrafficService
   private
 
   def send_crawl
-    response = client
-      .timeout(TIMEOUT_SECONDS)
-      .post(ENDPOINT, json: payload)
+    response = Datafast.http_client(auth_token).post(ENDPOINT, json: payload)
 
     if response.status.success?
       true
@@ -69,17 +60,10 @@ class DatafastBotTrafficService
     end
   end
 
-  # The Authorization header is only required once "Require authentication"
-  # is switched on in the DataFast bot traffic settings; without a configured
-  # token the request is sent unauthenticated.
-  def client
-    auth_token.present? ? HTTP.auth("Bearer #{auth_token}") : HTTP
-  end
-
   def payload
     {
-      websiteId: WEBSITE_ID,
-      domain: DOMAIN,
+      websiteId: Datafast::WEBSITE_ID,
+      domain: Datafast::DOMAIN,
       href: @href,
       ai: {
         userAgent: @user_agent,
@@ -90,6 +74,9 @@ class DatafastBotTrafficService
     }
   end
 
+  # Only required once "Require authentication" is switched on in the
+  # DataFast bot traffic settings; without a configured token the request
+  # is sent unauthenticated.
   def auth_token
     Rails.application.credentials.dig(:datafast, :bot_traffic_token)
   end

@@ -3,6 +3,9 @@
 require Rails.root.join("app/middleware/bot_traffic_tracking_middleware")
 
 # Reports AI crawler visits to DataFast (see BotTrafficTrackingMiddleware).
-# Sits at the bottom of the stack so requests already answered higher up
-# (static files, redirects) are not reported.
-Rails.application.config.middleware.use BotTrafficTrackingMiddleware
+# Placed above ActionDispatch::Static so crawls of static files in public/
+# — notably /llms.txt, the most crawler-targeted file on the site — are
+# seen. This also puts it above the exception renderer, so crawls of stale
+# URLs (production 404s) come back as ordinary status codes instead of
+# raising past the tracker.
+Rails.application.config.middleware.insert_before ActionDispatch::Static, BotTrafficTrackingMiddleware

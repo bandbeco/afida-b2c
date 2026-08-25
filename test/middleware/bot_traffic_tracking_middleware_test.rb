@@ -44,11 +44,53 @@ class BotTrafficTrackingMiddlewareTest < ActiveJob::TestCase
     assert_equal 404, enqueued[:args].first["status_code"]
   end
 
-  test "matches crawler keywords case-insensitively" do
+  test "tracks crawls that end in an exception, with the mapped status code" do
+    app = ->(env) { raise ActiveRecord::RecordNotFound, "gone" }
+    middleware = BotTrafficTrackingMiddleware.new(app)
+    env = env_for("https://afida.com/products/deleted", user_agent: GPTBOT_UA)
+
+    assert_raises ActiveRecord::RecordNotFound do
+      middleware.call(env)
+    end
+
+    tracking_jobs = enqueued_jobs.select { |job| job[:job] == DatafastBotTrafficJob }
+    assert_equal 1, tracking_jobs.size
+    enqueued = tracking_jobs.last
+    assert_equal 404, enqueued[:args].first["status_code"]
+  end
+
+  test "defers the enqueue to rack.after_reply when the server provides it" do
+    env = env_for("https://afida.com/", user_agent: GPTBOT_UA)
+    env["rack.after_reply"] = []
+
+    assert_no_enqueued_jobs do
+      @middleware.call(env)
+    end
+    assert_equal 1, env["rack.after_reply"].size
+
+    assert_enqueued_jobs 1, only: DatafastBotTrafficJob do
+      env["rack.after_reply"].each(&:call)
+    end
+  end
+
+  test "matches crawler tokens case-insensitively" do
     env = env_for("https://afida.com/", user_agent: "PerplexityBot/1.0")
 
     assert_enqueued_jobs 1, only: DatafastBotTrafficJob do
       @middleware.call(env)
+    end
+  end
+
+  test "matches known AI and search crawlers" do
+    [ "Mozilla/5.0; compatible; ClaudeBot/1.0; +claudebot@anthropic.com",
+      "cohere-ai/1.0",
+      "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)" ].each do |ua|
+      env = env_for("https://afida.com/", user_agent: ua)
+
+      assert_enqueued_jobs 1, only: DatafastBotTrafficJob do
+        @middleware.call(env)
+      end
+      clear_enqueued_jobs
     end
   end
 
@@ -57,6 +99,18 @@ class BotTrafficTrackingMiddlewareTest < ActiveJob::TestCase
 
     assert_no_enqueued_jobs do
       @middleware.call(env)
+    end
+  end
+
+  test "does not enqueue for human or non-AI-crawler user agents containing bare bot words" do
+    [ "Mozilla/5.0 (Linux; Android 10; Cubot X30 Build/QP1A.190711.020) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.185 Mobile Safari/537.36",
+      "Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)",
+      "GoogleHC/1.0" ].each do |ua|
+      env = env_for("https://afida.com/", user_agent: ua)
+
+      assert_no_enqueued_jobs do
+        @middleware.call(env)
+      end
     end
   end
 
@@ -69,9 +123,24 @@ class BotTrafficTrackingMiddlewareTest < ActiveJob::TestCase
     end
   end
 
-  test "does not enqueue for asset and rails-internal paths" do
+  test "scrubs invalid bytes from the user agent instead of dropping the crawl" do
+    binary_ua = "GPTBot/1.2 \xE9".dup.force_encoding(Encoding::ASCII_8BIT)
+    env = env_for("https://afida.com/", user_agent: binary_ua)
+
+    assert_enqueued_jobs 1, only: DatafastBotTrafficJob do
+      @middleware.call(env)
+    end
+    enqueued = enqueued_jobs.last
+    assert enqueued[:args].first["user_agent"].valid_encoding?
+    assert_includes enqueued[:args].first["user_agent"], "GPTBot/1.2"
+  end
+
+  test "does not enqueue for asset paths, static assets, or the health check" do
     [ "https://afida.com/assets/application-abc123.css",
-      "https://afida.com/rails/active_storage/blobs/abc" ].each do |url|
+      "https://afida.com/rails/active_storage/blobs/abc",
+      "https://afida.com/favicon.ico",
+      "https://afida.com/apple-touch-icon.png",
+      "https://afida.com/up" ].each do |url|
       env = env_for(url, user_agent: GPTBOT_UA)
 
       assert_no_enqueued_jobs do
@@ -80,8 +149,8 @@ class BotTrafficTrackingMiddlewareTest < ActiveJob::TestCase
     end
   end
 
-  test "still tracks robots.txt and llms.txt" do
-    [ "https://afida.com/robots.txt", "https://afida.com/llms.txt" ].each do |url|
+  test "still tracks robots.txt, llms.txt, and sitemap.xml" do
+    [ "https://afida.com/robots.txt", "https://afida.com/llms.txt", "https://afida.com/sitemap.xml" ].each do |url|
       env = env_for(url, user_agent: GPTBOT_UA)
 
       assert_enqueued_jobs 1, only: DatafastBotTrafficJob do

@@ -20,8 +20,8 @@ class DatafastBotTrafficServiceTest < ActiveSupport::TestCase
     assert result
     assert_requested :post, DATAFAST_AI_CRAWLS_ENDPOINT do |req|
       body = JSON.parse(req.body)
-      body["websiteId"] == DatafastBotTrafficService::WEBSITE_ID &&
-        body["domain"] == "afida.com" &&
+      body["websiteId"] == Datafast::WEBSITE_ID &&
+        body["domain"] == Datafast::DOMAIN &&
         body["href"] == @href &&
         body.dig("ai", "userAgent") == @user_agent &&
         body.dig("ai", "source") == "server_middleware"
