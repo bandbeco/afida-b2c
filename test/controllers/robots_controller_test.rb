@@ -41,6 +41,13 @@ class RobotsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "User-agent: Applebot-Extended"
   end
 
+  test "robots txt lists every crawler in the AiCrawlers registry" do
+    get "/robots.txt"
+    AiCrawlers::REGISTRY.each do |crawler|
+      assert_includes response.body, "User-agent: #{crawler.robots_token}"
+    end
+  end
+
   test "robots txt AI crawler blocks include disallow rules" do
     get "/robots.txt"
     # GPTBot section should have its own disallow rules

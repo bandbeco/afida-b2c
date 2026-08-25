@@ -44,12 +44,12 @@ module CategoriesHelper
   # Used to improve internal linking and cross-selling
   RELATED_CATEGORIES = {
     # Cups & Accessories subcategories
-    "hot-cups" => %w[cup-lids cup-accessories napkins],
-    "cold-cups-and-lids" => %w[cup-lids straws napkins],
-    "cup-lids" => %w[hot-cups cold-cups-and-lids cup-accessories],
-    "cup-accessories" => %w[cup-lids hot-cups cold-cups-and-lids],
+    "hot-cups" => %w[hot-cup-lids cup-accessories napkins],
+    "cold-cups-and-lids" => %w[hot-cup-lids straws napkins],
+    "hot-cup-lids" => %w[hot-cups cold-cups-and-lids cup-accessories],
+    "cup-accessories" => %w[hot-cup-lids hot-cups cold-cups-and-lids],
     "ice-cream-cups" => %w[napkins cutlery cold-cups-and-lids],
-    "straws" => %w[cold-cups-and-lids cup-lids napkins],
+    "straws" => %w[cold-cups-and-lids hot-cup-lids napkins],
     # Food Containers subcategories
     "pizza-boxes" => %w[napkins greaseproof-and-wraps bags],
     "takeaway-boxes" => %w[napkins cutlery bags],
@@ -139,7 +139,7 @@ module CategoriesHelper
     # Subcategories
     "hot-cups" => "What eco-friendly hot cups does Afida offer?",
     "cold-cups-and-lids" => "What eco-friendly cold cups does Afida offer?",
-    "cup-lids" => "What cup lids does Afida offer?",
+    "hot-cup-lids" => "What hot cup lids does Afida offer?",
     "cup-accessories" => "What cup accessories does Afida offer?",
     "ice-cream-cups" => "What eco-friendly ice cream cups does Afida offer?",
     "straws" => "What eco-friendly straws does Afida offer?",

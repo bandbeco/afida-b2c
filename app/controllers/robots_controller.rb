@@ -17,6 +17,16 @@ class RobotsController < ApplicationController
   # Add any staging/preview domains here to block search engine indexing
   STAGING_DOMAINS = %w[].freeze
 
+  CONTENT_SIGNAL = "Content-Signal: ai-train=yes, search=yes, ai-input=yes"
+
+  DISALLOW_RULES = <<~RULES
+    Disallow: /admin/
+    Disallow: /cart
+    Disallow: /checkout
+    Disallow: /signin
+    Disallow: /signup
+  RULES
+
   def robots_txt_content
     # Block all crawling on staging domains
     if staging_domain?
@@ -30,75 +40,30 @@ class RobotsController < ApplicationController
 
     <<~ROBOTS
       User-agent: *
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
+      #{CONTENT_SIGNAL}
       Allow: /
 
       # Disallow admin and checkout areas
-      Disallow: /admin/
-      Disallow: /cart
-      Disallow: /checkout
-      Disallow: /signin
-      Disallow: /signup
+      #{DISALLOW_RULES.strip}
 
       # AI Search Engine Crawlers - Explicitly Allowed
-      User-agent: GPTBot
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-      Disallow: /admin/
-      Disallow: /cart
-      Disallow: /checkout
-      Disallow: /signin
-      Disallow: /signup
-
-      User-agent: ChatGPT-User
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-
-      User-agent: OAI-SearchBot
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-
-      User-agent: ClaudeBot
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-      Disallow: /admin/
-      Disallow: /cart
-      Disallow: /checkout
-      Disallow: /signin
-      Disallow: /signup
-
-      User-agent: Claude-Web
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-
-      User-agent: PerplexityBot
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-      Disallow: /admin/
-      Disallow: /cart
-      Disallow: /checkout
-      Disallow: /signin
-      Disallow: /signup
-
-      User-agent: Google-Extended
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-
-      User-agent: Applebot-Extended
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-
-      User-agent: cohere-ai
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
-
-      User-agent: Diffbot
-      Content-Signal: ai-train=yes, search=yes, ai-input=yes
-      Allow: /
+      #{ai_crawler_sections.strip}
 
       # Sitemap
       Sitemap: #{base_url}/sitemap.xml
     ROBOTS
+  end
+
+  # One stanza per crawler in the shared AiCrawlers registry, which also
+  # drives BotTrafficTrackingMiddleware's User-Agent matching.
+  def ai_crawler_sections
+    AiCrawlers::REGISTRY.map { |crawler| ai_crawler_section(crawler) }.join("\n")
+  end
+
+  def ai_crawler_section(crawler)
+    section = +"User-agent: #{crawler.robots_token}\n#{CONTENT_SIGNAL}\nAllow: /\n"
+    section << DISALLOW_RULES if crawler.restricted
+    section
   end
 
   def staging_domain?

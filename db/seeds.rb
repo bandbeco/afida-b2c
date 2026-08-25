@@ -11,31 +11,45 @@
 require 'csv'
 
 puts "Loading categories metadata from CSV..."
-categories_metadata = {}
-CSV.foreach(Rails.root.join('lib', 'data', 'categories.csv'), headers: true) do |row|
-  data = row.to_h
-  slug = data['slug']&.strip
-  if slug
-    categories_metadata[slug] = {
-      name: data['name']&.strip&.gsub(/\s+/, ' '),
-      meta_title: data['meta_title']&.strip,
-      meta_description: data['meta_description']&.strip&.gsub(/\s+/, ' '),
-      description: data['description']&.strip
-    }
-  end
+categories_csv = CSV.read(Rails.root.join('lib', 'data', 'categories.csv'), headers: true)
+
+# Without this column every row looks top-level, which would silently flatten
+# the taxonomy and break every /categories/:parent_slug/:id URL.
+unless categories_csv.headers.include?('parent_slug')
+  raise "categories.csv is missing the parent_slug column — refusing to seed a flattened taxonomy"
 end
+
+category_rows = categories_csv.map(&:to_h).reject { |row| row['slug'].to_s.strip.blank? }
 puts "Categories metadata loaded."
 
-# Create categories from the metadata loaded from CSV
-puts "Creating categories..."
-categories_metadata.each do |slug, metadata|
-  category = Category.find_or_initialize_by(slug: slug)
-  category.name = metadata[:name]
-  category.meta_title = metadata[:meta_title]
-  category.meta_description = metadata[:meta_description]
-  category.description = metadata[:description]
+upsert_category = lambda do |row, parent|
+  category = Category.find_or_initialize_by(slug: row['slug'].strip)
+  category.name = row['name']&.strip&.gsub(/\s+/, ' ')
+  category.parent = parent
+  # Only assign copy the CSV actually carries. A blank cell means "no opinion",
+  # not "clear it": most rows ship blank and rely on the model's
+  # meta_*_with_fallback, and production holds copy this file does not.
+  category.meta_title = row['meta_title'].strip if row['meta_title'].present?
+  category.meta_description = row['meta_description'].strip.gsub(/\s+/, ' ') if row['meta_description'].present?
+  category.description = row['description'].strip if row['description'].present?
   category.save!
-  puts "  Created/Updated category: #{metadata[:name]} (#{slug})"
+  puts "  Created/Updated category: #{category.name} (#{category.slug})"
+  category
+end
+
+# Two passes: the taxonomy is nested (parent + subcategory), so a child cannot
+# be saved before its parent row exists. Rows with a blank parent_slug are the
+# top-level parents. See test/data/seed_data_test.rb for the shape this expects.
+puts "Creating categories..."
+parents = category_rows.select { |row| row['parent_slug'].blank? }.to_h do |row|
+  [ row['slug'].strip, upsert_category.call(row, nil) ]
+end
+
+category_rows.reject { |row| row['parent_slug'].blank? }.each do |row|
+  parent = parents.fetch(row['parent_slug'].strip) do
+    raise "categories.csv: #{row['slug']} names unknown parent #{row['parent_slug'].inspect}"
+  end
+  upsert_category.call(row, parent)
 end
 
 # Keep branded products category for custom products
@@ -46,6 +60,25 @@ branded_category = Category.find_or_create_by!(
   meta_description: "Custom branded packaging for your business."
 )
 puts "  Created/Updated category: Branded Products (branded-products)"
+
+# Seeding never deletes. A database seeded before the June 2026 restructure
+# still holds the old flat categories, which are no longer in the CSV: they
+# survive as empty top-level rows and, because they sort first, head the nav
+# and footer while linking to paths config/routes.rb 301s away.
+seeded_slugs = category_rows.map { |row| row['slug'].strip } + [ branded_category.slug ]
+stale_categories = Category.where.not(slug: seeded_slugs).order(:parent_id, :position)
+
+if stale_categories.any?
+  puts ""
+  puts "  WARNING: #{stale_categories.count} categor#{stale_categories.count == 1 ? 'y is' : 'ies are'} in the database but not in categories.csv."
+  puts "  These predate the current taxonomy. Top-level ones sort ahead of the real"
+  puts "  parents in the nav and footer. Review and remove them, or re-seed from scratch:"
+  stale_categories.each do |category|
+    location = category.parent_id ? "child of #{category.parent&.slug}" : "TOP-LEVEL"
+    puts "    - #{category.slug} (#{location}, #{category.products.count} products)"
+  end
+  puts ""
+end
 
 # Load products from consolidated CSV
 load Rails.root.join('db', 'seeds', 'products_from_csv.rb')

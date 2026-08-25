@@ -15,7 +15,6 @@ require "http"
 class DatafastService
   ENDPOINT = "https://datafa.st/api/v1/goals"
   VISITOR_ENDPOINT = "https://datafa.st/api/v1/visitors"
-  TIMEOUT_SECONDS = 5
   MAX_METADATA_KEYS = 10
 
   # How long to remember that a visitor has (or lacks) a recorded pageview, so
@@ -60,7 +59,7 @@ class DatafastService
     end
 
     send_goal
-  rescue HTTP::Error, HTTP::TimeoutError => e
+  rescue HTTP::Error => e
     log_error("HTTP error: #{e.class} - #{e.message}")
     false
   rescue StandardError => e
@@ -71,10 +70,7 @@ class DatafastService
   private
 
   def send_goal
-    response = HTTP
-      .auth("Bearer #{api_key}")
-      .timeout(TIMEOUT_SECONDS)
-      .post(ENDPOINT, json: payload)
+    response = Datafast.http_client(api_key).post(ENDPOINT, json: payload)
 
     if response.status.success?
       log_success
@@ -99,10 +95,7 @@ class DatafastService
   # event or resurfacing the FAILED alert whenever the cache is unhealthy.
   def visitor_has_pageviews?
     Rails.cache.fetch(visitor_cache_key, expires_in: VISITOR_VERDICT_TTL) do
-      response = HTTP
-        .auth("Bearer #{api_key}")
-        .timeout(TIMEOUT_SECONDS)
-        .get("#{VISITOR_ENDPOINT}/#{@visitor_id}")
+      response = Datafast.http_client(api_key).get("#{VISITOR_ENDPOINT}/#{@visitor_id}")
 
       case response.code
       when 200 then true

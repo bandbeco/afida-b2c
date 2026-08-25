@@ -14,6 +14,7 @@
 module DatafastTestHelper
   DATAFAST_ENDPOINT = "https://datafa.st/api/v1/goals"
   DATAFAST_VISITOR_ENDPOINT = "https://datafa.st/api/v1/visitors"
+  DATAFAST_AI_CRAWLS_ENDPOINT = "https://datafa.st/api/ai-crawls"
 
   # Stubs successful goal creation
   # @param response_body [Hash] Optional custom response body
@@ -103,6 +104,33 @@ module DatafastTestHelper
   # Asserts no goals were tracked
   def assert_no_datafast_goals_tracked
     assert_not_requested :post, DATAFAST_ENDPOINT
+  end
+
+  # Stubs successful AI crawl creation (bot traffic tracking)
+  def stub_datafast_ai_crawl_create
+    stub_request(:post, DATAFAST_AI_CRAWLS_ENDPOINT)
+      .to_return(status: 200, body: { success: true }.to_json, headers: { "Content-Type" => "application/json" })
+  end
+
+  # Stubs AI crawl creation with error response
+  def stub_datafast_ai_crawl_error(status: 400, error: "Bad Request")
+    stub_request(:post, DATAFAST_AI_CRAWLS_ENDPOINT)
+      .to_return(status: status, body: { error: error }.to_json)
+  end
+
+  # Stubs AI crawl creation timing out
+  def stub_datafast_ai_crawl_timeout
+    stub_request(:post, DATAFAST_AI_CRAWLS_ENDPOINT).to_timeout
+  end
+
+  # Asserts no AI crawls were tracked
+  def assert_no_datafast_ai_crawls_tracked
+    assert_not_requested :post, DATAFAST_AI_CRAWLS_ENDPOINT
+  end
+
+  # Sets up the optional bot traffic auth token in credentials (nil = unconfigured)
+  def stub_datafast_bot_traffic_token(token)
+    Rails.application.credentials.stubs(:dig).with(:datafast, :bot_traffic_token).returns(token)
   end
 
   # Sets up DataFast API key in credentials for testing

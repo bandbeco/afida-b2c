@@ -20,6 +20,23 @@ require "mocha/minitest"
 # Load test support files
 Dir[Rails.root.join("test/support/**/*.rb")].each { |f| require f }
 
+# Fixtures cannot load unless this role may disable foreign-key checks. Without
+# this, that shows up as thousands of identical foreign-key errors that name
+# the wrong cause. Fail once, early, and say how to fix it.
+if (message = ReferentialIntegrityCheck.failure_message(ActiveRecord::Base.lease_connection))
+  abort(message)
+end
+
+# Rails re-validates every foreign key after loading fixtures, by writing to
+# pg_catalog.pg_constraint. That is superuser-only and cannot be granted, so an
+# unprivileged role has to go without the check rather than fail 1,089 times
+# claiming the fixtures are invalid. CI runs as postgres and keeps it.
+unless ReferentialIntegrityCheck.can_verify_foreign_keys?(ActiveRecord::Base.lease_connection)
+  ActiveRecord.verify_foreign_keys_for_fixtures = false
+  warn "NOTE: skipping post-fixture foreign-key verification (needs superuser). " \
+       "See docs/runbooks/local-test-database.md."
+end
+
 module ActiveSupport
   class TestCase
     # Include N+1 query detection helpers

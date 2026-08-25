@@ -14,6 +14,7 @@ Strategy documents, point-in-time analyses, and work records.
 * [Bestsellers March to June 2026](/reports/bestsellers-2026-03-to-06.md) - Top products by revenue, units and orders from the production database.
 * [Timesheet June 2026](/reports/timesheet-2026-06.md) - Measured-elapsed billable hours for June 2026.
 * [Timesheet July 2026](/reports/timesheet-2026-07.md) - Measured-elapsed billable hours for July 2026.
+* [Seed Taxonomy Drift 2026-08-20](/reports/seed-taxonomy-drift-2026-08-20.md) - Why bin/setup stopped seeding: db:prepare never runs the hierarchy migration, so the seed CSVs still held the flat March taxonomy.
 
 # Superseded
 

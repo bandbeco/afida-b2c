@@ -68,7 +68,7 @@ cold-cups-and-lids:
   - question: "What sizes of cold cups do you offer?"
     answer: "We offer cold cups in sizes from 9oz to 20oz, suitable for everything from small juices to large smoothies and milkshakes."
 
-cup-lids:
+hot-cup-lids:
   - question: "Do your lids fit all cup brands?"
     answer: "Our lids are designed to fit standard cup sizes (8oz, 12oz, 16oz etc.) and work with most paper cup brands. We recommend ordering a sample to check the fit if you're switching from another supplier."
   - question: "What is the difference between sip lids and dome lids?"
