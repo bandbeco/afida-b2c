@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Load the Hetzner deploy SSH key from 1Password into the running ssh-agent,
+# so kamal commands (deploy, console, logs, shell...) can authenticate.
+# The key is piped straight into the agent and never touches disk.
+# bin/deploy runs this automatically; run it yourself before other kamal
+# commands in a fresh shell, e.g.: bin/load-deploy-key && bin/kamal console
+#
+# 1Password secret reference for the deploy key. Override with:
+#   OP_SSH_KEY_REF="op://<vault>/<item>/private key" bin/load-deploy-key
+OP_SSH_KEY_REF="${OP_SSH_KEY_REF:-op://Private/afida/private key}"
+
+if ! command -v op >/dev/null; then
+  echo "1Password CLI (op) not found on PATH" >&2
+  exit 1
+fi
+
+# ssh-add -l exits 1 for "agent running, no keys yet" (fine) and 2 for "no
+# agent reachable". Capture the status directly: inside `if ! ...`, $? holds
+# the negated pipeline's status, not ssh-add's.
+agent_status=0
+ssh-add -l >/dev/null 2>&1 || agent_status=$?
+if [ "$agent_status" -gt 1 ]; then
+  echo "No ssh-agent reachable; start one with: eval \$(ssh-agent)" >&2
+  exit 1
+fi
+
+# op read does not prompt for a sign-in itself; without a session it fails
+# with "You are not currently signed in". Sign in here (prompts on the tty)
+# so the session covers the read below.
+if ! op whoami >/dev/null 2>&1; then
+  eval "$(op signin)" || { echo "1Password sign-in failed" >&2; exit 1; }
+fi
+
+# Re-adding a key the agent already holds is a no-op, so repeat runs in one
+# session are fine without any fingerprint bookkeeping.
+op read "${OP_SSH_KEY_REF}?ssh-format=openssh" | ssh-add -

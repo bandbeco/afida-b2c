@@ -1,47 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Deploy via Kamal with the server SSH key loaded from 1Password.
-#
-# The key is piped from 1Password straight into the ssh-agent, so it never
-# touches disk. Run from a terminal: `op` prompts for your 1Password
-# password if the shell has no active session.
-#
-# Requires: op (1Password CLI) signed in to the account holding the key,
-# and an ssh-agent (`eval $(ssh-agent)` if none is running).
+# Deploy via Kamal with the server SSH key loaded from 1Password
+# (see bin/load-deploy-key).
 #
 # Usage: bin/deploy [kamal deploy args; defaults to --roles=web]
 
-# 1Password secret reference for the deploy key. Override with:
-#   OP_SSH_KEY_REF="op://<vault>/<item>/private key" bin/deploy
-OP_SSH_KEY_REF="${OP_SSH_KEY_REF:-op://Private/afida/private key}"
-
-if ! command -v op >/dev/null; then
-  echo "1Password CLI (op) not found on PATH" >&2
-  exit 1
-fi
-
-# ssh-add -l exits 1 for "agent running, no keys yet" (fine) and 2 for "no
-# agent reachable". Capture the status directly: inside `if ! ...`, $? holds
-# the negated pipeline's status, not ssh-add's.
-agent_status=0
-ssh-add -l >/dev/null 2>&1 || agent_status=$?
-if [ "$agent_status" -gt 1 ]; then
-  echo "No ssh-agent reachable; start one with: eval \$(ssh-agent)" >&2
-  exit 1
-fi
-
-# op read does not prompt for a sign-in itself; without a session it fails
-# with "You are not currently signed in". Sign in here (prompts on the tty)
-# so the session covers the read below.
-if ! op whoami >/dev/null 2>&1; then
-  eval "$(op signin)" || { echo "1Password sign-in failed" >&2; exit 1; }
-fi
-
-# Pipe the key from 1Password straight into the agent; it never touches
-# disk. Re-adding a key the agent already holds is a no-op, so repeat
-# deploys in one session are fine without any fingerprint bookkeeping.
-op read "${OP_SSH_KEY_REF}?ssh-format=openssh" | ssh-add -
+"$(dirname "$0")/load-deploy-key"
 
 # Default to --roles=web: plain `kamal deploy` aborts on the postgres
 # accessory host before retagging :latest and silently keeps serving the old
