@@ -22,11 +22,11 @@ class TelegramNotifier
   MAX_ITEM_LINES = 25
 
   # Asks Margot (our research bot) to profile the buyer, only on a customer's
-  # first order — returning customers are already known. For her to receive a
-  # message sent by this bot, both bots need Bot-to-Bot Communication Mode
-  # enabled in @BotFather, and Margot must be a group admin with Group Privacy
-  # Mode disabled (plain @mentions from bots are only delivered then).
-  RESEARCH_MENTION = "@margot_afida_bot research this prospect"
+  # first order — returning customers are already known. Telegram delivers a
+  # bot's message to another bot ONLY as a /command@TargetBot command mention
+  # (plain @mentions are not a delivery trigger), and only when at least one
+  # of the two bots has Bot-to-Bot Communication Mode enabled in @BotFather.
+  RESEARCH_MENTION = "/research@margot_afida_bot this prospect"
 
   class << self
     # Notifies the group chat that a new order has been placed.
