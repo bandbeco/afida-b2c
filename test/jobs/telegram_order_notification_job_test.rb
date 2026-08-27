@@ -13,6 +13,14 @@ class TelegramOrderNotificationJobTest < ActiveJob::TestCase
     TelegramOrderNotificationJob.perform_now(@order.id)
   end
 
+  test "enqueues a Margot research request for the order" do
+    TelegramNotifier.stubs(:notify_new_order)
+
+    assert_enqueued_with(job: MargotResearchJob, args: [ @order.id ]) do
+      TelegramOrderNotificationJob.perform_now(@order.id)
+    end
+  end
+
   test "does nothing when the order no longer exists" do
     TelegramNotifier.expects(:notify_new_order).never
 

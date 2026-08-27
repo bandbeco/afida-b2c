@@ -21,6 +21,14 @@ class TelegramNotifier
   MAX_MESSAGE_LENGTH = 4096
   MAX_ITEM_LINES = 25
 
+  # Asks Margot (our research bot) to profile the buyer, only on a customer's
+  # first order — returning customers are already known. Telegram never
+  # delivers this bot's messages to Margot directly (and a button cannot post
+  # as the user), so the notification carries a copy-text button: tapping it
+  # copies this mention for the human to paste and send in the group, which
+  # is the trigger Margot responds to.
+  RESEARCH_MENTION = "@margot_afida_bot research this prospect"
+
   class << self
     # Notifies the group chat that a new order has been placed.
     # @param order [Order]
@@ -66,12 +74,18 @@ class TelegramNotifier
   end
 
   def payload
-    {
+    payload = {
       chat_id: chat_id,
       text: build_message,
       parse_mode: "HTML",
       link_preview_options: { is_disabled: true }
     }
+    payload[:reply_markup] = research_button if @order.new_customer?
+    payload
+  end
+
+  def research_button
+    { inline_keyboard: [ [ { text: "🔍 Margot, research the client", copy_text: { text: RESEARCH_MENTION } } ] ] }
   end
 
   def build_message
@@ -83,6 +97,7 @@ class TelegramNotifier
     lines << "🛒 <b>New order #{esc(@order.display_number)}</b>"
     lines << ""
     lines << "👤 #{esc(customer_name)} (#{esc(@order.email)})"
+    lines << "📍 #{esc(@order.full_shipping_address)}"
     lines << "📦 #{line_items_count} line items / #{units_count} units · Total #{esc(formatted_total)}"
 
     if items.any?

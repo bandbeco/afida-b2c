@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Deploy via Kamal with the server SSH key loaded from 1Password
+# (see bin/load-deploy-key).
+#
+# Usage: bin/deploy [kamal deploy args; defaults to --roles=web]
+
+"$(dirname "$0")/load-deploy-key"
+
+# Default to --roles=web: plain `kamal deploy` aborts on the postgres
+# accessory host before retagging :latest and silently keeps serving the old
+# image (see docs/runbooks/deploying.md).
+if [ "$#" -eq 0 ]; then
+  set -- --roles=web
+fi
+
+exec "$(dirname "$0")/kamal" deploy "$@"

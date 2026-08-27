@@ -13,5 +13,9 @@ class TelegramOrderNotificationJob < ApplicationJob
     return unless order
 
     TelegramNotifier.notify_new_order(order)
+
+    # Margot's research lands in the same group, so it rides the same
+    # trigger; the job itself skips returning customers.
+    MargotResearchJob.perform_later(order.id)
   end
 end
