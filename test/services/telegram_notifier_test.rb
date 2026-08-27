@@ -168,6 +168,53 @@ class TelegramNotifierTest < ActiveSupport::TestCase
     assert_telegram_message_sent
   end
 
+  test "message includes the shipping address" do
+    stub_telegram_send_message
+
+    TelegramNotifier.notify_new_order(@order)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      JSON.parse(req.body)["text"].include?(@order.full_shipping_address)
+    end
+  end
+
+  test "tags Margot to research the prospect on a new customer's order" do
+    stub_telegram_send_message
+    make_new_customer!(@order)
+
+    TelegramNotifier.notify_new_order(@order)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      JSON.parse(req.body)["text"].end_with?(TelegramNotifier::RESEARCH_MENTION)
+    end
+  end
+
+  test "does not tag Margot when the customer has ordered before" do
+    stub_telegram_send_message
+    assert_not @order.new_customer?, "fixture should be a returning customer"
+
+    TelegramNotifier.notify_new_order(@order)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      !JSON.parse(req.body)["text"].include?("@margot_afida_bot")
+    end
+  end
+
+  test "truncation never cuts off the Margot mention" do
+    stub_telegram_send_message
+    make_new_customer!(@order)
+    item = @order.order_items.first
+    item.update!(product_name: "X" * 5000)
+
+    TelegramNotifier.notify_new_order(@order)
+
+    assert_requested :post, TELEGRAM_ENDPOINT do |req|
+      text = JSON.parse(req.body)["text"]
+      text.length <= TelegramNotifier::MAX_MESSAGE_LENGTH &&
+        text.end_with?(TelegramNotifier::RESEARCH_MENTION)
+    end
+  end
+
   test "falls back to email when shipping name is blank" do
     stub_telegram_send_message
     @order.update_columns(shipping_name: "")
@@ -177,5 +224,13 @@ class TelegramNotifierTest < ActiveSupport::TestCase
     assert_requested :post, TELEGRAM_ENDPOINT do |req|
       JSON.parse(req.body)["text"].include?(@order.email)
     end
+  end
+
+  private
+
+  # Detaches the order from its user and gives it an email no other order
+  # uses, so Order#new_customer? sees a first-time buyer.
+  def make_new_customer!(order)
+    order.update_columns(user_id: nil, email: "first-order@example.com")
   end
 end

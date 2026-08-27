@@ -21,6 +21,13 @@ class TelegramNotifier
   MAX_MESSAGE_LENGTH = 4096
   MAX_ITEM_LINES = 25
 
+  # Asks Margot (our research bot) to profile the buyer, only on a customer's
+  # first order — returning customers are already known. For her to receive a
+  # message sent by this bot, both bots need Bot-to-Bot Communication Mode
+  # enabled in @BotFather, and Margot must be a group admin with Group Privacy
+  # Mode disabled (plain @mentions from bots are only delivered then).
+  RESEARCH_MENTION = "@margot_afida_bot research this prospect"
+
   class << self
     # Notifies the group chat that a new order has been placed.
     # @param order [Order]
@@ -83,6 +90,7 @@ class TelegramNotifier
     lines << "🛒 <b>New order #{esc(@order.display_number)}</b>"
     lines << ""
     lines << "👤 #{esc(customer_name)} (#{esc(@order.email)})"
+    lines << "📍 #{esc(@order.full_shipping_address)}"
     lines << "📦 #{line_items_count} line items / #{units_count} units · Total #{esc(formatted_total)}"
 
     if items.any?
@@ -99,15 +107,18 @@ class TelegramNotifier
     lines << ""
     lines << "🔗 #{esc(admin_url)}"
 
-    truncate_message(lines.join("\n"))
+    return truncate_message(lines.join("\n")) unless @order.new_customer?
+
+    body = truncate_message(lines.join("\n"), limit: MAX_MESSAGE_LENGTH - RESEARCH_MENTION.length - 2)
+    "#{body}\n\n#{RESEARCH_MENTION}"
   end
 
   # Telegram rejects messages whose HTML doesn't parse, so a hard slice must
   # not leave a partial entity (e.g. "&amp;" cut to "&am") at the end.
-  def truncate_message(text)
-    return text if text.length <= MAX_MESSAGE_LENGTH
+  def truncate_message(text, limit: MAX_MESSAGE_LENGTH)
+    return text if text.length <= limit
 
-    text.first(MAX_MESSAGE_LENGTH).sub(/&[a-zA-Z#0-9]*\z/, "")
+    text.first(limit).sub(/&[a-zA-Z#0-9]*\z/, "")
   end
 
   def customer_name
