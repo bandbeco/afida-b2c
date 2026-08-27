@@ -178,40 +178,30 @@ class TelegramNotifierTest < ActiveSupport::TestCase
     end
   end
 
-  test "tags Margot to research the prospect on a new customer's order" do
+  test "adds a research button on a new customer's order" do
     stub_telegram_send_message
     make_new_customer!(@order)
 
     TelegramNotifier.notify_new_order(@order)
 
     assert_requested :post, TELEGRAM_ENDPOINT do |req|
-      JSON.parse(req.body)["text"].end_with?(TelegramNotifier::RESEARCH_MENTION)
+      button = JSON.parse(req.body).dig("reply_markup", "inline_keyboard", 0, 0)
+      button.present? &&
+        button["url"].start_with?("https://t.me/share/url?") &&
+        CGI.unescape(button["url"]).include?(TelegramNotifier::RESEARCH_MENTION) &&
+        CGI.unescape(button["url"]).include?("/admin/orders/#{@order.id}")
     end
   end
 
-  test "does not tag Margot when the customer has ordered before" do
+  test "no research button when the customer has ordered before" do
     stub_telegram_send_message
     assert_not @order.new_customer?, "fixture should be a returning customer"
 
     TelegramNotifier.notify_new_order(@order)
 
     assert_requested :post, TELEGRAM_ENDPOINT do |req|
-      !JSON.parse(req.body)["text"].include?("@margot_afida_bot")
-    end
-  end
-
-  test "truncation never cuts off the Margot mention" do
-    stub_telegram_send_message
-    make_new_customer!(@order)
-    item = @order.order_items.first
-    item.update!(product_name: "X" * 5000)
-
-    TelegramNotifier.notify_new_order(@order)
-
-    assert_requested :post, TELEGRAM_ENDPOINT do |req|
-      text = JSON.parse(req.body)["text"]
-      text.length <= TelegramNotifier::MAX_MESSAGE_LENGTH &&
-        text.end_with?(TelegramNotifier::RESEARCH_MENTION)
+      body = JSON.parse(req.body)
+      !body.key?("reply_markup") && !body["text"].include?("margot")
     end
   end
 

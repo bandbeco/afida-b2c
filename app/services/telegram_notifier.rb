@@ -22,11 +22,11 @@ class TelegramNotifier
   MAX_ITEM_LINES = 25
 
   # Asks Margot (our research bot) to profile the buyer, only on a customer's
-  # first order — returning customers are already known. Telegram delivers a
-  # bot's message to another bot ONLY as a /command@TargetBot command mention
-  # (plain @mentions are not a delivery trigger), and only when at least one
-  # of the two bots has Bot-to-Bot Communication Mode enabled in @BotFather.
-  RESEARCH_MENTION = "/research@margot_afida_bot this prospect"
+  # first order — returning customers are already known. Telegram never
+  # delivers this bot's messages to Margot directly, so the notification
+  # carries a share button instead: tapping it lets a human post this mention
+  # into the group as themselves, which is the trigger Margot responds to.
+  RESEARCH_MENTION = "@margot_afida_bot research this prospect"
 
   class << self
     # Notifies the group chat that a new order has been placed.
@@ -73,12 +73,24 @@ class TelegramNotifier
   end
 
   def payload
-    {
+    payload = {
       chat_id: chat_id,
       text: build_message,
       parse_mode: "HTML",
       link_preview_options: { is_disabled: true }
     }
+    payload[:reply_markup] = research_button if @order.new_customer?
+    payload
+  end
+
+  def research_button
+    { inline_keyboard: [ [ { text: "🔍 Research prospect", url: research_share_url } ] ] }
+  end
+
+  # Opens Telegram's share dialog prefilled with the admin order link and the
+  # Margot mention; the human picks the group and the message posts as them.
+  def research_share_url
+    "https://t.me/share/url?url=#{ERB::Util.url_encode(admin_url)}&text=#{ERB::Util.url_encode(RESEARCH_MENTION)}"
   end
 
   def build_message
@@ -107,18 +119,15 @@ class TelegramNotifier
     lines << ""
     lines << "🔗 #{esc(admin_url)}"
 
-    return truncate_message(lines.join("\n")) unless @order.new_customer?
-
-    body = truncate_message(lines.join("\n"), limit: MAX_MESSAGE_LENGTH - RESEARCH_MENTION.length - 2)
-    "#{body}\n\n#{RESEARCH_MENTION}"
+    truncate_message(lines.join("\n"))
   end
 
   # Telegram rejects messages whose HTML doesn't parse, so a hard slice must
   # not leave a partial entity (e.g. "&amp;" cut to "&am") at the end.
-  def truncate_message(text, limit: MAX_MESSAGE_LENGTH)
-    return text if text.length <= limit
+  def truncate_message(text)
+    return text if text.length <= MAX_MESSAGE_LENGTH
 
-    text.first(limit).sub(/&[a-zA-Z#0-9]*\z/, "")
+    text.first(MAX_MESSAGE_LENGTH).sub(/&[a-zA-Z#0-9]*\z/, "")
   end
 
   def customer_name
