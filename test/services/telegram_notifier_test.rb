@@ -187,9 +187,7 @@ class TelegramNotifierTest < ActiveSupport::TestCase
     assert_requested :post, TELEGRAM_ENDPOINT do |req|
       button = JSON.parse(req.body).dig("reply_markup", "inline_keyboard", 0, 0)
       button.present? &&
-        button["url"].start_with?("https://t.me/share/url?") &&
-        CGI.unescape(button["url"]).include?(TelegramNotifier::RESEARCH_MENTION) &&
-        CGI.unescape(button["url"]).include?("/admin/orders/#{@order.id}")
+        button.dig("copy_text", "text") == TelegramNotifier::RESEARCH_MENTION
     end
   end
 

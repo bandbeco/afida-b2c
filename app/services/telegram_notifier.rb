@@ -23,9 +23,10 @@ class TelegramNotifier
 
   # Asks Margot (our research bot) to profile the buyer, only on a customer's
   # first order — returning customers are already known. Telegram never
-  # delivers this bot's messages to Margot directly, so the notification
-  # carries a share button instead: tapping it lets a human post this mention
-  # into the group as themselves, which is the trigger Margot responds to.
+  # delivers this bot's messages to Margot directly (and a button cannot post
+  # as the user), so the notification carries a copy-text button: tapping it
+  # copies this mention for the human to paste and send in the group, which
+  # is the trigger Margot responds to.
   RESEARCH_MENTION = "@margot_afida_bot research this prospect"
 
   class << self
@@ -84,13 +85,7 @@ class TelegramNotifier
   end
 
   def research_button
-    { inline_keyboard: [ [ { text: "🔍 Research prospect", url: research_share_url } ] ] }
-  end
-
-  # Opens Telegram's share dialog prefilled with the admin order link and the
-  # Margot mention; the human picks the group and the message posts as them.
-  def research_share_url
-    "https://t.me/share/url?url=#{ERB::Util.url_encode(admin_url)}&text=#{ERB::Util.url_encode(RESEARCH_MENTION)}"
+    { inline_keyboard: [ [ { text: "🔍 Margot, research the client", copy_text: { text: RESEARCH_MENTION } } ] ] }
   end
 
   def build_message
