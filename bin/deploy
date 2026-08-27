@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Deploy via Kamal with the server SSH key loaded from 1Password.
+#
+# The key is piped from 1Password straight into the ssh-agent, so it never
+# touches disk. Run from a terminal: `op` prompts for your 1Password
+# password if the shell has no active session.
+#
+# Requires: op (1Password CLI) signed in to the account holding the key,
+# and an ssh-agent (`eval $(ssh-agent)` if none is running).
+#
+# Usage: bin/deploy [kamal deploy args, e.g. --roles=web]
+
+# 1Password secret reference for the deploy key. Override with:
+#   OP_SSH_KEY_REF="op://<vault>/<item>/private key" bin/deploy
+OP_SSH_KEY_REF="${OP_SSH_KEY_REF:-op://Private/afida deploy/private key}"
+
+if ! command -v op >/dev/null; then
+  echo "1Password CLI (op) not found on PATH" >&2
+  exit 1
+fi
+
+if ! ssh-add -l >/dev/null 2>&1; then
+  case $? in
+    1) ;; # agent running, no keys yet: fine
+    *) echo "No ssh-agent reachable; start one with: eval \$(ssh-agent)" >&2; exit 1 ;;
+  esac
+fi
+
+# Read the key once (op may prompt), keep it in memory only.
+key_material="$(op read "${OP_SSH_KEY_REF}?ssh-format=openssh")"
+fingerprint="$(printf '%s\n' "$key_material" | ssh-keygen -lf /dev/stdin | awk '{print $2}')"
+
+# Only load the key when the agent doesn't hold it already, so repeat
+# deploys in one session don't churn the agent.
+if ! ssh-add -l 2>/dev/null | grep -q "$fingerprint"; then
+  printf '%s\n' "$key_material" | ssh-add -
+fi
+unset key_material
+
+exec kamal deploy "$@"
