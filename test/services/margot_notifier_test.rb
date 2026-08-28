@@ -40,14 +40,14 @@ class MargotNotifierTest < ActiveSupport::TestCase
     end
   end
 
-  test "runs on the main agent with a persistent session so Margot has her full context" do
+  test "targets the afida agent and leaves session management to Margot's config" do
     stub_request(:post, HOOK_ENDPOINT).to_return(status: 200, body: { ok: true }.to_json)
 
     MargotNotifier.request_research(@order)
 
     assert_requested :post, HOOK_ENDPOINT do |req|
       body = JSON.parse(req.body)
-      body["agentId"] == "main" && body["sessionMode"] == "persistent"
+      body["agentId"] == "afida" && !body.key?("sessionMode") && !body.key?("sessionKey")
     end
   end
 

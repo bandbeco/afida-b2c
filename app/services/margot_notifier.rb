@@ -72,11 +72,11 @@ class MargotNotifier
     {
       message: research_prompt,
       name: "Research prospect #{@order.display_number}",
-      # Run on Margot's main agent with its persistent session: isolated
-      # sessions gave her a blank context and noticeably shallower research
-      # than when she is tagged in the group.
-      agentId: "main",
-      sessionMode: "persistent",
+      # Margot's agent id. Session management is deliberately left to her
+      # OpenClaw config (hooks.defaultSessionKey), so all order-research
+      # runs share one dedicated persistent session that the caller
+      # cannot redirect.
+      agentId: "afida",
       deliver: true,
       channel: "telegram",
       to: chat_id
@@ -87,7 +87,7 @@ class MargotNotifier
     items = @order.order_items.map { |item| "#{item.quantity}x #{item.product_name}" }.join(", ")
 
     <<~PROMPT
-      New first-time customer order #{@order.display_number} on afida.com — research this prospect properly, the way you do when we tag you in the group.
+      New first-time customer order #{@order.display_number} on afida.com — research this prospect properly, the way you do when we tag you in the group. This session has no chat history: search your memory for anything we already know about this customer, and research the web for everything else.
 
       Customer: #{customer_name} (#{@order.email})
       Shipping address: #{@order.full_shipping_address}
