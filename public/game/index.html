@@ -388,6 +388,92 @@
   }
   .footer-link a { color: var(--ink); }
 
+  /* ---------- Leaderboard ---------- */
+  .board {
+    width: min(92%, 340px);
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    background: var(--paper);
+    box-shadow: 0 5px 0 var(--ink);
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .board.hidden { display: none; }
+  .board-title {
+    font-weight: 500;
+    font-size: 0.75rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    text-align: center;
+    margin: 0;
+  }
+  .board ol {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .board li {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.9rem;
+  }
+  .board .rank {
+    font-weight: 500;
+    color: var(--deep);
+    min-width: 1.6em;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .board .who {
+    flex: 1;
+    text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .board .who a { color: var(--pink); }
+  .board .pts {
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .board-empty {
+    font-size: 0.85rem;
+    color: var(--muted);
+    margin: 0;
+    text-align: center;
+  }
+  .board-empty.hidden,
+  .fineprint.hidden { display: none; }
+  .lb-form {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+  }
+  .lb-form.hidden { display: none; }
+  .lb-form .btn { font-size: 0.9rem; padding: 12px 22px; }
+  .ig-input { width: 17ch; }
+  .fineprint {
+    font-size: 0.74rem;
+    color: var(--muted);
+    max-width: 32ch;
+    margin: 0;
+  }
+  .lb-result {
+    font-weight: 500;
+    font-size: 1.05rem;
+    color: var(--deep);
+    margin: 0;
+  }
+  .lb-result.hidden { display: none; }
+
   @media (prefers-reduced-motion: reduce) {
     .btn, .toast { transition: none; }
   }
@@ -414,6 +500,11 @@
     <div class="prize-line">Stack 15 &rarr; <span class="off">5% off</span></div>
     <button class="btn" id="playBtn">Play</button>
     <p class="howto">Tap, click or press space to drop. Sloppy drops get trimmed &mdash; waste less, stack more.</p>
+    <div class="board hidden" id="menuBoard">
+      <p class="board-title" id="boardTitle">Top stackers</p>
+      <ol id="boardList"></ol>
+      <p class="board-empty hidden" id="boardEmpty">Nobody yet this month. The board is yours for the taking.</p>
+    </div>
     <p class="footer-link"><a href="https://afida.com" rel="noopener">afida.com &mdash; eco-friendly packaging supplies</a></p>
   </div>
 
@@ -429,6 +520,15 @@
         <button class="copy" id="copyCode">Copy</button>
       </div>
       <p class="terms">Works at <a href="https://afida.com" rel="noopener">afida.com</a> checkout. Yes, even on the pizza boxes.</p>
+    </div>
+    <div class="share-card hidden" id="lbCard">
+      <p class="share-title">Monthly leaderboard</p>
+      <div class="lb-form" id="lbForm">
+        <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
+        <button class="btn" id="lbSubmit">Join the board</button>
+      </div>
+      <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Handles appear once we've approved them &mdash; we check for nonsense.</p>
+      <p class="lb-result hidden" id="lbResult"></p>
     </div>
     <div class="share-card">
       <p class="share-title">Challenge a friend</p>
@@ -598,6 +698,9 @@
   let score = 0, combo = 0, unlocked = false;
   let cam = 0, camTarget = 0, shake = 0, overAt = 0;
   let best = parseInt(store.get('afidaStackBest'), 10) || 0;
+  // Replay log for leaderboard verification: canvas width at game start plus
+  // the left edge of every landed drop. The server re-runs the slice math.
+  let dropLog = [], roundW = 0, roundBaseW = 0;
 
   function baseW() { return Math.max(120, Math.min(W * 0.46, 230)); }
   function speedFor(n) { return 1.9 + Math.min(n * 0.075, 2.3); }
@@ -610,7 +713,8 @@
     stack = []; debris = []; particles = []; confetti = [];
     score = 0; combo = 0; unlocked = false;
     cam = 0; camTarget = 0; shake = 0;
-    const w = baseW();
+    dropLog = []; roundW = W; roundBaseW = baseW();
+    const w = roundBaseW;
     stack.push({ x: (W - w) / 2, w, level: 0 });
     swing = { phase: Math.PI / 2, x: 0, w };
     falling = null;
@@ -641,9 +745,10 @@
     const dx = x - prev.x;
 
     if (Math.abs(dx) <= PERFECT_TOL) {
-      // Perfect: snap, tiny regrowth, streak
+      // Perfect: snap, tiny regrowth, streak (cap locked at round start so the
+      // server replay stays exact even if the window resizes mid-game)
       x = prev.x;
-      w = Math.min(prev.w + 4, baseW());
+      w = Math.min(prev.w + 4, roundBaseW);
       x -= (w - prev.w) / 2;
       combo++;
       sfx.perfect();
@@ -670,6 +775,7 @@
       toast(quip('trim'), false);
     }
 
+    dropLog.push(Math.round(falling.x * 100) / 100);
     stack.push({ x, w, level: falling.level });
     falling = null;
     score++;
@@ -727,6 +833,7 @@
       (beatScore ? ' · ' + (rivalName || 'Rival') + ': ' + beatScore : '');
     $('prizeCard').classList.toggle('hidden', !unlocked);
     refreshPreview();
+    prepareBoardCard();
     overEl.classList.remove('hidden');
   }
 
@@ -1047,6 +1154,109 @@
       prompt('Your code:', PROMO_CODE);
     }
   });
+
+  // ---------- Monthly leaderboard ----------
+  // Backed by the Rails endpoint at /game/leaderboard. When the game is served
+  // anywhere without that endpoint (previews, static mirrors) the fetch fails
+  // and every leaderboard element simply stays hidden.
+  const lb = { ok: false, token: null, entries: [], month: '' };
+  const igInput = $('igInput');
+  igInput.value = store.get('afidaStackIG') || '';
+
+  async function fetchBoard() {
+    try {
+      const r = await fetch('/game/leaderboard', { headers: { 'Accept': 'application/json' } });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      lb.ok = true;
+      lb.token = d.token;
+      lb.entries = d.entries || [];
+      lb.month = d.month || '';
+      renderBoard();
+    } catch {
+      lb.ok = false;
+    }
+  }
+
+  function renderBoard() {
+    if (!lb.ok) return;
+    $('menuBoard').classList.remove('hidden');
+    $('boardTitle').textContent = lb.month ? lb.month + ' — top stackers' : 'Top stackers';
+    const list = $('boardList');
+    list.textContent = '';
+    $('boardEmpty').classList.toggle('hidden', lb.entries.length > 0);
+    for (const e of lb.entries.slice(0, 5)) {
+      const li = document.createElement('li');
+      const rank = document.createElement('span');
+      rank.className = 'rank';
+      rank.textContent = e.rank + '.';
+      const who = document.createElement('span');
+      who.className = 'who';
+      who.textContent = e.name;
+      if (e.instagram_handle) {
+        who.append(' ');
+        const a = document.createElement('a');
+        a.href = 'https://instagram.com/' + encodeURIComponent(e.instagram_handle);
+        a.rel = 'noopener nofollow ugc';
+        a.target = '_blank';
+        a.textContent = '@' + e.instagram_handle;
+        who.append(a);
+      }
+      const pts = document.createElement('span');
+      pts.className = 'pts';
+      pts.textContent = e.score;
+      li.append(rank, who, pts);
+      list.append(li);
+    }
+  }
+
+  function prepareBoardCard() {
+    const card = $('lbCard');
+    card.classList.toggle('hidden', !lb.ok || score < 1);
+    $('lbForm').classList.remove('hidden');
+    $('lbNote').classList.remove('hidden');
+    $('lbResult').classList.add('hidden');
+    $('lbSubmit').disabled = false;
+    $('lbSubmit').textContent = 'Join the board';
+  }
+
+  $('lbSubmit').addEventListener('click', async () => {
+    const btn = $('lbSubmit');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    const handle = igInput.value.trim();
+    store.set('afidaStackIG', handle);
+    try {
+      const r = await fetch('/game/leaderboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          token: lb.token,
+          name: (nameInput.value.trim() || 'Stacker').slice(0, 14),
+          instagram_handle: handle,
+          canvas_width: roundW,
+          xs: dropLog
+        })
+      });
+      if (!r.ok) throw new Error(r.status);
+      const d = await r.json();
+      $('lbForm').classList.add('hidden');
+      $('lbNote').classList.add('hidden');
+      const result = $('lbResult');
+      result.textContent = 'You’re #' + d.rank + ' this month.' +
+        (d.rank <= 10 ? ' On the board.' : ' Top 10 gets the glory — go again.');
+      result.classList.remove('hidden');
+      fetchBoard();
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Try again';
+      const result = $('lbResult');
+      result.textContent = 'Couldn’t verify that run — give it another go.';
+      result.classList.remove('hidden');
+    }
+  });
+
+  fetchBoard();
 
   // ---------- Menu wiring ----------
   if (beatScore > 0) {

@@ -1,0 +1,55 @@
+<div class="py-4 sm:py-8">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Game Leaderboard</h1>
+  </div>
+
+  <p class="text-sm mb-4">
+    Approving an entry publishes its Instagram handle on the /game leaderboard.
+    Rejecting hides the entry entirely. Pending entries already show name and score.
+  </p>
+
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Instagram</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @entries.each do |entry| %>
+          <tr>
+            <td><%= entry.month.strftime("%b %Y") %></td>
+            <td class="font-medium"><%= entry.name %></td>
+            <td><%= entry.score %></td>
+            <td>
+              <% if entry.instagram_handle.present? %>
+                <%= link_to "@#{entry.instagram_handle}", "https://instagram.com/#{entry.instagram_handle}",
+                      target: "_blank", rel: "noopener nofollow", class: "link-inline" %>
+              <% end %>
+            </td>
+            <td>
+              <span class="badge badge-sm <%= { "pending" => "badge-warning", "approved" => "badge-success", "rejected" => "badge-ghost" }[entry.status] %>">
+                <%= entry.status %>
+              </span>
+            </td>
+            <td><%= entry.created_at.strftime("%d %b %H:%M") %></td>
+            <td class="flex gap-2">
+              <% unless entry.approved? %>
+                <%= button_to "Approve", approve_admin_leaderboard_entry_path(entry), method: :patch, class: "btn btn-sm btn-success" %>
+              <% end %>
+              <% unless entry.rejected? %>
+                <%= button_to "Reject", reject_admin_leaderboard_entry_path(entry), method: :patch, class: "btn btn-sm btn-outline" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>
