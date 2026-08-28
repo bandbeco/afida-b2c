@@ -510,9 +510,8 @@
     border-top: 6px solid transparent;
     border-bottom: 6px solid transparent;
     transition: transform 0.15s ease;
-    animation: blink 1.2s linear infinite;
   }
-  .fold[open] .chev { transform: rotate(90deg); animation: none; }
+  .fold[open] .chev { transform: rotate(90deg); }
   .fold-body {
     display: flex;
     flex-direction: column;
@@ -676,7 +675,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .btn, .toast, .chev, .hint { transition: none; }
-    .hint, .blink, .chev { animation: none; }
+    .hint, .blink { animation: none; }
   }
 </style>
 </head>
