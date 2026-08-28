@@ -152,6 +152,16 @@
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
   .toast.pink { background: var(--pink); color: var(--paper); }
+  /* Flavour quips ride low, over the settled base of the tower, so they never
+     cover the landing zone; only big moments use the centred toast. */
+  .toast.low {
+    top: auto;
+    bottom: calc(96px + env(safe-area-inset-bottom));
+    font-size: 0.95rem;
+    letter-spacing: 0.02em;
+    padding: 8px 16px;
+    box-shadow: 0 3px 0 var(--ink);
+  }
   .toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
 
   /* ---------- Overlays ---------- */
@@ -874,7 +884,7 @@
       x -= (w - prev.w) / 2;
       combo++;
       sfx.perfect();
-      toast(combo > 1 ? 'Perfect ×' + combo + ' — ' + quip('streak') : quip('perfect'), false);
+      toast(combo > 1 ? 'Perfect ×' + combo + ' — ' + quip('streak') : quip('perfect'), false, true);
       burst(x + w / 2, sy(towerTopWorldY(falling.level)) - BLOCK_H / 2, DEEP, 14);
     } else {
       const left = Math.max(x, prev.x);
@@ -894,7 +904,7 @@
       x = left; w = overlap;
       combo = 0;
       sfx.land();
-      toast(quip('trim'), false);
+      toast(quip('trim'), false, true);
     }
 
     dropLog.push(Math.round(falling.x * 100) / 100);
@@ -961,9 +971,10 @@
 
   // ---------- Toast ----------
   let toastTimer = 0;
-  function toast(msg, pink) {
+  function toast(msg, pink, low) {
     toastEl.textContent = msg;
     toastEl.classList.toggle('pink', !!pink);
+    toastEl.classList.toggle('low', !!low);
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1400);
