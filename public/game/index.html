@@ -383,15 +383,6 @@
     text-shadow: 0 0 10px rgba(199, 154, 99, 0.5);
   }
   .prize-line .off { color: var(--green); text-shadow: var(--glow-green); }
-  .credit {
-    font-family: var(--font);
-    font-size: 0.55rem;
-    line-height: 1.7;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin: 0;
-  }
 
   /* ---------- Game over ---------- */
   .over-title {
@@ -740,8 +731,7 @@
     <div class="challenge hidden" id="challengeBanner"></div>
     <div class="prize-line">Bonus: stack <span id="winTarget">15</span> for <span class="off">5% off</span></div>
     <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
-    <button class="btn" id="playBtn">Press start</button>
-    <p class="credit blink">Insert coin? No need &mdash; free play</p>
+    <button class="btn" id="playBtn"><span class="blink">Press start</span></button>
     <details class="fold board hidden" id="menuBoard">
       <summary><span id="boardLead">Hi-score table</span><span class="chev" aria-hidden="true"></span></summary>
       <div class="fold-body">
