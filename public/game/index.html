@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="description" content="The eco-packaging arcade game from Afida. Stack it recklessly high, unlock 5% off your next order.">
 <meta property="og:title" content="The Afida Stack">
 <meta property="og:description" content="Quality packaging supplies. Stacked recklessly high. Reach 15 and win 5% off at afida.com — think you can beat my tower?">
@@ -43,6 +44,8 @@
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
     overflow: hidden;
+    overscroll-behavior: none;
+    -webkit-tap-highlight-color: transparent;
   }
   .shell {
     position: relative;
@@ -120,8 +123,8 @@
     font-family: var(--font);
     font-weight: 500;
     font-size: 1rem;
-    width: 42px;
-    height: 42px;
+    width: 44px;
+    height: 44px;
     background: var(--paper);
     border: 3px solid var(--ink);
     border-radius: 9999px;
@@ -531,6 +534,19 @@
   }
   .lb-result.hidden { display: none; }
 
+  /* Short viewports (most phones in portrait with browser chrome, and any
+     landscape phone): tighten the overlays so nothing important scrolls away. */
+  @media (max-height: 720px) {
+    .overlay { gap: 10px; padding-top: 16px; }
+    .logo-hero { width: min(46vw, 180px); }
+    .title { font-size: clamp(2.6rem, 12vw, 4rem); }
+    .final { font-size: clamp(3.4rem, 18vw, 5rem); }
+    .board { padding: 10px 14px; gap: 6px; }
+    .share-card, .prize-card { padding: 12px 14px; gap: 8px; }
+    .howto { font-size: 0.95rem; }
+    .btn { padding: 13px 30px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .btn, .toast { transition: none; }
   }
@@ -568,13 +584,15 @@
     </div>
     <p class="tagline">Quality packaging supplies. Stacked recklessly high.</p>
     <div class="challenge hidden" id="challengeBanner"></div>
-    <div class="prize-line">Stack 15 &rarr; <span class="off">5% off</span></div>
+    <div class="prize-line">Stack <span id="winTarget">15</span> &rarr; <span class="off">5% off</span></div>
+    <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
     <button class="btn" id="playBtn">Play</button>
     <p class="howto">Tap, click or press space to drop. Sloppy drops get trimmed &mdash; waste less, stack more.</p>
     <div class="board hidden" id="menuBoard">
       <p class="board-title" id="boardTitle">Top stackers</p>
       <ol id="boardList"></ol>
       <p class="board-empty hidden" id="boardEmpty">Nobody yet this month. The board is yours for the taking.</p>
+      <p class="fineprint">Top stacker this month gets a shoutout from @afidasupplies.</p>
     </div>
     <p class="footer-link"><a href="https://afida.com" rel="noopener"><svg class="logo-inline" viewBox="0 0 456.039 149.71" role="img" aria-label="afida.com"><use href="#afidaLogo"></use></svg><span>eco-friendly packaging supplies</span></a></p>
   </div>
@@ -585,12 +603,12 @@
     <div class="final" id="finalScore">0</div>
     <p class="best-line" id="bestLine">Best: 0</p>
     <div class="prize-card hidden" id="prizeCard">
-      <p class="won">You've won 5% off</p>
+      <p class="won">You've won 5% off your next order</p>
       <div class="code-row">
         <span class="code" id="promoCode">STACK5</span>
         <button class="copy" id="copyCode">Copy code</button>
       </div>
-      <p class="terms">Works at <a href="https://afida.com" rel="noopener">afida.com</a> checkout. Yes, even on the pizza boxes.</p>
+      <p class="terms">On a typical order that's a sleeve of cups on us. This month only, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
     </div>
     <div class="share-card hidden" id="lbCard">
       <p class="share-title">Monthly leaderboard</p>
@@ -609,6 +627,7 @@
         <button class="btn pink" id="copyShare">Copy challenge</button>
         <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
       </div>
+      <p class="fineprint hidden" id="inviteProgress"></p>
     </div>
     <button class="btn ghost" id="againBtn">Stack again</button>
     <p class="footer-link"><a href="https://afida.com" rel="noopener"><svg class="logo-inline" viewBox="0 0 456.039 149.71" role="img" aria-label="afida.com"><use href="#afidaLogo"></use></svg><span>eco-friendly packaging supplies</span></a></p>
@@ -631,7 +650,8 @@
   const BLOCK_H = 46;
   const MIN_OVERLAP = 10;
   const PERFECT_TOL = 7;
-  const WIN_SCORE = 15;
+  const BASE_WIN = 15;
+  const INVITED_WIN = 12;
   const PROMO_CODE = 'STACK5';
   const BASE_H = 78;
   const SWING_Y = 96;
@@ -710,6 +730,20 @@
   const params = new URLSearchParams(location.search);
   const beatScore = Math.min(999, parseInt(params.get('beat'), 10) || 0);
   const rivalName = (params.get('by') || '').replace(/[<>&"']/g, '').slice(0, 14).trim();
+  // My shareable referral code (earned with the first board submission), and
+  // the code of whoever invited me here. Arriving via an invite lowers the
+  // prize threshold — the link is worth something to the person receiving it.
+  let myCode = null;
+  try { myCode = localStorage.getItem('afidaStackRefCode') || null; } catch {}
+  let inviterCode = (params.get('ref') || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 12) || null;
+  if (inviterCode && inviterCode === myCode) inviterCode = null;
+  const winScore = inviterCode ? INVITED_WIN : BASE_WIN;
+
+  // Haptics for phones that support it (silently ignored elsewhere)
+  function buzz(pattern) {
+    if (reducedMotion) return;
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch {}
+  }
 
   // ---------- Sound ----------
   let audio = null;
@@ -740,10 +774,10 @@
   }
   const sfx = {
     drop: () => beep(240, 0.08, 'square', 0.05),
-    land: () => beep(150, 0.12, 'triangle', 0.12),
-    perfect: () => { beep(660, 0.09, 'square', 0.07); beep(880, 0.12, 'square', 0.07, 0.07); },
-    win: () => [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.16, 'square', 0.08, i * 0.11)),
-    over: () => { beep(220, 0.18, 'sawtooth', 0.07); beep(150, 0.3, 'sawtooth', 0.07, 0.15); }
+    land: () => { beep(150, 0.12, 'triangle', 0.12); buzz(8); },
+    perfect: () => { beep(660, 0.09, 'square', 0.07); beep(880, 0.12, 'square', 0.07, 0.07); buzz(18); },
+    win: () => { [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.16, 'square', 0.08, i * 0.11)); buzz([30, 40, 60]); },
+    over: () => { beep(220, 0.18, 'sawtooth', 0.07); beep(150, 0.3, 'sawtooth', 0.07, 0.15); buzz(50); }
   };
 
   // ---------- Brand logo (drawn onto the canvas base) ----------
@@ -800,7 +834,7 @@
     falling = null;
     state = 'play';
     scoreEl.textContent = '0';
-    prizePill.textContent = '5% off at ' + WIN_SCORE;
+    prizePill.textContent = '5% off at ' + winScore;
     prizePill.classList.remove('unlocked');
     hud.classList.add('playing');
     menuEl.classList.add('hidden');
@@ -861,7 +895,7 @@
     score++;
     scoreEl.textContent = score;
     if (!reducedMotion) shake = 5;
-    if (score >= WIN_SCORE && !unlocked) unlockPrize();
+    if (score >= winScore && !unlocked) unlockPrize();
     if (score > best) { best = score; store.set('afidaStackBest', String(best)); }
 
     camTarget = Math.max(0, towerTopWorldY(stack.length) - H * 0.62);
@@ -905,9 +939,9 @@
     state = 'over';
     hud.classList.remove('playing');
     $('overTitle').textContent =
-      score >= WIN_SCORE ? 'Certified stacker' :
+      score >= winScore ? 'Certified stacker' :
       score === best && score > 0 ? 'New personal best' : 'Tower down';
-    $('overQuip').textContent = score >= WIN_SCORE ? quip('win') : quip('over');
+    $('overQuip').textContent = score >= winScore ? quip('win') : quip('over');
     $('finalScore').textContent = score;
     $('bestLine').textContent = 'Best: ' + best +
       (beatScore ? ' · ' + (rivalName || 'Rival') + ': ' + beatScore : '');
@@ -1183,7 +1217,8 @@
     const url = new URL(location.origin + location.pathname);
     url.searchParams.set('beat', String(score));
     if (name) url.searchParams.set('by', name);
-    const brag = score >= WIN_SCORE
+    if (myCode) url.searchParams.set('ref', myCode);
+    const brag = score >= winScore
       ? `\u{1F964}\u{1F4E6} I stacked ${score} crates of eco-packaging and won 5% off at afida.com`
       : `\u{1F964}\u{1F4E6} I stacked ${score} on The Afida Stack before it all came down`;
     return `${brag}\nYour move: ${url.toString()}`;
@@ -1242,23 +1277,34 @@
 
   async function fetchBoard() {
     try {
-      const r = await fetch('/game/leaderboard', { headers: { 'Accept': 'application/json' } });
+      const url = '/game/leaderboard' + (myCode ? '?me=' + encodeURIComponent(myCode) : '');
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       lb.ok = true;
       lb.token = d.token;
       lb.entries = d.entries || [];
       lb.month = d.month || '';
+      lb.me = d.me || null;
       renderBoard();
+      renderInviteProgress();
     } catch {
       lb.ok = false;
     }
   }
 
+  function daysUntilReset() {
+    const now = new Date();
+    const next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return Math.max(1, Math.ceil((next - now) / 86400000));
+  }
+
   function renderBoard() {
     if (!lb.ok) return;
     $('menuBoard').classList.remove('hidden');
-    $('boardTitle').textContent = lb.month ? lb.month + ' — top stackers' : 'Top stackers';
+    const days = daysUntilReset();
+    const reset = ' · resets in ' + days + (days === 1 ? ' day' : ' days');
+    $('boardTitle').textContent = (lb.month || 'Top stackers') + reset;
     const list = $('boardList');
     list.textContent = '';
     $('boardEmpty').classList.toggle('hidden', lb.entries.length > 0);
@@ -1287,6 +1333,21 @@
     }
   }
 
+  // Invite milestones: things, not percentages. Fulfilment is manual — the
+  // player quotes their code, the entry in admin shows the verified count.
+  function renderInviteProgress() {
+    const el = $('inviteProgress');
+    if (!lb.ok || !myCode) { el.classList.add('hidden'); return; }
+    const n = lb.me ? lb.me.referrals : 0;
+    const code = myCode.toUpperCase();
+    el.textContent =
+      n >= 5 ? 'Free case of cups unlocked (' + n + ' invites) — quote code ' + code + ' with your next order.' :
+      n >= 3 ? 'Samples box unlocked — quote code ' + code + '. A free case of cups at 5 invites (' + n + '/5).' :
+      n >= 1 ? 'Verified invites: ' + n + '/3 — a free samples box at 3.' :
+      'Invite a café: 3 verified invites earn a free samples box.';
+    el.classList.remove('hidden');
+  }
+
   function prepareBoardCard() {
     const card = $('lbCard');
     card.classList.toggle('hidden', !lb.ok || score < 1);
@@ -1312,11 +1373,16 @@
           name: (nameInput.value.trim() || 'Stacker').slice(0, 14),
           instagram_handle: handle,
           canvas_width: roundW,
-          xs: dropLog
+          xs: dropLog,
+          ref: inviterCode || undefined
         })
       });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
+      if (d.ref_code && !myCode) {
+        myCode = d.ref_code;
+        store.set('afidaStackRefCode', myCode);
+      }
       $('lbForm').classList.add('hidden');
       $('lbNote').classList.add('hidden');
       const result = $('lbResult');
@@ -1347,6 +1413,8 @@
   buildDemoTower();
   addEventListener('resize', () => { if (state === 'menu') buildDemoTower(); });
 
+  $('winTarget').textContent = winScore;
+  if (inviterCode) $('refBoost').classList.remove('hidden');
   if (beatScore > 0) {
     challengeBanner.textContent =
       (rivalName || 'A rival') + ' stacked ' + beatScore + '. Your move.';

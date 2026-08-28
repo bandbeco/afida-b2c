@@ -9,6 +9,11 @@ class LeaderboardEntry < ApplicationRecord
 
   enum :status, { pending: "pending", approved: "approved", rejected: "rejected" }, default: "pending"
 
+  # The entry whose share link brought this player in.
+  belongs_to :referrer, class_name: "LeaderboardEntry", optional: true
+
+  before_create { self.ref_code ||= generate_ref_code }
+
   # Instagram allows letters, digits, dots and underscores; the game's name
   # input caps at 14 characters, mirrored here.
   normalizes :instagram_handle, with: ->(h) { h.to_s.strip.delete_prefix("@").downcase }
@@ -34,5 +39,24 @@ class LeaderboardEntry < ApplicationRecord
 
   def public_handle
     instagram_handle if approved? && instagram_handle.present?
+  end
+
+  # Invites that count toward referral rewards: one per distinct address, and
+  # never the referrer's own (playing your own link in a private window earns
+  # nothing). An intentionally blunt proxy for "a different café played".
+  def verified_referrals
+    self.class.where(referrer: self)
+      .where.not(submitter_ip: submitter_ip)
+      .where.not(submitter_ip: nil)
+      .distinct.count(:submitter_ip)
+  end
+
+  private
+
+  def generate_ref_code
+    loop do
+      code = SecureRandom.alphanumeric(6).downcase
+      break code unless self.class.exists?(ref_code: code)
+    end
   end
 end

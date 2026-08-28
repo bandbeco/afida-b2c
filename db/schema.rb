@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -251,12 +251,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_170000) do
     t.string "instagram_handle"
     t.date "month", null: false
     t.string "name", null: false
+    t.string "ref_code"
+    t.bigint "referrer_id"
     t.jsonb "replay"
     t.integer "score", null: false
     t.string "status", default: "pending", null: false
     t.string "submitter_ip"
     t.datetime "updated_at", null: false
     t.index ["month", "score"], name: "index_leaderboard_entries_on_month_and_score"
+    t.index ["ref_code"], name: "index_leaderboard_entries_on_ref_code", unique: true
+    t.index ["referrer_id"], name: "index_leaderboard_entries_on_referrer_id"
     t.index ["status"], name: "index_leaderboard_entries_on_status"
     t.index ["submitter_ip", "created_at"], name: "index_leaderboard_entries_on_submitter_ip_and_created_at"
   end
@@ -555,6 +559,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_170000) do
   add_foreign_key "collection_category_guides", "collections", on_delete: :cascade
   add_foreign_key "collection_items", "collections"
   add_foreign_key "collection_items", "products"
+  add_foreign_key "leaderboard_entries", "leaderboard_entries", column: "referrer_id"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "organizations"

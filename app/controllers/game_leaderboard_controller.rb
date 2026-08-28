@@ -23,13 +23,17 @@ class GameLeaderboardController < ApplicationController
 
   def index
     entries = LeaderboardEntry.current_top
-    render json: {
+    payload = {
       month: Date.current.strftime("%B %Y"),
       token: self.class.token_verifier.generate({ "issued_at" => Time.current.to_i }),
       entries: entries.map.with_index(1) do |entry, rank|
         { rank: rank, name: entry.name, score: entry.score, instagram_handle: entry.public_handle }
       end
     }
+    if params[:me].present? && (mine = LeaderboardEntry.find_by(ref_code: params[:me].to_s.downcase))
+      payload[:me] = { ref_code: mine.ref_code, referrals: mine.verified_referrals }
+    end
+    render json: payload
   end
 
   def create
@@ -56,10 +60,11 @@ class GameLeaderboardController < ApplicationController
       status: screening.clean? && auto_approve? ? "approved" : "pending",
       flags: screening.flags,
       submitter_ip: request.remote_ip,
+      referrer: credited_referrer,
       replay: { canvas_width: params[:canvas_width], xs: params[:xs] }
     )
     if entry.save
-      render json: { rank: entry.rank, score: entry.score }, status: :created
+      render json: { rank: entry.rank, score: entry.score, ref_code: entry.ref_code }, status: :created
     else
       render_rejection("invalid_entry")
     end
@@ -71,6 +76,15 @@ class GameLeaderboardController < ApplicationController
   # review again (e.g. during a spam wave). Flagged entries always wait.
   def auto_approve?
     ENV.fetch("LEADERBOARD_AUTO_APPROVE", "true") != "false"
+  end
+
+  # The referrer named by the share link, unless it points back at the
+  # submitter's own address (self-invites earn nothing).
+  def credited_referrer
+    return nil if params[:ref].blank?
+
+    referrer = LeaderboardEntry.find_by(ref_code: params[:ref].to_s.downcase)
+    referrer unless referrer&.submitter_ip == request.remote_ip
   end
 
   def verified_issued_at

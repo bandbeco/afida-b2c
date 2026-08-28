@@ -164,6 +164,49 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "a submission returns the entry's referral code" do
+    post game_leaderboard_path, params: valid_submission(xs: perfectish_run(4)), as: :json
+
+    assert_response :created
+    assert_equal LeaderboardEntry.last.ref_code, response.parsed_body["ref_code"]
+  end
+
+  test "playing through a referral link credits the referrer" do
+    referrer = LeaderboardEntry.create!(name: "Host", score: 9, submitter_ip: "9.9.9.9")
+
+    post game_leaderboard_path, params: valid_submission(ref: referrer.ref_code, xs: perfectish_run(4)), as: :json
+
+    assert_response :created
+    assert_equal referrer, LeaderboardEntry.last.referrer
+  end
+
+  test "a referral from the referrer's own address is not credited" do
+    referrer = LeaderboardEntry.create!(name: "Host", score: 9, submitter_ip: "127.0.0.1")
+
+    post game_leaderboard_path, params: valid_submission(ref: referrer.ref_code, xs: perfectish_run(4)), as: :json
+
+    assert_response :created
+    assert_nil LeaderboardEntry.last.referrer
+  end
+
+  test "an unknown referral code is ignored" do
+    post game_leaderboard_path, params: valid_submission(ref: "nosuch", xs: perfectish_run(4)), as: :json
+
+    assert_response :created
+    assert_nil LeaderboardEntry.last.referrer
+  end
+
+  test "the board reports invite progress for a returning player" do
+    mine = LeaderboardEntry.create!(name: "Me", score: 9, submitter_ip: "9.9.9.9")
+    LeaderboardEntry.create!(name: "Guest", score: 4, referrer: mine, submitter_ip: "2.2.2.2")
+
+    get game_leaderboard_path(me: mine.ref_code)
+
+    assert_response :success
+    assert_equal 1, response.parsed_body.dig("me", "referrals")
+    assert_equal mine.ref_code, response.parsed_body.dig("me", "ref_code")
+  end
+
   test "rank counts only better visible scores this month" do
     LeaderboardEntry.create!(name: "Top", score: 50, status: "approved")
     LeaderboardEntry.create!(name: "Cheat", score: 60, status: "rejected")
