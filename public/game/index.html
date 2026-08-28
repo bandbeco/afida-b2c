@@ -308,11 +308,12 @@
     border-radius: 20px;
     background: var(--green);
     box-shadow: 0 6px 0 var(--ink);
-    padding: 14px 20px;
+    padding: 16px 20px;
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
+    width: min(92%, 340px);
   }
   .prize-card.hidden { display: none; }
   .prize-card .won {
@@ -322,30 +323,43 @@
     text-transform: uppercase;
     margin: 0;
   }
-  .code-row { display: flex; gap: 8px; align-items: stretch; }
+  .code-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    width: 100%;
+  }
   .code {
     font-weight: 500;
-    font-size: 1.7rem;
-    letter-spacing: 0.12em;
+    font-size: 2.2rem;
+    letter-spacing: 0.18em;
+    text-align: center;
     background: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 12px;
-    padding: 6px 16px;
+    border: 3px dashed var(--ink);
+    border-radius: 14px;
+    padding: 10px 16px;
   }
   .copy {
     font-family: var(--font);
     font-weight: 500;
-    font-size: 0.75rem;
+    font-size: 1.05rem;
     letter-spacing: 0.08em;
     text-transform: uppercase;
     background: var(--ink);
     color: var(--paper);
     border: 3px solid var(--ink);
-    border-radius: 12px;
-    padding: 6px 14px;
+    border-radius: 9999px;
+    box-shadow: 0 5px 0 color-mix(in srgb, var(--ink) 40%, var(--deep));
+    padding: 14px 26px;
     cursor: pointer;
+    transition: transform 0.06s ease, box-shadow 0.06s ease;
   }
-  .copy:active { background: var(--deep); border-color: var(--deep); }
+  .copy:hover { background: #1f2937; }
+  .copy:active {
+    transform: translateY(4px);
+    box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 40%, var(--deep));
+  }
   .prize-card .terms { font-size: 0.74rem; margin: 0; max-width: 30ch; }
   .prize-card .terms a { color: var(--ink); }
   .share-card {
@@ -574,7 +588,7 @@
       <p class="won">You've won 5% off</p>
       <div class="code-row">
         <span class="code" id="promoCode">STACK5</span>
-        <button class="copy" id="copyCode">Copy</button>
+        <button class="copy" id="copyCode">Copy code</button>
       </div>
       <p class="terms">Works at <a href="https://afida.com" rel="noopener">afida.com</a> checkout. Yes, even on the pizza boxes.</p>
     </div>
@@ -1211,8 +1225,8 @@
   });
   $('copyCode').addEventListener('click', async () => {
     if (await copyText(PROMO_CODE)) {
-      $('copyCode').textContent = 'Copied';
-      setTimeout(() => { $('copyCode').textContent = 'Copy'; }, 1500);
+      $('copyCode').textContent = 'Copied!';
+      setTimeout(() => { $('copyCode').textContent = 'Copy code'; }, 1500);
     } else {
       prompt('Your code:', PROMO_CODE);
     }
