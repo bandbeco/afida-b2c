@@ -83,11 +83,20 @@ class MargotNotifier
     items = @order.order_items.map { |item| "#{item.quantity}x #{item.product_name}" }.join(", ")
 
     <<~PROMPT
-      New first-time customer order #{@order.display_number} on afida.com. Research this prospect and post your findings to the group.
+      New first-time customer order #{@order.display_number} on afida.com — research this prospect properly, the way you do when we tag you in the group.
 
       Customer: #{customer_name} (#{@order.email})
       Shipping address: #{@order.full_shipping_address}
-      Order: #{items} - total #{number_to_currency(@order.total_amount, unit: "£")}
+      Order: #{items} — total #{number_to_currency(@order.total_amount, unit: "£")}
+
+      Dig deep:
+      - Identify the actual business behind the order: trading name, venue, what they sell. The email and shipping address are your best leads — and check whether the address is a second or new location (opening stock is a strong buying signal).
+      - Companies House: registered company, directors, incorporation date, latest filings, what the finances suggest.
+      - Reviews and reach: Google and Tripadvisor ratings with review counts, delivery platforms, website, social presence, and whether the owner engages personally.
+      - Contacts: phone, public emails, and who the likely buyer is.
+      - The sales angle: what this order says about their operation and what recurring packaging needs they will have.
+
+      Post your findings to the group in your usual style: lead with the most interesting insight, score the prospect out of 10 with your reasoning, include links, and keep it punchy. If you can't confirm something, say so rather than padding.
     PROMPT
   end
 
