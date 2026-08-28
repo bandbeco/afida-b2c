@@ -307,12 +307,51 @@
   .copy:active { background: var(--deep); border-color: var(--deep); }
   .prize-card .terms { font-size: 0.74rem; margin: 0; max-width: 30ch; }
   .prize-card .terms a { color: var(--ink); }
-  .name-row {
+  .share-card {
+    border: 3px solid var(--ink);
+    border-radius: 20px;
+    background: var(--paper);
+    box-shadow: 0 6px 0 var(--ink);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    width: min(92%, 380px);
+  }
+  .share-title {
+    font-weight: 500;
+    font-size: 0.8rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    margin: 0;
+  }
+  .share-preview {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    background: var(--mist);
+    border: 2px dashed #d1d5db;
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin: 0;
+    text-align: left;
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+    width: 100%;
+  }
+  .share-actions {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: center;
+  }
+  .share-actions .btn { font-size: 0.95rem; padding: 12px 26px; }
+  .share-actions .btn.hidden { display: none; }
+  .clipboard-stage {
+    position: fixed;
+    top: -100px;
+    left: 0;
+    opacity: 0;
   }
   .name-input {
     font-family: var(--font);
@@ -375,9 +414,14 @@
       </div>
       <p class="terms">Works at <a href="https://afida.com" rel="noopener">afida.com</a> checkout. Yes, even on the pizza boxes.</p>
     </div>
-    <div class="name-row">
+    <div class="share-card">
+      <p class="share-title">Challenge a friend</p>
       <input class="name-input" id="nameInput" maxlength="14" placeholder="Your name" autocomplete="off">
-      <button class="btn pink" id="shareBtn">Challenge a friend</button>
+      <p class="share-preview" id="sharePreview"></p>
+      <div class="share-actions">
+        <button class="btn pink" id="copyShare">Copy challenge</button>
+        <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
+      </div>
     </div>
     <button class="btn ghost" id="againBtn">Stack again</button>
     <p class="footer-link"><a href="https://afida.com" rel="noopener">afida.com &mdash; eco-friendly packaging supplies</a></p>
@@ -609,6 +653,7 @@
     $('bestLine').textContent = 'Best: ' + best +
       (beatScore ? ' · ' + (rivalName || 'Rival') + ': ' + beatScore : '');
     $('prizeCard').classList.toggle('hidden', !unlocked);
+    refreshPreview();
     overEl.classList.remove('hidden');
   }
 
@@ -873,6 +918,7 @@
 
   // ---------- Share ----------
   const nameInput = $('nameInput');
+  const sharePreview = $('sharePreview');
   nameInput.value = store.get('afidaStackName') || '';
   function shareText() {
     const name = nameInput.value.replace(/[<>&"']/g, '').trim().slice(0, 14);
@@ -885,24 +931,46 @@
       : `\u{1F964}\u{1F4E6} I stacked ${score} on The Afida Stack before it all came down`;
     return `${brag}\nYour move: ${url.toString()}`;
   }
-  $('shareBtn').addEventListener('click', async () => {
-    const text = shareText();
-    if (navigator.share) {
-      try { await navigator.share({ text }); return; } catch {}
-    }
+  function refreshPreview() { sharePreview.textContent = shareText(); }
+  nameInput.addEventListener('input', refreshPreview);
+
+  // Clipboard API needs a secure context; fall back to execCommand elsewhere
+  async function copyText(text) {
     try {
-      await navigator.clipboard.writeText(text);
-      toast('Challenge copied!', true);
-    } catch {
+      if (navigator.clipboard) { await navigator.clipboard.writeText(text); return true; }
+    } catch {}
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.className = 'clipboard-stage';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch { return false; }
+  }
+  const copyShareBtn = $('copyShare');
+  copyShareBtn.addEventListener('click', async () => {
+    const text = shareText();
+    if (await copyText(text)) {
+      copyShareBtn.textContent = 'Copied!';
+      setTimeout(() => { copyShareBtn.textContent = 'Copy challenge'; }, 1600);
+    } else {
       prompt('Copy your challenge:', text);
     }
   });
+  const shareBtn = $('shareBtn');
+  if (navigator.share) shareBtn.classList.remove('hidden');
+  shareBtn.addEventListener('click', async () => {
+    try { await navigator.share({ text: shareText() }); } catch {}
+  });
   $('copyCode').addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(PROMO_CODE);
+    if (await copyText(PROMO_CODE)) {
       $('copyCode').textContent = 'Copied';
       setTimeout(() => { $('copyCode').textContent = 'Copy'; }, 1500);
-    } catch {
+    } else {
       prompt('Your code:', PROMO_CODE);
     }
   });
