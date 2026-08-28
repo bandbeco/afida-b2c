@@ -252,7 +252,7 @@
   .btn.pink:hover { background: #ff5290; }
   .btn.ghost { background: var(--paper); font-size: 0.95rem; padding: 12px 26px; }
   .btn.ghost:hover { background: var(--mist); }
-  :is(.btn, .mute, .copy, .name-input):focus-visible {
+  :is(.btn, .mute, .copy, .name-input, .fold > summary):focus-visible {
     outline: 3px solid var(--deep);
     outline-offset: 3px;
   }
@@ -365,25 +365,54 @@
   }
   .prize-card .terms { font-size: 0.74rem; margin: 0; max-width: 30ch; }
   .prize-card .terms a { color: var(--ink); }
-  .share-card {
+  /* Collapsible sections: whichever one the outcome makes relevant opens as
+     the hero; the rest wait as single quiet rows. */
+  .fold {
     border: 3px solid var(--ink);
     border-radius: 20px;
     background: var(--paper);
     box-shadow: 0 6px 0 var(--ink);
-    padding: 14px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
     width: min(92%, 380px);
   }
-  .share-title {
+  .fold.hidden { display: none; }
+  .fold > summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
     font-weight: 500;
     font-size: 0.8rem;
     letter-spacing: 0.16em;
     text-transform: uppercase;
+    padding: 15px 18px;
+  }
+  .fold > summary::-webkit-details-marker { display: none; }
+  .chev {
+    width: 8px;
+    height: 8px;
+    border-right: 3px solid var(--ink);
+    border-bottom: 3px solid var(--ink);
+    transform: rotate(-45deg) translateY(-1px);
+    transition: transform 0.15s ease;
+  }
+  .fold[open] .chev { transform: rotate(45deg); }
+  .fold-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+    padding: 2px 16px 16px;
+  }
+  .share-pitch {
+    font-weight: 500;
+    font-size: 1rem;
+    line-height: 1.4;
+    max-width: 28ch;
     margin: 0;
   }
+  .share-pitch.hidden { display: none; }
   .share-preview {
     font-size: 0.8rem;
     line-height: 1.45;
@@ -542,13 +571,15 @@
     .title { font-size: clamp(2.6rem, 12vw, 4rem); }
     .final { font-size: clamp(3.4rem, 18vw, 5rem); }
     .board { padding: 10px 14px; gap: 6px; }
-    .share-card, .prize-card { padding: 12px 14px; gap: 8px; }
+    .prize-card { padding: 12px 14px; gap: 8px; }
+    .fold > summary { padding: 12px 16px; }
+    .fold-body { padding: 0 14px 12px; gap: 8px; }
     .howto { font-size: 0.95rem; }
     .btn { padding: 13px 30px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    .btn, .toast { transition: none; }
+    .btn, .toast, .chev { transition: none; }
   }
 </style>
 </head>
@@ -610,27 +641,31 @@
       </div>
       <p class="terms">On a typical order that's a sleeve of cups on us. This month only, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
     </div>
-    <div class="share-card hidden" id="lbCard">
-      <p class="share-title">Monthly leaderboard</p>
-      <div class="lb-form" id="lbForm">
-        <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
-        <button class="btn" id="lbSubmit">Join the board</button>
+    <details class="fold" id="challengeFold">
+      <summary>Challenge a mate<span class="chev" aria-hidden="true"></span></summary>
+      <div class="fold-body">
+        <p class="share-pitch hidden" id="sharePitch"></p>
+        <input class="name-input" id="nameInput" maxlength="14" placeholder="Your name" autocomplete="off">
+        <p class="share-preview" id="sharePreview"></p>
+        <div class="share-actions">
+          <button class="btn pink" id="copyShare">Copy challenge</button>
+          <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
+        </div>
+        <p class="fineprint hidden" id="inviteProgress"></p>
       </div>
-      <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Anything dodgy gets pulled.</p>
-      <p class="lb-result hidden" id="lbResult"></p>
-    </div>
-    <div class="share-card">
-      <p class="share-title">Challenge a friend</p>
-      <input class="name-input" id="nameInput" maxlength="14" placeholder="Your name" autocomplete="off">
-      <p class="share-preview" id="sharePreview"></p>
-      <div class="share-actions">
-        <button class="btn pink" id="copyShare">Copy challenge</button>
-        <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
+    </details>
+    <details class="fold hidden" id="lbFold">
+      <summary>Monthly leaderboard<span class="chev" aria-hidden="true"></span></summary>
+      <div class="fold-body">
+        <div class="lb-form" id="lbForm">
+          <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
+          <button class="btn" id="lbSubmit">Join the board</button>
+        </div>
+        <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Anything dodgy gets pulled.</p>
+        <p class="lb-result hidden" id="lbResult"></p>
       </div>
-      <p class="fineprint hidden" id="inviteProgress"></p>
-    </div>
+    </details>
     <button class="btn ghost" id="againBtn">Stack again</button>
-    <p class="footer-link"><a href="https://afida.com" rel="noopener"><svg class="logo-inline" viewBox="0 0 456.039 149.71" role="img" aria-label="afida.com"><use href="#afidaLogo"></use></svg><span>eco-friendly packaging supplies</span></a></p>
   </div>
 </main>
 
@@ -944,17 +979,36 @@
     sfx.over();
   }
 
+  // One hero per outcome: the prize when the run won, the challenge share
+  // when the score is worth bragging about, and a plain "go again" for a
+  // short one. Everything else waits behind a collapsed fold.
+  const BRAG_SCORE = 5;
   function showOverScreen() {
     state = 'over';
     hud.classList.remove('playing');
+    const won = score >= winScore;
+    const low = score < BRAG_SCORE;
     $('overTitle').textContent =
-      score >= winScore ? 'Certified stacker' :
+      won ? 'Certified stacker' :
       score === best && score > 0 ? 'New personal best' : 'Tower down';
-    $('overQuip').textContent = score >= winScore ? quip('win') : quip('over');
+    $('overQuip').textContent = won ? quip('win') : quip('over');
     $('finalScore').textContent = score;
     $('bestLine').textContent = 'Best: ' + best +
       (beatScore ? ' · ' + (rivalName || 'Rival') + ': ' + beatScore : '');
     $('prizeCard').classList.toggle('hidden', !unlocked);
+
+    const fold = $('challengeFold');
+    fold.classList.toggle('hidden', low);
+    fold.open = !won && !low;
+    const pitch = $('sharePitch');
+    pitch.classList.toggle('hidden', won || low);
+    if (!won && !low) {
+      pitch.textContent = beatScore && score > beatScore
+        ? (rivalName || 'Your rival') + ' has been dealt with. Pick the next one.'
+        : score + ' stacks and no witnesses. Fix that.';
+    }
+    $('againBtn').classList.toggle('ghost', !low);
+
     refreshPreview();
     prepareBoardCard();
     overEl.classList.remove('hidden');
@@ -1392,8 +1446,9 @@
   }
 
   function prepareBoardCard() {
-    const card = $('lbCard');
-    card.classList.toggle('hidden', !lb.ok || score < 1);
+    const fold = $('lbFold');
+    fold.classList.toggle('hidden', !lb.ok || score < BRAG_SCORE);
+    fold.open = false;
     $('lbForm').classList.remove('hidden');
     $('lbNote').classList.remove('hidden');
     $('lbResult').classList.add('hidden');
