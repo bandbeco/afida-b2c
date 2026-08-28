@@ -40,10 +40,22 @@ class GameLeaderboardController < ApplicationController
     return render_rejection("invalid_replay") unless replay.valid?
     return render_rejection("too_fast") if Time.current - issued_at < replay.score * MIN_SECONDS_PER_DROP
 
+    screening = Game::EntryScreening.new(
+      name: params[:name].to_s.strip,
+      instagram_handle: params[:instagram_handle],
+      score: replay.score,
+      perfect_ratio: replay.perfect_ratio,
+      current_best: LeaderboardEntry.for_month(Date.current).visible.maximum(:score),
+      recent_from_ip: LeaderboardEntry.where(submitter_ip: request.remote_ip, created_at: 10.minutes.ago..).count
+    )
+
     entry = LeaderboardEntry.new(
       name: params[:name].to_s.strip,
       instagram_handle: params[:instagram_handle],
       score: replay.score,
+      status: screening.clean? && auto_approve? ? "approved" : "pending",
+      flags: screening.flags,
+      submitter_ip: request.remote_ip,
       replay: { canvas_width: params[:canvas_width], xs: params[:xs] }
     )
     if entry.save
@@ -54,6 +66,12 @@ class GameLeaderboardController < ApplicationController
   end
 
   private
+
+  # Kill switch: set LEADERBOARD_AUTO_APPROVE=false to hold every entry for
+  # review again (e.g. during a spam wave). Flagged entries always wait.
+  def auto_approve?
+    ENV.fetch("LEADERBOARD_AUTO_APPROVE", "true") != "false"
+  end
 
   def verified_issued_at
     payload = self.class.token_verifier.verified(params[:token].to_s)

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_28_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -247,15 +247,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_150000) do
 
   create_table "leaderboard_entries", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.jsonb "flags", default: [], null: false
     t.string "instagram_handle"
     t.date "month", null: false
     t.string "name", null: false
     t.jsonb "replay"
     t.integer "score", null: false
     t.string "status", default: "pending", null: false
+    t.string "submitter_ip"
     t.datetime "updated_at", null: false
     t.index ["month", "score"], name: "index_leaderboard_entries_on_month_and_score"
     t.index ["status"], name: "index_leaderboard_entries_on_status"
+    t.index ["submitter_ip", "created_at"], name: "index_leaderboard_entries_on_submitter_ip_and_created_at"
   end
 
   create_table "leads", force: :cascade do |t|

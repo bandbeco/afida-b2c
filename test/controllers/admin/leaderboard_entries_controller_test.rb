@@ -44,4 +44,17 @@ class Admin::LeaderboardEntriesControllerTest < ActionDispatch::IntegrationTest
 
     assert @entry.reload.rejected?
   end
+
+  test "the review filter shows only held entries, with their flags" do
+    LeaderboardEntry.create!(name: "Clean", score: 8, status: "approved")
+    @entry.update!(flags: [ "high_score" ])
+
+    sign_in_as(users(:acme_admin))
+    get admin_leaderboard_entries_path(filter: "review"), headers: @headers
+
+    assert_response :success
+    assert_select "td", text: /Laurent/
+    assert_select "span", text: /high_score/
+    assert_select "td", text: /Clean/, count: 0
+  end
 end

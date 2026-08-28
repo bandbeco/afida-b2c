@@ -1,6 +1,7 @@
 class Admin::LeaderboardEntriesController < Admin::ApplicationController
   def index
     @entries = LeaderboardEntry.order(month: :desc).best_first
+    @entries = @entries.pending if params[:filter] == "review"
   end
 
   def approve

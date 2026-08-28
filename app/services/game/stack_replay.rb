@@ -33,6 +33,12 @@ module Game
       valid? ? @xs.size : nil
     end
 
+    # Share of drops inside the perfect tolerance — the suspicion screening
+    # uses this to spot bot-grade consistency. Nil when the run is invalid.
+    def perfect_ratio
+      valid? ? @perfect_count.to_f / @xs.size : nil
+    end
+
     private
 
     def replay
@@ -43,12 +49,14 @@ module Game
       base_w = (@canvas_width * BASE_RATIO).clamp(BASE_MIN_W, BASE_MAX_W)
       prev_x = (@canvas_width - base_w) / 2.0
       prev_w = base_w
+      @perfect_count = 0
 
       @xs.each do |x|
         return false unless x > -prev_w && x < @canvas_width
 
         dx = x - prev_x
         if dx.abs <= PERFECT_TOL
+          @perfect_count += 1
           w = [ prev_w + PERFECT_GROWTH, base_w ].min
           prev_x -= (w - prev_w) / 2.0
           prev_w = w

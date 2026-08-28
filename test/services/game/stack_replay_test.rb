@@ -53,6 +53,16 @@ class Game::StackReplayTest < ActiveSupport::TestCase
     assert_equal 7, replay.score
   end
 
+  test "tracks the share of perfect drops for suspicion checks" do
+    all_perfect = Game::StackReplay.new(canvas_width: CANVAS, xs: [ START_X ] * 10)
+    assert_in_delta 1.0, all_perfect.perfect_ratio
+
+    mixed = Game::StackReplay.new(canvas_width: CANVAS, xs: [ START_X, START_X + 22, START_X + 22, START_X + 50 ])
+    assert_in_delta 0.5, mixed.perfect_ratio
+
+    assert_nil Game::StackReplay.new(canvas_width: CANVAS, xs: [ START_X + 179 ]).perfect_ratio
+  end
+
   test "a drop outside the canvas is invalid" do
     replay = Game::StackReplay.new(canvas_width: CANVAS, xs: [ CANVAS + 10 ])
 

@@ -4,9 +4,15 @@
   </div>
 
   <p class="text-sm mb-4">
-    Approving an entry publishes its Instagram handle on the /game leaderboard.
-    Rejecting hides the entry entirely. Pending entries already show name and score.
+    Clean entries are approved automatically and their Instagram handle is live on the
+    /game leaderboard. Flagged entries wait here as pending &mdash; approve to publish the
+    handle, reject to hide the entry entirely. Names and scores show either way.
   </p>
+
+  <div class="mb-4 flex gap-2">
+    <%= link_to "All", admin_leaderboard_entries_path, class: "btn btn-sm #{"btn-active" if params[:filter].blank?}" %>
+    <%= link_to "Needs review", admin_leaderboard_entries_path(filter: "review"), class: "btn btn-sm #{"btn-active" if params[:filter] == "review"}" %>
+  </div>
 
   <div class="overflow-x-auto">
     <table class="table table-zebra w-full">
@@ -37,6 +43,9 @@
               <span class="badge badge-sm <%= { "pending" => "badge-warning", "approved" => "badge-success", "rejected" => "badge-ghost" }[entry.status] %>">
                 <%= entry.status %>
               </span>
+              <% entry.flags.each do |flag| %>
+                <span class="badge badge-error badge-sm"><%= flag %></span>
+              <% end %>
             </td>
             <td><%= entry.created_at.strftime("%d %b %H:%M") %></td>
             <td class="flex gap-2">

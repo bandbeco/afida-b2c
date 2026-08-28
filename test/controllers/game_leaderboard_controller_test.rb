@@ -13,6 +13,11 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     GameLeaderboardController.token_verifier.generate({ "issued_at" => issued_at.to_i })
   end
 
+  # All-perfect but short: runs under 20 drops never trip the perfect_run flag.
+  def perfectish_run(n)
+    [ START_X ] * n
+  end
+
   def valid_submission(overrides = {})
     {
       token: token,
@@ -51,9 +56,9 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
 
   # ---------- create ----------
 
-  test "a valid submission creates a pending entry with the replayed score" do
+  test "a clean submission is approved on the spot, handle live" do
     assert_difference "LeaderboardEntry.count", 1 do
-      post game_leaderboard_path, params: valid_submission(xs: [ START_X ] * 7), as: :json
+      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7)), as: :json
     end
 
     assert_response :created
@@ -61,8 +66,52 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_equal 7, entry.score
     assert_equal "Laurent", entry.name
     assert_equal "the.roastery", entry.instagram_handle
-    assert entry.pending?
+    assert entry.approved?
+    assert_empty entry.flags
+    assert_equal "the.roastery", entry.public_handle
     assert_equal 1, response.parsed_body["rank"]
+  end
+
+  test "a suspicious submission is held for review with its reasons recorded" do
+    post game_leaderboard_path, params: valid_submission(name: "afida staff", xs: perfectish_run(7)), as: :json
+
+    assert_response :created
+    entry = LeaderboardEntry.last
+    assert entry.pending?
+    assert_includes entry.flags, "impersonation"
+    assert_nil entry.public_handle
+  end
+
+  test "an inhuman all-perfect marathon is held for review" do
+    post game_leaderboard_path,
+      params: valid_submission(token: token(issued_at: 2.minutes.ago), xs: [ START_X ] * 25),
+      as: :json
+
+    assert_response :created
+    entry = LeaderboardEntry.last
+    assert entry.pending?
+    assert_includes entry.flags, "perfect_run"
+  end
+
+  test "a burst of entries from one address is held for review" do
+    5.times { LeaderboardEntry.create!(name: "Laurent", score: 3, submitter_ip: "127.0.0.1") }
+
+    post game_leaderboard_path, params: valid_submission(xs: perfectish_run(4)), as: :json
+
+    assert_response :created
+    entry = LeaderboardEntry.last
+    assert entry.pending?
+    assert_includes entry.flags, "burst"
+  end
+
+  test "the kill switch reverts to hold-everything moderation" do
+    GameLeaderboardController.any_instance.stubs(:auto_approve?).returns(false)
+
+    post game_leaderboard_path, params: valid_submission(xs: perfectish_run(4)), as: :json
+
+    assert_response :created
+    assert LeaderboardEntry.last.pending?
+    assert_empty LeaderboardEntry.last.flags
   end
 
   test "the score comes from the replay, not from a score param" do
