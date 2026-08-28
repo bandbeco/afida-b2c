@@ -16,33 +16,37 @@
 <meta name="twitter:title" content="The Afida Stack">
 <meta name="twitter:description" content="Quality packaging supplies. Stacked recklessly high. Reach 15 and win 5% off at afida.com.">
 <meta name="twitter:image" content="https://afida.com/game/og.png">
-<meta name="theme-color" content="#79ebc0">
+<meta name="theme-color" content="#06130d">
 <title>The Afida Stack</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
 <style>
   :root {
     --green: #79ebc0;
-    --green-hover: #5fd9a8;
+    --green-soft: #a7f4d9;
     --deep: #00a86b;
     --pink: #ff6b9d;
     --kraft: #c79a63;
     --ink: #000000;
     --paper: #ffffff;
-    --mist: #f9fafb;
-    --muted: #4b5563;
-    --font: 'Fredoka', ui-sans-serif, system-ui, sans-serif;
+    --crt: #06130d;
+    --panel: #0b2015;
+    --dim: #1e4b36;
+    --muted: #79a58f;
+    --font: 'Press Start 2P', monospace;
+    --font-body: 'VT323', monospace;
+    --glow-green: 0 0 12px rgba(121, 235, 192, 0.55);
+    --glow-pink: 0 0 12px rgba(255, 107, 157, 0.55);
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     margin: 0;
-    background: var(--mist);
-    color: var(--ink);
-    font-family: var(--font);
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--font-body);
     font-weight: 400;
-    -webkit-font-smoothing: antialiased;
     overflow: hidden;
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
@@ -52,13 +56,24 @@
     margin: 0 auto;
     height: 100dvh;
     max-width: 560px;
-    background: var(--paper);
+    background: var(--crt);
     overflow: hidden;
+  }
+  /* CRT glass: scanlines + corner vignette over everything, UI included */
+  .shell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.4) 100%),
+      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0, rgba(0, 0, 0, 0.16) 1px, transparent 1px, transparent 3px);
   }
   @media (min-width: 561px) {
     .shell {
-      border-left: 3px solid var(--ink);
-      border-right: 3px solid var(--ink);
+      border-left: 3px solid var(--dim);
+      border-right: 3px solid var(--dim);
     }
   }
   canvas {
@@ -73,6 +88,11 @@
     width: 0;
     height: 0;
     overflow: hidden;
+  }
+  .blink { animation: blink 1.2s linear infinite; }
+  @keyframes blink {
+    0%, 55% { opacity: 1; }
+    56%, 100% { opacity: 0; }
   }
 
   /* ---------- HUD ---------- */
@@ -89,70 +109,77 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    padding: max(12px, env(safe-area-inset-top)) 14px 0;
+    gap: 10px;
+    padding: max(12px, env(safe-area-inset-top)) 12px 0;
   }
-  .score {
-    font-weight: 500;
-    font-size: clamp(3rem, 16vw, 5rem);
-    line-height: 1;
-    font-variant-numeric: tabular-nums;
-    text-align: center;
-    flex: 1;
+  .stat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
     visibility: hidden;
   }
-  .hud.playing .score { visibility: visible; }
-  .pill {
-    font-weight: 500;
-    font-size: 0.68rem;
+  .hud.playing .stat { visibility: visible; }
+  .stat-label {
+    font-family: var(--font);
+    font-size: 0.5rem;
     letter-spacing: 0.08em;
+    color: var(--pink);
+  }
+  .stat-value {
+    font-family: var(--font);
+    font-size: 0.85rem;
+    color: var(--green);
+    text-shadow: var(--glow-green);
+  }
+  .stat.hi .stat-value { color: var(--kraft); text-shadow: none; }
+  .pill {
+    font-family: var(--font);
+    font-size: 0.5rem;
+    line-height: 1.7;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    background: var(--pink);
-    color: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    padding: 7px 11px;
-    box-shadow: 0 3px 0 var(--ink);
-    max-width: 116px;
-    text-align: center;
+    text-align: right;
+    color: var(--pink);
+    max-width: 110px;
     visibility: hidden;
   }
   .hud.playing .pill { visibility: visible; }
-  .pill.unlocked { background: var(--green); color: var(--ink); }
+  .pill.unlocked { color: var(--green); text-shadow: var(--glow-green); }
   .mute {
     pointer-events: auto;
     font-family: var(--font);
-    font-weight: 500;
-    font-size: 1rem;
-    width: 44px;
-    height: 44px;
-    background: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    box-shadow: 0 3px 0 var(--ink);
+    font-size: 0.8rem;
+    width: 40px;
+    height: 40px;
+    background: var(--crt);
+    color: var(--green);
+    border: 3px solid var(--dim);
     cursor: pointer;
     padding: 0;
   }
-  .mute:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+  .mute:active { background: var(--dim); }
   .toast {
     position: absolute;
     top: 26%;
     left: 50%;
-    transform: translateX(-50%) scale(0.9);
-    font-weight: 500;
-    font-size: clamp(1.1rem, 5.5vw, 1.5rem);
-    letter-spacing: 0.03em;
-    background: var(--green);
-    border: 3px solid var(--ink);
-    border-radius: 20px;
-    box-shadow: 0 4px 0 var(--ink);
-    padding: 10px 22px;
+    transform: translateX(-50%);
+    font-family: var(--font);
+    font-size: clamp(0.7rem, 3.4vw, 0.95rem);
+    line-height: 1.6;
+    text-transform: uppercase;
+    text-align: center;
+    background: var(--crt);
+    color: var(--green);
+    text-shadow: var(--glow-green);
+    border: 3px solid var(--green);
+    padding: 12px 18px;
     max-width: 88%;
-    line-height: 1.3;
     opacity: 0;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition: opacity 0.12s ease;
   }
-  .toast.pink { background: var(--pink); color: var(--paper); }
-  .toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+  .toast.pink { color: var(--pink); border-color: var(--pink); text-shadow: var(--glow-pink); }
+  .toast.show { opacity: 1; }
 
   /* ---------- Overlays ---------- */
   .overlay {
@@ -165,28 +192,28 @@
     gap: 16px;
     padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
     text-align: center;
-    background: color-mix(in srgb, var(--paper) 90%, transparent);
-    backdrop-filter: blur(3px);
+    background: color-mix(in srgb, var(--crt) 86%, transparent);
     overflow-y: auto;
   }
   .overlay.hidden { display: none; }
   /* The menu sits over the live attract-mode scene: wash fades so the
-     swinging dispenser and demo tower ghost through behind the cards. */
+     swinging dispenser and demo tower ghost through behind the panels. */
   .overlay.clear {
     background: linear-gradient(180deg,
-      color-mix(in srgb, var(--paper) 96%, transparent) 12%,
-      color-mix(in srgb, var(--paper) 62%, transparent) 58%,
-      color-mix(in srgb, var(--paper) 30%, transparent));
-    backdrop-filter: none;
+      color-mix(in srgb, var(--crt) 96%, transparent) 12%,
+      color-mix(in srgb, var(--crt) 70%, transparent) 58%,
+      color-mix(in srgb, var(--crt) 35%, transparent));
   }
   .hero-lockup {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 14px;
   }
   .logo-hero {
-    width: min(58vw, 235px);
+    width: min(52vw, 210px);
     height: auto;
+    filter: drop-shadow(0 0 10px rgba(121, 235, 192, 0.45));
   }
   .sr-only {
     position: absolute;
@@ -200,60 +227,75 @@
     border: 0;
   }
   .title {
-    font-weight: 500;
-    font-size: clamp(3.2rem, 16vw, 5.2rem);
+    font-family: var(--font);
+    font-size: clamp(1.7rem, 9.5vw, 2.6rem);
     line-height: 1;
-    margin: -0.08em 0 0;
-    text-wrap: balance;
-  }
-  .title .pop {
-    background: linear-gradient(100deg, var(--deep), var(--green));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    margin: 0;
+    text-transform: uppercase;
+    color: var(--green);
+    text-shadow: 3px 3px 0 var(--pink), var(--glow-green);
   }
   .tagline {
-    font-size: 1.05rem;
-    line-height: 1.5;
+    font-size: 1.35rem;
+    line-height: 1.2;
     max-width: 30ch;
     margin: 0;
+    color: var(--muted);
   }
   .challenge {
-    font-weight: 500;
-    font-size: 1rem;
-    letter-spacing: 0.02em;
-    background: var(--pink);
-    color: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 18px;
-    box-shadow: 0 5px 0 var(--ink);
-    padding: 12px 18px;
+    font-family: var(--font);
+    font-size: 0.65rem;
+    line-height: 1.8;
+    text-transform: uppercase;
+    background: var(--panel);
+    color: var(--pink);
+    text-shadow: var(--glow-pink);
+    border: 3px solid var(--pink);
+    padding: 12px 16px;
     max-width: 90%;
   }
   .challenge.hidden { display: none; }
   .btn {
     font-family: var(--font);
-    font-weight: 500;
-    font-size: 1.1rem;
-    letter-spacing: 0.08em;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     color: var(--ink);
     background: var(--green);
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    box-shadow: 0 5px 0 var(--ink);
-    padding: 15px 38px;
+    border: none;
+    box-shadow: inset -4px -4px 0 var(--deep), inset 4px 4px 0 var(--green-soft);
+    padding: 17px 30px;
     cursor: pointer;
-    transition: transform 0.06s ease, box-shadow 0.06s ease, background 0.12s ease;
   }
-  .btn:hover { background: var(--green-hover); }
-  .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--ink); }
-  .btn.pink { background: var(--pink); color: var(--paper); }
-  .btn.pink:hover { background: #ff5290; }
-  .btn.ghost { background: var(--paper); font-size: 0.95rem; padding: 12px 26px; }
-  .btn.ghost:hover { background: var(--mist); }
+  .btn:hover { background: var(--green-soft); }
+  .btn:active {
+    transform: translateY(2px);
+    box-shadow: inset 4px 4px 0 var(--deep), inset -4px -4px 0 var(--green-soft);
+  }
+  .btn.pink {
+    background: var(--pink);
+    box-shadow:
+      inset -4px -4px 0 color-mix(in srgb, var(--pink) 55%, var(--ink)),
+      inset 4px 4px 0 color-mix(in srgb, var(--pink) 55%, var(--paper));
+  }
+  .btn.pink:hover { background: #ff87ae; }
+  .btn.pink:active {
+    box-shadow:
+      inset 4px 4px 0 color-mix(in srgb, var(--pink) 55%, var(--ink)),
+      inset -4px -4px 0 color-mix(in srgb, var(--pink) 55%, var(--paper));
+  }
+  .btn.ghost {
+    background: var(--crt);
+    color: var(--green);
+    border: 3px solid var(--dim);
+    box-shadow: none;
+    font-size: 0.65rem;
+    padding: 13px 22px;
+  }
+  .btn.ghost:hover { border-color: var(--green); }
+  .btn.ghost:active { transform: translateY(2px); }
   :is(.btn, .mute, .copy, .name-input, .fold > summary):focus-visible {
-    outline: 3px solid var(--deep);
+    outline: 3px solid var(--pink);
     outline-offset: 3px;
   }
   /* First-run hint: floats over the playfield until the first-ever drop */
@@ -262,14 +304,16 @@
     top: 40%;
     left: 50%;
     transform: translateX(-50%);
-    font-weight: 500;
-    font-size: 0.95rem;
-    letter-spacing: 0.03em;
-    background: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    box-shadow: 0 4px 0 var(--ink);
-    padding: 10px 20px;
+    font-family: var(--font);
+    font-size: 0.55rem;
+    line-height: 1.8;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--green);
+    text-shadow: var(--glow-green);
+    background: var(--crt);
+    border: 3px solid var(--dim);
+    padding: 10px 16px;
     max-width: 88%;
     opacity: 1;
     transition: opacity 0.4s ease;
@@ -280,66 +324,77 @@
     50% { transform: translateX(-50%) translateY(-6px); }
   }
   .prize-line {
-    font-weight: 500;
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
+    font-family: var(--font);
+    font-size: 0.62rem;
+    line-height: 1.8;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    background: var(--pink);
-    color: var(--paper);
-    box-shadow: 0 4px 0 var(--ink);
-    padding: 9px 18px;
+    color: var(--kraft);
+    text-shadow: 0 0 10px rgba(199, 154, 99, 0.5);
   }
-  .prize-line .off { color: var(--ink); }
+  .prize-line .off { color: var(--green); text-shadow: var(--glow-green); }
+  .credit {
+    font-family: var(--font);
+    font-size: 0.55rem;
+    line-height: 1.7;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0;
+  }
 
   /* ---------- Game over ---------- */
   .over-title {
-    font-weight: 500;
-    font-size: clamp(2rem, 10vw, 3rem);
-    line-height: 1;
+    font-family: var(--font);
+    font-size: clamp(1.3rem, 7.5vw, 2rem);
+    line-height: 1.2;
     margin: 0;
+    text-transform: uppercase;
+    color: var(--pink);
+    text-shadow: var(--glow-pink);
   }
   .over-quip {
-    font-size: 0.95rem;
+    font-size: 1.25rem;
+    line-height: 1.2;
     color: var(--muted);
-    max-width: 32ch;
+    max-width: 34ch;
     margin: 0;
   }
   .final {
-    font-weight: 500;
-    font-size: clamp(4.4rem, 24vw, 7rem);
+    font-family: var(--font);
+    font-size: clamp(2.4rem, 13vw, 3.6rem);
     line-height: 1;
-    font-variant-numeric: tabular-nums;
-    margin: -10px 0;
-    color: var(--deep);
+    margin: 0;
+    color: var(--green);
+    text-shadow: var(--glow-green);
   }
   .best-line {
-    font-weight: 500;
-    font-size: 0.8rem;
-    letter-spacing: 0.14em;
+    font-family: var(--font);
+    font-size: 0.55rem;
+    line-height: 1.8;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--kraft);
     margin: 0;
   }
   .prize-card {
-    border: 3px solid var(--ink);
-    border-radius: 20px;
-    background: var(--green);
-    box-shadow: 0 6px 0 var(--ink);
-    padding: 16px 20px;
+    border: 3px solid var(--green);
+    background: var(--panel);
+    box-shadow: 0 0 18px rgba(121, 235, 192, 0.25);
+    padding: 16px 18px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
     width: min(92%, 340px);
   }
   .prize-card.hidden { display: none; }
   .prize-card .won {
-    font-weight: 500;
-    font-size: 0.8rem;
-    letter-spacing: 0.16em;
+    font-family: var(--font);
+    font-size: 0.6rem;
+    line-height: 1.8;
     text-transform: uppercase;
+    color: var(--green);
     margin: 0;
   }
   .code-row {
@@ -350,44 +405,43 @@
     width: 100%;
   }
   .code {
-    font-weight: 500;
-    font-size: 2.2rem;
-    letter-spacing: 0.18em;
+    font-family: var(--font);
+    font-size: 1.2rem;
+    letter-spacing: 0.15em;
     text-align: center;
-    background: var(--paper);
-    border: 3px dashed var(--ink);
-    border-radius: 14px;
-    padding: 10px 16px;
+    color: var(--kraft);
+    background: var(--crt);
+    border: 3px dashed var(--kraft);
+    padding: 14px 10px;
   }
   .copy {
     font-family: var(--font);
-    font-weight: 500;
-    font-size: 1.05rem;
-    letter-spacing: 0.08em;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
-    background: var(--ink);
-    color: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    box-shadow: 0 5px 0 color-mix(in srgb, var(--ink) 40%, var(--deep));
-    padding: 14px 26px;
+    background: var(--kraft);
+    color: var(--ink);
+    border: none;
+    box-shadow:
+      inset -4px -4px 0 color-mix(in srgb, var(--kraft) 60%, var(--ink)),
+      inset 4px 4px 0 color-mix(in srgb, var(--kraft) 60%, var(--paper));
+    padding: 15px 22px;
     cursor: pointer;
-    transition: transform 0.06s ease, box-shadow 0.06s ease;
   }
-  .copy:hover { background: #1f2937; }
+  .copy:hover { background: #d9ad74; }
   .copy:active {
-    transform: translateY(4px);
-    box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 40%, var(--deep));
+    transform: translateY(2px);
+    box-shadow:
+      inset 4px 4px 0 color-mix(in srgb, var(--kraft) 60%, var(--ink)),
+      inset -4px -4px 0 color-mix(in srgb, var(--kraft) 60%, var(--paper));
   }
-  .prize-card .terms { font-size: 0.74rem; margin: 0; max-width: 30ch; }
-  .prize-card .terms a { color: var(--ink); }
+  .prize-card .terms { font-size: 1.05rem; line-height: 1.2; margin: 0; max-width: 30ch; color: var(--muted); }
+  .prize-card .terms a { color: var(--green); }
   /* Collapsible sections: whichever one the outcome makes relevant opens as
-     the hero; the rest wait as single quiet rows. */
+     the hero; the rest wait as single quiet rows behind a blinking cursor. */
   .fold {
-    border: 3px solid var(--ink);
-    border-radius: 20px;
-    background: var(--paper);
-    box-shadow: 0 6px 0 var(--ink);
+    border: 3px solid var(--dim);
+    background: var(--panel);
     width: min(92%, 380px);
   }
   .fold.hidden { display: none; }
@@ -397,44 +451,48 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    font-weight: 500;
-    font-size: 0.8rem;
-    letter-spacing: 0.16em;
+    gap: 12px;
+    font-family: var(--font);
+    font-size: 0.6rem;
+    line-height: 1.6;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 15px 18px;
+    color: var(--paper);
+    padding: 16px 18px;
   }
   .fold > summary::-webkit-details-marker { display: none; }
+  .fold > summary:hover { color: var(--green); }
   .chev {
-    width: 8px;
-    height: 8px;
-    border-right: 3px solid var(--ink);
-    border-bottom: 3px solid var(--ink);
-    transform: rotate(-45deg) translateY(-1px);
+    width: 0;
+    height: 0;
+    border-left: 9px solid var(--green);
+    border-top: 6px solid transparent;
+    border-bottom: 6px solid transparent;
     transition: transform 0.15s ease;
+    animation: blink 1.2s linear infinite;
   }
-  .fold[open] .chev { transform: rotate(45deg); }
+  .fold[open] .chev { transform: rotate(90deg); animation: none; }
   .fold-body {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     align-items: center;
     padding: 2px 16px 16px;
   }
   .share-pitch {
-    font-weight: 500;
-    font-size: 1rem;
-    line-height: 1.4;
-    max-width: 28ch;
+    font-size: 1.3rem;
+    line-height: 1.2;
+    max-width: 30ch;
     margin: 0;
+    color: var(--paper);
   }
   .share-pitch.hidden { display: none; }
   .share-preview {
-    font-size: 0.8rem;
-    line-height: 1.45;
-    background: var(--mist);
-    border: 2px dashed #d1d5db;
-    border-radius: 12px;
+    font-size: 1.1rem;
+    line-height: 1.25;
+    background: var(--crt);
+    color: var(--green);
+    border: 2px dashed var(--dim);
     padding: 10px 12px;
     margin: 0;
     text-align: left;
@@ -448,7 +506,7 @@
     flex-wrap: wrap;
     justify-content: center;
   }
-  .share-actions .btn { font-size: 0.95rem; padding: 12px 26px; }
+  .share-actions .btn { font-size: 0.65rem; padding: 14px 20px; }
   .share-actions .btn.hidden { display: none; }
   .clipboard-stage {
     position: fixed;
@@ -457,21 +515,20 @@
     opacity: 0;
   }
   .name-input {
-    font-family: var(--font);
-    font-weight: 500;
-    font-size: 1rem;
+    font-family: var(--font-body);
+    font-size: 1.3rem;
     width: 11ch;
     text-align: center;
-    background: var(--paper);
-    color: var(--ink);
-    border: 3px solid var(--ink);
-    border-radius: 9999px;
-    box-shadow: 0 4px 0 var(--ink);
-    padding: 11px 10px;
+    background: var(--crt);
+    color: var(--green);
+    caret-color: var(--green);
+    border: 3px solid var(--dim);
+    padding: 8px 10px;
   }
-  .name-input::placeholder { color: #9ca3af; }
+  .name-input::placeholder { color: #3f6b57; }
+  .name-input:focus { border-color: var(--green); outline: none; }
   .footer-link {
-    font-size: 0.8rem;
+    font-size: 1.05rem;
     color: var(--muted);
   }
   .footer-link a {
@@ -483,19 +540,20 @@
   }
   .footer-link a:hover span { text-decoration: underline; }
   .logo-inline {
-    height: 19px;
+    height: 18px;
     width: auto;
     display: block;
   }
 
-  /* ---------- Leaderboard ---------- */
+  /* ---------- Hi-score table ---------- */
   .board-title {
-    font-weight: 500;
-    font-size: 0.75rem;
-    letter-spacing: 0.14em;
+    font-family: var(--font);
+    font-size: 0.5rem;
+    line-height: 1.7;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     text-align: center;
-    color: var(--deep);
+    color: var(--muted);
     margin: 0;
   }
   .board ol {
@@ -505,39 +563,36 @@
     padding: 0;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
   }
   .board li {
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    font-size: 0.9rem;
+    gap: 10px;
+    font-size: 1.2rem;
+    line-height: 1.1;
   }
   .board .rank {
-    font-weight: 500;
     color: var(--muted);
     min-width: 1.6em;
     text-align: right;
-    font-variant-numeric: tabular-nums;
   }
-  /* podium colors for the top three */
-  .board li:nth-child(1) .rank { color: var(--deep); }
-  .board li:nth-child(2) .rank { color: var(--pink); }
-  .board li:nth-child(3) .rank { color: var(--kraft); }
+  /* podium colors: gold, silver, pink */
+  .board li:nth-child(1) .rank { color: var(--kraft); }
+  .board li:nth-child(2) .rank { color: var(--paper); }
+  .board li:nth-child(3) .rank { color: var(--pink); }
   .board .who {
     flex: 1;
     text-align: left;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    color: var(--paper);
   }
   .board .who a { color: var(--pink); }
-  .board .pts {
-    font-weight: 500;
-    font-variant-numeric: tabular-nums;
-  }
+  .board .pts { color: var(--green); }
   .board-empty {
-    font-size: 0.85rem;
+    font-size: 1.15rem;
     color: var(--muted);
     margin: 0;
     text-align: center;
@@ -546,24 +601,26 @@
   .fineprint.hidden { display: none; }
   .lb-form {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
   }
   .lb-form.hidden { display: none; }
-  .lb-form .btn { font-size: 0.9rem; padding: 12px 22px; }
+  .lb-form .btn { font-size: 0.6rem; padding: 14px 16px; }
   .ig-input { width: 17ch; }
   .fineprint {
-    font-size: 0.74rem;
+    font-size: 1.05rem;
+    line-height: 1.2;
     color: var(--muted);
-    max-width: 32ch;
+    max-width: 34ch;
     margin: 0;
   }
   .lb-result {
-    font-weight: 500;
-    font-size: 1.05rem;
-    color: var(--deep);
+    font-size: 1.3rem;
+    line-height: 1.2;
+    color: var(--green);
+    text-shadow: var(--glow-green);
     margin: 0;
   }
   .lb-result.hidden { display: none; }
@@ -572,18 +629,18 @@
      landscape phone): tighten the overlays so nothing important scrolls away. */
   @media (max-height: 720px) {
     .overlay { gap: 10px; padding-top: 16px; }
-    .logo-hero { width: min(46vw, 180px); }
-    .title { font-size: clamp(2.6rem, 12vw, 4rem); }
-    .final { font-size: clamp(3.4rem, 18vw, 5rem); }
-    .prize-card { padding: 12px 14px; gap: 8px; }
-    .fold > summary { padding: 12px 16px; }
-    .fold-body { padding: 0 14px 12px; gap: 8px; }
-    .btn { padding: 13px 30px; }
+    .logo-hero { width: min(40vw, 160px); }
+    .title { font-size: clamp(1.4rem, 8vw, 2rem); }
+    .final { font-size: clamp(2rem, 11vw, 3rem); }
+    .prize-card { padding: 12px 14px; gap: 9px; }
+    .fold > summary { padding: 12px 14px; }
+    .fold-body { padding: 0 14px 12px; gap: 9px; }
+    .btn { padding: 14px 22px; }
   }
 
   @media (prefers-reduced-motion: reduce) {
     .btn, .toast, .chev, .hint { transition: none; }
-    .hint { animation: none; }
+    .hint, .blink, .chev { animation: none; }
   }
 </style>
 </head>
@@ -606,8 +663,9 @@
   <div class="hud" id="hud">
     <div class="hud-top">
       <button class="mute" id="muteBtn" aria-label="Toggle sound">♪</button>
-      <div class="score" id="score">0</div>
-      <div class="pill" id="prizePill">5% off at 15</div>
+      <div class="stat"><span class="stat-label">1UP</span><span class="stat-value" id="score">0000</span></div>
+      <div class="stat hi"><span class="stat-label">HI-SCORE</span><span class="stat-value" id="hiScore">0000</span></div>
+      <div class="pill" id="prizePill">Bonus 5% at 15</div>
     </div>
     <div class="toast" id="toast" role="status"></div>
     <div class="hint hidden" id="dropHint">Tap, click or press space to drop</div>
@@ -620,11 +678,12 @@
     </div>
     <p class="tagline">Quality packaging supplies. Stacked recklessly high.</p>
     <div class="challenge hidden" id="challengeBanner"></div>
-    <div class="prize-line">Stack <span id="winTarget">15</span> &rarr; <span class="off">5% off</span></div>
+    <div class="prize-line">Bonus: stack <span id="winTarget">15</span> for <span class="off">5% off</span></div>
     <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
-    <button class="btn" id="playBtn">Play</button>
+    <button class="btn" id="playBtn">Press start</button>
+    <p class="credit blink">Insert coin? No need &mdash; free play</p>
     <details class="fold board hidden" id="menuBoard">
-      <summary><span id="boardLead">Top stackers</span><span class="chev" aria-hidden="true"></span></summary>
+      <summary><span id="boardLead">Hi-score table</span><span class="chev" aria-hidden="true"></span></summary>
       <div class="fold-body">
         <p class="board-title" id="boardTitle">Top stackers</p>
         <ol id="boardList"></ol>
@@ -641,7 +700,7 @@
     <div class="final" id="finalScore">0</div>
     <p class="best-line" id="bestLine">Best: 0</p>
     <div class="prize-card hidden" id="prizeCard">
-      <p class="won">You've won 5% off your next order</p>
+      <p class="won">Bonus unlocked: 5% off your next order</p>
       <div class="code-row">
         <span class="code" id="promoCode">STACK5</span>
         <button class="copy" id="copyCode">Copy code</button>
@@ -662,7 +721,7 @@
       </div>
     </details>
     <details class="fold hidden" id="lbFold">
-      <summary>Monthly leaderboard<span class="chev" aria-hidden="true"></span></summary>
+      <summary>Enter the hi-score table<span class="chev" aria-hidden="true"></span></summary>
       <div class="fold-body">
         <div class="lb-form" id="lbForm">
           <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
@@ -672,7 +731,7 @@
         <p class="lb-result hidden" id="lbResult"></p>
       </div>
     </details>
-    <button class="btn ghost" id="againBtn">Stack again</button>
+    <button class="btn ghost" id="againBtn">Continue?</button>
   </div>
 </main>
 
@@ -688,7 +747,11 @@
   const PINK = '#ff6b9d';
   const KRAFT = '#c79a63';
   const KRAFT_DARK = '#a97f4e';
-  const GRID = '#edf3ef';
+  const CRT = '#06130d';   // near-black with a green cast, the screen ground
+  const BASE_FILL = '#0b2015';
+  const ARM = '#2f5f49';
+  const GRID = '#10281c';
+  const PIXEL_FONT = '"Press Start 2P", monospace';
   const BLOCK_H = 46;
   const MIN_OVERLAP = 10;
   const PERFECT_TOL = 7;
@@ -764,7 +827,11 @@
   // ---------- DOM ----------
   const $ = id => document.getElementById(id);
   const canvas = $('game'), ctx = canvas.getContext('2d');
-  const hud = $('hud'), scoreEl = $('score'), prizePill = $('prizePill');
+  // Warm up the pixel font so canvas text (quips, 2UP label) never falls back
+  if (document.fonts) document.fonts.load('8px "Press Start 2P"');
+  const hud = $('hud'), scoreEl = $('score'), hiEl = $('hiScore'), prizePill = $('prizePill');
+  // Arcade scores wear leading zeros
+  const pad = n => String(n).padStart(4, '0');
   const toastEl = $('toast'), menuEl = $('menu'), overEl = $('over');
   const challengeBanner = $('challengeBanner');
 
@@ -884,8 +951,9 @@
     swing = { phase: Math.PI / 2, x: 0, w };
     falling = null;
     state = 'play';
-    scoreEl.textContent = '0';
-    prizePill.textContent = '5% off at ' + winScore;
+    scoreEl.textContent = pad(0);
+    hiEl.textContent = pad(best);
+    prizePill.textContent = 'Bonus 5% at ' + winScore;
     prizePill.classList.remove('unlocked');
     hud.classList.add('playing');
     menuEl.classList.add('hidden');
@@ -921,7 +989,7 @@
       x -= (w - prev.w) / 2;
       combo++;
       sfx.perfect();
-      floatQuip(combo > 1 ? 'Perfect ×' + combo + ' — ' + quip('streak') : quip('perfect'), x + w / 2, towerTopWorldY(falling.level) + BLOCK_H, DEEP);
+      floatQuip(combo > 1 ? 'Perfect x' + combo + ' — ' + quip('streak') : quip('perfect'), x + w / 2, towerTopWorldY(falling.level) + BLOCK_H, GREEN);
       burst(x + w / 2, sy(towerTopWorldY(falling.level)) - BLOCK_H / 2, DEEP, 14);
     } else {
       const left = Math.max(x, prev.x);
@@ -941,17 +1009,17 @@
       x = left; w = overlap;
       combo = 0;
       sfx.land();
-      floatQuip(quip('trim'), x + w / 2, towerTopWorldY(falling.level) + BLOCK_H, INK);
+      floatQuip(quip('trim'), x + w / 2, towerTopWorldY(falling.level) + BLOCK_H, PAPER);
     }
 
     dropLog.push(Math.round(falling.x * 100) / 100);
     stack.push({ x, w, level: falling.level });
     falling = null;
     score++;
-    scoreEl.textContent = score;
+    scoreEl.textContent = pad(score);
     if (!reducedMotion) shake = 5;
     if (score >= winScore && !unlocked) unlockPrize();
-    if (score > best) { best = score; store.set('afidaStackBest', String(best)); }
+    if (score > best) { best = score; store.set('afidaStackBest', String(best)); hiEl.textContent = pad(best); }
 
     camTarget = Math.max(0, towerTopWorldY(stack.length) - H * 0.62);
     swing = { phase: swing.phase, x: swing.x, w };
@@ -960,7 +1028,7 @@
 
   function unlockPrize() {
     unlocked = true;
-    prizePill.textContent = '5% unlocked';
+    prizePill.textContent = '5% banked';
     prizePill.classList.add('unlocked');
     toast('5% off unlocked!', true);
     sfx.win();
@@ -1000,12 +1068,12 @@
     const won = score >= winScore;
     const low = score < BRAG_SCORE;
     $('overTitle').textContent =
-      won ? 'Certified stacker' :
-      score === best && score > 0 ? 'New personal best' : 'Tower down';
+      won ? 'You win!' :
+      score === best && score > 0 ? 'New hi-score' : 'Game over';
     $('overQuip').textContent = won ? quip('win') : quip('over');
-    $('finalScore').textContent = score;
-    $('bestLine').textContent = 'Best: ' + best +
-      (beatScore ? ' · ' + (rivalName || 'Rival') + ': ' + beatScore : '');
+    $('finalScore').textContent = pad(score);
+    $('bestLine').textContent = 'Hi-score ' + pad(best) +
+      (beatScore ? ' · 2UP ' + (rivalName || 'Rival') + ' ' + pad(beatScore) : '');
     $('prizeCard').classList.toggle('hidden', !unlocked);
 
     const fold = $('challengeFold');
@@ -1049,7 +1117,10 @@
   // cover the landing zone or pull the eye away from it.
   const FLOAT_LIFE = 1.9, FLOAT_RISE = 54;
   function floatQuip(text, x, worldY, color) {
-    floaters.push({ text, x, worldY, color, age: 0 });
+    // The pixel font is ASCII-only: swap curly quotes and em-dashes so the
+    // canvas never renders tofu boxes.
+    const ascii = text.replace(/’/g, "'").replace(/\s*—\s*/g, ' - ');
+    floaters.push({ text: ascii, x, worldY, color, age: 0 });
   }
 
   // ---------- Drawing ----------
@@ -1130,7 +1201,7 @@
 
   function drawBase() {
     const y = sy(BASE_H);
-    ctx.fillStyle = DEEP;
+    ctx.fillStyle = BASE_FILL;
     ctx.fillRect(0, y, W, BASE_H + 200);
     ctx.fillStyle = GREEN;
     ctx.fillRect(0, y, W, 6);
@@ -1152,17 +1223,12 @@
     ctx.moveTo(0, y); ctx.lineTo(W, y);
     ctx.stroke();
     ctx.setLineDash([]);
-    const label = (rivalName || 'Rival') + ' · ' + beatScore;
-    ctx.font = "500 13px Fredoka, sans-serif";
+    const label = '2UP ' + (rivalName || 'RIVAL').toUpperCase() + ' ' + beatScore;
+    ctx.font = '8px ' + PIXEL_FONT;
     const tw = ctx.measureText(label).width + 18;
     ctx.fillStyle = PINK;
-    ctx.beginPath();
-    ctx.roundRect(W - tw - 10, y - 26, tw, 22, 11);
-    ctx.fill();
-    ctx.strokeStyle = INK;
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    ctx.fillStyle = PAPER;
+    ctx.fillRect(W - tw - 10, y - 26, tw, 22);
+    ctx.fillStyle = INK;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(label, W - tw / 2 - 10, y - 14);
@@ -1171,8 +1237,8 @@
 
   function render(now) {
     ctx.clearRect(0, 0, W, H);
-    // paper ground + faint grid, offset by camera for depth
-    ctx.fillStyle = PAPER;
+    // CRT ground + dim phosphor grid, offset by camera for depth
+    ctx.fillStyle = CRT;
     ctx.fillRect(0, 0, W, H);
     ctx.strokeStyle = GRID;
     ctx.lineWidth = 1;
@@ -1202,15 +1268,13 @@
     // swinging block + dispenser arm (also runs as the menu's attract mode)
     if (state === 'play' || state === 'menu') {
       drawBlock(swing.x - swing.w / 2, SWING_Y, swing.w, stack.length, 0, 0, 0);
-      ctx.strokeStyle = INK;
+      ctx.strokeStyle = ARM;
       ctx.lineWidth = 3;
       ctx.beginPath();
       ctx.moveTo(swing.x, 0); ctx.lineTo(swing.x, SWING_Y - 2);
       ctx.stroke();
       ctx.fillStyle = PINK;
-      ctx.beginPath();
-      ctx.roundRect(swing.x - 13, SWING_Y - 11, 26, 12, 6);
-      ctx.fill(); ctx.stroke();
+      ctx.fillRect(swing.x - 13, SWING_Y - 11, 26, 12);
     }
 
     // falling block
@@ -1242,7 +1306,7 @@
     // rising quips
     if (floaters.length) {
       ctx.save();
-      ctx.font = '500 15px Fredoka, sans-serif';
+      ctx.font = '8px ' + PIXEL_FONT;
       ctx.textAlign = 'center';
       ctx.textBaseline = 'alphabetic';
       ctx.lineJoin = 'round';
@@ -1254,8 +1318,8 @@
         const half = ctx.measureText(f.text).width / 2;
         const fx = Math.min(Math.max(f.x, half + 8), W - half - 8);
         ctx.globalAlpha = t < 0.5 ? 1 : Math.max(0, 1 - (t - 0.5) / 0.5);
-        ctx.strokeStyle = PAPER;
-        ctx.lineWidth = 5;
+        ctx.strokeStyle = CRT;
+        ctx.lineWidth = 4;
         ctx.strokeText(f.text, fx, y);
         ctx.fillStyle = f.color;
         ctx.fillText(f.text, fx, y);
@@ -1412,8 +1476,8 @@
     $('menuBoard').classList.remove('hidden');
     const lead = lb.entries[0];
     $('boardLead').textContent = lead
-      ? 'Top this month: ' + lead.name + ' · ' + lead.score
-      : 'Top stackers';
+      ? 'Hi-score ' + pad(lead.score) + ' ' + lead.name
+      : 'Hi-score table';
     const days = daysUntilReset();
     const reset = ' · resets in ' + days + (days === 1 ? ' day' : ' days');
     $('boardTitle').textContent = (lb.month || 'Top stackers') + reset;
@@ -1530,7 +1594,7 @@
   if (inviterCode) $('refBoost').classList.remove('hidden');
   if (beatScore > 0) {
     challengeBanner.textContent =
-      (rivalName || 'A rival') + ' stacked ' + beatScore + '. Your move.';
+      '2UP ' + (rivalName || 'A rival') + ' stacked ' + beatScore + '. Your move.';
     challengeBanner.classList.remove('hidden');
   }
   $('playBtn').addEventListener('click', startGame);
