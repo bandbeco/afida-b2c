@@ -152,16 +152,6 @@
     transition: opacity 0.15s ease, transform 0.15s ease;
   }
   .toast.pink { background: var(--pink); color: var(--paper); }
-  /* Flavour quips ride low, over the settled base of the tower, so they never
-     cover the landing zone; only big moments use the centred toast. */
-  .toast.low {
-    top: auto;
-    bottom: calc(96px + env(safe-area-inset-bottom));
-    font-size: 0.95rem;
-    letter-spacing: 0.02em;
-    padding: 8px 16px;
-    box-shadow: 0 3px 0 var(--ink);
-  }
   .toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
 
   /* ---------- Overlays ---------- */
@@ -827,6 +817,7 @@
   let debris = [];    // sliced offcuts + the fatal piece
   let particles = [];
   let confetti = [];
+  let floaters = []; // quips rising off freshly-landed blocks
   let score = 0, combo = 0, unlocked = false;
   let cam = 0, camTarget = 0, shake = 0, overAt = 0;
   let best = parseInt(store.get('afidaStackBest'), 10) || 0;
@@ -842,7 +833,7 @@
   function sy(worldY) { return H - (worldY - cam); }
 
   function startGame() {
-    stack = []; debris = []; particles = []; confetti = [];
+    stack = []; debris = []; particles = []; confetti = []; floaters = [];
     score = 0; combo = 0; unlocked = false;
     cam = 0; camTarget = 0; shake = 0;
     dropLog = []; roundW = W; roundBaseW = baseW();
@@ -884,7 +875,7 @@
       x -= (w - prev.w) / 2;
       combo++;
       sfx.perfect();
-      toast(combo > 1 ? 'Perfect ×' + combo + ' — ' + quip('streak') : quip('perfect'), false, true);
+      floatQuip(combo > 1 ? 'Perfect ×' + combo + ' — ' + quip('streak') : quip('perfect'), x + w / 2, towerTopWorldY(falling.level) + BLOCK_H, DEEP);
       burst(x + w / 2, sy(towerTopWorldY(falling.level)) - BLOCK_H / 2, DEEP, 14);
     } else {
       const left = Math.max(x, prev.x);
@@ -904,7 +895,7 @@
       x = left; w = overlap;
       combo = 0;
       sfx.land();
-      toast(quip('trim'), false, true);
+      floatQuip(quip('trim'), x + w / 2, towerTopWorldY(falling.level) + BLOCK_H, INK);
     }
 
     dropLog.push(Math.round(falling.x * 100) / 100);
@@ -971,10 +962,9 @@
 
   // ---------- Toast ----------
   let toastTimer = 0;
-  function toast(msg, pink, low) {
+  function toast(msg, pink) {
     toastEl.textContent = msg;
     toastEl.classList.toggle('pink', !!pink);
-    toastEl.classList.toggle('low', !!low);
     toastEl.classList.add('show');
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1400);
@@ -987,6 +977,14 @@
       const a = Math.random() * 6.28, sp = 60 + Math.random() * 140;
       particles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 60, s: 3 + Math.random() * 4, life: 0.7, color });
     }
+  }
+
+  // Flavour quips emanate from the block that just landed: anchored to the
+  // tower in world space, drifting upward with a slow fade, so they never
+  // cover the landing zone or pull the eye away from it.
+  const FLOAT_LIFE = 1.9, FLOAT_RISE = 54;
+  function floatQuip(text, x, worldY, color) {
+    floaters.push({ text, x, worldY, color, age: 0 });
   }
 
   // ---------- Drawing ----------
@@ -1176,6 +1174,30 @@
       ctx.restore();
     }
 
+    // rising quips
+    if (floaters.length) {
+      ctx.save();
+      ctx.font = '500 15px Fredoka, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.lineJoin = 'round';
+      for (const f of floaters) {
+        const t = f.age / FLOAT_LIFE;
+        const rise = reducedMotion ? 0 : FLOAT_RISE * (1 - Math.pow(1 - t, 3));
+        const y = sy(f.worldY) - 14 - rise;
+        if (y < -20 || y > H + 20) continue;
+        const half = ctx.measureText(f.text).width / 2;
+        const fx = Math.min(Math.max(f.x, half + 8), W - half - 8);
+        ctx.globalAlpha = t < 0.5 ? 1 : Math.max(0, 1 - (t - 0.5) / 0.5);
+        ctx.strokeStyle = PAPER;
+        ctx.lineWidth = 5;
+        ctx.strokeText(f.text, fx, y);
+        ctx.fillStyle = f.color;
+        ctx.fillText(f.text, fx, y);
+      }
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
@@ -1212,6 +1234,8 @@
       c.y += c.vy * dt; c.x += c.vx * dt + Math.sin(c.y / 30) * 0.6; c.rot += c.vr * dt;
     }
     confetti = confetti.filter(c => c.y < H + 40);
+    for (const f of floaters) f.age += dt;
+    floaters = floaters.filter(f => f.age < FLOAT_LIFE);
 
     render(now);
     requestAnimationFrame(tick);
