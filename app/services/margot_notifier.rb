@@ -72,7 +72,11 @@ class MargotNotifier
     {
       message: research_prompt,
       name: "Research prospect #{@order.display_number}",
-      sessionMode: "isolated",
+      # Run on Margot's main agent with its persistent session: isolated
+      # sessions gave her a blank context and noticeably shallower research
+      # than when she is tagged in the group.
+      agentId: "main",
+      sessionMode: "persistent",
       deliver: true,
       channel: "telegram",
       to: chat_id
