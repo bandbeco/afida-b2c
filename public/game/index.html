@@ -108,12 +108,6 @@
     text-align: center;
   }
   .rail-copy .glow { color: var(--green); text-shadow: var(--glow-green); }
-  .rail-logo { display: flex; justify-content: center; }
-  .rail-logo svg {
-    width: 150px;
-    height: auto;
-    filter: drop-shadow(0 0 10px rgba(121, 235, 192, 0.35));
-  }
   .rail .footer-link { text-align: center; }
   /* CRT glass: scanlines + corner vignette over everything, UI included */
   .shell::after {
@@ -800,7 +794,6 @@
   </div>
 </main>
 <aside class="rail" aria-label="Bonus and challenge info">
-  <div class="rail-logo"><svg viewBox="0 0 456.039 149.71" role="img" aria-label="Afida"><use href="#afidaLogo"></use></svg></div>
   <div class="rail-panel">
     <p class="rail-title">Bonus stage</p>
     <p class="rail-copy">Stack <span id="railWinTarget">15</span> and take <span class="glow">5% off</span> your next order at afida.com.</p>
@@ -966,15 +959,6 @@
     win: () => { [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.16, 'square', 0.08, i * 0.11)); buzz([30, 40, 60]); },
     over: () => { beep(220, 0.18, 'sawtooth', 0.07); beep(150, 0.3, 'sawtooth', 0.07, 0.15); buzz(50); }
   };
-
-  // ---------- Brand logo (drawn onto the canvas base) ----------
-  const LOGO_RATIO = 456.039 / 149.71;
-  const logoImg = new Image();
-  logoImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
-    '<svg xmlns="http://www.w3.org/2000/svg" width="456" height="150" viewBox="0 0 456.039 149.71">' +
-    document.getElementById('afidaLogo').innerHTML +
-    '</svg>'
-  );
 
   // ---------- Canvas sizing ----------
   // The game runs in virtual units with a minimum playfield of 420x640: when
@@ -1283,10 +1267,6 @@
     ctx.fillRect(0, y, W, BASE_H + 200);
     ctx.fillStyle = GREEN;
     ctx.fillRect(0, y, W, 6);
-    if (logoImg.complete && logoImg.naturalWidth) {
-      const lh = 36, lw = lh * LOGO_RATIO;
-      ctx.drawImage(logoImg, (W - lw) / 2, y + 22, lw, lh);
-    }
   }
 
   function drawRivalLine() {
