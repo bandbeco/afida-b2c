@@ -1,6 +1,6 @@
 // Generates public/game/og.png (1200x630 social card for The Afida Stack).
 // Run: npm i --no-save @napi-rs/canvas && node script/game_og_image.js
-const { createCanvas, GlobalFonts } = require('@napi-rs/canvas');
+const { createCanvas, loadImage, GlobalFonts } = require('@napi-rs/canvas');
 const fs = require('fs');
 
 const path = require('path');
@@ -14,6 +14,9 @@ const PINK = '#ff6b9d', KRAFT = '#c79a63', KRAFT_DARK = '#a97f4e', GRID = '#edf3
 
 const canvas = createCanvas(W, H);
 const ctx = canvas.getContext('2d');
+
+async function main() {
+const logo = await loadImage(fs.readFileSync(path.join(__dirname, '../app/views/shared/_logo.html.erb')));
 
 // ---------- ground + grid ----------
 ctx.fillStyle = PAPER;
@@ -31,12 +34,8 @@ ctx.fillStyle = DEEP;
 ctx.fillRect(0, BASE_Y, W, 78);
 ctx.fillStyle = GREEN;
 ctx.fillRect(0, BASE_Y, W, 8);
-ctx.fillStyle = PAPER;
-ctx.font = '30px Fredoka Medium';
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle';
-const word = 'A F I D A';
-for (let i = -1; i < 4; i++) ctx.fillText(word, 180 + i * 420, BASE_Y + 44);
+const barLogoH = 38, barLogoW = barLogoH * 456.039 / 149.71;
+for (let i = 0; i < 3; i++) ctx.drawImage(logo, 160 + i * 440 - barLogoW / 2, BASE_Y + 21, barLogoW, barLogoH);
 
 // ---------- block drawing (same shapes as the game) ----------
 const BLOCK_H = 62;
@@ -139,21 +138,10 @@ conf.forEach(([x, y], i) => {
 ctx.textAlign = 'left';
 ctx.textBaseline = 'alphabetic';
 
-// eyebrow pill
-ctx.fillStyle = INK;
-ctx.beginPath();
-ctx.roundRect(70, 78, 268, 48, 24);
-ctx.fill();
-ctx.fillStyle = PAPER;
-ctx.font = '22px Fredoka Medium';
-ctx.textAlign = 'center';
-ctx.fillText('A F I D A   P R E S E N T S', 204, 109);
-ctx.textAlign = 'left';
-
-// title
-ctx.fillStyle = INK;
+// hero lockup: the afida logo over the game title
+const heroW = 385, heroH = heroW * 149.71 / 456.039;
+ctx.drawImage(logo, 66, 100, heroW, heroH);
 ctx.font = '108px Fredoka Medium';
-ctx.fillText('The Afida', 66, 236);
 const grad = ctx.createLinearGradient(66, 260, 480, 340);
 grad.addColorStop(0, DEEP);
 grad.addColorStop(1, '#3ecf9a');
@@ -198,3 +186,5 @@ ctx.stroke();
 
 fs.writeFileSync(path.join(__dirname, '../public/game/og.png'), canvas.toBuffer('image/png'));
 console.log('written', fs.statSync(path.join(__dirname, '../public/game/og.png')).size, 'bytes');
+}
+main();
