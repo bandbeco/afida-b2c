@@ -790,13 +790,21 @@
   );
 
   // ---------- Canvas sizing ----------
-  let W = 0, H = 0;
+  // The game runs in virtual units with a minimum playfield of 420x640: when
+  // the viewport is smaller (tiny phone, browser zoomed in) the scene renders
+  // scaled down instead of shrinking the fall gap and swing travel. Zooming
+  // changes how big the game looks, never how hard it is.
+  const MIN_VW = 420, MIN_VH = 640;
+  let W = 0, H = 0, viewScale = 1;
   function resize() {
     const dpr = Math.min(devicePixelRatio || 1, 2);
-    W = canvas.clientWidth; H = canvas.clientHeight;
-    canvas.width = Math.round(W * dpr);
-    canvas.height = Math.round(H * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const cw = canvas.clientWidth, ch = canvas.clientHeight;
+    viewScale = Math.min(cw / MIN_VW, ch / MIN_VH, 1);
+    W = cw / viewScale;
+    H = ch / viewScale;
+    canvas.width = Math.round(cw * dpr);
+    canvas.height = Math.round(ch * dpr);
+    ctx.setTransform(dpr * viewScale, 0, 0, dpr * viewScale, 0, 0);
   }
   addEventListener('resize', resize);
   resize();

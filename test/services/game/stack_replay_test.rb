@@ -80,6 +80,8 @@ class Game::StackReplayTest < ActiveSupport::TestCase
 
   test "an implausible canvas width is invalid" do
     assert_not Game::StackReplay.new(canvas_width: 10, xs: [ 0 ]).valid?
+    # below the client's zoom-proof 420-unit minimum playfield
+    assert_not Game::StackReplay.new(canvas_width: 300, xs: [ 0 ]).valid?
     assert_not Game::StackReplay.new(canvas_width: 99_999, xs: [ 0 ]).valid?
     assert_not Game::StackReplay.new(canvas_width: "wide", xs: [ 0 ]).valid?
   end

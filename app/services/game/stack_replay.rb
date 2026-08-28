@@ -15,7 +15,9 @@ module Game
     BASE_MIN_W = 120
     BASE_MAX_W = 230
     BASE_RATIO = 0.46
-    CANVAS_RANGE = (200..4000)
+    # The client's virtual playfield never reports narrower than 420 (its
+    # zoom-proof minimum); anything below 380 is a doctored submission.
+    CANVAS_RANGE = (380..4000)
     MAX_DROPS = LeaderboardEntry::MAX_SCORE
 
     def initialize(canvas_width:, xs:)
