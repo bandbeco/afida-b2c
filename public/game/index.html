@@ -51,14 +51,70 @@
     overscroll-behavior: none;
     -webkit-tap-highlight-color: transparent;
   }
+  /* Cabinet: the screen stays a narrow CRT; on desktop, bezel rails flank it
+     like printed cabinet art (no scanlines there — print, not phosphor). */
+  .cabinet {
+    height: 100dvh;
+    display: flex;
+    justify-content: center;
+    align-items: stretch;
+  }
   .shell {
     position: relative;
-    margin: 0 auto;
     height: 100dvh;
+    width: 100%;
     max-width: 560px;
     background: var(--crt);
     overflow: hidden;
   }
+  .rail { display: none; }
+  @media (min-width: 1180px) {
+    .rail {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 20px;
+      width: 300px;
+      padding: 24px 22px;
+      overflow-y: auto;
+    }
+  }
+  .rail-panel {
+    border: 3px solid var(--dim);
+    background: var(--panel);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+  }
+  .rail-panel.hidden { display: none; }
+  .rail-title {
+    font-family: var(--font);
+    font-size: 0.6rem;
+    line-height: 1.6;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--green);
+    text-shadow: var(--glow-green);
+    margin: 0;
+  }
+  .rail-copy {
+    font-size: 1.2rem;
+    line-height: 1.25;
+    color: var(--muted);
+    margin: 0;
+    text-align: center;
+  }
+  .rail-copy .glow { color: var(--green); text-shadow: var(--glow-green); }
+  .rail-logo { display: flex; justify-content: center; }
+  .rail-logo svg {
+    width: 150px;
+    height: auto;
+    filter: drop-shadow(0 0 10px rgba(121, 235, 192, 0.35));
+  }
+  .rail .footer-link { text-align: center; }
   /* CRT glass: scanlines + corner vignette over everything, UI included */
   .shell::after {
     content: '';
@@ -645,6 +701,21 @@
 </style>
 </head>
 <body>
+<div class="cabinet">
+<aside class="rail" aria-label="Hi-scores and controls">
+  <div class="rail-panel board hidden" id="railScores">
+    <p class="rail-title">Hi-scores</p>
+    <p class="board-title" id="railBoardTitle">Top stackers</p>
+    <ol id="railBoardList"></ol>
+    <p class="board-empty hidden" id="railBoardEmpty">Nobody yet this month. The board is yours for the taking.</p>
+    <p class="fineprint">Top stacker this month gets a shoutout from @afidasupplies.</p>
+  </div>
+  <div class="rail-panel">
+    <p class="rail-title">Controls</p>
+    <p class="rail-copy">One button. The crane swings, you drop &mdash; tap, click or hit space.</p>
+    <p class="rail-copy">Overhang gets sliced off. Perfect drops grow the box back.</p>
+  </div>
+</aside>
 <main class="shell" id="shell">
   <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
     <symbol id="afidaLogo" viewBox="0 0 456.039 149.71">
@@ -734,6 +805,19 @@
     <button class="btn ghost" id="againBtn">Continue?</button>
   </div>
 </main>
+<aside class="rail" aria-label="Bonus and challenge info">
+  <div class="rail-logo"><svg viewBox="0 0 456.039 149.71" role="img" aria-label="Afida"><use href="#afidaLogo"></use></svg></div>
+  <div class="rail-panel">
+    <p class="rail-title">Bonus stage</p>
+    <p class="rail-copy">Stack <span id="railWinTarget">15</span> and take <span class="glow">5% off</span> your next order at afida.com.</p>
+  </div>
+  <div class="rail-panel">
+    <p class="rail-title">2P mode</p>
+    <p class="rail-copy">Finish a run, send your score link. Their game shows your line to beat.</p>
+  </div>
+  <p class="footer-link"><a href="https://afida.com" rel="noopener"><span>afida.com &mdash; eco-friendly packaging supplies</span></a></p>
+</aside>
+</div>
 
 <script>
 (() => {
@@ -1471,20 +1555,9 @@
     return Math.max(1, Math.ceil((next - now) / 86400000));
   }
 
-  function renderBoard() {
-    if (!lb.ok) return;
-    $('menuBoard').classList.remove('hidden');
-    const lead = lb.entries[0];
-    $('boardLead').textContent = lead
-      ? 'Hi-score ' + pad(lead.score) + ' ' + lead.name
-      : 'Hi-score table';
-    const days = daysUntilReset();
-    const reset = ' · resets in ' + days + (days === 1 ? ' day' : ' days');
-    $('boardTitle').textContent = (lb.month || 'Top stackers') + reset;
-    const list = $('boardList');
+  function fillBoard(list, limit) {
     list.textContent = '';
-    $('boardEmpty').classList.toggle('hidden', lb.entries.length > 0);
-    for (const e of lb.entries.slice(0, 5)) {
+    for (const e of lb.entries.slice(0, limit)) {
       const li = document.createElement('li');
       const rank = document.createElement('span');
       rank.className = 'rank';
@@ -1507,6 +1580,25 @@
       li.append(rank, who, pts);
       list.append(li);
     }
+  }
+
+  function renderBoard() {
+    if (!lb.ok) return;
+    $('menuBoard').classList.remove('hidden');
+    $('railScores').classList.remove('hidden');
+    const lead = lb.entries[0];
+    $('boardLead').textContent = lead
+      ? 'Hi-score ' + pad(lead.score) + ' ' + lead.name
+      : 'Hi-score table';
+    const days = daysUntilReset();
+    const reset = ' · resets in ' + days + (days === 1 ? ' day' : ' days');
+    $('boardTitle').textContent = (lb.month || 'Top stackers') + reset;
+    $('railBoardTitle').textContent = (lb.month || 'Top stackers') + reset;
+    $('boardEmpty').classList.toggle('hidden', lb.entries.length > 0);
+    $('railBoardEmpty').classList.toggle('hidden', lb.entries.length > 0);
+    // the menu fold keeps a tight top 5; the desktop rail has room for all 10
+    fillBoard($('boardList'), 5);
+    fillBoard($('railBoardList'), 10);
   }
 
   // Invite milestones: things, not percentages. Fulfilment is manual — the
@@ -1591,6 +1683,7 @@
   addEventListener('resize', () => { if (state === 'menu') buildDemoTower(); });
 
   $('winTarget').textContent = winScore;
+  $('railWinTarget').textContent = winScore;
   if (inviterCode) $('refBoost').classList.remove('hidden');
   if (beatScore > 0) {
     challengeBanner.textContent =
