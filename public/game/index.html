@@ -65,6 +65,12 @@
     touch-action: none;
     cursor: pointer;
   }
+  .sprite {
+    position: absolute;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+  }
 
   /* ---------- HUD ---------- */
   .hud {
@@ -161,21 +167,40 @@
     overflow-y: auto;
   }
   .overlay.hidden { display: none; }
-  .eyebrow {
-    font-weight: 500;
-    font-size: 0.72rem;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
-    background: var(--ink);
-    color: var(--paper);
-    border-radius: 9999px;
-    padding: 7px 16px;
+  /* The menu sits over the live attract-mode scene: wash fades so the
+     swinging dispenser and demo tower ghost through behind the cards. */
+  .overlay.clear {
+    background: linear-gradient(180deg,
+      color-mix(in srgb, var(--paper) 96%, transparent) 12%,
+      color-mix(in srgb, var(--paper) 62%, transparent) 58%,
+      color-mix(in srgb, var(--paper) 30%, transparent));
+    backdrop-filter: none;
+  }
+  .hero-lockup {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .logo-hero {
+    width: min(58vw, 235px);
+    height: auto;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
   }
   .title {
     font-weight: 500;
-    font-size: clamp(2.7rem, 13vw, 4.5rem);
+    font-size: clamp(3.2rem, 16vw, 5.2rem);
     line-height: 1;
-    margin: 0;
+    margin: -0.08em 0 0;
     text-wrap: balance;
   }
   .title .pop {
@@ -242,11 +267,12 @@
     text-transform: uppercase;
     border: 3px solid var(--ink);
     border-radius: 9999px;
-    background: var(--paper);
+    background: var(--pink);
+    color: var(--paper);
     box-shadow: 0 4px 0 var(--ink);
     padding: 9px 18px;
   }
-  .prize-line .off { color: var(--deep); }
+  .prize-line .off { color: var(--ink); }
 
   /* ---------- Game over ---------- */
   .over-title {
@@ -386,7 +412,19 @@
     font-size: 0.8rem;
     color: var(--muted);
   }
-  .footer-link a { color: var(--ink); }
+  .footer-link a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--muted);
+    text-decoration: none;
+  }
+  .footer-link a:hover span { text-decoration: underline; }
+  .logo-inline {
+    height: 19px;
+    width: auto;
+    display: block;
+  }
 
   /* ---------- Leaderboard ---------- */
   .board {
@@ -407,6 +445,7 @@
     letter-spacing: 0.14em;
     text-transform: uppercase;
     text-align: center;
+    color: var(--deep);
     margin: 0;
   }
   .board ol {
@@ -425,11 +464,15 @@
   }
   .board .rank {
     font-weight: 500;
-    color: var(--deep);
+    color: var(--muted);
     min-width: 1.6em;
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
+  /* podium colors for the top three */
+  .board li:nth-child(1) .rank { color: var(--deep); }
+  .board li:nth-child(2) .rank { color: var(--pink); }
+  .board li:nth-child(3) .rank { color: var(--kraft); }
   .board .who {
     flex: 1;
     text-align: left;
@@ -481,6 +524,18 @@
 </head>
 <body>
 <main class="shell" id="shell">
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="afidaLogo" viewBox="0 0 456.039 149.71">
+      <path d="M452.69 13.31C447.42 4.51 437.31.06 422.63.06h-38.64c-5.73-.35-14.64 1.5-22.65 8.72-5.76-5.8-14.66-8.74-26.57-8.74H181.6c-5.91-.36-15.19 1.62-23.38 9.39C152.5 3.2 143.4.04 131.06.04H92.42c-8.51-.51-24.01 3.79-33.18 23.33L0 149.7h174.96l34.03.01h74.28l8.32-.01 65.25.01h45.61l50.41-110.69c3.29-6.47 5.15-16.88-.14-25.71Z" fill="#000000"></path>
+      <path d="M130.79 14.03H91.6S79.49 12.6 71.65 29.3L21.77 135.69h34.41l24.64-51.31H91.2l-23.21 51.31h33.6l46.83-102.82s10.08-18.83-17.61-18.83Zm-29.32 47.65H91.09l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"></path>
+      <path d="M198.89 61.68h-18.63l9.64-20.24h28.28l14.2-27.4h-51.61s-12.11-1.43-19.95 15.27L110.94 135.7h34.41l24.64-51.31h18.22l10.69-22.7Z" fill="#79ebc0"></path>
+      <path d="M422.35 14.05h-39.19s-12.11-1.43-19.95 15.27l-49.88 106.39h34.41l24.64-51.31h10.38l-23.2 51.29h33.6l46.82-102.81s10.08-18.83-17.61-18.83Zm-29.32 47.64h-10.38l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"></path>
+      <path fill="#79ebc0" d="m262 37.26.67.31 3.45 1.58 11.45-25.12h-7.99l-10.08 22.1 2.5 1.13z"></path>
+      <path d="M254.35 50.8c-3.4-5.07-4.19-11.73-1.47-17.69l8.7-19.07h-19.72L181.8 135.7h17.63v.02h16.45v-.02l39.72-83.26c-.44-.52-.85-1.07-1.23-1.63Z" fill="#79ebc0"></path>
+      <path d="m314.33 115.81 37.77-82.94s10.08-18.83-17.61-18.83h-33l-15.5 34.17c-2.01 4.42-5.58 7.62-9.75 9.31-2.36.95-4.91 1.42-7.49 1.32l-36.7 76.85v.02h8.9v-.02h42.04c19.93 0 28.5-14.04 30.73-18.52l.62-1.36Zm-33.65 0h-11.26l25.51-54.13 13.1-27.79h10.59l-37.94 81.92Z" fill="#79ebc0"></path>
+      <path fill="#79ebc0" d="m279.37 45.19 12-26.33 2.2-4.83h-8l-12.82 28.14 6.62 3.02z"></path>
+    </symbol>
+  </svg>
   <canvas id="game"></canvas>
 
   <div class="hud" id="hud">
@@ -492,9 +547,11 @@
     <div class="toast" id="toast" role="status"></div>
   </div>
 
-  <div class="overlay" id="menu">
-    <div class="eyebrow">Afida presents</div>
-    <h1 class="title">The Afida <span class="pop">Stack</span></h1>
+  <div class="overlay clear" id="menu">
+    <div class="hero-lockup">
+      <svg class="logo-hero" viewBox="0 0 456.039 149.71" role="img" aria-label="Afida"><use href="#afidaLogo"></use></svg>
+      <h1 class="title"><span class="sr-only">The Afida </span><span class="pop">Stack</span></h1>
+    </div>
     <p class="tagline">Quality packaging supplies. Stacked recklessly high.</p>
     <div class="challenge hidden" id="challengeBanner"></div>
     <div class="prize-line">Stack 15 &rarr; <span class="off">5% off</span></div>
@@ -505,7 +562,7 @@
       <ol id="boardList"></ol>
       <p class="board-empty hidden" id="boardEmpty">Nobody yet this month. The board is yours for the taking.</p>
     </div>
-    <p class="footer-link"><a href="https://afida.com" rel="noopener">afida.com &mdash; eco-friendly packaging supplies</a></p>
+    <p class="footer-link"><a href="https://afida.com" rel="noopener"><svg class="logo-inline" viewBox="0 0 456.039 149.71" role="img" aria-label="afida.com"><use href="#afidaLogo"></use></svg><span>eco-friendly packaging supplies</span></a></p>
   </div>
 
   <div class="overlay hidden" id="over">
@@ -540,7 +597,7 @@
       </div>
     </div>
     <button class="btn ghost" id="againBtn">Stack again</button>
-    <p class="footer-link"><a href="https://afida.com" rel="noopener">afida.com &mdash; eco-friendly packaging supplies</a></p>
+    <p class="footer-link"><a href="https://afida.com" rel="noopener"><svg class="logo-inline" viewBox="0 0 456.039 149.71" role="img" aria-label="afida.com"><use href="#afidaLogo"></use></svg><span>eco-friendly packaging supplies</span></a></p>
   </div>
 </main>
 
@@ -674,6 +731,15 @@
     win: () => [523, 659, 784, 1047].forEach((f, i) => beep(f, 0.16, 'square', 0.08, i * 0.11)),
     over: () => { beep(220, 0.18, 'sawtooth', 0.07); beep(150, 0.3, 'sawtooth', 0.07, 0.15); }
   };
+
+  // ---------- Brand logo (drawn onto the canvas base) ----------
+  const LOGO_RATIO = 456.039 / 149.71;
+  const logoImg = new Image();
+  logoImg.src = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" width="456" height="150" viewBox="0 0 456.039 149.71">' +
+    document.getElementById('afidaLogo').innerHTML +
+    '</svg>'
+  );
 
   // ---------- Canvas sizing ----------
   let W = 0, H = 0;
@@ -938,13 +1004,10 @@
     ctx.fillRect(0, y, W, BASE_H + 200);
     ctx.fillStyle = GREEN;
     ctx.fillRect(0, y, W, 6);
-    ctx.fillStyle = PAPER;
-    ctx.font = "500 26px Fredoka, sans-serif";
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.letterSpacing = '10px';
-    ctx.fillText('AFIDA', W / 2 + 5, y + 44);
-    ctx.letterSpacing = '0px';
+    if (logoImg.complete && logoImg.naturalWidth) {
+      const lh = 36, lw = lh * LOGO_RATIO;
+      ctx.drawImage(logoImg, (W - lw) / 2, y + 22, lw, lh);
+    }
   }
 
   function drawRivalLine() {
@@ -1006,8 +1069,8 @@
       drawBlock(b.x + sway, y, b.w, b.level, 0, 0, 0);
     }
 
-    // swinging block + dispenser arm
-    if (state === 'play') {
+    // swinging block + dispenser arm (also runs as the menu's attract mode)
+    if (state === 'play' || state === 'menu') {
       drawBlock(swing.x - swing.w / 2, SWING_Y, swing.w, stack.length, 0, 0, 0);
       ctx.strokeStyle = INK;
       ctx.lineWidth = 3;
@@ -1055,8 +1118,8 @@
     const dt = Math.min((now - last) / 1000, 0.05);
     last = now;
 
-    if (state === 'play') {
-      swing.phase += dt * speedFor(stack.length);
+    if (state === 'play' || state === 'menu') {
+      swing.phase += dt * (state === 'menu' ? 1.2 : speedFor(stack.length));
       swing.x = W / 2 + Math.sin(swing.phase) * ampFor(swing.w);
     }
     if (state === 'drop' && falling) {
@@ -1259,6 +1322,17 @@
   fetchBoard();
 
   // ---------- Menu wiring ----------
+  // Attract mode: a little demo tower stands behind the menu while the
+  // dispenser swings above it, so the first thing a visitor sees is the game.
+  function buildDemoTower() {
+    const w = baseW();
+    const jitter = [ 0, -10, 7, -5 ];
+    stack = jitter.map((j, i) => ({ x: (W - w) / 2 + j, w, level: i }));
+    swing = { phase: Math.PI / 2, x: W / 2, w };
+  }
+  buildDemoTower();
+  addEventListener('resize', () => { if (state === 'menu') buildDemoTower(); });
+
   if (beatScore > 0) {
     challengeBanner.textContent =
       (rivalName || 'A rival') + ' stacked ' + beatScore + '. Your move.';
