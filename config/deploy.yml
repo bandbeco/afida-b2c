@@ -7,7 +7,14 @@ image: bandbeco/afida-b2c
 # Deploy to these servers.
 servers:
   web:
-    - 195.201.16.125
+    hosts:
+      - 195.201.16.125
+    options:
+      # Margot's OpenClaw gateway lives on the tailnet; the host is joined
+      # (tailscale up --accept-dns=false) but containers don't get MagicDNS,
+      # so pin her ts.net hostname to her Tailscale IP. TLS still validates
+      # against the hostname.
+      add-host: margot.dojo-liberty.ts.net:100.86.36.28
   # job:
   #   hosts:
   #     - 192.168.0.1
