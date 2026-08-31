@@ -13,6 +13,11 @@ module Game
     # are scoped to the month and capped, putting a hard ceiling on what even
     # a distributed scraper could give away.
     MONTHLY_REDEMPTION_CAP = 200
+    # Matches the free-delivery threshold: the prize nudges a real stocking
+    # order, not a £15 samples basket. Stripe checks this against the checkout
+    # subtotal, where shipping rides as a line item — near-misses can squeak
+    # through, which is fine.
+    MINIMUM_ORDER_PENCE = 10_000
 
     # Stripe caps coupon names at 40 characters, and the month suffix in
     # coupon_id adds 15 — keep these short.
@@ -27,7 +32,8 @@ module Game
         promotion: { type: "coupon", coupon: coupon_id(kind) },
         code: kind[:prefix] + Array.new(6) { CODE_ALPHABET.sample }.join,
         max_redemptions: 1,
-        expires_at: Time.current.end_of_month.to_i
+        expires_at: Time.current.end_of_month.to_i,
+        restrictions: { minimum_amount: MINIMUM_ORDER_PENCE, minimum_amount_currency: "gbp" }
       ).code
     end
 

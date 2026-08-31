@@ -14,6 +14,7 @@ class Game::PromoCodesTest < ActiveSupport::TestCase
     assert_match(/\ASTACK[#{Game::PromoCodes::CODE_ALPHABET.join}]{6}\z/, captured[:code])
     assert_equal 1, captured[:max_redemptions]
     assert_equal Time.current.end_of_month.to_i, captured[:expires_at]
+    assert_equal({ minimum_amount: 10_000, minimum_amount_currency: "gbp" }, captured[:restrictions])
   end
 
   test "mints MATE codes against the month's referral coupon" do
