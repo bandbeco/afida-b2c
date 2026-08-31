@@ -769,7 +769,7 @@
         <span class="code" id="promoCode">...</span>
         <button class="copy" id="copyCode">Copy code</button>
       </div>
-      <p class="terms">On a typical order that's a sleeve of cups on us. Yours alone &mdash; one use, this month, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
+      <p class="terms">Yours alone &mdash; one use, this month, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
     </div>
     <details class="fold" id="challengeFold">
       <summary>Challenge a mate<span class="chev" aria-hidden="true"></span></summary>
@@ -781,7 +781,7 @@
           <button class="btn pink" id="copyShare">Copy challenge</button>
           <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
         </div>
-        <p class="fineprint">When a mate you sent plays, an extra 5% code lands for you.</p>
+        <p class="fineprint" id="shareBonus"></p>
       </div>
     </details>
     <details class="fold hidden" id="lbFold">
@@ -1457,9 +1457,17 @@
     const brag = score >= winScore
       ? `\u{1F964}\u{1F4E6} I stacked ${score} crates of eco-packaging and won 5% off at afida.com`
       : `\u{1F964}\u{1F4E6} I stacked ${score} on The Afida Stack before it all came down`;
-    return `${brag}\nYour move: ${url.toString()}`;
+    const gift = myCode ? '\nCrane’s greased for you — you win the 5% at 12.' : '';
+    return `${brag}${gift}\nYour move: ${url.toString()}`;
   }
-  function refreshPreview() { sharePreview.textContent = shareText(); }
+  function refreshPreview() {
+    sharePreview.textContent = shareText();
+    // The gift is only real once the link carries a ref code, which the
+    // board grants on joining — before that, the line sells the join.
+    $('shareBonus').textContent = myCode
+      ? 'Your link greases the crane — mates win the 5% at 12, not 15. And when one plays, an extra 5% code lands for you.'
+      : 'Join the hi-score table and your link greases the crane — mates win at 12, and an extra 5% lands for you when one plays.';
+  }
   nameInput.addEventListener('input', refreshPreview);
 
   // Clipboard API needs a secure context; fall back to execCommand elsewhere
@@ -1526,8 +1534,8 @@
       btn.textContent = 'Copy code';
       btn.disabled = true;
     } else {
-      codeEl.textContent = 'JAMMED';
-      btn.textContent = 'Try again';
+      codeEl.textContent = '------';
+      btn.textContent = 'Get my code';
       btn.disabled = false;
     }
   }
@@ -1691,6 +1699,7 @@
       if (d.ref_code && !myCode) {
         myCode = d.ref_code;
         store.set('afidaStackRefCode', myCode);
+        refreshPreview();
       }
       $('lbForm').classList.add('hidden');
       $('lbNote').classList.add('hidden');
