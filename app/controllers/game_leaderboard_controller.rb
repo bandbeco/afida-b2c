@@ -23,17 +23,13 @@ class GameLeaderboardController < ApplicationController
 
   def index
     entries = LeaderboardEntry.current_top
-    payload = {
+    render json: {
       month: Date.current.strftime("%B %Y"),
       token: self.class.token_verifier.generate({ "issued_at" => Time.current.to_i }),
       entries: entries.map.with_index(1) do |entry, rank|
         { rank: rank, name: entry.name, score: entry.score, instagram_handle: entry.public_handle }
       end
     }
-    if params[:me].present? && (mine = LeaderboardEntry.find_by(ref_code: params[:me].to_s.downcase))
-      payload[:me] = { ref_code: mine.ref_code, referrals: mine.verified_referrals }
-    end
-    render json: payload
   end
 
   def create

@@ -651,21 +651,6 @@
     max-width: 34ch;
     margin: 0;
   }
-  .fineprint-btn {
-    background: none;
-    border: none;
-    font-family: inherit;
-    font-size: 1.05rem;
-    line-height: 1.2;
-    color: var(--green);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-    max-width: 34ch;
-    margin: 0;
-    padding: 0;
-    cursor: pointer;
-  }
-  .fineprint-btn.hidden { display: none; }
   .email-row {
     display: flex;
     flex-wrap: wrap;
@@ -770,7 +755,6 @@
     <div class="challenge hidden" id="challengeBanner"></div>
     <div class="prize-line">Bonus: stack <span id="winTarget">15</span> for <span class="off">5% off</span></div>
     <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
-    <button class="fineprint-btn hidden" id="mateReward"></button>
     <button class="btn" id="playBtn"><span class="blink">Press start</span></button>
     <details class="fold board hidden" id="menuBoard">
       <summary><span id="boardLead">Hi-score table</span><span class="chev" aria-hidden="true"></span></summary>
@@ -790,16 +774,13 @@
     <p class="best-line" id="bestLine">Best: 0</p>
     <div class="prize-card hidden" id="prizeCard">
       <p class="won">Bonus unlocked: 5% off your next order</p>
-      <div class="code-row">
-        <span class="code" id="promoCode">...</span>
-        <button class="copy" id="copyCode">Copy code</button>
-      </div>
-      <form class="email-row hidden" id="winEmailRow">
-        <input class="name-input email-input" id="winEmail" type="email" maxlength="80" placeholder="you@yourcafe.com" autocomplete="email">
-        <button class="copy" id="winEmailBtn" type="submit">Email it to me</button>
+      <form class="email-row" id="winEmailRow">
+        <input class="name-input email-input" id="winEmail" type="email" maxlength="80" placeholder="you@yourcafe.com" autocomplete="email" required>
+        <button class="copy" id="winEmailBtn" type="submit">Send my code</button>
         <label class="consent"><input type="checkbox" id="winOptIn"> Send me Afida offers too</label>
       </form>
-      <p class="terms">Yours alone &mdash; one use, this month, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
+      <p class="terms hidden" id="winSent"></p>
+      <p class="terms">Your unique code lands by email &mdash; one use, this month, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
     </div>
     <details class="fold" id="challengeFold">
       <summary>Challenge a mate<span class="chev" aria-hidden="true"></span></summary>
@@ -1130,7 +1111,6 @@
     prizePill.classList.add('unlocked');
     toast('5% off unlocked!', true);
     sfx.win();
-    mintWinCode();
     if (!reducedMotion) {
       for (let i = 0; i < 80; i++) {
         confetti.push({
@@ -1174,7 +1154,7 @@
     $('bestLine').textContent = 'Hi-score ' + pad(best) +
       (beatScore ? ' · 2UP ' + (rivalName || 'Rival') + ' ' + pad(beatScore) : '');
     $('prizeCard').classList.toggle('hidden', !unlocked);
-    if (unlocked) mintWinCode();
+    if (unlocked) resetWinClaim();
 
     const fold = $('challengeFold');
     fold.classList.toggle('hidden', low);
@@ -1495,11 +1475,14 @@
   function refreshPreview() {
     sharePreview.textContent = shareText();
     // The gift is only real once the link carries a ref code, which the
-    // board grants on joining — before that, the line sells the join.
-    const byEmail = store.get('afidaStackEmail') ? ' by email' : '';
+    // board grants on joining — and the kickback line only promises what can
+    // be delivered: it travels by email, to the address left at board join.
+    const kickback = store.get('afidaStackBoardEmail')
+      ? ' And when one plays, an extra 5% code lands in your inbox.'
+      : '';
     $('shareBonus').textContent = myCode
-      ? 'Your link greases the crane — mates win the 5% at 12, not 15. And when one plays, an extra 5% code lands for you' + byEmail + '.'
-      : 'Join the hi-score table and your link greases the crane — mates win at 12, and an extra 5% lands for you when one plays.';
+      ? 'Your link greases the crane — mates win the 5% at 12, not 15.' + kickback
+      : 'Join the hi-score table (email included) and your link greases the crane — mates win at 12, and an extra 5% lands in your inbox when one plays.';
   }
   nameInput.addEventListener('input', refreshPreview);
 
@@ -1535,74 +1518,47 @@
   shareBtn.addEventListener('click', async () => {
     try { await navigator.share({ text: shareText() }); } catch {}
   });
-  // ---------- Prize codes ----------
-  // Codes are minted server-side after the run is re-verified: unique and
-  // single-use, so nothing shown here is worth pasting to a coupon site.
-  // One code per visit is plenty — a second win re-shows the first code.
-  let winCode = null, winCodePending = false;
-  async function mintWinCode() {
-    if (winCode || winCodePending) { renderWinCode(); return; }
-    winCodePending = true;
-    renderWinCode();
-    try {
-      const r = await fetch('/game/win_code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ token: lb.token, canvas_width: roundW, xs: dropLog, ref: inviterCode || undefined })
-      });
-      if (!r.ok) throw new Error(r.status);
-      winCode = (await r.json()).code;
-    } catch {}
-    winCodePending = false;
-    renderWinCode();
+  // ---------- Prize claim ----------
+  // The code exists only in Stripe and the claimant's inbox: the claim posts
+  // the winning run's proof, the server re-verifies it, mints a unique
+  // single-use code and emails it. Nothing shown here is worth scraping.
+  function resetWinClaim() {
+    $('winSent').classList.add('hidden');
+    const btn = $('winEmailBtn');
+    btn.disabled = false;
+    btn.textContent = 'Send my code';
   }
-  function renderWinCode() {
-    const codeEl = $('promoCode'), btn = $('copyCode');
-    $('winEmailRow').classList.toggle('hidden', !winCode);
-    if (winCode) {
-      codeEl.textContent = winCode;
-      btn.textContent = 'Copy code';
-      btn.disabled = false;
-    } else if (winCodePending) {
-      codeEl.textContent = 'MINTING...';
-      btn.textContent = 'Copy code';
-      btn.disabled = true;
-    } else {
-      codeEl.textContent = '------';
-      btn.textContent = 'Get my code';
-      btn.disabled = false;
-    }
-  }
-  $('copyCode').addEventListener('click', async () => {
-    if (!winCode) { mintWinCode(); return; }
-    if (await copyText(winCode)) {
-      $('copyCode').textContent = 'Copied!';
-      setTimeout(() => { $('copyCode').textContent = 'Copy code'; }, 1500);
-    } else {
-      prompt('Your code:', winCode);
-    }
-  });
   $('winEmail').value = store.get('afidaStackEmail') || '';
   $('winEmailRow').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = $('winEmail').value.trim();
-    if (!email || !winCode) return;
+    if (!email) return;
     const btn = $('winEmailBtn');
     btn.disabled = true;
     btn.textContent = 'Sending…';
     try {
-      const r = await fetch('/game/email_code', {
+      const r = await fetch('/game/win_code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ email, code: winCode, marketing: $('winOptIn').checked })
+        body: JSON.stringify({
+          email,
+          marketing: $('winOptIn').checked,
+          token: lb.token,
+          canvas_width: roundW,
+          xs: dropLog,
+          ref: inviterCode || undefined
+        })
       });
       if (!r.ok) throw new Error(r.status);
       store.set('afidaStackEmail', email);
-      btn.textContent = 'Sent!';
-      refreshPreview();
+      const sent = $('winSent');
+      sent.textContent = 'Sent to ' + email + ' — check your inbox.';
+      sent.classList.remove('hidden');
+      btn.disabled = false;
+      btn.textContent = 'Send again';
     } catch {
       btn.disabled = false;
-      btn.textContent = 'Try sending again';
+      btn.textContent = 'Try again';
     }
   });
 
@@ -1610,7 +1566,7 @@
   // Backed by the Rails endpoint at /game/leaderboard. When the game is served
   // anywhere without that endpoint (previews, static mirrors) the fetch fails
   // and every leaderboard element simply stays hidden.
-  const lb = { ok: false, token: null, entries: [], month: '', me: null };
+  const lb = { ok: false, token: null, entries: [], month: '' };
   const igInput = $('igInput');
   igInput.value = store.get('afidaStackIG') || '';
   const lbEmail = $('lbEmail');
@@ -1618,17 +1574,14 @@
 
   async function fetchBoard() {
     try {
-      const url = '/game/leaderboard' + (myCode ? '?me=' + encodeURIComponent(myCode) : '');
-      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const r = await fetch('/game/leaderboard', { headers: { 'Accept': 'application/json' } });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       lb.ok = true;
       lb.token = d.token;
       lb.entries = d.entries || [];
       lb.month = d.month || '';
-      lb.me = d.me || null;
       renderBoard();
-      renderMateReward();
     } catch {
       lb.ok = false;
     }
@@ -1686,43 +1639,6 @@
     fillBoard($('railBoardList'), 10);
   }
 
-  // ---------- Referral kickback ----------
-  // The board fetch says when someone this player sent has verifiably played;
-  // the claim mints (or re-shows) their unique extra-5% code.
-  let mateCode = null, matePending = false;
-  function renderMateReward() {
-    const el = $('mateReward');
-    if (!lb.ok || !lb.me || !lb.me.referrals) { el.classList.add('hidden'); return; }
-    el.textContent = mateCode
-      ? 'Your extra 5%: ' + mateCode + ' — tap to copy'
-      : matePending ? 'Minting your code…' : 'A mate you sent played — claim your extra 5%';
-    el.classList.remove('hidden');
-  }
-  $('mateReward').addEventListener('click', async () => {
-    if (matePending) return;
-    if (mateCode) {
-      if (await copyText(mateCode)) $('mateReward').textContent = 'Copied! ' + mateCode + ' — one use, this month';
-      else prompt('Your code:', mateCode);
-      return;
-    }
-    matePending = true;
-    renderMateReward();
-    try {
-      const r = await fetch('/game/referral_code', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-        body: JSON.stringify({ me: myCode })
-      });
-      if (!r.ok) throw new Error(r.status);
-      mateCode = (await r.json()).code;
-      matePending = false;
-      renderMateReward();
-    } catch {
-      matePending = false;
-      $('mateReward').textContent = 'Code machine jammed — try again in a minute.';
-    }
-  });
-
   function prepareBoardCard() {
     const fold = $('lbFold');
     fold.classList.toggle('hidden', !lb.ok || score < BRAG_SCORE);
@@ -1767,11 +1683,12 @@
       });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
+      if (email) store.set('afidaStackBoardEmail', '1');
       if (d.ref_code && !myCode) {
         myCode = d.ref_code;
         store.set('afidaStackRefCode', myCode);
-        refreshPreview();
       }
+      refreshPreview();
       $('lbForm').classList.add('hidden');
       $('lbNote').classList.add('hidden');
       const result = $('lbResult');

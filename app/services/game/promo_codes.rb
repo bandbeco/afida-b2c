@@ -31,11 +31,6 @@ module Game
       ).code
     end
 
-    # True when Stripe knows an active promotion code by this exact string.
-    def self.active?(code)
-      Stripe::PromotionCode.list(code: code, active: true, limit: 1).data.any?
-    end
-
     def self.coupon_id(kind)
       id = "#{kind[:coupon]}-#{Date.current.strftime('%Y-%m')}"
       Stripe::Coupon.retrieve(id).id
