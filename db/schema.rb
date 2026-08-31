@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_28_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_145341) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -252,6 +252,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_28_190000) do
     t.date "month", null: false
     t.string "name", null: false
     t.string "ref_code"
+    t.string "referral_promo_code"
     t.bigint "referrer_id"
     t.jsonb "replay"
     t.integer "score", null: false

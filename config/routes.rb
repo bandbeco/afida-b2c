@@ -106,6 +106,10 @@ Rails.application.routes.draw do
   get "game/leaderboard", to: "game_leaderboard#index"
   post "game/leaderboard", to: "game_leaderboard#create"
 
+  # Unique single-use prize codes for the game, minted after re-verification
+  post "game/win_code", to: "game_promo_codes#win"
+  post "game/referral_code", to: "game_promo_codes#referral"
+
   get "pattern-demo", to: "pages#pattern_demo" if Rails.env.development?
   get "sentry-test", to: "pages#sentry_test" if Rails.env.development?
 

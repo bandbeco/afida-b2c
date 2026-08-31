@@ -2,6 +2,8 @@
 
 ## 2026-08-31
 
+* **Ship**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) prize plumbing, on branch `afida-stack-game`. Fixed promo codes are gone: `/game/win_code` re-verifies the drop log with `Game::StackReplay` (token, speed floor, invite-aware 12/15 target) and mints a unique single-use Stripe promotion code; `/game/referral_code` mints a one-per-entry extra-5% `MATE` code once a verified invite exists, claimable from the game menu. Coupons auto-create per month, capped at 200 redemptions each, so scripted minting is bounded — a forged-but-plausible replay can't be distinguished from a real one, so the design makes minting unprofitable rather than impossible. The board now promises the monthly winner a free case of cups + the shoutout. 16 new tests; full game suite green.
+
 * **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md). Referrer-side milestone rewards (samples box at 3 verified invites, free case at 5) stripped from the game and marked deferred in the proposal, per the "keep it simple, optimise for virality" direction: the share motivator is the gift link (invitee's win threshold drops to 12), not a reward ladder. Founder decisions shrink from four to two (STACK5 Stripe code, monthly shoutout). The server keeps issuing ref codes and counting verified invites on the admin page, so the numbers to justify reintroduction keep accruing. Proposals index updated.
 
 ## 2026-08-28

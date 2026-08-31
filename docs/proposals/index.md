@@ -4,7 +4,7 @@ Client-facing proposals and their supporting annexes. The 2025 partnership packa
 
 # Growth Proposals
 
-* [Stack Game Growth Proposal (August 2026)](/proposals/stack-game-growth-2026-08.md) - Referral-rewards and prize design for The Afida Stack game from a Hormozi offer audit: v1 ships the gift-link loop, board and shoutout; milestone rewards deferred until invite numbers prove appetite.
+* [Stack Game Growth Proposal (August 2026)](/proposals/stack-game-growth-2026-08.md) - Referral-rewards and prize design for The Afida Stack game from a Hormozi offer audit: v1 ships unique single-use prize codes, the gift-link loop, a referral kickback, and a case-of-cups crown; milestone ladders deferred.
 
 * [Range Gaps (August 2026)](/proposals/range-gaps-2026-08.md) - One-pager for Afida leadership quantifying search demand behind unstocked lines: cake/bakery boxes (~12K/mo), custom-print extension, chicken boxes; recommends declining foil and cling film.
 * [Money Model Proposal (August 2026)](/proposals/money-model-2026-08.md) - Hormozi offer-sequence framework applied to afida.com; prioritises continuity (scheduled reorders), free-framed offers, and sample-to-prescription follow-up.

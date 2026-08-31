@@ -1,6 +1,6 @@
 ---
 type: Proposal
-description: Referral-rewards and prize design for The Afida Stack game, from a Hormozi offer audit — v1 ships the gift-link loop, board and shoutout; milestone rewards are deferred until invite numbers prove appetite.
+description: Referral-rewards and prize design for The Afida Stack game, from a Hormozi offer audit — v1 ships unique single-use prize codes, the gift-link loop, a referral kickback, and a case-of-cups crown; milestone ladders are deferred.
 status: active
 timestamp: 2026-08-31
 ---
@@ -19,18 +19,20 @@ The game mechanics score high on the value equation (instant, effortless, determ
 - **Invitee side of the offer**: arriving via an invite link drops the win threshold from 15 to 12 ("A mate greased the crane") — the link is worth something to the person receiving it, which is what makes people forward it.
 - **Urgency**: "resets in N days" on the board; "this month only" on the prize.
 - **Tangible framing**: "You've won 5% off your next order — on a typical order that's a sleeve of cups on us."
-- **Status**: "Top stacker this month gets a shoutout from @afidasupplies" on the board.
+- **Unique single-use prize codes** (no fixed `STACK5` anywhere): a win POSTs the drop log to `/game/win_code`, the server re-verifies it with `Game::StackReplay` exactly like a leaderboard submission, and mints a Stripe promotion code (`STACK` + 6 chars, `max_redemptions: 1`, expiring with the month). Nothing shown on screen is worth pasting to a coupon site. The two 5% coupons the codes draw on are created in Stripe automatically on first use, scoped per month and capped at 200 redemptions each — a hard ceiling on what even scripted minting could give away. Nothing to set up manually.
+- **Referral kickback, one rung**: when someone a player sent has verifiably played (distinct-address, replay-verified — the machinery that already existed), a claim appears on the menu and mints their own single-use extra-5% `MATE` code. One per board entry per month. The share screen says so: "When a mate you sent plays, an extra 5% code lands for you."
+- **Status crown**: "Top stacker this month wins a free case of cups + a shoutout from @afidasupplies" on the board.
 
 ## The two decisions founders need to make
 
-1. **Create the Stripe promotion code `STACK5`** (5% off). Recommend monthly expiry to match the "this month only" copy, recreated each month. Decide: first-order-only or open to repeat customers (recommend open — the co-founder's "win and get 5%" implies no restriction).
+1. **The crown prize**: the board now promises the monthly winner a free case of cups on top of the shoutout — confirm the fulfilment (one DM and one case a month; winners' Instagram handles are on the board). A case is photographable in a way a discount never is, which is the point.
 2. **The @afidasupplies shoutout**: commit to one story/post per month tagging the winning café. Near-zero cost, and for a B2B audience it is the strongest incentive on the page. Optional extra: a "Certified Stacker" till sticker dropped into the winner's next order.
 
-Also worth a look, no action needed to launch: is "a sleeve of cups on us" acceptable copy for 5% off a typical order, or would you rather fulfil an actual free sleeve? (Actual product beats a discount on perceived value; costs roughly the same.)
+Nothing to create in Stripe: the coupons mint themselves at 5%. Worth a skim of the numbers, though — the 200-redemptions-per-coupon monthly cap in `Game::PromoCodes::MONTHLY_REDEMPTION_CAP` is the giveaway ceiling, adjustable in one place.
 
-## Deferred: referrer-side milestone rewards (2026-08-31)
+## Deferred: referrer-side milestone ladder (2026-08-31)
 
-The v1 direction is *keep it simple, optimise for virality* — and the share motivator in this design is the gift (the invitee's greased crane), not a reward ladder for the sharer. The milestone copy (3 verified invites → samples box, 5 → free case of cups) has been removed from the game. The server still issues ref codes, attributes `ref=` arrivals, and counts verified invites on the admin page, so the numbers to justify reintroduction keep accruing. Revisit when verified invites show players actually chain referrals; the samples-box rung doubles as the free-samples lead funnel when it comes back, and the free-case rung needs a cap or "with your next order over £X" qualifier.
+The v1 direction is *keep it simple, optimise for virality* — and the share motivator in this design is the gift (the invitee's greased crane) plus the single kickback rung above, not a reward ladder. The milestone copy (3 verified invites → samples box, 5 → free case of cups) has been removed from the game. The server still attributes `ref=` arrivals and counts verified invites on the admin page, so the numbers to justify reintroduction keep accruing. Revisit when verified invites show players actually chain referrals; the samples-box rung doubles as the free-samples lead funnel when it comes back, and the free-case rung needs a cap or "with your next order over £X" qualifier.
 
 ## Deliberately not built
 

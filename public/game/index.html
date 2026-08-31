@@ -651,6 +651,21 @@
     max-width: 34ch;
     margin: 0;
   }
+  .fineprint-btn {
+    background: none;
+    border: none;
+    font-family: inherit;
+    font-size: 1.05rem;
+    line-height: 1.2;
+    color: var(--green);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    max-width: 34ch;
+    margin: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+  .fineprint-btn.hidden { display: none; }
   .lb-result {
     font-size: 1.3rem;
     line-height: 1.2;
@@ -687,7 +702,7 @@
     <p class="board-title" id="railBoardTitle">Top stackers</p>
     <ol id="railBoardList"></ol>
     <p class="board-empty hidden" id="railBoardEmpty">Nobody yet this month. The board is yours for the taking.</p>
-    <p class="fineprint">Top stacker this month gets a shoutout from @afidasupplies.</p>
+    <p class="fineprint">Top stacker this month wins a free case of cups + a shoutout from @afidasupplies.</p>
   </div>
   <div class="rail-panel">
     <p class="rail-title">Controls</p>
@@ -730,6 +745,7 @@
     <div class="challenge hidden" id="challengeBanner"></div>
     <div class="prize-line">Bonus: stack <span id="winTarget">15</span> for <span class="off">5% off</span></div>
     <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
+    <button class="fineprint-btn hidden" id="mateReward"></button>
     <button class="btn" id="playBtn"><span class="blink">Press start</span></button>
     <details class="fold board hidden" id="menuBoard">
       <summary><span id="boardLead">Hi-score table</span><span class="chev" aria-hidden="true"></span></summary>
@@ -737,7 +753,7 @@
         <p class="board-title" id="boardTitle">Top stackers</p>
         <ol id="boardList"></ol>
         <p class="board-empty hidden" id="boardEmpty">Nobody yet this month. The board is yours for the taking.</p>
-        <p class="fineprint">Top stacker this month gets a shoutout from @afidasupplies.</p>
+        <p class="fineprint">Top stacker this month wins a free case of cups + a shoutout from @afidasupplies.</p>
       </div>
     </details>
   </div>
@@ -750,10 +766,10 @@
     <div class="prize-card hidden" id="prizeCard">
       <p class="won">Bonus unlocked: 5% off your next order</p>
       <div class="code-row">
-        <span class="code" id="promoCode">STACK5</span>
+        <span class="code" id="promoCode">...</span>
         <button class="copy" id="copyCode">Copy code</button>
       </div>
-      <p class="terms">On a typical order that's a sleeve of cups on us. This month only, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
+      <p class="terms">On a typical order that's a sleeve of cups on us. Yours alone &mdash; one use, this month, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
     </div>
     <details class="fold" id="challengeFold">
       <summary>Challenge a mate<span class="chev" aria-hidden="true"></span></summary>
@@ -765,6 +781,7 @@
           <button class="btn pink" id="copyShare">Copy challenge</button>
           <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
         </div>
+        <p class="fineprint">When a mate you sent plays, an extra 5% code lands for you.</p>
       </div>
     </details>
     <details class="fold hidden" id="lbFold">
@@ -816,7 +833,6 @@
   const PERFECT_TOL = 7;
   const BASE_WIN = 15;
   const INVITED_WIN = 12;
-  const PROMO_CODE = 'STACK5';
   const BASE_H = 78;
   const SWING_Y = 96;
 
@@ -1082,6 +1098,7 @@
     prizePill.classList.add('unlocked');
     toast('5% off unlocked!', true);
     sfx.win();
+    mintWinCode();
     if (!reducedMotion) {
       for (let i = 0; i < 80; i++) {
         confetti.push({
@@ -1125,6 +1142,7 @@
     $('bestLine').textContent = 'Hi-score ' + pad(best) +
       (beatScore ? ' · 2UP ' + (rivalName || 'Rival') + ' ' + pad(beatScore) : '');
     $('prizeCard').classList.toggle('hidden', !unlocked);
+    if (unlocked) mintWinCode();
 
     const fold = $('challengeFold');
     fold.classList.toggle('hidden', low);
@@ -1476,12 +1494,50 @@
   shareBtn.addEventListener('click', async () => {
     try { await navigator.share({ text: shareText() }); } catch {}
   });
+  // ---------- Prize codes ----------
+  // Codes are minted server-side after the run is re-verified: unique and
+  // single-use, so nothing shown here is worth pasting to a coupon site.
+  // One code per visit is plenty — a second win re-shows the first code.
+  let winCode = null, winCodePending = false;
+  async function mintWinCode() {
+    if (winCode || winCodePending) { renderWinCode(); return; }
+    winCodePending = true;
+    renderWinCode();
+    try {
+      const r = await fetch('/game/win_code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ token: lb.token, canvas_width: roundW, xs: dropLog, ref: inviterCode || undefined })
+      });
+      if (!r.ok) throw new Error(r.status);
+      winCode = (await r.json()).code;
+    } catch {}
+    winCodePending = false;
+    renderWinCode();
+  }
+  function renderWinCode() {
+    const codeEl = $('promoCode'), btn = $('copyCode');
+    if (winCode) {
+      codeEl.textContent = winCode;
+      btn.textContent = 'Copy code';
+      btn.disabled = false;
+    } else if (winCodePending) {
+      codeEl.textContent = 'MINTING...';
+      btn.textContent = 'Copy code';
+      btn.disabled = true;
+    } else {
+      codeEl.textContent = 'JAMMED';
+      btn.textContent = 'Try again';
+      btn.disabled = false;
+    }
+  }
   $('copyCode').addEventListener('click', async () => {
-    if (await copyText(PROMO_CODE)) {
+    if (!winCode) { mintWinCode(); return; }
+    if (await copyText(winCode)) {
       $('copyCode').textContent = 'Copied!';
       setTimeout(() => { $('copyCode').textContent = 'Copy code'; }, 1500);
     } else {
-      prompt('Your code:', PROMO_CODE);
+      prompt('Your code:', winCode);
     }
   });
 
@@ -1489,20 +1545,23 @@
   // Backed by the Rails endpoint at /game/leaderboard. When the game is served
   // anywhere without that endpoint (previews, static mirrors) the fetch fails
   // and every leaderboard element simply stays hidden.
-  const lb = { ok: false, token: null, entries: [], month: '' };
+  const lb = { ok: false, token: null, entries: [], month: '', me: null };
   const igInput = $('igInput');
   igInput.value = store.get('afidaStackIG') || '';
 
   async function fetchBoard() {
     try {
-      const r = await fetch('/game/leaderboard', { headers: { 'Accept': 'application/json' } });
+      const url = '/game/leaderboard' + (myCode ? '?me=' + encodeURIComponent(myCode) : '');
+      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       lb.ok = true;
       lb.token = d.token;
       lb.entries = d.entries || [];
       lb.month = d.month || '';
+      lb.me = d.me || null;
       renderBoard();
+      renderMateReward();
     } catch {
       lb.ok = false;
     }
@@ -1559,6 +1618,43 @@
     fillBoard($('boardList'), 5);
     fillBoard($('railBoardList'), 10);
   }
+
+  // ---------- Referral kickback ----------
+  // The board fetch says when someone this player sent has verifiably played;
+  // the claim mints (or re-shows) their unique extra-5% code.
+  let mateCode = null, matePending = false;
+  function renderMateReward() {
+    const el = $('mateReward');
+    if (!lb.ok || !lb.me || !lb.me.referrals) { el.classList.add('hidden'); return; }
+    el.textContent = mateCode
+      ? 'Your extra 5%: ' + mateCode + ' — tap to copy'
+      : matePending ? 'Minting your code…' : 'A mate you sent played — claim your extra 5%';
+    el.classList.remove('hidden');
+  }
+  $('mateReward').addEventListener('click', async () => {
+    if (matePending) return;
+    if (mateCode) {
+      if (await copyText(mateCode)) $('mateReward').textContent = 'Copied! ' + mateCode + ' — one use, this month';
+      else prompt('Your code:', mateCode);
+      return;
+    }
+    matePending = true;
+    renderMateReward();
+    try {
+      const r = await fetch('/game/referral_code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ me: myCode })
+      });
+      if (!r.ok) throw new Error(r.status);
+      mateCode = (await r.json()).code;
+      matePending = false;
+      renderMateReward();
+    } catch {
+      matePending = false;
+      $('mateReward').textContent = 'Code machine jammed — try again in a minute.';
+    }
+  });
 
   function prepareBoardCard() {
     const fold = $('lbFold');
