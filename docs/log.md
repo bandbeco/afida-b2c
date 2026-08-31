@@ -1,5 +1,13 @@
 # Update Log
 
+## 2026-08-31
+
+* **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md). Referrer-side milestone rewards (samples box at 3 verified invites, free case at 5) stripped from the game and marked deferred in the proposal, per the "keep it simple, optimise for virality" direction: the share motivator is the gift link (invitee's win threshold drops to 12), not a reward ladder. Founder decisions shrink from four to two (STACK5 Stripe code, monthly shoutout). The server keeps issuing ref codes and counting verified invites on the admin page, so the numbers to justify reintroduction keep accruing. Proposals index updated.
+
+## 2026-08-28
+
+* **Creation**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md). Hormozi-audit-driven referral design for The Afida Stack game (branch `afida-stack-game`, PR #292): verified peer invites earn milestone rewards (samples box at 3, free case at 5), invited cafés get a lower win threshold, the leaderboard crown pays in an @afidasupplies shoutout, and monthly-reset urgency is said out loud. Lists the four founder decisions (STACK5 Stripe code, prize framing, milestone fulfilment, shoutout commitment). The referral backend, screening, and game UI shipped on the branch alongside a mobile pass. Proposals index updated.
+
 ## 2026-08-21
 
 * **Ship**: [Product Page Buy Box Overhaul](/plans/2026-08-20-pdp-buy-box-overhaul.md) merged and deployed (ff `d28c3d42..d1e6f88f`, 19 commits, CI green, `kamal deploy --roles=web`). Targeting the web role sidesteps the postgres accessory host that aborts a full `kamal deploy` before the `:latest` retag, so the documented `kamal app boot` workaround is no longer needed. Live-verified on served HTML across a container page, a lid page and a smoothie cup: attach cards plus the companions field, the reverse "fits these containers" block with a correct "Show all 9 compatible containers" disclosure, unit price on the price line, spec tiles, and the pinned media column. A `/code-review` pass before merge found two genuine merge-blockers, both reproduced before fixing: a validation failure returning a 500 (the rescue dereferenced `@cart_item`, which is assigned inside the transaction by the call that raises, so it was nil when the primary item failed; the turbo_stream template had the same exposure), and a free sample displaced by a companion being destroyed without telling the buyer. Also fixed from that review: the "most popular" cue vanishing when the curated default lid was deactivated, hardcoded "compatible containers" copy in a partial serving both directions, and the reverse mapping being preloaded with its photo blobs on every container page and thrown away unread.

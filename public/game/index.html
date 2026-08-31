@@ -765,7 +765,6 @@
           <button class="btn pink" id="copyShare">Copy challenge</button>
           <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
         </div>
-        <p class="fineprint hidden" id="inviteProgress"></p>
       </div>
     </details>
     <details class="fold hidden" id="lbFold">
@@ -1496,17 +1495,14 @@
 
   async function fetchBoard() {
     try {
-      const url = '/game/leaderboard' + (myCode ? '?me=' + encodeURIComponent(myCode) : '');
-      const r = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const r = await fetch('/game/leaderboard', { headers: { 'Accept': 'application/json' } });
       if (!r.ok) throw new Error(r.status);
       const d = await r.json();
       lb.ok = true;
       lb.token = d.token;
       lb.entries = d.entries || [];
       lb.month = d.month || '';
-      lb.me = d.me || null;
       renderBoard();
-      renderInviteProgress();
     } catch {
       lb.ok = false;
     }
@@ -1562,21 +1558,6 @@
     // the menu fold keeps a tight top 5; the desktop rail has room for all 10
     fillBoard($('boardList'), 5);
     fillBoard($('railBoardList'), 10);
-  }
-
-  // Invite milestones: things, not percentages. Fulfilment is manual — the
-  // player quotes their code, the entry in admin shows the verified count.
-  function renderInviteProgress() {
-    const el = $('inviteProgress');
-    if (!lb.ok || !myCode) { el.classList.add('hidden'); return; }
-    const n = lb.me ? lb.me.referrals : 0;
-    const code = myCode.toUpperCase();
-    el.textContent =
-      n >= 5 ? 'Free case of cups unlocked (' + n + ' invites) — quote code ' + code + ' with your next order.' :
-      n >= 3 ? 'Samples box unlocked — quote code ' + code + '. A free case of cups at 5 invites (' + n + '/5).' :
-      n >= 1 ? 'Verified invites: ' + n + '/3 — a free samples box at 3.' :
-      'Invite a café: 3 verified invites earn a free samples box.';
-    el.classList.remove('hidden');
   }
 
   function prepareBoardCard() {
