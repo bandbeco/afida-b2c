@@ -22,6 +22,7 @@
           <th>Name</th>
           <th>Score</th>
           <th>Instagram</th>
+          <th>Email</th>
           <th>Status</th>
           <th>Submitted</th>
           <th></th>
@@ -37,6 +38,11 @@
               <% if entry.instagram_handle.present? %>
                 <%= link_to "@#{entry.instagram_handle}", "https://instagram.com/#{entry.instagram_handle}",
                       target: "_blank", rel: "noopener nofollow", class: "link-inline" %>
+              <% end %>
+            </td>
+            <td>
+              <% if entry.email.present? %>
+                <%= mail_to entry.email, entry.email, class: "link-inline" %>
               <% end %>
             </td>
             <td>

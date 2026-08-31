@@ -109,6 +109,7 @@ Rails.application.routes.draw do
   # Unique single-use prize codes for the game, minted after re-verification
   post "game/win_code", to: "game_promo_codes#win"
   post "game/referral_code", to: "game_promo_codes#referral"
+  post "game/email_code", to: "game_promo_codes#email"
 
   get "pattern-demo", to: "pages#pattern_demo" if Rails.env.development?
   get "sentry-test", to: "pages#sentry_test" if Rails.env.development?

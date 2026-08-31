@@ -145,4 +145,49 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_equal "unknown_code", response.parsed_body["error"]
   end
+
+  # ---------- email ----------
+
+  def stub_active_code(active)
+    Stripe::PromotionCode.stubs(:list).returns(stub(data: active ? [ stub(code: "STACKMHR4T7") ] : []))
+  end
+
+  test "emails a code the player holds and captures the lead" do
+    stub_active_code(true)
+
+    assert_enqueued_emails 1 do
+      post game_email_code_path, params: { email: "Cafe@Example.com", code: "STACKMHR4T7", marketing: true }, as: :json
+    end
+
+    assert_response :success
+    lead = GameLead.find_by(email: "cafe@example.com")
+    assert_equal "win", lead.source
+    assert lead.marketing_opt_in
+  end
+
+  test "a made-up code that Stripe never minted sends nothing" do
+    stub_active_code(false)
+
+    assert_no_enqueued_emails do
+      post game_email_code_path, params: { email: "cafe@example.com", code: "STACKMHR4T7" }, as: :json
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "unknown_promo", response.parsed_body["error"]
+    assert_equal 0, GameLead.count
+  end
+
+  test "a string that isn't even code-shaped is rejected without asking Stripe" do
+    post game_email_code_path, params: { email: "cafe@example.com", code: "'; DROP TABLE" }, as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "invalid_code", response.parsed_body["error"]
+  end
+
+  test "an implausible email is rejected" do
+    post game_email_code_path, params: { email: "not-an-email", code: "STACKMHR4T7" }, as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal "invalid_email", response.parsed_body["error"]
+  end
 end

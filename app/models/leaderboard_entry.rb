@@ -17,8 +17,12 @@ class LeaderboardEntry < ApplicationRecord
   # Instagram allows letters, digits, dots and underscores; the game's name
   # input caps at 14 characters, mirrored here.
   normalizes :instagram_handle, with: ->(h) { h.to_s.strip.delete_prefix("@").downcase }
+  # Email is never shown on the board — it's how prize codes and dethronement
+  # news reach the player.
+  normalizes :email, with: ->(e) { e.to_s.strip.downcase.presence }
 
   validates :name, presence: true, length: { maximum: 14 }
+  validates :email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_nil: true
   validates :score, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: MAX_SCORE }
   validates :instagram_handle, format: { with: /\A[a-z0-9._]{1,30}\z/ }, allow_blank: true
 

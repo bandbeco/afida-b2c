@@ -217,4 +217,72 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_response :created
     assert_equal 2, response.parsed_body["rank"]
   end
+
+  # ---------- email capture and notifications ----------
+
+  test "email addresses never appear anywhere in the public board payload" do
+    LeaderboardEntry.create!(name: "Roastery", score: 20, status: "approved",
+      email: "roastery@example.com", instagram_handle: "roastery")
+
+    get game_leaderboard_path
+    assert_response :success
+    assert_no_match(/roastery@example\.com/, response.body)
+    assert_no_match(/email/, response.body)
+  end
+
+  test "a submission may leave an email, stored on the entry and captured as a lead" do
+    post game_leaderboard_path,
+      params: valid_submission(xs: perfectish_run(7), email: "Cafe@Example.com", marketing: true), as: :json
+
+    assert_response :created
+    assert_equal "cafe@example.com", LeaderboardEntry.last.email
+    lead = GameLead.find_by(email: "cafe@example.com")
+    assert_equal "board", lead.source
+    assert lead.marketing_opt_in
+  end
+
+  test "no email on a submission stays a perfectly fine submission" do
+    post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7)), as: :json
+
+    assert_response :created
+    assert_nil LeaderboardEntry.last.email
+    assert_equal 0, GameLead.count
+  end
+
+  test "a credited invite queues the referrer's kickback delivery" do
+    referrer = LeaderboardEntry.create!(name: "Roastery", score: 20,
+      submitter_ip: "203.0.113.9", email: "roastery@example.com")
+
+    assert_enqueued_with(job: GameMateCodeJob, args: [ referrer.id ]) do
+      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7), ref: referrer.ref_code), as: :json
+    end
+  end
+
+  test "an uncredited self-invite queues nothing" do
+    mine = LeaderboardEntry.create!(name: "Me", score: 20,
+      submitter_ip: "127.0.0.1", email: "me@example.com")
+
+    assert_no_enqueued_jobs only: GameMateCodeJob do
+      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7), ref: mine.ref_code), as: :json
+    end
+  end
+
+  test "a new number one dethrones the old leader into their inbox" do
+    LeaderboardEntry.create!(name: "Roastery", score: 5,
+      email: "roastery@example.com", status: "approved")
+
+    assert_enqueued_emails 1 do
+      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7)), as: :json
+    end
+  end
+
+  test "matching the leader is not a dethroning, and a leader without email hears nothing" do
+    LeaderboardEntry.create!(name: "Roastery", score: 7,
+      email: "roastery@example.com", status: "approved")
+    LeaderboardEntry.create!(name: "Silent", score: 9, status: "approved")
+
+    assert_no_enqueued_emails do
+      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7)), as: :json
+    end
+  end
 end

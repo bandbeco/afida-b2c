@@ -10,7 +10,7 @@ class Game::PromoCodesTest < ActiveSupport::TestCase
 
     assert_equal "STACKMHR4T7", Game::PromoCodes.mint_win_code
 
-    assert_equal "afida-stack-win-#{MONTH}", captured[:coupon]
+    assert_equal({ type: "coupon", coupon: "afida-stack-win-#{MONTH}" }, captured[:promotion])
     assert_match(/\ASTACK[#{Game::PromoCodes::CODE_ALPHABET.join}]{6}\z/, captured[:code])
     assert_equal 1, captured[:max_redemptions]
     assert_equal Time.current.end_of_month.to_i, captured[:expires_at]
@@ -23,7 +23,7 @@ class Game::PromoCodesTest < ActiveSupport::TestCase
 
     assert_equal "MATEC4NHW6", Game::PromoCodes.mint_referral_code
 
-    assert_equal "afida-stack-mate-#{MONTH}", captured[:coupon]
+    assert_equal({ type: "coupon", coupon: "afida-stack-mate-#{MONTH}" }, captured[:promotion])
     assert_match(/\AMATE[#{Game::PromoCodes::CODE_ALPHABET.join}]{6}\z/, captured[:code])
   end
 
@@ -39,5 +39,7 @@ class Game::PromoCodesTest < ActiveSupport::TestCase
     assert_equal 5, captured[:percent_off]
     assert_equal "once", captured[:duration]
     assert_equal Game::PromoCodes::MONTHLY_REDEMPTION_CAP, captured[:max_redemptions]
+    # Stripe rejects coupon names over 40 characters — a stub can't catch it
+    assert_operator captured[:name].length, :<=, 40
   end
 end

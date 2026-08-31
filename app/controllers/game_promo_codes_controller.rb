@@ -14,6 +14,7 @@ class GamePromoCodesController < ApplicationController
 
   BASE_WIN = 15
   INVITED_WIN = 12
+  CODE_SHAPE = /\A(STACK|MATE)[#{Game::PromoCodes::CODE_ALPHABET.join}]{6}\z/
 
   def win
     issued_at = verified_issued_at
@@ -25,7 +26,8 @@ class GamePromoCodesController < ApplicationController
     return render_rejection("below_target") if replay.score < win_target
 
     render json: { code: Game::PromoCodes.mint_win_code }
-  rescue Stripe::StripeError
+  rescue Stripe::StripeError => e
+    Rails.logger.error("Stripe error minting a game code: #{e.message}")
     render json: { error: "mint_failed" }, status: :service_unavailable
   end
 
@@ -38,7 +40,28 @@ class GamePromoCodesController < ApplicationController
 
     entry.update!(referral_promo_code: Game::PromoCodes.mint_referral_code) if entry.referral_promo_code.blank?
     render json: { code: entry.referral_promo_code }
-  rescue Stripe::StripeError
+  rescue Stripe::StripeError => e
+    Rails.logger.error("Stripe error minting a game code: #{e.message}")
+    render json: { error: "mint_failed" }, status: :service_unavailable
+  end
+
+  # Emails a code the player already holds. Possession of a code Stripe knows
+  # as active is the proof here — no replay needed — and the address becomes a
+  # lead. The shape check keeps arbitrary strings out of outgoing mail.
+  def email
+    address = params[:email].to_s.strip.downcase
+    return render_rejection("invalid_email") unless address.match?(URI::MailTo::EMAIL_REGEXP)
+
+    code = params[:code].to_s.strip.upcase
+    return render_rejection("invalid_code") unless code.match?(CODE_SHAPE)
+    return render_rejection("unknown_promo") unless Game::PromoCodes.active?(code)
+
+    GameLead.capture(email: address, source: "win",
+      marketing_opt_in: ActiveModel::Type::Boolean.new.cast(params[:marketing]) || false)
+    GameMailer.win_code(address, code).deliver_later
+    head :ok
+  rescue Stripe::StripeError => e
+    Rails.logger.error("Stripe error minting a game code: #{e.message}")
     render json: { error: "mint_failed" }, status: :service_unavailable
   end
 

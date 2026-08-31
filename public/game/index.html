@@ -666,6 +666,31 @@
     cursor: pointer;
   }
   .fineprint-btn.hidden { display: none; }
+  .email-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+  }
+  .email-row.hidden { display: none; }
+  .email-input { width: 21ch; }
+  .consent {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    font-size: 1.05rem;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .consent input {
+    accent-color: var(--green);
+    width: 16px;
+    height: 16px;
+  }
   .lb-result {
     font-size: 1.3rem;
     line-height: 1.2;
@@ -769,6 +794,11 @@
         <span class="code" id="promoCode">...</span>
         <button class="copy" id="copyCode">Copy code</button>
       </div>
+      <form class="email-row hidden" id="winEmailRow">
+        <input class="name-input email-input" id="winEmail" type="email" maxlength="80" placeholder="you@yourcafe.com" autocomplete="email">
+        <button class="copy" id="winEmailBtn" type="submit">Email it to me</button>
+        <label class="consent"><input type="checkbox" id="winOptIn"> Send me Afida offers too</label>
+      </form>
       <p class="terms">Yours alone &mdash; one use, this month, at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
     </div>
     <details class="fold" id="challengeFold">
@@ -789,9 +819,11 @@
       <div class="fold-body">
         <div class="lb-form" id="lbForm">
           <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
+          <input class="name-input email-input" id="lbEmail" type="email" maxlength="80" placeholder="email (optional)" autocomplete="email">
+          <label class="consent"><input type="checkbox" id="lbOptIn"> Send me Afida offers too</label>
           <button class="btn" id="lbSubmit">Join the board</button>
         </div>
-        <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Anything dodgy gets pulled.</p>
+        <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Email never shows &mdash; it's for prize codes and dethronement news. Anything dodgy gets pulled.</p>
         <p class="lb-result hidden" id="lbResult"></p>
       </div>
     </details>
@@ -1464,8 +1496,9 @@
     sharePreview.textContent = shareText();
     // The gift is only real once the link carries a ref code, which the
     // board grants on joining — before that, the line sells the join.
+    const byEmail = store.get('afidaStackEmail') ? ' by email' : '';
     $('shareBonus').textContent = myCode
-      ? 'Your link greases the crane — mates win the 5% at 12, not 15. And when one plays, an extra 5% code lands for you.'
+      ? 'Your link greases the crane — mates win the 5% at 12, not 15. And when one plays, an extra 5% code lands for you' + byEmail + '.'
       : 'Join the hi-score table and your link greases the crane — mates win at 12, and an extra 5% lands for you when one plays.';
   }
   nameInput.addEventListener('input', refreshPreview);
@@ -1525,6 +1558,7 @@
   }
   function renderWinCode() {
     const codeEl = $('promoCode'), btn = $('copyCode');
+    $('winEmailRow').classList.toggle('hidden', !winCode);
     if (winCode) {
       codeEl.textContent = winCode;
       btn.textContent = 'Copy code';
@@ -1548,6 +1582,29 @@
       prompt('Your code:', winCode);
     }
   });
+  $('winEmail').value = store.get('afidaStackEmail') || '';
+  $('winEmailRow').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('winEmail').value.trim();
+    if (!email || !winCode) return;
+    const btn = $('winEmailBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    try {
+      const r = await fetch('/game/email_code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({ email, code: winCode, marketing: $('winOptIn').checked })
+      });
+      if (!r.ok) throw new Error(r.status);
+      store.set('afidaStackEmail', email);
+      btn.textContent = 'Sent!';
+      refreshPreview();
+    } catch {
+      btn.disabled = false;
+      btn.textContent = 'Try sending again';
+    }
+  });
 
   // ---------- Monthly leaderboard ----------
   // Backed by the Rails endpoint at /game/leaderboard. When the game is served
@@ -1556,6 +1613,8 @@
   const lb = { ok: false, token: null, entries: [], month: '', me: null };
   const igInput = $('igInput');
   igInput.value = store.get('afidaStackIG') || '';
+  const lbEmail = $('lbEmail');
+  lbEmail.value = store.get('afidaStackEmail') || '';
 
   async function fetchBoard() {
     try {
@@ -1681,6 +1740,16 @@
     btn.textContent = 'Sending…';
     const handle = igInput.value.trim();
     store.set('afidaStackIG', handle);
+    const email = lbEmail.value.trim();
+    if (email && !/.+@.+\..+/.test(email)) {
+      btn.disabled = false;
+      btn.textContent = 'Join the board';
+      const oops = $('lbResult');
+      oops.textContent = 'That email looks off — fix it or clear it.';
+      oops.classList.remove('hidden');
+      return;
+    }
+    if (email) store.set('afidaStackEmail', email);
     try {
       const r = await fetch('/game/leaderboard', {
         method: 'POST',
@@ -1689,6 +1758,8 @@
           token: lb.token,
           name: (nameInput.value.trim() || 'Stacker').slice(0, 14),
           instagram_handle: handle,
+          email: email || undefined,
+          marketing: $('lbOptIn').checked || undefined,
           canvas_width: roundW,
           xs: dropLog,
           ref: inviterCode || undefined

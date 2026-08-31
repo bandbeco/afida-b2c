@@ -53,9 +53,13 @@ class GameLeaderboardController < ApplicationController
       recent_from_ip: LeaderboardEntry.where(submitter_ip: request.remote_ip, created_at: 10.minutes.ago..).count
     )
 
+    previous_leader = LeaderboardEntry.current_top.first
+
     entry = LeaderboardEntry.new(
       name: params[:name].to_s.strip,
       instagram_handle: params[:instagram_handle],
+      email: params[:email],
+      marketing_opt_in: marketing_opt_in?,
       score: replay.score,
       status: screening.clean? && auto_approve? ? "approved" : "pending",
       flags: screening.flags,
@@ -64,6 +68,9 @@ class GameLeaderboardController < ApplicationController
       replay: { canvas_width: params[:canvas_width], xs: params[:xs] }
     )
     if entry.save
+      GameLead.capture(email: entry.email, source: "board", marketing_opt_in: entry.marketing_opt_in) if entry.email.present?
+      GameMateCodeJob.perform_later(entry.referrer_id) if entry.referrer_id
+      notify_dethroned(previous_leader, entry)
       render json: { rank: entry.rank, score: entry.score, ref_code: entry.ref_code }, status: :created
     else
       render_rejection("invalid_entry")
@@ -76,6 +83,19 @@ class GameLeaderboardController < ApplicationController
   # review again (e.g. during a spam wave). Flagged entries always wait.
   def auto_approve?
     ENV.fetch("LEADERBOARD_AUTO_APPROVE", "true") != "false"
+  end
+
+  # Losing the top spot is the one board change worth an email — it's the
+  # nudge that brings last month's café back to defend the crown.
+  def notify_dethroned(previous_leader, entry)
+    return unless previous_leader&.email&.present?
+    return unless entry.score > previous_leader.score
+
+    GameMailer.dethroned(previous_leader, by: entry).deliver_later
+  end
+
+  def marketing_opt_in?
+    ActiveModel::Type::Boolean.new.cast(params[:marketing]) || false
   end
 
   # The referrer named by the share link, unless it points back at the

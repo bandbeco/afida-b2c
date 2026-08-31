@@ -1,6 +1,6 @@
 ---
 type: Proposal
-description: Referral-rewards and prize design for The Afida Stack game, from a Hormozi offer audit — v1 ships unique single-use prize codes, the gift-link loop, a referral kickback, and a case-of-cups crown; milestone ladders are deferred.
+description: Referral-rewards and prize design for The Afida Stack game, from a Hormozi offer audit — v1 ships unique single-use prize codes, the gift-link loop, a referral kickback, email lead capture, and a case-of-cups crown; milestone ladders are deferred.
 status: active
 timestamp: 2026-08-31
 ---
@@ -22,6 +22,7 @@ The game mechanics score high on the value equation (instant, effortless, determ
 - **Unique single-use prize codes** (no fixed `STACK5` anywhere): a win POSTs the drop log to `/game/win_code`, the server re-verifies it with `Game::StackReplay` exactly like a leaderboard submission, and mints a Stripe promotion code (`STACK` + 6 chars, `max_redemptions: 1`, expiring with the month). Nothing shown on screen is worth pasting to a coupon site. The two 5% coupons the codes draw on are created in Stripe automatically on first use, scoped per month and capped at 200 redemptions each — a hard ceiling on what even scripted minting could give away. Nothing to set up manually.
 - **Referral kickback, one rung**: when someone a player sent has verifiably played (distinct-address, replay-verified — the machinery that already existed), a claim appears on the menu and mints their own single-use extra-5% `MATE` code. One per board entry per month. The share screen says so: "When a mate you sent plays, an extra 5% code lands for you."
 - **Status crown**: "Top stacker this month wins a free case of cups + a shoutout from @afidasupplies" on the board.
+- **Email capture, as delivery rather than bribe** — three transactional hooks, no extra reward paid for an address: "Email it to me" under a won code (`/game/email_code` mails only a code Stripe knows as active); an optional email on the board join (never in the public payload — regression-tested); and push delivery of the `MATE` kickback the moment a verified invite lands (a background job mints and emails it, so the sharer doesn't have to come back to find out). The dethroned #1 gets an email pulling them back to defend the crown. Every address lands in `game_leads` with a separate, unticked "Send me Afida offers too" opt-in (UK PECR); the admin leaderboard shows entry emails for crown fulfilment.
 
 ## The two decisions founders need to make
 

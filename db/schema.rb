@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_145341) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_31_152831) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -245,10 +245,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_145341) do
     t.index ["email"], name: "index_email_subscriptions_on_email", unique: true
   end
 
+  create_table "game_leads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.boolean "marketing_opt_in", default: false, null: false
+    t.string "source", null: false
+    t.datetime "updated_at", null: false
+    t.index ["email"], name: "index_game_leads_on_email", unique: true
+  end
+
   create_table "leaderboard_entries", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.string "email"
     t.jsonb "flags", default: [], null: false
     t.string "instagram_handle"
+    t.boolean "marketing_opt_in", default: false, null: false
     t.date "month", null: false
     t.string "name", null: false
     t.string "ref_code"

@@ -14,19 +14,26 @@ module Game
     # a distributed scraper could give away.
     MONTHLY_REDEMPTION_CAP = 200
 
-    WIN = { coupon: "afida-stack-win", prefix: "STACK", name: "The Afida Stack: winning run" }.freeze
-    REFERRAL = { coupon: "afida-stack-mate", prefix: "MATE", name: "The Afida Stack: verified invite" }.freeze
+    # Stripe caps coupon names at 40 characters, and the month suffix in
+    # coupon_id adds 15 — keep these short.
+    WIN = { coupon: "afida-stack-win", prefix: "STACK", name: "Afida Stack win" }.freeze
+    REFERRAL = { coupon: "afida-stack-mate", prefix: "MATE", name: "Afida Stack invite" }.freeze
 
     def self.mint_win_code = mint(WIN)
     def self.mint_referral_code = mint(REFERRAL)
 
     def self.mint(kind)
       Stripe::PromotionCode.create(
-        coupon: coupon_id(kind),
+        promotion: { type: "coupon", coupon: coupon_id(kind) },
         code: kind[:prefix] + Array.new(6) { CODE_ALPHABET.sample }.join,
         max_redemptions: 1,
         expires_at: Time.current.end_of_month.to_i
       ).code
+    end
+
+    # True when Stripe knows an active promotion code by this exact string.
+    def self.active?(code)
+      Stripe::PromotionCode.list(code: code, active: true, limit: 1).data.any?
     end
 
     def self.coupon_id(kind)
