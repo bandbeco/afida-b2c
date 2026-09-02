@@ -86,6 +86,21 @@ class Game::StackReplayTest < ActiveSupport::TestCase
     assert_not Game::StackReplay.new(canvas_width: "wide", xs: [ 0 ]).valid?
   end
 
+  test "client physics constants match the server replay" do
+    js = Rails.root.join("app/frontend/entrypoints/game.js").read
+
+    {
+      MIN_OVERLAP: Game::StackReplay::MIN_OVERLAP,
+      PERFECT_TOL: Game::StackReplay::PERFECT_TOL,
+      PERFECT_GROWTH: Game::StackReplay::PERFECT_GROWTH,
+      BASE_MIN_W: Game::StackReplay::BASE_MIN_W,
+      BASE_MAX_W: Game::StackReplay::BASE_MAX_W
+    }.each do |name, value|
+      assert_match(/const #{name} = #{value};/, js)
+    end
+    assert_match(/const BASE_RATIO = #{Game::StackReplay::BASE_RATIO};/, js)
+  end
+
   test "a run longer than the score ceiling is invalid" do
     replay = Game::StackReplay.new(canvas_width: CANVAS, xs: [ START_X ] * 501)
 

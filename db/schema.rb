@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_31_152831) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_02_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -251,6 +251,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_31_152831) do
     t.boolean "marketing_opt_in", default: false, null: false
     t.string "source", null: false
     t.datetime "updated_at", null: false
+    t.string "win_promo_code"
+    t.date "win_promo_month"
     t.index ["email"], name: "index_game_leads_on_email", unique: true
   end
 

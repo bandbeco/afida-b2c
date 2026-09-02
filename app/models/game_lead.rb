@@ -1,6 +1,7 @@
 # An email address The Afida Stack game captured — the bridge from plays to
 # pipeline. One row per address: a later capture keeps the first source and
-# can only ever upgrade marketing consent, never withdraw it silently.
+# can only ever upgrade marketing consent, never withdraw it silently. The
+# row is also the win-claim record: one Stripe code per address per month.
 class GameLead < ApplicationRecord
   SOURCES = %w[win board].freeze
 
@@ -13,8 +14,42 @@ class GameLead < ApplicationRecord
   def self.capture(email:, source:, marketing_opt_in: false)
     lead = find_or_initialize_by(email: normalize_value_for(:email, email))
     lead.source ||= source
+    newly_opted_in = marketing_opt_in && !lead.marketing_opt_in
     lead.marketing_opt_in ||= marketing_opt_in
-    lead.save
+    transaction do
+      lead.save!
+      lead.sync_to_marketing_list if newly_opted_in
+    end
     lead
+  end
+
+  # First claim this month mints; later claims return the stored code so
+  # "Send again" resends rather than creating a second prize.
+  def claim_win_code
+    code = nil
+    with_lock do
+      month = Date.current.beginning_of_month
+      if win_promo_code.present? && win_promo_month == month
+        code = win_promo_code
+      else
+        code = Game::PromoCodes.mint_win_code
+        update!(win_promo_code: code, win_promo_month: month)
+      end
+    end
+    code
+  end
+
+  # Opted-in addresses join the canonical EmailSubscription list so Klaviyo
+  # (which resolves signup events via subscription_id) actually sees them.
+  def sync_to_marketing_list
+    subscription = EmailSubscription.find_or_initialize_by(email: email)
+    created = subscription.new_record?
+    subscription.source = "game_#{source}" if created
+    subscription.save!
+    return unless created
+
+    Rails.event.notify("email_signup.completed",
+      subscription_id: subscription.id,
+      source: subscription.source)
   end
 end

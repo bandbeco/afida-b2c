@@ -90,4 +90,20 @@ class LeaderboardEntryTest < ActiveSupport::TestCase
     assert_nil pending_entry.public_handle
     assert_equal "cafe", approved.public_handle
   end
+
+  test "credited_referrer names a real entry from a different address" do
+    host = LeaderboardEntry.create!(valid_attributes.merge(submitter_ip: "9.9.9.9"))
+
+    assert_equal host, LeaderboardEntry.credited_referrer(host.ref_code, "1.1.1.1")
+    assert_equal host, LeaderboardEntry.credited_referrer(host.ref_code.upcase, "1.1.1.1")
+  end
+
+  test "credited_referrer ignores a blank code, an unknown code, and a self-invite" do
+    host = LeaderboardEntry.create!(valid_attributes.merge(submitter_ip: "9.9.9.9"))
+
+    assert_nil LeaderboardEntry.credited_referrer(nil, "1.1.1.1")
+    assert_nil LeaderboardEntry.credited_referrer("", "1.1.1.1")
+    assert_nil LeaderboardEntry.credited_referrer("nosuch", "1.1.1.1")
+    assert_nil LeaderboardEntry.credited_referrer(host.ref_code, "9.9.9.9")
+  end
 end

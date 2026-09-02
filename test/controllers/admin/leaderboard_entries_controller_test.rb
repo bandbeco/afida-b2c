@@ -45,6 +45,16 @@ class Admin::LeaderboardEntriesControllerTest < ActionDispatch::IntegrationTest
     assert @entry.reload.rejected?
   end
 
+  test "admins see prize-claim emails that never joined the board" do
+    GameLead.capture(email: "winner-only@example.com", source: "win")
+    sign_in_as(users(:acme_admin))
+
+    get admin_leaderboard_entries_path, headers: @headers
+
+    assert_response :success
+    assert_select "td", text: /winner-only@example.com/
+  end
+
   test "the review filter shows only held entries, with their flags" do
     LeaderboardEntry.create!(name: "Clean", score: 8, status: "approved")
     @entry.update!(flags: [ "high_score" ])

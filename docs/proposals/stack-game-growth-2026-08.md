@@ -2,12 +2,12 @@
 type: Proposal
 description: Referral-rewards and prize design for The Afida Stack game, from a Hormozi offer audit — v1 ships unique single-use prize codes, the gift-link loop, a referral kickback, email lead capture, and a case-of-cups crown; milestone ladders are deferred.
 status: active
-timestamp: 2026-08-31
+timestamp: 2026-09-02
 ---
 
 # The Afida Stack: Growth Mechanics Proposal
 
-The Afida Stack (afida.com/game, PR #292) is a 30-second browser stacking game built as a marketing loop: stack 15, win 5% off, challenge peers via score links, monthly top-10 leaderboard with Instagram handles. This proposal covers the peer-invite incentive layer, designed by running the offer through the Hormozi value-equation audit (companion to /proposals/money-model-2026-08.md and /proposals/leads-2026-08.md).
+The Afida Stack (afida.com/game, PR #292) is a 30-second browser stacking game — a Rails page at `GamesController#show`, not a static file — built as a marketing loop: stack 15, win 5% off, challenge peers via score links, monthly top-10 leaderboard with Instagram handles. This proposal covers the peer-invite incentive layer, designed by running the offer through the Hormozi value-equation audit (companion to /proposals/money-model-2026-08.md and /proposals/leads-2026-08.md).
 
 ## Audit verdict in one paragraph
 
@@ -19,10 +19,10 @@ The game mechanics score high on the value equation (instant, effortless, determ
 - **Invitee side of the offer**: arriving via an invite link drops the win threshold from 15 to 12 ("A mate greased the crane") — the link is worth something to the person receiving it, which is what makes people forward it.
 - **Urgency**: "resets in N days" on the board; "this month only" on the prize.
 - **Tangible framing**: "You've won 5% off your next order — on a typical order that's a sleeve of cups on us."
-- **Unique single-use prize codes, delivered by email only** (no fixed `STACK5` anywhere, and no code ever shown on screen): the win screen asks where to send the code; `/game/win_code` re-verifies the drop log with `Game::StackReplay` exactly like a leaderboard submission, mints a Stripe promotion code (`STACK` + 6 chars, `max_redemptions: 1`, expiring with the month, valid on orders over £100 excl. VAT — matching the free-delivery threshold so the prize nudges a real stocking order), emails it, and captures the lead in one motion. Codes exist only in Stripe and the winner's inbox — nothing for a coupon site to scrape, and every claim is a lead. The two 5% coupons auto-create per month, capped at 200 redemptions each — a hard ceiling on what even scripted minting could give away. Nothing to set up manually.
-- **Referral kickback, one rung, pure push**: when someone a player sent verifiably plays (distinct-address, replay-verified), a background job mints their single-use extra-5% `MATE` code and emails it to the address they left at board join — no claim UI anywhere. One per board entry per month. A sharer who left no email isn't promised a kickback, and the share-screen copy only offers it when it can be delivered.
+- **Unique single-use prize codes, delivered by email only** (no fixed `STACK5` anywhere, and no code ever shown on screen): the win screen asks where to send the code; `/game/win_code` re-verifies the drop log through `Game::VerifiedRun` (the same proof as a leaderboard submission), captures the lead, mints a Stripe promotion code (`STACK` + 6 chars, `max_redemptions: 1`, expiring with the month, valid on orders over £100 excl. VAT — matching the free-delivery threshold so the prize nudges a real stocking order), and emails it. One code per address per month is stored on `game_leads`; "Send again" resends that code rather than minting another. Nothing for a coupon site to scrape, and every claim is a lead. The two 5% coupons auto-create per month, capped at 200 redemptions each — a hard ceiling on what even scripted minting could give away. Nothing to set up manually.
+- **Referral kickback, one rung, pure push**: when someone a player sent verifiably plays (distinct-address, replay-verified), a background job mints their single-use extra-5% `MATE` code and emails it to the address they left at board join — no claim UI anywhere. One per board entry per month (row-locked so two invites cannot mint twice). A sharer who left no email isn't promised a kickback, and the share-screen copy only offers it when it can be delivered.
 - **Status crown**: "Top stacker this month wins a free case of cups + a shoutout from @afidasupplies" on the board.
-- **Email capture, as delivery rather than bribe**: the win claim and the optional board-join email (never in the public payload — regression-tested) are the two capture points; the dethroned #1 gets an email pulling them back to defend the crown. Every address lands in `game_leads` with a separate, unticked "Send me Afida offers too" opt-in (UK PECR); the admin leaderboard shows entry emails for crown fulfilment.
+- **Email capture, as delivery rather than bribe**: the win claim and the optional board-join email (never in the public payload — regression-tested) are the two capture points; the dethroned #1 gets an email pulling them back to defend the crown. Every address lands in `game_leads` with a separate, unticked "Send me Afida offers too" opt-in (UK PECR). Opting in writes an `EmailSubscription` and emits `email_signup.completed`, so Klaviyo actually sees the lead. The admin leaderboard lists prize-claim emails (including winners who never joined the board) alongside entries for crown fulfilment.
 
 ## The two decisions founders need to make
 

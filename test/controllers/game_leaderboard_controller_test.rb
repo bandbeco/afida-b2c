@@ -10,7 +10,7 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   def token(issued_at: 30.seconds.ago)
-    GameLeaderboardController.token_verifier.generate({ "issued_at" => issued_at.to_i })
+    Game::VerifiedRun.token_verifier.generate({ "issued_at" => issued_at.to_i })
   end
 
   # All-perfect but short: runs under 20 drops never trip the perfect_run flag.
@@ -228,6 +228,7 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     lead = GameLead.find_by(email: "cafe@example.com")
     assert_equal "board", lead.source
     assert lead.marketing_opt_in
+    assert_equal "game_board", EmailSubscription.find_by(email: "cafe@example.com").source
   end
 
   test "no email on a submission stays a perfectly fine submission" do
@@ -263,6 +264,14 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_emails 1 do
       post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7)), as: :json
     end
+  end
+
+  test "does not create a cart row for a cookieless client" do
+    assert_no_difference "Cart.count" do
+      get game_leaderboard_path
+    end
+
+    assert_response :success
   end
 
   test "matching the leader is not a dethroning, and a leader without email hears nothing" do

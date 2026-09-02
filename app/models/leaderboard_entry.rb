@@ -45,6 +45,15 @@ class LeaderboardEntry < ApplicationRecord
     instagram_handle if approved? && instagram_handle.present?
   end
 
+  # The referrer named by a share link, unless it points back at the player's
+  # own address (self-invites earn nothing).
+  def self.credited_referrer(ref_code, ip)
+    return if ref_code.blank?
+
+    referrer = find_by(ref_code: ref_code.to_s.downcase)
+    referrer unless referrer&.submitter_ip == ip
+  end
+
   # Invites that count toward referral rewards: one per distinct address, and
   # never the referrer's own (playing your own link in a private window earns
   # nothing). An intentionally blunt proxy for "a different café played".

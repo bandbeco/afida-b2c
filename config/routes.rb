@@ -102,7 +102,8 @@ Rails.application.routes.draw do
   get "accessibility-statement", to: "pages#accessibility_statement"
   get "return-policy", to: "pages#return_policy"
   get "delivery-returns", to: "pages#delivery_returns"
-  # Monthly leaderboard for The Afida Stack (the static game at /game/)
+  # The Afida Stack arcade cabinet, plus its JSON board and prize-claim endpoints
+  get "game", to: "games#show", as: :game
   get "game/leaderboard", to: "game_leaderboard#index"
   post "game/leaderboard", to: "game_leaderboard#create"
 

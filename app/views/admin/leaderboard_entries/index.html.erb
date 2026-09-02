@@ -67,4 +67,41 @@
       </tbody>
     </table>
   </div>
+
+  <h2 class="mt-10 mb-4">Prize claims</h2>
+  <p class="text-sm mb-4">
+    Every address the game captured, including winners who never joined the board.
+    Win codes are one per address per month; opted-in rows also land on the marketing list.
+  </p>
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Source</th>
+          <th>Marketing</th>
+          <th>Win code</th>
+          <th>Captured</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @leads.each do |lead| %>
+          <tr>
+            <td><%= mail_to lead.email, lead.email, class: "link-inline" %></td>
+            <td><%= lead.source %></td>
+            <td><%= lead.marketing_opt_in? ? "opted in" : "transactional" %></td>
+            <td>
+              <% if lead.win_promo_code.present? %>
+                <code><%= lead.win_promo_code %></code>
+                <% if lead.win_promo_month.present? %>
+                  <span class="text-sm">(<%= lead.win_promo_month.strftime("%b %Y") %>)</span>
+                <% end %>
+              <% end %>
+            </td>
+            <td><%= lead.created_at.strftime("%d %b %H:%M") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 </div>

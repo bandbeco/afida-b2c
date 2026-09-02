@@ -8,7 +8,8 @@ module Game
   # the submission token's minimum-elapsed check and rate limiting carry the
   # rest of the burden.
   class StackReplay
-    # Mirrors the constants in public/game/index.html — change them together.
+    # Mirrors the constants in app/frontend/entrypoints/game.js — change them together.
+    # test/services/game/stack_replay_test.rb pins the pair.
     MIN_OVERLAP = 10
     PERFECT_TOL = 7
     PERFECT_GROWTH = 4

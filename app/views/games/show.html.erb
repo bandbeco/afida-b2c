@@ -1,0 +1,120 @@
+<div class="cabinet">
+<aside class="rail" aria-label="Hi-scores and controls">
+  <div class="rail-panel board hidden" id="railScores">
+    <p class="rail-title">Hi-scores</p>
+    <p class="board-title" id="railBoardTitle">Top stackers</p>
+    <ol id="railBoardList"></ol>
+    <p class="board-empty hidden" id="railBoardEmpty">Nobody yet this month. The board is yours for the taking.</p>
+    <p class="fineprint">Top stacker this month wins a free case of cups + a shoutout from @afidasupplies.</p>
+  </div>
+  <div class="rail-panel">
+    <p class="rail-title">Controls</p>
+    <p class="rail-copy">One button. The crane swings, you drop &mdash; tap, click or hit space.</p>
+    <p class="rail-copy">Overhang gets sliced off. Perfect drops grow the box back.</p>
+  </div>
+</aside>
+<main class="shell" id="shell">
+  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+    <symbol id="afidaLogo" viewBox="0 0 456.039 149.71">
+      <path d="M452.69 13.31C447.42 4.51 437.31.06 422.63.06h-38.64c-5.73-.35-14.64 1.5-22.65 8.72-5.76-5.8-14.66-8.74-26.57-8.74H181.6c-5.91-.36-15.19 1.62-23.38 9.39C152.5 3.2 143.4.04 131.06.04H92.42c-8.51-.51-24.01 3.79-33.18 23.33L0 149.7h174.96l34.03.01h74.28l8.32-.01 65.25.01h45.61l50.41-110.69c3.29-6.47 5.15-16.88-.14-25.71Z" fill="#000000"></path>
+      <path d="M130.79 14.03H91.6S79.49 12.6 71.65 29.3L21.77 135.69h34.41l24.64-51.31H91.2l-23.21 51.31h33.6l46.83-102.82s10.08-18.83-17.61-18.83Zm-29.32 47.65H91.09l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"></path>
+      <path d="M198.89 61.68h-18.63l9.64-20.24h28.28l14.2-27.4h-51.61s-12.11-1.43-19.95 15.27L110.94 135.7h34.41l24.64-51.31h18.22l10.69-22.7Z" fill="#79ebc0"></path>
+      <path d="M422.35 14.05h-39.19s-12.11-1.43-19.95 15.27l-49.88 106.39h34.41l24.64-51.31h10.38l-23.2 51.29h33.6l46.82-102.81s10.08-18.83-17.61-18.83Zm-29.32 47.64h-10.38l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"></path>
+      <path fill="#79ebc0" d="m262 37.26.67.31 3.45 1.58 11.45-25.12h-7.99l-10.08 22.1 2.5 1.13z"></path>
+      <path d="M254.35 50.8c-3.4-5.07-4.19-11.73-1.47-17.69l8.7-19.07h-19.72L181.8 135.7h17.63v.02h16.45v-.02l39.72-83.26c-.44-.52-.85-1.07-1.23-1.63Z" fill="#79ebc0"></path>
+      <path d="m314.33 115.81 37.77-82.94s10.08-18.83-17.61-18.83h-33l-15.5 34.17c-2.01 4.42-5.58 7.62-9.75 9.31-2.36.95-4.91 1.42-7.49 1.32l-36.7 76.85v.02h8.9v-.02h42.04c19.93 0 28.5-14.04 30.73-18.52l.62-1.36Zm-33.65 0h-11.26l25.51-54.13 13.1-27.79h10.59l-37.94 81.92Z" fill="#79ebc0"></path>
+      <path fill="#79ebc0" d="m279.37 45.19 12-26.33 2.2-4.83h-8l-12.82 28.14 6.62 3.02z"></path>
+    </symbol>
+  </svg>
+  <canvas id="game"></canvas>
+
+  <div class="hud" id="hud">
+    <div class="hud-top">
+      <button class="mute" id="muteBtn" aria-label="Toggle sound">♪</button>
+      <div class="stat"><span class="stat-label">1UP</span><span class="stat-value" id="score">0000</span></div>
+      <div class="stat hi"><span class="stat-label">HI-SCORE</span><span class="stat-value" id="hiScore">0000</span></div>
+      <div class="pill" id="prizePill">Bonus 5% at 15</div>
+    </div>
+    <div class="toast" id="toast" role="status"></div>
+    <div class="hint hidden" id="dropHint">Tap, click or press space to drop</div>
+  </div>
+
+  <div class="overlay clear" id="menu">
+    <div class="hero-lockup">
+      <svg class="logo-hero" viewBox="0 0 456.039 149.71" role="img" aria-label="Afida"><use href="#afidaLogo"></use></svg>
+      <h1 class="title"><span class="sr-only">The Afida </span><span class="pop">Stack</span></h1>
+    </div>
+    <p class="tagline">Quality packaging supplies. Stacked recklessly high.</p>
+    <div class="challenge hidden" id="challengeBanner"></div>
+    <div class="prize-line">Bonus: stack <span id="winTarget">15</span> for <span class="off">5% off</span></div>
+    <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
+    <button class="btn" id="playBtn"><span class="blink">Press start</span></button>
+    <details class="fold board hidden" id="menuBoard">
+      <summary><span id="boardLead">Hi-score table</span><span class="chev" aria-hidden="true"></span></summary>
+      <div class="fold-body">
+        <p class="board-title" id="boardTitle">Top stackers</p>
+        <ol id="boardList"></ol>
+        <p class="board-empty hidden" id="boardEmpty">Nobody yet this month. The board is yours for the taking.</p>
+        <p class="fineprint">Top stacker this month wins a free case of cups + a shoutout from @afidasupplies.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="overlay hidden" id="over">
+    <h2 class="over-title" id="overTitle">Tower down</h2>
+    <p class="over-quip" id="overQuip"></p>
+    <div class="final" id="finalScore">0</div>
+    <p class="best-line" id="bestLine">Best: 0</p>
+    <div class="prize-card hidden" id="prizeCard">
+      <p class="won">Bonus unlocked: 5% off your next order</p>
+      <form class="email-row" id="winEmailRow">
+        <input class="name-input email-input" id="winEmail" type="email" maxlength="80" placeholder="you@yourcafe.com" autocomplete="email" required>
+        <button class="copy" id="winEmailBtn" type="submit">Send my code</button>
+        <label class="consent"><input type="checkbox" id="winOptIn"> Send me Afida offers too</label>
+      </form>
+      <p class="terms hidden" id="winSent"></p>
+      <p class="terms">Your unique code lands by email &mdash; one use, this month, on orders over &pound;100 excl. VAT at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
+    </div>
+    <details class="fold" id="challengeFold">
+      <summary>Challenge a mate<span class="chev" aria-hidden="true"></span></summary>
+      <div class="fold-body">
+        <p class="share-pitch hidden" id="sharePitch"></p>
+        <input class="name-input" id="nameInput" maxlength="14" placeholder="Your name" autocomplete="off">
+        <p class="share-preview" id="sharePreview"></p>
+        <div class="share-actions">
+          <button class="btn pink" id="copyShare">Copy challenge</button>
+          <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
+        </div>
+        <p class="fineprint" id="shareBonus"></p>
+      </div>
+    </details>
+    <details class="fold hidden" id="lbFold">
+      <summary>Enter the hi-score table<span class="chev" aria-hidden="true"></span></summary>
+      <div class="fold-body">
+        <div class="lb-form" id="lbForm">
+          <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
+          <input class="name-input email-input" id="lbEmail" type="email" maxlength="80" placeholder="email (optional)" autocomplete="email">
+          <label class="consent"><input type="checkbox" id="lbOptIn"> Send me Afida offers too</label>
+          <button class="btn" id="lbSubmit">Join the board</button>
+        </div>
+        <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Email never shows &mdash; it's for prize codes and dethronement news. Anything dodgy gets pulled.</p>
+        <p class="lb-result hidden" id="lbResult"></p>
+      </div>
+    </details>
+    <button class="btn ghost" id="againBtn">Continue?</button>
+  </div>
+</main>
+<aside class="rail" aria-label="Bonus and challenge info">
+  <div class="rail-panel">
+    <p class="rail-title">Bonus stage</p>
+    <p class="rail-copy">Stack <span id="railWinTarget">15</span> and take <span class="glow">5% off</span> your next &pound;100+ order at afida.com.</p>
+  </div>
+  <div class="rail-panel">
+    <p class="rail-title">2P mode</p>
+    <p class="rail-copy">Finish a run, send your score link. Their game shows your line to beat.</p>
+  </div>
+  <p class="footer-link"><a href="https://afida.com" rel="noopener"><span>afida.com &mdash; eco-friendly packaging supplies</span></a></p>
+</aside>
+</div>
+
+<script type="application/json" id="game-board"><%== json_escape(@board.to_json) %></script>

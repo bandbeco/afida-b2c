@@ -8,11 +8,15 @@ class GameMateCodeJob < ApplicationJob
 
   def perform(entry_id)
     entry = LeaderboardEntry.find_by(id: entry_id)
-    return unless entry&.email&.present?
-    return if entry.referral_promo_code.present?
-    return if entry.verified_referrals.zero?
+    return unless entry
 
-    entry.update!(referral_promo_code: Game::PromoCodes.mint_referral_code)
-    GameMailer.mate_code(entry).deliver_later
+    minted = false
+    entry.with_lock do
+      if entry.email.present? && entry.referral_promo_code.blank? && entry.verified_referrals.positive?
+        entry.update!(referral_promo_code: Game::PromoCodes.mint_referral_code)
+        minted = true
+      end
+    end
+    GameMailer.mate_code(entry.reload).deliver_later if minted
   end
 end

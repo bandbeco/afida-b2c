@@ -12,7 +12,7 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
   end
 
   def token(issued_at: 5.minutes.ago)
-    GameLeaderboardController.token_verifier.generate({ "issued_at" => issued_at.to_i })
+    Game::VerifiedRun.token_verifier.generate({ "issued_at" => issued_at.to_i })
   end
 
   def stub_mint(code)
@@ -43,6 +43,7 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
     lead = GameLead.find_by(email: "cafe@example.com")
     assert_equal "win", lead.source
     assert lead.marketing_opt_in
+    assert_equal "game_win", EmailSubscription.find_by(email: "cafe@example.com").source
   end
 
   test "no email, no claim" do
@@ -104,6 +105,31 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_equal "too_fast", response.parsed_body["error"]
+  end
+
+  test "does not create a cart row for a cookieless client" do
+    stub_mint("STACKMHR4T7")
+
+    assert_no_difference "Cart.count" do
+      post game_win_code_path, params: win_claim, as: :json
+    end
+
+    assert_response :success
+  end
+
+  test "a second claim the same month resends the stored code and does not mint another" do
+    stub_mint("STACKMHR4T7")
+    post game_win_code_path, params: win_claim, as: :json
+    assert_response :success
+
+    Stripe::PromotionCode.stubs(:create).returns(stub(code: "STACKXXXXXX"))
+
+    assert_enqueued_email_with GameMailer, :win_code, args: [ "cafe@example.com", "STACKMHR4T7" ] do
+      post game_win_code_path, params: win_claim, as: :json
+    end
+
+    assert_response :success
+    assert_equal "STACKMHR4T7", GameLead.find_by(email: "cafe@example.com").win_promo_code
   end
 
   test "Stripe being down degrades gracefully, and no email goes out" do

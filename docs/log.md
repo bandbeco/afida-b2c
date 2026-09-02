@@ -1,5 +1,11 @@
 # Update Log
 
+## 2026-09-02
+
+* **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) the cabinet is a Rails page. `/game` is `GamesController#show` with a dedicated layout (CSRF, Vite `game` entrypoints); the monthly board is in the first HTML so play does not wait on a second fetch; JSON writes send the CSRF token and no longer `skip_forgery_protection`. `public/game/` keeps only `og.png`. Proposal timestamp updated.
+
+* **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) review fixes on branch `afida-stack-game`. Win claims are now one Stripe code per address per month, persisted on `game_leads` so "Send again" resends; `Game::VerifiedRun` is the single token/replay/timing/referrer proof both JSON endpoints share; opted-in addresses join `EmailSubscription` and emit `email_signup.completed`; the mate job row-locks before minting; game JSON skips the storefront cart/nav lifecycle; physics constants in the client are pinned to `Game::StackReplay` by a contract test. Admin prize-claims table shows win-only emails. Proposal timestamp updated.
+
 ## 2026-08-31
 
 * **Ship**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) prize codes reworked to email-only delivery with a £100 excl-VAT minimum, on branch `afida-stack-game`. The win screen now asks where to send the code — `/game/win_code` verifies the run, mints, emails, and captures the lead in one motion; codes never render on screen. The MATE kickback lost its claim endpoint and menu button: GameMateCodeJob's push email is the whole mechanism, and the share copy only promises the kickback when a board-join email makes it deliverable. Codes carry Stripe's minimum_amount restriction at £100, matching the free-delivery threshold (shipping rides as a checkout line item, so it counts toward the minimum — a known near-miss leak). Condition stated on the win card, the rail, and both prize emails. Restricted mint live-verified in Stripe test mode; full suite green.
@@ -13,6 +19,8 @@
 ## 2026-08-28
 
 * **Creation**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md). Hormozi-audit-driven referral design for The Afida Stack game (branch `afida-stack-game`, PR #292): verified peer invites earn milestone rewards (samples box at 3, free case at 5), invited cafés get a lower win threshold, the leaderboard crown pays in an @afidasupplies shoutout, and monthly-reset urgency is said out loud. Lists the four founder decisions (STACK5 Stripe code, prize framing, milestone fulfilment, shoutout commitment). The referral backend, screening, and game UI shipped on the branch alongside a mobile pass. Proposals index updated.
+
+* **Creation**: [Timesheet August 2026](/reports/timesheet-2026-08.md). Measured-elapsed hours for 1–28 August: 34.50 h development (16 git sessions over 12 active days; the 9 Aug session crossed midnight into 10 Aug and is shown as one row). No non-code work billed this month at the owner's direction. 34.50 h at £50/h, £1,725.00. Reports index updated.
 
 ## 2026-08-21
 

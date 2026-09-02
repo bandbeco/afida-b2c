@@ -1,830 +1,3 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="description" content="The eco-packaging arcade game from Afida. Stack it recklessly high, unlock 5% off your next order.">
-<meta property="og:title" content="The Afida Stack">
-<meta property="og:description" content="Quality packaging supplies. Stacked recklessly high. Reach 15 and win 5% off at afida.com — think you can beat my tower?">
-<meta property="og:type" content="website">
-<meta property="og:url" content="https://afida.com/game/">
-<meta property="og:image" content="https://afida.com/game/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="The Afida Stack">
-<meta name="twitter:description" content="Quality packaging supplies. Stacked recklessly high. Reach 15 and win 5% off at afida.com.">
-<meta name="twitter:image" content="https://afida.com/game/og.png">
-<meta name="theme-color" content="#06130d">
-<title>The Afida Stack</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap">
-<style>
-  :root {
-    --green: #79ebc0;
-    --green-soft: #a7f4d9;
-    --deep: #00a86b;
-    --pink: #ff6b9d;
-    --kraft: #c79a63;
-    --ink: #000000;
-    --paper: #ffffff;
-    --crt: #06130d;
-    --panel: #0b2015;
-    --dim: #1e4b36;
-    --muted: #79a58f;
-    --font: 'Press Start 2P', monospace;
-    --font-body: 'VT323', monospace;
-    --glow-green: 0 0 12px rgba(121, 235, 192, 0.55);
-    --glow-pink: 0 0 12px rgba(255, 107, 157, 0.55);
-  }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body {
-    margin: 0;
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--font-body);
-    font-weight: 400;
-    overflow: hidden;
-    overscroll-behavior: none;
-    -webkit-tap-highlight-color: transparent;
-  }
-  /* Cabinet: the screen stays a narrow CRT; on desktop, bezel rails flank it
-     like printed cabinet art (no scanlines there — print, not phosphor). */
-  .cabinet {
-    height: 100dvh;
-    display: flex;
-    justify-content: center;
-    align-items: stretch;
-  }
-  .shell {
-    position: relative;
-    height: 100dvh;
-    width: 100%;
-    max-width: 560px;
-    background: var(--crt);
-    overflow: hidden;
-  }
-  .rail { display: none; }
-  @media (min-width: 1180px) {
-    .rail {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 20px;
-      width: 300px;
-      padding: 24px 22px;
-      overflow-y: auto;
-    }
-  }
-  .rail-panel {
-    border: 3px solid var(--dim);
-    background: var(--panel);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: center;
-  }
-  .rail-panel.hidden { display: none; }
-  .rail-title {
-    font-family: var(--font);
-    font-size: 0.6rem;
-    line-height: 1.6;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    text-align: center;
-    color: var(--green);
-    text-shadow: var(--glow-green);
-    margin: 0;
-  }
-  .rail-copy {
-    font-size: 1.2rem;
-    line-height: 1.25;
-    color: var(--muted);
-    margin: 0;
-    text-align: center;
-  }
-  .rail-copy .glow { color: var(--green); text-shadow: var(--glow-green); }
-  .rail .footer-link { text-align: center; }
-  /* CRT glass: scanlines + corner vignette over everything, UI included */
-  .shell::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 40;
-    pointer-events: none;
-    background:
-      radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.4) 100%),
-      repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0, rgba(0, 0, 0, 0.16) 1px, transparent 1px, transparent 3px);
-  }
-  @media (min-width: 561px) {
-    .shell {
-      border-left: 3px solid var(--dim);
-      border-right: 3px solid var(--dim);
-    }
-  }
-  canvas {
-    display: block;
-    width: 100%;
-    height: 100%;
-    touch-action: none;
-    cursor: pointer;
-  }
-  .sprite {
-    position: absolute;
-    width: 0;
-    height: 0;
-    overflow: hidden;
-  }
-  .blink { animation: blink 1.2s linear infinite; }
-  @keyframes blink {
-    0%, 55% { opacity: 1; }
-    56%, 100% { opacity: 0; }
-  }
-
-  /* ---------- HUD ---------- */
-  .hud {
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .hud-top {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 10px;
-    padding: max(12px, env(safe-area-inset-top)) 12px 0;
-  }
-  .stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 7px;
-    visibility: hidden;
-  }
-  .hud.playing .stat { visibility: visible; }
-  .stat-label {
-    font-family: var(--font);
-    font-size: 0.5rem;
-    letter-spacing: 0.08em;
-    color: var(--pink);
-  }
-  .stat-value {
-    font-family: var(--font);
-    font-size: 0.85rem;
-    color: var(--green);
-    text-shadow: var(--glow-green);
-  }
-  .stat.hi .stat-value { color: var(--kraft); text-shadow: none; }
-  .pill {
-    font-family: var(--font);
-    font-size: 0.5rem;
-    line-height: 1.7;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    text-align: right;
-    color: var(--pink);
-    max-width: 110px;
-    visibility: hidden;
-  }
-  .hud.playing .pill { visibility: visible; }
-  .pill.unlocked { color: var(--green); text-shadow: var(--glow-green); }
-  .mute {
-    pointer-events: auto;
-    font-family: var(--font);
-    font-size: 0.8rem;
-    width: 40px;
-    height: 40px;
-    background: var(--crt);
-    color: var(--green);
-    border: 3px solid var(--dim);
-    cursor: pointer;
-    padding: 0;
-  }
-  .mute:active { background: var(--dim); }
-  .toast {
-    position: absolute;
-    top: 26%;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--font);
-    font-size: clamp(0.7rem, 3.4vw, 0.95rem);
-    line-height: 1.6;
-    text-transform: uppercase;
-    text-align: center;
-    background: var(--crt);
-    color: var(--green);
-    text-shadow: var(--glow-green);
-    border: 3px solid var(--green);
-    padding: 12px 18px;
-    max-width: 88%;
-    opacity: 0;
-    transition: opacity 0.12s ease;
-  }
-  .toast.pink { color: var(--pink); border-color: var(--pink); text-shadow: var(--glow-pink); }
-  .toast.show { opacity: 1; }
-
-  /* ---------- Overlays ---------- */
-  .overlay {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 16px;
-    padding: 24px 20px calc(24px + env(safe-area-inset-bottom));
-    text-align: center;
-    background: color-mix(in srgb, var(--crt) 86%, transparent);
-    overflow-y: auto;
-  }
-  .overlay.hidden { display: none; }
-  /* The menu sits over the live attract-mode scene: wash fades so the
-     swinging dispenser and demo tower ghost through behind the panels. */
-  .overlay.clear {
-    background: linear-gradient(180deg,
-      color-mix(in srgb, var(--crt) 96%, transparent) 12%,
-      color-mix(in srgb, var(--crt) 70%, transparent) 58%,
-      color-mix(in srgb, var(--crt) 35%, transparent));
-  }
-  .hero-lockup {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-  }
-  .logo-hero {
-    width: min(52vw, 210px);
-    height: auto;
-    filter: drop-shadow(0 0 10px rgba(121, 235, 192, 0.45));
-  }
-  .sr-only {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0 0 0 0);
-    white-space: nowrap;
-    border: 0;
-  }
-  .title {
-    font-family: var(--font);
-    font-size: clamp(1.7rem, 9.5vw, 2.6rem);
-    line-height: 1;
-    margin: 0;
-    text-transform: uppercase;
-    color: var(--green);
-    text-shadow: 3px 3px 0 var(--pink), var(--glow-green);
-  }
-  .tagline {
-    font-size: 1.35rem;
-    line-height: 1.2;
-    max-width: 30ch;
-    margin: 0;
-    color: var(--muted);
-  }
-  .challenge {
-    font-family: var(--font);
-    font-size: 0.65rem;
-    line-height: 1.8;
-    text-transform: uppercase;
-    background: var(--panel);
-    color: var(--pink);
-    text-shadow: var(--glow-pink);
-    border: 3px solid var(--pink);
-    padding: 12px 16px;
-    max-width: 90%;
-  }
-  .challenge.hidden { display: none; }
-  .btn {
-    font-family: var(--font);
-    font-size: 0.75rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    color: var(--ink);
-    background: var(--green);
-    border: none;
-    box-shadow: inset -4px -4px 0 var(--deep), inset 4px 4px 0 var(--green-soft);
-    padding: 17px 30px;
-    cursor: pointer;
-  }
-  .btn:hover { background: var(--green-soft); }
-  .btn:active {
-    transform: translateY(2px);
-    box-shadow: inset 4px 4px 0 var(--deep), inset -4px -4px 0 var(--green-soft);
-  }
-  .btn.pink {
-    background: var(--pink);
-    box-shadow:
-      inset -4px -4px 0 color-mix(in srgb, var(--pink) 55%, var(--ink)),
-      inset 4px 4px 0 color-mix(in srgb, var(--pink) 55%, var(--paper));
-  }
-  .btn.pink:hover { background: #ff87ae; }
-  .btn.pink:active {
-    box-shadow:
-      inset 4px 4px 0 color-mix(in srgb, var(--pink) 55%, var(--ink)),
-      inset -4px -4px 0 color-mix(in srgb, var(--pink) 55%, var(--paper));
-  }
-  .btn.ghost {
-    background: var(--crt);
-    color: var(--green);
-    border: 3px solid var(--dim);
-    box-shadow: none;
-    font-size: 0.65rem;
-    padding: 13px 22px;
-  }
-  .btn.ghost:hover { border-color: var(--green); }
-  .btn.ghost:active { transform: translateY(2px); }
-  :is(.btn, .mute, .copy, .name-input, .fold > summary):focus-visible {
-    outline: 3px solid var(--pink);
-    outline-offset: 3px;
-  }
-  /* First-run hint: floats over the playfield until the first-ever drop */
-  .hint {
-    position: absolute;
-    top: 40%;
-    left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--font);
-    font-size: 0.55rem;
-    line-height: 1.8;
-    text-transform: uppercase;
-    text-align: center;
-    color: var(--green);
-    text-shadow: var(--glow-green);
-    background: var(--crt);
-    border: 3px solid var(--dim);
-    padding: 10px 16px;
-    max-width: 88%;
-    opacity: 1;
-    transition: opacity 0.4s ease;
-    animation: hint-bob 1.6s ease-in-out infinite;
-  }
-  .hint.hidden { opacity: 0; animation: none; }
-  @keyframes hint-bob {
-    50% { transform: translateX(-50%) translateY(-6px); }
-  }
-  .prize-line {
-    font-family: var(--font);
-    font-size: 0.62rem;
-    line-height: 1.8;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--kraft);
-    text-shadow: 0 0 10px rgba(199, 154, 99, 0.5);
-  }
-  .prize-line .off { color: var(--green); text-shadow: var(--glow-green); }
-
-  /* ---------- Game over ---------- */
-  .over-title {
-    font-family: var(--font);
-    font-size: clamp(1.3rem, 7.5vw, 2rem);
-    line-height: 1.2;
-    margin: 0;
-    text-transform: uppercase;
-    color: var(--pink);
-    text-shadow: var(--glow-pink);
-  }
-  .over-quip {
-    font-size: 1.25rem;
-    line-height: 1.2;
-    color: var(--muted);
-    max-width: 34ch;
-    margin: 0;
-  }
-  .final {
-    font-family: var(--font);
-    font-size: clamp(2.4rem, 13vw, 3.6rem);
-    line-height: 1;
-    margin: 0;
-    color: var(--green);
-    text-shadow: var(--glow-green);
-  }
-  .best-line {
-    font-family: var(--font);
-    font-size: 0.55rem;
-    line-height: 1.8;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--kraft);
-    margin: 0;
-  }
-  .prize-card {
-    border: 3px solid var(--green);
-    background: var(--panel);
-    box-shadow: 0 0 18px rgba(121, 235, 192, 0.25);
-    padding: 16px 18px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    width: min(92%, 340px);
-  }
-  .prize-card.hidden { display: none; }
-  .prize-card .won {
-    font-family: var(--font);
-    font-size: 0.6rem;
-    line-height: 1.8;
-    text-transform: uppercase;
-    color: var(--green);
-    margin: 0;
-  }
-  .code-row {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-    width: 100%;
-  }
-  .code {
-    font-family: var(--font);
-    font-size: 1.2rem;
-    letter-spacing: 0.15em;
-    text-align: center;
-    color: var(--kraft);
-    background: var(--crt);
-    border: 3px dashed var(--kraft);
-    padding: 14px 10px;
-  }
-  .copy {
-    font-family: var(--font);
-    font-size: 0.7rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    background: var(--kraft);
-    color: var(--ink);
-    border: none;
-    box-shadow:
-      inset -4px -4px 0 color-mix(in srgb, var(--kraft) 60%, var(--ink)),
-      inset 4px 4px 0 color-mix(in srgb, var(--kraft) 60%, var(--paper));
-    padding: 15px 22px;
-    cursor: pointer;
-  }
-  .copy:hover { background: #d9ad74; }
-  .copy:active {
-    transform: translateY(2px);
-    box-shadow:
-      inset 4px 4px 0 color-mix(in srgb, var(--kraft) 60%, var(--ink)),
-      inset -4px -4px 0 color-mix(in srgb, var(--kraft) 60%, var(--paper));
-  }
-  .prize-card .terms { font-size: 1.05rem; line-height: 1.2; margin: 0; max-width: 30ch; color: var(--muted); }
-  .prize-card .terms a { color: var(--green); }
-  /* Collapsible sections: whichever one the outcome makes relevant opens as
-     the hero; the rest wait as single quiet rows behind a blinking cursor. */
-  .fold {
-    border: 3px solid var(--dim);
-    background: var(--panel);
-    width: min(92%, 380px);
-  }
-  .fold.hidden { display: none; }
-  .fold > summary {
-    list-style: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    font-family: var(--font);
-    font-size: 0.6rem;
-    line-height: 1.6;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: var(--paper);
-    padding: 16px 18px;
-  }
-  .fold > summary::-webkit-details-marker { display: none; }
-  .fold > summary:hover { color: var(--green); }
-  .chev {
-    width: 0;
-    height: 0;
-    border-left: 9px solid var(--green);
-    border-top: 6px solid transparent;
-    border-bottom: 6px solid transparent;
-    transition: transform 0.15s ease;
-  }
-  .fold[open] .chev { transform: rotate(90deg); }
-  .fold-body {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    padding: 2px 16px 16px;
-  }
-  .share-pitch {
-    font-size: 1.3rem;
-    line-height: 1.2;
-    max-width: 30ch;
-    margin: 0;
-    color: var(--paper);
-  }
-  .share-pitch.hidden { display: none; }
-  .share-preview {
-    font-size: 1.1rem;
-    line-height: 1.25;
-    background: var(--crt);
-    color: var(--green);
-    border: 2px dashed var(--dim);
-    padding: 10px 12px;
-    margin: 0;
-    text-align: left;
-    overflow-wrap: anywhere;
-    white-space: pre-line;
-    width: 100%;
-  }
-  .share-actions {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .share-actions .btn { font-size: 0.65rem; padding: 14px 20px; }
-  .share-actions .btn.hidden { display: none; }
-  .clipboard-stage {
-    position: fixed;
-    top: -100px;
-    left: 0;
-    opacity: 0;
-  }
-  .name-input {
-    font-family: var(--font-body);
-    font-size: 1.3rem;
-    width: 11ch;
-    text-align: center;
-    background: var(--crt);
-    color: var(--green);
-    caret-color: var(--green);
-    border: 3px solid var(--dim);
-    padding: 8px 10px;
-  }
-  .name-input::placeholder { color: #3f6b57; }
-  .name-input:focus { border-color: var(--green); outline: none; }
-  .footer-link {
-    font-size: 1.05rem;
-    color: var(--muted);
-  }
-  .footer-link a {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    color: var(--muted);
-    text-decoration: none;
-  }
-  .footer-link a:hover span { text-decoration: underline; }
-
-  /* ---------- Hi-score table ---------- */
-  .board-title {
-    font-family: var(--font);
-    font-size: 0.5rem;
-    line-height: 1.7;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    text-align: center;
-    color: var(--muted);
-    margin: 0;
-  }
-  .board ol {
-    list-style: none;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .board li {
-    display: flex;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 1.2rem;
-    line-height: 1.1;
-  }
-  .board .rank {
-    color: var(--muted);
-    min-width: 1.6em;
-    text-align: right;
-  }
-  /* podium colors: gold, silver, pink */
-  .board li:nth-child(1) .rank { color: var(--kraft); }
-  .board li:nth-child(2) .rank { color: var(--paper); }
-  .board li:nth-child(3) .rank { color: var(--pink); }
-  .board .who {
-    flex: 1;
-    text-align: left;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    color: var(--paper);
-  }
-  .board .who a { color: var(--pink); }
-  .board .pts { color: var(--green); }
-  .board-empty {
-    font-size: 1.15rem;
-    color: var(--muted);
-    margin: 0;
-    text-align: center;
-  }
-  .board-empty.hidden,
-  .fineprint.hidden { display: none; }
-  .lb-form {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-  }
-  .lb-form.hidden { display: none; }
-  .lb-form .btn { font-size: 0.6rem; padding: 14px 16px; }
-  .ig-input { width: 17ch; }
-  .fineprint {
-    font-size: 1.05rem;
-    line-height: 1.2;
-    color: var(--muted);
-    max-width: 34ch;
-    margin: 0;
-  }
-  .email-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-  }
-  .email-row.hidden { display: none; }
-  .email-input { width: 21ch; }
-  .consent {
-    display: flex;
-    gap: 8px;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    font-size: 1.05rem;
-    color: var(--muted);
-    cursor: pointer;
-  }
-  .consent input {
-    accent-color: var(--green);
-    width: 16px;
-    height: 16px;
-  }
-  .lb-result {
-    font-size: 1.3rem;
-    line-height: 1.2;
-    color: var(--green);
-    text-shadow: var(--glow-green);
-    margin: 0;
-  }
-  .lb-result.hidden { display: none; }
-
-  /* Short viewports (most phones in portrait with browser chrome, and any
-     landscape phone): tighten the overlays so nothing important scrolls away. */
-  @media (max-height: 720px) {
-    .overlay { gap: 10px; padding-top: 16px; }
-    .logo-hero { width: min(40vw, 160px); }
-    .title { font-size: clamp(1.4rem, 8vw, 2rem); }
-    .final { font-size: clamp(2rem, 11vw, 3rem); }
-    .prize-card { padding: 12px 14px; gap: 9px; }
-    .fold > summary { padding: 12px 14px; }
-    .fold-body { padding: 0 14px 12px; gap: 9px; }
-    .btn { padding: 14px 22px; }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .btn, .toast, .chev, .hint { transition: none; }
-    .hint, .blink { animation: none; }
-  }
-</style>
-</head>
-<body>
-<div class="cabinet">
-<aside class="rail" aria-label="Hi-scores and controls">
-  <div class="rail-panel board hidden" id="railScores">
-    <p class="rail-title">Hi-scores</p>
-    <p class="board-title" id="railBoardTitle">Top stackers</p>
-    <ol id="railBoardList"></ol>
-    <p class="board-empty hidden" id="railBoardEmpty">Nobody yet this month. The board is yours for the taking.</p>
-    <p class="fineprint">Top stacker this month wins a free case of cups + a shoutout from @afidasupplies.</p>
-  </div>
-  <div class="rail-panel">
-    <p class="rail-title">Controls</p>
-    <p class="rail-copy">One button. The crane swings, you drop &mdash; tap, click or hit space.</p>
-    <p class="rail-copy">Overhang gets sliced off. Perfect drops grow the box back.</p>
-  </div>
-</aside>
-<main class="shell" id="shell">
-  <svg class="sprite" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
-    <symbol id="afidaLogo" viewBox="0 0 456.039 149.71">
-      <path d="M452.69 13.31C447.42 4.51 437.31.06 422.63.06h-38.64c-5.73-.35-14.64 1.5-22.65 8.72-5.76-5.8-14.66-8.74-26.57-8.74H181.6c-5.91-.36-15.19 1.62-23.38 9.39C152.5 3.2 143.4.04 131.06.04H92.42c-8.51-.51-24.01 3.79-33.18 23.33L0 149.7h174.96l34.03.01h74.28l8.32-.01 65.25.01h45.61l50.41-110.69c3.29-6.47 5.15-16.88-.14-25.71Z" fill="#000000"></path>
-      <path d="M130.79 14.03H91.6S79.49 12.6 71.65 29.3L21.77 135.69h34.41l24.64-51.31H91.2l-23.21 51.31h33.6l46.83-102.82s10.08-18.83-17.61-18.83Zm-29.32 47.65H91.09l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"></path>
-      <path d="M198.89 61.68h-18.63l9.64-20.24h28.28l14.2-27.4h-51.61s-12.11-1.43-19.95 15.27L110.94 135.7h34.41l24.64-51.31h18.22l10.69-22.7Z" fill="#79ebc0"></path>
-      <path d="M422.35 14.05h-39.19s-12.11-1.43-19.95 15.27l-49.88 106.39h34.41l24.64-51.31h10.38l-23.2 51.29h33.6l46.82-102.81s10.08-18.83-17.61-18.83Zm-29.32 47.64h-10.38l13.23-27.79h10.59l-13.44 27.79Z" fill="#79ebc0"></path>
-      <path fill="#79ebc0" d="m262 37.26.67.31 3.45 1.58 11.45-25.12h-7.99l-10.08 22.1 2.5 1.13z"></path>
-      <path d="M254.35 50.8c-3.4-5.07-4.19-11.73-1.47-17.69l8.7-19.07h-19.72L181.8 135.7h17.63v.02h16.45v-.02l39.72-83.26c-.44-.52-.85-1.07-1.23-1.63Z" fill="#79ebc0"></path>
-      <path d="m314.33 115.81 37.77-82.94s10.08-18.83-17.61-18.83h-33l-15.5 34.17c-2.01 4.42-5.58 7.62-9.75 9.31-2.36.95-4.91 1.42-7.49 1.32l-36.7 76.85v.02h8.9v-.02h42.04c19.93 0 28.5-14.04 30.73-18.52l.62-1.36Zm-33.65 0h-11.26l25.51-54.13 13.1-27.79h10.59l-37.94 81.92Z" fill="#79ebc0"></path>
-      <path fill="#79ebc0" d="m279.37 45.19 12-26.33 2.2-4.83h-8l-12.82 28.14 6.62 3.02z"></path>
-    </symbol>
-  </svg>
-  <canvas id="game"></canvas>
-
-  <div class="hud" id="hud">
-    <div class="hud-top">
-      <button class="mute" id="muteBtn" aria-label="Toggle sound">♪</button>
-      <div class="stat"><span class="stat-label">1UP</span><span class="stat-value" id="score">0000</span></div>
-      <div class="stat hi"><span class="stat-label">HI-SCORE</span><span class="stat-value" id="hiScore">0000</span></div>
-      <div class="pill" id="prizePill">Bonus 5% at 15</div>
-    </div>
-    <div class="toast" id="toast" role="status"></div>
-    <div class="hint hidden" id="dropHint">Tap, click or press space to drop</div>
-  </div>
-
-  <div class="overlay clear" id="menu">
-    <div class="hero-lockup">
-      <svg class="logo-hero" viewBox="0 0 456.039 149.71" role="img" aria-label="Afida"><use href="#afidaLogo"></use></svg>
-      <h1 class="title"><span class="sr-only">The Afida </span><span class="pop">Stack</span></h1>
-    </div>
-    <p class="tagline">Quality packaging supplies. Stacked recklessly high.</p>
-    <div class="challenge hidden" id="challengeBanner"></div>
-    <div class="prize-line">Bonus: stack <span id="winTarget">15</span> for <span class="off">5% off</span></div>
-    <p class="fineprint hidden" id="refBoost">A mate greased the crane &mdash; the prize drops at 12 for you.</p>
-    <button class="btn" id="playBtn"><span class="blink">Press start</span></button>
-    <details class="fold board hidden" id="menuBoard">
-      <summary><span id="boardLead">Hi-score table</span><span class="chev" aria-hidden="true"></span></summary>
-      <div class="fold-body">
-        <p class="board-title" id="boardTitle">Top stackers</p>
-        <ol id="boardList"></ol>
-        <p class="board-empty hidden" id="boardEmpty">Nobody yet this month. The board is yours for the taking.</p>
-        <p class="fineprint">Top stacker this month wins a free case of cups + a shoutout from @afidasupplies.</p>
-      </div>
-    </details>
-  </div>
-
-  <div class="overlay hidden" id="over">
-    <h2 class="over-title" id="overTitle">Tower down</h2>
-    <p class="over-quip" id="overQuip"></p>
-    <div class="final" id="finalScore">0</div>
-    <p class="best-line" id="bestLine">Best: 0</p>
-    <div class="prize-card hidden" id="prizeCard">
-      <p class="won">Bonus unlocked: 5% off your next order</p>
-      <form class="email-row" id="winEmailRow">
-        <input class="name-input email-input" id="winEmail" type="email" maxlength="80" placeholder="you@yourcafe.com" autocomplete="email" required>
-        <button class="copy" id="winEmailBtn" type="submit">Send my code</button>
-        <label class="consent"><input type="checkbox" id="winOptIn"> Send me Afida offers too</label>
-      </form>
-      <p class="terms hidden" id="winSent"></p>
-      <p class="terms">Your unique code lands by email &mdash; one use, this month, on orders over &pound;100 excl. VAT at <a href="https://afida.com" rel="noopener">afida.com</a> checkout.</p>
-    </div>
-    <details class="fold" id="challengeFold">
-      <summary>Challenge a mate<span class="chev" aria-hidden="true"></span></summary>
-      <div class="fold-body">
-        <p class="share-pitch hidden" id="sharePitch"></p>
-        <input class="name-input" id="nameInput" maxlength="14" placeholder="Your name" autocomplete="off">
-        <p class="share-preview" id="sharePreview"></p>
-        <div class="share-actions">
-          <button class="btn pink" id="copyShare">Copy challenge</button>
-          <button class="btn ghost hidden" id="shareBtn">Share&hellip;</button>
-        </div>
-        <p class="fineprint" id="shareBonus"></p>
-      </div>
-    </details>
-    <details class="fold hidden" id="lbFold">
-      <summary>Enter the hi-score table<span class="chev" aria-hidden="true"></span></summary>
-      <div class="fold-body">
-        <div class="lb-form" id="lbForm">
-          <input class="name-input ig-input" id="igInput" maxlength="31" placeholder="@instagram (optional)" autocomplete="off">
-          <input class="name-input email-input" id="lbEmail" type="email" maxlength="80" placeholder="email (optional)" autocomplete="email">
-          <label class="consent"><input type="checkbox" id="lbOptIn"> Send me Afida offers too</label>
-          <button class="btn" id="lbSubmit">Join the board</button>
-        </div>
-        <p class="fineprint" id="lbNote">Top 10 get their name and Instagram on the board. Email never shows &mdash; it's for prize codes and dethronement news. Anything dodgy gets pulled.</p>
-        <p class="lb-result hidden" id="lbResult"></p>
-      </div>
-    </details>
-    <button class="btn ghost" id="againBtn">Continue?</button>
-  </div>
-</main>
-<aside class="rail" aria-label="Bonus and challenge info">
-  <div class="rail-panel">
-    <p class="rail-title">Bonus stage</p>
-    <p class="rail-copy">Stack <span id="railWinTarget">15</span> and take <span class="glow">5% off</span> your next &pound;100+ order at afida.com.</p>
-  </div>
-  <div class="rail-panel">
-    <p class="rail-title">2P mode</p>
-    <p class="rail-copy">Finish a run, send your score link. Their game shows your line to beat.</p>
-  </div>
-  <p class="footer-link"><a href="https://afida.com" rel="noopener"><span>afida.com &mdash; eco-friendly packaging supplies</span></a></p>
-</aside>
-</div>
-
-<script>
 (() => {
   'use strict';
 
@@ -844,6 +17,10 @@
   const BLOCK_H = 46;
   const MIN_OVERLAP = 10;
   const PERFECT_TOL = 7;
+  const PERFECT_GROWTH = 4;
+  const BASE_MIN_W = 120;
+  const BASE_MAX_W = 230;
+  const BASE_RATIO = 0.46;
   const BASE_WIN = 15;
   const INVITED_WIN = 12;
   const BASE_H = 78;
@@ -1013,7 +190,7 @@
   // the left edge of every landed drop. The server re-runs the slice math.
   let dropLog = [], roundW = 0, roundBaseW = 0;
 
-  function baseW() { return Math.max(120, Math.min(W * 0.46, 230)); }
+  function baseW() { return Math.max(BASE_MIN_W, Math.min(W * BASE_RATIO, BASE_MAX_W)); }
   function speedFor(n) { return 1.9 + Math.min(n * 0.075, 2.3); }
   function ampFor(w) { return (W - w) / 2 - 12; }
   function towerTopWorldY(n) { return BASE_H + n * BLOCK_H; }
@@ -1064,7 +241,7 @@
       // Perfect: snap, tiny regrowth, streak (cap locked at round start so the
       // server replay stays exact even if the window resizes mid-game)
       x = prev.x;
-      w = Math.min(prev.w + 4, roundBaseW);
+      w = Math.min(prev.w + PERFECT_GROWTH, roundBaseW);
       x -= (w - prev.w) / 2;
       combo++;
       sfx.perfect();
@@ -1539,7 +716,7 @@
     try {
       const r = await fetch('/game/win_code', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: jsonHeaders(),
         body: JSON.stringify({
           email,
           marketing: $('winOptIn').checked,
@@ -1563,10 +740,24 @@
   });
 
   // ---------- Monthly leaderboard ----------
-  // Backed by the Rails endpoint at /game/leaderboard. When the game is served
-  // anywhere without that endpoint (previews, static mirrors) the fetch fails
-  // and every leaderboard element simply stays hidden.
+  // First paint carries the board in #game-board; GET /game/leaderboard
+  // refreshes after a submission. POSTs send the Rails CSRF token.
+  function jsonHeaders() {
+    const headers = { 'Content-Type': 'application/json', 'Accept': 'application/json' };
+    const csrf = document.querySelector('meta[name="csrf-token"]');
+    if (csrf) headers['X-CSRF-Token'] = csrf.content;
+    return headers;
+  }
+
   const lb = { ok: false, token: null, entries: [], month: '' };
+
+  function applyBoard(d) {
+    lb.ok = true;
+    lb.token = d.token;
+    lb.entries = d.entries || [];
+    lb.month = d.month || '';
+    renderBoard();
+  }
   const igInput = $('igInput');
   igInput.value = store.get('afidaStackIG') || '';
   const lbEmail = $('lbEmail');
@@ -1576,15 +767,16 @@
     try {
       const r = await fetch('/game/leaderboard', { headers: { 'Accept': 'application/json' } });
       if (!r.ok) throw new Error(r.status);
-      const d = await r.json();
-      lb.ok = true;
-      lb.token = d.token;
-      lb.entries = d.entries || [];
-      lb.month = d.month || '';
-      renderBoard();
+      applyBoard(await r.json());
     } catch {
-      lb.ok = false;
+      if (!lb.token) lb.ok = false;
     }
+  }
+
+  function readBootBoard() {
+    const el = $('game-board');
+    if (!el || !el.textContent.trim()) return;
+    try { applyBoard(JSON.parse(el.textContent)); } catch {}
   }
 
   function daysUntilReset() {
@@ -1669,7 +861,7 @@
     try {
       const r = await fetch('/game/leaderboard', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        headers: jsonHeaders(),
         body: JSON.stringify({
           token: lb.token,
           name: (nameInput.value.trim() || 'Stacker').slice(0, 14),
@@ -1705,6 +897,7 @@
     }
   });
 
+  readBootBoard();
   fetchBoard();
 
   // ---------- Menu wiring ----------
@@ -1730,6 +923,3 @@
   $('playBtn').addEventListener('click', startGame);
   $('againBtn').addEventListener('click', startGame);
 })();
-</script>
-</body>
-</html>
