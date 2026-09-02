@@ -8,6 +8,7 @@ Dated feature and design plans. Statuses were researched against git history and
 * [Hormozi Trilogy Implementation 2026-08](/plans/2026-08-17-hormozi-trilogy-implementation.md) - Consolidated four-phase checklist merging the build orders of the three Hormozi proposals (Money Model, Grand Slam Offer, Leads).
 * [Gap Coverage Plan 2026-08](/plans/2026-08-19-gap-coverage-plan.md) - Closes the Ahrefs content gap with rankable commercial pages: batch 1 is eight category retargets plus three new pages, gated on the 2026-10-15 GSC checkpoint.
 * [Product Copy and Specs 2026-08](/plans/2026-08-21-product-copy-and-specs.md) - Replaces formulaic product descriptions with facts in three sequenced moves: promote fit into the spec table from the curated mappings, fix the spec vocabulary, then cut the prose back.
+* [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) - Sells the stock catalogue through AI chat agents via Stripe ACS in four phases: CSV product feed reusing the Google Merchant data, a checkout customization hook for UK VAT and zone shipping, cart-less order creation from the checkout webhook, then freshness monitoring and go-live.
 
 # Shipped
 

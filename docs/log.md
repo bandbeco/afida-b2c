@@ -2,6 +2,8 @@
 
 ## 2026-09-02
 
+* **New**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) plan for selling through AI chat agents via Stripe Agentic Commerce Suite. Four phases: product feed CSV and sandbox import, customization hook plus cart-less order creation, price and deletion freshness with import monitoring, live connection and promotions. Stock products only; branded, samples and tier pricing stay website-only.
+
 * **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) review follow-up on `afida-stack-game`. Play token is issued on the game page only (a board GET no longer mints one). Win-claim email attaches to this IP’s latest board entry, not the public share code. MATE codes persist on `game_leads` and mint outside the row lock. 12/15 win thresholds live on `Game::PromoCodes` and the page boot payload. In-play swing stays on `roundW`. Unused `verified_referrals` / `referral_promo_code` dropped.
 
 * **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) monthly crown is the @afidasupplies shoutout only — no free case of cups. The handle on the board and in the dethroned email links to the Instagram account.
