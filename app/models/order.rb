@@ -60,6 +60,7 @@ class Order < ApplicationRecord
   # first.
   before_create :set_shipping_zone
   before_create :set_estimated_delivery_on
+  after_commit :enqueue_game_referral_reward, on: :create
 
   scope :recent, -> { order(created_at: :desc) }
   scope :for_organization, ->(org) { where(organization: org) }
@@ -208,6 +209,12 @@ class Order < ApplicationRecord
   end
 
   private
+
+  def enqueue_game_referral_reward
+    return unless subtotal_amount.to_d >= GameMateCodeJob::QUALIFYING_SUBTOTAL
+
+    GameMateCodeJob.perform_later(id)
+  end
 
   def generate_order_number
     return if order_number.present?

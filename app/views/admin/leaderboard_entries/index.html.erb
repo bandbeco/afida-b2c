@@ -1,0 +1,125 @@
+<div class="py-4 sm:py-8">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
+    <h1>Game Leaderboard</h1>
+  </div>
+
+  <p class="text-sm mb-4">
+    Clean entries are approved automatically and their Instagram handle is live on the
+    /game leaderboard. Flagged entries wait here as pending &mdash; approve to publish the
+    handle, reject to hide the entry entirely. Names and scores show either way.
+  </p>
+
+  <div class="mb-4 flex gap-2">
+    <%= link_to "All", admin_leaderboard_entries_path, class: "btn btn-sm #{"btn-active" if params[:filter].blank?}" %>
+    <%= link_to "Needs review", admin_leaderboard_entries_path(filter: "review"), class: "btn btn-sm #{"btn-active" if params[:filter] == "review"}" %>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Month</th>
+          <th>Name</th>
+          <th>Score</th>
+          <th>Instagram</th>
+          <th>Email</th>
+          <th>Referred by</th>
+          <th>Status</th>
+          <th>Submitted</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @entries.each do |entry| %>
+          <tr>
+            <td><%= entry.month.strftime("%b %Y") %></td>
+            <td class="font-medium"><%= entry.name %></td>
+            <td><%= entry.score %></td>
+            <td>
+              <% if entry.instagram_handle.present? %>
+                <%= link_to "@#{entry.instagram_handle}", "https://instagram.com/#{entry.instagram_handle}",
+                      target: "_blank", rel: "noopener nofollow", class: "link-inline" %>
+              <% end %>
+            </td>
+            <td>
+              <% if entry.email.present? %>
+                <%= mail_to entry.email, entry.email, class: "link-inline" %>
+              <% end %>
+            </td>
+            <td>
+              <% if entry.referrer %>
+                <%= entry.referrer.name %>
+                <span class="text-sm">(<%= entry.referrer.ref_code %>)</span>
+              <% end %>
+            </td>
+            <td>
+              <span class="badge badge-sm <%= { "pending" => "badge-warning", "approved" => "badge-success", "rejected" => "badge-ghost" }[entry.status] %>">
+                <%= entry.status %>
+              </span>
+              <% entry.flags.each do |flag| %>
+                <span class="badge badge-error badge-sm"><%= flag %></span>
+              <% end %>
+            </td>
+            <td><%= entry.created_at.strftime("%d %b %H:%M") %></td>
+            <td class="flex gap-2">
+              <% unless entry.approved? %>
+                <%= button_to "Approve", approve_admin_leaderboard_entry_path(entry), method: :patch, class: "btn btn-sm btn-success" %>
+              <% end %>
+              <% unless entry.rejected? %>
+                <%= button_to "Reject", reject_admin_leaderboard_entry_path(entry), method: :patch, class: "btn btn-sm btn-outline" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="mt-10 mb-4">Prize claims</h2>
+  <p class="text-sm mb-4">
+    Every address the game captured, including winners who never joined the board.
+    Win codes are one per address per month; opted-in rows also land on the marketing list.
+  </p>
+  <div class="overflow-x-auto">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Referred by</th>
+          <th>Referral paid</th>
+          <th>Source</th>
+          <th>Marketing</th>
+          <th>Win code</th>
+          <th>Captured</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @leads.each do |lead| %>
+          <tr>
+            <td><%= mail_to lead.email, lead.email, class: "link-inline" %></td>
+            <td>
+              <% if lead.referrer %>
+                <%= lead.referrer.name %>
+                <% if lead.referrer.email.present? %>
+                  <br><%= mail_to lead.referrer.email, lead.referrer.email, class: "link-inline" %>
+                <% end %>
+              <% end %>
+            </td>
+            <td><%= lead.referrer_rewarded_at&.strftime("%d %b %H:%M") %></td>
+            <td><%= lead.source %></td>
+            <td><%= lead.marketing_opt_in? ? "opted in" : "transactional" %></td>
+            <td>
+              <% if lead.win_promo_code.present? %>
+                <code><%= lead.win_promo_code %></code>
+                <% if lead.win_promo_month.present? %>
+                  <span class="text-sm">(<%= lead.win_promo_month.strftime("%b %Y") %>)</span>
+                <% end %>
+              <% end %>
+            </td>
+            <td><%= lead.created_at.strftime("%d %b %H:%M") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

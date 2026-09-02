@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_17_114044) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -243,6 +243,43 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_114044) do
     t.string "source", default: "cart_discount", null: false
     t.datetime "updated_at", null: false
     t.index ["email"], name: "index_email_subscriptions_on_email", unique: true
+  end
+
+  create_table "game_leads", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.boolean "marketing_opt_in", default: false, null: false
+    t.string "mate_promo_code"
+    t.bigint "referrer_id"
+    t.datetime "referrer_rewarded_at"
+    t.string "source", null: false
+    t.datetime "updated_at", null: false
+    t.string "win_promo_code"
+    t.date "win_promo_month"
+    t.index ["email"], name: "index_game_leads_on_email", unique: true
+    t.index ["referrer_id"], name: "index_game_leads_on_referrer_id"
+  end
+
+  create_table "leaderboard_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.jsonb "flags", default: [], null: false
+    t.string "instagram_handle"
+    t.boolean "marketing_opt_in", default: false, null: false
+    t.date "month", null: false
+    t.string "name", null: false
+    t.string "ref_code"
+    t.bigint "referrer_id"
+    t.jsonb "replay"
+    t.integer "score", null: false
+    t.string "status", default: "pending", null: false
+    t.string "submitter_ip"
+    t.datetime "updated_at", null: false
+    t.index ["month", "score"], name: "index_leaderboard_entries_on_month_and_score"
+    t.index ["ref_code"], name: "index_leaderboard_entries_on_ref_code", unique: true
+    t.index ["referrer_id"], name: "index_leaderboard_entries_on_referrer_id"
+    t.index ["status"], name: "index_leaderboard_entries_on_status"
+    t.index ["submitter_ip", "created_at"], name: "index_leaderboard_entries_on_submitter_ip_and_created_at"
   end
 
   create_table "leads", force: :cascade do |t|
@@ -539,6 +576,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_17_114044) do
   add_foreign_key "collection_category_guides", "collections", on_delete: :cascade
   add_foreign_key "collection_items", "collections"
   add_foreign_key "collection_items", "products"
+  add_foreign_key "game_leads", "leaderboard_entries", column: "referrer_id"
+  add_foreign_key "leaderboard_entries", "leaderboard_entries", column: "referrer_id"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"
   add_foreign_key "orders", "organizations"

@@ -102,6 +102,15 @@ Rails.application.routes.draw do
   get "accessibility-statement", to: "pages#accessibility_statement"
   get "return-policy", to: "pages#return_policy"
   get "delivery-returns", to: "pages#delivery_returns"
+  # The Afida Stack arcade cabinet, plus its JSON board and prize-claim endpoints
+  get "game", to: "games#show", as: :game
+  get "game/leaderboard", to: "game_leaderboard#index"
+  post "game/leaderboard", to: "game_leaderboard#create"
+
+  # Unique single-use prize codes for the game: re-verified, minted, and
+  # delivered by email only (referral kickbacks go out via GameMateCodeJob)
+  post "game/win_code", to: "game_promo_codes#win"
+
   get "pattern-demo", to: "pages#pattern_demo" if Rails.env.development?
   get "sentry-test", to: "pages#sentry_test" if Rails.env.development?
 
@@ -283,6 +292,12 @@ Rails.application.routes.draw do
     end
     resources :product_families, path: "product-families", except: [ :show ]
     resources :orders, only: [ :index, :show ]
+    resources :leaderboard_entries, only: [ :index ] do
+      member do
+        patch :approve
+        patch :reject
+      end
+    end
 
     # Blog management at /admin/blog/posts and /admin/blog/categories
     scope :blog do
