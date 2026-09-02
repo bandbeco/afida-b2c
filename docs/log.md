@@ -2,6 +2,16 @@
 
 ## 2026-09-02
 
+* **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) monthly crown is the @afidasupplies shoutout only — no free case of cups. The handle on the board and in the dethroned email links to the Instagram account.
+
+* **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) player-facing copy no longer says “café”. Share bonus, mate-code emails, and the win-email placeholder speak to any hospitality business (restaurants, hotels, and the rest), not coffee shops only.
+
+* **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) prizes are £10 off over £100, not 5%. A win still mints a unique STACK code. Referral kickback is one £10 code per referred address, paid when that address places a first paid order of £100+ excl. VAT — play-through alone no longer pays.
+
+* **Creation**: [Afida.com B2B Offers (September 2026)](/reports/afida-b2b-offers-2026-09.md). Diagnosis of the live store (AOV ~£96, 86-of-99 one-timers, 10% welcome already beating the game’s 5%) and a short list of trade offers: “Your Name On It” (print setup waived), “Never Run Out” (continuity), Opening Week Kit, round-pound credit, free delivery under £100. Recommends splitting the game into a small SKU-agnostic win (free delivery or unlock the existing 10%) and a monthly crown that is an upsell door (branded-print setup + shoutout, or a case of whatever they order). Reports index updated.
+
+* **Creation**: [Stack Game Offer Audit (September 2026)](/reports/stack-game-offer-audit-2026-09.md). Hormozi value-equation re-audit of the live commercial layer (prizes, 15→12 gift, MATE kickback, monthly crown). Verdict: mechanics still crush the equation; the prize is still a percentage worth £5 on the £100 floor; the crown is promised without public fulfilment; the gift-link is locked behind board join. Top fixes: sell a thing not 5% — not a sleeve of cups (wrong SKU) and not a sample box as the trophy (already free on /samples, looks like a sales call); a round-pound credit and/or the crown, samples stay the lead magnet not the win — confirm the crown, put the greased-crane URL in the win email, replace extra-5% with a sample-box rung. Reports index updated.
+
 * **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) the cabinet is a Rails page. `/game` is `GamesController#show` with a dedicated layout (CSRF, Vite `game` entrypoints); the monthly board is in the first HTML so play does not wait on a second fetch; JSON writes send the CSRF token and no longer `skip_forgery_protection`. `public/game/` keeps only `og.png`. Proposal timestamp updated.
 
 * **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) review fixes on branch `afida-stack-game`. Win claims are now one Stripe code per address per month, persisted on `game_leads` so "Send again" resends; `Game::VerifiedRun` is the single token/replay/timing/referrer proof both JSON endpoints share; opted-in addresses join `EmailSubscription` and emit `email_signup.completed`; the mate job row-locks before minting; game JSON skips the storefront cart/nav lifecycle; physics constants in the client are pinned to `Game::StackReplay` by a contract test. Admin prize-claims table shows win-only emails. Proposal timestamp updated.

@@ -7,7 +7,7 @@ module Game
     # Consonants and unambiguous digits only: no 0/O, 1/I/L, and no vowels so
     # six random characters can't spell anything.
     CODE_ALPHABET = %w[C D F H J K M N P R T V W X Y 3 4 6 7 9].freeze
-    PERCENT_OFF = 5
+    AMOUNT_OFF_PENCE = 1_000
     # A forged-but-plausible drop log is indistinguishable from a real one, so
     # scripted minting can't be made impossible — only unprofitable. Coupons
     # are scoped to the month and capped, putting a hard ceiling on what even
@@ -20,9 +20,10 @@ module Game
     MINIMUM_ORDER_PENCE = 10_000
 
     # Stripe caps coupon names at 40 characters, and the month suffix in
-    # coupon_id adds 15 — keep these short.
-    WIN = { coupon: "afida-stack-win", prefix: "STACK", name: "Afida Stack win" }.freeze
-    REFERRAL = { coupon: "afida-stack-mate", prefix: "MATE", name: "Afida Stack invite" }.freeze
+    # coupon_id adds 15 — keep these short. New ids so we never retrieve the
+    # old 5%-off coupons from earlier in the month.
+    WIN = { coupon: "afida-stack-ten", prefix: "STACK", name: "Afida Stack £10" }.freeze
+    REFERRAL = { coupon: "afida-stack-ref", prefix: "MATE", name: "Afida Stack invite" }.freeze
 
     def self.mint_win_code = mint(WIN)
     def self.mint_referral_code = mint(REFERRAL)
@@ -43,7 +44,8 @@ module Game
     rescue Stripe::InvalidRequestError
       Stripe::Coupon.create(
         id: id,
-        percent_off: PERCENT_OFF,
+        amount_off: AMOUNT_OFF_PENCE,
+        currency: "gbp",
         duration: "once",
         max_redemptions: MONTHLY_REDEMPTION_CAP,
         name: "#{kind[:name]} (#{Date.current.strftime('%B %Y')})"

@@ -5,15 +5,18 @@
 class GameLead < ApplicationRecord
   SOURCES = %w[win board].freeze
 
+  belongs_to :referrer, class_name: "LeaderboardEntry", optional: true
+
   normalizes :email, with: ->(e) { e.to_s.strip.downcase }
 
   validates :email, presence: true, uniqueness: { case_sensitive: false },
     format: { with: URI::MailTo::EMAIL_REGEXP }
   validates :source, inclusion: { in: SOURCES }
 
-  def self.capture(email:, source:, marketing_opt_in: false)
+  def self.capture(email:, source:, marketing_opt_in: false, referrer: nil)
     lead = find_or_initialize_by(email: normalize_value_for(:email, email))
     lead.source ||= source
+    lead.referrer ||= referrer
     newly_opted_in = marketing_opt_in && !lead.marketing_opt_in
     lead.marketing_opt_in ||= marketing_opt_in
     transaction do

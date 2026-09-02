@@ -23,6 +23,7 @@
           <th>Score</th>
           <th>Instagram</th>
           <th>Email</th>
+          <th>Referred by</th>
           <th>Status</th>
           <th>Submitted</th>
           <th></th>
@@ -43,6 +44,12 @@
             <td>
               <% if entry.email.present? %>
                 <%= mail_to entry.email, entry.email, class: "link-inline" %>
+              <% end %>
+            </td>
+            <td>
+              <% if entry.referrer %>
+                <%= entry.referrer.name %>
+                <span class="text-sm">(<%= entry.referrer.ref_code %>)</span>
               <% end %>
             </td>
             <td>
@@ -78,6 +85,8 @@
       <thead>
         <tr>
           <th>Email</th>
+          <th>Referred by</th>
+          <th>Referral paid</th>
           <th>Source</th>
           <th>Marketing</th>
           <th>Win code</th>
@@ -88,6 +97,15 @@
         <% @leads.each do |lead| %>
           <tr>
             <td><%= mail_to lead.email, lead.email, class: "link-inline" %></td>
+            <td>
+              <% if lead.referrer %>
+                <%= lead.referrer.name %>
+                <% if lead.referrer.email.present? %>
+                  <br><%= mail_to lead.referrer.email, lead.referrer.email, class: "link-inline" %>
+                <% end %>
+              <% end %>
+            </td>
+            <td><%= lead.referrer_rewarded_at&.strftime("%d %b %H:%M") %></td>
             <td><%= lead.source %></td>
             <td><%= lead.marketing_opt_in? ? "opted in" : "transactional" %></td>
             <td>

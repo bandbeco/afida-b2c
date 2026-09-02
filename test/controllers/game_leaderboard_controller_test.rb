@@ -239,13 +239,16 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0, GameLead.count
   end
 
-  test "a credited invite queues the referrer's kickback delivery" do
+  test "a credited invite stores the referrer on the lead, and pays out only on their first 100-pound order" do
     referrer = LeaderboardEntry.create!(name: "Roastery", score: 20,
       submitter_ip: "203.0.113.9", email: "roastery@example.com")
 
-    assert_enqueued_with(job: GameMateCodeJob, args: [ referrer.id ]) do
-      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7), ref: referrer.ref_code), as: :json
+    assert_no_enqueued_jobs only: GameMateCodeJob do
+      post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7),
+        ref: referrer.ref_code, email: "invitee@example.com"), as: :json
     end
+
+    assert_equal referrer, GameLead.find_by(email: "invitee@example.com").referrer
   end
 
   test "an uncredited self-invite queues nothing" do

@@ -195,7 +195,7 @@ ctx.fillStyle = KRAFT;
 ctx.fillText('STACK 15', 70, 500);
 ctx.fillStyle = PAPER;
 ctx.fillText('FOR', 316, 500);
-glowText('5% OFF', 426, 500, GREEN, 16);
+glowText('£10 OFF', 410, 500, GREEN, 16);
 
 // press start, sitting on the base platform like a credit line
 ctx.font = '30px "Press Start 2P"';

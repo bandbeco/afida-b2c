@@ -209,7 +209,7 @@
     state = 'play';
     scoreEl.textContent = pad(0);
     hiEl.textContent = pad(best);
-    prizePill.textContent = 'Bonus 5% at ' + winScore;
+    prizePill.textContent = 'Bonus £10 at ' + winScore;
     prizePill.classList.remove('unlocked');
     hud.classList.add('playing');
     menuEl.classList.add('hidden');
@@ -284,9 +284,9 @@
 
   function unlockPrize() {
     unlocked = true;
-    prizePill.textContent = '5% banked';
+    prizePill.textContent = '£10 banked';
     prizePill.classList.add('unlocked');
-    toast('5% off unlocked!', true);
+    toast('£10 off unlocked!', true);
     sfx.win();
     if (!reducedMotion) {
       for (let i = 0; i < 80; i++) {
@@ -644,22 +644,16 @@
     if (name) url.searchParams.set('by', name);
     if (myCode) url.searchParams.set('ref', myCode);
     const brag = score >= winScore
-      ? `\u{1F964}\u{1F4E6} I stacked ${score} crates of eco-packaging and won 5% off at afida.com`
+      ? `\u{1F964}\u{1F4E6} I stacked ${score} crates of eco-packaging and won £10 off at afida.com`
       : `\u{1F964}\u{1F4E6} I stacked ${score} on The Afida Stack before it all came down`;
-    const gift = myCode ? '\nCrane’s greased for you — you win the 5% at 12.' : '';
+    const gift = myCode ? '\nCrane’s greased for you — you win the £10 at 12.' : '';
     return `${brag}${gift}\nYour move: ${url.toString()}`;
   }
   function refreshPreview() {
     sharePreview.textContent = shareText();
-    // The gift is only real once the link carries a ref code, which the
-    // board grants on joining — and the kickback line only promises what can
-    // be delivered: it travels by email, to the address left at board join.
-    const kickback = store.get('afidaStackBoardEmail')
-      ? ' And when one plays, an extra 5% code lands in your inbox.'
-      : '';
     $('shareBonus').textContent = myCode
-      ? 'Your link greases the crane — mates win the 5% at 12, not 15.' + kickback
-      : 'Join the hi-score table (email included) and your link greases the crane — mates win at 12, and an extra 5% lands in your inbox when one plays.';
+      ? 'You get £10 off when someone you share this with places their first order over £100. They get an easier win: £10 off at 12 stacks, not 15. Stack another £10 for each business that orders.'
+      : 'Join the hi-score table to get a share link. You get £10 off each time someone you send it to places their first order over £100.';
   }
   nameInput.addEventListener('input', refreshPreview);
 
@@ -723,7 +717,8 @@
           token: lb.token,
           canvas_width: roundW,
           xs: dropLog,
-          ref: inviterCode || undefined
+          ref: inviterCode || undefined,
+          my_ref: myCode || undefined
         })
       });
       if (!r.ok) throw new Error(r.status);

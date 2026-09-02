@@ -41,8 +41,11 @@ class GameLeaderboardController < ApplicationController
       replay: { canvas_width: params[:canvas_width], xs: params[:xs] }
     )
     if entry.save
-      GameLead.capture(email: entry.email, source: "board", marketing_opt_in: entry.marketing_opt_in) if entry.email.present?
-      GameMateCodeJob.perform_later(entry.referrer_id) if entry.referrer_id
+      if entry.email.present?
+        GameLead.capture(email: entry.email, source: "board",
+          marketing_opt_in: entry.marketing_opt_in, referrer: entry.referrer)
+        entry.deliver_pending_referral_rewards
+      end
       notify_dethroned(previous_leader, entry)
       render json: { rank: entry.rank, score: entry.score, ref_code: entry.ref_code }, status: :created
     else
@@ -69,7 +72,7 @@ class GameLeaderboardController < ApplicationController
   end
 
   # Losing the top spot is the one board change worth an email — it's the
-  # nudge that brings last month's café back to defend the crown.
+  # nudge that brings last month's winner back to defend the crown.
   def notify_dethroned(previous_leader, entry)
     return unless previous_leader&.email&.present?
     return unless entry.score > previous_leader.score

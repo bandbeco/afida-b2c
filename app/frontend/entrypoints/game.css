@@ -627,6 +627,7 @@
     max-width: 34ch;
     margin: 0;
   }
+  .fineprint a { color: var(--pink); }
   .email-row {
     display: flex;
     flex-wrap: wrap;

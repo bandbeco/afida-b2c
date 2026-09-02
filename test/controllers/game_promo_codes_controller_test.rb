@@ -68,6 +68,16 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "below_target", response.parsed_body["error"]
   end
 
+  test "a win claim attaches its email to the player's own shareable board entry" do
+    mine = LeaderboardEntry.create!(name: "Me", score: 20, submitter_ip: "9.9.9.9")
+    stub_mint("STACKMHR4T7")
+
+    post game_win_code_path, params: win_claim(my_ref: mine.ref_code), as: :json
+
+    assert_response :success
+    assert_equal "cafe@example.com", mine.reload.email
+  end
+
   test "an invite link from another player lowers the target to twelve" do
     referrer = LeaderboardEntry.create!(name: "Roastery", score: 20, submitter_ip: "203.0.113.9")
     stub_mint("STACKC4NHW6")
@@ -75,6 +85,7 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
     post game_win_code_path, params: win_claim(xs: [ START_X ] * 12, ref: referrer.ref_code), as: :json
 
     assert_response :success
+    assert_equal referrer, GameLead.find_by(email: "cafe@example.com").referrer
   end
 
   test "your own invite link earns no lower target" do

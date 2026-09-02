@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_02_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_02_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -249,11 +249,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_120000) do
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.boolean "marketing_opt_in", default: false, null: false
+    t.bigint "referrer_id"
+    t.datetime "referrer_rewarded_at"
     t.string "source", null: false
     t.datetime "updated_at", null: false
     t.string "win_promo_code"
     t.date "win_promo_month"
     t.index ["email"], name: "index_game_leads_on_email", unique: true
+    t.index ["referrer_id"], name: "index_game_leads_on_referrer_id"
   end
 
   create_table "leaderboard_entries", force: :cascade do |t|
@@ -573,6 +576,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_120000) do
   add_foreign_key "collection_category_guides", "collections", on_delete: :cascade
   add_foreign_key "collection_items", "collections"
   add_foreign_key "collection_items", "products"
+  add_foreign_key "game_leads", "leaderboard_entries", column: "referrer_id"
   add_foreign_key "leaderboard_entries", "leaderboard_entries", column: "referrer_id"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"

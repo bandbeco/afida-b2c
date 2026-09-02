@@ -41,6 +41,21 @@ class LeaderboardEntry < ApplicationRecord
     self.class.for_month(month).visible.where("score > ?", score).count + 1
   end
 
+  # Referral £10s are emailed. If this entry had no address when a referred
+  # café ordered, the payout waits here until an email lands (win claim or
+  # a later board join).
+  def deliver_pending_referral_rewards
+    return if email.blank?
+
+    GameLead.where(referrer: self, referrer_rewarded_at: nil).find_each do |lead|
+      order = Order.where(email: lead.email, status: Order::COMPLETED_STATUSES)
+        .where(subtotal_amount: GameMateCodeJob::QUALIFYING_SUBTOTAL..)
+        .order(:id)
+        .first
+      GameMateCodeJob.perform_later(order.id) if order
+    end
+  end
+
   def public_handle
     instagram_handle if approved? && instagram_handle.present?
   end

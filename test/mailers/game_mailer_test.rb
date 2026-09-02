@@ -14,14 +14,13 @@ class GameMailerTest < ActionMailer::TestCase
   end
 
   test "mate_code tells a referrer their kickback landed" do
-    entry = LeaderboardEntry.create!(name: "Roastery", score: 20,
-      email: "roastery@example.com", referral_promo_code: "MATEC4NHW6")
-
-    email = GameMailer.mate_code(entry)
+    email = GameMailer.mate_code("roastery@example.com", "MATEC4NHW6")
 
     assert_equal [ "roastery@example.com" ], email.to
     assert_match "MATEC4NHW6", email.body.encoded
-    assert_match(/5%/, email.body.encoded)
+    assert_match(/10 off/, email.body.encoded)
+    assert_match "someone else", email.body.encoded
+    assert_no_match(/caf[eé]/i, email.body.encoded)
   end
 
   test "dethroned nudges the outstacked leader back to the game" do
@@ -34,5 +33,9 @@ class GameMailerTest < ActionMailer::TestCase
     assert_match "Deli", email.body.encoded
     assert_match "19", email.body.encoded
     assert_match "afida.com/game", email.body.encoded
+    assert_no_match(/case of cups/i, email.body.encoded)
+    assert_match "shoutout", email.body.encoded
+    assert_match "https://www.instagram.com/afidasupplies", email.html_part.body.to_s
+    assert_match "@afidasupplies", email.html_part.body.to_s
   end
 end

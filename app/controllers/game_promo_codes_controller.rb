@@ -3,8 +3,8 @@
 # the lead the game exists to capture. A claim carries the same proof as a
 # leaderboard submission (Game::VerifiedRun), so no code exists without a
 # server-verified winning run behind it. CSRF comes from the Rails game
-# page. The referral kickback has no endpoint at all: a verified invite
-# triggers GameMateCodeJob, which emails the referrer.
+# page. The referral kickback has no claim UI: when a referred address
+# places a first £100+ order, GameMateCodeJob emails the referrer £10 off.
 class GamePromoCodesController < ApplicationController
   allow_unauthenticated_access
   skip_before_action :set_current_cart, :set_nav_categories
@@ -30,8 +30,10 @@ class GamePromoCodesController < ApplicationController
     return render_rejection("below_target") if run.replay.score < win_target(run.referrer)
 
     lead = GameLead.capture(email: address, source: "win",
-      marketing_opt_in: ActiveModel::Type::Boolean.new.cast(params[:marketing]) || false)
+      marketing_opt_in: ActiveModel::Type::Boolean.new.cast(params[:marketing]) || false,
+      referrer: run.referrer)
     code = lead.claim_win_code
+    attach_own_email!(address)
     GameMailer.win_code(address, code).deliver_later
     head :ok
   rescue Stripe::StripeError => e
@@ -43,6 +45,17 @@ class GamePromoCodesController < ApplicationController
 
   def win_target(referrer)
     referrer ? INVITED_WIN : BASE_WIN
+  end
+
+  # Codes travel by email, not on screen. The board form is not special: a
+  # later win-claim address is enough to attach to the shareable ref entry
+  # and to flush any referral payouts that were waiting on it.
+  def attach_own_email!(address)
+    entry = LeaderboardEntry.find_by(ref_code: params[:my_ref].to_s.downcase)
+    return unless entry
+
+    entry.update!(email: address) if entry.email.blank?
+    entry.deliver_pending_referral_rewards
   end
 
   def render_rejection(reason)

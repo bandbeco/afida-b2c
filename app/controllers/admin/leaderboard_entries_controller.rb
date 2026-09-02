@@ -1,8 +1,8 @@
 class Admin::LeaderboardEntriesController < Admin::ApplicationController
   def index
-    @entries = LeaderboardEntry.order(month: :desc).best_first
+    @entries = LeaderboardEntry.includes(:referrer).order(month: :desc).best_first
     @entries = @entries.pending if params[:filter] == "review"
-    @leads = GameLead.order(created_at: :desc)
+    @leads = GameLead.includes(:referrer).order(created_at: :desc)
   end
 
   def approve

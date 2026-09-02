@@ -21,6 +21,25 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_select "meta[name=csrf-token]"
     assert_select ".cabinet"
     assert_select "canvas#game"
+    assert_select "#winEmail[placeholder='you@yourplace.com']"
+    assert_select "#winEmail[placeholder*='cafe']", count: 0
+  end
+
+  test "share copy talks about businesses, not cafés" do
+    js = Rails.root.join("app/frontend/entrypoints/game.js").read
+
+    assert_match "each business that orders", js
+    assert_no_match(/caf[eé]/i, js)
+  end
+
+  test "the monthly crown is a shoutout, not a case of cups" do
+    get game_path
+
+    assert_response :success
+    assert_select ".fineprint", text: /case of cups/, count: 0
+    assert_select ".fineprint a[href='https://www.instagram.com/afidasupplies'][target=_blank][rel=noopener]",
+                  text: "@afidasupplies", count: 2
+    assert_select ".fineprint", text: /Top stacker this month wins a shoutout from/, count: 2
   end
 
   test "the trailing-slash URL that mail and the social card already use still works" do

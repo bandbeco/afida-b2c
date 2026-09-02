@@ -8,9 +8,9 @@ class GameMailer < ApplicationMailer
     mail to: email, subject: "Your Afida Stack code: #{code}"
   end
 
-  def mate_code(entry)
-    @code = entry.referral_promo_code
-    mail to: entry.email, subject: "A mate played — your extra 5% is in"
+  def mate_code(email, code)
+    @code = code
+    mail to: email, subject: "A mate ordered — your £10 off is in"
   end
 
   def dethroned(entry, by:)

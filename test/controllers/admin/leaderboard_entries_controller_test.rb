@@ -45,6 +45,19 @@ class Admin::LeaderboardEntriesControllerTest < ActionDispatch::IntegrationTest
     assert @entry.reload.rejected?
   end
 
+  test "admins see who referred whom on the board and on prize claims" do
+    host = LeaderboardEntry.create!(name: "Roastery", score: 20, email: "host@example.com")
+    LeaderboardEntry.create!(name: "Invitee", score: 12, referrer: host)
+    GameLead.capture(email: "invitee@example.com", source: "win", referrer: host)
+    sign_in_as(users(:acme_admin))
+
+    get admin_leaderboard_entries_path, headers: @headers
+
+    assert_response :success
+    assert_select "td", text: /Roastery/
+    assert_select "td", text: /invitee@example.com/
+  end
+
   test "admins see prize-claim emails that never joined the board" do
     GameLead.capture(email: "winner-only@example.com", source: "win")
     sign_in_as(users(:acme_admin))

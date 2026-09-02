@@ -23,6 +23,16 @@ class GameLeadTest < ActiveSupport::TestCase
     assert lead.marketing_opt_in
   end
 
+  test "capture keeps the first credited referrer" do
+    host = LeaderboardEntry.create!(name: "Host", score: 9, submitter_ip: "9.9.9.9")
+    other = LeaderboardEntry.create!(name: "Other", score: 8, submitter_ip: "8.8.8.8")
+
+    GameLead.capture(email: "cafe@example.com", source: "win", referrer: host)
+    lead = GameLead.capture(email: "cafe@example.com", source: "board", referrer: other)
+
+    assert_equal host, lead.referrer
+  end
+
   test "capture upgrades consent when a later opt-in arrives" do
     GameLead.capture(email: "cafe@example.com", source: "win")
     lead = GameLead.capture(email: "cafe@example.com", source: "win", marketing_opt_in: true)
