@@ -1,6 +1,6 @@
 # JSON API behind The Afida Stack game at /game. The board is public;
-# submissions carry a signed token issued with the board (proving when play
-# could have started) and a drop log that Game::VerifiedRun re-runs
+# submissions carry a signed token issued with the game page (proving when
+# play could have started) and a drop log that Game::VerifiedRun re-runs
 # server-side, so the recorded score is derived, never trusted.
 class GameLeaderboardController < ApplicationController
   allow_unauthenticated_access

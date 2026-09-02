@@ -7,6 +7,8 @@ module Game
     # Consonants and unambiguous digits only: no 0/O, 1/I/L, and no vowels so
     # six random characters can't spell anything.
     CODE_ALPHABET = %w[C D F H J K M N P R T V W X Y 3 4 6 7 9].freeze
+    BASE_WIN = 15
+    INVITED_WIN = 12
     AMOUNT_OFF_PENCE = 1_000
     # A forged-but-plausible drop log is indistinguishable from a real one, so
     # scripted minting can't be made impossible — only unprofitable. Coupons

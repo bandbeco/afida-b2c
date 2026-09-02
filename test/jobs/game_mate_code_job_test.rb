@@ -36,8 +36,23 @@ class GameMateCodeJobTest < ActiveJob::TestCase
     assert_enqueued_email_with GameMailer, :mate_code, args: [ "roastery@example.com", "MATEC4NHW6" ] do
       GameMateCodeJob.perform_now(order.id)
     end
-    assert GameLead.find_by(email: "invitee@example.com").referrer_rewarded_at.present?
-    assert_equal host, GameLead.find_by(email: "invitee@example.com").referrer
+    lead = GameLead.find_by(email: "invitee@example.com")
+    assert lead.referrer_rewarded_at.present?
+    assert_equal "MATEC4NHW6", lead.mate_promo_code
+    assert_equal host, lead.referrer
+  end
+
+  test "a retry after the payout is claimed resends the stored code" do
+    referred_lead
+    order = Order.create!(order_attrs(email: "invitee@example.com", subtotal: 100))
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "afida-stack-ref"))
+    Stripe::PromotionCode.stubs(:create).returns(stub(code: "MATEC4NHW6"))
+    GameMateCodeJob.perform_now(order.id)
+
+    Stripe::PromotionCode.stubs(:create).returns(stub(code: "MATEXXXXXX"))
+    assert_enqueued_email_with GameMailer, :mate_code, args: [ "roastery@example.com", "MATEC4NHW6" ] do
+      GameMateCodeJob.perform_now(order.id)
+    end
   end
 
   test "a first order under 100 pounds pays nothing" do

@@ -21,8 +21,6 @@
   const BASE_MIN_W = 120;
   const BASE_MAX_W = 230;
   const BASE_RATIO = 0.46;
-  const BASE_WIN = 15;
-  const INVITED_WIN = 12;
   const BASE_H = 78;
   const SWING_Y = 96;
 
@@ -91,6 +89,13 @@
 
   // ---------- DOM ----------
   const $ = id => document.getElementById(id);
+  let boot = {};
+  try {
+    const el = $('game-board');
+    if (el && el.textContent.trim()) boot = JSON.parse(el.textContent);
+  } catch {}
+  const BASE_WIN = boot.win_score;
+  const INVITED_WIN = boot.invited_win_score;
   const canvas = $('game'), ctx = canvas.getContext('2d');
   // Warm up the pixel font so canvas text (quips, 2UP label) never falls back
   if (document.fonts) document.fonts.load('8px "Press Start 2P"');
@@ -192,7 +197,12 @@
 
   function baseW() { return Math.max(BASE_MIN_W, Math.min(W * BASE_RATIO, BASE_MAX_W)); }
   function speedFor(n) { return 1.9 + Math.min(n * 0.075, 2.3); }
-  function ampFor(w) { return (W - w) / 2 - 12; }
+  // Replay is committed to roundW at startGame. Live W still drives drawing;
+  // drop x must stay in the round's coordinate system or a rotate invalidates it.
+  function fieldW() {
+    return (state === 'play' || state === 'drop' || state === 'tumble') && roundW ? roundW : W;
+  }
+  function ampFor(w) { return (fieldW() - w) / 2 - 12; }
   function towerTopWorldY(n) { return BASE_H + n * BLOCK_H; }
   // world y (up from shell floor) -> screen y
   function sy(worldY) { return H - (worldY - cam); }
@@ -203,7 +213,7 @@
     cam = 0; camTarget = 0; shake = 0;
     dropLog = []; roundW = W; roundBaseW = baseW();
     const w = roundBaseW;
-    stack.push({ x: (W - w) / 2, w, level: 0 });
+    stack.push({ x: (roundW - w) / 2, w, level: 0 });
     swing = { phase: Math.PI / 2, x: 0, w };
     falling = null;
     state = 'play';
@@ -591,7 +601,7 @@
 
     if (state === 'play' || state === 'menu') {
       swing.phase += dt * (state === 'menu' ? 1.2 : speedFor(stack.length));
-      swing.x = W / 2 + Math.sin(swing.phase) * ampFor(swing.w);
+      swing.x = fieldW() / 2 + Math.sin(swing.phase) * ampFor(swing.w);
     }
     if (state === 'drop' && falling) {
       falling.vy += 2600 * dt;
@@ -717,8 +727,7 @@
           token: lb.token,
           canvas_width: roundW,
           xs: dropLog,
-          ref: inviterCode || undefined,
-          my_ref: myCode || undefined
+          ref: inviterCode || undefined
         })
       });
       if (!r.ok) throw new Error(r.status);
@@ -748,7 +757,7 @@
 
   function applyBoard(d) {
     lb.ok = true;
-    lb.token = d.token;
+    if (d.token && !lb.token) lb.token = d.token;
     lb.entries = d.entries || [];
     lb.month = d.month || '';
     renderBoard();
@@ -769,9 +778,7 @@
   }
 
   function readBootBoard() {
-    const el = $('game-board');
-    if (!el || !el.textContent.trim()) return;
-    try { applyBoard(JSON.parse(el.textContent)); } catch {}
+    if (boot.token || boot.entries) applyBoard(boot);
   }
 
   function daysUntilReset() {

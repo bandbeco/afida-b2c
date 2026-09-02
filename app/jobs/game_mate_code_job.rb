@@ -18,17 +18,9 @@ class GameMateCodeJob < ApplicationJob
     lead = GameLead.find_by(email: order.email)
     referrer = lead&.referrer
     return unless referrer&.email.present?
-    return if lead.referrer_rewarded_at.present?
     return if prior_qualifying_order?(order)
 
-    code = nil
-    lead.with_lock do
-      lead.reload
-      next if lead.referrer_rewarded_at.present?
-
-      code = Game::PromoCodes.mint_referral_code
-      lead.update!(referrer_rewarded_at: Time.current)
-    end
+    code = lead.claim_referral_code
     GameMailer.mate_code(referrer.email, code).deliver_later if code
   end
 

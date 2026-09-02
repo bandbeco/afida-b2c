@@ -58,7 +58,31 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     boot = JSON.parse(css_select("#game-board").text)
     assert boot["token"].present?
+    assert_equal Game::PromoCodes::BASE_WIN, boot["win_score"]
+    assert_equal Game::PromoCodes::INVITED_WIN, boot["invited_win_score"]
     assert_equal "Roastery", boot["entries"].first["name"]
     assert_equal "cafe", boot["entries"].first["instagram_handle"]
+  end
+
+  test "a later board listing does not replace the page's play token" do
+    js = Rails.root.join("app/frontend/entrypoints/game.js").read
+
+    assert_match(/if \(d\.token && !lb\.token\)/, js)
+  end
+
+  test "in-play physics stay on the round's canvas width" do
+    js = Rails.root.join("app/frontend/entrypoints/game.js").read
+
+    assert_match(/function fieldW\(\)/, js)
+    assert_match(/fieldW\(\) \/ 2/, js)
+  end
+
+  test "client win thresholds come from the page boot payload" do
+    js = Rails.root.join("app/frontend/entrypoints/game.js").read
+
+    assert_match(/boot\.win_score/, js)
+    assert_match(/boot\.invited_win_score/, js)
+    assert_no_match(/const BASE_WIN = 15/, js)
+    assert_no_match(/const INVITED_WIN = 12/, js)
   end
 end

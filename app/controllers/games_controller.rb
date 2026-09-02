@@ -7,6 +7,10 @@ class GamesController < ApplicationController
   layout "game"
 
   def show
-    @board = Game.board
+    @board = Game.board.merge(
+      token: Game::VerifiedRun.issue_token,
+      win_score: Game::PromoCodes::BASE_WIN,
+      invited_win_score: Game::PromoCodes::INVITED_WIN
+    )
   end
 end

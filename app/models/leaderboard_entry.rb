@@ -42,7 +42,7 @@ class LeaderboardEntry < ApplicationRecord
   end
 
   # Referral £10s are emailed. If this entry had no address when a referred
-  # café ordered, the payout waits here until an email lands (win claim or
+  # lead ordered, the payout waits here until an email lands (win claim or
   # a later board join).
   def deliver_pending_referral_rewards
     return if email.blank?
@@ -67,16 +67,6 @@ class LeaderboardEntry < ApplicationRecord
 
     referrer = find_by(ref_code: ref_code.to_s.downcase)
     referrer unless referrer&.submitter_ip == ip
-  end
-
-  # Invites that count toward referral rewards: one per distinct address, and
-  # never the referrer's own (playing your own link in a private window earns
-  # nothing). An intentionally blunt proxy for "a different café played".
-  def verified_referrals
-    self.class.where(referrer: self)
-      .where.not(submitter_ip: submitter_ip)
-      .where.not(submitter_ip: nil)
-      .distinct.count(:submitter_ip)
   end
 
   private

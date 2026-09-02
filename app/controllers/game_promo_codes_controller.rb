@@ -12,9 +12,6 @@ class GamePromoCodesController < ApplicationController
   rate_limit to: 10, within: 1.hour, store: LiveCacheStore,
     with: -> { render json: { error: "rate_limited" }, status: :too_many_requests }
 
-  BASE_WIN = 15
-  INVITED_WIN = 12
-
   def win
     address = params[:email].to_s.strip.downcase
     return render_rejection("invalid_email") unless address.match?(URI::MailTo::EMAIL_REGEXP)
@@ -44,14 +41,14 @@ class GamePromoCodesController < ApplicationController
   private
 
   def win_target(referrer)
-    referrer ? INVITED_WIN : BASE_WIN
+    referrer ? Game::PromoCodes::INVITED_WIN : Game::PromoCodes::BASE_WIN
   end
 
-  # Codes travel by email, not on screen. The board form is not special: a
-  # later win-claim address is enough to attach to the shareable ref entry
-  # and to flush any referral payouts that were waiting on it.
+  # Bind the win-claim address to this IP's latest board entry so a later
+  # payout can travel. The public share code is not proof of ownership.
   def attach_own_email!(address)
-    entry = LeaderboardEntry.find_by(ref_code: params[:my_ref].to_s.downcase)
+    entry = LeaderboardEntry.where(submitter_ip: request.remote_ip)
+      .order(created_at: :desc).first
     return unless entry
 
     entry.update!(email: address) if entry.email.blank?

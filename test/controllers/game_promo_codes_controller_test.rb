@@ -68,14 +68,24 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "below_target", response.parsed_body["error"]
   end
 
-  test "a win claim attaches its email to the player's own shareable board entry" do
-    mine = LeaderboardEntry.create!(name: "Me", score: 20, submitter_ip: "9.9.9.9")
+  test "a win claim attaches its email to this address's latest board entry" do
+    mine = LeaderboardEntry.create!(name: "Me", score: 20, submitter_ip: "127.0.0.1")
     stub_mint("STACKMHR4T7")
 
-    post game_win_code_path, params: win_claim(my_ref: mine.ref_code), as: :json
+    post game_win_code_path, params: win_claim, as: :json
 
     assert_response :success
     assert_equal "cafe@example.com", mine.reload.email
+  end
+
+  test "a public share code is not proof of ownership of a board entry" do
+    host = LeaderboardEntry.create!(name: "Host", score: 20, submitter_ip: "9.9.9.9")
+    stub_mint("STACKMHR4T7")
+
+    post game_win_code_path, params: win_claim(my_ref: host.ref_code), as: :json
+
+    assert_response :success
+    assert_nil host.reload.email
   end
 
   test "an invite link from another player lowers the target to twelve" do

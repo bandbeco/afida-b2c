@@ -87,6 +87,22 @@ class GameLeadTest < ActiveSupport::TestCase
     assert_equal Date.current.beginning_of_month, lead.win_promo_month
   end
 
+  test "claim_referral_code mints once and returns the stored code after" do
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "afida-stack-ref"))
+    Stripe::PromotionCode.stubs(:create).returns(stub(code: "MATEC4NHW6"))
+
+    lead = GameLead.capture(email: "invitee@example.com", source: "win")
+    first = lead.claim_referral_code
+
+    Stripe::PromotionCode.stubs(:create).returns(stub(code: "MATEXXXXXX"))
+    second = lead.claim_referral_code
+
+    assert_equal "MATEC4NHW6", first
+    assert_equal "MATEC4NHW6", second
+    assert_equal "MATEC4NHW6", lead.reload.mate_promo_code
+    assert lead.referrer_rewarded_at.present?
+  end
+
   test "a new month mints a fresh win code" do
     Stripe::Coupon.stubs(:retrieve).returns(stub(id: "afida-stack-win"))
     Stripe::PromotionCode.stubs(:create).returns(stub(code: "STACKMHR4T7"))

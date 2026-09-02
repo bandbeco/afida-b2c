@@ -42,6 +42,25 @@ class GameLead < ApplicationRecord
     code
   end
 
+  # One MATE code per referred address. Minting talks to Stripe, so it happens
+  # outside the row lock; the lock only claims the payout.
+  def claim_referral_code
+    with_lock do
+      reload
+      return mate_promo_code if mate_promo_code.present?
+    end
+
+    code = Game::PromoCodes.mint_referral_code
+
+    with_lock do
+      reload
+      return mate_promo_code if mate_promo_code.present?
+
+      update!(mate_promo_code: code, referrer_rewarded_at: Time.current)
+      code
+    end
+  end
+
   # Opted-in addresses join the canonical EmailSubscription list so Klaviyo
   # (which resolves signup events via subscription_id) actually sees them.
   def sync_to_marketing_list

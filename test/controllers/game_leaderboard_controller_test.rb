@@ -30,7 +30,7 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
 
   # ---------- index ----------
 
-  test "index returns the monthly board and a submission token" do
+  test "index returns the monthly board without minting a play token" do
     LeaderboardEntry.create!(name: "Approved", score: 20, instagram_handle: "cafe", status: "approved")
     LeaderboardEntry.create!(name: "Pending", score: 15, instagram_handle: "hidden", status: "pending")
     LeaderboardEntry.create!(name: "Cheat", score: 90, status: "rejected")
@@ -39,7 +39,7 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = response.parsed_body
-    assert body["token"].present?
+    assert_nil body["token"]
     assert body["month"].present?
 
     names = body["entries"].map { |e| e["name"] }

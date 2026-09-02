@@ -72,17 +72,6 @@ class LeaderboardEntryTest < ActiveSupport::TestCase
     assert_not_equal a.ref_code, b.ref_code
   end
 
-  test "verified referrals count distinct addresses and never the referrer's own" do
-    referrer = LeaderboardEntry.create!(valid_attributes.merge(submitter_ip: "1.1.1.1"))
-    # two plays from the same invited café count once
-    2.times { |i| LeaderboardEntry.create!(valid_attributes.merge(name: "Guest#{i}", referrer: referrer, submitter_ip: "2.2.2.2")) }
-    LeaderboardEntry.create!(valid_attributes.merge(name: "Guest2", referrer: referrer, submitter_ip: "3.3.3.3"))
-    # self-invite from the referrer's own address does not count
-    LeaderboardEntry.create!(valid_attributes.merge(name: "Sneaky", referrer: referrer, submitter_ip: "1.1.1.1"))
-
-    assert_equal 2, referrer.verified_referrals
-  end
-
   test "only approved entries expose their handle publicly" do
     pending_entry = LeaderboardEntry.new(valid_attributes.merge(instagram_handle: "cafe", status: "pending"))
     approved = LeaderboardEntry.new(valid_attributes.merge(instagram_handle: "cafe", status: "approved"))
