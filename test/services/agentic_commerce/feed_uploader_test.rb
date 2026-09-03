@@ -48,6 +48,36 @@ module AgenticCommerce
       assert_equal "processing", import.status
     end
 
+    test "refresh pulls the terminal status and the error rows from Stripe" do
+      import = AgenticCommerceImport.create!(
+        stripe_import_id: "pcimprt_test_123", feed_type: "product", mode: "upsert", row_count: 3, status: "processing"
+      )
+      stub_request(:get, "#{IMPORTS_URL}/pcimprt_test_123")
+        .with(headers: { "Stripe-Version" => FeedUploader::API_VERSION })
+        .to_return(
+          status: 200, headers: { "Content-Type" => "application/json" },
+          body: {
+            id: "pcimprt_test_123", object: "v2.commerce.product_catalog_import", feed_type: "product",
+            status: "succeeded_with_errors", livemode: false,
+            status_details: {
+              succeeded_with_errors: {
+                success_count: 2, error_count: 1,
+                error_file: { download_url: { expires_at: 5.minutes.from_now.iso8601, url: "https://files.example/errors.csv" } }
+              }
+            }
+          }.to_json
+        )
+      stub_request(:get, "https://files.example/errors.csv")
+        .to_return(status: 200, body: "stripe_error_message,id\nimage_link must be https,SKU-3\n")
+
+      FeedUploader.new.refresh(import)
+
+      assert_equal "succeeded_with_errors", import.reload.status
+      assert_equal false, import.livemode
+      assert_includes import.error_summary, "image_link must be https"
+      assert_includes import.error_summary, "SKU-3"
+    end
+
     test "a rejected upload leaves the import marked as failed and raises" do
       stub_create_import
       stub_request(:put, UPLOAD_URL).to_return(status: 403, body: "expired")

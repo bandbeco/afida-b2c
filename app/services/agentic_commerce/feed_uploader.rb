@@ -42,9 +42,39 @@ module AgenticCommerce
       import
     end
 
+    # Pulls the import's current state from Stripe onto the record. On
+    # succeeded_with_errors the error CSV (only the failed rows, each with a
+    # stripe_error_message) is fetched inside its five-minute window and kept
+    # on the record, truncated, so it can be read after the URL has expired.
+    def refresh(import)
+      stripe_import = client.v2.commerce.product_catalog.imports.retrieve(
+        import.stripe_import_id, {}, { stripe_version: API_VERSION }
+      )
+      attributes = { status: stripe_import.status, livemode: stripe_import.livemode }
+      attributes[:error_summary] = error_summary_for(stripe_import) if import.status != stripe_import.status
+      import.update!(attributes.compact)
+      import
+    end
+
     private
 
     attr_reader :client
+
+    ERROR_SUMMARY_LIMIT = 20_000
+
+    def error_summary_for(stripe_import)
+      details = stripe_import.status_details
+      case stripe_import.status
+      when "succeeded_with_errors"
+        url = details.succeeded_with_errors.error_file&.download_url&.url
+        return "#{details.succeeded_with_errors.error_count} rows failed (no error file)" if url.blank?
+
+        response = HTTP.timeout(UPLOAD_TIMEOUT_SECONDS).get(url)
+        response.status.success? ? response.body.to_s.first(ERROR_SUMMARY_LIMIT) : "error file fetch failed: HTTP #{response.status}"
+      when "failed"
+        [ details.failed.code, details.failed.failure_message ].compact.join(": ")
+      end
+    end
 
     def create_import(feed_type, mode)
       client.v2.commerce.product_catalog.imports.create(
