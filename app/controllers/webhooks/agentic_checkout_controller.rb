@@ -12,9 +12,14 @@ module Webhooks
       payload = request.body.read
       secret = Rails.application.credentials.dig(:stripe, :agentic_hook_secret)
 
+      # Stripe checks the endpoint when the hook is saved in the Dashboard, and
+      # the signing secret only exists after that save. Until the secret is in
+      # credentials, answer with no customization (Stripe falls back to the
+      # catalogue's shipping and tax) rather than a 400 that blocks the save.
+      # Nothing is computed or disclosed on this path.
       unless secret.present?
-        Rails.logger.error("[Agentic Hook] Missing agentic_hook_secret in credentials")
-        head :bad_request
+        Rails.logger.error("[Agentic Hook] Missing agentic_hook_secret in credentials; returning no customization")
+        render json: {}
         return
       end
 
