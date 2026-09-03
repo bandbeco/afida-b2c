@@ -36,7 +36,7 @@ Sources: Stripe's seller guide (`docs.stripe.com/agentic-commerce/for-sellers`),
 
 Goal: Afida's stock catalogue is visible in the Stripe sandbox feed view and passes validation with zero row errors.
 
-Progress 2026-09-03: code items 1 to 5 are built on branch `agentic-commerce-plan` (`AgenticCommerce::ProductFeed`, `ProductFeedAttributes` shared with the Google feed, `AgenticCommerce::FeedUploader`, `AgenticCommerce::PushProductFeedJob` at 03:00 daily, the `agentic_commerce_imports` table, and `bin/rails agentic_commerce:push_product_feed` / `agentic_commerce:preview_product_feed`). The Dashboard items and the first sandbox upload are still to do. `delete=true` rows are deferred to Phase 3 as planned; `custom_variant_option_*` was dropped in favour of `size` carrying the pack count.
+Progress 2026-09-03: code items 1 to 5 are built on branch `agentic-commerce-plan` (`AgenticCommerce::ProductFeed`, `ProductFeedAttributes` shared with the Google feed, `AgenticCommerce::FeedUploader`, `AgenticCommerce::PushProductFeedJob` at 03:00 daily, the `agentic_commerce_imports` table, and `bin/rails agentic_commerce:push_product_feed` / `agentic_commerce:preview_product_feed`). First upload done 2026-09-03 from the production container: 656 rows, `succeeded` with no row errors, in live mode (the task uses the credentials key; there is no sandbox key override yet). Do not request an agent connection until Phase 2 lands: without the hooks and the cart-less order path, an agent checkout would take payment and the webhook would fail to build the order. `delete=true` rows are deferred to Phase 3 as planned; `custom_variant_option_*` was dropped in favour of `size` carrying the pack count.
 
 **Dashboard (Afida leadership, with dev support)**
 
@@ -161,8 +161,7 @@ Goal: the Stripe catalogue never advertises a price or product that afida.com no
 
 ## Open questions
 
-- Which `Stripe-Version` does the v2 imports endpoint accept: the gem's GA `dahlia` version or only the documented `2026-08-26.preview`? Resolved by the first sandbox upload.
-- Does the Dashboard require `stripe_product_tax_code` at validation time even when the customization hook supplies rates? Resolved in the Phase 1 sandbox run.
+- Resolved 2026-09-03: the v2 imports endpoint accepts `2026-08-26.preview`, and a feed with no `stripe_product_tax_code` ingests with zero row errors. Whether checkout then taxes correctly through the customization hook alone is still a Phase 2 sandbox check.
 - Does returning zero shipping options from the customization hook decline the checkout, or does Stripe fall back to the feed's shipping rule? Determines whether the approval hook is needed.
 - Is `payment_intent.agent_details` (private preview) available on Afida's account? If not, agent attribution comes only from the Dashboard filter.
 - Are agent orders eligible for the reorder-schedule and abandoned-cart flows? Default here is no; confirm with Afida.

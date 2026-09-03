@@ -2,7 +2,7 @@
 
 ## 2026-09-03
 
-* **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) Phase 1 code built test-first on `agentic-commerce-plan`: CSV product feed sharing copy, images and identifiers with the Google Merchant feed through a new `ProductFeedAttributes`, uploader for Stripe's v2 catalog import, daily push job, import record table and rake tasks. Sandbox upload and Dashboard onboarding still pending.
+* **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) Phase 1 code built test-first on `agentic-commerce-plan`: CSV product feed sharing copy, images and identifiers with the Google Merchant feed through a new `ProductFeedAttributes`, uploader for Stripe's v2 catalog import, daily push job, import record table and rake tasks. First real upload from production: 656 rows succeeded in live mode; the imports endpoint accepts the documented preview version and a feed without a tax code ingests cleanly. Import status refresh added.
 
 ## 2026-09-02
 
