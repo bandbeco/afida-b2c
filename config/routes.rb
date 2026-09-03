@@ -238,6 +238,10 @@ Rails.application.routes.draw do
   # Webhooks (Stripe, Outrank, etc.)
   namespace :webhooks do
     post :stripe, to: "stripe#create"
+    # Stripe Agentic Commerce checkout customization hook (tax rates and
+    # shipping options for agent checkouts). Not a webhook: Stripe waits for
+    # the response body.
+    post "stripe/agentic_checkout", to: "agentic_checkout#create", as: :stripe_agentic_checkout
     post :outrank, to: "outrank#create"
   end
 
