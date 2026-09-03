@@ -2,7 +2,7 @@
 type: Plan
 description: Sell Afida's stock catalogue through AI chat agents via Stripe Agentic Commerce Suite in four phases, reusing the Google Merchant feed data, the existing UK VAT tax rate, the postcode shipping zones and the checkout.session.completed webhook.
 status: active
-timestamp: 2026-09-02
+timestamp: 2026-09-03
 ---
 
 # Stripe Agentic Commerce Suite (ACS) Integration
@@ -35,6 +35,8 @@ Sources: Stripe's seller guide (`docs.stripe.com/agentic-commerce/for-sellers`),
 ## Phase 1: Account, sandbox and product feed
 
 Goal: Afida's stock catalogue is visible in the Stripe sandbox feed view and passes validation with zero row errors.
+
+Progress 2026-09-03: code items 1 to 5 are built on branch `agentic-commerce-plan` (`AgenticCommerce::ProductFeed`, `ProductFeedAttributes` shared with the Google feed, `AgenticCommerce::FeedUploader`, `AgenticCommerce::PushProductFeedJob` at 03:00 daily, the `agentic_commerce_imports` table, and `bin/rails agentic_commerce:push_product_feed` / `agentic_commerce:preview_product_feed`). The Dashboard items and the first sandbox upload are still to do. `delete=true` rows are deferred to Phase 3 as planned; `custom_variant_option_*` was dropped in favour of `size` carrying the pack count.
 
 **Dashboard (Afida leadership, with dev support)**
 

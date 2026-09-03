@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-09-03
+
+* **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) Phase 1 code built test-first on `agentic-commerce-plan`: CSV product feed sharing copy, images and identifiers with the Google Merchant feed through a new `ProductFeedAttributes`, uploader for Stripe's v2 catalog import, daily push job, import record table and rake tasks. Sandbox upload and Dashboard onboarding still pending.
+
 ## 2026-09-02
 
 * **New**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) plan for selling through AI chat agents via Stripe Agentic Commerce Suite. Four phases: product feed CSV and sandbox import, customization hook plus cart-less order creation, price and deletion freshness with import monitoring, live connection and promotions. Stock products only; branded, samples and tier pricing stay website-only.

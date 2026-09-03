@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -60,6 +60,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
     t.index ["user_id", "line1", "postcode"], name: "index_addresses_on_user_line1_postcode"
     t.index ["user_id"], name: "index_addresses_on_user_id"
     t.index ["user_id"], name: "index_addresses_on_user_id_where_default", unique: true, where: "(\"default\" = true)"
+  end
+
+  create_table "agentic_commerce_imports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "error_summary"
+    t.string "feed_type", null: false
+    t.string "mode", null: false
+    t.integer "row_count", default: 0, null: false
+    t.jsonb "skus", default: [], null: false
+    t.string "status", null: false
+    t.string "stripe_import_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["feed_type", "created_at"], name: "index_agentic_commerce_imports_on_feed_type_and_created_at"
+    t.index ["stripe_import_id"], name: "index_agentic_commerce_imports_on_stripe_import_id", unique: true
   end
 
   create_table "bank_holidays", force: :cascade do |t|
