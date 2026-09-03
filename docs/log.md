@@ -2,6 +2,8 @@
 
 ## 2026-09-03
 
+* **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) Phase 2 code built test-first on `agentic-commerce-plan`: checkout customization hook endpoint (signature-verified, quotes delivery from the website's zone rules and applies the UK VAT rate per line item), `Checkout::AgentOrderCreator` for cart-less orders matched by catalogue SKU, webhook routing of sessions without `cart_id` to it with unknown SKUs treated as permanent failures, `orders.source` and `orders.agent_name` columns, and the Klaviyo `order.placed` event emitted for agent orders. Not deployed; the hook secret, Dashboard hook settings and the sandbox test purchase remain, along with two sandbox-only questions (declining non-GB by returning no shipping options; VAT on the shipping option).
+
 * **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) Phase 1 code built test-first on `agentic-commerce-plan`: CSV product feed sharing copy, images and identifiers with the Google Merchant feed through a new `ProductFeedAttributes`, uploader for Stripe's v2 catalog import, daily push job, import record table and rake tasks. First real upload from production: 656 rows succeeded in live mode; the imports endpoint accepts the documented preview version and a feed without a tax code ingests cleanly. Import status refresh added.
 
 ## 2026-09-02

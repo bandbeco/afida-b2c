@@ -98,12 +98,104 @@ module Webhooks
         raise PermanentlyInvalidSessionError, "session #{full_session.id} has no shipping details"
       end
 
+      # SessionBuilder stamps every website session with its cart_id, so a
+      # session without one was completed by an AI agent through Stripe
+      # Agentic Commerce: there is no cart, and the items come from the
+      # session's line items instead.
+      cart_id = full_session.metadata&.[]("cart_id")
+      order =
+        if cart_id.present?
+          create_web_order(full_session, cart_id)
+        else
+          Rails.logger.info("[Stripe Webhook] Creating agent order for session #{session.id}")
+          Checkout::AgentOrderCreator.new(stripe_session: full_session).create
+        end
+
+      # Send confirmation email (customer + internal ops copy)
+      OrderMailer.with(order: order).confirmation_email.deliver_later
+      OrderMailer.with(order: order).ops_confirmation_email.deliver_later
+
+      # Notify the team in Telegram that a new order has been placed
+      TelegramOrderNotificationJob.perform_later(order.id)
+
+      # Track purchase server-side via GA4 Measurement Protocol
+      # This ensures the purchase is recorded even if the client-side event never fires
+      Ga4MeasurementProtocolService.track_purchase(order)
+
+      Rails.logger.info("[Stripe Webhook] Order #{order.id} created successfully")
+
+      # Emit checkout.completed event for Datafast conversion tracking
+      # The visitor ID was captured at checkout creation and stored in Stripe metadata
+      emit_checkout_completed_event(order, full_session)
+
+      # The Klaviyo "Placed Order" event rides order.placed, which the success
+      # redirect emits for website orders. An agent order has no redirect, so
+      # the webhook is its only chance to reach Klaviyo.
+      emit_order_placed_event(order) if order.agent?
+
+      # Emit webhook.processed event for successful handling
+      Rails.event.notify("webhook.processed",
+        event_type: event.type,
+        stripe_event_id: event.id,
+        order_id: order.id
+      )
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
+      # Lost the create race: the success redirect committed the order in the window
+      # after our find_by check. Benign and idempotent - the order exists - so log
+      # and return 200 (no Stripe retry needed). If no order exists, this was a real
+      # failure (e.g. an item rolled the transaction back), so treat it as retryable.
+      unless Order.exists?(stripe_session_id: session.id)
+        Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
+        Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
+        raise RetryableWebhookError, e.message
+      end
+
+      Rails.logger.info("[Stripe Webhook] Order already created concurrently for session #{session.id}")
+      Rails.event.notify("webhook.processed", event_type: event.type, stripe_event_id: event.id)
+    rescue PermanentlyInvalidSessionError, Checkout::SessionAmounts::UnexpandedLineItemError,
+           Checkout::AgentOrderCreator::UnknownSkuError => e
+      # The session can never produce a valid order on retry, for one of two reasons:
+      #   - PermanentlyInvalidSessionError: a completed session carrying no
+      #     shipping_details, so the required shipping fields would be nil.
+      #   - UnexpandedLineItemError: a dropped expand (programmer error) means the
+      #     shipping line can't be identified; the same payload will fail identically.
+      #   - UnknownSkuError: an agent paid for a SKU that is not in the catalogue;
+      #     the product will not appear on retry, so ops must see it in Sentry now.
+      # Either way retrying can never succeed, so capture it for investigation and
+      # return 200 to stop Stripe retrying for 72h and flooding Sentry. Both are
+      # raised before/while deriving amounts, never from a transient item-level
+      # RecordInvalid that rolls the transaction back (that path stays retryable).
+      # The success controller rescues UnexpandedLineItemError the same way, so the
+      # two order-creation paths don't diverge on this error.
+      Rails.logger.error("[Stripe Webhook] Session permanently invalid for #{session.id}: #{e.message}")
+      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
+      Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
+    rescue => e
+      Rails.logger.error("[Stripe Webhook] Error creating order: #{e.message}")
+      Rails.logger.error(e.backtrace.first(10).join("\n"))
+      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
+
+      Rails.event.notify("webhook.failed",
+        event_type: event.type,
+        stripe_event_id: event.id,
+        error: e.message
+      )
+
+      # Signal the controller to return 5xx so Stripe retries the event. A transient
+      # failure (DB blip, Stripe error) must not be swallowed as 200 - that would
+      # lose a paid order with no retry. The race (handled above) is the only case
+      # where returning 200 on an exception is correct.
+      raise RetryableWebhookError, e.message
+    end
+
+    # A website order whose success redirect never ran: rebuild it from the
+    # cart the session was created for. Returns the persisted Order.
+    def create_web_order(full_session, cart_id)
       # Get user if client_reference_id was set
       user = User.find_by(id: full_session.client_reference_id)
 
       # Try to get cart from metadata (added to checkout session for webhook fallback)
-      cart_id = full_session.metadata&.[]("cart_id")
-      cart = Cart.find_by(id: cart_id) if cart_id.present?
+      cart = Cart.find_by(id: cart_id)
 
       # Use Stripe session amounts as source of truth (handles discounts
       # correctly). SessionAmounts splits shipping back out of the subtotal, since
@@ -122,7 +214,7 @@ module Webhooks
       # Create the order and its items atomically: a mid-loop item failure must
       # not leave a committed paid order with missing items. Cart clearing stays
       # in the transaction so it only happens once the items are safely persisted.
-      order = ApplicationRecord.transaction do
+      ApplicationRecord.transaction do
         new_order = Order.create!(
           user: user,
           organization: user&.organization,
@@ -159,74 +251,17 @@ module Webhooks
 
         new_order
       end
+    end
 
-      # Send confirmation email (customer + internal ops copy)
-      OrderMailer.with(order: order).confirmation_email.deliver_later
-      OrderMailer.with(order: order).ops_confirmation_email.deliver_later
-
-      # Notify the team in Telegram that a new order has been placed
-      TelegramOrderNotificationJob.perform_later(order.id)
-
-      # Track purchase server-side via GA4 Measurement Protocol
-      # This ensures the purchase is recorded even if the client-side event never fires
-      Ga4MeasurementProtocolService.track_purchase(order)
-
-      Rails.logger.info("[Stripe Webhook] Order #{order.id} created successfully")
-
-      # Emit checkout.completed event for Datafast conversion tracking
-      # The visitor ID was captured at checkout creation and stored in Stripe metadata
-      emit_checkout_completed_event(order, full_session)
-
-      # Emit webhook.processed event for successful handling
-      Rails.event.notify("webhook.processed",
-        event_type: event.type,
-        stripe_event_id: event.id,
-        order_id: order.id
+    def emit_order_placed_event(order)
+      Rails.event.notify("order.placed",
+        order_id: order.id,
+        email: order.email,
+        total: order.total_amount.to_f,
+        item_count: order.order_items.count,
+        has_discount: order.discount_code.present?,
+        source: order.source
       )
-    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
-      # Lost the create race: the success redirect committed the order in the window
-      # after our find_by check. Benign and idempotent - the order exists - so log
-      # and return 200 (no Stripe retry needed). If no order exists, this was a real
-      # failure (e.g. an item rolled the transaction back), so treat it as retryable.
-      unless Order.exists?(stripe_session_id: session.id)
-        Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
-        Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
-        raise RetryableWebhookError, e.message
-      end
-
-      Rails.logger.info("[Stripe Webhook] Order already created concurrently for session #{session.id}")
-      Rails.event.notify("webhook.processed", event_type: event.type, stripe_event_id: event.id)
-    rescue PermanentlyInvalidSessionError, Checkout::SessionAmounts::UnexpandedLineItemError => e
-      # The session can never produce a valid order on retry, for one of two reasons:
-      #   - PermanentlyInvalidSessionError: a completed session carrying no
-      #     shipping_details, so the required shipping fields would be nil.
-      #   - UnexpandedLineItemError: a dropped expand (programmer error) means the
-      #     shipping line can't be identified; the same payload will fail identically.
-      # Either way retrying can never succeed, so capture it for investigation and
-      # return 200 to stop Stripe retrying for 72h and flooding Sentry. Both are
-      # raised before/while deriving amounts, never from a transient item-level
-      # RecordInvalid that rolls the transaction back (that path stays retryable).
-      # The success controller rescues UnexpandedLineItemError the same way, so the
-      # two order-creation paths don't diverge on this error.
-      Rails.logger.error("[Stripe Webhook] Session permanently invalid for #{session.id}: #{e.message}")
-      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
-      Rails.event.notify("webhook.failed", event_type: event.type, stripe_event_id: event.id, error: e.message)
-    rescue => e
-      Rails.logger.error("[Stripe Webhook] Error creating order: #{e.message}")
-      Rails.logger.error(e.backtrace.first(10).join("\n"))
-      Sentry.capture_exception(e, extra: { stripe_session_id: session.id })
-
-      Rails.event.notify("webhook.failed",
-        event_type: event.type,
-        stripe_event_id: event.id,
-        error: e.message
-      )
-
-      # Signal the controller to return 5xx so Stripe retries the event. A transient
-      # failure (DB blip, Stripe error) must not be swallowed as 200 - that would
-      # lose a paid order with no retry. The race (handled above) is the only case
-      # where returning 200 on an exception is correct.
-      raise RetryableWebhookError, e.message
     end
 
     # The Stripe-entered promotion code, or nil. Unlike OrderCreator (which lets an

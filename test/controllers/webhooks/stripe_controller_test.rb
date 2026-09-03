@@ -371,35 +371,66 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_nil Order.find_by(stripe_session_id: "sess_item_fails")
   end
 
-  test "creates order without order items when cart_id is missing from metadata" do
-    # Build session without cart_id in metadata (legacy sessions)
+  test "creates an agent order from the line items when the session has no cart" do
+    # No cart_id in metadata means the session was completed by an AI agent
+    # through Stripe Agentic Commerce: there is no cart, and shipping is a
+    # shipping_option rather than a line item.
     session = build_stripe_session(
-      id: "sess_no_cart_metadata",
+      id: "cs_agent_webhook",
       payment_status: "paid",
       metadata: {},
-      amount_total: 3500,
-      amount_tax: 500,
-      line_items_data: [
-        stub(amount_total: 3000, description: "Test Product")
-      ]
+      amount_subtotal: 1998,
+      amount_tax: 539,
+      amount_shipping: 699,
+      amount_total: 3236,
+      line_items_data: [ stripe_agent_line_item(sku: products(:one).sku, unit_amount: 999, quantity: 2) ]
     )
 
     event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
     stub_stripe_webhook_construct_event(event)
     Stripe::Checkout::Session.stubs(:retrieve).returns(session)
 
-    assert_difference "Order.count", 1 do
-      assert_no_difference "OrderItem.count" do
+    assert_difference [ "Order.count", "OrderItem.count" ], 1 do
+      assert_event_reported("order.placed", payload: { source: "agent" }) do
         post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
       end
     end
 
     assert_response :ok
+    order = Order.find_by(stripe_session_id: "cs_agent_webhook")
+    assert_equal "agent", order.source
+    assert_equal products(:one), order.order_items.first.product
+    assert_equal 2, order.order_items.first.quantity
+    assert_equal 19.98, order.subtotal_amount.to_f
+    assert_equal 6.99, order.shipping_amount.to_f
+    assert_equal 32.36, order.total_amount.to_f
+    assert_enqueued_with(job: TelegramOrderNotificationJob, args: [ order.id ])
+    assert_enqueued_emails 2
+  end
 
-    # Order should exist but without order items
-    order = Order.find_by(stripe_session_id: "sess_no_cart_metadata")
-    assert_not_nil order
-    assert_equal 0, order.order_items.count
+  test "returns 200 without retrying and alerts when an agent session carries an unknown SKU" do
+    # The payment has been taken for a SKU we do not sell. Retrying cannot fix
+    # it, so stop Stripe retrying and put it in front of ops via Sentry.
+    session = build_stripe_session(
+      id: "cs_agent_unknown_sku",
+      payment_status: "paid",
+      metadata: {},
+      amount_subtotal: 100,
+      amount_total: 100,
+      line_items_data: [ stripe_agent_line_item(sku: "NOT-A-SKU", unit_amount: 100) ]
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+    Sentry.expects(:capture_exception).with(instance_of(Checkout::AgentOrderCreator::UnknownSkuError), anything)
+
+    assert_no_difference [ "Order.count", "OrderItem.count" ] do
+      assert_no_enqueued_jobs only: TelegramOrderNotificationJob do
+        post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+      end
+    end
+
+    assert_response :ok
   end
 
   test "creates order without order items when cart no longer exists" do

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_03_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_03_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -334,6 +334,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_120000) do
   end
 
   create_table "orders", force: :cascade do |t|
+    t.string "agent_name"
     t.string "billing_address_line1"
     t.string "billing_address_line2"
     t.string "billing_city"
@@ -359,6 +360,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_120000) do
     t.string "shipping_name", null: false
     t.string "shipping_postal_code", null: false
     t.string "shipping_zone"
+    t.string "source", default: "web", null: false
     t.string "status", default: "pending", null: false
     t.string "stripe_session_id", null: false
     t.decimal "subtotal_amount", precision: 10, scale: 2, null: false
@@ -373,6 +375,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_03_120000) do
     t.index ["organization_id"], name: "index_orders_on_organization_id"
     t.index ["placed_by_user_id"], name: "index_orders_on_placed_by_user_id"
     t.index ["reorder_schedule_id"], name: "index_orders_on_reorder_schedule_id"
+    t.index ["source"], name: "index_orders_on_source"
     t.index ["status"], name: "index_orders_on_status"
     t.index ["stripe_session_id"], name: "index_orders_on_stripe_session_id", unique: true
     t.index ["user_id"], name: "index_orders_on_user_id"

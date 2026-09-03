@@ -95,6 +95,10 @@ Progress 2026-09-03: code items 1 to 5 are built on branch `agentic-commerce-pla
 
 Goal: a test purchase from the Dashboard's feed view creates a paid `Order` with correct items, VAT, shipping and addresses, and fires the usual Telegram and Klaviyo notifications.
 
+Progress 2026-09-03: the code is built on `agentic-commerce-plan` and not yet deployed. `Webhooks::AgenticCheckoutController` at `POST /webhooks/stripe/agentic_checkout` verifies the Agentic Commerce Extension signature and renders `AgenticCommerce::CheckoutCustomization`, a pure function of the hook request that reuses `Shipping` and `ShippingZone` (free over the mainland threshold, the off-mainland charge for Highlands and islands, no option for non-GB or Crown Dependency addresses, the cached UK VAT rate on every line item unless `automatic_tax.enabled`). `Checkout::AgentOrderCreator` builds the order from `line_items[].price.external_reference`; `Webhooks::StripeController` routes sessions without `cart_id` metadata to it, and an unknown SKU is a permanent failure (200 to Stripe, Sentry alert). `orders.source` (`web` | `agent`) and `orders.agent_name` were added. Because the Klaviyo "Placed Order" event rides `order.placed`, which only the success redirect emitted, the webhook now emits it for agent orders. The same gap still exists for website orders the webhook rebuilds after a missed redirect; that is pre-existing and left alone here.
+
+Still to do before the exit criteria can be checked: add `stripe.agentic_hook_secret` to credentials (the signing secret lives under the "Agentic Commerce Extension" event destination in Dashboard webhook settings), set the hook URL and enable Custom tax rates and Custom shipping options on the Agentic commerce settings page, deploy, then run the Dashboard test purchase. Two things only the sandbox can answer: whether an empty `shipping_options` array declines a non-GB checkout, and whether the shipping option is taxed at all under manual tax rates (the website taxes delivery by sending it as a line item, which the hook cannot do; if Stripe leaves delivery untaxed, the order still records exactly what was charged, but VAT on delivery is under-collected and the fix is a shipping `tax_code` plus Stripe Tax, or accepting it).
+
 **Checkout customization hook** (`POST /webhooks/stripe/agentic_checkout`)
 
 Stripe calls this before quoting a checkout, with line items and the shipping address. Enable both Custom tax rates and Custom shipping options in Agentic commerce settings. The endpoint:
@@ -162,7 +166,8 @@ Goal: the Stripe catalogue never advertises a price or product that afida.com no
 ## Open questions
 
 - Resolved 2026-09-03: the v2 imports endpoint accepts `2026-08-26.preview`, and a feed with no `stripe_product_tax_code` ingests with zero row errors. Whether checkout then taxes correctly through the customization hook alone is still a Phase 2 sandbox check.
-- Does returning zero shipping options from the customization hook decline the checkout, or does Stripe fall back to the feed's shipping rule? Determines whether the approval hook is needed.
+- Does returning zero shipping options from the customization hook decline the checkout, or does Stripe fall back to the feed's shipping rule? Determines whether the approval hook is needed. The hook returns `[]` for non-GB and Crown Dependency addresses; check in the sandbox test purchase.
+- Does Stripe apply VAT to a hook-supplied shipping option when tax comes from manual `tax_rates`? The website sidesteps this by charging delivery as a taxed line item, which the hook cannot do.
 - Is `payment_intent.agent_details` (private preview) available on Afida's account? If not, agent attribution comes only from the Dashboard filter.
 - Are agent orders eligible for the reorder-schedule and abandoned-cart flows? Default here is no; confirm with Afida.
 

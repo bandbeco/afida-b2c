@@ -134,9 +134,13 @@ module StripeTestHelper
     end
     breakdown = stub(discounts: breakdown_discounts)
 
+    # amount_shipping is only populated when shipping rides as a shipping_option
+    # (agent checkouts through the customization hook); website sessions carry
+    # shipping as a line item and leave it at 0.
     total_details = stub(
       amount_tax: tax_amount,
       amount_discount: discount_amount,
+      amount_shipping: overrides[:amount_shipping] || 0,
       breakdown: breakdown
     )
 
@@ -232,6 +236,28 @@ module StripeTestHelper
       amount_total: amount_total || (amount_subtotal + tax),
       price: stub(product: Stripe::StripeObject.construct_from("metadata" => {})),
       description: name
+    )
+  end
+
+  # Build a mock expanded line item as an AGENT checkout produces it: the price
+  # carries external_reference (the catalogue SKU from the product feed) and
+  # unit_amount, and shipping is NOT a line item (it is a shipping_option, read
+  # from total_details.amount_shipping). Checkout::AgentOrderCreator reads these.
+  def stripe_agent_line_item(sku:, unit_amount:, quantity: 1, id: "li_agent_#{SecureRandom.hex(4)}")
+    amount_subtotal = unit_amount * quantity
+    stub(
+      id: id,
+      quantity: quantity,
+      amount_subtotal: amount_subtotal,
+      amount_discount: 0,
+      amount_tax: (amount_subtotal * VAT_RATE).round,
+      amount_total: amount_subtotal + (amount_subtotal * VAT_RATE).round,
+      price: stub(
+        external_reference: sku,
+        unit_amount: unit_amount,
+        product: Stripe::StripeObject.construct_from("metadata" => {})
+      ),
+      description: sku
     )
   end
 
