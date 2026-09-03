@@ -135,6 +135,8 @@ Stripe calls this before quoting a checkout, with line items and the shipping ad
 
 ## Phase 3: Freshness, deletions and monitoring
 
+Paused 2026-09-03, waiting on agent availability. The live Agentic commerce page lists only the Stripe Test Agent as enabled; the agents open to connection today (Shop Diddo, BeyondStyle, Payouts Technologies US, Rye) are US aggregators with no UK hospitality audience, and Google, Copilot, Meta and Wizard AI are "Coming soon". Until an agent that serves UK buyers can be connected, nothing is advertised, so freshness, deletions and monitoring have nothing to protect. The daily product feed push stays on (it costs nothing and keeps the catalogue current for the day an agent opens up). Resume here when one of the "Coming soon" agents becomes available in the UK; the first two items (deletions and price feed on change) are the ones that prevent selling a stale product or price and should land before any connection is requested.
+
 Goal: the Stripe catalogue never advertises a price or product that afida.com no longer sells.
 
 1. **Pricing feed on change.** `after_commit` on `Product` when `price`, `pricing_tiers` or `active` change enqueues `AgenticCommerce::PushPriceFeedJob` (debounced to one run per 5 minutes via a Solid Queue concurrency key). The job sends only changed SKUs with `id, price`. Deactivations go in the product feed with `delete=true` rather than the price feed.
