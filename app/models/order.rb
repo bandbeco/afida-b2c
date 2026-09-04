@@ -55,11 +55,6 @@ class Order < ApplicationRecord
     instance_created: "instance_created"
   }, prefix: true, validate: { allow_nil: true }
 
-  # Where the order was placed. "web" is afida.com checkout; "agent" is a
-  # purchase an AI agent completed through Stripe Agentic Commerce (see
-  # Checkout::AgentOrderCreator). Explicit so reporting and reorder flows can
-  # exclude agent orders deliberately rather than by inferring from missing
-  # cart metadata.
   SOURCES = %w[web agent].freeze
   validates :source, inclusion: { in: SOURCES }
   scope :from_agents, -> { where(source: "agent") }

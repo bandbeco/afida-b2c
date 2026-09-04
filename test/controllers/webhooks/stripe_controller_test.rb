@@ -372,9 +372,6 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creates an agent order from the line items when the session has no cart" do
-    # No cart_id in metadata means the session was completed by an AI agent
-    # through Stripe Agentic Commerce: there is no cart, and shipping is a
-    # shipping_option rather than a line item.
     session = build_stripe_session(
       id: "cs_agent_webhook",
       payment_status: "paid",
@@ -409,8 +406,6 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "returns 200 without retrying and alerts when an agent session carries an unknown SKU" do
-    # The payment has been taken for a SKU we do not sell. Retrying cannot fix
-    # it, so stop Stripe retrying and put it in front of ops via Sentry.
     session = build_stripe_session(
       id: "cs_agent_unknown_sku",
       payment_status: "paid",

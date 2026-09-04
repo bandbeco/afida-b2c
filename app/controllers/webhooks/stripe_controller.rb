@@ -98,10 +98,6 @@ module Webhooks
         raise PermanentlyInvalidSessionError, "session #{full_session.id} has no shipping details"
       end
 
-      # SessionBuilder stamps every website session with its cart_id, so a
-      # session without one was completed by an AI agent through Stripe
-      # Agentic Commerce: there is no cart, and the items come from the
-      # session's line items instead.
       cart_id = full_session.metadata&.[]("cart_id")
       order =
         if cart_id.present?
@@ -128,9 +124,6 @@ module Webhooks
       # The visitor ID was captured at checkout creation and stored in Stripe metadata
       emit_checkout_completed_event(order, full_session)
 
-      # The Klaviyo "Placed Order" event rides order.placed, which the success
-      # redirect emits for website orders. An agent order has no redirect, so
-      # the webhook is its only chance to reach Klaviyo.
       emit_order_placed_event(order) if order.agent?
 
       # Emit webhook.processed event for successful handling
@@ -159,8 +152,6 @@ module Webhooks
       #     shipping_details, so the required shipping fields would be nil.
       #   - UnexpandedLineItemError: a dropped expand (programmer error) means the
       #     shipping line can't be identified; the same payload will fail identically.
-      #   - UnknownSkuError: an agent paid for a SKU that is not in the catalogue;
-      #     the product will not appear on retry, so ops must see it in Sentry now.
       # Either way retrying can never succeed, so capture it for investigation and
       # return 200 to stop Stripe retrying for 72h and flooding Sentry. Both are
       # raised before/while deriving amounts, never from a transient item-level
@@ -188,8 +179,6 @@ module Webhooks
       raise RetryableWebhookError, e.message
     end
 
-    # A website order whose success redirect never ran: rebuild it from the
-    # cart the session was created for. Returns the persisted Order.
     def create_web_order(full_session, cart_id)
       # Get user if client_reference_id was set
       user = User.find_by(id: full_session.client_reference_id)

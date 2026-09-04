@@ -3,9 +3,6 @@ require "test_helper"
 class Checkout::AgentOrderCreatorTest < ActiveSupport::TestCase
   include StripeTestHelper
 
-  # An agent checkout for 2 x Product 1 (£9.99 each) plus 1 x Product 2 (£9.99)
-  # delivered to the mainland under the free-shipping threshold: products
-  # £29.97, delivery £6.99, VAT 20% on both = £7.39, total £44.35.
   def agent_session(overrides = {})
     build_stripe_session({
       id: "cs_agent_1",

@@ -1,10 +1,6 @@
 require "csv"
 
 module AgenticCommerce
-  # Renders Afida's stock catalogue as the CSV Stripe Agentic Commerce Suite
-  # ingests (see docs/plans/2026-09-02-stripe-agentic-commerce.md). Product
-  # copy, images and identifiers come from the same source as the Google
-  # Merchant feed so the two cannot drift.
   class ProductFeed
     COLUMNS = %w[
       id title description link image_link additional_image_link brand gtin mpn condition
@@ -16,12 +12,8 @@ module AgenticCommerce
     ].freeze
 
     SHIPPING_SERVICE = "Standard"
-    # Mainland next-working-day; off-mainland zones are priced by postcode in the
-    # checkout customization hook (Phase 2), not in the feed.
     SHIPPING_SPEED_RANGE = "1-1"
 
-    # Stock products only. Branded templates need artwork and a design review
-    # an agent cannot run, so they stay website-only for now.
     def self.eligible_products
       Product.active.standard
         .includes(:category, :product_family)
@@ -40,8 +32,6 @@ module AgenticCommerce
       end
     end
 
-    # The SKUs the CSV carries, in feed order. Recorded on the import so the
-    # next push can send deletions for products that have since dropped out.
     def skus
       rows.map { |row| row["id"] }
     end
@@ -89,8 +79,6 @@ module AgenticCommerce
       }
     end
 
-    # Stripe wants plain text: strip any markup carried in the stored copy and
-    # hold the length under Stripe's cap.
     def plain_text(text, limit:)
       ActionController::Base.helpers.strip_tags(text.to_s).squish.first(limit)
     end
@@ -103,8 +91,6 @@ module AgenticCommerce
       "GB:ALL:#{SHIPPING_SERVICE}:#{format_price(Shipping::FREE_SHIPPING_THRESHOLD)}"
     end
 
-    # Stripe groups variants by item_group_id; a product outside a family is a
-    # group of one, so it carries no group columns.
     def variant_columns(product, attributes)
       return {} unless product.product_family.present?
 
@@ -131,8 +117,6 @@ module AgenticCommerce
       [ category.parent&.name, category.name ].compact.join(" > ")
     end
 
-    # Agents charge price x quantity, so the feed carries the single-pack tier.
-    # Volume tiers stay website-only (see the plan's Decisions).
     def list_price(product)
       return product.price if product.pricing_tiers.blank?
 

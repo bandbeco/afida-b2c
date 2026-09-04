@@ -1,13 +1,7 @@
 require "http"
 
 module AgenticCommerce
-  # Pushes one CSV feed to Stripe Agentic Commerce Suite: creates a
-  # ProductCatalogImport, then PUTs the file to the presigned URL Stripe hands
-  # back (valid for five minutes). Every attempt is recorded as an
-  # AgenticCommerceImport so failures are visible and later pushes can diff.
   class FeedUploader
-    # Stripe documents the v2 imports endpoint under this preview version; the
-    # app-wide pin stays on the checkout version, so it is passed per call.
     API_VERSION = "2026-08-26.preview"
     UPLOAD_TIMEOUT_SECONDS = 120
 
@@ -17,9 +11,6 @@ module AgenticCommerce
       @client = client
     end
 
-    # @return [AgenticCommerceImport] the recorded import, in `processing`
-    # @raise [UploadError] when Stripe refuses the file; the record is left
-    #   as `upload_failed`
     def upload(feed_type:, csv:, row_count:, mode: "upsert", skus: [])
       stripe_import = create_import(feed_type, mode)
       import = AgenticCommerceImport.create!(
@@ -42,10 +33,6 @@ module AgenticCommerce
       import
     end
 
-    # Pulls the import's current state from Stripe onto the record. On
-    # succeeded_with_errors the error CSV (only the failed rows, each with a
-    # stripe_error_message) is fetched inside its five-minute window and kept
-    # on the record, truncated, so it can be read after the URL has expired.
     def refresh(import)
       stripe_import = client.v2.commerce.product_catalog.imports.retrieve(
         import.stripe_import_id, {}, { stripe_version: API_VERSION }

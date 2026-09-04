@@ -114,10 +114,6 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "answers with no customization while no hook secret is configured" do
-    # Stripe checks the endpoint when the hook is saved, and the signing secret
-    # only exists after that save. Until the secret is in credentials the
-    # endpoint therefore returns an empty customization (Stripe falls back to
-    # the catalogue's shipping and tax) rather than a 400 that blocks the save.
     Rails.application.credentials.stubs(:dig).with(:stripe, :agentic_hook_secret).returns(nil)
     Stripe::TaxRate.expects(:list).never
     payload = customize_checkout_payload.to_json
