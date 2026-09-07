@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_07_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -245,11 +245,58 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
     t.index ["email"], name: "index_email_subscriptions_on_email", unique: true
   end
 
+  create_table "game_awards", force: :cascade do |t|
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.datetime "expires_at", null: false
+    t.bigint "game_participant_id"
+    t.string "grant_key", null: false
+    t.string "kind", null: false
+    t.date "month", null: false
+    t.bigint "qualifying_order_id"
+    t.bigint "redeemed_order_id"
+    t.datetime "updated_at", null: false
+    t.index ["code"], name: "index_game_awards_on_code", unique: true
+    t.index ["game_participant_id"], name: "index_game_awards_on_game_participant_id"
+    t.index ["grant_key"], name: "index_game_awards_on_grant_key", unique: true
+    t.index ["kind", "month"], name: "index_game_awards_on_kind_and_month"
+    t.index ["qualifying_order_id"], name: "index_game_awards_on_qualifying_order_id"
+    t.index ["redeemed_order_id"], name: "index_game_awards_on_redeemed_order_id"
+  end
+
+  create_table "game_crowns", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "leaderboard_entry_id"
+    t.date "month", null: false
+    t.string "publication_url"
+    t.datetime "published_at"
+    t.datetime "updated_at", null: false
+    t.index ["leaderboard_entry_id"], name: "index_game_crowns_on_leaderboard_entry_id"
+    t.index ["month"], name: "index_game_crowns_on_month", unique: true
+  end
+
+  create_table "game_events", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "event_key", null: false
+    t.bigint "game_participant_id"
+    t.string "name", null: false
+    t.bigint "order_id"
+    t.jsonb "properties", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_key"], name: "index_game_events_on_event_key", unique: true
+    t.index ["game_participant_id"], name: "index_game_events_on_game_participant_id"
+    t.index ["name", "created_at"], name: "index_game_events_on_name_and_created_at"
+    t.index ["order_id"], name: "index_game_events_on_order_id"
+  end
+
   create_table "game_leads", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.bigint "inviter_id"
     t.boolean "marketing_opt_in", default: false, null: false
     t.string "mate_promo_code"
+    t.bigint "qualifying_order_id"
     t.bigint "referrer_id"
     t.datetime "referrer_rewarded_at"
     t.string "source", null: false
@@ -257,14 +304,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
     t.string "win_promo_code"
     t.date "win_promo_month"
     t.index ["email"], name: "index_game_leads_on_email", unique: true
+    t.index ["inviter_id"], name: "index_game_leads_on_inviter_id"
+    t.index ["qualifying_order_id"], name: "index_game_leads_on_qualifying_order_id"
     t.index ["referrer_id"], name: "index_game_leads_on_referrer_id"
+  end
+
+  create_table "game_participants", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.string "experiment", default: "voucher_30_days", null: false
+    t.string "ref_code", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ref_code"], name: "index_game_participants_on_ref_code", unique: true
+  end
+
+  create_table "game_prize_budgets", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.date "month", null: false
+    t.integer "reserved", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind", "month"], name: "index_game_prize_budgets_on_kind_and_month", unique: true
   end
 
   create_table "leaderboard_entries", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email"
     t.jsonb "flags", default: [], null: false
+    t.bigint "game_participant_id"
     t.string "instagram_handle"
+    t.bigint "inviter_id"
     t.boolean "marketing_opt_in", default: false, null: false
     t.date "month", null: false
     t.string "name", null: false
@@ -275,6 +344,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
     t.string "status", default: "pending", null: false
     t.string "submitter_ip"
     t.datetime "updated_at", null: false
+    t.index ["game_participant_id"], name: "index_leaderboard_entries_on_game_participant_id"
+    t.index ["inviter_id"], name: "index_leaderboard_entries_on_inviter_id"
     t.index ["month", "score"], name: "index_leaderboard_entries_on_month_and_score"
     t.index ["ref_code"], name: "index_leaderboard_entries_on_ref_code", unique: true
     t.index ["referrer_id"], name: "index_leaderboard_entries_on_referrer_id"
@@ -576,7 +647,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
   add_foreign_key "collection_category_guides", "collections", on_delete: :cascade
   add_foreign_key "collection_items", "collections"
   add_foreign_key "collection_items", "products"
+  add_foreign_key "game_awards", "game_participants"
+  add_foreign_key "game_awards", "orders", column: "qualifying_order_id"
+  add_foreign_key "game_awards", "orders", column: "redeemed_order_id"
+  add_foreign_key "game_crowns", "leaderboard_entries"
+  add_foreign_key "game_events", "game_participants"
+  add_foreign_key "game_events", "orders"
+  add_foreign_key "game_leads", "game_participants", column: "inviter_id"
   add_foreign_key "game_leads", "leaderboard_entries", column: "referrer_id"
+  add_foreign_key "game_leads", "orders", column: "qualifying_order_id"
+  add_foreign_key "leaderboard_entries", "game_participants"
+  add_foreign_key "leaderboard_entries", "game_participants", column: "inviter_id"
   add_foreign_key "leaderboard_entries", "leaderboard_entries", column: "referrer_id"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"
