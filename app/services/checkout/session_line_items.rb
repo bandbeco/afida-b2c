@@ -32,13 +32,16 @@ module Checkout
     # shipping? depends on. Stripe embeds at most 10 expanded line items in a
     # retrieved session and promises no order, so correctness must never
     # depend on the shipping line landing in the first page.
-    def self.list(session_id, starting_after: nil)
+    def self.list(session_id, starting_after: nil, stripe_version: nil)
       params = { expand: [ "data.price.product" ] }
       params[:starting_after] = starting_after if starting_after
-      Stripe::Checkout::Session
-        .list_line_items(session_id, **params)
-        .auto_paging_each
-        .to_a
+      response =
+        if stripe_version
+          Stripe::Checkout::Session.list_line_items(session_id, params, { stripe_version: stripe_version })
+        else
+          Stripe::Checkout::Session.list_line_items(session_id, **params)
+        end
+      response.auto_paging_each.to_a
     end
   end
 end

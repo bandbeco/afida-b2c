@@ -371,6 +371,31 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_nil Order.find_by(stripe_session_id: "sess_item_fails")
   end
 
+  test "retrieves an agent session with the ACS preview version so the SKU is present" do
+    session = build_stripe_session(
+      id: "cs_agent_preview",
+      payment_status: "paid",
+      metadata: {},
+      amount_subtotal: 999,
+      amount_total: 1199,
+      line_items_data: [ stripe_agent_line_item(sku: products(:one).sku, unit_amount: 999) ]
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.expects(:retrieve).with(
+      has_entries(
+        id: "cs_agent_preview",
+        expand: includes("line_items.data.price.product", "payment_intent.agent_details")
+      ),
+      has_entries(stripe_version: "2025-12-15.preview")
+    ).returns(session)
+
+    post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+
+    assert_response :ok
+    assert_equal products(:one), Order.find_by(stripe_session_id: "cs_agent_preview").order_items.first.product
+  end
+
   test "creates an agent order from the line items when the session has no cart" do
     session = build_stripe_session(
       id: "cs_agent_webhook",

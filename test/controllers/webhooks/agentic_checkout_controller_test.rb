@@ -80,6 +80,16 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
     assert_equal [], response.parsed_body["shipping_options"]
   end
 
+  test "offers no shipping option for an unparseable GB postcode" do
+    stub_stripe_tax_rate_list
+    payload = customize_checkout_payload(postal_code: "ZZZ").to_json
+
+    post webhooks_stripe_agentic_checkout_url, params: payload, headers: signed_headers(payload)
+
+    assert_response :ok
+    assert_equal [], response.parsed_body["shipping_options"]
+  end
+
   test "applies the VAT rate to each of several line items" do
     tax_rate = stub_stripe_tax_rate_list
     items = [

@@ -16,23 +16,23 @@ module AgenticCommerce
 
     def shipping_options
       return [] unless Shipping::ALLOWED_COUNTRIES.include?(address["country"])
-      return [] if resolved_zone == :undeliverable
+      return [] unless ShippingZone.deliverable?(resolved_zone)
 
       [ { shipping_rate_data: shipping_rate_data } ]
     end
 
     def shipping_rate_data
-      free = Shipping.free_shipping?(zone: zone, subtotal: subtotal_in_pounds)
+      free = Shipping.free_shipping?(zone: resolved_zone, subtotal: subtotal_in_pounds)
       {
-        display_name: "#{free ? 'Free' : 'Standard'} delivery (#{ShippingZone.transit_label(zone)})",
-        fixed_amount: { amount: free ? 0 : Shipping.cost_for_zone(zone), currency: CURRENCY },
+        display_name: "#{free ? 'Free' : 'Standard'} delivery (#{ShippingZone.transit_label(resolved_zone)})",
+        fixed_amount: { amount: free ? 0 : Shipping.cost_for_zone(resolved_zone), currency: CURRENCY },
         tax_behavior: "exclusive",
         delivery_estimate: delivery_estimate
       }
     end
 
     def delivery_estimate
-      extra_days = ShippingZone.transit_days(zone)
+      extra_days = ShippingZone.transit_days(resolved_zone)
       minimum = extra_days.zero? ? 1 : 2
       {
         minimum: { unit: "business_day", value: minimum },
@@ -57,10 +57,6 @@ module AgenticCommerce
 
     def resolved_zone
       @resolved_zone ||= ShippingZone.for(address["postal_code"])
-    end
-
-    def zone
-      ShippingZone.deliverable?(resolved_zone) ? resolved_zone : :mainland
     end
 
     def line_item_details

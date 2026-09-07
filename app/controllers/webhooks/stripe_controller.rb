@@ -75,16 +75,7 @@ module Webhooks
       # We need to create the order from the webhook
       Rails.logger.info("[Stripe Webhook] Creating order for session #{session.id} (redirect missed)")
 
-      # Retrieve full session with expanded data. The nested price.product is
-      # needed so SessionAmounts can identify the shipping line by its metadata.
-      full_session = Stripe::Checkout::Session.retrieve(
-        id: session.id,
-        # total_details.breakdown is omitted unless expanded, and without it the
-        # discount breakdown is nil, so the promotion code cannot be read and the
-        # order records no discount_code.
-        expand: [ "collected_information", "line_items.data.price.product",
-                 "payment_intent.payment_method", "total_details.breakdown" ]
-      )
+      full_session = retrieve_completed_session(session)
 
       # Extract shipping address
       shipping = Checkout::SessionDetails.shipping_address(full_session)
@@ -177,6 +168,34 @@ module Webhooks
       # lose a paid order with no retry. The race (handled above) is the only case
       # where returning 200 on an exception is correct.
       raise RetryableWebhookError, e.message
+    end
+
+    def retrieve_completed_session(session)
+      if session.metadata&.[]("cart_id").present?
+        Stripe::Checkout::Session.retrieve(
+          id: session.id,
+          expand: [
+            "collected_information", "line_items.data.price.product",
+            "payment_intent.payment_method", "total_details.breakdown"
+          ]
+        )
+      else
+        Stripe::Checkout::Session.retrieve(
+          {
+            id: session.id,
+            expand: [
+              "collected_information",
+              "line_items.data.price.product",
+              "line_items.data.taxes",
+              "payment_intent.payment_method",
+              "payment_intent.latest_charge",
+              "payment_intent.agent_details",
+              "total_details.breakdown"
+            ]
+          },
+          { stripe_version: AgenticCommerce::CHECKOUT_API_VERSION }
+        )
+      end
     end
 
     def create_web_order(full_session, cart_id)

@@ -44,7 +44,7 @@ module Checkout
     end
 
     def order_items_attributes
-      line_items.map do |line_item|
+      catalogue_line_items.map do |line_item|
         sku = line_item.price.external_reference
         product = Product.find_by(sku: sku)
         raise UnknownSkuError, "no product with SKU #{sku.inspect} on session #{stripe_session.id}" unless product
@@ -61,8 +61,20 @@ module Checkout
       end
     end
 
+    def catalogue_line_items
+      line_items.reject { |item| SessionLineItems.shipping?(item) }
+    end
+
     def line_items
-      stripe_session.line_items&.data || []
+      embedded = stripe_session.line_items
+      page_one = embedded&.data || []
+      return page_one unless embedded.respond_to?(:has_more) && embedded.has_more
+
+      page_one + SessionLineItems.list(
+        stripe_session.id,
+        starting_after: page_one.last&.id,
+        stripe_version: AgenticCommerce::CHECKOUT_API_VERSION
+      )
     end
 
     def total_details

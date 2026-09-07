@@ -70,6 +70,42 @@ class Checkout::AgentOrderCreatorTest < ActiveSupport::TestCase
     assert_equal "mainland", order.shipping_zone
   end
 
+  test "creates items for SKUs that sit past Stripe's first embedded page" do
+    page_one = stripe_agent_line_item(sku: products(:one).sku, unit_amount: 999, quantity: 1, id: "li_page1")
+    page_two = stripe_agent_line_item(sku: products(:two).sku, unit_amount: 999, quantity: 1, id: "li_page2")
+    session = agent_session(
+      amount_subtotal: 1998,
+      amount_tax: 400,
+      amount_total: 3097,
+      line_items_data: [ page_one ],
+      line_items_has_more: true
+    )
+    Stripe::Checkout::Session.stubs(:list_line_items)
+      .with(
+        "cs_agent_1",
+        has_entries(expand: [ "data.price.product" ], starting_after: "li_page1"),
+        has_entries(stripe_version: "2025-12-15.preview")
+      )
+      .returns(stub(auto_paging_each: [ page_two ].each))
+
+    order = Checkout::AgentOrderCreator.new(stripe_session: session).create
+
+    assert_equal [ products(:one).id, products(:two).id ].sort, order.order_items.map(&:product_id).sort
+  end
+
+  test "skips a shipping line that has no catalogue SKU" do
+    session = agent_session(
+      line_items_data: [
+        stripe_agent_line_item(sku: products(:one).sku, unit_amount: 999, quantity: 2),
+        stripe_shipping_line_item(amount_subtotal: 699)
+      ]
+    )
+
+    order = Checkout::AgentOrderCreator.new(stripe_session: session).create
+
+    assert_equal [ products(:one) ], order.order_items.map(&:product)
+  end
+
   test "raises a permanent error and creates nothing when a SKU is not in the catalogue" do
     session = agent_session(line_items_data: [ stripe_agent_line_item(sku: "NOT-A-SKU", unit_amount: 100) ])
 
