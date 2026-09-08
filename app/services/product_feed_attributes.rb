@@ -64,15 +64,8 @@ class ProductFeedAttributes
   end
 
   def title
-    parts = []
+    parts = [ "Afida", product.generated_title ]
 
-    # Brand (always first)
-    parts << "Afida"
-
-    # Product name
-    parts << product.generated_title
-
-    # Size/volume
     if product.volume_in_ml.present?
       parts << "#{product.volume_in_ml}ml"
     elsif product.diameter_in_mm.present?
@@ -81,53 +74,19 @@ class ProductFeedAttributes
       parts << "#{product.width_in_mm}x#{product.height_in_mm}mm"
     end
 
-    # Material
     parts << product.material if product.material.present?
-
-    # Eco feature (compostable, biodegradable, etc)
-    description_text = product.description_detailed_with_fallback
-    if description_text&.match?(/compostable/i)
-      parts << "Compostable"
-    elsif description_text&.match?(/biodegradable/i)
-      parts << "Biodegradable"
-    end
-
-    # Pack size
+    parts << eco_feature
     parts << "#{product.pac_size} Pack" if product.pac_size.present?
 
-    # Join and truncate to 150 chars
-    title = parts.join(" ")
+    title = parts.compact.join(" ")
     title.length > 150 ? title[0..146] + "..." : title
   end
 
   def description
-    # First 160 chars are critical for ads
-    intro = "Afida #{product.generated_title} are perfect for eco-conscious cafes and packaging businesses."
-
-    material_info = if product.material.present?
-      " Made from #{product.material},"
-    else
-      ""
-    end
-
-    eco_info = " fully compostable in commercial facilities. EN 13432 certified."
-
-    # Extended description
-    quality = " Premium quality that your customers will notice - sturdy construction."
-    business = " Available in bulk packs for business use with competitive wholesale pricing."
-    shipping = " Free UK shipping on orders over #{Shipping.formatted_free_shipping_threshold}."
-
-    # Combine (ensure first 160 chars have essential info)
-    first_part = intro + material_info + eco_info
-    full_description = first_part + quality + business + shipping
-
-    # Use existing description if available, otherwise use generated
-    existing_description = product.description_detailed_with_fallback
-    existing_description.present? ? existing_description : full_description
+    product.description_detailed_with_fallback.presence || generated_description
   end
 
   def item_group_id
-    # Use product family ID if available, otherwise product ID
     if product.product_family.present?
       "FAMILY-#{product.product_family.id}"
     else
@@ -138,7 +97,6 @@ class ProductFeedAttributes
   def google_product_category
     return nil unless product.category
 
-    # Try the category's own slug first, then fall back to parent's slug
     GOOGLE_TAXONOMY_MAP[product.category.slug] ||
       (product.category.parent && GOOGLE_TAXONOMY_MAP[product.category.parent.slug])
   end
@@ -158,6 +116,24 @@ class ProductFeedAttributes
   end
 
   private
+
+  def eco_feature
+    text = product.description_detailed_with_fallback
+    return "Compostable" if text&.match?(/compostable/i)
+
+    "Biodegradable" if text&.match?(/biodegradable/i)
+  end
+
+  # The first 160 characters carry the essentials, because that is what ad
+  # surfaces truncate to.
+  def generated_description
+    material = product.material.present? ? " Made from #{product.material}," : ""
+    "Afida #{product.generated_title} are perfect for eco-conscious cafes and packaging businesses." \
+      "#{material} fully compostable in commercial facilities. EN 13432 certified." \
+      " Premium quality that your customers will notice - sturdy construction." \
+      " Available in bulk packs for business use with competitive wholesale pricing." \
+      " Free UK shipping on orders over #{Shipping.formatted_free_shipping_threshold}."
+  end
 
   def url_for_image(image)
     if image.content_type == "image/webp"

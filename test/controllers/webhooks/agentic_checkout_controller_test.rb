@@ -61,7 +61,7 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
     assert_equal({ "unit" => "business_day", "value" => 4 }, option["delivery_estimate"]["maximum"])
   end
 
-  test "offers no shipping option to an address outside the UK" do
+  test "offers no shipping option and no UK VAT to an address outside the UK" do
     stub_stripe_tax_rate_list
     payload = customize_checkout_payload(postal_code: "75001", country: "FR").to_json
 
@@ -69,18 +69,20 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal [], response.parsed_body["shipping_options"]
+    assert_equal [], response.parsed_body["line_items"]
   end
 
-  test "offers no shipping option to the Channel Islands" do
+  test "offers no shipping option and no UK VAT to the Channel Islands" do
     stub_stripe_tax_rate_list
     payload = customize_checkout_payload(postal_code: "JE2 3AB").to_json
 
     post webhooks_stripe_agentic_checkout_url, params: payload, headers: signed_headers(payload)
 
     assert_equal [], response.parsed_body["shipping_options"]
+    assert_equal [], response.parsed_body["line_items"]
   end
 
-  test "offers no shipping option for an unparseable GB postcode" do
+  test "offers no shipping option and no UK VAT for an unparseable GB postcode" do
     stub_stripe_tax_rate_list
     payload = customize_checkout_payload(postal_code: "ZZZ").to_json
 
@@ -88,6 +90,7 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :ok
     assert_equal [], response.parsed_body["shipping_options"]
+    assert_equal [], response.parsed_body["line_items"]
   end
 
   test "applies the VAT rate to each of several line items" do
@@ -123,15 +126,23 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
-  test "answers with no customization while no hook secret is configured" do
+  test "rejects every request while no hook secret is configured" do
     Rails.application.credentials.stubs(:dig).with(:stripe, :agentic_hook_secret).returns(nil)
     Stripe::TaxRate.expects(:list).never
     payload = customize_checkout_payload.to_json
 
     post webhooks_stripe_agentic_checkout_url, params: payload, headers: signed_headers(payload)
 
-    assert_response :ok
-    assert_equal({}, response.parsed_body)
+    assert_response :bad_request
+  end
+
+  test "rejects a replay of a correctly signed request from outside the timestamp tolerance" do
+    payload = customize_checkout_payload.to_json
+
+    post webhooks_stripe_agentic_checkout_url, params: payload,
+      headers: signed_headers(payload, timestamp: 10.minutes.ago)
+
+    assert_response :bad_request
   end
 
   private
@@ -158,8 +169,7 @@ class Webhooks::AgenticCheckoutControllerTest < ActionDispatch::IntegrationTest
     }
   end
 
-  def signed_headers(payload, secret: HOOK_SECRET)
-    timestamp = Time.now
+  def signed_headers(payload, secret: HOOK_SECRET, timestamp: Time.now)
     signature = Stripe::Webhook::Signature.compute_signature(timestamp, payload, secret)
     header = Stripe::Webhook::Signature.generate_header(timestamp, signature)
     { "CONTENT_TYPE" => "application/json", "HTTP_STRIPE_SIGNATURE" => header }

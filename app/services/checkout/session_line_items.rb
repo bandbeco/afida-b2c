@@ -27,6 +27,18 @@ module Checkout
       product["metadata"]&.[](Shipping::LINE_ITEM_FLAG_KEY) == Shipping::LINE_ITEM_FLAG_VALUE
     end
 
+    # Every line item of a retrieved session: the embedded first page as-is when
+    # it is complete, plus the rest via list when Stripe reports has_more. An
+    # embedded page that is empty despite has_more (a defensive edge) has no
+    # boundary item, so it lists from the start rather than dereferencing nil.
+    def self.all(session, stripe_version: nil)
+      embedded = session.line_items
+      page_one = embedded&.data || []
+      return page_one unless embedded.respond_to?(:has_more) && embedded.has_more
+
+      page_one + list(session.id, starting_after: page_one.last&.id, stripe_version: stripe_version)
+    end
+
     # Every line item of the session (from starting_after onwards, when given),
     # paged in full via the dedicated endpoint with the product expand
     # shipping? depends on. Stripe embeds at most 10 expanded line items in a

@@ -79,33 +79,11 @@ module Checkout
       (@session.shipping_cost&.amount_total || 0).to_i
     end
 
-    # All line items for the session. Stripe returns at most 10 expanded line
-    # items in the embedded list and does not promise an order, so when the list
-    # reports has_more we page through every line item via the dedicated endpoint
-    # (retrieve does not auto-paginate). Otherwise the shipping line can sit on a
-    # later page and be missed, recording shipping as £0. The embedded first page
-    # is used as-is when it is complete, so the common case makes no extra call.
+    # The paging (and why it exists: the shipping line can sit past the embedded
+    # first page and be missed, recording shipping as £0) lives in
+    # SessionLineItems, shared with the agent order path.
     def line_items
-      return @line_items if defined?(@line_items)
-
-      embedded = @session.line_items
-      page_one = embedded&.data || []
-      @line_items =
-        if embedded.respond_to?(:has_more) && embedded.has_more
-          page_one + line_items_after(page_one.last)
-        else
-          page_one
-        end
-    end
-
-    # The line items after the embedded first page, via the shared paged fetch.
-    # starting_after avoids re-fetching the page Stripe already returned. If
-    # the embedded page was empty (has_more true but no data, a defensive
-    # edge), there is no boundary item, so list from the start instead of
-    # dereferencing nil. A Stripe error propagates to the caller's handler
-    # rather than being treated as "no shipping line".
-    def line_items_after(last_embedded_item)
-      SessionLineItems.list(@session.id, starting_after: last_embedded_item&.id)
+      @line_items ||= SessionLineItems.all(@session)
     end
 
     def amount_subtotal

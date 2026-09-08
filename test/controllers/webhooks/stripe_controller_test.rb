@@ -453,6 +453,53 @@ class Webhooks::StripeControllerTest < ActionDispatch::IntegrationTest
     assert_response :ok
   end
 
+  test "creates an itemless order for a session with neither a cart nor catalogue line items" do
+    session = build_stripe_session(
+      id: "sess_no_cart_metadata",
+      payment_status: "paid",
+      metadata: {},
+      amount_total: 3500,
+      amount_tax: 500,
+      line_items_data: [ stub(amount_total: 3000, description: "Test Product") ]
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+
+    assert_difference "Order.count", 1 do
+      assert_no_difference "OrderItem.count" do
+        post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+      end
+    end
+
+    assert_response :ok
+    order = Order.find_by(stripe_session_id: "sess_no_cart_metadata")
+    assert_equal "web", order.source
+    assert_equal 0, order.order_items.count
+  end
+
+  test "returns 200 without retrying when an agent session is missing its shipping details" do
+    session = build_stripe_session(
+      id: "cs_agent_no_shipping",
+      payment_status: "paid",
+      metadata: {},
+      amount_subtotal: 999,
+      amount_total: 1199,
+      line_items_data: [ stripe_agent_line_item(sku: products(:one).sku, unit_amount: 999) ]
+    )
+    event = build_stripe_webhook_event(type: "checkout.session.completed", data_object: session)
+    stub_stripe_webhook_construct_event(event)
+    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
+    Checkout::AgentOrderCreator.any_instance.stubs(:create).raises(Checkout::MissingShippingDetails)
+    Sentry.expects(:capture_exception).with(instance_of(Checkout::MissingShippingDetails), anything)
+
+    assert_no_difference "Order.count" do
+      post webhooks_stripe_url, params: "{}", headers: { "HTTP_STRIPE_SIGNATURE" => "valid_sig" }
+    end
+
+    assert_response :ok
+  end
+
   test "creates order without order items when cart no longer exists" do
     # Build session with cart_id that doesn't exist anymore
     session = build_stripe_session(

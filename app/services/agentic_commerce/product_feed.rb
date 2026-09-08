@@ -16,7 +16,7 @@ module AgenticCommerce
 
     def self.eligible_products
       Product.active.standard
-        .includes(:category, :product_family)
+        .includes(:product_family, category: :parent)
         .with_attached_product_photo
         .with_attached_lifestyle_photo
     end

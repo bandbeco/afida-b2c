@@ -116,6 +116,47 @@ class Checkout::AgentOrderCreatorTest < ActiveSupport::TestCase
     end
   end
 
+  test "skips a line item whose price carries no catalogue reference" do
+    session = agent_session(
+      line_items_data: [
+        stripe_agent_line_item(sku: products(:one).sku, unit_amount: 999, quantity: 2),
+        stripe_agent_line_item(sku: nil, unit_amount: 699)
+      ]
+    )
+
+    order = Checkout::AgentOrderCreator.new(stripe_session: session).create
+
+    assert_equal [ products(:one) ], order.order_items.map(&:product)
+  end
+
+  test "raises rather than committing a paid order with no items" do
+    session = agent_session(line_items_data: [ stripe_shipping_line_item(amount_subtotal: 699) ])
+
+    assert_no_difference [ "Order.count", "OrderItem.count" ] do
+      assert_raises Checkout::AgentOrderCreator::EmptyOrderError do
+        Checkout::AgentOrderCreator.new(stripe_session: session).create
+      end
+    end
+  end
+
+  test "fails validation rather than raising when the session carries no customer details" do
+    session = agent_session(customer_details: nil)
+
+    assert_raises ActiveRecord::RecordInvalid do
+      Checkout::AgentOrderCreator.new(stripe_session: session).create
+    end
+  end
+
+  test "recognises a session carrying catalogue line items as an agent session" do
+    assert Checkout::AgentOrderCreator.new(stripe_session: agent_session).agent_session?
+  end
+
+  test "does not recognise a session without catalogue line items as an agent session" do
+    session = agent_session(line_items_data: [ stripe_shipping_line_item(amount_subtotal: 699) ])
+
+    assert_not Checkout::AgentOrderCreator.new(stripe_session: session).agent_session?
+  end
+
   test "raises a permanent error when the session has no shipping details" do
     session = agent_session(shipping_address: { line1: nil, city: nil, postal_code: nil, country: nil })
 

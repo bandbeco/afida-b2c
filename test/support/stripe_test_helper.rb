@@ -83,11 +83,13 @@ module StripeTestHelper
       end
     billing_address = billing_address_hash && stub(**billing_address_hash)
 
-    customer_details = stub(
-      email: customer_email,
-      name: billing_name,
-      address: billing_address
-    )
+    # Pass customer_details: nil to model a session where Stripe returned none.
+    customer_details =
+      if overrides.key?(:customer_details)
+        overrides[:customer_details]
+      else
+        stub(email: customer_email, name: billing_name, address: billing_address)
+      end
 
     shipping_cost = legacy_shipping_amount ? stub(amount_total: legacy_shipping_amount) : nil
 

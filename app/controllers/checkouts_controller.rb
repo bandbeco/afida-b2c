@@ -333,7 +333,7 @@ class CheckoutsController < ApplicationController
         total: order.total_amount.to_f,
         item_count: order.order_items.count,
         has_discount: session[:discount_code].present?,
-        source: "checkout"
+        source: order.source
       )
 
       # Clear the cart after successful order creation

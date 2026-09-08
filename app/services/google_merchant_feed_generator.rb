@@ -1,7 +1,7 @@
 class GoogleMerchantFeedGenerator
   GOOGLE_TAXONOMY_MAP = ProductFeedAttributes::GOOGLE_TAXONOMY_MAP
 
-  def initialize(products = Product.includes(:category, :product_family).with_attached_product_photo.active)
+  def initialize(products = Product.includes(:product_family, category: :parent).with_attached_product_photo.active)
     @products = products
   end
 
@@ -28,13 +28,15 @@ class GoogleMerchantFeedGenerator
   private
 
   def generate_product_item(xml, product)
+    attributes = ProductFeedAttributes.new(product)
+
     xml.item do
       # Required fields
       xml["g"].id product.sku
-      xml["g"].title optimized_title(product)
-      xml["g"].description optimized_description(product)
+      xml["g"].title attributes.title
+      xml["g"].description attributes.description
       xml["g"].link Rails.application.routes.url_helpers.product_url(product)
-      xml["g"].image_link product_image_url(product)
+      xml["g"].image_link attributes.image_url
       xml["g"].availability product.in_stock? ? "in_stock" : "out_of_stock"
       if product.pricing_tiers.present?
         xml["g"].price "#{product.pricing_tiers.first['price']} GBP"
@@ -54,7 +56,7 @@ class GoogleMerchantFeedGenerator
       end
 
       # Google Product Category (taxonomy ID)
-      google_category_id = google_product_category_for(product)
+      google_category_id = attributes.google_product_category
       xml["g"].google_product_category google_category_id if google_category_id
 
       # Brand
@@ -73,7 +75,7 @@ class GoogleMerchantFeedGenerator
 
       # Item group for products in the same family
       if product.product_family.present?
-        xml["g"].item_group_id generate_item_group_id(product)
+        xml["g"].item_group_id attributes.item_group_id
 
         # Add size if present
         if product.volume_in_ml.present?
@@ -105,24 +107,5 @@ class GoogleMerchantFeedGenerator
         xml["g"].max_transit_time 1
       end
     end
-  end
-  def optimized_title(product)
-    ProductFeedAttributes.new(product).title
-  end
-
-  def optimized_description(product)
-    ProductFeedAttributes.new(product).description
-  end
-
-  def generate_item_group_id(product)
-    ProductFeedAttributes.new(product).item_group_id
-  end
-
-  def google_product_category_for(product)
-    ProductFeedAttributes.new(product).google_product_category
-  end
-
-  def product_image_url(product)
-    ProductFeedAttributes.new(product).image_url
   end
 end

@@ -7,18 +7,17 @@ module AgenticCommerce
     end
 
     def response
-      { shipping_options: shipping_options, line_items: line_items }
+      return { shipping_options: [], line_items: [] } unless deliverable?
+
+      { shipping_options: [ { shipping_rate_data: shipping_rate_data } ], line_items: line_items }
     end
 
     private
 
     attr_reader :data
 
-    def shipping_options
-      return [] unless Shipping::ALLOWED_COUNTRIES.include?(address["country"])
-      return [] unless ShippingZone.deliverable?(resolved_zone)
-
-      [ { shipping_rate_data: shipping_rate_data } ]
+    def deliverable?
+      Shipping::ALLOWED_COUNTRIES.include?(address["country"]) && ShippingZone.deliverable?(resolved_zone)
     end
 
     def shipping_rate_data

@@ -1,11 +1,17 @@
 module Checkout
   class AgentOrderCreator
-    class UnknownSkuError < StandardError; end
+    class SessionNotBuildableError < StandardError; end
+    class UnknownSkuError < SessionNotBuildableError; end
+    class EmptyOrderError < SessionNotBuildableError; end
 
     SOURCE = "agent"
 
     def initialize(stripe_session:)
       @stripe_session = stripe_session
+    end
+
+    def agent_session?
+      catalogue_line_items.any?
     end
 
     def create
@@ -15,6 +21,7 @@ module Checkout
       end
 
       items = order_items_attributes
+      raise EmptyOrderError, "no catalogue line items on session #{stripe_session.id}" if items.empty?
 
       ApplicationRecord.transaction do
         order = Order.create!(order_attributes)
@@ -29,7 +36,7 @@ module Checkout
 
     def order_attributes
       {
-        email: stripe_session.customer_details.email,
+        email: stripe_session.customer_details&.email,
         stripe_session_id: stripe_session.id,
         status: "paid",
         source: SOURCE,
@@ -45,7 +52,7 @@ module Checkout
 
     def order_items_attributes
       catalogue_line_items.map do |line_item|
-        sku = line_item.price.external_reference
+        sku = catalogue_sku(line_item)
         product = Product.find_by(sku: sku)
         raise UnknownSkuError, "no product with SKU #{sku.inspect} on session #{stripe_session.id}" unless product
 
@@ -61,20 +68,18 @@ module Checkout
       end
     end
 
+    # The catalogue SKU the feed put on the price, or nil for any other line the
+    # agent checkout added (delivery, fees): those are charges, not products.
+    def catalogue_sku(line_item)
+      line_item.try(:price).try(:external_reference).presence
+    end
+
     def catalogue_line_items
-      line_items.reject { |item| SessionLineItems.shipping?(item) }
+      @catalogue_line_items ||= line_items.select { |item| catalogue_sku(item) }
     end
 
     def line_items
-      embedded = stripe_session.line_items
-      page_one = embedded&.data || []
-      return page_one unless embedded.respond_to?(:has_more) && embedded.has_more
-
-      page_one + SessionLineItems.list(
-        stripe_session.id,
-        starting_after: page_one.last&.id,
-        stripe_version: AgenticCommerce::CHECKOUT_API_VERSION
-      )
+      SessionLineItems.all(stripe_session, stripe_version: AgenticCommerce::CHECKOUT_API_VERSION)
     end
 
     def total_details

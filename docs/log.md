@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-09-07
+
+* **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) code-review fixes on `agentic-commerce-plan`. Agent orders are now routed by a positive signal (line items carrying catalogue `external_reference`s) instead of a missing `cart_id`, which had turned every other cart-less session into a 500 and 72h of Stripe retries; non-catalogue lines are skipped rather than failing the order; the creator refuses to commit a paid order with no items. The customization hook verifies signatures with Stripe's timestamp tolerance (replays were accepted indefinitely), rejects requests when the secret is missing rather than answering 200 with no VAT or delivery, and withholds VAT as well as delivery for addresses we do not ship to. Line-item paging is shared through `Checkout::SessionLineItems.all`. The feed's flat `GB:ALL` shipping rule cannot be zoned — the spec's postal-code delivery areas are US-only — so it is recorded as an open question with the hook left authoritative.
+
 ## 2026-09-03
 
 * **Update**: [Stripe Agentic Commerce 2026-09](/plans/2026-09-02-stripe-agentic-commerce.md) Phase 2 deployed and configured live: hook URL set with Custom shipping options and Custom tax rates on, Order approvals off, hook secret in credentials. The Workbench test purchase (US addresses only) was declined by the feed's GB-only shipping rule before the hook was called, closing the non-GB question; the GB happy path is unverifiable with the tool. Phases 3 and 4 paused: the only agents open to connection are US aggregators, and Google, Copilot and Meta are "Coming soon". Daily feed push stays on.

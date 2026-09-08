@@ -90,12 +90,19 @@ module Webhooks
       end
 
       cart_id = full_session.metadata&.[]("cart_id")
+      agent_creator = Checkout::AgentOrderCreator.new(stripe_session: full_session)
       order =
         if cart_id.present?
           create_web_order(full_session, cart_id)
-        else
+        elsif agent_creator.agent_session?
           Rails.logger.info("[Stripe Webhook] Creating agent order for session #{session.id}")
-          Checkout::AgentOrderCreator.new(stripe_session: full_session).create
+          agent_creator.create
+        else
+          # A Payment Link, a Dashboard session or one predating the cart
+          # metadata: nothing to rebuild items from, so record the paid order
+          # itemless and let its ops alerts get it fixed by hand.
+          Rails.logger.warn("[Stripe Webhook] Session #{session.id} has no cart and no catalogue line items")
+          create_web_order(full_session, nil)
         end
 
       # Send confirmation email (customer + internal ops copy)
@@ -136,15 +143,20 @@ module Webhooks
 
       Rails.logger.info("[Stripe Webhook] Order already created concurrently for session #{session.id}")
       Rails.event.notify("webhook.processed", event_type: event.type, stripe_event_id: event.id)
-    rescue PermanentlyInvalidSessionError, Checkout::SessionAmounts::UnexpandedLineItemError,
-           Checkout::AgentOrderCreator::UnknownSkuError => e
-      # The session can never produce a valid order on retry, for one of two reasons:
-      #   - PermanentlyInvalidSessionError: a completed session carrying no
-      #     shipping_details, so the required shipping fields would be nil.
+    rescue PermanentlyInvalidSessionError, Checkout::MissingShippingDetails,
+           Checkout::SessionAmounts::UnexpandedLineItemError,
+           Checkout::AgentOrderCreator::SessionNotBuildableError => e
+      # The session can never produce a valid order on retry, for one of three reasons:
+      #   - PermanentlyInvalidSessionError / MissingShippingDetails: a completed
+      #     session carrying no shipping_details, so the required shipping fields
+      #     would be nil. The guard above and AgentOrderCreator's own each raise
+      #     their own; both mean the same thing.
       #   - UnexpandedLineItemError: a dropped expand (programmer error) means the
       #     shipping line can't be identified; the same payload will fail identically.
+      #   - SessionNotBuildableError: an unknown SKU, or no catalogue line item to
+      #     build an agent order from.
       # Either way retrying can never succeed, so capture it for investigation and
-      # return 200 to stop Stripe retrying for 72h and flooding Sentry. Both are
+      # return 200 to stop Stripe retrying for 72h and flooding Sentry. All are
       # raised before/while deriving amounts, never from a transient item-level
       # RecordInvalid that rolls the transaction back (that path stays retryable).
       # The success controller rescues UnexpandedLineItemError the same way, so the
