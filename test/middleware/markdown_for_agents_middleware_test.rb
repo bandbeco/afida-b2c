@@ -136,3 +136,36 @@ class MarkdownForAgentsMiddlewareNotFoundTest < ActiveSupport::TestCase
     assert_equal [ NOT_FOUND_HTML ], body
   end
 end
+
+class MarkdownForAgentsMiddlewareRackHeadersTest < ActiveSupport::TestCase
+  HTML = "<html><body><h1>Hi</h1></body></html>"
+
+  def call(env_overrides = {}, headers: { "content-type" => "text/html", "content-length" => "999", "etag" => "\"abc\"" })
+    app = ->(_env) { [ 200, headers, [ HTML ] ] }
+    MarkdownForAgentsMiddleware.new(app).call(Rack::MockRequest.env_for("/", { "HTTP_ACCEPT" => "text/markdown" }.merge(env_overrides)))
+  end
+
+  test "does not duplicate lowercase Rack 3 headers from a plain Hash" do
+    _status, headers, body = call
+
+    assert_equal headers.keys.size, headers.keys.map(&:downcase).uniq.size, "duplicate header names: #{headers.keys}"
+    assert_equal "text/markdown; charset=utf-8", headers["content-type"]
+    assert_equal body.join.bytesize.to_s, headers["content-length"]
+  end
+
+  test "drops the HTML ETag because the markdown body is a different representation" do
+    _status, headers, _body = call
+
+    assert_nil headers["etag"]
+    assert_nil headers["ETag"]
+  end
+
+  test "leaves HEAD requests untouched instead of reporting an empty markdown body" do
+    app = ->(_env) { [ 200, { "content-type" => "text/html", "content-length" => "37" }, [] ] }
+    _status, headers, body = MarkdownForAgentsMiddleware.new(app).call(Rack::MockRequest.env_for("/", method: "HEAD", "HTTP_ACCEPT" => "text/markdown"))
+
+    assert_equal "37", headers["content-length"]
+    assert_equal "text/html", headers["content-type"]
+    assert_equal [], body
+  end
+end

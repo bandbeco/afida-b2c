@@ -17,15 +17,17 @@ class MarkdownForAgentsMiddleware
 
     status, headers, body = @app.call(env)
     return [ status, headers, body ] unless wants_markdown
+    return [ status, headers, body ] if env["REQUEST_METHOD"] == "HEAD"
     return [ status, headers, body ] unless convertible?(status, headers)
 
     html = extract_body(body)
     markdown = ReverseMarkdown.convert(html, unknown_tags: :bypass, github_flavored: true)
 
-    new_headers = headers.dup
-    new_headers["Content-Type"] = "#{MARKDOWN_MEDIA_TYPE}; charset=utf-8"
-    new_headers["Content-Length"] = markdown.bytesize.to_s
-    new_headers["Vary"] = append_vary(new_headers["Vary"])
+    new_headers = Rack::Headers[headers]
+    new_headers["content-type"] = "#{MARKDOWN_MEDIA_TYPE}; charset=utf-8"
+    new_headers["content-length"] = markdown.bytesize.to_s
+    new_headers["vary"] = append_vary(new_headers["vary"])
+    new_headers.delete("etag")
     new_headers["x-markdown-tokens"] = estimate_tokens(markdown).to_s
 
     [ status, new_headers, [ markdown ] ]
@@ -46,8 +48,7 @@ class MarkdownForAgentsMiddleware
 
   def convertible?(status, headers)
     return false unless CONVERTIBLE_STATUSES.include?(status)
-    content_type = headers["Content-Type"] || headers["content-type"]
-    content_type.to_s.include?("text/html")
+    Rack::Headers[headers]["content-type"].to_s.include?("text/html")
   end
 
   def extract_body(body)

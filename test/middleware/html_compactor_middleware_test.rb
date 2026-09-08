@@ -96,3 +96,13 @@ class HtmlCompactorMiddlewareTest < ActiveSupport::TestCase
     assert_equal [], body
   end
 end
+
+class HtmlCompactorMiddlewareRackHeadersTest < ActiveSupport::TestCase
+  test "does not duplicate lowercase Rack 3 headers from a plain Hash" do
+    app = ->(_env) { [ 404, { "content-type" => "text/html", "content-length" => "999" }, [ "<html>\n  <body>\n    <p>x</p>\n  </body>\n</html>" ] ] }
+    _status, headers, body = HtmlCompactorMiddleware.new(app).call(Rack::MockRequest.env_for("/missing"))
+
+    assert_equal headers.keys.size, headers.keys.map(&:downcase).uniq.size, "duplicate header names: #{headers.keys}"
+    assert_equal body.join.bytesize.to_s, headers["content-length"]
+  end
+end

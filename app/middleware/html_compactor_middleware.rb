@@ -17,8 +17,8 @@ class HtmlCompactorMiddleware
     return [ status, headers, [ html ] ] if html.match?(WHITESPACE_SENSITIVE_TAG)
 
     compacted = compact(html)
-    headers = headers.dup
-    headers["Content-Length"] = compacted.bytesize.to_s
+    headers = Rack::Headers[headers]
+    headers["content-length"] = compacted.bytesize.to_s
     [ status, headers, [ compacted ] ]
   end
 
@@ -33,7 +33,7 @@ class HtmlCompactorMiddleware
   end
 
   def header(headers, name)
-    headers[name] || headers[name.downcase]
+    Rack::Headers[headers][name]
   end
 
   def read(body)
