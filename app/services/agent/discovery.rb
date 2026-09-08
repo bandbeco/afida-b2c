@@ -138,7 +138,7 @@ module Agent
 
     def oauth_protected_resource
       {
-        "resource" => url("/api/v1/acp"),
+        "resource" => @base_url,
         "authorization_servers" => [ @base_url ],
         "scopes_supported" => [ "checkout.write" ],
         "bearer_methods_supported" => [ "header" ]
@@ -193,33 +193,60 @@ module Agent
       <<~MARKDOWN
         # auth.md
 
+        You are an agent. This service supports **agentic registration**: discover → register → authorize → exchange for an access token → call the API → handle revocation. Follow the steps in order.
+
         Afida is a UK eco-packaging shop. The product catalog is public. Prices, SKUs, and pack sizes are not confidential.
 
-        ## Public catalog (no authentication)
+        ## Step 1 — Discover
 
-        Do not send tokens. These endpoints return 200 without `Authorization`:
+        Fetch `#{url("/.well-known/oauth-protected-resource")}` (RFC 9728) and `#{url("/.well-known/oauth-authorization-server")}` (RFC 8414). The `agent_auth` block carries this skill (`skill`), the registration endpoint (`register_uri`), and `identity_types_supported` (`anonymous`).
+
+        These endpoints return 200 without `Authorization`:
 
         - REST: `#{url("/api/v1/products")}` and `#{url("/api/v1/categories")}`
         - OpenAPI: `#{url("/openapi.json")}`
         - MCP (Streamable HTTP): `#{url("/mcp")}`
         - Overview: `#{url("/llms.txt")}`
 
-        ## Optional agent credentials
+        ## Step 2 — Register
 
-        Dynamic client registration at `#{url("/oauth/register")}` issues `client_id` and `client_secret`.
-        Exchange them at `#{url("/oauth/token")}` with `grant_type=client_credentials`.
-        A bearer token is not required for the catalog, MCP, or checkout.
+        Dynamic Client Registration (RFC 7591): POST client metadata to `register_uri` (`#{url("/oauth/register")}`).
 
-        ## Human accounts
+        ```http
+        POST /oauth/register
+        Content-Type: application/json
 
-        Customers create a session cookie account at `#{url("/signup")}` and sign in at `#{url("/signin")}`.
-        That flow is for browsers, not agents.
+        { "client_name": "your-agent" }
+        ```
 
-        ## Payments
+        The response is `client_id` and `client_secret`. Identity type is anonymous; credential type is `client_secret`. Claim and manage credentials at the same `claim_uri`.
 
-        Checkout is Stripe (card). An agent can create a hosted Checkout session at
-        `#{url("/api/v1/acp/checkout_sessions")}`; the buyer completes payment on Stripe.
-        Afida does not accept cryptocurrency or x402 settlement.
+        ## Step 3 — Authorize
+
+        Afida issues agent tokens with `grant_type=client_credentials`. There is no interactive authorization-code redirect for agents. Humans sign in at `#{url("/signin")}` and create a session cookie account at `#{url("/signup")}`.
+
+        ## Step 4 — Exchange
+
+        POST to the `token_endpoint` (`#{url("/oauth/token")}`):
+
+        ```http
+        POST /oauth/token
+        Content-Type: application/x-www-form-urlencoded
+
+        grant_type=client_credentials&client_id=...&client_secret=...
+        ```
+
+        The response is a Bearer access token that expires in 3600 seconds.
+
+        ## Step 5 — Use the access token
+
+        Send `Authorization: Bearer <token>` if you hold one. A bearer token is not required for the catalog, MCP, or checkout.
+
+        Checkout is Stripe (card). An agent can create a hosted Checkout session at `#{url("/api/v1/acp/checkout_sessions")}`; the buyer completes payment on Stripe. Afida does not accept cryptocurrency or x402 settlement.
+
+        ## Revocation
+
+        Tokens are short-lived JWTs. Discard `client_secret` and the access token when finished. There is no persistent token store; tokens expire in 3600 seconds.
       MARKDOWN
     end
 

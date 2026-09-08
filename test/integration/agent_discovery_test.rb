@@ -137,15 +137,22 @@ class AgentDiscoveryTest < ActionDispatch::IntegrationTest
     assert_equal "GBP", payment["currency"]
   end
 
-  test "auth.md documents how agents authenticate" do
+  test "auth.md describes agentic registration" do
     get "/auth.md"
 
     assert_response :success
     assert_match(%r{\Atext/markdown}, response.media_type)
     assert_match(/^# .*auth\.md/i, response.body)
-    assert_includes response.body, "/signup"
+    assert_includes response.body, "You are an agent"
+    assert_includes response.body, "agentic registration"
+    assert_includes response.body, "register_uri"
+    assert_includes response.body, "agent_auth"
+    assert_match(/## Step \d+ — Register/, response.body)
+    assert_match(/## Step \d+ — Authorize/, response.body)
+    assert_match(/## Step \d+ — Exchange/, response.body)
+    assert_match(/^## Revocation/i, response.body)
+    assert_includes response.body, "/oauth/register"
     assert_includes response.body, "The product catalog is public"
-    assert_includes response.body, "Do not send tokens"
   end
 
   test "OAuth authorization server metadata is complete" do
@@ -153,7 +160,7 @@ class AgentDiscoveryTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     body = JSON.parse(response.body)
-    assert body["issuer"].present?
+    assert_equal request.base_url, body["issuer"]
     assert body["authorization_endpoint"].present?
     assert body["token_endpoint"].present?
     assert body["jwks_uri"].present?
@@ -161,18 +168,23 @@ class AgentDiscoveryTest < ActionDispatch::IntegrationTest
     assert body["response_types_supported"].is_a?(Array)
     agent_auth = body["agent_auth"]
     assert agent_auth.is_a?(Hash)
-    assert agent_auth["register_uri"].present?
+    assert_equal "#{request.base_url}/auth.md", agent_auth["skill"]
+    assert_equal "#{request.base_url}/oauth/register", agent_auth["register_uri"]
+    assert_includes agent_auth["identity_types_supported"], "anonymous"
+    assert_includes agent_auth.dig("anonymous", "credential_types_supported"), "client_secret"
+    assert agent_auth.dig("anonymous", "claim_uri").present?
   end
 
-  test "OAuth protected resource metadata points at the authorization server" do
+  test "OAuth protected resource metadata identifies the origin" do
     get "/.well-known/oauth-protected-resource"
 
     assert_response :success
     body = JSON.parse(response.body)
-    assert body["resource"].end_with?("/api/v1/acp")
+    resource = URI.parse(body["resource"])
+    assert_equal request.host, resource.host
+    assert_includes [ "", "/" ], resource.path
+    assert_includes body["authorization_servers"], request.base_url
     refute_includes body["scopes_supported"], "catalog.read"
-    assert body["authorization_servers"].is_a?(Array)
-    assert_operator body["authorization_servers"].size, :>=, 1
     assert_includes body["bearer_methods_supported"], "header"
   end
 

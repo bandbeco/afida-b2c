@@ -7,7 +7,7 @@ timestamp: 2026-09-08
 
 # Agent discovery
 
-Afida publishes machine-readable discovery so AI agents can find the catalog, MCP tools, and Stripe checkout without scraping HTML. The HTTP documents are served by Rails. DNS-AID records are not in the app; they have to be created on the Cloudflare zone.
+Afida publishes machine-readable discovery so AI agents can find the catalog, MCP tools, and Stripe checkout without scraping HTML. The HTTP documents are served by Rails. DNS-AID records are not in the app; they have to be created on the Cloudflare zone with a token that can edit DNS.
 
 ## HTTP surfaces
 
@@ -34,35 +34,45 @@ The homepage `Link` header advertises `api-catalog`, `service-desc` (`/openapi.j
 
 Catalog GET endpoints and MCP tools are public: SKUs, prices, and pack sizes are the same data as the shop pages. Do not put them behind OAuth. Checkout still finishes on Stripe's hosted page (card). There is no x402 / crypto wallet.
 
+`/.well-known/oauth-protected-resource` identifies the origin (`https://afida.com`) as `resource`. RFC 9728 requires that value to match the identifier used to fetch the origin-level well-known document; a path such as `/api/v1/acp` is treated as a mismatch. `/auth.md` is the WorkOS agentic-registration recipe (discover → register → authorize → exchange → revoke) and the `agent_auth` block on `/.well-known/oauth-authorization-server` uses `register_uri`, `identity_types_supported: ["anonymous"]`, and `anonymous.credential_types_supported`.
+
 OAuth JWKS is an RSA key generated per process unless `AGENT_OAUTH_RSA_PEM` is set in the environment (a PKCS#1/PKCS#8 PEM). Set that in Kamal if agents will verify tokens across deploys.
 
 ## DNS-AID records
 
-Publish these on `afida.com` (Cloudflare DNS). SVCB/HTTPS must be ServiceMode (priority > 0) with `alpn` and `port`. Sign the zone with DNSSEC so validating resolvers accept the data.
+Publish these on `afida.com` (Cloudflare DNS). SVCB/HTTPS must be ServiceMode (priority > 0) with `alpn` and `port`. Do not publish `_a2a._agents`: Afida does not run an A2A agent. `_mcp._agents` is honest because `/mcp` exists.
 
 ```
 _index._agents.afida.com.  3600  IN  HTTPS  1  afida.com.  alpn="h2,http/1.1" port=443
 _mcp._agents.afida.com.    3600  IN  HTTPS  1  afida.com.  alpn="h2,http/1.1" port=443
-_catalog._agents.afida.com. 3600 IN  TXT    "url=https://afida.com/.well-known/ai-catalog.json"
+_index._agents.afida.com.  3600  IN  TXT    "url=https://afida.com/.well-known/ai-catalog.json"
 ```
 
-Apply with a zone-scoped token that can edit DNS (zone id `f5bf9fb80128e2cb3daf33ddc610244c`, same as [AI Crawler Access](/runbooks/ai-crawler-access.md)):
+Published 2026-09-08 after adding **Zone.DNS Edit** to the zone token (zone id `f5bf9fb80128e2cb3daf33ddc610244c`). Re-apply with:
+
+```
+CLOUDFLARE_API_TOKEN=... bin/publish-dns-aid
+```
+
+Or POST each record:
 
 ```
 curl -sS -X POST -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
   -H "Content-Type: application/json" \
-  --data '{"type":"HTTPS","name":"_index._agents","priority":1,"data":{"target":"afida.com","priority":1,"value":"alpn=\\"h2,http/1.1\\" port=443"}}' \
+  --data '{"type":"HTTPS","name":"_index._agents","ttl":3600,"data":{"priority":1,"target":"afida.com","value":"alpn=\\"h2,http/1.1\\" port=443"}}' \
   https://api.cloudflare.com/client/v4/zones/f5bf9fb80128e2cb3daf33ddc610244c/dns_records
 ```
 
-Verify over DNS-over-HTTPS:
+Verify over DNS-over-HTTPS (`Status` must be 0, not 3/NXDOMAIN):
 
 ```
 curl -sS "https://cloudflare-dns.com/dns-query?name=_index._agents.afida.com&type=HTTPS" \
   -H "accept: application/dns-json"
+curl -sS "https://cloudflare-dns.com/dns-query?name=_mcp._agents.afida.com&type=HTTPS" \
+  -H "accept: application/dns-json"
 ```
 
-DNSSEC is a zone setting (DNS → Settings → DNSSEC). The scanner looks up `_index._agents` and `_a2a._agents` / `_mcp._agents` via DoH.
+DNSSEC is intentionally off. The HTTPS records already let agents find the catalog and MCP; signing the zone only makes validating resolvers set `AD=true`, and that needs a DS record at GoDaddy. A wrong DS SERVFAILs the whole domain. Leave Cloudflare DNSSEC disabled. The scanner will stay red on DNS-AID for `AD=false`.
 
 ## Verify
 

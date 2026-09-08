@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+"""Publish DNS-AID HTTPS/TXT records on the afida.com Cloudflare zone.
+
+Requires CLOUDFLARE_API_TOKEN with Zone.DNS Edit. Does not enable DNSSEC.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+import urllib.error
+import urllib.parse
+import urllib.request
+
+ZONE_ID = "f5bf9fb80128e2cb3daf33ddc610244c"
+API = f"https://api.cloudflare.com/client/v4/zones/{ZONE_ID}/dns_records"
+
+RECORDS = [
+    {
+        "type": "HTTPS",
+        "name": "_index._agents",
+        "ttl": 3600,
+        "data": {
+            "priority": 1,
+            "target": "afida.com",
+            "value": 'alpn="h2,http/1.1" port=443',
+        },
+    },
+    {
+        "type": "HTTPS",
+        "name": "_mcp._agents",
+        "ttl": 3600,
+        "data": {
+            "priority": 1,
+            "target": "afida.com",
+            "value": 'alpn="h2,http/1.1" port=443',
+        },
+    },
+    {
+        "type": "TXT",
+        "name": "_index._agents",
+        "ttl": 3600,
+        "content": "url=https://afida.com/.well-known/ai-catalog.json",
+    },
+]
+
+
+def request(method: str, url: str, payload: dict | None = None) -> dict:
+    token = os.environ.get("CLOUDFLARE_API_TOKEN")
+    if not token:
+        raise SystemExit("CLOUDFLARE_API_TOKEN is not set")
+    data = None if payload is None else json.dumps(payload).encode()
+    req = urllib.request.Request(
+        url,
+        data=data,
+        headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json"},
+        method=method,
+    )
+    try:
+        with urllib.request.urlopen(req) as response:
+            return json.loads(response.read().decode())
+    except urllib.error.HTTPError as error:
+        return json.loads(error.read().decode())
+
+
+def fqdn(name: str) -> str:
+    return f"{name}.afida.com" if not name.endswith(".afida.com") else name
+
+
+def existing(name: str, record_type: str) -> list[dict]:
+    query = urllib.parse.urlencode({"name": fqdn(name), "type": record_type})
+    body = request("GET", f"{API}?{query}")
+    if not body.get("success"):
+        raise SystemExit(json.dumps(body, indent=2))
+    return body.get("result") or []
+
+
+def ensure(record: dict) -> None:
+    matches = existing(record["name"], record["type"])
+    if matches:
+        rec = matches[0]
+        print(f"exists {rec['type']} {rec['name']} {rec.get('content') or rec.get('data')}")
+        return
+    body = request("POST", API, record)
+    if not body.get("success"):
+        raise SystemExit(json.dumps(body, indent=2))
+    rec = body["result"]
+    print(f"created {rec['type']} {rec['name']} {rec.get('content') or rec.get('data')}")
+
+
+def main() -> None:
+    for record in RECORDS:
+        ensure(record)
+
+
+if __name__ == "__main__":
+    main()
