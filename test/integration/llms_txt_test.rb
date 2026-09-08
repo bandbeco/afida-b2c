@@ -40,7 +40,21 @@ class LlmsTxtTest < ActionDispatch::IntegrationTest
   end
 
   test "llms.txt does not link the retired cup-lids slug" do
-    refute_includes File.read(Rails.root.join("public/llms.txt")), "/categories/cup-lids"
+    text = File.read(Rails.root.join("public/llms.txt"))
+
+    refute_match(%r{\]\(https://afida\.com/categories/cup-lids/?\)}, text)
+  end
+
+  test "llms.txt tells agents when to use Afida and how to call it" do
+    text = File.read(Rails.root.join("public/llms.txt"))
+
+    assert_match(/^## When to use this$/, text)
+    assert_includes text, "disposable food-service packaging"
+    assert_includes text, "sample pack"
+    assert_includes text, "Accept: text/markdown"
+    assert_includes text, "https://afida.com/samples"
+    assert_includes text, "https://afida.com/branded-products"
+    assert_includes text, "Do not use Afida"
   end
 
   private

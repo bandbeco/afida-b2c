@@ -112,6 +112,7 @@ class SeoHelperTest < ActionView::TestCase
 
     assert_equal "2020", data["foundingDate"]
     assert_equal "B&B Eco", data["alternateName"]
+    assert_equal "B&B Eco, Ltd", data["legalName"]
   end
 
   test "organization_structured_data contactPoint includes telephone and hours" do
@@ -137,6 +138,7 @@ class SeoHelperTest < ActionView::TestCase
     assert_equal "LocalBusiness", data["@type"]
     assert_equal "Afida", data["name"]
     assert_equal "B&B Eco", data["alternateName"]
+    assert_equal "B&B Eco, Ltd", data["legalName"]
     assert_equal "+44-203-302-7719", data["telephone"]
     assert_equal "hello@afida.com", data["email"]
     assert_equal "Mo-Fr 09:00-17:00", data["openingHours"]
