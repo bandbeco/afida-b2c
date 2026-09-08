@@ -10,26 +10,44 @@ class HtmlCompactorMiddleware
   end
 
   def call(env)
+    head_request = env["REQUEST_METHOD"] == "HEAD"
+    env = env_as_get(env) if head_request
+
     status, headers, body = @app.call(env)
-    return [ status, headers, body ] unless compactable?(env, status, headers)
+    unless compactable?(status, headers)
+      return [ status, headers, head_request ? empty_body(body) : body ]
+    end
 
     html = read(body)
-    return [ status, headers, [ html ] ] if html.match?(WHITESPACE_SENSITIVE_TAG)
+    if html.match?(WHITESPACE_SENSITIVE_TAG)
+      return [ status, headers, head_request ? [] : [ html ] ]
+    end
 
     compacted = compact(html)
     headers = Rack::Headers[headers]
     headers["content-length"] = compacted.bytesize.to_s
-    [ status, headers, [ compacted ] ]
+    [ status, headers, head_request ? [] : [ compacted ] ]
   end
 
   private
 
-  def compactable?(env, status, headers)
-    return false if env["REQUEST_METHOD"] == "HEAD"
+  def compactable?(status, headers)
     return false if Rack::Utils::STATUS_WITH_NO_ENTITY_BODY[status]
     return false if header(headers, "Content-Encoding").present?
 
     header(headers, "Content-Type").to_s.include?("text/html")
+  end
+
+  def env_as_get(env)
+    env.dup.tap do |get_env|
+      get_env["REQUEST_METHOD"] = "GET"
+      get_env.delete("action_dispatch.request")
+    end
+  end
+
+  def empty_body(body)
+    body.close if body.respond_to?(:close)
+    []
   end
 
   def header(headers, name)

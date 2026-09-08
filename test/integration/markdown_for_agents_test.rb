@@ -26,6 +26,21 @@ class MarkdownForAgentsTest < ActionDispatch::IntegrationTest
     assert_match(/\Atext\/html/, response.headers["Content-Type"])
   end
 
+  test "HEAD Accept markdown advertises the same type and length as GET" do
+    headers = { "Accept" => "text/markdown" }
+    get "/", headers: headers
+    get_length = response.headers["Content-Length"]
+    get_type = response.media_type
+
+    head "/", headers: headers
+
+    assert_response :success
+    assert_equal "text/markdown", response.media_type
+    assert_equal get_type, response.media_type
+    assert_equal get_length, response.headers["Content-Length"]
+    assert_equal "", response.body
+  end
+
   test "product page returns markdown when Accept: text/markdown" do
     product = Product.active.first
     skip "no active product fixture" unless product

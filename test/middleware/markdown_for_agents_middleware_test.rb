@@ -103,6 +103,19 @@ class MarkdownForAgentsMiddlewareTest < ActiveSupport::TestCase
     markdown = body.is_a?(Array) ? body.join : body.to_s
     assert_equal markdown.bytesize.to_s, headers["Content-Length"]
   end
+
+  test "HEAD Content-Type and Content-Length match the markdown GET representation" do
+    stacked = MarkdownForAgentsMiddleware.new(Rack::Head.new(html_app))
+    accept = { "HTTP_ACCEPT" => "text/markdown" }
+    _get_status, get_headers, get_body = stacked.call(Rack::MockRequest.env_for("/", accept))
+    _head_status, head_headers, head_body = stacked.call(Rack::MockRequest.env_for("/", accept.merge(method: "HEAD")))
+
+    assert_equal "text/markdown; charset=utf-8", head_headers["Content-Type"]
+    assert_equal get_headers["Content-Type"], head_headers["Content-Type"]
+    assert_equal get_headers["Content-Length"], head_headers["Content-Length"]
+    assert_equal get_body.join.bytesize.to_s, head_headers["Content-Length"]
+    assert_equal [], head_body
+  end
 end
 
 class MarkdownForAgentsMiddlewareNotFoundTest < ActiveSupport::TestCase
@@ -158,14 +171,5 @@ class MarkdownForAgentsMiddlewareRackHeadersTest < ActiveSupport::TestCase
 
     assert_nil headers["etag"]
     assert_nil headers["ETag"]
-  end
-
-  test "leaves HEAD requests untouched instead of reporting an empty markdown body" do
-    app = ->(_env) { [ 200, { "content-type" => "text/html", "content-length" => "37" }, [] ] }
-    _status, headers, body = MarkdownForAgentsMiddleware.new(app).call(Rack::MockRequest.env_for("/", method: "HEAD", "HTTP_ACCEPT" => "text/markdown"))
-
-    assert_equal "37", headers["content-length"]
-    assert_equal "text/html", headers["content-type"]
-    assert_equal [], body
   end
 end

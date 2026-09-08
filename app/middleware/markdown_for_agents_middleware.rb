@@ -14,11 +14,13 @@ class MarkdownForAgentsMiddleware
   def call(env)
     wants_markdown = markdown_requested?(env)
     env = rewrite_accept_to_html(env) if wants_markdown
+    head_request = env["REQUEST_METHOD"] == "HEAD"
+    env = env_as_get(env) if head_request
 
     status, headers, body = @app.call(env)
-    return [ status, headers, body ] unless wants_markdown
-    return [ status, headers, body ] if env["REQUEST_METHOD"] == "HEAD"
-    return [ status, headers, body ] unless convertible?(status, headers)
+    unless wants_markdown && convertible?(status, headers)
+      return [ status, headers, head_request ? empty_body(body) : body ]
+    end
 
     html = extract_body(body)
     markdown = ReverseMarkdown.convert(html, unknown_tags: :bypass, github_flavored: true)
@@ -30,7 +32,7 @@ class MarkdownForAgentsMiddleware
     new_headers.delete("etag")
     new_headers["x-markdown-tokens"] = estimate_tokens(markdown).to_s
 
-    [ status, new_headers, [ markdown ] ]
+    [ status, new_headers, head_request ? [] : [ markdown ] ]
   end
 
   private
@@ -57,6 +59,18 @@ class MarkdownForAgentsMiddleware
     buffer
   ensure
     body.close if body.respond_to?(:close)
+  end
+
+  def env_as_get(env)
+    env.dup.tap do |get_env|
+      get_env["REQUEST_METHOD"] = "GET"
+      get_env.delete("action_dispatch.request")
+    end
+  end
+
+  def empty_body(body)
+    body.close if body.respond_to?(:close)
+    []
   end
 
   def append_vary(existing)

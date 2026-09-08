@@ -2,6 +2,8 @@
 
 ## 2026-09-08
 
+* **Update**: [AI Crawler Access](/runbooks/ai-crawler-access.md). Review follow-up on `agent-readiness`: HEAD now advertises the same `Content-Type`/`Content-Length` as GET after HTML compaction and markdown conversion; `llms.txt` headings and grouping match the live taxonomy (Cups & Accessories, Food Containers, Deli Containers; aluminium under Food Containers) and tests pin parent/child pairs against `LIVE_TAXONOMY`; the runbook no longer claims an explicit `DeepSeekBot` robots stanza (it is allowed via `User-agent: *`); duplicate `/config/*.key` gitignore dropped.
+
 * **Creation**: [AI Crawler Access](/runbooks/ai-crawler-access.md). Agent-readiness audit follow-up on branch `agent-readiness`. ClaudeBot, ChatGPT-User and PerplexityBot got a Cloudflare 403 before reaching Rails: the zone's "Block AI Bots" setting (`ai_bots_protection: block`). Set to `disabled` via the API the same day; all audited crawlers now get 200. In the app: HTML responses are compacted (no indentation or comments) and the markdown-for-agents conversion now covers 404/410 and wraps the exception renderer, so unknown paths return a short markdown body pointing at `/sitemap.xml` and `/llms.txt`; the 404 page links live category slugs; `llms.txt` links canonical nested category URLs and lists the dead `cup-lids` slug no more; the homepage branding headline is a real `h2` with `h3` badges so heading levels no longer skip. Runbooks index updated.
 
 ## 2026-09-02

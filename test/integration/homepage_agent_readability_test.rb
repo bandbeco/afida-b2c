@@ -29,4 +29,17 @@ class HomepageAgentReadabilityTest < ActionDispatch::IntegrationTest
     refute_match(/^[ \t]+\S/, response.body)
     refute_includes response.body, "<!--"
   end
+
+  test "HEAD Content-Length matches the compacted GET body" do
+    get root_path
+    get_length = response.headers["Content-Length"]
+    get_type = response.media_type
+
+    head root_path
+
+    assert_response :success
+    assert_equal get_type, response.media_type
+    assert_equal get_length, response.headers["Content-Length"]
+    assert_equal "", response.body
+  end
 end

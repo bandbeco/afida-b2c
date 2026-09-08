@@ -9,7 +9,7 @@ timestamp: 2026-09-08
 
 ## The symptom
 
-An agent-readiness audit on 2026-09-08 (Is Agentic score 71/100) reported ChatGPT-User, ClaudeBot and PerplexityBot as blocked, while GPTBot, Google-Extended and DeepSeekBot reached the homepage. `robots.txt` explicitly allows every one of them, so the site publishes one policy and enforces another.
+An agent-readiness audit on 2026-09-08 (Is Agentic score 71/100) reported ChatGPT-User, ClaudeBot and PerplexityBot as blocked, while GPTBot, Google-Extended and DeepSeekBot reached the homepage. `robots.txt` has explicit allow stanzas for ChatGPT-User, ClaudeBot, PerplexityBot, GPTBot and Google-Extended; DeepSeekBot is allowed only via `User-agent: *`. The site still published one policy and enforced another.
 
 ## Where the block lives
 

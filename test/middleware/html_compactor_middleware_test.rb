@@ -95,6 +95,26 @@ class HtmlCompactorMiddlewareTest < ActiveSupport::TestCase
     assert_equal 304, status
     assert_equal [], body
   end
+
+  test "HEAD Content-Length matches the compacted GET representation" do
+    stacked = HtmlCompactorMiddleware.new(Rack::Head.new(app_returning(INDENTED_HTML)))
+    _get_status, get_headers, get_body = stacked.call(Rack::MockRequest.env_for("/"))
+    _head_status, head_headers, head_body = stacked.call(Rack::MockRequest.env_for("/", method: "HEAD"))
+
+    assert_equal get_headers["Content-Length"], head_headers["Content-Length"]
+    assert_equal get_body.join.bytesize.to_s, head_headers["Content-Length"]
+    assert_equal get_headers["Content-Type"], head_headers["Content-Type"]
+    assert_equal [], head_body
+  end
+
+  test "HEAD of a non-HTML response still has an empty body" do
+    json = "{\n  \"ok\": true\n}"
+    stacked = HtmlCompactorMiddleware.new(Rack::Head.new(app_returning(json, headers: { "Content-Type" => "application/json" })))
+    _status, headers, body = stacked.call(Rack::MockRequest.env_for("/", method: "HEAD"))
+
+    assert_equal "application/json", headers["Content-Type"]
+    assert_equal [], body
+  end
 end
 
 class HtmlCompactorMiddlewareRackHeadersTest < ActiveSupport::TestCase

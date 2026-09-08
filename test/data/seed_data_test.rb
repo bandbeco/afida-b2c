@@ -92,20 +92,7 @@ class SeedDataTest < Minitest::Test
     end
   end
 
-  # The live taxonomy, read from https://afida.com/sitemap.xml on 2026-08-20.
-  # This is the authority the CSV is reconstructed against — production, not the
-  # March hierarchy migration, which is now out of date (it put
-  # aluminium-containers under tableware; production has it under
-  # food-containers).
-  LIVE_TAXONOMY = {
-    "bags-and-wraps" => %w[bags greaseproof-and-wraps natureflex-bags],
-    "cold-food-and-salads" => %w[deli-containers salad-boxes sandwich-and-wrap-boxes],
-    "cups-and-accessories" => %w[cold-cups-and-lids cup-accessories hot-cup-lids hot-cups ice-cream-cups straws],
-    "food-containers" => %w[aluminium-containers bagasse-containers bowls-and-lids food-containers-and-lids
-                            pizza-boxes portion-pots-and-lids soup-containers takeaway-boxes],
-    "supplies-and-essentials" => %w[bin-liners gloves-and-cleaning labels-and-stickers till-rolls],
-    "tableware" => %w[cutlery napkins plates-and-bowls]
-  }.freeze
+  LIVE_TAXONOMY = LiveTaxonomy::TREE
 
   test "categories.csv matches the live production taxonomy" do
     seeded = category_rows.reject { |r| r["parent_slug"].blank? }
