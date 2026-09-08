@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-09-08
+
+* **Creation**: [AI Crawler Access](/runbooks/ai-crawler-access.md). Agent-readiness audit follow-up on branch `agent-readiness`. ClaudeBot, ChatGPT-User and PerplexityBot got a Cloudflare 403 before reaching Rails: the zone's "Block AI Bots" setting (`ai_bots_protection: block`). Set to `disabled` via the API the same day; all audited crawlers now get 200. In the app: HTML responses are compacted (no indentation or comments) and the markdown-for-agents conversion now covers 404/410 and wraps the exception renderer, so unknown paths return a short markdown body pointing at `/sitemap.xml` and `/llms.txt`; the 404 page links live category slugs; `llms.txt` links canonical nested category URLs and lists the dead `cup-lids` slug no more; the homepage branding headline is a real `h2` with `h3` badges so heading levels no longer skip. Runbooks index updated.
+
 ## 2026-09-02
 
 * **Update**: [Stack Game Growth Proposal](/proposals/stack-game-growth-2026-08.md) review follow-up on `afida-stack-game`. Play token is issued on the game page only (a board GET no longer mints one). Win-claim email attaches to this IP’s latest board entry, not the public share code. MATE codes persist on `game_leads` and mint outside the row lock. 12/15 win thresholds live on `Game::PromoCodes` and the page boot payload. In-play swing stays on `roundW`. Unused `verified_referrals` / `referral_promo_code` dropped.

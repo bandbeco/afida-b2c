@@ -74,3 +74,10 @@ node_modules
 # Private negotiation notes — never commit
 /docs/retainer-proposal-tariq.md
 
+
+# Ignore key files for decrypting credentials and more.
+/config/*.key
+
+
+# Per-machine mise config (secrets via 1Password) — never commit
+/mise.local.toml

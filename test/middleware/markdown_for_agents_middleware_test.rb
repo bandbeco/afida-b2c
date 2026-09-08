@@ -104,3 +104,35 @@ class MarkdownForAgentsMiddlewareTest < ActiveSupport::TestCase
     assert_equal markdown.bytesize.to_s, headers["Content-Length"]
   end
 end
+
+class MarkdownForAgentsMiddlewareNotFoundTest < ActiveSupport::TestCase
+  NOT_FOUND_HTML = "<html><body><h1>Not found</h1><p>Try the <a href='/sitemap.xml'>sitemap</a>.</p></body></html>"
+
+  def call(status)
+    app = ->(_env) { [ status, { "Content-Type" => "text/html; charset=utf-8" }, [ NOT_FOUND_HTML ] ] }
+    MarkdownForAgentsMiddleware.new(app).call(Rack::MockRequest.env_for("/missing", "HTTP_ACCEPT" => "text/markdown"))
+  end
+
+  test "converts 404 HTML responses so agents get a markdown not-found body" do
+    status, headers, body = call(404)
+
+    assert_equal 404, status
+    assert_equal "text/markdown; charset=utf-8", headers["Content-Type"]
+    assert_match(/# Not found/, body.join)
+    assert_includes body.join, "[sitemap](/sitemap.xml)"
+  end
+
+  test "converts 410 HTML responses" do
+    status, headers, _body = call(410)
+
+    assert_equal 410, status
+    assert_equal "text/markdown; charset=utf-8", headers["Content-Type"]
+  end
+
+  test "does not convert server error responses" do
+    _status, headers, body = call(500)
+
+    assert_equal "text/html; charset=utf-8", headers["Content-Type"]
+    assert_equal [ NOT_FOUND_HTML ], body
+  end
+end

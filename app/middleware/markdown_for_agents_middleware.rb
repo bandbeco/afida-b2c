@@ -5,6 +5,7 @@ require "reverse_markdown"
 class MarkdownForAgentsMiddleware
   MARKDOWN_MEDIA_TYPE = "text/markdown"
   TOKEN_CHAR_RATIO = 4
+  CONVERTIBLE_STATUSES = [ 200, 404, 410 ].freeze
 
   def initialize(app)
     @app = app
@@ -44,7 +45,7 @@ class MarkdownForAgentsMiddleware
   end
 
   def convertible?(status, headers)
-    return false unless status == 200
+    return false unless CONVERTIBLE_STATUSES.include?(status)
     content_type = headers["Content-Type"] || headers["content-type"]
     content_type.to_s.include?("text/html")
   end

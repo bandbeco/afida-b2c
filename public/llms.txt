@@ -7,41 +7,43 @@ Afida supplies sustainable disposable packaging to hospitality businesses and co
 ## Product Categories
 
 ### Cups & Drinks
-- [Hot Cups](https://afida.com/categories/hot-cups): Single wall, double wall, and ripple wall paper coffee cups
-- [Cold Cups](https://afida.com/categories/cold-cups): PLA-lined and clear cold drink cups
-- [Cup Lids](https://afida.com/categories/cup-lids): Sip lids and dome lids for hot and cold cups
-- [Cup Accessories](https://afida.com/categories/cup-accessories): Cup carriers, sleeves, and stirrers
-- [Ice Cream Cups](https://afida.com/categories/ice-cream-cups): Paper ice cream and dessert cups in sizes from 4oz to 10oz
-- [Straws](https://afida.com/categories/straws): Paper straws and biodegradable bamboo straws
+- [Hot Cups](https://afida.com/categories/cups-and-accessories/hot-cups): Single wall, double wall, and ripple wall paper coffee cups
+- [Cold Cups + Lids](https://afida.com/categories/cups-and-accessories/cold-cups-and-lids): PLA-lined and clear cold drink cups with matching lids
+- [Hot Cup Lids](https://afida.com/categories/cups-and-accessories/hot-cup-lids): Sip lids and dome lids for hot cups
+- [Cup Accessories](https://afida.com/categories/cups-and-accessories/cup-accessories): Cup carriers, sleeves, and stirrers
+- [Ice Cream Cups](https://afida.com/categories/cups-and-accessories/ice-cream-cups): Paper ice cream and dessert cups in sizes from 4oz to 10oz
+- [Straws](https://afida.com/categories/cups-and-accessories/straws): Paper straws and biodegradable bamboo straws
 
 ### Hot Food
-- [Pizza Boxes](https://afida.com/categories/pizza-boxes): Kraft corrugated pizza boxes from 7 inch to 16 inch
-- [Takeaway Boxes](https://afida.com/categories/takeaway-boxes): Burger boxes, chip boxes, and general takeaway food boxes
-- [Food Containers](https://afida.com/categories/food-containers): Portion pots, deli containers, and food boxes with lids
-- [Soup Containers](https://afida.com/categories/soup-containers): Paper soup cups and containers with lids
-- [Bagasse Containers](https://afida.com/categories/bagasse-containers): Compostable clamshells, burger boxes, and food containers
+- [Pizza Boxes](https://afida.com/categories/food-containers/pizza-boxes): Kraft corrugated pizza boxes from 7 inch to 16 inch
+- [Takeaway Boxes](https://afida.com/categories/food-containers/takeaway-boxes): Burger boxes, chip boxes, and general takeaway food boxes
+- [Food Containers + Lids](https://afida.com/categories/food-containers/food-containers-and-lids): Deli containers and food boxes with lids
+- [Bowls + Lids](https://afida.com/categories/food-containers/bowls-and-lids): Kraft and bagasse food bowls with lids
+- [Portion Pots + Lids](https://afida.com/categories/food-containers/portion-pots-and-lids): Sauce and portion pots with lids
+- [Soup Containers](https://afida.com/categories/food-containers/soup-containers): Paper soup cups and containers with lids
+- [Bagasse Containers](https://afida.com/categories/food-containers/bagasse-containers): Compostable clamshells, burger boxes, and food containers
 
 ### Cold Food & Salads
-- [Salad Boxes](https://afida.com/categories/salad-boxes): Kraft and clear salad bowls and boxes
-- [Sandwich & Wrap Boxes](https://afida.com/categories/sandwich-and-wrap-boxes): Sandwich wedges and wrap boxes
-- [Deli Pots](https://afida.com/categories/deli-pots): Small portion pots and deli containers
+- [Salad Boxes](https://afida.com/categories/cold-food-and-salads/salad-boxes): Kraft and clear salad bowls and boxes
+- [Sandwich & Wrap Boxes](https://afida.com/categories/cold-food-and-salads/sandwich-and-wrap-boxes): Sandwich wedges and wrap boxes
+- [Deli Pots](https://afida.com/categories/cold-food-and-salads/deli-containers): Small portion pots and deli containers
 
 ### Tableware
-- [Plates & Trays](https://afida.com/categories/plates-and-trays): Palm leaf plates, bagasse plates, and platter boxes
-- [Cutlery](https://afida.com/categories/cutlery): Wooden forks, knives, spoons, and cutlery kits
-- [Napkins](https://afida.com/categories/napkins): Cocktail napkins, dinner napkins, airlaid napkins, and dispenser napkins
-- [Aluminium Containers](https://afida.com/categories/aluminium-containers): Aluminium foil trays and containers
+- [Plates & Bowls](https://afida.com/categories/tableware/plates-and-bowls): Palm leaf plates, bagasse plates, and platter boxes
+- [Cutlery](https://afida.com/categories/tableware/cutlery): Wooden forks, knives, spoons, and cutlery kits
+- [Napkins](https://afida.com/categories/tableware/napkins): Cocktail napkins, dinner napkins, airlaid napkins, and dispenser napkins
+- [Aluminium Containers](https://afida.com/categories/food-containers/aluminium-containers): Aluminium foil trays and containers
 
 ### Bags & Wraps
-- [Bags](https://afida.com/categories/bags): Paper bags with handles, carrier bags, and kraft bags
-- [Greaseproof & Wraps](https://afida.com/categories/greaseproof-and-wraps): Greaseproof paper sheets and food wraps
-- [NatureFlex Bags](https://afida.com/categories/natureflex-bags): Compostable NatureFlex window bags
+- [Bags](https://afida.com/categories/bags-and-wraps/bags): Paper bags with handles, carrier bags, and kraft bags
+- [Greaseproof & Wraps](https://afida.com/categories/bags-and-wraps/greaseproof-and-wraps): Greaseproof paper sheets and food wraps
+- [NatureFlex Bags](https://afida.com/categories/bags-and-wraps/natureflex-bags): Compostable NatureFlex window bags
 
 ### Supplies & Essentials
-- [Bin Liners](https://afida.com/categories/bin-liners): Compostable and standard bin liners
-- [Labels & Stickers](https://afida.com/categories/labels-and-stickers): Day-of-week labels, allergy labels, and custom stickers
-- [Gloves & Cleaning](https://afida.com/categories/gloves-and-cleaning): Disposable gloves and cleaning supplies
-- [Till Rolls](https://afida.com/categories/till-rolls): Thermal and plain till receipt rolls
+- [Bin Liners](https://afida.com/categories/supplies-and-essentials/bin-liners): Compostable and standard bin liners
+- [Labels & Stickers](https://afida.com/categories/supplies-and-essentials/labels-and-stickers): Day-of-week labels, allergy labels, and custom stickers
+- [Gloves & Cleaning](https://afida.com/categories/supplies-and-essentials/gloves-and-cleaning): Disposable gloves and cleaning supplies
+- [Till Rolls](https://afida.com/categories/supplies-and-essentials/till-rolls): Thermal and plain till receipt rolls
 
 ## Services
 
@@ -56,6 +58,12 @@ Afida supplies sustainable disposable packaging to hospitality businesses and co
 - [Contact Us](https://afida.com/contact)
 - [Blog](https://afida.com/blog)
 - [Delivery & Returns](https://afida.com/delivery-returns)
+
+## Machine-Readable
+
+- [Sitemap](https://afida.com/sitemap.xml): Every indexable product, category, and blog URL
+- [robots.txt](https://afida.com/robots.txt): Crawler permissions, including explicit allow rules for AI crawlers
+- Any HTML page is also available as Markdown by sending an `Accept: text/markdown` request header
 
 ## Key Information
 
