@@ -14,9 +14,11 @@ Strategy documents, point-in-time analyses, and work records.
 * [Bestsellers March to June 2026](/reports/bestsellers-2026-03-to-06.md) - Top products by revenue, units and orders from the production database.
 * [Timesheet June 2026](/reports/timesheet-2026-06.md) - Measured-elapsed billable hours for June 2026.
 * [Timesheet July 2026](/reports/timesheet-2026-07.md) - Measured-elapsed billable hours for July 2026.
+* [Timesheet August 2026](/reports/timesheet-2026-08.md) - Measured-elapsed billable hours for August 2026.
 * [Seed Taxonomy Drift 2026-08-20](/reports/seed-taxonomy-drift-2026-08-20.md) - Why bin/setup stopped seeding: db:prepare never runs the hierarchy migration, so the seed CSVs still held the flat March taxonomy.
 * [Stack Game Offer Audit (September 2026)](/reports/stack-game-offer-audit-2026-09.md) - Hormozi value-equation audit of the live prizes, referral gift, kickback, and crown: the game is a strong advertisement, the 5% prize is a £5 voucher.
 * [Afida.com B2B Offers (September 2026)](/reports/afida-b2b-offers-2026-09.md) - What the store actually is, which trade offers would be compelling, and how to split the game into a small win prize and a substantial monthly crown (print setup waived).
+* [Datafa.st Analysis 2026-09-08](/reports/datafast-2026-09-08.md) - August was the record month; last-30d traffic jumped while conversion fell because Direct and display junk grew; returning visitors still make the revenue.
 
 # Superseded
 
