@@ -5,7 +5,7 @@ module Agent
     rate_limit to: 60, within: 1.minute, with: -> { render json: { error: "Rate limit exceeded" }, status: :too_many_requests }
 
     def handle
-      if request.get?
+      if request.get? || request.head?
         render json: discovery.mcp_server_card
         return
       end

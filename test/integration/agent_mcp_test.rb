@@ -24,6 +24,17 @@ class AgentMcpTest < ActionDispatch::IntegrationTest
     assert body.dig("result", "capabilities", "tools")
   end
 
+  test "HEAD is answered like the GET server card, not routed into the JSON-RPC branch" do
+    get "/mcp"
+    card_etag = response.headers["ETag"]
+
+    head "/mcp"
+
+    assert_response :success
+    assert_equal "application/json", response.media_type
+    assert_equal card_etag, response.headers["ETag"]
+  end
+
   test "tools/list includes catalog tools" do
     post "/mcp", params: { jsonrpc: "2.0", id: 2, method: "tools/list" }, as: :json
 
