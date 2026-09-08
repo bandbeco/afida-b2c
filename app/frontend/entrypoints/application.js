@@ -6,6 +6,7 @@ import "dialog-closedby-polyfill"
 
 import "@hotwired/turbo-rails"
 import { Application } from "@hotwired/stimulus"
+import "../javascript/webmcp"
 
 // Start Stimulus application
 const application = Application.start()

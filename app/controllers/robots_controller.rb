@@ -51,6 +51,7 @@ class RobotsController < ApplicationController
 
       # Sitemap
       Sitemap: #{base_url}/sitemap.xml
+      Agentmap: #{base_url}/.well-known/ai-catalog.json
     ROBOTS
   end
 

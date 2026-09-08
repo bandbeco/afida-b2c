@@ -2,6 +2,8 @@
 
 ## 2026-09-08
 
+* **Creation**: [Agent Discovery](/runbooks/agent-discovery.md). Homepage `Link` headers, RFC 9727 API catalog, OpenAPI, public `/api/v1` catalog, MCP server card + `/mcp` tools, agent skills index, ARD `ai-catalog.json`, Auth.md, OAuth discovery + client_credentials, ACP/UCP/MPP discovery, and Stripe-hosted ACP checkout sessions. x402 is intentionally absent (no crypto wallet). DNS-AID records must be added at Cloudflare; the runbook has the HTTPS/TXT shapes. Runbooks index updated.
+
 * **Update**: Homepage and `llms.txt` agent-readiness on `agent-readiness` (Is Agentic 94/100). Raw homepage HTML now names Afida before the H1, adds a catalogue section with sequential h2/h3s and NAP, and clears the 5% content-ratio bar; `llms.txt` gains a When to use this section (jobs and how to call); Organization and LocalBusiness schema add `legalName` B&B Eco, Ltd. Ranking for a generic "Afida" Google query remains off-site (press, GBP, directories).
 
 * **Update**: [AI Crawler Access](/runbooks/ai-crawler-access.md). Review follow-up on `agent-readiness`: HEAD now advertises the same `Content-Type`/`Content-Length` as GET after HTML compaction and markdown conversion; `llms.txt` headings and grouping match the live taxonomy (Cups & Accessories, Food Containers, Deli Containers; aluminium under Food Containers) and tests pin parent/child pairs against `LIVE_TAXONOMY`; the runbook no longer claims an explicit `DeepSeekBot` robots stanza (it is allowed via `User-agent: *`); duplicate `/config/*.key` gitignore dropped.

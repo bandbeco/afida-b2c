@@ -970,6 +970,25 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_equal @cart_item.product.pac_size, order_item.pac_size  # OrderItem stores pac_size for pricing display
   end
 
+  test "success builds the order from the cart the paid session names, not the browser cart" do
+    agent_cart = Cart.create!
+    agent_cart.cart_items.create!(product: products(:two), quantity: 3, price: 5.0)
+
+    session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com",
+      metadata: { "cart_id" => agent_cart.id.to_s }
+    )
+
+    assert_difference "Order.count", 1 do
+      get success_checkout_path, params: { session_id: session.id }
+    end
+
+    order = Order.last
+    assert_equal [ products(:two).id ], order.order_items.map(&:product_id)
+    assert_equal 0, agent_cart.reload.cart_items.count
+    assert_equal 1, @cart.reload.cart_items.count
+  end
+
   test "success clears cart after creating order" do
     session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
 

@@ -233,7 +233,38 @@ Rails.application.routes.draw do
         resources :blog_posts, only: [ :create, :show, :index, :update ], param: :id_or_slug
       end
     end
+
+    namespace :v1 do
+      resources :products, only: [ :index, :show ], param: :slug
+      resources :categories, only: [ :index, :show ], param: :slug
+      namespace :acp do
+        resources :checkout_sessions, only: [ :create ]
+        match "checkout_sessions", to: "checkout_sessions#preflight", via: :options
+      end
+    end
   end
+
+  get ".well-known/api-catalog", to: "agent/well_known#api_catalog"
+  get ".well-known/mcp/server-card.json", to: "agent/well_known#mcp_server_card"
+  get ".well-known/mcp.json", to: "agent/well_known#mcp_server_card"
+  get ".well-known/agent-skills/index.json", to: "agent/well_known#agent_skills_index"
+  get ".well-known/agent-skills/:name/SKILL.md", to: "agent/well_known#agent_skill"
+  get ".well-known/ai-catalog.json", to: "agent/well_known#ard"
+  get ".well-known/oauth-authorization-server", to: "agent/well_known#oauth_authorization_server"
+  get ".well-known/oauth-protected-resource", to: "agent/well_known#oauth_protected_resource"
+  get ".well-known/openid-configuration", to: "agent/well_known#oauth_authorization_server"
+  get ".well-known/ucp", to: "agent/well_known#ucp"
+  get ".well-known/acp.json", to: "agent/well_known#acp"
+  get "auth.md", to: "agent/well_known#auth_md"
+  get "openapi.json", to: "agent/well_known#openapi"
+  match "mcp", to: "agent/mcp#handle", via: [ :get, :post ]
+  match "mcp", to: "agent/mcp#preflight", via: :options
+  post "oauth/register", to: "agent/oauth#register"
+  post "oauth/token", to: "agent/oauth#token"
+  match "oauth/register", to: "agent/oauth#preflight", via: :options
+  match "oauth/token", to: "agent/oauth#preflight", via: :options
+  get "oauth/jwks", to: "agent/oauth#jwks"
+  get "oauth/authorize", to: "agent/oauth#authorize"
 
   # Webhooks (Stripe, Outrank, etc.)
   namespace :webhooks do

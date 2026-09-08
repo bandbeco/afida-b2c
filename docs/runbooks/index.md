@@ -8,6 +8,7 @@ Operational knowledge for running and maintaining the Afida shop: procedures and
 * [Rails Credentials](/runbooks/credentials.md) - The shared production vault, how to edit it safely, and how test credentials behave in CI.
 * [Verification Email Throttling](/runbooks/verification-email-throttling.md) - The honeypot and the two sending budgets, what trips each, and what to do when genuine signups are refused.
 * [AI Crawler Access](/runbooks/ai-crawler-access.md) - AI crawlers were blocked by Cloudflare's Block AI Bots setting, not the app; the API call that cleared it and how to verify each User-Agent.
+* [Agent Discovery](/runbooks/agent-discovery.md) - Well-known documents, catalog API, MCP, OAuth, ACP checkout, and the Cloudflare DNS-AID records.
 * [Local Test Database Privileges](/runbooks/local-test-database.md) - Why fixture loading needs a privileged PostgreSQL role, the narrow grant that avoids superuser, and the boot-time check that now says so.
 
 # Integrations

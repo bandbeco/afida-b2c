@@ -82,6 +82,11 @@ How an agent should call Afida:
 
 - [Sitemap](https://afida.com/sitemap.xml): Every indexable product, category, and blog URL
 - [robots.txt](https://afida.com/robots.txt): Crawler permissions, including explicit allow rules for AI crawlers
+- [Catalog API](https://afida.com/api/v1/products): JSON products and categories
+- [OpenAPI](https://afida.com/openapi.json): Machine-readable description of the catalog and checkout
+- [API catalog](https://afida.com/.well-known/api-catalog): RFC 9727 linkset
+- [MCP](https://afida.com/.well-known/mcp/server-card.json): Catalog tools over Streamable HTTP at `/mcp`
+- [Agent skills](https://afida.com/.well-known/agent-skills/index.json): How to shop, request samples, and order branded packaging
 - Any HTML page is also available as Markdown by sending an `Accept: text/markdown` request header
 
 ## Key Information

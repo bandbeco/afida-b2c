@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_08_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -297,6 +297,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_02_170000) do
     t.index ["created_at"], name: "index_leads_on_created_at"
     t.index ["source", "external_id"], name: "index_leads_on_source_and_external_id", unique: true
     t.index ["status"], name: "index_leads_on_status"
+  end
+
+  create_table "oauth_applications", force: :cascade do |t|
+    t.string "client_id", null: false
+    t.string "client_secret_digest", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_oauth_applications_on_client_id", unique: true
   end
 
   create_table "order_items", force: :cascade do |t|
