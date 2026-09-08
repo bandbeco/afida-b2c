@@ -92,9 +92,9 @@ group :test do
 end
 gem "mocha"
 
-gem "sentry-ruby", "~> 6.6"
+gem "sentry-ruby", "~> 7.0"
 
-gem "sentry-rails", "~> 6.6"
+gem "sentry-rails", "~> 7.0"
 
 gem "pagy", "~> 43.6"
 
