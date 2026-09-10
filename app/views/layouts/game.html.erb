@@ -5,20 +5,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="theme-color" content="#06130d">
-  <title>The Afida Stack</title>
-  <meta name="description" content="The eco-packaging arcade game from Afida. Stack it recklessly high, unlock £10 off your next £100+ order.">
+  <%
+    stack_win = Game::PromoCodes::BASE_WIN
+    stack_off = "£#{Game::PromoCodes::AMOUNT_OFF_PENCE / 100}"
+    stack_min = "£#{Game::PromoCodes::MINIMUM_ORDER_PENCE / 100}"
+    stack_og_title = "The Afida Stack — stack #{stack_win}, win #{stack_off} off"
+    stack_og_description = "Quality packaging supplies. Stacked recklessly high. Stack #{stack_win} for #{stack_off} off your next #{stack_min}+ order. Top stacker this month wins a shoutout from @afidasupplies."
+  %>
+  <title><%= stack_og_title %></title>
+  <meta name="description" content="<%= stack_og_description %>">
   <%= csrf_meta_tags %>
   <%= csp_meta_tag %>
-  <meta property="og:title" content="The Afida Stack">
-  <meta property="og:description" content="Quality packaging supplies. Stacked recklessly high. Reach 15 and win £10 off at afida.com — think you can beat my tower?">
+  <meta property="og:title" content="<%= stack_og_title %>">
+  <meta property="og:description" content="<%= stack_og_description %>">
   <meta property="og:type" content="website">
   <meta property="og:url" content="<%= game_url %>">
   <meta property="og:image" content="<%= image_url("/game/og.png") %>">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The Afida Stack">
-  <meta name="twitter:description" content="Quality packaging supplies. Stacked recklessly high. Reach 15 and win £10 off at afida.com.">
+  <meta name="twitter:title" content="<%= stack_og_title %>">
+  <meta name="twitter:description" content="<%= stack_og_description %>">
   <meta name="twitter:image" content="<%= image_url("/game/og.png") %>">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

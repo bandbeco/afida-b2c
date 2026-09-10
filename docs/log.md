@@ -2,6 +2,8 @@
 
 ## 2026-09-10
 
+* **Update**: `/game` Open Graph title and description now match the live prizes (stack 15 for £10 off a £100+ order; monthly #1 gets an @afidasupplies shoutout). Dropped the leftover “beat my tower” challenge line from the canonical card.
+
 * **Update**: Homepage catalogue dump and hero "Afida" eyebrow removed. The `#what-afida-supplies` block and the H1 kicker added on 2026-09-08 for the Is Agentic content-ratio / brand-name-before-H1 checks are gone. Agent guidance stays in `llms.txt`.
 
 ## 2026-09-08

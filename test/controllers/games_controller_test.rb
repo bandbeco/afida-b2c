@@ -25,6 +25,33 @@ class GamesControllerTest < ActionDispatch::IntegrationTest
     assert_select "#winEmail[placeholder*='cafe']", count: 0
   end
 
+  test "the social card states the live prizes" do
+    get game_path
+
+    og_title = css_select("meta[property='og:title']").first["content"]
+    og_description = css_select("meta[property='og:description']").first["content"]
+    twitter_title = css_select("meta[name='twitter:title']").first["content"]
+    twitter_description = css_select("meta[name='twitter:description']").first["content"]
+    meta_description = css_select("meta[name='description']").first["content"]
+
+    [ og_title, twitter_title ].each do |title|
+      assert_match(/The Afida Stack/, title)
+      assert_match(/15/, title)
+      assert_match(/£10/, title)
+    end
+
+    [ og_description, twitter_description, meta_description ].each do |description|
+      assert_match(/£10 off/, description)
+      assert_match(/£100\+/, description)
+      assert_match(/15/, description)
+      refute_match(/beat my tower/, description)
+      refute_match(/5%/, description)
+    end
+
+    assert_match(/shoutout/, og_description)
+    assert_match(/@afidasupplies/, og_description)
+  end
+
   test "share copy talks about businesses, not cafés" do
     js = Rails.root.join("app/frontend/entrypoints/game.js").read
 
