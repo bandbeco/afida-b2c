@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-09-10
+
+* **Update**: Homepage catalogue dump and hero "Afida" eyebrow removed. The `#what-afida-supplies` block and the H1 kicker added on 2026-09-08 for the Is Agentic content-ratio / brand-name-before-H1 checks are gone. Agent guidance stays in `llms.txt`.
+
 ## 2026-09-08
 
 * **Update**: [Agent Discovery](/runbooks/agent-discovery.md). RFC 9728 `resource` is the origin (the scanner rejected `/api/v1/acp` as a mismatch). `/auth.md` is the WorkOS agentic-registration recipe. DNS-AID HTTPS records for `_index._agents` and `_mcp._agents` plus a TXT index are live on Cloudflare (Zone.DNS Edit added 2026-09-08). DNSSEC is skipped (GoDaddy DS risk, no shop benefit). x402 stays absent (no crypto wallet).

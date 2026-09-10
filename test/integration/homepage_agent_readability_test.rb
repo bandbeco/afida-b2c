@@ -39,28 +39,24 @@ class HomepageAgentReadabilityTest < ActionDispatch::IntegrationTest
 
     assert_select "h1"
     assert_operator text.length, :>=, 500
-    assert_operator text.length.to_f / response.body.bytesize, :>=, 0.05,
-      "content ratio #{(text.length.to_f / response.body.bytesize * 100).round(1)}% is below 5% (#{text.length} chars / #{response.body.bytesize} bytes)"
   end
 
-  test "hero names Afida in raw HTML before the H1" do
+  test "hero has no Afida eyebrow above the H1" do
     get root_path
 
     h1 = Nokogiri::HTML(response.body).at("h1")
-    kicker = h1&.previous_element
 
-    assert kicker, "expected a sibling before the H1"
-    assert_equal "Afida", kicker.text.strip
+    assert h1
+    assert_nil h1.previous_element
+    assert_select "section[aria-label='Hero banner'] p", text: /\AAfida\z/, count: 0
   end
 
-  test "homepage catalogue section is real HTML copy with sequential subheadings" do
+  test "homepage does not render the agent-readiness catalogue dump" do
     get root_path
 
-    assert_select "section#what-afida-supplies h2", text: /Afida/
-    assert_select "section#what-afida-supplies h3", minimum: 3
-    assert_select "section#what-afida-supplies p", minimum: 4
-    assert_includes css_select("section#what-afida-supplies").text, "Unit 27, The Metro Centre"
-    assert_includes css_select("section#what-afida-supplies").text, "hello@afida.com"
+    assert_select "section#what-afida-supplies", count: 0
+    refute_includes response.body, "retired short slug"
+    refute_includes response.body, "Afida supplies disposable packaging for UK hospitality"
   end
 
   test "HEAD Content-Length matches the compacted GET body" do
