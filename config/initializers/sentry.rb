@@ -17,6 +17,11 @@ Sentry.init do |config|
   # Set environment
   config.environment = Rails.env
 
+  # sentry-rails 7 ships Rails logs to Sentry by default. The shop has never
+  # sent them and they are billed separately; turn them on deliberately or not
+  # at all.
+  config.rails.structured_logging.enabled = false
+
   # Enable async sending
   config.background_worker_threads = 5
 end
