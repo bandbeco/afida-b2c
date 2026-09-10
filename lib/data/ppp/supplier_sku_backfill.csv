@@ -1,0 +1,266 @@
+production_sku,current_name,supplier_sku,mapping_ppp_sku,ppp_name,api_status,name_tokens_shared,confidence
+XMS-16,Christmas Double-Wall Cup,,PW16XMAS2024,16oz Christmas Double-Wall Paper Cup – Compostable  Recyclable,not_in_api,4,REVIEW
+BGP,Food Box,LF&CBOX,LFCBOX,Large Bagasse Food Box – Compostable,corrected,2,corrected-ok
+FNC-7,Leakproof Pots with Lids,D19016,09COV/7OZPP,7oz Leakproof Recyclable Paper Pots with lids (Case of 250),corrected,4,corrected-ok
+GP-400,Honeycomb -Backed Deli Wrap Sheets ( Insulating),HFIS.350.400.PL,HFIS.267.400.PL,Honeycomb Foil-Backed Deli Wrap Sheets – 350x400mm (Food Safe  Insulating),corrected,6,corrected-ok
+MFB-BG-BK-2,Burger Box,GRAND6B,GRAND6,Black Kraft Burger Box – Case of 200 Recyclable,corrected,2,corrected-ok
+NAP-30-WH,Soft Napkin 1-Ply,3014WHCOM/330,3014WHCOM,Soft White Napkin 30cm 1-Ply – Recyclable,corrected,4,corrected-ok
+HCX-ST,Stirrer,G01006,G01006,7.5in Wooden Stirrer Recyclable/Compostable,live,1,medium
+STR-10,Straw,10MCS240X20X8,10MCS240X20X8,Bright Colour Paper Straw 10mm x 200mm – Recyclable  Food-Safe,live,1,medium
+STR-6-WH,Straw,6BLW200X20X2,6BLW200X20X2,Blue/White Paper Straw 6mm x 200mm – Recyclable  Food-Safe,live,1,medium
+STR-6-WH-2,Striped Straw,6RW200X20X25,6RW200X20X25,Red/White Paper Straw 6mm x 200mm – Recyclable  Food-Safe,live,1,medium
+STR-6-WH-3,Striped Straw,6GW200X20X25,6GW200X20X25,Green/White Paper Straw 6mm x 200mm – Recyclable  Food-Safe,live,1,medium
+BAG-12,Lined Food Bags,PWFOIL,PWFOIL,12-Inch Foil-Lined Food Bags (7 x 9 x 12 Inches) Recyclable,live,3,high
+BAG-170,Newspaper 2 Open-Sided Bags,GP0416,GP0416,Newspaper 2 Open-Sided Bags 170mm x 160mm  Food Safe  Recyclable,live,5,high
+BAG-170-2,Contact Grill Bag,10373,10373,Contact Grill Bag 170mm (Case of 600),live,3,high
+BAG-170-BK,Gingham 2 Open-Sided Bags,GP0413,GP0413,Black Gingham 2 Open-Sided Bags 170mm x 160mm  Food Safe  Recyclable,live,5,high
+BAG-170-BL,Gingham 2 Open-Sided Bags,GP0412,GP0412,Blue Gingham 2 Open-Sided Bags 170mm x 160mm  Food Safe  Recyclable,live,5,high
+BAG-170-KR,2 Open-Sided Bags,GP0420,GP0420,Kraft 2 Open-Sided Bags 170mm x 160mm  Food Safe  Recyclable,live,4,high
+BAG-170-RD,Gingham 2 Open-Sided Bags,GP0410,GP0410,Red Gingham 2 Open-Sided Bags 170mm x 160mm  Food Safe  Recyclable,live,5,high
+BAG-180-CL,Natureflex Multi Bag,VGN5-case-,VGN5-case-,Clear Natureflex Multi Bag 220 x 180mm Compostable (Case of 1000),live,3,high
+BAG-195,Contact Grill Bag,10370,10370,Contact Grill Bag 195mm (Case of 500),live,3,high
+BAG-205-CL,Natureflex Bag,VGN2-case-,VGN2-case-,"Clear Natureflex Bag 170 x 205mm Compostable (Case of 1,000)",live,2,high
+BAG-210-CL,Natureflex Bag,VGN1-case-,VGN1-case-,Clear Natureflex Bag 70 x 210mm Compostable (Case of 1000),live,2,high
+BAG-240-CL,Natureflex Multi Bag with Gusset,VGN6-case-,VGN6-case-,Clear Natureflex Multi Bag with Gusset 150 x 50 x 240mm Compostable (Case of 1000),live,5,high
+BAG-260,Contact Grill Bag,10371,10371,Contact Grill Bag 260mm (Case of 500),live,3,high
+BAG-320,Contact Grill Bag,10369,10369,Contact Grill Bag 320mm Compostable (Case of 600),live,3,high
+BAG-350-CL,Natureflex Baguette Bag With Gusset,VGN4-case-,VGN4-case-,Clear Natureflex Baguette Bag With Gusset 100 x 50 x 350mm Compostable (Case of 1000),live,5,high
+BAG-350-CL-2,Natureflex Baguette Bag,VGN3-case-,VGN3-case-,Clear Natureflex Baguette Bag 100 x 350mm Compostable (Case of 1000),live,3,high
+BAG-CR,Large Carrier Width,XLBAG,XLBAG,X Large Recycled Paper Carrier  13in width Recyclable/Compostable (Case of 200),live,3,high
+BAG-CR-2,Carrier Bag/Takeaway Bag,PCB300,PCB300,Frosted Plastic Carrier Bag/Takeaway Bag Recyclable (Case of 300),live,3,high
+BAG-CR-3,Large Carrier Width,LBAG,LBAG,Large Recycled Paper Carrier  10in width Recyclable/Compostable (Case of 250),live,3,high
+BAG-CR-4,Medium Carrier Width,MBAG,MBAG,Medium Recycled Paper Carrier 8.5in width Recyclable/Compostable (Case of 250),live,3,high
+BAG-CR-5,Small Carrier Width,SBAG,SBAG,Small Recycled Paper Carrier  7in width Recyclable/Compostable (Case of 250),live,3,high
+BAG-CR-BL,Carrier Bags,FBCB.11.17.21.20.BR3,FBCB.11.17.21.20.BR3,Blue Plastic Carrier Bags 11 x 17 x 21,live,2,high
+BAG-CR-WH,Carrier Bags 23 25 Micron Strong,FWCB.11.17.21.21.WP12,FWCB.11.17.21.21.WP12,White Plastic Carrier Bags 12 x 19 x 23 – 25 Micron Strong,live,6,high
+BAG-CR-WH-2,Carrier Bags,FWCB.11.17.21.21.WP8,FWCB.11.17.21.21.WP8,White Carrier Bags 11 x 17 x 21,live,2,high
+BAG-GR-KR,Large SOS Grab Bag,GRABBAG,GRABBAG,Large Kraft Brown SOS Paper Grab Bag – Recyclable,live,4,high
+BAG-KR-3,Wide Bag/Takeaway Bags,CB254,CB254,Brown Kraft Wide Bag/Takeaway Bag Recyclable (Case of 250),live,3,high
+BAG-RC-200,Contact Grill Bag Rectangular,10372,10372,Contact Grill Bag 200mm Rectangular (Case of 1000),live,4,high
+BGP-CS-9-WH,Clamshell Box,D06022,D06022,9″ x 9″ White Moulded Fibre Clamshell Box – Recyclable,live,2,high
+BGP-TY-2,Medium Chip Tray,D06007,D06007,Medium Bagasse Chip Tray 7x5in Compostable,live,3,high
+BGT-RD-10,Round 3-Compartment Plate,10340.103,10340.103,10″ Round 3-Compartment Bagasse Plate – Compostable  Recyclable,live,4,high
+BGT-RD-7,Round Plate,10340.07,10340.07,7″ Round Bagasse Plate – Compostable  Recyclable,live,2,high
+BGT-RD-9,Round Plate,10340.09,10340.09,9″ Round Bagasse Plate – Compostable  Recyclable,live,2,high
+BOX-1200-KR,Tuck Top Window Salad Box,61003,61003,PLA Tuck Top Kraft Window Salad Box 1200ml Compostable (Case of 200),live,5,high
+BOX-26-WH,Food Pail PE-Lined Leak-Resistant,D42130,D42130,26 oz White Food Pail PE-Lined – Leak-Resistant  Recyclable,live,6,high
+BOX-500-KR,Tuck Top Window Salad Box,61000,61000,PLA Tuck Top Kraft Window Salad Box 500ml Compostable (Case of 200),live,5,high
+BOX-700-KR,Tuck Top Window Salad Box,61001,61001,PLA Tuck Top Kraft Window Salad Box 700ml Compostable (Case of 200),live,5,high
+BOX-900-KR,Tuck Top Window Salad Box,61002,61002,PLA Tuck Top Kraft Window Salad Box 900ml Compostable (Case of 200),live,5,high
+BWL-1000-KR,Food Bowl Lids,A48001,A48001,"PET Kraft Food Bowl Lids For 500, 750  1000ml Recyclable (Case of 300) (149mm Diameter)",live,3,high
+BWL-1000-KR-2,"Food Bowl Lids For 500, 750 ( Diameter)",A48011,A48011,"PP Kraft Food Bowl Lids For 500, 750  1000ml Recyclable (Case of 300) (149mm Diameter)",live,7,high
+BWL-1000-KR-3,Large Round Food Bowl ( Diameter),D48002,D48002,Large Kraft Round Food Bowl  1000ml Recyclable (Case of 300) (149mm Diameter),live,5,high
+BWL-1300-KR,Extra Large Round Food Bowl,D48003,D48003,Extra Large Round Kraft Food Bowl  1300ml Recyclable (Case of 300),live,5,high
+BWL-168-KR,Lids For Large Round Food Bowl ( Diameter) (Dispo),63003,63003,PP Lids For Large Kraft Round Food Bowl Recyclable (Case of 300) (168mm Diameter) (Dispo),live,8,high
+BWL-RD-KR-2,Lids For Extra Large Round Food Bowl,A48012,A48012,PP Lids For Extra Large Round Kraft Food Bowl Recyclable (Case of 300),live,7,high
+CC-22,Coke Zero Cold Cups,BPUKCC22,BPUKCC22,Coke Zero 22oz Cold Cups – Recyclable,live,4,high
+CC-22-2,Pepsi Max Cold Cups,BPUKPEPMX,BPUKPEPMX,Pepsi Max 22oz Cold Cups – Recyclable,live,4,high
+CC-9-3,R- Squat Cold Cup,R16008,R16008,9oz r-PET Squat Cold Cup Recyclable (Case of 1000),live,4,high
+CC-CR-KR,Takeaway Pint Cup Carrier 4 Cup Inline Holder with Handle,PP4CUP,PP4CUP,Kraft Takeaway Pint Cup Carrier – 4 Cup inline Holder with Handle,live,9,high
+CC-PN,Two Pint to Line Cup,4330017,4330017,Recyclable Two Pint to Line CE Marked Cup,live,5,high
+CC-PN-2,Two Pint to Brim Cup,4330016Z,4330016Z,Recyclable Two Pint to Brim CE Marked Cup,live,5,high
+CC-PN-285,Half Pint Tumbler To Rim,R15013,R15013,HALF PINT TUMBLER (285ML) TO RIM (RPET) (Case of 1000),live,5,high
+CC-PN-4,1 Flexy Pint Glasses to Brim,FG616CBIOSELF,FG616CBIOSELF,Recyclable 2-in-1 Flexy Pint Glasses to Brim CE Marked,live,6,high
+CC-PN-568,Pint Tumbler To Rim,R15014,R15014,PINT TUMBLER (568ML) TO RIM (RPET) Recyclable (Case of 1000),live,4,high
+CC-PN-6,Half Pint to Brim Cup,PINT0.5,PINT0.5,"Half pint to brim PLA cup, UKCA UKNI CE mark",live,5,high
+CC-SH-25,Shot Glasses,SHOT25,SHOT25,25ml Plastic Shot Glasses – Recyclable,live,2,high
+CC-SH-25-2,Bomb Shot Glass,XR15005DO,XR15005DO,25ml rPET Bomb Shot Glass Recyclable (Case of 1000),live,3,high
+CNT,Lid Stagione,10162,10162,PP Lid Stagione Recyclable (Case of 300),live,2,high
+CNT-1000-KR,Food Tray PE-Lined,D48102,D48102,Kraft Food Tray 1000 ml – Recyclable  PE-Lined,live,4,high
+CNT-1000-KR-2,Food Tray Stagione,10037,10037,Kraft Food Tray 1000ml Stagione Recyclable (Case of 300),live,3,high
+CNT-150,Anti-mist Lid Stagione,10397,10397,150ml-250ml rPET Anti-mist Lid Stagione Recyclable (Case of 500),live,4,high
+CNT-150-KR,Food Tray Stagione,10039,10039,Kraft Food Tray 150ml Stagione Recyclable (Case of 500),live,3,high
+CNT-250-KR,Food Tray Stagione,10040,10040,Kraft Food Tray 250ml Stagione Recyclable (Case of 500),live,3,high
+CNT-500-KR,Salad Bowl Lid,69002,69002,"Kraft Salad Bowl Lid – Fits 500ml to 1,000ml Containers Recyclable",live,3,high
+CNT-500-KR-2,Rectangle Food Tray PE-Lined,D48100,D48100,Kraft Rectangle Food Tray 500 ml – Recyclable  PE-Lined,live,5,high
+CNT-500-KR-3,Food Tray Stagione,10035,10035,Kraft Food Tray 500ml Stagione Recyclable (Case of 300),live,3,high
+CNT-650-KR,Food Tray PE-Lined,68003,68003,Kraft Food Tray 650 ml – Recyclable  PE-Lined,live,4,high
+CNT-650-KR-2,Food Tray Stagione,10038,10038,Kraft Food Tray 650ml Stagione Recyclable  (Case of 300),live,3,high
+CNT-750-KR,Food Tray PE-Lined,D48101,D48101,Kraft Food Tray 750 ml – Recyclable  PE-Lined,live,4,high
+CNT-750-KR-2,Food Tray Stagione,10036,10036,Kraft Food Tray 750ml Stagione Recyclable (Case of 300),live,3,high
+CNT-KR,Lined Lid Stagione,10161,10161,Kraft PP Lined Lid Stagione Recyclable (Case of 300),live,3,high
+CNT-TY-KR,Lid for Rectangular Kraft Trays,A48111,A48111,PP Lid for Kraft Paperboard Food Trays – Recyclable,live,4,high
+CTL,"Cutlery Kit, 3 in 1",10080.30,10080.30,"Cornstarch Cutlery Kit, 3 in 1 (Case of 250)",live,5,high
+CTL-125-NT,Natural Teaspoon / 4.9” Reusable Cutlery,10080.04,10080.04,"Natural Cornstarch Teaspoon – 125mm / 4.9” Reusable  Compostable Cutlery (Case of 1,000)",live,6,high
+CTL-2,Ice Cream Spade,XG01009DO-case,XG01009DO-case,Wooden Ice Cream Spade Recyclable/Compostable (Case of 4000),live,3,high
+CTL-229,"Chopstick (9"") Wrapped",10330.23P,10330.23P,Bamboo Chopstick (229mm/9) Paper Wrapped Recyclable/Compostable (Case of 1000),live,3,high
+CTL-4,"Birchwood Cutlery Kit, 6 in 1",10101.60,10101.60,"Birchwood Cutlery Kit, 6 in 1 Recyclable/Compostable (Case of 250)",live,6,high
+CTL-5,"Birchwood Cutlery Kit, 5 in 1",10101.50,10101.50,"Birchwood Cutlery Kit, 5 in 1 Recyclable/Compostable (Case of 250)",live,6,high
+CTL-6,"Birchwood Cutlery Kit, 4 in 1",10101.40,10101.40,"Birchwood Cutlery Kit, 4 in 1 Recyclable/Compostable (Case of 250)",live,6,high
+CTL-7,"Cutlery Kit, 5 in 1",10080.50,10080.50,"Cornstarch Cutlery Kit, 5 in 1 (Case of 250)",live,5,high
+CTL-8,"Cutlery Kit, 4 in 1",10080.40,10080.40,"Cornstarch Cutlery Kit, 4 in 1 (Case of 250)",live,5,high
+CTL-9,"Cutlery Kit, 3 in 1",10080.31,10080.31,"Cornstarch Cutlery Kit, 3 in 1 (Case of 250)",live,5,high
+CTL-FK-CL,Heavy Duty Reusable Forks,44PLCTCLRHD0FKG001,44PLCTCLRHD0FKG001,"Heavy Duty Clear Reusable Plastic Forks – Case of 1,000",live,4,high
+CTL-FK-NT,Natural Fork,10080.02,10080.02,7in Natural Cornstarch Fork (Case of 1000),live,2,high
+CTL-KN-CL,Heavy Duty Reusable Knives,44PLCTCLRHD0KNG001,44PLCTCLRHD0KNG001,"Heavy Duty Clear Reusable Plastic Knives – Case of 1,000",live,4,high
+CTL-KN-NT,Natural Knife,10080.01,10080.01,7in Natural Cornstarch Knife (Case of 1000),live,2,high
+CTL-SP-4,Mini Spoon,VT-SP4,VT-SP4,Compostable 4.25in Mini Wooden Spoon Recyclable/Compostable,live,2,high
+CTL-SP-CL,Heavy Duty Reusable Spoons,44PLCTCLRHD0DSG001,44PLCTCLRHD0DSG001,"Heavy Duty Clear Reusable Plastic Spoons – Case of 1,000",live,4,high
+CTL-SP-NT,Natural Desert Spoon,10080.03,10080.03,6.6in Natural Cornstarch Desert Spoon (Case of 1000),live,3,high
+CUP-12,Lined Compostable Takeaway Cup,10431.12,10431.12,12oz Aqueous Lined Takeaway Cup Compostable (Case of 500),live,4,high
+CUP-DW-12-2,Double Wall Takeaway Cup,PW12,PW12,Planetware 12oz Double Wall Takeaway Cup Compostable  Recyclable,live,4,high
+CUP-DW-12-3,Double Wall Takeaway Cup,B04013,B04013,Edenware 12oz Double Wall Takeaway Cup Compostable (Case of 500),live,4,high
+CUP-DW-12-KR-2,"Double Wall Hot Takeaway Cup, 89 Series",VDW-12,VDW-12,"12oz Double Wall Brown Kraft Hot Takeaway Cup, 89 Series Compostable",live,7,high
+CUP-DW-16-2,Double Wall Takeaway Cup,PW16,PW16,Planetware™ 16oz Double Wall Takeaway Cup Recyclable/Compostable,live,4,high
+CUP-DW-16-KR,"Double Wall Hot Takeaway Cup, 89 Series",VDW-16,VDW-16,"16oz Double Wall Brown Kraft Hot Takeaway Cup, 89 Series Compostable",live,7,high
+CUP-DW-6,Double Wall Takeaway Cup,PW06,PW06,Planetware 6oz Double Wall Takeaway Cup – Recyclable  Compostable,live,4,high
+CUP-DW-8-2,Double Wall Takeaway Cup,PW08,PW08,Planetware™ 8oz Double Wall Takeaway Cup Recyclable/Compostable,live,4,high
+CUP-DW-8-3,Double Wall Takeaway Cup,B04012,B04012,Edenware 8oz Double Wall Takeaway Cup Compostable (Case of 500),live,4,high
+FNC,Large Fish ‘n’ Chips Bag,44PABAWK3631FHG001,44PABAWK3631FHG001,Large Fish ‘n’ Chips Recyclable Paper Bag (Case of 250),live,5,high
+FNC-2,Medium Fish and Chips Bag,44PABAWK2430FHG004,44PABAWK2430FHG004,Medium Fish and Chips Recyclable Paper Bag (Case of 250),live,5,high
+FNC-3,Large Fish and Chips Takeaway Box,44PABXFC00LA00G001,44PABXFC00LA00G001,Large Fish and Chips Takeaway Box (Case of 100),live,6,high
+FNC-4,Leakproof Pots with Lids,D19014,D19014,4oz Leakproof Recyclable Paper Pots with lids (Case of 250),live,4,high
+FNC-5,Medium Fish and Chips Takeaway Box,44PABXFC00ME00G001,44PABXFC00ME00G001,Medium Fish and Chips Recyclable Takeaway Box  (Case of 100),live,6,high
+FNC-6,Small Fish and Chips Takeaway Box,44PABXFC00SM00G001,44PABXFC00SM00G001,Small Fish and Chips Recyclable Takeaway Box (Case of 100),live,6,high
+FOL,Lids for No. 9 Container,10815.09,10815.09,Lids for No. 9 Container Recyclable (Case of 200),live,5,high
+FOL-16,No. 2 Aluminium Food Containers,10810.02,10810.02,No. 2 Aluminium Foil Food Containers Recyclable  470ml/16oz (Case of 1000),live,5,high
+FOL-2,Lids for No. 6 Container,10811.06FB,10811.06FB,Lids for No. 6 Container Recyclable (Case of 500),live,5,high
+FOL-24,No. 6a Aluminium Food Containers,10810.06A,10810.06A,No. 6a Aluminium Foil Food Containers Recyclable  700ml/24oz (Case of 500),live,5,high
+FOL-3,Lids for No. 6A Container,10815.06A,10815.06A,Lids for No. 6A Container Recyclable (Case of 500),live,5,high
+FOL-30,No. 6 Aluminium Food Containers,10810.06,10810.06,No. 6 Aluminium Foil Food Containers Recyclable  860ml/30oz (Case of 500),live,5,high
+FOL-4,Lids for No. 2 Container,10811.02FB,10811.02FB,Lids for No. 2 Container Recyclable (Case of 1000),live,5,high
+FOL-5,Lids for No. 1 Container,10811.01,10811.01,Lids for No. 1 Container Recyclable (Case of 1000),live,5,high
+FOL-52,No.9 Shallow Aluminium Food Containers,10810.09S,10810.09S,No.9 Shallow Aluminium Foil Food Containers Recyclable  1500ml/52oz (Case of 200),live,6,high
+FOL-7,No. 1 Aluminium Food Containers,10810.01,10810.01,No. 1 Aluminium Foil Food Containers Recyclable  250ml/8.7oz (Case of 1000),live,5,high
+FOL-73,No.9 Deep Aluminium Food Containers,10810.09D,10810.09D,No.9 Deep Aluminium Foil Food Containers Recyclable  2100ml/73oz (Case of 200),live,6,high
+FOL-RD,Lids for No. 12 Container Round,10815.12FB,10815.12FB,Lids for No. 12 Container Round Recyclable (Case of 400),live,6,high
+FOL-RD-32,No.12 Round Aluminium Food Containers,10810.12,10810.12,No.12 Round Aluminium Foil Food Containers Recyclable  920ml/32oz (Case of 400),live,6,high
+GP-250,Steak House Printed Greaseproof Sheets,GP0025,GP0025,Steak House Printed Greaseproof Paper Sheets – 250mm x 350mm Food Safe  Recyclable,live,5,high
+GP-250-BK,Gingham Printed Sheets,GP0003,GP0003,Black Gingham Printed Paper Sheets – 250mm x 200mm  Food Safe  Recyclable,live,3,high
+GP-250-BL,Gingham Printed Sheets,GP0002,GP0002,Blue Gingham Printed Paper Sheets – 250mm x 200mm  Food Safe  Recyclable,live,3,high
+GP-250-RD,Gingham Printed Sheets,GP0001,GP0001,Red Gingham Printed Paper Sheets – 250mm x 200mm  Food Safe  Recyclable,live,3,high
+GP-350,Honeycomb -Backed Deli Wrap Sheets ( Insulating),HFIS.267.350.PL,HFIS.267.350.PL,Honeycomb Foil-Backed Deli Wrap Sheets – 267 x 350mm (Food Safe  Insulating),live,6,high
+GP-375,Bon Appétit Printed Greaseproof Sheets,GP0012,GP0012,Bon Appétit Printed Greaseproof Paper Sheets – 375mm x 245mm  Food Safe  Recyclable,live,6,high
+GP-375-2,Gourmet Grilled Printed Greaseproof Sheets,GP0015,GP0015,Gourmet Grilled Printed Greaseproof Paper Sheets – 375mm x 245mm  Food Safe  Recyclable,live,5,high
+GP-375-3,Yum Yum Printed Greaseproof Sheets,GP0010,GP0010,Yum Yum Printed Greaseproof Paper Sheets – 375mm x 245mm  Food Safe  Recyclable,live,4,high
+GP-375-4,Newspaper Printed Greaseproof Sheets,GP0009,GP0009,Newspaper Printed Greaseproof Paper Sheets – 375mm x 245mm Food Safe  Recyclable,live,4,high
+GP-375-BL,Gingham Printed Sheets,GP0021,GP0021,Blue Gingham Printed Paper Sheets – 375mm x 250mm  Food Safe  Recyclable,live,3,high
+GP-375-RD,Gingham Printed Sheets,GP0020,GP0020,Red Gingham Printed Paper Sheets – 375mm x 250mm  Food Safe  Recyclable,live,3,high
+GP-BG-320-BL,Blue Printed Burger Wraps,GP0006,GP0006,Blue Printed Burger Wraps 250x320mm  Food Safe  Recyclable,live,4,high
+GP-BG-320-GN,Green Printed Burger Wraps,GP0004,GP0004,Green Printed Burger Wraps 250x320mm  Food Safe  Recyclable,live,4,high
+GP-BG-320-OR,Printed Burger Wraps,GP0007,GP0007,Orange Printed Burger Wraps 250x320mm  Food Safe  Recyclable,live,3,high
+GP-BG-320-RD,Printed Burger Wraps 250x320mm,GP0005,GP0005,Red Printed Burger Wraps 250x320mm  Food Safe  Recyclable,live,4,high
+GP-BG-320-YL,Yellow Printed Burger Wraps,GP0008,GP0008,Yellow Printed Burger Wraps 250x320mm  Food Safe  Recyclable,live,4,high
+IC-4-2,Ice Cream Tub Domed Lid,R10091,R10091,4oz Ice Cream Tub Domed rPET Lid (Case of 1000),live,5,high
+IC-4-3,Ice Cream Tub Lid,D46111,D46111,4oz Ice Cream Tub Paper Lid Recyclable (Case of 500),live,4,high
+IC-5-OR,Ice Cream Tub,10480.05,10480.05,Orange Paper Ice Cream Tub (160ml/5oz)  RECYCLABLE,live,3,high
+IC-5-PK,Ice Cream Tub,10480.03,10480.03,Pink Paper Ice Cream Tub (100ml/3.5oz)  RECYCLABLE,live,3,high
+IC-6-2,Ice Cream Tub Domed Lid,R10092,R10092,6oz Ice Cream Tub Domed rPET Lid Recyclable (Case of 1000),live,5,high
+IC-6-3,Ice Cream Tub Lid,D46112,D46112,6oz Ice Cream Tub Paper Lid Recyclable (Case of 500),live,4,high
+IC-8,Knickerbocker Glory Dessert Cups Cup,10485.04,10485.04,Knickerbocker Glory Dessert Cups – 231ml/8oz Recyclable Plastic Cup (Case of 1000),live,5,high
+IC-8-2,Ice Cream Tub Domed Lid,R10093,R10093,8oz Ice Cream Tub Domed rPET Lid Recyclable (Case of 1000),live,5,high
+IC-8-3,Ice Cream Tub Lid,D46113,D46113,8oz Ice Cream Tub Paper Lid Recyclable (Case of 500),live,4,high
+LID-16,Lid (PE Lined) Recyclable,D12012,D12012,12/16oz Paper Lid (PE Lined)  RECYCLABLE,live,4,high
+LID-16-BK,Sip-Thru Hot Cup Lid,B10013P,B10013P,12-16oz Black CPLA Sip-Thru Hot Cup Lid Compostable(Case of 1000),live,5,high
+LID-16-WH,Sip-Thru Hot Cup Lid,B10003P,B10003P,12-16oz White CPLA Sip-Thru Hot Cup Lid Compostable (Case of 1000),live,5,high
+LID-8,Lid (PE Lined) Recyclable,D12011,D12011,8oz Paper Lid (PE Lined)  RECYCLABLE,live,4,high
+LID-8-BK-2,Sip-Thru Hot Cup Lid,B10012P,B10012P,8oz Black CPLA Sip-Thru Hot Cup Lid Compostable (Case of 1000),live,5,high
+LID-8-WH-2,Sip-Thru Hot Cup Lid,B10002P,B10002P,8oz White CPLA Sip-Thru Hot Cup Lid Compostable (Case of 1000),live,5,high
+MFB-BG-BK,Burger Chip Box,GRAND10B,GRAND10B,Black Kraft Burger Chip Box Recyclable,live,3,high
+MFB-BG-KR,Burger Box,GRAND6K,GRAND6K,Kraft Burger Box Recyclable,live,2,high
+MFB-BG-KR-2,Burger Chip Box,GRAND10K,GRAND10K,Kraft Burger Chip Box Recyclable,live,3,high
+NAP-40-BL,Navy 8-Fold Tablin Pop-In Napkin,POPIN4048NB,POPIN4048NB,40cm Navy Blue 8-Fold Tablin Pop-In Napkin – Compostable (Case of 500),live,7,high
+NAP-CK-24-WH,Tablin Cocktail Napkins,2444WH,2444WH,"White Tablin Cocktail Napkins 24cm – Recyclable (Case of 2,400)",live,3,high
+PFC,Microwaveable Container with Lids,10840.100,10840.100,1000cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),live,4,high
+PFC-2,750cc Microwaveable Container with Lids,10840.075,10840.075,750cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),live,5,high
+PFC-3,650cc Microwaveable Container with Lids,10840.065,10840.065,650cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),live,5,high
+PFC-4,500cc Microwaveable Container with Lids,10840.050,10840.050,500cc Microwaveable Plastic Container with Lids Recyclable (Case of 250),live,5,high
+PIZ-BG,Premium Burger Meal Box,ECOB/CBOX,ECOB/CBOX,Premium burger meal box 9 x 5in Recyclable/Compostable (Case of 100),live,4,high
+PIZ-BG-2,Premium Burger Box,ECOBBOX,ECOBBOX,Premium burger box 5in Recyclable/Compostable (Case of 100),live,3,high
+PIZ-BG-5-BK,Folded Board Burger Tray,D40113,D40113,5″ x 5″ Black Folded Board Burger Tray – Recyclable,live,4,high
+PIZ-KR,Pizza Box,BOX010,BOX010,10in Brown Kraft Pizza Box Recyclable/Compostable (Case of 75),live,2,high
+PIZ-TY,Pizza Slice Tray,TA009-,TA009-,Pizza Slice Tray Compostable (Case of 1000),live,3,high
+PIZ-TY-BK,Large Folded Board Tray,D40015,D40015,Large Black Folded Board Tray – Recyclable,live,4,high
+PIZ-TY-BK-2,Medium Folded Board Meal Tray,D40115,D40115,Medium Black Folded Board Meal Tray – Recyclable,live,5,high
+PIZ-TY-BK-3,Small Folded Board Tray,D40103,D40103,Small Black Folded Board Tray – Recyclable,live,4,high
+PIZ-TY-KR,Large Folded Board Tray,BOATNO6,BOATNO6,Large Kraft Folded Board Tray – Recyclable,live,4,high
+PIZ-TY-KR-2,Small Folded Board Tray,BOATNO5,BOATNO5,Small Kraft Folded Board Tray – Recyclable,live,4,high
+PIZ-WH,Paperboard Crepe Cone,10074,10074,White Paperboard Crepe Cone Recyclable/Compostable (Case of 1000),live,3,high
+PLF,Heart Shaped Dish,ELP16HP,ELP16HP,Palm Leaf 6in Heart Palm Dish Compostable (Case of 100),live,2,high
+PLF-OV,Oval Plate,ELPOLP,ELPOLP,Palm leaf 10 x 6.5 in Oval Plate Compostable  (Case of 100),live,2,high
+PLF-RC,Rectangle Plate,ELP95DRP,ELP95DRP,9.8” X 6” Palm Rectangle Plate Compostable (Case of 100),live,2,high
+PLF-RC-2,Rectangle Plate,ELPSRT,ELPSRT,Palm Leaf 6.5 x 4.5 in Rectangle Plate Compostable (Case of 100),live,2,high
+PLF-RD,Round Bowl,ELP7RB,ELP7RB,Palm Leaf 7 in Round Palm Bowl Compostable (Case of 100),live,2,high
+PLF-RD-2,Round Salad Bowl,ELP7.5RB,ELP7.5RB,Palm Leaf 7.5 in Round Palm Salad Bowl Compostable (Case of 100),live,3,high
+PLF-RD-3,Round Bowl,ELP3RB,ELP3RB,Palm Leaf 3 in Round Palm Bowl Compostable (Case of 100),live,2,high
+PLF-RD-4,Round Plate,ELP12RP,ELP12RP,Palm Leaf 12in Round Palm Plate Compostable (Case of 100),live,2,high
+PLF-RD-5,Round Plate,ELP6RP,ELP6RP,Palm Leaf 6in Round Palm Plate Compostable (Case of 100),live,2,high
+PLF-RD-6,Round Plate,ELP7RP,ELP7RP,Palm Leaf 7in Round Palm Plate Compostable (Case of 100),live,2,high
+PLF-RD-7,Round Plate,ELP8RP,ELP8RP,Palm Leaf 8in Round Palm Plate Compostable (Case of 100),live,2,high
+PLF-RD-8,Round Plate,ELP9RP,ELP9RP,Palm Leaf 9in Round Palm Plate Compostable (Case of 100),live,2,high
+PLF-RD-9,Round Plate,ELP10RP,ELP10RP,Palm Leaf 10in Round Palm Plate Compostable (Case of 100),live,2,high
+PLF-SQ,Square Bowl,ELP7SB,ELP7SB,Palm Leaf 7 in Square Palm Bowl Compostable (Case of 100),live,2,high
+PLF-SQ-2,Square Plate,ELP6SP,ELP6SP,Palm Leaf 6in Square Palm Plate Compostable (Case of 100),live,2,high
+PLF-SQ-3,Square Plate,ELP7SP,ELP7SP,Palm Leaf 7in Square Palm Plate Compostable (Case of 100),live,2,high
+PLF-SQ-4,Square Plate,ELP8SP,ELP8SP,Palm Leaf 8in Square Palm Plate Compostable (Case of 100),live,2,high
+PLF-SQ-5,Square Plate,ELP9.5SP,ELP9.5SP,Palm Leaf 9in Square Palm Plate Compostable (Case of 100),live,2,high
+PLF-SQ-6,Square Plate,ELP10SP,ELP10SP,Palm Leaf 10in Square Palm Plate Compostable (Case of 100),live,2,high
+PLT,Medium Platter Box with Insert,12169,12169,Medium Platter Box with Insert Recyclable/Compostable (Case of 50),live,5,high
+POT-1,Portion Pot Lid,D18005,D18005,1oz Paper Portion Pot Lid (44mm) Recyclable (Case of 2000),live,3,high
+POT-1-CL,Portion Pot Lid,A18002,A18002,1 oz Clear PET Portion Pot Lid – Recyclable,live,3,high
+POT-1-CL-2,Portion Pot,A18001,A18001,1 oz Clear PP Portion Pot – Recyclable,live,2,high
+POT-1-KR-3,Portion Pot,D18001,D18001,1oz Kraft Paper Portion Pot Recyclable (Case of  4000),live,2,high
+POT-2,Portion Pot Lid,D18006,D18006,"2oz, 3oz, 4oz Paper Portion Pot Lid (62mm) Recyclable (Case of 1500)",live,3,high
+POT-2-2,Souffle Portion Pot,75001,75001,2oz Souffle Paper Portion Pot Recyclable/Compostable (Case of 5000),live,3,high
+POT-2-3,Portion Pot Lid,10360.02,10360.02,2oz Bagasse Portion Pot  Lid Recyclable/Compostable (Case of 200),live,3,high
+POT-2-CL,Portion Pot Lid,A18004Z,A18004Z,2 oz Clear PET Portion Pot Lid – Recyclable,live,3,high
+POT-2-CL-2,Portion Pot,A18003,A18003,2 oz Clear PP Portion Pot – Recyclable,live,2,high
+POT-2-KR,Portion Pot,D18002,D18002,2oz Kraft Paper Portion Pot Recyclable (Case of 3000),live,2,high
+POT-25-CL,Portion Pot,A18005,A18005,3.25 oz Clear PP Portion Pot – Recyclable,live,2,high
+POT-3-KR,Portion Pot,D18003,D18003,3oz Kraft Paper Portion Pot Recyclable (Case of 3000),live,2,high
+POT-4,Souffle Portion Pot,11080.04,11080.04,4oz Souffle Paper Portion Pot Recyclable/Compostable (Case of 5000),live,3,high
+POT-4-2,Portion Pot Lid,10360.04,10360.04,4oz Bagasse Portion Pot  Lid Recyclable/Compostable (Case of 500),live,3,high
+POT-4-CL,Portion Pot,A18006,A18006,4 oz Clear PP Portion Pot – Recyclable,live,2,high
+POT-4-KR,Portion Pot,D18004,D18004,4oz Kraft Paper Portion Pot Recyclable (Case of 3000),live,2,high
+POT-5-CL,3.25/4/ Portion Pot Lid,A18008,A18008,3.25/4/5.5 oz Clear PET Portion Pot Lid,live,6,high
+POT-5-CL-2,Portion Pot,A18007,A18007,5.5 oz Clear PP Portion Pot – Recyclable,live,2,high
+SAN,Small Hot Pillow Pack,10374,10374,Small Hot Pillow Pack (Case of 250),live,4,high
+SAN-6-KR,Bloomer Bag NatureFlex Window,VBLOOM2,VBLOOM2,Kraft Bloomer Bag 6″ x 3″ x 9″ – NatureFlex Window,live,4,high
+SAN-SW,Sandwich Bag with Film Packaging for Wraps Rolls,4422KR-FSC,4422KR-FSC,Sandwich Bag with Film – Recyclable Packaging for Wraps  Rolls,live,8,high
+SAN-SW-KR,Sandwich Card,KSC5,KSC5,Kraft Sandwich Card Recyclable/Compostable  5 x 5in (Case of 500),live,2,high
+SAN-TR,Long Tortilla Bag with Film Wrap Packaging,293C-FSC,293C-FSC,Long Tortilla Bag with Film – Recyclable Wrap Packaging,live,7,high
+SAN-TY-KR,Baguette Tray,01NTBT,01NTBT,Kraft Baguette Tray Compostable (Case of 500),live,2,high
+SPC-16,Vented Lids Fits,A19003,A19003,16oz Plastic Vented Lids  fits 16oz Recyclable (Case of 500),live,3,high
+SPC-16-KR,Vented Lids Fits,D46023,D46023,16oz Kraft Paper Vented Lids  fits 16oz Recyclable (Case of 500),live,3,high
+SPC-26,Vented Lids Fits,49013,49013,26oz -32oz Plastic Vented Lids  fits 26oz -32oz Recyclable (Case of 500),live,3,high
+SPC-26-KR,Vented Lids,49021,49021,26oz -32oz Kraft Paper Vented Lids  fits 26oz -32oz Recyclable (Case of 500),live,2,high
+SPC-26-KR-2,Heavy Duty Soup Container,49018,49018,26oz Kraft Heavy Duty Soup Container Recyclable (Case of 500),live,4,high
+SPC-32-KR,Heavy Duty Soup Container,49019,49019,32oz Kraft Heavy Duty Soup Container Recyclable (Case of 500),live,4,high
+SPC-8,Vented Lids,A19002,A19002,8oz -12oz Plastic Vented Lids  fits 8oz -12oz Recyclable (Case of 500),live,2,high
+SPC-8-KR,Heavy Duty Lid Planetware,D46022,D46022,8oz/12oz Kraft Heavy Duty Lid Recyclable Planetware (Case of 500),live,4,high
+STR-10-WH,Straw Food-Safe,10W200X20X80,10W200X20X80,White Paper Straw 10mm x 200mm – Recyclable  Food-Safe,live,3,high
+STR-12-WH,Angle-Cut Straws,10203.04,10203.04,12 mm  Red/White Angle-Cut Paper Straws (Case of 3000),live,3,high
+STR-200-WH,Straws (Individually Wrapped),D22041,D22041,White Paper Straws Individually Wrapped  – 200 mm × 8 mm,live,3,high
+STR-6-BK-2,White / Black Straw,6200BLW,6200BLW,Black/White Paper Straw 6mm x 200mm – Recyclable  Food-Safe,live,3,high
+STR-8-WH-2,Jumbo Straw Wrapped 7.8,PS08-WWL,PS08-WWL,Jumbo White 8mm Paper Straw Wrapped 7.8 – Compostable  Recyclable,live,5,high
+STR-CK-6-BK,Cocktail Straw,6B140X20X250N,6B140X20X250N,Black Paper Cocktail Straw 6mm x 140mm – Recyclable  Food-Safe,live,2,high
+STR-CK-6-WH,Cocktail Straw,6W140X20X250,6W140X20X250,White Paper Cocktail Straw 6mm x 140mm – Recyclable  Food-Safe,live,2,high
+STR-SP-8-WH,Spoon Straw Food Safe,10204.04,10204.04,Red/White Paper Spoon Straw 8mm x 200mm – Recyclable  Food-Safe),live,4,high
+SUN,Release Agent Spray PR100,PR100,PR100,Release Agent Spray PR100,live,4,high
+SUN-57,Thermal Till/PDQ Roll Chip N Pin,TR57-30,TR57-30,Thermal Till/PDQ Roll 57mm x 30mm Chip N Pin (Pack of 20),live,7,high
+SUN-57-2,Thermal Till/PDQ Roll Chip N Pin,TR57-38,TR57-38,Thermal Till/PDQ Roll 57mm x 38mm Chip N Pin (Pack of 20),live,7,high
+SUN-80,Thermal Till Rolls,TR80-76,TR80-76,Thermal Till Rolls 80mm x 76mm (Pack of 20),live,3,high
+SUN-BL,Centrefeed Roll 2 Ply,7307-case-,7307-case-,Blue Centrefeed Roll 2 Ply (Case of 6),live,4,high
+SUN-CL,Large Food Handling Gloves,10640.04,10640.04,Large Clear Food Handling Gloves Recyclable (Case of 1000),live,4,high
+SUN-CL-2,Medium Food Handling Gloves,10640.03,10640.03,Medium Clear Food Handling Gloves Recyclable (Case of 1000),live,4,high
+SUN-LB-100,Shelf Life Labels,DAY-L-D,DAY-L-D,Shelf Life Labels 50x100mm (Pack of 500),live,3,high
+SUN-LB-50,Allergen Contents Label,ALL-LABEL,ALL-LABEL,Allergen Contents Label 50mm (Pack of 500),live,3,high
+SUN-LB-50-RD,Removable Use First Labels,USE-F,USE-F,50mm Removable Use First Red Labels,live,4,high
+SUN-LB-65-RD,Removable Food Rotation Labels Day Label (Roll of 500),DAY-L,DAY-L,Removable Food Rotation Labels Red Day Label 50x65mm (Roll of 500),live,9,high
+SUN-LB-95,Allergen Contents Label Date Prep Info,DAY-ALL,DAY-ALL,Allergen Contents Label  Date  Prep Info 60x95mm (Pack of 500),live,6,high
+SUN-RD-19,Day Food Rotation Labels Complete Set 7 Days Round (7 Rolls of 1000),DD-A-W,DD-A-W,Day Food Rotation Labels Complete Set 7 Days 19mm Round (7 rolls of 1000),live,12,high
+SUN-RD-20,Day Food Rotation Labels Round Sunday (Roll of 1000),DD-SU,DD-SU,Day Food Rotation Labels Round 20mm Sunday (Roll of 1000),live,9,high
+SUN-RD-20-2,Day Food Rotation Labels Round Saturday (Roll of 1000),DD-S,DD-S,Day Food Rotation Labels Round 20mm Saturday (Roll of 1000),live,9,high
+SUN-RD-20-3,Day Food Rotation Labels Round Friday (Roll of 1000),DD-F,DD-F,Day Food Rotation Labels Round 20mm Friday (Roll of 1000),live,9,high
+SUN-RD-20-4,Day Food Rotation Labels Round Thursday (Roll of 1000),DD-TH,DD-TH,Day Food Rotation Labels Round 20mm Thursday (Roll of 1000),live,9,high
+SUN-RD-20-5,Day Food Rotation Labels Round Wednesday (Roll of 1000),DD-W,DD-W,Day Food Rotation Labels Round 20mm Wednesday (Roll of 1000),live,9,high
+SUN-RD-20-6,Day Food Rotation Labels Round Tuesday (Roll of 1000),DD-T,DD-T,Day Food Rotation Labels Round 20mm Tuesday (Roll of 1000),live,9,high
+SUN-RD-20-7,Day Food Rotation Labels Round Monday (Roll of 1000),DD-M,DD-M,Day Food Rotation Labels Round 20mm Monday (Roll of 1000),live,9,high
+SUN-SQ-25,Square 7 Day Food Rotation Labels Mon Sun ( Rolls of 1000),DD-A-S-W,DD-A-S-W,Square 7 Day Food Rotation Labels 25mm Mon  Sun (7 x Rolls of 1000),live,11,high
+SUN-SQ-25-2,Square Day Food Rotation Labels Sunday (Roll of 1000),DD-SU-SQ,DD-SU-SQ,Square Day Food Rotation Labels 25mm Sunday (Roll of 1000),live,9,high
+SUN-SQ-25-3,Square Day Food Rotation Labels Saturday (Roll of 1000),DD-S-SQ,DD-S-SQ,Square Day Food Rotation Labels 25mm Saturday (Roll of 1000),live,9,high
+SUN-SQ-25-4,Square Day Food Rotation Labels Friday (Roll of 1000),DD-F-SQ,DD-F-SQ,Square Day Food Rotation Labels 25mm Friday (Roll of 1000),live,9,high
+SUN-SQ-25-5,Square Day Food Rotation Labels Thursday (Roll of 1000),DD-TH-SQ,DD-TH-SQ,Square Day Food Rotation Labels 25mm Thursday (Roll of 1000,live,9,high
+SUN-SQ-25-6,Square Day Food Rotation Labels Wednesday (Roll of 1000),DD-W-SQ,DD-W-SQ,Square Day Food Rotation Labels 25mm Wednesday (Roll of 1000),live,9,high
+SUN-SQ-25-7,Square Day Food Rotation Labels Tuesday (Roll of 1000),DD-T-SQ,DD-T-SQ,Square Day Food Rotation Labels 25mm Tuesday (Roll of 1000),live,9,high
+SUN-SQ-25-8,Square Day Food Rotation Labels Monday (Roll of 1000),DD-M-SQ,DD-M-SQ,Square Day Food Rotation Labels 25mm Monday (Roll of 1000),live,9,high
