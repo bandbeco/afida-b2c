@@ -1,0 +1,75 @@
+require "test_helper"
+
+class LeadMonitor::LeadsControllerTest < ActionDispatch::IntegrationTest
+  def setup
+    @lead = LeadMonitor::Lead.create!(source: "fhrs", external_id: "1", business_name: "Review café", address: "1 High Street")
+  end
+
+  def sign_in(user = users(:acme_admin))
+    post session_url, params: { email_address: user.email_address, password: "password" }
+  end
+
+  test "anonymous and non admin access is denied including mutations and export" do
+    get lead_monitor_leads_path
+    assert_redirected_to new_session_path
+    sign_in(users(:acme_member))
+    get lead_monitor_leads_path(format: :csv)
+    assert_redirected_to root_path
+    patch lead_monitor_lead_path(@lead), params: { lead: { contact_email: "owner@example.com" } }
+    assert_redirected_to root_path
+    post activity_lead_monitor_lead_path(@lead), params: { activity: { kind: "suppressed", notes: "Stop" } }
+    assert_redirected_to root_path
+    assert_nil @lead.reload.contact_email
+    assert_empty @lead.activities
+  end
+
+  test "review queue and detail pages do not load storefront data" do
+    sign_in
+    Cart.expects(:find_or_create_by).never
+    Category.expects(:browsable).never
+    get lead_monitor_leads_path
+    assert_response :success
+    assert_select "a", text: "Review café"
+    get lead_monitor_lead_path(@lead)
+    assert_response :success
+    assert_select "textarea[name='lead[evidence_notes]']"
+    assert_select "textarea#outreach-template", count: 0
+  end
+
+  test "review is attributed to the authenticated admin and saved with evidence" do
+    sign_in
+    patch lead_monitor_lead_path(@lead), params: { lead: {
+      classification: "upcoming", opening_on: Date.current + 5, evidence_kind: "direct_confirmation",
+      evidence_notes: "Spoke with owner today; venue and address match", location_verified: "1",
+      reviewed_by: "forged", reviewed_at: 10.years.ago, contact_phone: "01234 567890"
+    } }
+    assert_redirected_to lead_monitor_lead_path(@lead)
+    assert_equal users(:acme_admin).email_address, @lead.reload.reviewed_by
+    assert @lead.opening_eligible?
+    get lead_monitor_lead_path(@lead)
+    assert_select "textarea#outreach-template", count: 1
+  end
+
+  test "invalid evidence stays on the form and cannot enable outreach" do
+    sign_in
+    patch lead_monitor_lead_path(@lead), params: { lead: { classification: "recent", opening_on: Date.current } }
+    assert_response :unprocessable_entity
+    assert_equal "possible", @lead.reload.classification
+    post activity_lead_monitor_lead_path(@lead), params: { activity: { kind: "sent", notes: "Hello" } }
+    assert_response :unprocessable_entity
+    assert_empty @lead.activities
+  end
+
+  test "qualification filters and CSV include classification and neutralize spreadsheet formulas" do
+    @lead.update!(business_name: "=HYPERLINK(1)")
+    sign_in
+    get lead_monitor_leads_path(classification: "upcoming")
+    assert_response :success
+    assert_select "a", text: "=HYPERLINK(1)", count: 0
+    get lead_monitor_leads_path(format: :csv)
+    assert_response :success
+    assert_includes response.body, "'=HYPERLINK(1)"
+    assert_includes response.body, "possible"
+    assert_includes response.body, "Opening eligible"
+  end
+end

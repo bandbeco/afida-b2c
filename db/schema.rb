@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_08_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_11_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -258,6 +258,71 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_120000) do
     t.date "win_promo_month"
     t.index ["email"], name: "index_game_leads_on_email", unique: true
     t.index ["referrer_id"], name: "index_game_leads_on_referrer_id"
+  end
+
+  create_table "lead_monitor_activities", force: :cascade do |t|
+    t.string "actor", null: false
+    t.datetime "created_at", null: false
+    t.string "kind", null: false
+    t.bigint "lead_id", null: false
+    t.text "notes", null: false
+    t.index ["lead_id"], name: "index_lead_monitor_activities_on_lead_id"
+  end
+
+  create_table "lead_monitor_leads", force: :cascade do |t|
+    t.text "address"
+    t.string "business_name", null: false
+    t.string "business_type"
+    t.string "classification", default: "possible", null: false
+    t.string "contact_email"
+    t.string "contact_name"
+    t.string "contact_phone"
+    t.datetime "created_at", null: false
+    t.string "evidence_kind"
+    t.text "evidence_notes"
+    t.text "evidence_url"
+    t.string "external_id", null: false
+    t.string "local_authority"
+    t.boolean "location_verified", default: false, null: false
+    t.date "opening_on"
+    t.jsonb "payload", default: {}, null: false
+    t.string "postcode"
+    t.datetime "reviewed_at"
+    t.string "reviewed_by"
+    t.bigint "run_id"
+    t.string "source", null: false
+    t.datetime "updated_at", null: false
+    t.text "website"
+    t.index ["classification", "created_at"], name: "index_lead_monitor_leads_on_classification_and_created_at"
+    t.index ["run_id"], name: "index_lead_monitor_leads_on_run_id"
+    t.index ["source", "external_id"], name: "index_lead_monitor_leads_on_source_and_external_id", unique: true
+  end
+
+  create_table "lead_monitor_runs", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "error"
+    t.integer "fetched_count", default: 0, null: false
+    t.integer "new_count", default: 0, null: false
+    t.datetime "notified_at"
+    t.string "source", null: false
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["notified_at"], name: "index_lead_monitor_runs_on_notified_at"
+  end
+
+  create_table "lead_monitor_sightings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.string "source", null: false
+    t.index ["source", "external_id"], name: "index_lead_monitor_sightings_on_source_and_external_id", unique: true
+  end
+
+  create_table "lead_monitor_sources", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.datetime "seeded_at"
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_lead_monitor_sources_on_name", unique: true
   end
 
   create_table "leaderboard_entries", force: :cascade do |t|
@@ -586,6 +651,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_08_120000) do
   add_foreign_key "collection_items", "collections"
   add_foreign_key "collection_items", "products"
   add_foreign_key "game_leads", "leaderboard_entries", column: "referrer_id"
+  add_foreign_key "lead_monitor_activities", "lead_monitor_leads", column: "lead_id"
+  add_foreign_key "lead_monitor_leads", "lead_monitor_runs", column: "run_id"
   add_foreign_key "leaderboard_entries", "leaderboard_entries", column: "referrer_id"
   add_foreign_key "order_items", "orders"
   add_foreign_key "order_items", "products"

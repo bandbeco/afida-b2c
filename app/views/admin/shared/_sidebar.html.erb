@@ -1,6 +1,7 @@
 <div class="drawer-side z-20 hidden lg:block">
   <label for="admin-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
   <ul class="menu bg-base-200 min-h-full w-64 p-4 pt-20">
+    <li><%= link_to "Lead monitor", lead_monitor_leads_path %></li>
     <li>
       <%= link_to admin_products_path, class: "#{request.path.start_with?('/admin/products') ? 'active' : ''}" do %>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5">
