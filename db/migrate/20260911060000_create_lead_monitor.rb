@@ -14,6 +14,7 @@ class CreateLeadMonitor < ActiveRecord::Migration[8.1]
       t.integer :new_count, null: false, default: 0
       t.string :error
       t.datetime :notified_at
+      t.datetime :digest_claimed_at
       t.timestamps
     end
     add_index :lead_monitor_runs, :notified_at

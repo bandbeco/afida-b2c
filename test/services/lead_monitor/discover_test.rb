@@ -49,6 +49,13 @@ class LeadMonitor::DiscoverTest < ActiveSupport::TestCase
     assert_equal 1, discover([ record("1"), record("2") ]).new_count
   end
 
+  test "the snapshot is fetched before the source row is locked" do
+    depth_outside = LeadMonitor::Record.connection.open_transactions
+    fetcher = mock
+    fetcher.expects(:fetch).with { LeadMonitor::Record.connection.open_transactions == depth_outside }.returns([])
+    assert_equal "seeded", LeadMonitor::Discover.new(source: "fhrs", fetcher: fetcher).call.status
+  end
+
   test "a different source has an independent seed" do
     discover([ record("1") ])
     run = LeadMonitor::Discover.new(source: "other", fetcher: stub(fetch: [ record("1").merge(source: "other") ])).call

@@ -11,15 +11,15 @@ The monitor discovers candidates for the new-opening kit. A business first seen 
 
 All domain records, services, jobs and mailers live under `LeadMonitor`. Its five tables have the `lead_monitor_` prefix and foreign keys only within the module. The abstract record inherits directly from Active Record; jobs and mailers inherit Rails framework classes. There are no associations, callbacks or writes to customers, orders, products, carts or marketing integrations.
 
-The controller shares the host's `Authentication` concern and admin check, but inherits directly from `ActionController::Base` and uses a dedicated layout. Reviewer identities are stored as strings supplied by this adapter, without a foreign key to users. The host integration consists of routes, an admin navigation link, recurring schedules, existing CSS and shared Rails infrastructure. This keeps extraction possible without introducing an engine or a second deployment now.
+The controller shares the host's `Authentication` and `AdminAuthorization` concerns, but inherits directly from `ActionController::Base` and uses a dedicated layout. Reviewer identities are stored as strings supplied by this adapter, without a foreign key to users. The host integration consists of routes, an admin navigation link, recurring schedules, existing CSS and shared Rails infrastructure. This keeps extraction possible without introducing an engine or a second deployment now.
 
 ## Discovery boundary
 
 The injected fetcher returns normalized attributes for a complete source snapshot or raises. V1 polls four FSA business types in the AwaitingInspection pool; it does not scan the full register. Missing identity, missing metadata, failed pages, count changes or duplicate page identities reject the snapshot. Rate-limit retries and pagination are bounded. Only discovered leads retain the source payload.
 
-A unique source record tracks seeding independently of sightings, including successful empty seeds. A source row lock serializes fetch and import. Sightings, new unqualified leads, the seed marker and a run record commit together. Persistence failures roll back the complete import and create a failed run. Existing identities are never recreated or overwritten.
+A unique source record tracks seeding independently of sightings, including successful empty seeds. The snapshot is fetched outside any transaction; a source row lock then serializes the import. Sightings, new unqualified leads, the seed marker and a run record commit together. Persistence failures roll back the complete import and create a failed run. Existing identities are never recreated or overwritten.
 
-Each run is also a durable pending digest. An hourly sweep recovers notifications if a worker stops before enqueueing the immediate digest. A row lock prevents normal concurrent delivery; a successful send records `notified_at`. Delivery is at least once: a crash after email acceptance but before the database commit can duplicate a digest. The run ID appears in the subject so duplicates are recognizable.
+Each run is also a durable pending digest. An hourly sweep recovers notifications if a worker stops before enqueueing the immediate digest. A claim timestamp on the run prevents normal concurrent delivery, the message is sent outside any transaction, and a successful send records `notified_at`. A claim older than ten minutes is treated as abandoned and swept again. Delivery is at least once: a crash after email acceptance but before the database commit can duplicate a digest. The run ID appears in the subject so duplicates are recognizable.
 
 ## Qualification and contact boundary
 

@@ -25,9 +25,9 @@
     </tbody>
   </table>
 </div>
-<div class="flex gap-4 my-4">
-  <% if @page > 1 %><%= link_to "Previous", lead_monitor_leads_path(page: @page - 1, classification: @classification), class: "link" %><% end %>
-  <% if @leads.size == 50 %><%= link_to "Next", lead_monitor_leads_path(page: @page + 1, classification: @classification), class: "link" %><% end %>
+<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 my-4">
+  <p class="text-sm">Showing <%= @pagy.from %>–<%= @pagy.to %> of <%= @pagy.count %> candidates</p>
+  <%== @pagy.series_nav %>
 </div>
 <h2 class="text-xl mt-8 mb-3">Recent discovery runs</h2>
 <ul class="space-y-2">

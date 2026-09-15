@@ -9,8 +9,8 @@ module LeadMonitor
 
     def call
       state = Source.create_or_find_by!(name: @source)
+      records = @fetcher.fetch.uniq { |record| record.fetch(:external_id) }
       state.with_lock(requires_new: true) do
-        records = @fetcher.fetch.uniq { |record| record.fetch(:external_id) }
         seeded = state.seeded_at.nil?
         run = Run.create!(source: @source, status: seeded ? "seeded" : "completed", fetched_count: records.size)
         known = Sighting.where(source: @source, external_id: records.map { |row| row.fetch(:external_id) }).pluck(:external_id).to_set

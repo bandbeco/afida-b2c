@@ -2,7 +2,7 @@
 type: Plan
 description: Consolidated implementation checklist for the three Hormozi trilogy proposals (Money Model, Grand Slam Offer, Leads), merging their interlocking build orders into four phases with per-item ownership and the shared scoreboard.
 status: active
-timestamp: 2026-08-21
+timestamp: 2026-09-15
 ---
 
 # Hormozi Trilogy Implementation Plan
@@ -53,7 +53,7 @@ Centred on merging the `lead-monitor` branch with the new-opening kit as its rea
 
 ### Lead monitor: opening qualification
 
-Implementation is on `build-lead-monitor`, using an isolated `LeadMonitor` namespace in place of merging the older prototype. See the [architecture decision](../adr/0002-isolated-lead-monitor.md) and [operating runbook](../runbooks/lead-monitor.md). Discovery, manual qualification, contact drafts/logging and recoverable internal digests are implemented; deployment, kit readiness and the manual quality review remain pending. Automated research, outreach sequences, list recycling and storefront conversion integration remain deferred.
+Implementation is on `build-lead-monitor`, using an isolated `LeadMonitor` namespace in place of merging the older prototype. See the [architecture decision](/adr/0002-isolated-lead-monitor.md) and [operating runbook](/runbooks/lead-monitor.md). Discovery, manual qualification, contact drafts/logging and recoverable internal digests are implemented; deployment, kit readiness and the manual quality review remain pending. Automated research, outreach sequences, list recycling and storefront conversion integration remain deferred.
 
 Qualify the trading location. A new location from an established operator qualifies. Incorporation dates, awaiting-inspection status, and first reviews can guide research but do not establish when the location opened.
 

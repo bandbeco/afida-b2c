@@ -30,7 +30,7 @@ CSV exports contain evidence, classification and eligibility as of export time, 
 
 ## Failure recovery and limits
 
-The queue shows the five most recent runs and their digest state. A failed fetch or import creates a failed run without advancing sightings or the baseline. The failed run stores the exception class and message, the same failure is reported to Sentry, and application logs carry it under `[LeadMonitor]`. Correct the source/API problem and rerun discovery. Do not delete source or sighting records to retry: that would discard the baseline.
+The queue shows the five most recent runs and their digest state. A digest that a worker claimed but never sent is retried by the hourly sweep once the claim is ten minutes old. A failed fetch or import creates a failed run without advancing sightings or the baseline. The failed run stores the exception class and message, the same failure is reported to Sentry, and application logs carry it under `[LeadMonitor]`. Correct the source/API problem and rerun discovery. Do not delete source or sighting records to retry: that would discard the baseline.
 
 The fetcher polls restaurant/café/canteen, pub/bar/nightclub, takeaway/sandwich shop and mobile-caterer types in the FSA AwaitingInspection pool. Missing pages or malformed metadata fail the whole snapshot. HTTP requests time out after 30 seconds; rate limits have two retries with delays capped at 60 seconds. A count change or duplicate identity during pagination refetches that business type once; a second mismatch fails the run, which can be retried later. The API offers no immutable snapshot token, so count validation cannot prove that a live dataset was unchanged.
 
@@ -46,4 +46,4 @@ Run the module tests with:
 
     bin/rails test test/models/lead_monitor test/services/lead_monitor test/jobs/lead_monitor test/controllers/lead_monitor
 
-The browser workflow lives in `test/system/lead_monitor_test.rb`. It requires Chrome and its runtime libraries; set `CHROME_BIN` if Chrome is outside the normal executable path. HTTP tests use WebMock and never poll live businesses. See [the architecture decision](../adr/0002-isolated-lead-monitor.md) for isolation boundaries and delivery guarantees.
+The browser workflow lives in `test/system/lead_monitor_test.rb`. It requires Chrome and its runtime libraries; set `CHROME_BIN` if Chrome is outside the normal executable path. HTTP tests use WebMock and never poll live businesses. See [the architecture decision](/adr/0002-isolated-lead-monitor.md) for isolation boundaries and delivery guarantees.

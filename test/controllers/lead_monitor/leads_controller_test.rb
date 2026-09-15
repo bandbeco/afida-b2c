@@ -79,6 +79,27 @@ class LeadMonitor::LeadsControllerTest < ActionDispatch::IntegrationTest
     assert_empty @lead.activities
   end
 
+  test "the review queue paginates fifty candidates per page and exports every row" do
+    LeadMonitor::Lead.insert_all!((2..52).map { |n|
+      { source: "fhrs", external_id: n.to_s, business_name: "Café #{n}", created_at: Time.current, updated_at: Time.current }
+    })
+    sign_in
+    get lead_monitor_leads_path
+    assert_select "tbody tr", 50
+    assert_select "nav.pagy"
+    get lead_monitor_leads_path(page: 2)
+    assert_select "tbody tr", 2
+    get lead_monitor_leads_path(format: :csv)
+    assert_equal 53, response.body.lines.size
+  end
+
+  test "the admin sidebar and mobile dock both reach the lead monitor" do
+    sign_in
+    get admin_products_path
+    assert_select ".drawer-side a[href=?]", lead_monitor_leads_path
+    assert_select ".dock a[href=?]", lead_monitor_leads_path
+  end
+
   test "qualification filters and CSV include classification and neutralize spreadsheet formulas" do
     @lead.update!(business_name: "=HYPERLINK(1)")
     sign_in

@@ -1,8 +1,8 @@
 module LeadMonitor
   class LeadsController < ActionController::Base
     include Authentication
+    include AdminAuthorization
     layout "lead_monitor"
-    before_action :require_admin
     before_action :set_lead, only: %i[show update activity]
 
     def index
@@ -11,8 +11,7 @@ module LeadMonitor
       @leads = @leads.where(classification: @classification) if Lead::CLASSIFICATIONS.key?(@classification)
       respond_to do |format|
         format.html do
-          @page = [ params[:page].to_i, 1 ].max
-          @leads = @leads.limit(50).offset((@page - 1) * 50)
+          @pagy, @leads = pagy(@leads)
           @runs = Run.order(id: :desc).limit(5)
         end
         format.csv { send_data LeadsCsv.generate(@leads.reorder(nil)), filename: "lead-monitor-#{Date.current}.csv", type: "text/csv" }
@@ -50,10 +49,6 @@ module LeadMonitor
 
     def set_lead
       @lead = Lead.find(params[:id])
-    end
-
-    def require_admin
-      redirect_to root_path, alert: "You are not authorized to access this page." unless Current.user&.admin?
     end
   end
 end

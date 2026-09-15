@@ -13,7 +13,7 @@ module LeadMonitor
         return
       end
 
-      Run.pending_notification.find_each do |run|
+      Run.digest_claimable.find_each do |run|
         deliver(run)
       end
     end
@@ -21,13 +21,12 @@ module LeadMonitor
     private
 
     def deliver(run)
-      run.with_lock do
-        return if run.notified_at
+      return unless run.claim_digest!
 
-        DigestMailer.digest(run).deliver_now
-        run.update!(notified_at: Time.current)
-      end
+      DigestMailer.digest(run).deliver_now
+      run.update!(notified_at: Time.current)
     rescue StandardError => e
+      run.release_digest_claim!
       Rails.logger.error("[LeadMonitor] Digest #{run.id} failed: #{e.class}; left pending")
     end
   end

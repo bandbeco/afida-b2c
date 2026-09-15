@@ -300,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_11_060000) do
 
   create_table "lead_monitor_runs", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.datetime "digest_claimed_at"
     t.string "error"
     t.integer "fetched_count", default: 0, null: false
     t.integer "new_count", default: 0, null: false

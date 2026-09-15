@@ -21,6 +21,27 @@ class LeadMonitor::DeliverDigestsJobTest < ActiveJob::TestCase
     LeadMonitor::DigestMailer.expects(:digest).with(run).returns(message)
     LeadMonitor::DeliverDigestsJob.perform_now
     assert_nil run.reload.notified_at
+    assert_nil run.digest_claimed_at
+  end
+
+  test "delivery happens outside a database transaction" do
+    run = LeadMonitor::Run.create!(source: "fhrs", status: "seeded")
+    LeadMonitor::DigestMailer.stubs(:recipient).returns("admin@example.com")
+    depth_outside = LeadMonitor::Record.connection.open_transactions
+    message = mock
+    message.expects(:deliver_now).with { LeadMonitor::Record.connection.open_transactions == depth_outside }
+    LeadMonitor::DigestMailer.expects(:digest).with(run).returns(message)
+    LeadMonitor::DeliverDigestsJob.perform_now
+    assert run.reload.notified_at
+  end
+
+  test "a run claimed by another worker is skipped and an abandoned claim is delivered by the next sweep" do
+    LeadMonitor::DigestMailer.stubs(:recipient).returns("admin@example.com")
+    claimed = LeadMonitor::Run.create!(source: "fhrs", status: "seeded", digest_claimed_at: 1.minute.ago)
+    abandoned = LeadMonitor::Run.create!(source: "fhrs", status: "seeded", digest_claimed_at: 20.minutes.ago)
+    assert_emails(1) { LeadMonitor::DeliverDigestsJob.perform_now }
+    assert_nil claimed.reload.notified_at
+    assert abandoned.reload.notified_at
   end
 
   test "missing recipient leaves pending runs intact" do
