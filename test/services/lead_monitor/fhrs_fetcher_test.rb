@@ -30,6 +30,11 @@ class LeadMonitor::FhrsFetcherTest < ActiveSupport::TestCase
     end
   end
 
+  test "records carry the source name the fetcher was built for" do
+    stub_types(page([ establishment ]))
+    assert_equal "other", LeadMonitor::FhrsFetcher.new(source: "other").tap { |fetcher| fetcher.stubs(:sleep) }.fetch.first[:source]
+  end
+
   test "fetches all pages and target types" do
     LeadMonitor::FhrsFetcher::BUSINESS_TYPE_IDS.each do |type|
       [ 1, 2 ].each do |number|

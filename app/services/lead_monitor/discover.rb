@@ -2,7 +2,7 @@ module LeadMonitor
   class Discover
     SOURCE_FIELDS = %i[external_id business_name business_type address postcode local_authority payload].freeze
 
-    def initialize(source: "fhrs", fetcher: FhrsFetcher.new)
+    def initialize(source: "fhrs", fetcher: FhrsFetcher.new(source: source))
       @source = source
       @fetcher = fetcher
     end

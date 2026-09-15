@@ -101,7 +101,7 @@ class LeadMonitor::LeadsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "qualification filters and CSV include classification and neutralize spreadsheet formulas" do
-    @lead.update!(business_name: "=HYPERLINK(1)")
+    @lead.update!(business_name: "=HYPERLINK(1)", website: "https://example.com/cafe")
     sign_in
     get lead_monitor_leads_path(classification: "upcoming")
     assert_response :success
@@ -109,6 +109,8 @@ class LeadMonitor::LeadsControllerTest < ActionDispatch::IntegrationTest
     get lead_monitor_leads_path(format: :csv)
     assert_response :success
     assert_includes response.body, "'=HYPERLINK(1)"
+    assert_includes response.body, "Website"
+    assert_includes response.body, "https://example.com/cafe"
     assert_includes response.body, "possible"
     assert_includes response.body, "Opening eligible"
   end

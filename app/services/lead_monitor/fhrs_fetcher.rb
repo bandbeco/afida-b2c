@@ -9,6 +9,10 @@ module LeadMonitor
     FetchFailed = Class.new(StandardError)
     SnapshotChanged = Class.new(FetchFailed)
 
+    def initialize(source: "fhrs")
+      @source = source
+    end
+
     def fetch
       BUSINESS_TYPE_IDS.flat_map { |type| fetch_type(type) }.uniq { |record| record[:external_id] }
     rescue HTTP::Error, JSON::ParserError, KeyError => e
@@ -78,7 +82,7 @@ module LeadMonitor
         raise FetchFailed, "Invalid establishment identity or name"
       end
       {
-        source: "fhrs", external_id: entry.fetch("FHRSID").to_s, business_name: entry.fetch("BusinessName"),
+        source: @source, external_id: entry.fetch("FHRSID").to_s, business_name: entry.fetch("BusinessName"),
         business_type: entry["BusinessType"],
         address: entry.values_at("AddressLine1", "AddressLine2", "AddressLine3", "AddressLine4").compact_blank.join(", "),
         postcode: entry["PostCode"], local_authority: entry["LocalAuthorityName"], payload: entry
