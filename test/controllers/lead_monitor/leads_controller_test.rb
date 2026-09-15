@@ -50,6 +50,25 @@ class LeadMonitor::LeadsControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea#outreach-template", count: 1
   end
 
+  test "contact details saved with blank evidence fields do not count as a review" do
+    sign_in
+    patch lead_monitor_lead_path(@lead), params: { lead: {
+      classification: "possible", opening_on: "", evidence_kind: "", evidence_url: "", evidence_notes: "",
+      location_verified: "0", contact_phone: "01234 567890"
+    } }
+    assert_redirected_to lead_monitor_lead_path(@lead)
+    assert_equal "01234 567890", @lead.reload.contact_phone
+    assert_nil @lead.reviewed_by
+    assert_nil @lead.reviewed_at
+  end
+
+  test "an activity without a kind is rejected as invalid" do
+    sign_in
+    post activity_lead_monitor_lead_path(@lead), params: { activity: { notes: "Hello" } }
+    assert_response :unprocessable_entity
+    assert_empty @lead.activities
+  end
+
   test "invalid evidence stays on the form and cannot enable outreach" do
     sign_in
     patch lead_monitor_lead_path(@lead), params: { lead: { classification: "recent", opening_on: Date.current } }

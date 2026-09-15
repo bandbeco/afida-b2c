@@ -19,8 +19,7 @@ module LeadMonitor
       mail(to: self.class.recipient, subject: "Lead monitor ##{run.id}: #{run.status}, #{run.new_count} candidates") do |format|
         format.text { render plain: lines.join("\n\n") }
       end
-      # Action Mailer's setting is shared across subclasses. Override only
-      # this message so failed digests stay pending without changing shop mail.
+      # raise_delivery_errors is shared by every mailer, so override it on this message only.
       mail.raise_delivery_errors = true
     end
   end

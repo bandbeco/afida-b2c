@@ -1,12 +1,12 @@
 <%= link_to "Back to review queue", lead_monitor_leads_path, class: "link" %>
-<h1 class="text-3xl font-bold mt-4 mb-2"><%= @lead.business_name %></h1>
+<h1 class="text-3xl mt-4 mb-2"><%= @lead.business_name %></h1>
 <p><%= @lead.address %>, <%= @lead.postcode %></p>
 <p class="mb-6"><%= @lead.business_type %> · <%= @lead.local_authority %> · <%= @lead.source %> #<%= @lead.external_id %></p>
 <% if @lead.errors.any? %>
   <div class="alert alert-error mb-4" role="alert"><%= @lead.errors.full_messages.to_sentence %></div>
 <% end %>
 <section class="bg-base-100 rounded-box p-6 mb-6">
-  <h2 class="text-xl font-bold mb-3">Verify this trading location</h2>
+  <h2 class="text-xl mb-3">Verify this trading location</h2>
   <p class="mb-4">Use a business opening announcement, local reporting, or direct confirmation. Incorporation and awaiting-inspection status alone do not qualify. A new location from an established operator can qualify.</p>
   <%= form_with model: @lead, scope: :lead, url: lead_monitor_lead_path(@lead), class: "space-y-4" do |form| %>
     <div class="grid md:grid-cols-2 gap-4">
@@ -18,7 +18,7 @@
     <div><%= form.label :evidence_notes, "Evidence / dated call notes, including venue and address", class: "block" %><%= form.text_area :evidence_notes, rows: 4, class: "textarea textarea-bordered w-full" %></div>
     <div><%= form.check_box :location_verified, class: "checkbox align-middle" %> <%= form.label :location_verified, "I verified that this evidence refers to this venue and address" %></div>
     <p>Recent means opened within the past 60 days. Leave uncertain or conflicting evidence as “Possible new opening”.</p>
-    <h3 class="font-bold">Contact details</h3>
+    <h3 class="text-lg">Contact details</h3>
     <div class="grid md:grid-cols-2 gap-4">
       <% %i[contact_name contact_email contact_phone website].each do |field| %>
         <div><%= form.label field, class: "block" %><%= form.text_field field, class: "input input-bordered w-full" %></div>
@@ -29,7 +29,7 @@
   <% if @lead.reviewed_at %><p class="mt-4">Checked by <%= @lead.reviewed_by %> on <%= @lead.reviewed_at.to_fs(:long) %>.</p><% end %>
 </section>
 <section class="bg-base-100 rounded-box p-6 mb-6">
-  <h2 class="text-xl font-bold mb-3">Manual outreach</h2>
+  <h2 class="text-xl mb-3">Manual outreach</h2>
   <p class="mb-3">Status: <%= @lead.outreach_status.humanize %>. Opening evidence: <%= @lead.opening_eligible? ? "eligible today" : "verification required before contact" %>.</p>
   <% outreach = LeadMonitor::Outreach.new(@lead) %>
   <% if (template = outreach.template) %>
@@ -48,7 +48,7 @@
   <% end %>
   <ul class="mt-6 space-y-4">
     <% @lead.activities.order(created_at: :desc, id: :desc).each do |activity| %>
-      <li><strong><%= activity.kind.humanize %></strong> — <%= activity.created_at.to_fs(:long) %> by <%= activity.actor %><p class="whitespace-pre-wrap"><%= activity.notes %></p></li>
+      <li><%= activity.kind.humanize %> — <%= activity.created_at.to_fs(:long) %> by <%= activity.actor %><p class="whitespace-pre-wrap"><%= activity.notes %></p></li>
     <% end %>
   </ul>
 </section>

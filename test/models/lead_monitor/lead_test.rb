@@ -57,6 +57,8 @@ class LeadMonitor::LeadTest < ActiveSupport::TestCase
     travel 1.day do
       refute candidate.reload.opening_eligible?
       assert candidate.update(contact_phone: "01234 567890")
+      assert candidate.update(evidence_notes: "Corrected: names this venue and address")
+      refute candidate.update(opening_on: Date.current - 70)
     end
 
     candidate.assign_attributes(evidence(classification: "upcoming", opening_on: Date.current + 1))

@@ -30,8 +30,10 @@ class LeadMonitor::DiscoverTest < ActiveSupport::TestCase
   test "fetch failures do not seed and remain visible as pending digest runs" do
     fetcher = mock
     fetcher.expects(:fetch).raises(LeadMonitor::FhrsFetcher::FetchFailed, "broken page")
+    Sentry.expects(:capture_exception).with(instance_of(LeadMonitor::FhrsFetcher::FetchFailed)).once
     run = LeadMonitor::Discover.new(source: "fhrs", fetcher: fetcher).call
     assert_equal "failed", run.status
+    assert_equal "LeadMonitor::FhrsFetcher::FetchFailed: broken page", run.error
     assert_nil run.notified_at
     assert_nil LeadMonitor::Source.find_by!(name: "fhrs").seeded_at
     assert_equal 0, LeadMonitor::Sighting.count

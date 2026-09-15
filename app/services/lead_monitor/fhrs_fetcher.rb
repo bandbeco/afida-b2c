@@ -1,24 +1,31 @@
 require "http"
 
 module LeadMonitor
-  # A complete snapshot of the target AwaitingInspection pool, not the full register.
-  # No writes, no interpretation of opening dates. Any incomplete page fails closed.
   class FhrsFetcher
     ENDPOINT = "https://api.ratings.food.gov.uk/Establishments"
     BUSINESS_TYPE_IDS = [ 1, 7843, 7844, 7846 ].freeze
     PAGE_SIZE = 5000
     MAX_PAGES = 1000
     FetchFailed = Class.new(StandardError)
+    SnapshotChanged = Class.new(FetchFailed)
 
     def fetch
       BUSINESS_TYPE_IDS.flat_map { |type| fetch_type(type) }.uniq { |record| record[:external_id] }
-    rescue HTTP::Error, JSON::ParserError, KeyError, TypeError, NoMethodError => e
-      raise FetchFailed, "Invalid FHRS snapshot (#{e.class})"
+    rescue HTTP::Error, JSON::ParserError, KeyError => e
+      raise FetchFailed, "Invalid FHRS snapshot (#{e.class}: #{e.message})"
     end
 
     private
 
-    def fetch_type(type)
+    def fetch_type(type, retries_left: 1)
+      fetch_pages(type)
+    rescue SnapshotChanged
+      raise if retries_left.zero?
+
+      fetch_type(type, retries_left: retries_left - 1)
+    end
+
+    def fetch_pages(type)
       records = []
       expected = nil
       page_number = 1
@@ -30,11 +37,11 @@ module LeadMonitor
         entries = body.fetch("establishments")
         unless pages.is_a?(Integer) && pages.between?(0, MAX_PAGES) &&
             count.is_a?(Integer) && count >= 0 && (count.zero? || pages.positive?) && entries.is_a?(Array) &&
-            meta.fetch("currentPage") == page_number
+            meta.fetch("pageNumber") == page_number
           raise FetchFailed, "Invalid pagination for type #{type}"
         end
         expected ||= [ pages, count ]
-        raise FetchFailed, "Snapshot changed during pagination" unless expected == [ pages, count ]
+        raise SnapshotChanged, "Snapshot changed during pagination" unless expected == [ pages, count ]
         raise FetchFailed, "Empty page in nonempty snapshot" if entries.empty? && count.positive?
         records.concat(entries.map { |entry| normalize(entry) })
         break if page_number >= pages
@@ -42,7 +49,7 @@ module LeadMonitor
         page_number += 1
       end
       unless records.size == expected.last && records.map { |row| row[:external_id] }.uniq.size == records.size
-        raise FetchFailed, "Snapshot count mismatch or duplicate identities"
+        raise SnapshotChanged, "Snapshot count mismatch or duplicate identities"
       end
       records
     end

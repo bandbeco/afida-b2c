@@ -8,7 +8,7 @@ class LeadMonitor::FhrsFetcherTest < ActiveSupport::TestCase
   end
 
   def page(records = [], number: 1, pages: 1, count: records.length)
-    { establishments: records, meta: { currentPage: number, totalPages: pages, totalCount: count } }
+    { establishments: records, meta: { pageNumber: number, totalPages: pages, totalCount: count } }
   end
 
   def establishment(id = 1)
@@ -69,6 +69,15 @@ class LeadMonitor::FhrsFetcherTest < ActiveSupport::TestCase
   test "zero page metadata cannot describe a nonempty snapshot" do
     stub_types(page([ establishment ], pages: 0))
     assert_raises(LeadMonitor::FhrsFetcher::FetchFailed) { @fetcher.fetch }
+  end
+
+  test "a snapshot that changes during pagination is fetched again once" do
+    stub_request(:get, LeadMonitor::FhrsFetcher::ENDPOINT).with(query: hash_including("pageNumber" => "1"))
+      .to_return(body: page([ establishment ], pages: 2, count: 2).to_json)
+    stub_request(:get, LeadMonitor::FhrsFetcher::ENDPOINT).with(query: hash_including("pageNumber" => "2"))
+      .to_return(body: page([ establishment(2) ], number: 2, pages: 2, count: 3).to_json)
+      .then.to_return(body: page([ establishment(2) ], number: 2, pages: 2, count: 2).to_json)
+    assert_equal 2, @fetcher.fetch.size
   end
 
   test "a changing count or a repeated identity across pages rejects the snapshot" do

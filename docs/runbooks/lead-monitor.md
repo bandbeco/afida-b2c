@@ -30,9 +30,9 @@ CSV exports contain evidence, classification and eligibility as of export time, 
 
 ## Failure recovery and limits
 
-The queue shows the five most recent runs and their digest state. A failed fetch or import creates a failed run without advancing sightings or the baseline. Check application logs for `[LeadMonitor]`, correct the source/API problem and rerun discovery. Do not delete source or sighting records to retry: that would discard the baseline.
+The queue shows the five most recent runs and their digest state. A failed fetch or import creates a failed run without advancing sightings or the baseline. The failed run stores the exception class and message, the same failure is reported to Sentry, and application logs carry it under `[LeadMonitor]`. Correct the source/API problem and rerun discovery. Do not delete source or sighting records to retry: that would discard the baseline.
 
-The fetcher polls restaurant/café/canteen, pub/bar/nightclub, takeaway/sandwich shop and mobile-caterer types in the FSA AwaitingInspection pool. Missing pages or malformed metadata fail the whole snapshot. HTTP requests time out after 30 seconds; rate limits have two retries with delays capped at 60 seconds. Count changes during pagination are rejected and can be retried later. The API offers no immutable snapshot token, so count validation cannot prove that a live dataset was unchanged.
+The fetcher polls restaurant/café/canteen, pub/bar/nightclub, takeaway/sandwich shop and mobile-caterer types in the FSA AwaitingInspection pool. Missing pages or malformed metadata fail the whole snapshot. HTTP requests time out after 30 seconds; rate limits have two retries with delays capped at 60 seconds. A count change or duplicate identity during pagination refetches that business type once; a second mismatch fails the run, which can be retried later. The API offers no immutable snapshot token, so count validation cannot prove that a live dataset was unchanged.
 
 Identities seen before the seed, businesses never present in this pool, and businesses entering and leaving between weekly polls will not become leads. New registration identities and ownership changes can produce candidates; manual evidence determines whether they qualify. A failed week can recover on the next successful snapshot if the identities are still in the pool.
 

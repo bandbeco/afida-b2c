@@ -1,4 +1,4 @@
-<h1 class="text-3xl font-bold mb-3">Opening review queue</h1>
+<h1 class="text-3xl mb-3">Opening review queue</h1>
 <p class="mb-6">These businesses were first seen in the FSA awaiting-inspection results. Verify their opening date and location before outreach.</p>
 <%= form_with url: lead_monitor_leads_path, method: :get, class: "flex gap-3 items-end mb-6" do |form| %>
   <div>
@@ -16,7 +16,7 @@
         <tr>
           <td><%= link_to lead.business_name, lead_monitor_lead_path(lead), class: "link" %></td>
           <td><%= lead.postcode %><br><%= lead.local_authority %></td>
-          <td><%= LeadMonitor::Lead::CLASSIFICATIONS.fetch(lead.classification) %><% if %w[upcoming recent].include?(lead.classification) && !lead.opening_eligible? %><br><strong>Recheck opening date</strong><% end %></td>
+          <td><%= LeadMonitor::Lead::CLASSIFICATIONS.fetch(lead.classification) %><% if %w[upcoming recent].include?(lead.classification) && !lead.opening_eligible? %><br><span class="text-error">Recheck opening date</span><% end %></td>
           <td><%= lead.outreach_status.humanize %></td>
           <td><%= lead.next_follow_up_on || "—" %></td>
         </tr>
@@ -29,7 +29,7 @@
   <% if @page > 1 %><%= link_to "Previous", lead_monitor_leads_path(page: @page - 1, classification: @classification), class: "link" %><% end %>
   <% if @leads.size == 50 %><%= link_to "Next", lead_monitor_leads_path(page: @page + 1, classification: @classification), class: "link" %><% end %>
 </div>
-<h2 class="text-xl font-bold mt-8 mb-3">Recent discovery runs</h2>
+<h2 class="text-xl mt-8 mb-3">Recent discovery runs</h2>
 <ul class="space-y-2">
   <% @runs.each do |run| %>
     <li><%= run.created_at.to_fs(:short) %> — <%= run.source %>: <%= run.status %>, <%= run.fetched_count %> fetched, <%= run.new_count %> candidates. Digest <%= run.notified_at ? "delivered" : "pending" %><% if run.error %> — <%= run.error %><% end %></li>

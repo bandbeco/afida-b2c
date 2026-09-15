@@ -1,5 +1,4 @@
 module LeadMonitor
-  # The only host adapter is authentication. Avoid storefront callbacks/layout queries.
   class LeadsController < ActionController::Base
     include Authentication
     layout "lead_monitor"
@@ -39,8 +38,8 @@ module LeadMonitor
     end
 
     def activity
-      attributes = params.require(:activity).permit(:kind, :notes).to_h.symbolize_keys
-      Outreach.new(@lead).record!(**attributes, actor: Current.user.email_address)
+      attributes = params.require(:activity).permit(:kind, :notes)
+      Outreach.new(@lead).record!(kind: attributes[:kind], notes: attributes[:notes], actor: Current.user.email_address)
       redirect_to lead_monitor_lead_path(@lead), notice: "Contact activity recorded."
     rescue Outreach::NotEligible, ActiveRecord::RecordInvalid => e
       @lead.errors.add(:base, e.message)

@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-09-15
+
+* **Update**: [Lead monitor](/runbooks/lead-monitor.md). Failed runs now store the exception message and report to Sentry; a snapshot that changes during FHRS pagination is refetched once per business type before the run fails.
+
 ## 2026-09-10
 
 * **Update**: `/game` Open Graph title and description now match the live prizes (stack 15 for £10 off a £100+ order; monthly #1 gets an @afidasupplies shoutout). Dropped the leftover “beat my tower” challenge line from the canonical card.

@@ -1,5 +1,4 @@
 module LeadMonitor
-  # Manual contact log only. Never sends prospect messages or touches customer data.
   class Outreach
     NotEligible = Class.new(StandardError)
 

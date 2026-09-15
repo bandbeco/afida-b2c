@@ -8,12 +8,15 @@ module LeadMonitor
     belongs_to :run, class_name: "LeadMonitor::Run", optional: true
     has_many :activities, class_name: "LeadMonitor::Activity", dependent: :restrict_with_exception
 
+    normalizes :evidence_kind, :evidence_url, :evidence_notes, with: ->(value) { value.presence }
+
     validates :source, :external_id, :business_name, presence: true
     validates :external_id, uniqueness: { scope: :source }
     validates :classification, inclusion: { in: CLASSIFICATIONS.keys }
     validates :contact_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
     validate :safe_urls
     validate :qualification_evidence, if: :review_changed?
+    validate :opening_window, if: :opening_changed?
 
     def opening_eligible?(on: Date.current)
       verified_evidence? && opening_in_window?(on)
@@ -45,6 +48,10 @@ module LeadMonitor
       new_record? || (changed & REVIEW_FIELDS).any?
     end
 
+    def opening_changed?
+      new_record? || will_save_change_to_classification? || will_save_change_to_opening_on?
+    end
+
     def verified_evidence?
       EVIDENCE_KINDS.include?(evidence_kind) && location_verified? && reviewed_by.present? &&
         reviewed_at.present? && reviewed_at <= Time.current &&
@@ -65,6 +72,11 @@ module LeadMonitor
       return unless %w[upcoming recent].include?(classification)
 
       errors.add(:base, "Verify opening evidence, location, reviewer and date checked") unless verified_evidence?
+    end
+
+    def opening_window
+      return unless %w[upcoming recent].include?(classification)
+
       errors.add(:opening_on, "must match the selected opening classification") unless opening_in_window?(Date.current)
     end
 

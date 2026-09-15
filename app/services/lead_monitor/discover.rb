@@ -9,8 +9,6 @@ module LeadMonitor
 
     def call
       state = Source.create_or_find_by!(name: @source)
-      # Serialize fetch + import per source, including concurrent first runs.
-      # Run and pending notification are committed with sightings and leads.
       state.with_lock(requires_new: true) do
         records = @fetcher.fetch.uniq { |record| record.fetch(:external_id) }
         seeded = state.seeded_at.nil?
@@ -28,8 +26,9 @@ module LeadMonitor
         run
       end
     rescue StandardError => e
-      Rails.logger.error("[LeadMonitor] #{@source} import failed: #{e.class}")
-      Run.create!(source: @source, status: "failed", error: e.class.name)
+      Rails.logger.error("[LeadMonitor] #{@source} import failed: #{e.class}: #{e.message}")
+      Sentry.capture_exception(e)
+      Run.create!(source: @source, status: "failed", error: "#{e.class}: #{e.message}")
     end
   end
 end
