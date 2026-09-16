@@ -703,9 +703,11 @@
   // The code exists only in Stripe and the claimant's inbox: the claim posts
   // the winning run's proof, the server re-verifies it, mints a unique
   // single-use code and emails it. Nothing shown here is worth scraping.
+  let winSentTimer = 0;
   function resetWinClaim() {
+    clearTimeout(winSentTimer);
     $('winSent').classList.add('hidden');
-    $('winSent').classList.remove('error');
+    $('winSent').classList.remove('error', 'sent');
     const btn = $('winEmailBtn');
     btn.disabled = false;
     btn.textContent = 'Send my code';
@@ -734,7 +736,19 @@
     const sent = $('winSent');
     sent.textContent = text;
     sent.classList.toggle('error', isError);
+    sent.classList.toggle('sent', !isError);
     sent.classList.remove('hidden');
+  }
+  // The button itself confirms the send; "Send again" only comes back once
+  // the confirmation has had time to register.
+  function markWinSent(btn) {
+    btn.disabled = true;
+    btn.textContent = 'Sent!';
+    clearTimeout(winSentTimer);
+    winSentTimer = setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = 'Send again';
+    }, 4000);
   }
   $('winEmail').value = store.get('afidaStackEmail') || '';
   $('winEmailRow').addEventListener('submit', async (e) => {
@@ -769,8 +783,7 @@
       showWinStatus(d.resent
         ? 'Sent again to ' + email + ' — same code as earlier this month, so look in that thread (and spam).'
         : 'Sent to ' + email + ' — check your inbox, and spam if it’s not there.', false);
-      btn.disabled = false;
-      btn.textContent = 'Send again';
+      markWinSent(btn);
     } catch {
       showWinStatus(OFFLINE, true);
       btn.disabled = false;

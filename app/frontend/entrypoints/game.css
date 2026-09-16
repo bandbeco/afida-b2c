@@ -455,6 +455,7 @@
   .prize-card .terms { font-size: 1.05rem; line-height: 1.2; margin: 0; max-width: 30ch; color: var(--muted); }
   .prize-card .terms a { color: var(--green); }
   .prize-card .terms.error { color: var(--pink); }
+  .prize-card .terms.sent { color: var(--green); text-shadow: var(--glow-green); }
   /* Collapsible sections: whichever one the outcome makes relevant opens as
      the hero; the rest wait as single quiet rows behind a blinking cursor. */
   .fold {
