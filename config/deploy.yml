@@ -59,6 +59,7 @@ env:
     # to Stripe's hosted page. Rollback lever: remove/zero this and re-boot
     # the app (read live from ENV, no code change needed). See OnsiteCheckout.
     ONSITE_CHECKOUT: "1"
+    LEAD_MONITOR_DIGEST_TO: "hello@afida.com, laurent@afida.com"
     # Emergency stop for verification mail: set SUPPRESS_VERIFICATION_EMAILS: "true"
     # here and redeploy (see docs/runbooks/verification-email-throttling.md). Used
     # during the 2026-08-19 subscription-bombing incident; lifted once the signup
