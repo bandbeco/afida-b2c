@@ -1,4 +1,8 @@
+<% if @resent -%>
+You asked for your code again — this is the same code we sent you earlier this month, still good until the month ends.
+<% else -%>
 You stacked it recklessly high — here's your code, safe from lost browser tabs:
+<% end -%>
 
 <%= @code %>
 

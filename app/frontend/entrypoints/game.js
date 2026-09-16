@@ -705,9 +705,36 @@
   // single-use code and emails it. Nothing shown here is worth scraping.
   function resetWinClaim() {
     $('winSent').classList.add('hidden');
+    $('winSent').classList.remove('error');
     const btn = $('winEmailBtn');
     btn.disabled = false;
     btn.textContent = 'Send my code';
+  }
+  // The server names every refusal (and logs it); turn the name into a
+  // sentence so a player is told what happened instead of a bare "Try again".
+  const REFUSALS = {
+    invalid_email: 'That email looks off — fix it and try again.',
+    below_target: d => 'The server replayed your run and counted ' +
+      (typeof d.score === 'number' ? d.score : 'too few') + ' stacks; the prize needs ' + winScore + '.',
+    invalid_token: 'This page has been open too long. Reload, play again, then claim straight after.',
+    too_fast: 'That run was quicker than a human could play. Play again and claim straight after.',
+    invalid_replay: 'Your run couldn’t be replayed. Play again on this screen without rotating or resizing it, then claim.',
+    rate_limited: 'Too many claims from your connection this hour. Try again later.',
+    mint_failed: 'Couldn’t create your code right now. Try again in a minute.',
+    invalid_entry: 'That entry couldn’t be saved. Check the name and email and try again.'
+  };
+  const OFFLINE = 'Couldn’t reach Afida. Check your connection and try again.';
+  async function explainRefusal(r) {
+    let d = null;
+    try { d = await r.json(); } catch {}
+    const m = d && REFUSALS[d.error];
+    return typeof m === 'function' ? m(d) : (m || OFFLINE);
+  }
+  function showWinStatus(text, isError) {
+    const sent = $('winSent');
+    sent.textContent = text;
+    sent.classList.toggle('error', isError);
+    sent.classList.remove('hidden');
   }
   $('winEmail').value = store.get('afidaStackEmail') || '';
   $('winEmailRow').addEventListener('submit', async (e) => {
@@ -730,14 +757,22 @@
           ref: inviterCode || undefined
         })
       });
-      if (!r.ok) throw new Error(r.status);
+      if (!r.ok) {
+        showWinStatus(await explainRefusal(r), true);
+        btn.disabled = false;
+        btn.textContent = 'Try again';
+        return;
+      }
+      let d = {};
+      try { d = await r.json(); } catch {}
       store.set('afidaStackEmail', email);
-      const sent = $('winSent');
-      sent.textContent = 'Sent to ' + email + ' — check your inbox.';
-      sent.classList.remove('hidden');
+      showWinStatus(d.resent
+        ? 'Sent again to ' + email + ' — same code as earlier this month, so look in that thread (and spam).'
+        : 'Sent to ' + email + ' — check your inbox, and spam if it’s not there.', false);
       btn.disabled = false;
       btn.textContent = 'Send again';
     } catch {
+      showWinStatus(OFFLINE, true);
       btn.disabled = false;
       btn.textContent = 'Try again';
     }
@@ -856,6 +891,7 @@
       btn.textContent = 'Join the board';
       const oops = $('lbResult');
       oops.textContent = 'That email looks off — fix it or clear it.';
+      oops.classList.add('error');
       oops.classList.remove('hidden');
       return;
     }
@@ -875,7 +911,11 @@
           ref: inviterCode || undefined
         })
       });
-      if (!r.ok) throw new Error(r.status);
+      if (!r.ok) {
+        const refusal = new Error('refused');
+        refusal.explained = await explainRefusal(r);
+        throw refusal;
+      }
       const d = await r.json();
       if (email) store.set('afidaStackBoardEmail', '1');
       if (d.ref_code && !myCode) {
@@ -888,13 +928,15 @@
       const result = $('lbResult');
       result.textContent = 'You’re #' + d.rank + ' this month.' +
         (d.rank <= 10 ? ' On the board.' : ' Top 10 gets the glory — go again.');
+      result.classList.remove('error');
       result.classList.remove('hidden');
       fetchBoard();
-    } catch {
+    } catch (err) {
       btn.disabled = false;
       btn.textContent = 'Try again';
       const result = $('lbResult');
-      result.textContent = 'Couldn’t verify that run — give it another go.';
+      result.textContent = err.explained || OFFLINE;
+      result.classList.add('error');
       result.classList.remove('hidden');
     }
   });

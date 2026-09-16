@@ -3,9 +3,14 @@
 # dethronement news travels by email. Marketing consent lives on GameLead and
 # is never assumed by these.
 class GameMailer < ApplicationMailer
-  def win_code(email, code)
+  # A resend carries the same code, so it gets its own subject: mail clients
+  # fold identical subjects into the earlier conversation and the player
+  # concludes nothing arrived.
+  def win_code(email, code, resent = false)
     @code = code
-    mail to: email, subject: "Your Afida Stack code: #{code}"
+    @resent = resent
+    subject = resent ? "Your Afida Stack code again: #{code}" : "Your Afida Stack code: #{code}"
+    mail to: email, subject: subject
   end
 
   def mate_code(email, code)

@@ -10,11 +10,11 @@ class GamePromoCodesController < ApplicationController
   skip_before_action :set_current_cart, :set_nav_categories
 
   rate_limit to: 10, within: 1.hour, store: LiveCacheStore,
-    with: -> { render json: { error: "rate_limited" }, status: :too_many_requests }
+    with: -> { reject("rate_limited", status: :too_many_requests) }
 
   def win
     address = params[:email].to_s.strip.downcase
-    return render_rejection("invalid_email") unless address.match?(URI::MailTo::EMAIL_REGEXP)
+    return reject("invalid_email") unless address.match?(URI::MailTo::EMAIL_REGEXP)
 
     run = Game::VerifiedRun.from(
       token: params[:token],
@@ -23,19 +23,20 @@ class GamePromoCodesController < ApplicationController
       ip: request.remote_ip,
       ref: params[:ref]
     )
-    return render_rejection(run.error) unless run.ok?
-    return render_rejection("below_target") if run.replay.score < win_target(run.referrer)
+    return reject(run.error) unless run.ok?
+    return reject("below_target", score: run.replay.score) if run.replay.score < win_target(run.referrer)
 
     lead = GameLead.capture(email: address, source: "win",
       marketing_opt_in: ActiveModel::Type::Boolean.new.cast(params[:marketing]) || false,
       referrer: run.referrer)
+    resent = lead.win_code_claimed_this_month?
     code = lead.claim_win_code
     attach_own_email!(address)
-    GameMailer.win_code(address, code).deliver_later
-    head :ok
+    GameMailer.win_code(address, code, resent).deliver_later
+    render json: { resent: resent }
   rescue Stripe::StripeError => e
     Rails.logger.error("Stripe error minting a game code: #{e.message}")
-    render json: { error: "mint_failed" }, status: :service_unavailable
+    reject("mint_failed", status: :service_unavailable)
   end
 
   private
@@ -55,7 +56,11 @@ class GamePromoCodesController < ApplicationController
     entry.deliver_pending_referral_rewards
   end
 
-  def render_rejection(reason)
-    render json: { error: reason }, status: :unprocessable_entity
+  # Every refusal names its reason in the response (the page turns it into a
+  # sentence) and in a business event, so "Try again" is never the only trace
+  # of a player who could not claim.
+  def reject(reason, status: :unprocessable_entity, score: nil)
+    Rails.event.notify("game.win_claim_rejected", { reason: reason, score: score }.compact)
+    render json: { error: reason, score: score }.compact, status: status
   end
 end

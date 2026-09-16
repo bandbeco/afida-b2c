@@ -454,6 +454,7 @@
   }
   .prize-card .terms { font-size: 1.05rem; line-height: 1.2; margin: 0; max-width: 30ch; color: var(--muted); }
   .prize-card .terms a { color: var(--green); }
+  .prize-card .terms.error { color: var(--pink); }
   /* Collapsible sections: whichever one the outcome makes relevant opens as
      the hero; the rest wait as single quiet rows behind a blinking cursor. */
   .fold {
@@ -661,6 +662,7 @@
     margin: 0;
   }
   .lb-result.hidden { display: none; }
+  .lb-result.error { color: var(--pink); text-shadow: none; }
 
   /* Short viewports (most phones in portrait with browser chrome, and any
      landscape phone): tighten the overlays so nothing important scrolls away. */

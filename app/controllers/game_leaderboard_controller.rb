@@ -7,7 +7,7 @@ class GameLeaderboardController < ApplicationController
   skip_before_action :set_current_cart, :set_nav_categories
 
   rate_limit to: 20, within: 1.hour, only: :create, store: LiveCacheStore,
-    with: -> { render json: { error: "rate_limited" }, status: :too_many_requests }
+    with: -> { render_rejection("rate_limited", status: :too_many_requests) }
 
   def index
     render json: Game.board
@@ -84,7 +84,10 @@ class GameLeaderboardController < ApplicationController
     ActiveModel::Type::Boolean.new.cast(params[:marketing]) || false
   end
 
-  def render_rejection(reason)
-    render json: { error: reason }, status: :unprocessable_entity
+  # Named refusals, reported as events, for the same reason as the win claim:
+  # a silent 422 tells neither the player nor the logs what went wrong.
+  def render_rejection(reason, status: :unprocessable_entity)
+    Rails.event.notify("game.board_entry_rejected", reason: reason)
+    render json: { error: reason }, status: status
   end
 end

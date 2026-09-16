@@ -27,7 +27,7 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
   test "a verified winning run mints a code straight into the claimant's inbox" do
     stub_mint("STACKMHR4T7")
 
-    assert_enqueued_email_with GameMailer, :win_code, args: [ "cafe@example.com", "STACKMHR4T7" ] do
+    assert_enqueued_email_with GameMailer, :win_code, args: [ "cafe@example.com", "STACKMHR4T7", false ] do
       post game_win_code_path, params: win_claim, as: :json
     end
 
@@ -145,9 +145,10 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
 
     Stripe::PromotionCode.stubs(:create).returns(stub(code: "STACKXXXXXX"))
 
-    assert_enqueued_email_with GameMailer, :win_code, args: [ "cafe@example.com", "STACKMHR4T7" ] do
+    assert_enqueued_email_with GameMailer, :win_code, args: [ "cafe@example.com", "STACKMHR4T7", true ] do
       post game_win_code_path, params: win_claim, as: :json
     end
+    assert_equal true, response.parsed_body["resent"]
 
     assert_response :success
     assert_equal "STACKMHR4T7", GameLead.find_by(email: "cafe@example.com").win_promo_code
@@ -162,5 +163,62 @@ class GamePromoCodesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :service_unavailable
     assert_equal "mint_failed", response.parsed_body["error"]
+  end
+
+  test "a first claim tells the client the code is new" do
+    stub_mint("STACKMHR4T7")
+
+    post game_win_code_path, params: win_claim, as: :json
+
+    assert_response :success
+    assert_equal false, response.parsed_body["resent"]
+  end
+
+  # Every refusal used to come back as a bare 422 the page rendered as "Try again",
+  # leaving no trace server-side either. The reason now rides the response and a
+  # business event, so a player is told what happened and the logs show it.
+  test "a rejected claim says why, with the replayed score, and reports it" do
+    assert_event_reported("game.win_claim_rejected", payload: { reason: "below_target", score: 14 }) do
+      post game_win_code_path, params: win_claim(xs: [ START_X ] * 14), as: :json
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "below_target", response.parsed_body["error"]
+    assert_equal 14, response.parsed_body["score"]
+  end
+
+  test "a claim rejected before replay reports the reason without a score" do
+    assert_event_reported("game.win_claim_rejected", payload: { reason: "invalid_token" }) do
+      post game_win_code_path, params: win_claim(token: "forged"), as: :json
+    end
+
+    assert_nil response.parsed_body["score"]
+  end
+
+  test "a failed mint is reported as a rejection too" do
+    Stripe::PromotionCode.stubs(:create).raises(Stripe::APIConnectionError.new("down"))
+
+    assert_event_reported("game.win_claim_rejected", payload: { reason: "mint_failed" }) do
+      post game_win_code_path, params: win_claim, as: :json
+    end
+
+    assert_response :service_unavailable
+  end
+
+  test "a claim past the hourly per-IP limit is refused with a reason and reported" do
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    stub_mint("STACKMHR4T7")
+
+    10.times { post game_win_code_path, params: win_claim, as: :json }
+
+    assert_event_reported("game.win_claim_rejected", payload: { reason: "rate_limited" }) do
+      post game_win_code_path, params: win_claim, as: :json
+    end
+
+    assert_response :too_many_requests
+    assert_equal "rate_limited", response.parsed_body["error"]
+  ensure
+    Rails.cache = original_cache
   end
 end

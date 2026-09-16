@@ -1,4 +1,8 @@
+<% if @resent %>
+<p>You asked for your code again &mdash; this is the same code we sent you earlier this month, still good until the month ends.</p>
+<% else %>
 <p>You stacked it recklessly high &mdash; here's your code, safe from lost browser tabs:</p>
+<% end %>
 <p><code><%= @code %></code></p>
 <p>&pound;10 off, one use, this month, on orders over &pound;100 excl. VAT, at <a href="https://afida.com">afida.com</a> checkout.</p>
 <p>Fancy another go, or a mate to beat? <a href="https://afida.com/game/">Play The Afida Stack</a></p>

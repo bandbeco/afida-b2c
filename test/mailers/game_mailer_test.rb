@@ -38,4 +38,16 @@ class GameMailerTest < ActionMailer::TestCase
     assert_match "https://www.instagram.com/afidasupplies", email.html_part.body.to_s
     assert_match "@afidasupplies", email.html_part.body.to_s
   end
+
+  # A resend carries the same code as the first email. Give it a different subject so
+  # mail clients don't fold it into the earlier conversation, and say so in the body.
+  test "win_code sent again says it is the same code and avoids the original subject" do
+    first = GameMailer.win_code("cafe@example.com", "STACKMHR4T7", false)
+    again = GameMailer.win_code("cafe@example.com", "STACKMHR4T7", true)
+
+    assert_not_equal first.subject, again.subject
+    assert_match "STACKMHR4T7", again.subject
+    assert_match(/same code/i, again.body.encoded)
+    assert_no_match(/same code/i, first.body.encoded)
+  end
 end

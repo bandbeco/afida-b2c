@@ -117,4 +117,18 @@ class GameLeadTest < ActiveSupport::TestCase
       assert_equal "STACKNEWMON", lead.reload.win_promo_code
     end
   end
+
+  test "win_code_claimed_this_month? tracks the monthly claim" do
+    Stripe::Coupon.stubs(:retrieve).returns(stub(id: "afida-stack-win"))
+    Stripe::PromotionCode.stubs(:create).returns(stub(code: "STACKMHR4T7"))
+    lead = GameLead.capture(email: "cafe@example.com", source: "win")
+
+    assert_not lead.win_code_claimed_this_month?
+    lead.claim_win_code
+    assert lead.win_code_claimed_this_month?
+
+    travel_to Date.current.next_month.beginning_of_month + 1.day do
+      assert_not lead.win_code_claimed_this_month?
+    end
+  end
 end

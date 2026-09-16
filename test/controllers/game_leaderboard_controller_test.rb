@@ -286,4 +286,15 @@ class GameLeaderboardControllerTest < ActionDispatch::IntegrationTest
       post game_leaderboard_path, params: valid_submission(xs: perfectish_run(7)), as: :json
     end
   end
+
+  # ---------- rejection reporting ----------
+
+  test "a refused submission says why and reports it" do
+    assert_event_reported("game.board_entry_rejected", payload: { reason: "too_fast" }) do
+      post game_leaderboard_path, params: valid_submission(token: token(issued_at: 1.second.ago)), as: :json
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "too_fast", response.parsed_body["error"]
+  end
 end

@@ -31,15 +31,18 @@ class GameLead < ApplicationRecord
   def claim_win_code
     code = nil
     with_lock do
-      month = Date.current.beginning_of_month
-      if win_promo_code.present? && win_promo_month == month
+      if win_code_claimed_this_month?
         code = win_promo_code
       else
         code = Game::PromoCodes.mint_win_code
-        update!(win_promo_code: code, win_promo_month: month)
+        update!(win_promo_code: code, win_promo_month: Date.current.beginning_of_month)
       end
     end
     code
+  end
+
+  def win_code_claimed_this_month?
+    win_promo_code.present? && win_promo_month == Date.current.beginning_of_month
   end
 
   # One MATE code per referred address. Minting talks to Stripe, so it happens

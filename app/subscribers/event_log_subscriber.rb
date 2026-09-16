@@ -24,6 +24,7 @@ class EventLogSubscriber
     cart.
     checkout.
     email_signup.
+    game.
     order.
     payment.
     pending_order.

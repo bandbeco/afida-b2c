@@ -41,6 +41,7 @@ class EventLogSubscriberTest < ActiveSupport::TestCase
       cart.item_added
       checkout.started
       email_signup.completed
+      game.win_claim_rejected
       order.placed
       payment.succeeded
       pending_order.created
