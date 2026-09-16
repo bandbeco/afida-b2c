@@ -62,4 +62,15 @@ class RemoteIpTest < ActionDispatch::IntegrationTest
   def latest_session_ip
     @user.sessions.order(:created_at).last&.ip_address
   end
+
+  # Logtail's HTTP context (and anything else on plain Rack) uses Rack::Request#ip, which
+  # has its own trusted-proxy list. Keep it in step with Rails so the remote_addr in the
+  # logs is the visitor too, not a Cloudflare edge node.
+  test "Rack's own ip agrees with Rails and skips the Cloudflare edge node" do
+    env = Rack::MockRequest.env_for("/",
+      "REMOTE_ADDR" => "172.18.0.2",
+      "HTTP_X_FORWARDED_FOR" => "#{VISITOR}, #{CLOUDFLARE_EDGE}")
+
+    assert_equal VISITOR, Rack::Request.new(env).ip
+  end
 end

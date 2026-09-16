@@ -26,6 +26,12 @@ servers:
 # Note: If using Cloudflare, set encryption mode in SSL/TLS setting to "Full" to enable CF-to-app encryption.
 proxy:
   ssl: true
+  # With ssl on, kamal-proxy REPLACES X-Forwarded-For with the connecting peer unless
+  # told to forward it. That peer is a Cloudflare edge node, so without this Rails
+  # never sees the visitor's address and request.remote_ip is an edge node no matter
+  # what config/initializers/trusted_proxies.rb trusts. Safe because kamal-proxy still
+  # appends the real peer on the right and Rails reads the chain right-to-left.
+  forward_headers: true
   hosts:
     - afida.com
     - www.afida.com

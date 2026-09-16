@@ -54,3 +54,13 @@ cloudflare_ranges = %w[
 
 Rails.application.config.action_dispatch.trusted_proxies =
   ActionDispatch::RemoteIp::TRUSTED_PROXIES + cloudflare_ranges
+
+# Rack::Request#ip has its own trusted-proxy list, and that is what Logtail writes as
+# remote_addr on every log line. Teach it the same ranges so the logs show the visitor
+# rather than an edge node; otherwise remote_ip and the logs disagree.
+rack_default_filter = Rack::Request.ip_filter
+Rack::Request.ip_filter = lambda do |ip|
+  rack_default_filter.call(ip) || cloudflare_ranges.any? { |range| range.include?(ip) }
+rescue IPAddr::InvalidAddressError
+  false
+end
