@@ -282,6 +282,12 @@ Rails.application.routes.draw do
     resources :products, only: [ :index, :show ]
   end
 
+  namespace :lead_monitor, path: "admin/lead-monitor" do
+    resources :leads, only: [ :index, :show, :update ] do
+      post :activity, on: :member
+    end
+  end
+
   namespace :admin do
     get "/", to: "products#index"
     resources :products do

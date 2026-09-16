@@ -23,3 +23,11 @@ production:
     class: RefreshBankHolidaysJob
     queue: default
     schedule: at 4am every day
+  discover_lead_monitor:
+    class: LeadMonitor::DiscoverJob
+    queue: lead_monitor
+    schedule: "0 7 * * 1 Europe/London"
+  deliver_lead_monitor_digests:
+    class: LeadMonitor::DeliverDigestsJob
+    queue: lead_monitor
+    schedule: every hour

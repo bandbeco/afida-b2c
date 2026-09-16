@@ -1,5 +1,15 @@
 # Update Log
 
+## 2026-09-15
+
+* **Update**: [Lead monitor](/runbooks/lead-monitor.md) and [Isolated lead monitor](/adr/0002-isolated-lead-monitor.md). The FHRS snapshot is fetched outside the source lock, digests are claimed then sent outside any transaction with abandoned claims swept after ten minutes, the queue paginates with Pagy, and the admin check is a shared `AdminAuthorization` concern. Lead monitor is reachable from the mobile admin dock.
+
+* **Update**: [Lead monitor](/runbooks/lead-monitor.md). Failed runs now store the exception message and report to Sentry; a snapshot that changes during FHRS pagination is refetched once per business type before the run fails.
+
+* **Creation**: [Lead monitor](/runbooks/lead-monitor.md) runbook and [Isolated lead monitor](/adr/0002-isolated-lead-monitor.md) ADR for the `build-lead-monitor` branch: weekly FSA awaiting-inspection discovery, manual opening qualification, contact logging and recoverable digests. Runbooks index updated.
+
+* **Update**: [Hormozi Trilogy Implementation Plan](/plans/2026-08-17-hormozi-trilogy-implementation.md). Phase 3 gains the lead monitor opening-qualification section: evidence requirements, classification table and contact-time rechecks.
+
 ## 2026-09-10
 
 * **Update**: `/game` Open Graph title and description now match the live prizes (stack 15 for £10 off a £100+ order; monthly #1 gets an @afidasupplies shoutout). Dropped the leftover “beat my tower” challenge line from the canonical card.

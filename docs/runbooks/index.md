@@ -13,5 +13,6 @@ Operational knowledge for running and maintaining the Afida shop: procedures and
 
 # Integrations
 
+* [Lead Monitor](/runbooks/lead-monitor.md) - FSA discovery, opening evidence review, manual outreach and recovery of internal digests.
 * [Stripe Checkout Gotchas](/runbooks/stripe-checkout.md) - Zero-total payment status, line_items pagination, and welcome coupon application.
 * [Datafast Tracking Architecture](/runbooks/datafast-tracking.md) - App-owned visitor id, purchase goal routing, the pageview gate, and API key scopes.

@@ -2,7 +2,7 @@
 type: Plan
 description: Consolidated implementation checklist for the three Hormozi trilogy proposals (Money Model, Grand Slam Offer, Leads), merging their interlocking build orders into four phases with per-item ownership and the shared scoreboard.
 status: active
-timestamp: 2026-08-21
+timestamp: 2026-09-15
 ---
 
 # Hormozi Trilogy Implementation Plan
@@ -42,13 +42,33 @@ The confirmation page is the shared surface: the continuity bonus card and the r
 Centred on merging the `lead-monitor` branch with the new-opening kit as its reason to exist.
 
 * [ ] **New-opening Grand Slam Offer kit** (Grand Slam play 1, dev + Afida leadership). Run the five steps for the new-food-business avatar; build the stack assets: quantity-prescription templates per business type, curated sample box, next-day top-up promise copy, UK packaging-compliance one-pager, first-scheduled-reorder bonus.
-* [ ] **Merge the `lead-monitor` branch** (dev). The kit is the attraction offer that justifies the merge.
-* [ ] **Cold-outreach last mile on the lead monitor** (Leads play 3, dev for the layer, Afida leadership for the motion). Contact fields, message templates, sent/replied tracking on Lead records; personalised messages leading with the free kit, follow-ups day 1/2/7, list re-run after 3 to 6 months.
+* [ ] **Merge the `lead-monitor` branch** (dev). The kit is the attraction offer that justifies the merge. FSA discoveries enter a manual review queue as possible new openings; first appearance in the awaiting-inspection results is not proof of a recent opening.
+* [ ] **Qualify openings before outreach** (dev for the review queue, Afida leadership for verification). Apply the evidence requirements and classifications below. Start with manual verification and assess lead quality over several discovery runs before adding automated research or outreach sequences.
+* [ ] **Cold-outreach last mile on the lead monitor** (Leads play 3, dev for the layer, Afida leadership for the motion). Contact fields, message templates, sent/replied tracking on Lead records; personalised messages leading with the free kit, follow-ups day 1/2/7, list re-run after 3 to 6 months. Opening-specific outreach requires a verified opening soon or confirmed recent opening at the time of contact; rerunning a list does not renew eligibility.
 * [ ] **Sample-to-prescription follow-up** (Money Model play 3, dev). After samples ship: prescription email, then the A/B close (one-off order or monthly delivery), wired to the lead monitor for new openings.
 * [ ] **Avatar offer pages in the next SEO batch** (Grand Slam play 4, dev). /for/coffee-shops, /for/street-food and so on: named bundle, prescription, guarantee, sample-box CTA. Bridges the [B2B organic plan](/seo/b2b-organic-growth-plan-2026-07.md) and the money model.
 * [ ] **"How [a real café] switched" case-study content** (Leads play 5, dev + Afida leadership). Folded into the next content batch; doubles as testimonial ammunition for the other plays.
 * [ ] **Engaged-lead counting** (Leads measurement, dev). Sample requests plus outreach replies per week, split by channel.
 * [ ] **Rollover win-back for the 86 lapsed one-time buyers** (Money Model play 5, dev + Afida leadership). Credit the last delivery fee toward the first scheduled reorder; new offer at least 4× the credit.
+
+### Lead monitor: opening qualification
+
+Implementation is on `build-lead-monitor`, using an isolated `LeadMonitor` namespace in place of merging the older prototype. See the [architecture decision](/adr/0002-isolated-lead-monitor.md) and [operating runbook](/runbooks/lead-monitor.md). Discovery, manual qualification, contact drafts/logging and recoverable internal digests are implemented; deployment, kit readiness and the manual quality review remain pending. Automated research, outreach sequences, list recycling and storefront conversion integration remain deferred.
+
+Qualify the trading location. A new location from an established operator qualifies. Incorporation dates, awaiting-inspection status, and first reviews can guide research but do not establish when the location opened.
+
+Require a business opening announcement, local reporting naming the location and opening date, or direct confirmation from the business. Match the evidence to the venue and address. Record the evidence URL or dated call notes, the opening date (planned or actual), reviewer, and date checked. Keep qualification separate from outreach status so contacting a business does not erase its evidence classification.
+
+| Classification | Required evidence | Opening-specific outreach |
+| --- | --- | --- |
+| Opening soon | Verified future opening date | Eligible |
+| Confirmed recent opening | Verified actual opening within the past 60 days | Eligible |
+| Possible new opening | Insufficient evidence of an opening date | Keep in manual review |
+| Existing business / ownership change | Earlier trading outside the 60-day window, or a takeover without a new location | Ineligible for this offer |
+
+Recheck eligibility at contact time. An elapsed planned opening date needs confirmation that the opening occurred; do not automatically promote it to a confirmed recent opening. Leave conflicting or uncertain evidence in manual review. Automated research may later suggest a classification, but a human verifies the evidence before outreach.
+
+Acceptance checks: a new FSA identity starts unqualified; incorporation alone cannot qualify it; confirmed future and recent openings can qualify; a second location from an established operator can qualify; uncertain dates, stale planned dates, and openings outside the 60-day window cannot pass the outreach gate.
 
 ## Phase 4: gated
 

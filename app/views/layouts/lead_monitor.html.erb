@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+  <head>
+    <title>Lead monitor | Afida</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= vite_stylesheet_tag "application" %>
+  </head>
+  <body class="bg-base-200 text-base-content min-h-screen">
+    <nav class="bg-base-100 border-b p-4 flex gap-6" aria-label="Lead monitor navigation">
+      <%= link_to "Lead monitor", lead_monitor_leads_path %>
+      <%= link_to "Back to admin", admin_products_path %>
+    </nav>
+    <main class="max-w-6xl mx-auto p-6">
+      <% flash.each do |_kind, message| %>
+        <p role="status" class="alert mb-4"><%= message %></p>
+      <% end %>
+      <%= yield %>
+    </main>
+  </body>
+</html>

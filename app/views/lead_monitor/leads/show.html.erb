@@ -1,0 +1,54 @@
+<%= link_to "Back to review queue", lead_monitor_leads_path, class: "link" %>
+<h1 class="text-3xl mt-4 mb-2"><%= @lead.business_name %></h1>
+<p><%= @lead.address %>, <%= @lead.postcode %></p>
+<p class="mb-6"><%= @lead.business_type %> · <%= @lead.local_authority %> · <%= @lead.source %> #<%= @lead.external_id %></p>
+<% if @lead.errors.any? %>
+  <div class="alert alert-error mb-4" role="alert"><%= @lead.errors.full_messages.to_sentence %></div>
+<% end %>
+<section class="bg-base-100 rounded-box p-6 mb-6">
+  <h2 class="text-xl mb-3">Verify this trading location</h2>
+  <p class="mb-4">Use a business opening announcement, local reporting, or direct confirmation. Incorporation and awaiting-inspection status alone do not qualify. A new location from an established operator can qualify.</p>
+  <%= form_with model: @lead, scope: :lead, url: lead_monitor_lead_path(@lead), class: "space-y-4" do |form| %>
+    <div class="grid md:grid-cols-2 gap-4">
+      <div><%= form.label :classification, class: "block" %><%= form.select :classification, LeadMonitor::Lead::CLASSIFICATIONS.map { |key, label| [label, key] }, {}, class: "select select-bordered w-full" %></div>
+      <div><%= form.label :opening_on, "Opening date (planned for opening soon; actual for recent)", class: "block" %><%= form.date_field :opening_on, class: "input input-bordered w-full" %></div>
+      <div><%= form.label :evidence_kind, class: "block" %><%= form.select :evidence_kind, LeadMonitor::Lead::EVIDENCE_KINDS.map { |key| [key.humanize, key] }, { include_blank: "Not verified" }, class: "select select-bordered w-full" %></div>
+      <div><%= form.label :evidence_url, class: "block" %><%= form.url_field :evidence_url, class: "input input-bordered w-full" %></div>
+    </div>
+    <div><%= form.label :evidence_notes, "Evidence / dated call notes, including venue and address", class: "block" %><%= form.text_area :evidence_notes, rows: 4, class: "textarea textarea-bordered w-full" %></div>
+    <div><%= form.check_box :location_verified, class: "checkbox align-middle" %> <%= form.label :location_verified, "I verified that this evidence refers to this venue and address" %></div>
+    <p>Recent means opened within the past 60 days. Leave uncertain or conflicting evidence as “Possible new opening”.</p>
+    <h3 class="text-lg">Contact details</h3>
+    <div class="grid md:grid-cols-2 gap-4">
+      <% %i[contact_name contact_email contact_phone website].each do |field| %>
+        <div><%= form.label field, class: "block" %><%= form.text_field field, class: "input input-bordered w-full" %></div>
+      <% end %>
+    </div>
+    <%= form.submit "Save review and contact details", class: "btn btn-primary" %>
+  <% end %>
+  <% if @lead.reviewed_at %><p class="mt-4">Checked by <%= @lead.reviewed_by %> on <%= @lead.reviewed_at.to_fs(:long) %>.</p><% end %>
+</section>
+<section class="bg-base-100 rounded-box p-6 mb-6">
+  <h2 class="text-xl mb-3">Manual outreach</h2>
+  <p class="mb-3">Status: <%= @lead.outreach_status.humanize %>. Opening evidence: <%= @lead.opening_eligible? ? "eligible today" : "verification required before contact" %>.</p>
+  <% outreach = LeadMonitor::Outreach.new(@lead) %>
+  <% if (template = outreach.template) %>
+    <label for="outreach-template" class="block">Personalise this draft before sending</label>
+    <textarea id="outreach-template" class="textarea textarea-bordered w-full mb-4" rows="4"><%= template %></textarea>
+  <% end %>
+  <% if @lead.next_follow_up_on %><p>Next follow-up due: <%= @lead.next_follow_up_on %>.</p><% end %>
+  <p class="mb-4">Send messages yourself, then record them here. Follow-ups are due on days 1, 2 and 7. A reply or suppression stops the sequence.</p>
+  <%= form_with url: activity_lead_monitor_lead_path(@lead), scope: :activity, class: "space-y-3" do |form| %>
+    <% options = [["Reply received", "replied"], ["Suppress further outreach", "suppressed"]] %>
+    <% options.unshift(["Initial message sent", "sent"]) if outreach.allowed?("sent") %>
+    <% options.unshift(["Follow-up sent", "follow_up"]) if outreach.allowed?("follow_up") %>
+    <div><%= form.label :kind, "Activity", class: "block" %><%= form.select :kind, options, {}, class: "select select-bordered" %></div>
+    <div><%= form.label :notes, "Message / channel / reply notes", class: "block" %><%= form.text_area :notes, required: true, class: "textarea textarea-bordered w-full" %></div>
+    <%= form.submit "Record activity", class: "btn" %>
+  <% end %>
+  <ul class="mt-6 space-y-4">
+    <% @lead.activities.order(created_at: :desc, id: :desc).each do |activity| %>
+      <li><%= activity.kind.humanize %> — <%= activity.created_at.to_fs(:long) %> by <%= activity.actor %><p class="whitespace-pre-wrap"><%= activity.notes %></p></li>
+    <% end %>
+  </ul>
+</section>
