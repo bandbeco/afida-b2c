@@ -277,6 +277,10 @@ class CheckoutsController < ApplicationController
     }
   end
 
+  # The success redirect completion channel (see CONTEXT.md: Checkout
+  # completion). Checkout::Completion owns what a completion does and reports
+  # its own failures; this action owns only the transport: the flash and
+  # redirect for each outcome, and the browser-session cleanup.
   def success
     session_id = params[:session_id]
 
@@ -285,133 +289,36 @@ class CheckoutsController < ApplicationController
       return redirect_to cart_path
     end
 
-    begin
-      stripe_session = Stripe::Checkout::Session.retrieve(
-        id: session_id,
-        # total_details.breakdown is omitted unless expanded, and without it the
-        # discount breakdown is nil, so the promotion code cannot be read and the
-        # order records no discount_code.
-        expand: [ "collected_information", "line_items.data.price.product",
-                 "payment_intent.payment_method", "total_details.breakdown" ]
-      )
+    outcome = Checkout::Completion.complete(session_id, browser_present: true)
 
-      unless Checkout::COMPLETED_PAYMENT_STATUSES.include?(stripe_session.payment_status)
-        flash[:error] = "Payment was not completed successfully"
-        return redirect_to cart_path
-      end
-
-      # The stash's job ends with payment: without this the paid session's
-      # client_secret would ride every later request's cookie.
-      session.delete(:onsite_checkout)
-
-      # Check if order already exists for this session (webhook may have created it)
-      existing_order = Order.find_by(stripe_session_id: session_id)
-      if existing_order
-        return redirect_to confirmation_order_path(existing_order, token: existing_order.signed_access_token)
-      end
-
-      cart = paid_cart_for(stripe_session)
-      if cart.blank? || cart.cart_items.empty?
-        flash[:error] = "No items found in cart"
-        return redirect_to root_path
-      end
-
-      order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: cart).create
-
-      # Emit checkout.completed event
-      Rails.event.notify("checkout.completed",
-        order_id: order.id,
-        total: order.total_amount.to_f,
-        payment_method: Checkout::SessionDetails.payment_method_type(stripe_session)
-      )
-
-      # Emit order.placed event
-      Rails.event.notify("order.placed",
-        order_id: order.id,
-        email: order.email,
-        total: order.total_amount.to_f,
-        item_count: order.order_items.count,
-        has_discount: session[:discount_code].present?,
-        source: "checkout"
-      )
-
-      # Clear the cart after successful order creation
-      cart.cart_items.destroy_all
-
-      # Send order confirmation email (customer + internal ops copy)
-      OrderMailer.with(order: order).confirmation_email.deliver_later
-      OrderMailer.with(order: order).ops_confirmation_email.deliver_later
-
-      # Notify the team in Telegram that a new order has been placed
-      TelegramOrderNotificationJob.perform_later(order.id)
-
-      # Store in session for immediate access (proves ownership for guest checkout)
-      session[:recent_order_id] = order.id
-
-      # Emit discount claimed event if order used a discount code.
-      # KlaviyoSubscriber resolves the customer email from order_id (Rails.event
-      # filters payload[:email] to "[FILTERED]"), so order_id is the contract here.
-      if session[:discount_code].present?
-        Rails.event.notify("email_signup.discount_claimed",
-          email: order.email,
-          order_id: order.id,
-          discount_code: session[:discount_code]
-        )
-      end
-
-      # Clear discount code after successful order (one-time use)
-      session.delete(:discount_code)
-
-      # Redirect to confirmation page with signed token
-      redirect_to confirmation_order_path(order, token: order.signed_access_token),
-                  status: :see_other
-
-    rescue ActiveRecord::RecordNotUnique => e
-      # Lost the create race: the webhook committed the order for this session in the
-      # window after our find_by check, so create! hit the unique stripe_session_id
-      # index. Redirect to that order rather than 500 the paying customer. If no order
-      # exists, the constraint fired for some other reason - a genuine inconsistency -
-      # so surface it.
-      existing_order = Order.find_by(stripe_session_id: session_id)
-      raise e unless existing_order
-
-      redirect_to confirmation_order_path(existing_order, token: existing_order.signed_access_token),
-                  status: :see_other
-    rescue ActiveRecord::RecordInvalid => e
-      # If the order exists, this is the model-level uniqueness validation firing
-      # before the DB constraint - the same benign race as above, so redirect to it.
-      existing_order = Order.find_by(stripe_session_id: session_id)
-      if existing_order
-        redirect_to confirmation_order_path(existing_order, token: existing_order.signed_access_token),
-                    status: :see_other
-      else
-        # Otherwise a different validation rejected the order (e.g. an OrderItem
-        # failed inside OrderCreator's transaction, rolling it back). The customer
-        # has already paid, so never 422 them: capture for investigation and redirect
-        # gracefully. The webhook fallback still creates the order.
-        Rails.logger.error("Order validation failed in checkout success: #{e.message}")
-        Sentry.capture_exception(e, extra: { session_id: session_id })
-        flash[:error] = "Unable to verify payment. Please contact support."
-        redirect_to cart_path
-      end
-    rescue Stripe::StripeError => e
-      Rails.logger.error("Stripe error in checkout success: #{e.message}")
-      Sentry.capture_exception(e, extra: { session_id: session_id })
-      flash[:error] = "Unable to verify payment. Please contact support."
-      redirect_to cart_path
-    rescue Checkout::MissingShippingDetails => e
-      Rails.logger.warn("Missing shipping details in checkout success: #{e.message}")
-      Sentry.capture_exception(e, extra: { session_id: session_id })
-      flash[:error] = "Shipping details are required. Please try checkout again."
-      redirect_to cart_path
-    rescue Checkout::SessionAmounts::UnexpandedLineItemError => e
-      # Programmer error (a dropped expand): don't 500 the paid customer. The
-      # webhook fallback still creates the order; surface for investigation.
-      Rails.logger.error("Unexpanded line item in checkout success: #{e.message}")
-      Sentry.capture_exception(e, extra: { session_id: session_id })
-      flash[:error] = "Unable to verify payment. Please contact support."
-      redirect_to cart_path
+    if outcome.unpaid?
+      # The stash survives so the customer can retry on the on-site page.
+      flash[:error] = "Payment was not completed successfully"
+      return redirect_to cart_path
     end
+
+    # The stash's job ends with payment: without this the paid session's
+    # client_secret would ride every later request's cookie.
+    session.delete(:onsite_checkout)
+
+    if outcome.created?
+      # Proves ownership of the fresh order for guest checkout, and the Welcome
+      # discount is one-time: the metadata on the session already decided
+      # whether it was applied, so the browser copy is simply spent.
+      session[:recent_order_id] = outcome.order.id
+      session.delete(:discount_code)
+    end
+
+    redirect_to confirmation_order_path(outcome.order, token: outcome.order.signed_access_token),
+                status: :see_other
+  rescue Checkout::MissingShippingDetails
+    flash[:error] = "Shipping details are required. Please try checkout again."
+    redirect_to cart_path
+  rescue Checkout::PermanentCompletionFailure, Checkout::TransientCompletionFailure
+    # The customer has already paid, so never 500 or 422 them. Completion has
+    # captured the failure; the webhook channel still completes the order.
+    flash[:error] = "Unable to verify payment. Please contact support."
+    redirect_to cart_path
   end
 
   def cancel
@@ -457,13 +364,6 @@ class CheckoutsController < ApplicationController
   # hold. An agent-created checkout has no browser cart behind it, so falling
   # back to Current.cart would turn unrelated items into the order and clear
   # them. Sessions predating the metadata key still resolve to the browser cart.
-  def paid_cart_for(stripe_session)
-    cart_id = stripe_session.metadata&.[]("cart_id")
-    return Current.cart if cart_id.blank?
-
-    Cart.find_by(id: cart_id)
-  end
-
   # The postcode used to price delivery: the one typed at the checkout page
   # (PATCH /checkout is its only writer, and it survives that Stripe session),
   # falling back to the customer's default address. Nil means mainland pricing.

@@ -225,4 +225,52 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_empty order.order_items
     assert_nil order.branded_order_status
   end
+
+  test "associates the order with the user the session references" do
+    user = users(:one)
+    order = Checkout::OrderCreator.new(
+      stripe_session: build_stripe_session(customer_email: user.email_address, client_reference_id: user.id), cart: @cart
+    ).create
+
+    assert_equal user, order.user
+    assert_nil order.organization_id
+    assert_nil order.placed_by_user_id
+  end
+
+  test "creates a guest order when the session references no user" do
+    order = Checkout::OrderCreator.new(
+      stripe_session: build_stripe_session(customer_email: "guest@example.com"), cart: @cart
+    ).create
+
+    assert_nil order.user
+    assert_equal "guest@example.com", order.email
+  end
+
+  test "records the organization and placing user for a B2B customer" do
+    admin = users(:acme_admin)
+    order = Checkout::OrderCreator.new(
+      stripe_session: build_stripe_session(customer_email: admin.email_address, client_reference_id: admin.id), cart: @cart
+    ).create
+
+    assert_equal organizations(:acme), order.organization
+    assert_equal admin, order.placed_by_user
+  end
+
+  test "prefers the Welcome discount in metadata over a Stripe-entered promotion code" do
+    stripe_session = build_stripe_session(
+      amount_discount: 200, metadata: { discount_code: "WELCOME5" }, promotion_code: "SUMMER20"
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal "WELCOME5", order.discount_code
+    assert_equal 2.0, order.discount_amount.to_f
+  end
+
+  test "records no discount when none was applied" do
+    order = Checkout::OrderCreator.new(stripe_session: build_stripe_session(amount_discount: 0), cart: @cart).create
+
+    assert_equal 0.0, order.discount_amount.to_f
+    assert_nil order.discount_code
+  end
 end
