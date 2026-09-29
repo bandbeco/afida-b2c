@@ -30,7 +30,8 @@ module Checkout
     # String id), which means the caller forgot expand: line_items.data.price.product.
     # Without the expanded product the shipping line cannot be identified, so we
     # fail loud rather than silently recording £0 shipping and an inflated subtotal.
-    class UnexpandedLineItemError < StandardError; end
+    # Permanent: the same payload fails identically on every retry.
+    class UnexpandedLineItemError < Checkout::PermanentCompletionFailure; end
 
     def self.from(session)
       new(session).amounts

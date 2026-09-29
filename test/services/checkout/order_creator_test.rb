@@ -189,12 +189,40 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     end
   end
 
-  test "propagates unexpected Stripe promotion code shapes" do
+  test "records no promotion code and reports when the Stripe discount shape is unexpected" do
     stripe_session = build_stripe_session
     stripe_session.total_details.stubs(:breakdown).raises(NoMethodError.new("unexpected shape"))
+    Sentry.expects(:capture_exception).once
 
-    assert_raises(NoMethodError) do
-      Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_nil order.discount_code
+    assert_equal "paid", order.status
+  end
+
+  test "consumes the cart in the same transaction as the order" do
+    Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: @cart).create
+
+    assert_equal 0, @cart.reload.cart_items.count
+  end
+
+  test "leaves the cart intact when the order rolls back" do
+    OrderItem.any_instance.stubs(:save!).raises(ActiveRecord::RecordInvalid.new(OrderItem.new))
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: @cart).create
     end
+
+    assert_equal 1, @cart.reload.cart_items.count
+  end
+
+  test "records an item-less paid order when the cart is gone" do
+    order = nil
+    assert_difference "Order.count", 1 do
+      order = Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: nil).create
+    end
+
+    assert_empty order.order_items
+    assert_nil order.branded_order_status
   end
 end
