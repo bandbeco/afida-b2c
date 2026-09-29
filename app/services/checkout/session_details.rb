@@ -1,10 +1,10 @@
 module Checkout
   # The single home for deriving the non-money Order fields from a completed Stripe
-  # Checkout session: the shipping and billing addresses and the promotion code. Both
-  # order-creation paths (Checkout::OrderCreator on the success redirect and the
-  # Stripe webhook fallback) call these, so the two can't drift in how they read a
-  # session. Money figures live in SessionAmounts; the required-field presence check
-  # lives in Order.required_shipping_values.
+  # Checkout session: the shipping and billing addresses, the priced zone, the
+  # payment method and the promotion code. Checkout::OrderCreator and
+  # Checkout::Completion read a session only through these. Money figures live in
+  # SessionAmounts; the required-field presence check lives in
+  # Order.required_shipping_values.
   module SessionDetails
     module_function
 
@@ -31,11 +31,10 @@ module Checkout
     end
 
     # Both addresses mapped to the Order's shipping_*/billing_* column names in
-    # one pass: the single source both order-creation paths merge into their
-    # Order.create! attributes, so a new address field can never be wired into
-    # the success redirect but forgotten on the webhook (or vice versa). One
-    # to_hash conversion covers both reads - the expanded session is large
-    # (line items, payment intent), so callers should not convert it twice.
+    # one pass, merged straight into OrderCreator's Order.create! attributes so a
+    # new address field is wired in one place. One to_hash conversion covers
+    # both reads - the expanded session is large (line items, payment intent),
+    # so callers should not convert it twice.
     def order_address_attributes(session)
       session_hash = session.to_hash.with_indifferent_access
       shipping = shipping_address_from(session_hash)
@@ -114,10 +113,9 @@ module Checkout
 
     # The Stripe-entered promotion code (the human-typed string, e.g. "SUMMER20"), or
     # nil when none was applied. Deliberately does NOT rescue an unexpected Stripe
-    # shape: each caller owns that policy. OrderCreator lets a NoMethodError surface
-    # so a success-path failure is visible (the webhook fallback still creates the
-    # order); the webhook rescues it to nil so a malformed discount can't fail a
-    # paid order over a cosmetic field.
+    # shape: the caller owns that policy. OrderCreator reports a NoMethodError and
+    # records no code, so a malformed discount can't fail a paid order over a
+    # cosmetic field.
     def promotion_code(session)
       promo = session
         .total_details
@@ -127,7 +125,7 @@ module Checkout
         &.discount
         &.promotion_code
 
-      # Both order-creation paths expand total_details.breakdown (without it the
+      # Checkout::Completion expands total_details.breakdown (without it the
       # breakdown is nil and no code is readable at all), but expanding the breakdown
       # does NOT expand the nested promotion_code: Stripe returns that as a bare
       # "promo_..." ID string, so resolve it. Calling .code on the String returned nil,
