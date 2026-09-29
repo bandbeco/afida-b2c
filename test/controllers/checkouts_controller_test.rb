@@ -916,6 +916,18 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Shipping details are required/, flash[:error]
   end
 
+  test "success drops the on-site stash when a paid session can never complete" do
+    # The stash holds the paid session's client secret; "try checkout again"
+    # must not remount that session on GET /checkout.
+    stash_onsite_session
+    Checkout::Completion.stubs(:complete).raises(Checkout::MissingShippingDetails.new("Shipping details are required"))
+
+    get success_checkout_path, params: { session_id: "sess_no_shipping" }
+
+    assert_nil session[:onsite_checkout]
+    assert_match /Shipping details are required/, flash[:error]
+  end
+
   test "success never 500s a paid customer on another permanent failure" do
     Checkout::Completion.stubs(:complete).raises(Checkout::SessionAmounts::UnexpandedLineItemError.new("unexpanded"))
 
