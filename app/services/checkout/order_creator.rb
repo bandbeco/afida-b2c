@@ -1,4 +1,13 @@
 module Checkout
+  # Builds the Order row (and its items) for a paid Checkout Session: the
+  # row-building part of a checkout completion (see CONTEXT.md), used only by
+  # Checkout::Completion. The cart is consumed inside the same transaction as
+  # the order so a failed item copy leaves the customer their cart, and a
+  # committed order can never coexist with a still-full cart.
+  #
+  # The cart may be nil or empty: money has moved either way, so an item-less
+  # paid order is still recorded (Stripe holds the line items) and the caller
+  # reports it for ops to reconcile.
   class OrderCreator
     def initialize(stripe_session:, cart:)
       @stripe_session = stripe_session
@@ -17,6 +26,7 @@ module Checkout
         cart_items.each do |cart_item|
           OrderItem.build_from_cart_item(cart_item, order).save!
         end
+        cart&.cart_items&.destroy_all
 
         order
       end
@@ -42,8 +52,7 @@ module Checkout
         discount_amount: amounts.discount,
         discount_code: discount_code.presence,
         # Both addresses come from the shared mapping (billing fails open to
-        # nils - display-only, must never cost a paid order); the webhook path
-        # merges the same call so the two can't drift.
+        # nils - display-only, must never cost a paid order).
         **Checkout::SessionDetails.order_address_attributes(stripe_session),
         # The zone the order was priced against, not the zone of the collected
         # address: the order records what the customer was charged. Nil falls
@@ -56,7 +65,9 @@ module Checkout
     end
 
     def cart_items
-      @cart_items ||= cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).load
+      return @cart_items if defined?(@cart_items)
+
+      @cart_items = cart ? cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).load : []
     end
 
     def user
@@ -65,12 +76,18 @@ module Checkout
       @user = User.find_by(id: stripe_session.client_reference_id)
     end
 
+    # The Welcome discount's code from metadata, else the Stripe-entered
+    # promotion code. The promotion code is display-only (the money is already
+    # correct from SessionAmounts), so an unexpected discount shape is reported
+    # and recorded as no code rather than failing a paid order: there is no
+    # second completion channel left to fail over to.
     def discount_code
-      # An unexpected Stripe discount shape is allowed to surface here so a
-      # success-path failure is visible (the webhook fallback still creates the
-      # order); the webhook rescues the same call to nil instead.
       stripe_session.metadata&.[]("discount_code").presence ||
         Checkout::SessionDetails.promotion_code(stripe_session)
+    rescue NoMethodError => e
+      Sentry.capture_exception(e, extra: { stripe_session_id: stripe_session.id })
+      Rails.logger.error("Unreadable promotion code on session #{stripe_session.id}: #{e.message}")
+      nil
     end
   end
 end
