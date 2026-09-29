@@ -359,11 +359,6 @@ class CheckoutsController < ApplicationController
     end
   end
 
-  # The cart the paid session was built from, named in its metadata (the same
-  # key the webhook fallback reads), NOT whichever cart this browser happens to
-  # hold. An agent-created checkout has no browser cart behind it, so falling
-  # back to Current.cart would turn unrelated items into the order and clear
-  # them. Sessions predating the metadata key still resolve to the browser cart.
   # The postcode used to price delivery: the one typed at the checkout page
   # (PATCH /checkout is its only writer, and it survives that Stripe session),
   # falling back to the customer's default address. Nil means mainland pricing.

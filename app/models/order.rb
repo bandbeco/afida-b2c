@@ -18,10 +18,10 @@ class Order < ApplicationRecord
             :shipping_postal_code, :shipping_country, presence: true
 
   # The keys of a Stripe shipping-details hash that map to the shipping_* columns
-  # validated for presence above. Both order-creation paths (Checkout::OrderCreator
-  # on the success redirect, and the Stripe webhook) check these before
-  # Order.create! so a session with no shipping details is treated as a permanent
-  # failure rather than retried for 72h. Single source so the two paths can't drift.
+  # validated for presence above. Checkout::OrderCreator checks these before
+  # Order.create! so a session with no shipping details is a permanent completion
+  # failure (Checkout::MissingShippingDetails) rather than a RecordInvalid the
+  # webhook would retry for 72h.
   REQUIRED_SHIPPING_KEYS = %i[name line1 city postal_code country].freeze
 
   # The values at REQUIRED_SHIPPING_KEYS from a shipping-details hash, for a
