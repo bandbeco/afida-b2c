@@ -312,11 +312,21 @@ class CheckoutsController < ApplicationController
     redirect_to confirmation_order_path(outcome.order, token: outcome.order.signed_access_token),
                 status: :see_other
   rescue Checkout::MissingShippingDetails
+    # Permanent failures are raised only after the paid check, so the stash
+    # holds a paid session's client secret: drop it before "try again" sends the
+    # customer back to GET /checkout, or that page would remount it.
+    session.delete(:onsite_checkout)
     flash[:error] = "Shipping details are required. Please try checkout again."
     redirect_to cart_path
-  rescue Checkout::PermanentCompletionFailure, Checkout::TransientCompletionFailure
+  rescue Checkout::PermanentCompletionFailure
+    session.delete(:onsite_checkout)
+    flash[:error] = "Unable to verify payment. Please contact support."
+    redirect_to cart_path
+  rescue Checkout::TransientCompletionFailure
     # The customer has already paid, so never 500 or 422 them. Completion has
-    # captured the failure; the webhook channel still completes the order.
+    # captured the failure; the webhook channel still completes the order. The
+    # payment state is unknown here (the retrieve may be what failed), so the
+    # stash is left alone.
     flash[:error] = "Unable to verify payment. Please contact support."
     redirect_to cart_path
   end

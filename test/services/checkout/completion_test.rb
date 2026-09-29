@@ -53,6 +53,15 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     Checkout::Completion.complete("sess_x", browser_present: true)
   end
 
+  test "an order that already exists is found without asking Stripe" do
+    Stripe::Checkout::Session.expects(:retrieve).never
+
+    outcome = Checkout::Completion.complete(orders(:one).stripe_session_id, browser_present: false)
+
+    assert outcome.existing?
+    assert_equal orders(:one), outcome.order
+  end
+
   test "an unpaid session yields no order and no effects" do
     stub_paid_session(payment_status: "unpaid")
 

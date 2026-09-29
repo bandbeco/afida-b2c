@@ -9,7 +9,8 @@ module Checkout
   # webhook.* tracing events. Everything a completion means lives here:
   #   - the retrieve, with the expands the money and address reads depend on
   #   - the paid check (COMPLETED_PAYMENT_STATUSES)
-  #   - the exactly-once order row, absorbing the create race between channels
+  #   - the exactly-once order row: an existing order is found before any
+  #     Stripe call, and the create race between channels is absorbed
   #   - consuming the cart inside the order's transaction (OrderCreator)
   #   - the side effects (CompletionEffects)
   #   - reporting to Sentry, once, whichever channel hit the failure
@@ -48,12 +49,15 @@ module Checkout
     end
 
     def complete
-      session = retrieve_session
-      return Outcome.new(order: nil, status: :unpaid) unless paid?(session)
-
-      if (existing = Order.find_by(stripe_session_id: session.id))
+      # The common case: the other channel already completed this session. Found
+      # from the id alone, so no Stripe call is made and the answer does not
+      # depend on Stripe being up.
+      if (existing = Order.find_by(stripe_session_id: @session_id))
         return Outcome.new(order: existing, status: :existing)
       end
+
+      session = retrieve_session
+      return Outcome.new(order: nil, status: :unpaid) unless paid?(session)
 
       order = OrderCreator.new(stripe_session: session, cart: cart_for(session)).create
       report_itemless(order, session) if order.order_items.none?
