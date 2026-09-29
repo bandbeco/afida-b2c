@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-09-30
+
+* **Update**: [Developer guide](/developer_guide.md). The "After payment" section now describes checkout completion: `Checkout::Completion` completes a paid session through either channel (success redirect or Stripe webhook), so the webhook-created orders that used to miss Klaviyo now emit the same events. `CONTEXT.md` gains the term.
+
 ## 2026-09-15
 
 * **Update**: [Lead monitor](/runbooks/lead-monitor.md) and [Isolated lead monitor](/adr/0002-isolated-lead-monitor.md). The FHRS snapshot is fetched outside the source lock, digests are claimed then sent outside any transaction with abandoned claims swept after ten minutes, the queue paginates with Pagy, and the admin check is a shared `AdminAuthorization` concern. Lead monitor is reachable from the mobile admin dock.
