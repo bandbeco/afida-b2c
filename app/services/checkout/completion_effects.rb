@@ -38,7 +38,9 @@ module Checkout
       end
       attempt("team notification") { TelegramOrderNotificationJob.perform_later(order.id) }
       attempt("GA4 fallback") { Ga4MeasurementProtocolService.track_purchase(order) } unless browser_present
-      attempt("events") { notify_events }
+      attempt("checkout.completed") { notify_checkout_completed } if attributable?
+      attempt("order.placed") { notify_order_placed }
+      attempt("email_signup.discount_claimed") { notify_discount_claimed } if welcome_discount_code
     end
 
     private
@@ -46,7 +48,16 @@ module Checkout
     attr_reader :order, :browser_present, :payment_method, :welcome_discount_code,
                 :datafast_visitor_id, :datafast_session_id
 
-    def notify_events
+    # checkout.completed feeds the Datafast purchase goal, keyed on the visitor
+    # in the event context. The redirect request carries the browser's cookie;
+    # the webhook request carries none, and EventContext mints a visitor id for
+    # every request, so without the id from metadata the goal would attribute
+    # the conversion to a visitor that never existed.
+    def attributable?
+      browser_present || datafast_visitor_id.present?
+    end
+
+    def notify_checkout_completed
       set_datafast_context
 
       Rails.event.notify("checkout.completed",
@@ -54,7 +65,9 @@ module Checkout
         total: order.total_amount.to_f,
         payment_method: payment_method
       )
+    end
 
+    def notify_order_placed
       Rails.event.notify("order.placed",
         order_id: order.id,
         email: order.email,
@@ -63,9 +76,9 @@ module Checkout
         has_discount: welcome_discount_code.present?,
         source: "checkout"
       )
+    end
 
-      return unless welcome_discount_code
-
+    def notify_discount_claimed
       Rails.event.notify("email_signup.discount_claimed",
         email: order.email,
         order_id: order.id,
@@ -74,15 +87,15 @@ module Checkout
     end
 
     # The Datafast visitor who paid, as captured at session creation. Merged into
-    # the current event context (set_context merges), so on the redirect channel
-    # request_id and user_id survive and on the webhook channel, which has no
-    # browser cookies, the conversion still attributes to the right visitor.
+    # the current event context (set_context merges, and would merge a nil too,
+    # hence the compact), so on the redirect channel request_id, user_id and any
+    # cookie value the metadata lacks survive, and on the webhook channel, which
+    # has no browser cookies, the conversion attributes to the right visitor.
     def set_datafast_context
       return unless datafast_visitor_id
 
       Rails.event.set_context(
-        datafast_visitor_id: datafast_visitor_id,
-        datafast_session_id: datafast_session_id
+        { datafast_visitor_id: datafast_visitor_id, datafast_session_id: datafast_session_id }.compact
       )
     end
 

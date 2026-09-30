@@ -256,6 +256,31 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal admin, order.placed_by_user
   end
 
+  test "a session with no customer details fails validation rather than crashing" do
+    stripe_session = build_stripe_session
+    stripe_session.stubs(:customer_details).returns(nil)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+    end
+  end
+
+  test "resolves the promotion code before opening the order transaction" do
+    # Transactional tests already hold one transaction open, so compare depth
+    # against that baseline rather than asking whether any is open.
+    stripe_session = build_stripe_session(promotion_code: "SUMMER20")
+    baseline = ApplicationRecord.connection.open_transactions
+    depth_at_lookup = nil
+    Checkout::SessionDetails.stubs(:promotion_code).with do |_|
+      depth_at_lookup = ApplicationRecord.connection.open_transactions
+      true
+    end.returns("SUMMER20")
+
+    Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal baseline, depth_at_lookup
+  end
+
   test "prefers the Welcome discount in metadata over a Stripe-entered promotion code" do
     stripe_session = build_stripe_session(
       amount_discount: 200, metadata: { discount_code: "WELCOME5" }, promotion_code: "SUMMER20"

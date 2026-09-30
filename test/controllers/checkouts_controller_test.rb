@@ -887,6 +887,29 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:discount_code]
   end
 
+  test "success spends the Welcome discount even when the webhook completed the order first" do
+    post email_subscriptions_path, params: { email: "discount-test@example.com" }
+    assert_equal welcome_coupon_id, session[:discount_code]
+    Checkout::Completion.stubs(:complete).returns(completion_outcome(:existing, orders(:one)))
+
+    get success_checkout_path, params: { session_id: orders(:one).stripe_session_id }
+
+    assert_nil session[:discount_code]
+  end
+
+  test "success drops the on-site stash on a transient failure too" do
+    # Reaching the success URL means the customer paid in the browser; an
+    # item rollback restores the cart, so a kept stash would revalidate and
+    # remount the paid session's client secret.
+    stash_onsite_session
+    Checkout::Completion.stubs(:complete).raises(Checkout::TransientCompletionFailure.new("rollback"))
+
+    get success_checkout_path, params: { session_id: "sess_blip" }
+
+    assert_nil session[:onsite_checkout]
+    assert_match /Unable to verify payment/, flash[:error]
+  end
+
   test "success handles missing session_id parameter" do
     Checkout::Completion.expects(:complete).never
 
