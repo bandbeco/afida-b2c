@@ -18,7 +18,7 @@ module Checkout
   # Interface: .complete(session_id, browser_present:) returns an Outcome whose
   # status is :created (this call made the order and fired the effects),
   # :existing (an earlier completion did) or :unpaid (no order; the session has
-  # not been paid). It raises PermanentCompletionFailure when the session can
+  # not been paid, or is not a payment-mode session at all). It raises PermanentCompletionFailure when the session can
   # never produce an order and TransientCompletionFailure when a retry may
   # succeed. Anything else (a programmer error) propagates untouched.
   #
@@ -57,7 +57,7 @@ module Checkout
       end
 
       session = retrieve_session
-      return Outcome.new(order: nil, status: :unpaid) unless paid?(session)
+      return Outcome.new(order: nil, status: :unpaid) unless payment?(session) && paid?(session)
 
       order = OrderCreator.new(stripe_session: session, cart: cart_for(session)).create
       report_itemless(order, session) if order.order_items.none?
@@ -73,6 +73,10 @@ module Checkout
       return Outcome.new(order: existing, status: :existing) if existing
 
       fail_transient(e)
+    rescue Stripe::InvalidRequestError => e
+      # Stripe rejected the request itself (a session id it cannot resolve, a
+      # malformed one): the same call fails identically on every retry.
+      fail_permanent(e)
     rescue Stripe::StripeError => e
       fail_transient(e)
     rescue Checkout::PermanentCompletionFailure => e
@@ -85,6 +89,13 @@ module Checkout
 
     def retrieve_session
       Stripe::Checkout::Session.retrieve(id: @session_id, expand: EXPAND)
+    end
+
+    # Only payment-mode sessions are checkouts. Stripe also completes setup-mode
+    # sessions (reorder card capture) as no_payment_required; they carry no
+    # order and must not be reported as completions that failed.
+    def payment?(session)
+      session.mode == "payment"
     end
 
     def paid?(session)
@@ -114,6 +125,12 @@ module Checkout
         datafast_visitor_id: metadata&.[]("datafast_visitor_id"),
         datafast_session_id: metadata&.[]("datafast_session_id")
       )
+    end
+
+    def fail_permanent(cause)
+      Rails.logger.error("[Checkout completion] session #{@session_id} can never complete: #{cause.class}: #{cause.message}")
+      Sentry.capture_exception(cause, extra: { stripe_session_id: @session_id })
+      raise Checkout::PermanentCompletionFailure, cause.message
     end
 
     def fail_transient(cause)

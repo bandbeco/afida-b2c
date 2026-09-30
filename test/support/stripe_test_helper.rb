@@ -183,6 +183,7 @@ module StripeTestHelper
       id: session_id,
       url: "https://checkout.stripe.com/test/#{session_id}",
       payment_status: overrides[:payment_status] || "paid",
+      mode: overrides[:mode] || "payment",
       payment_method_types: overrides[:payment_method_types] || [ "card" ],
       payment_intent: payment_intent,
       customer_details: customer_details,

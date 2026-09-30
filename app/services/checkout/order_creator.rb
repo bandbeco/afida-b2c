@@ -20,8 +20,12 @@ module Checkout
         raise Checkout::MissingShippingDetails, "Shipping details are required"
       end
 
+      # Resolved before the transaction opens: reading the promotion code can
+      # call Stripe, and a network round-trip must not hold a connection open.
+      attributes = order_attributes
+
       ApplicationRecord.transaction do
-        order = Order.create!(order_attributes)
+        order = Order.create!(attributes)
 
         cart_items.each do |cart_item|
           OrderItem.build_from_cart_item(cart_item, order).save!
@@ -42,7 +46,7 @@ module Checkout
         user: user,
         organization: user&.organization,
         placed_by_user: user&.organization_id? ? user : nil,
-        email: stripe_session.customer_details.email,
+        email: stripe_session.customer_details&.email,
         stripe_session_id: stripe_session.id,
         status: "paid",
         subtotal_amount: amounts.subtotal,

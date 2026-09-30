@@ -301,34 +301,34 @@ class CheckoutsController < ApplicationController
     # client_secret would ride every later request's cookie.
     session.delete(:onsite_checkout)
 
-    if outcome.created?
-      # Proves ownership of the fresh order for guest checkout, and the Welcome
-      # discount is one-time: the metadata on the session already decided
-      # whether it was applied, so the browser copy is simply spent.
-      session[:recent_order_id] = outcome.order.id
-      session.delete(:discount_code)
-    end
+    # Proves ownership of the fresh order for guest checkout.
+    session[:recent_order_id] = outcome.order.id if outcome.created?
+    # The Welcome discount is one-time. The session's metadata already decided
+    # whether it was applied, so the browser copy is spent whichever channel
+    # completed the order; keeping it would let a guest apply it again.
+    session.delete(:discount_code)
 
     redirect_to confirmation_order_path(outcome.order, token: outcome.order.signed_access_token),
                 status: :see_other
   rescue Checkout::MissingShippingDetails
-    # Permanent failures are raised only after the paid check, so the stash
-    # holds a paid session's client secret: drop it before "try again" sends the
-    # customer back to GET /checkout, or that page would remount it.
-    session.delete(:onsite_checkout)
+    drop_paid_stash
     flash[:error] = "Shipping details are required. Please try checkout again."
     redirect_to cart_path
-  rescue Checkout::PermanentCompletionFailure
-    session.delete(:onsite_checkout)
-    flash[:error] = "Unable to verify payment. Please contact support."
-    redirect_to cart_path
-  rescue Checkout::TransientCompletionFailure
+  rescue Checkout::PermanentCompletionFailure, Checkout::TransientCompletionFailure
     # The customer has already paid, so never 500 or 422 them. Completion has
-    # captured the failure; the webhook channel still completes the order. The
-    # payment state is unknown here (the retrieve may be what failed), so the
-    # stash is left alone.
+    # captured the failure; the webhook channel still completes the order.
+    drop_paid_stash
     flash[:error] = "Unable to verify payment. Please contact support."
     redirect_to cart_path
+  end
+
+  # Reaching the success URL means the customer paid in the browser, so
+  # whatever failed afterwards the stash holds a paid session's client secret.
+  # Drop it: a kept stash would revalidate (a rolled-back order restores the
+  # cart) and GET /checkout would remount the paid session. A fresh session is
+  # the cheaper mistake.
+  def drop_paid_stash
+    session.delete(:onsite_checkout)
   end
 
   def cancel

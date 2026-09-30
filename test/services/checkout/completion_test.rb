@@ -76,6 +76,29 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert_equal 1, @cart.reload.cart_items.count
   end
 
+  test "a setup-mode session (reorder card capture) is not a checkout and yields nothing" do
+    # Stripe completes setup sessions as no_payment_required; they carry no
+    # shipping details and must never be reported as failed completions.
+    stub_paid_session(mode: "setup", payment_status: "no_payment_required")
+    Sentry.expects(:capture_exception).never
+
+    outcome = nil
+    assert_no_difference "Order.count" do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: false)
+    end
+    assert outcome.unpaid?
+  end
+
+  test "a session Stripe cannot find is a permanent failure" do
+    Stripe::Checkout::Session.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such session", "id"))
+    Sentry.expects(:capture_exception).once
+
+    error = assert_raises(Checkout::PermanentCompletionFailure) do
+      Checkout::Completion.complete("sess_missing", browser_present: true)
+    end
+    assert_kind_of Stripe::InvalidRequestError, error.cause
+  end
+
   test "a zero-total session completes as no_payment_required" do
     stub_paid_session(payment_status: "no_payment_required", amount_total: 0)
 
