@@ -64,20 +64,12 @@ module Checkout
       session = retrieve_session
       return Outcome.new(order: nil, status: :unpaid) unless payment?(session) && paid?(session)
 
-      order = OrderCreator.new(stripe_session: session, cart: cart_for(session)).create
+      order, created = create_order(session)
+      return Outcome.new(order: order, status: :existing) unless created
+
       report_itemless(order, session) if order.order_items.none?
       effects_for(order, session).run
       Outcome.new(order: order, status: :created)
-    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
-      # Lost the create race: the other channel committed the order in the window
-      # after our find_by, so create! hit the unique stripe_session_id index (or
-      # the model validation ahead of it). Benign: the order exists. If it does
-      # not, the constraint or validation fired for another reason (an item
-      # rollback), which a retry may fix.
-      existing = Order.find_by(stripe_session_id: @session_id)
-      return Outcome.new(order: existing, status: :existing) if existing
-
-      fail_transient(e)
     rescue Stripe::InvalidRequestError => e
       # A session id Stripe cannot resolve fails identically on every retry.
       # Stripe raises the same class for retryable conditions too (lock_timeout),
@@ -86,9 +78,25 @@ module Checkout
     rescue Stripe::StripeError => e
       fail_transient(e)
     rescue Checkout::PermanentCompletionFailure => e
-      Rails.logger.error("[Checkout completion] session #{@session_id} can never complete: #{e.message}")
-      Sentry.capture_exception(e, extra: { stripe_session_id: @session_id })
+      report("can never complete", e)
       raise
+    end
+
+    private
+
+    # [order, created]. created is false when this call lost the create race:
+    # the other channel committed in the window after our find_by, so create!
+    # hit the unique stripe_session_id index or the model validation ahead of
+    # it, and the pair carries that order instead. Any other RecordInvalid (an
+    # item rollback) leaves no order, and a retry may fix it. Rescued only
+    # around the create so a failure elsewhere is never mistaken for a lost race.
+    def create_order(session)
+      [ OrderCreator.new(stripe_session: session, cart: cart_for(session)).create, true ]
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
+      existing = Order.find_by(stripe_session_id: @session_id)
+      return [ existing, false ] if existing
+
+      fail_transient(e)
     end
 
     private
@@ -111,38 +119,47 @@ module Checkout
     # The cart the session was priced from, named in metadata since 2026-05.
     # Nil when it has gone (the order is still recorded, see OrderCreator).
     def cart_for(session)
-      cart_id = session.metadata&.[]("cart_id")
+      cart_id = metadata_value(session, "cart_id")
       Cart.find_by(id: cart_id) if cart_id.present?
     end
 
+    def metadata_value(session, key)
+      session.metadata&.[](key)
+    end
+
+    # A static message so Sentry groups every item-less order into one issue;
+    # the ids ride in extra.
     def report_itemless(order, session)
-      message = "[Checkout completion] Order #{order.id} recorded without line items " \
-                "(cart_id: #{session.metadata&.[]("cart_id").inspect}); reconcile against session #{session.id}"
-      Rails.logger.warn(message)
-      Sentry.capture_message(message, level: :warning, extra: { order_id: order.id, stripe_session_id: session.id })
+      Rails.logger.warn("[Checkout completion] Order #{order.id} recorded without line items " \
+                        "(cart_id: #{metadata_value(session, "cart_id").inspect}); reconcile against session #{session.id}")
+      Sentry.capture_message("Checkout completion recorded an order without line items", level: :warning,
+        extra: { order_id: order.id, stripe_session_id: session.id, cart_id: metadata_value(session, "cart_id") })
     end
 
     def effects_for(order, session)
-      metadata = session.metadata
       CompletionEffects.new(order,
         browser_present: @browser_present,
         payment_method: Checkout::SessionDetails.payment_method_type(session),
-        welcome_discount_code: metadata&.[]("discount_code"),
-        datafast_visitor_id: metadata&.[]("datafast_visitor_id"),
-        datafast_session_id: metadata&.[]("datafast_session_id")
+        welcome_discount_code: metadata_value(session, "discount_code"),
+        datafast_visitor_id: metadata_value(session, "datafast_visitor_id"),
+        datafast_session_id: metadata_value(session, "datafast_session_id")
       )
     end
 
     def fail_permanent(cause)
-      Rails.logger.error("[Checkout completion] session #{@session_id} can never complete: #{cause.class}: #{cause.message}")
-      Sentry.capture_exception(cause, extra: { stripe_session_id: @session_id })
+      report("can never complete", cause)
       raise Checkout::PermanentCompletionFailure, cause.message
     end
 
     def fail_transient(cause)
-      Rails.logger.error("[Checkout completion] session #{@session_id} failed, retryable: #{cause.class}: #{cause.message}")
-      Sentry.capture_exception(cause, extra: { stripe_session_id: @session_id })
+      report("failed, retryable", cause)
       raise Checkout::TransientCompletionFailure, cause.message
+    end
+
+    # One log line and one Sentry capture per failure, whichever channel hit it.
+    def report(outcome, error)
+      Rails.logger.error("[Checkout completion] session #{@session_id} #{outcome}: #{error.class}: #{error.message}")
+      Sentry.capture_exception(error, extra: { stripe_session_id: @session_id })
     end
   end
 end
