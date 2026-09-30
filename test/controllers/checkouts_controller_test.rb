@@ -33,6 +33,10 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     Rails.application.credentials.dig(:stripe, :welcome_coupon)
   end
 
+  def completion_outcome(status, order)
+    Checkout::Completion::Outcome.new(order: order, status: status)
+  end
+
   # The fake Stripe promotion-code id and customer-facing code SessionBuilder
   # resolves the welcome coupon id to, before applying discounts:[{promotion_code:}]
   # and recording the code name on the order. Stubbed so checkout tests do not hit
@@ -606,21 +610,6 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
-  test "success logs the payment method that actually paid, not the configured list" do
-    captured = nil
-    stripe_session = build_stripe_session(payment_status: "paid", payment_method_type: "link")
-    Stripe::Checkout::Session.stubs(:retrieve).with do |params|
-      captured = params
-      true
-    end.returns(stripe_session)
-
-    assert_event_reported("checkout.completed", payload: { payment_method: "link" }) do
-      get success_checkout_path, params: { session_id: stripe_session.id }
-    end
-
-    assert_includes captured[:expand], "payment_intent.payment_method"
-  end
-
   # ============================================================================
   # CREATE ACTION TESTS (POST /checkouts)
   # ============================================================================
@@ -859,434 +848,156 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
   # ============================================================================
   # SUCCESS ACTION TESTS (GET /checkouts/success)
+  #
+  # The success redirect is one completion channel (CONTEXT.md: Checkout
+  # completion). It owns only transport: the flash and redirect for each
+  # outcome, and the browser-session cleanup. What a completion does lives in
+  # Checkout::CompletionTest.
   # ============================================================================
 
-  test "success creates order from paid Stripe session" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      customer_name: "Jane Buyer",
-      client_reference_id: @user.id,
-      payment_status: "paid"
-    )
+  test "success completes the session with the customer present and redirects to the new order" do
+    order = orders(:one)
+    Checkout::Completion.expects(:complete).with("sess_paid", browser_present: true)
+      .returns(completion_outcome(:created, order))
 
-    assert_difference "Order.count", 1 do
-      get success_checkout_path, params: { session_id: session.id }
-    end
+    get success_checkout_path, params: { session_id: "sess_paid" }
 
-    order = Order.last
-    assert_equal "buyer@example.com", order.email
-    assert_equal session.id, order.stripe_session_id
-    assert_equal "paid", order.status
+    assert_response :see_other
+    assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
+    assert_equal order.id, session[:recent_order_id]
   end
 
-  test "success extracts shipping details from Stripe session" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      customer_name: "Test Buyer",
-      shipping_name: "Test Buyer",
-      shipping_address: {
-        line1: "123 Test Street",
-        line2: "Flat 4",
-        city: "London",
-        postal_code: "SW1A 1AA",
-        country: "GB"
-      }
-    )
+  test "success redirects to the order the webhook already completed" do
+    order = orders(:one)
+    Checkout::Completion.stubs(:complete).returns(completion_outcome(:existing, order))
 
-    get success_checkout_path, params: { session_id: session.id }
+    get success_checkout_path, params: { session_id: order.stripe_session_id }
 
-    order = Order.last
-    assert_equal "Test Buyer", order.shipping_name
-    assert_equal "123 Test Street", order.shipping_address_line1
-    assert_equal "Flat 4", order.shipping_address_line2
-    assert_equal "London", order.shipping_city
-    assert_equal "SW1A 1AA", order.shipping_postal_code
-    assert_equal "GB", order.shipping_country
-  end
-
-  test "success calculates order totals from Stripe session amounts, taxing shipping" do
-    # Shipping is a taxed line item: amount_subtotal includes it (2000 + 500) and
-    # amount_tax is VAT on both: 2500 * 0.2 = 500.
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2500,
-      amount_tax: 500,
-      amount_total: 3000,
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 2000),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-
-    assert_difference "Order.count", 1 do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    order = Order.last
-    assert_equal 20.0, order.subtotal_amount.to_f
-    assert_equal 5.0, order.vat_amount.to_f
-    assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 30.0, order.total_amount.to_f
-  end
-
-  test "success expands nested line item product so shipping is identifiable" do
-    session = build_stripe_session(
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2500,
-      amount_tax: 500,
-      amount_total: 3000,
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 2000),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-    Stripe::Checkout::Session.expects(:retrieve).with do |args|
-      # total_details.breakdown must be expanded or the discount breakdown comes back
-      # nil and the order records no discount_code (see SessionDetails.promotion_code).
-      args[:expand] == [ "collected_information", "line_items.data.price.product",
-                        "payment_intent.payment_method", "total_details.breakdown" ]
-    end.returns(session)
-
-    assert_difference "Order.count", 1 do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-  end
-
-  test "success creates order items from cart items" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
-
-    assert_difference "OrderItem.count", @cart.cart_items.count do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    order = Order.last
-    order_item = order.order_items.first
-
-    assert_equal @cart_item.product, order_item.product
-    assert_equal @cart_item.product.display_name, order_item.product_name
-    assert_equal @cart_item.product.sku, order_item.product_sku
-    assert_equal @cart_item.price, order_item.price  # OrderItem stores pack price for display
-    assert_equal @cart_item.quantity, order_item.quantity
-    assert_equal @cart_item.product.pac_size, order_item.pac_size  # OrderItem stores pac_size for pricing display
-  end
-
-  test "success builds the order from the cart the paid session names, not the browser cart" do
-    agent_cart = Cart.create!
-    agent_cart.cart_items.create!(product: products(:two), quantity: 3, price: 5.0)
-
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      metadata: { "cart_id" => agent_cart.id.to_s }
-    )
-
-    assert_difference "Order.count", 1 do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    order = Order.last
-    assert_equal [ products(:two).id ], order.order_items.map(&:product_id)
-    assert_equal 0, agent_cart.reload.cart_items.count
-    assert_equal 1, @cart.reload.cart_items.count
-  end
-
-  test "success clears cart after creating order" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
-
-    initial_cart_items_count = @cart.cart_items.count
-    assert initial_cart_items_count > 0, "Cart should have items before checkout"
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    @cart.reload
-    assert_equal 0, @cart.cart_items.count
-  end
-
-  test "success sends order confirmation email" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
-
-    assert_enqueued_with(job: ActionMailer::MailDeliveryJob) do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-  end
-
-  test "success enqueues a Telegram notification for the new order" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_enqueued_with(job: TelegramOrderNotificationJob, args: [ order.id ])
-  end
-
-  test "success redirects to confirmation page with token" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    # Now redirects to confirmation page (not show) with signed token
-    # Check the redirect location contains the confirmation path (token varies by timestamp)
     assert_response :redirect
     assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
   end
 
-  test "success prevents duplicate orders with same session_id" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
+  test "success clears the Welcome discount from the browser session once spent" do
+    post email_subscriptions_path, params: { email: "discount-test@example.com" }
+    assert_equal welcome_coupon_id, session[:discount_code]
+    Checkout::Completion.stubs(:complete).returns(completion_outcome(:created, orders(:one)))
 
-    # First request creates order
-    get success_checkout_path, params: { session_id: session.id }
-    first_order = Order.last
+    get success_checkout_path, params: { session_id: "sess_paid" }
 
-    # Second request should not create duplicate
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    # Duplicate requests redirect to confirmation page with signed token
-    assert_response :redirect
-    assert_match %r{/orders/#{first_order.id}/confirmation\?token=}, response.location
+    assert_nil session[:discount_code]
   end
 
-  test "success redirects to the existing order when it loses the create race to the webhook" do
-    # TOCTOU: the find_by check passes (no order yet), then the webhook commits the
-    # order microseconds before OrderCreator runs, so create! hits the unique
-    # stripe_session_id index. The paying customer must be redirected to the
-    # existing order's confirmation, not shown a 500.
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
+  test "success spends the Welcome discount even when the webhook completed the order first" do
+    post email_subscriptions_path, params: { email: "discount-test@example.com" }
+    assert_equal welcome_coupon_id, session[:discount_code]
+    Checkout::Completion.stubs(:complete).returns(completion_outcome(:existing, orders(:one)))
 
-    # The order the webhook commits during the TOCTOU window.
-    racing_order = Order.create!(
-      user: @user, email: "buyer@example.com", stripe_session_id: session.id, status: "paid",
-      subtotal_amount: 20, vat_amount: 4, shipping_amount: 0, total_amount: 24,
-      shipping_name: "Buyer", shipping_address_line1: "1 St", shipping_city: "London",
-      shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
-    )
-    # find_by sees nothing on the guard check, but the order exists by the time the
-    # rescue re-checks; OrderCreator hits the unique index in between.
-    Order.stubs(:find_by).with(stripe_session_id: session.id).returns(nil).then.returns(racing_order)
-    Checkout::OrderCreator.any_instance.stubs(:create).raises(
-      ActiveRecord::RecordNotUnique.new("duplicate key value violates unique constraint")
-    )
+    get success_checkout_path, params: { session_id: orders(:one).stripe_session_id }
 
-    get success_checkout_path, params: { session_id: session.id }
-
-    assert_response :redirect
-    assert_match %r{/orders/#{racing_order.id}/confirmation\?token=}, response.location
+    assert_nil session[:discount_code]
   end
 
-  test "success does not 422 a paid customer when an order item fails validation" do
-    # A non-race RecordInvalid (e.g. an OrderItem validation fails inside
-    # OrderCreator's transaction, rolling back the order) must not surface as a 422
-    # to someone who has already paid. Capture it and redirect gracefully - the
-    # webhook fallback still creates the order - rather than re-raising.
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
-    # No order exists for this session, and create raises a validation error that is
-    # NOT the uniqueness race.
-    Order.stubs(:find_by).with(stripe_session_id: session.id).returns(nil)
-    Checkout::OrderCreator.any_instance.stubs(:create).raises(
-      ActiveRecord::RecordInvalid.new(Order.new)
-    )
-    Sentry.expects(:capture_exception).at_least_once
+  test "success drops the on-site stash on a transient failure too" do
+    # Reaching the success URL means the customer paid in the browser; an
+    # item rollback restores the cart, so a kept stash would revalidate and
+    # remount the paid session's client secret.
+    stash_onsite_session
+    Checkout::Completion.stubs(:complete).raises(Checkout::TransientCompletionFailure.new("rollback"))
 
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: session.id }
-    end
+    get success_checkout_path, params: { session_id: "sess_blip" }
 
-    assert_redirected_to cart_path
+    assert_nil session[:onsite_checkout]
     assert_match /Unable to verify payment/, flash[:error]
   end
 
   test "success handles missing session_id parameter" do
+    Checkout::Completion.expects(:complete).never
+
     get success_checkout_path
 
     assert_redirected_to cart_path
     assert_match /Invalid checkout session/, flash[:error]
   end
 
-  test "success handles unpaid Stripe sessions" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      payment_status: "unpaid"
-    )
+  test "success sends an unpaid session back to the cart and keeps the on-site stash" do
+    stash_onsite_session
+    Checkout::Completion.stubs(:complete).returns(completion_outcome(:unpaid, nil))
 
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: session.id }
-    end
+    get success_checkout_path, params: { session_id: "sess_unpaid" }
 
     assert_redirected_to cart_path
     assert_match /Payment was not completed/, flash[:error]
+    assert_not_nil session[:onsite_checkout]
   end
 
-  test "success creates a zero-total order for a no_payment_required session" do
-    # A 100%-off coupon (or any discount covering the whole order, including the
-    # taxed shipping line) makes Stripe complete the session with payment_status
-    # "no_payment_required" and amount_total 0 - never "paid". The order must
-    # still be created and fulfilled.
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      client_reference_id: @user.id,
-      payment_status: "no_payment_required",
-      amount_subtotal: 0,
-      amount_tax: 0,
-      amount_total: 0
-    )
+  test "success asks the customer to retry checkout when shipping details are missing" do
+    Checkout::Completion.stubs(:complete).raises(Checkout::MissingShippingDetails.new("Shipping details are required"))
 
-    assert_difference "Order.count", 1 do
-      get success_checkout_path, params: { session_id: session.id }
-    end
+    get success_checkout_path, params: { session_id: "sess_no_shipping" }
 
-    order = Order.last
-    assert_equal "buyer@example.com", order.email
-    assert_equal session.id, order.stripe_session_id
-    assert_equal "paid", order.status
-    assert_equal 0, order.total_amount
-    # Token carries a timestamp, so match the confirmation path rather than rebuild it.
-    assert_response :redirect
-    assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
+    assert_redirected_to cart_path
+    assert_match /Shipping details are required/, flash[:error]
   end
 
-  test "success handles invalid session_id" do
-    Stripe::Checkout::Session.stubs(:retrieve).raises(
-      Stripe::InvalidRequestError.new("No such session", nil)
-    )
+  test "success drops the on-site stash when a paid session can never complete" do
+    # The stash holds the paid session's client secret; "try checkout again"
+    # must not remount that session on GET /checkout.
+    stash_onsite_session
+    Checkout::Completion.stubs(:complete).raises(Checkout::MissingShippingDetails.new("Shipping details are required"))
 
-    get success_checkout_path, params: { session_id: "sess_invalid_12345" }
+    get success_checkout_path, params: { session_id: "sess_no_shipping" }
+
+    assert_nil session[:onsite_checkout]
+    assert_match /Shipping details are required/, flash[:error]
+  end
+
+  test "success never 500s a paid customer on another permanent failure" do
+    Checkout::Completion.stubs(:complete).raises(Checkout::SessionAmounts::UnexpandedLineItemError.new("unexpanded"))
+
+    get success_checkout_path, params: { session_id: "sess_unexpanded" }
 
     assert_redirected_to cart_path
     assert_match /Unable to verify payment/, flash[:error]
   end
 
-  test "success handles an unexpanded-line-item error gracefully instead of 500ing" do
-    # If a future change drops the line_items.data.price.product expand,
-    # SessionAmounts raises UnexpandedLineItemError. The paying customer must get a
-    # graceful redirect (the webhook still creates the order), not a 500.
-    stub_stripe_session_retrieve(customer_email: "buyer@example.com", client_reference_id: @user.id)
-    Checkout::SessionAmounts.stubs(:from).raises(
-      Checkout::SessionAmounts::UnexpandedLineItemError.new("line item product not expanded")
-    )
+  test "success never 500s a paid customer on a transient failure" do
+    Checkout::Completion.stubs(:complete).raises(Checkout::TransientCompletionFailure.new("connection reset"))
 
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: "sess_unexpanded" }
-    end
+    get success_checkout_path, params: { session_id: "sess_blip" }
 
     assert_redirected_to cart_path
     assert_match /Unable to verify payment/, flash[:error]
   end
 
-  test "success handles empty cart gracefully" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
+  test "success lets a programmer error surface instead of silently swallowing it" do
+    Checkout::Completion.stubs(:complete).raises(StandardError.new("Database error"))
 
-    # Clear the cart
-    @cart.cart_items.destroy_all
-
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: session.id }
+    assert_raises(StandardError) do
+      get success_checkout_path, params: { session_id: "sess_bug" }
     end
-
-    assert_redirected_to root_path
-    assert_match /No items found in cart/, flash[:error]
   end
 
-  test "success associates order with user for authenticated checkouts" do
-    session = stub_stripe_session_retrieve(
-      customer_email: @user.email_address,
-      client_reference_id: @user.id
+  test "success creates the order end to end from a paid session" do
+    # The wiring check: a real completion through the Stripe stubs, with the
+    # cart the session names rather than the browser cart.
+    paid_cart = Cart.create!
+    paid_cart.cart_items.create!(product: products(:one), quantity: 3, price: 10.0)
+    stripe_session = stub_stripe_session_retrieve(
+      customer_email: "buyer@example.com", client_reference_id: @user.id, metadata: { cart_id: paid_cart.id.to_s }
     )
 
-    get success_checkout_path, params: { session_id: session.id }
+    assert_difference [ "Order.count", "OrderItem.count" ], 1 do
+      assert_event_reported("order.placed") do
+        get success_checkout_path, params: { session_id: stripe_session.id }
+      end
+    end
 
-    order = Order.last
+    order = Order.find_by!(stripe_session_id: stripe_session.id)
     assert_equal @user, order.user
-  end
-
-  test "success creates guest order when no user is authenticated" do
-    session = stub_stripe_session_retrieve(customer_email: "guest@example.com")
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_nil order.user
-    assert_equal "guest@example.com", order.email
-  end
-
-  # ============================================================================
-  # DISCOUNT / STRIPE-SOURCED TOTALS TESTS
-  # ============================================================================
-
-  test "success uses Stripe session amounts as source of truth for order totals" do
-    # Cart has subtotal £20 (2 items × £10), but Stripe reflects a discount.
-    # Shipping is a taxed line item, so amount_subtotal includes it (1900 + 500)
-    # and amount_tax is VAT on both: 2400 * 0.2 = 480.
-    session = build_stripe_session(
-      id: "sess_discount_test",
-      payment_status: "paid",
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2400,    # products £19 (post-discount) + shipping £5
-      amount_tax: 480,          # £4.80
-      amount_total: 2880,       # £28.80
-      amount_discount: 100,     # £1.00 discount
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 1900),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    # Order should use Stripe amounts, NOT cart-calculated amounts
-    assert_equal 19.0, order.subtotal_amount.to_f
-    assert_equal 4.80, order.vat_amount.to_f
-    assert_equal 5.0, order.shipping_amount.to_f
-    assert_equal 28.80, order.total_amount.to_f
-    assert_equal 1.0, order.discount_amount.to_f
-  end
-
-  test "success stores discount code on order when discount was applied" do
-    session = build_stripe_session(
-      id: "sess_discount_code_test",
-      payment_status: "paid",
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2400,
-      amount_tax: 480,
-      amount_total: 2880,
-      amount_discount: 100,
-      metadata: { discount_code: "WELCOME5" },
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 1900),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_equal "WELCOME5", order.discount_code
-  end
-
-  test "success sets zero discount when no discount applied" do
-    session = build_stripe_session(
-      id: "sess_no_discount_test",
-      payment_status: "paid",
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2500,
-      amount_tax: 500,
-      amount_total: 3000,
-      amount_discount: 0,
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 2000),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_equal 0.0, order.discount_amount.to_f
-    assert_nil order.discount_code
+    assert_equal 3, order.order_items.first.quantity
+    assert_equal 0, paid_cart.reload.cart_items.count
+    assert_equal 1, @cart.reload.cart_items.count
+    assert_match %r{/orders/#{order.id}/confirmation\?token=}, response.location
   end
 
   # ============================================================================
@@ -1368,55 +1079,6 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # from the opaque coupon id to the resolved promotion code (WELCOME10), so the
     # order records the human-readable code.
     assert_equal WELCOME_PROMOTION_CODE, captured_params[:metadata][:discount_code]
-  end
-
-  test "success extracts discount code from Stripe promotion code when customer enters code" do
-    session = build_stripe_session(
-      id: "sess_promo_code_test",
-      payment_status: "paid",
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2300,
-      amount_tax: 460,
-      amount_total: 2760,
-      amount_discount: 200,
-      metadata: {},
-      promotion_code: "SUMMER20",
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 1800),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_equal 2.0, order.discount_amount.to_f
-    assert_equal "SUMMER20", order.discount_code
-  end
-
-  test "success prefers metadata discount code over Stripe promotion code" do
-    session = build_stripe_session(
-      id: "sess_metadata_priority",
-      payment_status: "paid",
-      customer_email: "buyer@example.com",
-      amount_subtotal: 2300,
-      amount_tax: 460,
-      amount_total: 2760,
-      amount_discount: 200,
-      metadata: { discount_code: "WELCOME5" },
-      promotion_code: "SUMMER20",
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: 1800),
-        stripe_shipping_line_item(amount_subtotal: 500)
-      ]
-    )
-    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_equal "WELCOME5", order.discount_code
   end
 
   # Note: Testing discount application requires session state persistence
@@ -1564,47 +1226,6 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert logged_messages.any? { |msg| msg.include?("Stripe error:") }
   end
 
-  test "success handles Stripe API errors when retrieving session" do
-    Stripe::Checkout::Session.stubs(:retrieve).raises(
-      StripeErrors.api_connection_error
-    )
-
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: "sess_test_123" }
-    end
-
-    assert_redirected_to cart_path
-    assert_match /Unable to verify payment/, flash[:error]
-  end
-
-  test "success raises on order creation errors instead of silently swallowing" do
-    session = stub_stripe_session_retrieve(customer_email: "buyer@example.com")
-
-    # Simulate an error during order creation (e.g., validation failure)
-    Order.any_instance.stubs(:save!).raises(StandardError.new("Database error"))
-
-    assert_raises(StandardError) do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-  end
-
-  test "success handles missing shipping details with checkout retry" do
-    # Use the helper with nil line1 to test validation
-    session = build_stripe_session(
-      id: "sess_test_missing_address",
-      payment_status: "paid",
-      shipping_address: { line1: nil, line2: "Flat 4", city: "London", postal_code: "SW1A 1AA", country: "GB" }
-    )
-    Stripe::Checkout::Session.stubs(:retrieve).returns(session)
-
-    assert_no_difference "Order.count" do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    assert_redirected_to cart_path
-    assert_match /Shipping details are required/, flash[:error]
-  end
-
   test "create respects rate limiting" do
     stub_stripe_session_create
 
@@ -1619,88 +1240,6 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     # After 10 requests, should hit rate limit
     # Note: In actual implementation, this would require time-based testing
     # or integration tests with proper rate limit store
-  end
-
-  # ============================================================================
-  # ORGANIZATION AND B2B TESTS
-  # ============================================================================
-
-  test "creates order with organization for B2B users" do
-    sign_in_as users(:acme_admin)
-
-    # Add item to cart
-    @cart.cart_items.create!(
-      product: products(:single_wall_8oz_white),
-      quantity: 10,
-      price: 10.0
-    )
-
-    session = stub_stripe_session_retrieve(
-      customer_email: users(:acme_admin).email_address,
-      client_reference_id: users(:acme_admin).id
-    )
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    # Verify order created with organization
-    order = Order.last
-    assert_equal organizations(:acme), order.organization
-    assert_equal users(:acme_admin), order.placed_by_user
-  end
-
-  test "creates order without organization for consumer users" do
-    sign_in_as users(:consumer)
-
-    # Add item to cart
-    @cart.cart_items.create!(
-      product: products(:single_wall_8oz_white),
-      quantity: 10,
-      price: 10.0
-    )
-
-    session = stub_stripe_session_retrieve(
-      customer_email: users(:consumer).email_address,
-      client_reference_id: users(:consumer).id
-    )
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    # Verify order created without organization
-    order = Order.last
-    assert_nil order.organization_id
-    assert_nil order.placed_by_user_id
-    assert_equal users(:consumer), order.user
-  end
-
-  test "sets branded_order_status for orders with configured items" do
-    sign_in_as users(:acme_admin)
-
-    # Add configured item
-    cart_item = @cart.cart_items.new(
-      product: products(:branded_template_variant),
-      quantity: 1,
-      configuration: { size: "12oz", quantity: 5000 },
-      calculated_price: 1000.00,
-      price: 1000.00
-    )
-
-    # Attach a design file before saving
-    cart_item.design.attach(
-      io: StringIO.new("fake design content"),
-      filename: "design.pdf",
-      content_type: "application/pdf"
-    )
-    cart_item.save!
-
-    session = stub_stripe_session_retrieve(
-      customer_email: users(:acme_admin).email_address,
-      client_reference_id: users(:acme_admin).id
-    )
-
-    get success_checkout_path, params: { session_id: session.id }
-
-    order = Order.last
-    assert_equal "design_pending", order.branded_order_status
   end
 
   # ============================================================================
@@ -1904,79 +1443,5 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_no_event_reported("cart.checkout_initiated") do
       post checkout_path
     end
-  end
-
-  test "emits checkout.completed event on successful payment verification" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      payment_status: "paid"
-    )
-
-    assert_event_reported("checkout.completed") do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    assert_response :redirect
-  end
-
-  test "emits order.placed event when order is created from checkout" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      payment_status: "paid"
-    )
-
-    assert_event_reported("order.placed") do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    assert_response :redirect
-  end
-
-  test "does not emit checkout events on payment failure" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "buyer@example.com",
-      payment_status: "unpaid"
-    )
-
-    assert_no_event_reported("checkout.completed") do
-      assert_no_event_reported("order.placed") do
-        get success_checkout_path, params: { session_id: session.id }
-      end
-    end
-
-    assert_redirected_to cart_path
-  end
-
-  test "emits email_signup.discount_claimed event when order placed with discount" do
-    # Set discount code in session
-    post email_subscriptions_path, params: { email: "discount-test@example.com" }
-    assert_equal welcome_coupon_id, session[:discount_code]
-
-    # Stub Stripe to resolve the welcome promo code
-    stub_welcome_promotion_code
-
-    session = stub_stripe_session_retrieve(
-      customer_email: "discount-test@example.com",
-      payment_status: "paid"
-    )
-
-    assert_event_reported("email_signup.discount_claimed") do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    assert_response :redirect
-  end
-
-  test "does not emit email_signup.discount_claimed event when order placed without discount" do
-    session = stub_stripe_session_retrieve(
-      customer_email: "no-discount@example.com",
-      payment_status: "paid"
-    )
-
-    assert_no_event_reported("email_signup.discount_claimed") do
-      get success_checkout_path, params: { session_id: session.id }
-    end
-
-    assert_response :redirect
   end
 end

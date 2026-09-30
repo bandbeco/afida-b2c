@@ -2,7 +2,7 @@
 type: Guide
 description: Codebase orientation for developers, covering data models, cart and checkout flows, authentication, and common tasks.
 status: active
-timestamp: 2026-07-29
+timestamp: 2026-09-30
 ---
 
 # Developer Guide
@@ -339,17 +339,26 @@ All money math lives in the Stripe session, built by
 
 ### After payment
 
-Both modes land on the same success URL with `?session_id=`:
-`CheckoutsController#success` retrieves the session (expanding
-`collected_information`, `line_items.data.price.product`, and
-`payment_intent.payment_method`), guards against
-the webhook's duplicate order, creates the order via `Checkout::OrderCreator`,
-clears the cart, and sends confirmation emails plus the Telegram notification.
-The `checkout.session.completed` webhook
-(`app/controllers/webhooks/stripe_controller.rb`) is the fallback that creates
-the order if the redirect never arrives. Zero-total orders complete with
-`payment_status: "no_payment_required"`; every completion gate accepts both
-statuses via `Checkout::COMPLETED_PAYMENT_STATUSES`.
+Both modes land on the same success URL with `?session_id=`, and Stripe also
+sends `checkout.session.completed`. These are the two **completion channels**
+of a **checkout completion** (see `CONTEXT.md`): `Checkout::Completion` turns
+a paid session into exactly one Order with its invariant side effects,
+whichever channel arrives first, and the other channel finds the order.
+
+The module owns the retrieve and its expand list, the paid check, the
+exactly-once row (`Checkout::OrderCreator`, which also consumes the cart inside
+the order's transaction) and the side effects (`Checkout::CompletionEffects`:
+confirmation emails, Telegram, `checkout.completed`, `order.placed` and the
+Welcome-discount `email_signup.discount_claimed`, all driven by Stripe metadata
+rather than the browser session). It returns `created`, `existing` or `unpaid`
+and raises `Checkout::PermanentCompletionFailure` or
+`Checkout::TransientCompletionFailure`; the controllers only map those to a
+flash and redirect (`CheckoutsController#success`) or to the HTTP status Stripe
+acts on (`Webhooks::StripeController`: 200 stops retries, 5xx asks for one).
+The one channel-dependent effect is the server-side GA4 purchase, fired only
+when no browser will fire the client-side event on the confirmation page.
+Zero-total orders complete with `payment_status: "no_payment_required"`; the
+paid check accepts both statuses via `Checkout::COMPLETED_PAYMENT_STATUSES`.
 
 ## Authentication
 
