@@ -301,7 +301,8 @@ class CheckoutsController < ApplicationController
     # client_secret would ride every later request's cookie.
     session.delete(:onsite_checkout)
 
-    # Proves ownership of the fresh order for guest checkout.
+    # Proves ownership of the fresh order for guest checkout. Only on created:
+    # an existing order is reached through the signed token in the redirect.
     session[:recent_order_id] = outcome.order.id if outcome.created?
     # The Welcome discount is one-time. The session's metadata already decided
     # whether it was applied, so the browser copy is spent whichever channel

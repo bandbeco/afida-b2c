@@ -30,6 +30,10 @@ module Checkout
         cart_items.each do |cart_item|
           OrderItem.build_from_cart_item(cart_item, order).save!
         end
+        # The whole cart is consumed, including any item added after the
+        # session was priced. The redirect is reached from a page that would
+        # have repriced on such a change; the webhook has no such guard. A
+        # check against the session's line items is a known follow-up.
         cart&.cart_items&.destroy_all
 
         order
