@@ -89,8 +89,21 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert outcome.unpaid?
   end
 
+  test "a Stripe request error that is not resource_missing is still transient" do
+    # Stripe uses InvalidRequestError for some retryable conditions too
+    # (lock_timeout); only a missing resource can never succeed on retry.
+    Stripe::Checkout::Session.stubs(:retrieve)
+      .raises(Stripe::InvalidRequestError.new("lock timeout", nil, code: "lock_timeout"))
+    Sentry.expects(:capture_exception).once
+
+    assert_raises(Checkout::TransientCompletionFailure) do
+      Checkout::Completion.complete("sess_locked", browser_present: false)
+    end
+  end
+
   test "a session Stripe cannot find is a permanent failure" do
-    Stripe::Checkout::Session.stubs(:retrieve).raises(Stripe::InvalidRequestError.new("No such session", "id"))
+    Stripe::Checkout::Session.stubs(:retrieve)
+      .raises(Stripe::InvalidRequestError.new("No such session", "id", code: "resource_missing"))
     Sentry.expects(:capture_exception).once
 
     error = assert_raises(Checkout::PermanentCompletionFailure) do

@@ -18,9 +18,14 @@ module Checkout
   # Interface: .complete(session_id, browser_present:) returns an Outcome whose
   # status is :created (this call made the order and fired the effects),
   # :existing (an earlier completion did) or :unpaid (no order; the session has
-  # not been paid, or is not a payment-mode session at all). It raises PermanentCompletionFailure when the session can
-  # never produce an order and TransientCompletionFailure when a retry may
-  # succeed. Anything else (a programmer error) propagates untouched.
+  # not been paid, or is not a payment-mode session at all). It raises
+  # PermanentCompletionFailure when the session can never produce an order and
+  # TransientCompletionFailure when a retry may succeed. Anything else (a
+  # programmer error) propagates untouched.
+  #
+  # Effects run after the order commits and are reported, not retried: a crash
+  # between the commit and the effects loses them, since the retry finds the
+  # order and returns :existing. A durable marker is a known follow-up.
   #
   # browser_present says whether the customer is looking at the site right now:
   # true on the redirect, false on the webhook. It decides only the GA4
@@ -74,9 +79,10 @@ module Checkout
 
       fail_transient(e)
     rescue Stripe::InvalidRequestError => e
-      # Stripe rejected the request itself (a session id it cannot resolve, a
-      # malformed one): the same call fails identically on every retry.
-      fail_permanent(e)
+      # A session id Stripe cannot resolve fails identically on every retry.
+      # Stripe raises the same class for retryable conditions too (lock_timeout),
+      # so only resource_missing is permanent.
+      e.code == "resource_missing" ? fail_permanent(e) : fail_transient(e)
     rescue Stripe::StripeError => e
       fail_transient(e)
     rescue Checkout::PermanentCompletionFailure => e
