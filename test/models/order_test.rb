@@ -791,10 +791,11 @@ end
 
 class OrderInvoiceNumberTest < ActiveSupport::TestCase
   # HMRC wants a unique, sequential invoice number; the order number is random,
-  # the id is sequential.
-  test "invoice_number is the zero-padded id in its own series" do
+  # the id is sequential. The series is prefixed so it cannot collide with the
+  # offline trade invoices.
+  test "invoice_number is the zero-padded id in the web shop's own series" do
     order = orders(:one)
 
-    assert_equal format("INV-%06d", order.id), order.invoice_number
+    assert_equal format("WEB-%06d", order.id), order.invoice_number
   end
 end

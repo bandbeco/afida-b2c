@@ -129,8 +129,13 @@ class Order < ApplicationRecord
 
   # HMRC asks for a unique, sequential invoice number. The order number is
   # random, so the invoice carries its own series built on the sequential id.
+  # The prefix marks the series as the web shop's: B&B Eco also invoices
+  # offline trade clients, and "INV-" is what accounting tools use by
+  # default, so a generic prefix could collide with those.
+  INVOICE_NUMBER_PREFIX = "WEB-"
+
   def invoice_number
-    format("INV-%06d", id)
+    format("#{INVOICE_NUMBER_PREFIX}%06d", id)
   end
 
   # The promised delivery date. Stamped at creation (see set_estimated_delivery_on);
