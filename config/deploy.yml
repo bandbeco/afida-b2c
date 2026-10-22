@@ -59,9 +59,6 @@ env:
     # to Stripe's hosted page. Rollback lever: remove/zero this and re-boot
     # the app (read live from ENV, no code change needed). See OnsiteCheckout.
     ONSITE_CHECKOUT: "1"
-    # Printed on customer invoices (CompanyDetails). Blank = the VAT line is
-    # omitted and the PDF is not a valid VAT invoice.
-    COMPANY_VAT_NUMBER: "GB372516007"
     LEAD_MONITOR_DIGEST_TO: "hello@afida.com, laurent@afida.com"
     # Emergency stop for verification mail: set SUPPRESS_VERIFICATION_EMAILS: "true"
     # here and redeploy (see docs/runbooks/verification-email-throttling.md). Used

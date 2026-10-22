@@ -33,14 +33,16 @@ class OrderMailer < ApplicationMailer
 
   def attach_order_pdf(order)
     pdf_data = OrderPdfGenerator.new(order).generate
-    attachments["Invoice-#{order.order_number}.pdf"] = {
+    attachments["Invoice-#{order.invoice_number}.pdf"] = {
       mime_type: "application/pdf",
       content: pdf_data
     }
     true
   rescue StandardError => e
-    # Log error but continue sending email
+    # The email still goes out, but the customer is then missing their VAT
+    # invoice, so the failure is reported (Sentry) rather than only logged.
     Rails.logger.error("Failed to generate PDF for order #{order.order_number}: #{e.message}")
+    Rails.error.report(e, handled: true, context: { order_id: order.id })
     false
   end
 end

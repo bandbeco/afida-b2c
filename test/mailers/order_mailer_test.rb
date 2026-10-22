@@ -149,8 +149,8 @@ class OrderMailerTest < ActionMailer::TestCase
     pdf_attachment = email.attachments.find { |a| a.content_type.include?("application/pdf") }
     assert_not_nil pdf_attachment, "Email should have PDF attachment"
 
-    # The attachment is the VAT invoice, so it is named as one
-    assert_equal "Invoice-#{@order.order_number}.pdf", pdf_attachment.filename
+    # The attachment is the VAT invoice, named after the number printed inside it
+    assert_equal "Invoice-#{@order.invoice_number}.pdf", pdf_attachment.filename
   end
 
   test "confirmation_email tells the customer the VAT invoice is attached" do

@@ -341,7 +341,6 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
   # text back so the invoice content is pinned, not just "generates".
   def setup
     @order = orders(:complete_order)
-    CompanyDetails.stubs(:vat_number).returns("GB123456789")
   end
 
   def pdf_text(order = @order)
@@ -368,7 +367,7 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
 
     assert_includes text, "B&B Eco Ltd"
     assert_includes text, "Watford WD18 9SB"
-    assert_includes text, "VAT No. GB123456789"
+    assert_includes text, "VAT No. #{CompanyDetails::VAT_NUMBER}"
     assert_includes text, "Company No. 12927067"
   end
 
@@ -388,6 +387,20 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
     assert_includes text, @order.shipping_address_line1
   end
 
+  test "bills the billing name at the delivery address when only the name differs" do
+    @order.update_columns(
+      billing_name: "Example Cafe Ltd", billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2, billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code, billing_country: @order.shipping_country
+    )
+
+    text = pdf_text
+
+    assert_includes text, "Example Cafe Ltd"
+    assert_not_includes text, @order.shipping_name
+    assert_includes text, "Same as billing address"
+  end
+
   test "bills the billing address when one differs from delivery" do
     @order.update_columns(
       billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
@@ -399,11 +412,5 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
     assert_includes text, "Accounts Payable"
     assert_includes text, "1 Finance Row"
     assert_includes text, @order.shipping_address_line1
-  end
-
-  test "omits the VAT number line while it is not configured" do
-    CompanyDetails.stubs(:vat_number).returns("")
-
-    assert_not_includes pdf_text, "VAT No."
   end
 end

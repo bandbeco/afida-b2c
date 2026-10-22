@@ -129,6 +129,9 @@ class Order < ApplicationRecord
 
   # HMRC asks for a unique, sequential invoice number. The order number is
   # random, so the invoice carries its own series built on the sequential id.
+  # The id is a Postgres sequence, so a rolled-back insert (the redirect and
+  # webhook paths racing to create the same order) leaves a gap; gaps are
+  # acceptable to HMRC when explainable, which this one is.
   # The prefix marks the series as the web shop's: B&B Eco also invoices
   # offline trade clients, and "INV-" is what accounting tools use by
   # default, so a generic prefix could collide with those.

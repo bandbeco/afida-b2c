@@ -23,7 +23,7 @@ class OrderPdfGenerator
 
   HEADER_LINE_HEIGHT = 12
   SAME_AS_BILLING_NOTE = "Same as billing address"
-  VAT_NOTE = "Prices exclude VAT. VAT at 20% is charged on goods and delivery."
+  VAT_NOTE = "Prices exclude VAT. VAT at #{(VAT_RATE * 100).round}% is charged on goods and delivery."
 
   COMPANY_NAME = "Afida".freeze
   COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
@@ -101,8 +101,7 @@ class OrderPdfGenerator
     end
 
     # Seller identity on the right: a VAT invoice must name the legal entity,
-    # its address and VAT number, so these replace the old tagline. The VAT
-    # line is omitted while unconfigured (see CompanyDetails).
+    # its address and VAT number, so these replace the old tagline.
     info_width = 220
     info_lines = seller_lines
     info_lines.each_with_index do |line, index|
@@ -124,10 +123,13 @@ class OrderPdfGenerator
   end
 
   def seller_lines
-    lines = [ CompanyDetails.legal_name_line, *CompanyDetails::ADDRESS_LINES ]
-    lines << "VAT No. #{CompanyDetails.vat_number}" if CompanyDetails.vat_number.present?
-    lines << "Company No. #{CompanyDetails::COMPANY_NUMBER}"
-    lines << COMPANY_EMAIL
+    [
+      CompanyDetails.legal_name_line,
+      *CompanyDetails::ADDRESS_LINES,
+      "VAT No. #{CompanyDetails::VAT_NUMBER}",
+      "Company No. #{CompanyDetails::COMPANY_NUMBER}",
+      COMPANY_EMAIL
+    ]
   end
 
   def add_invoice_banner(pdf)
@@ -187,6 +189,8 @@ class OrderPdfGenerator
   # The invoice is paid at checkout (or charged on the reorder schedule), so
   # the tax point is the order date and the status reads "Paid". Later
   # statuses (processing, shipped, delivered) are fulfilment, not payment.
+  # The generator runs at order creation only; a refunded or cancelled order
+  # would need a credit note, which this document is not.
   def payment_status
     return "Paid" if Order::COMPLETED_STATUSES.include?(@order.status)
 
@@ -196,7 +200,9 @@ class OrderPdfGenerator
   # Bill-to is the collected billing address when it differs from delivery;
   # otherwise the delivery address is the invoiced party (orders predating
   # billing collection, or same-as-delivery). The second block then only
-  # notes the match instead of repeating the address.
+  # notes the match instead of repeating the address. Same-as-delivery is
+  # judged on the address alone, so the billing name (the invoiced party,
+  # e.g. the company) still replaces the delivery recipient when present.
   def address_blocks
     shipping_lines = OrderAddress.shipping_lines(@order)
     billing_lines = OrderAddress.billing_lines(@order)
@@ -205,8 +211,14 @@ class OrderPdfGenerator
     if separate_billing
       [ [ "Bill to", billing_lines ], [ "Deliver to", shipping_lines ] ]
     else
-      [ [ "Bill to", shipping_lines ], [ "Deliver to", [ { kind: :note, text: SAME_AS_BILLING_NOTE } ] ] ]
+      [ [ "Bill to", bill_to_lines(shipping_lines) ], [ "Deliver to", [ { kind: :note, text: SAME_AS_BILLING_NOTE } ] ] ]
     end
+  end
+
+  def bill_to_lines(shipping_lines)
+    return shipping_lines if @order.billing_name.blank?
+
+    [ { kind: :name, text: @order.billing_name }, *shipping_lines.reject { |line| line[:kind] == :name } ]
   end
 
   # Only :name lines get the dark emphasis and trailing gap; :address and
