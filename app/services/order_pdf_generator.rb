@@ -21,10 +21,12 @@ class OrderPdfGenerator
   ADDRESS_BLOCK_GAP = 10
   BORDER_GRAY = "E5E7EB".freeze        # Subtle borders
 
+  HEADER_LINE_HEIGHT = 12
+  SAME_AS_BILLING_NOTE = "Same as billing address"
+  VAT_NOTE = "Prices exclude VAT. VAT at 20% is charged on goods and delivery."
+
   COMPANY_NAME = "Afida".freeze
-  COMPANY_TAGLINE = "Eco-Friendly Packaging Supplies".freeze
   COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
-  COMPANY_WEBSITE = "https://afida.com".freeze
   LOGO_PATH = Rails.root.join("app", "frontend", "images", "afida-logo-pdf.png").freeze
 
   FONT_DIR = Rails.root.join("app/frontend/fonts/fredoka/static")
@@ -48,17 +50,16 @@ class OrderPdfGenerator
       add_header(pdf)
       pdf.move_down 25
 
-      # Order confirmation banner
-      add_confirmation_banner(pdf)
+      add_invoice_banner(pdf)
       pdf.move_down 20
 
-      # Two-column: Order details + Shipping address
       add_details_section(pdf)
       pdf.move_down 25
 
-      # Order items table
       add_items_table(pdf)
-      pdf.move_down 20
+      pdf.move_down 8
+      add_vat_note(pdf)
+      pdf.move_down 12
 
       # Price summary
       add_price_summary(pdf)
@@ -99,15 +100,18 @@ class OrderPdfGenerator
       pdf.draw_text COMPANY_NAME, at: [ 0, header_top - 25 ], size: 24, style: :bold
     end
 
-    # Company info on right side (right-aligned)
-    info_width = 180
-    pdf.fill_color TEXT_GRAY
-    pdf.text_box COMPANY_TAGLINE, at: [ pdf.bounds.width - info_width, header_top - 2 ], width: info_width, size: 9, align: :right
-    pdf.text_box COMPANY_EMAIL, at: [ pdf.bounds.width - info_width, header_top - 14 ], width: info_width, size: 9, align: :right
-    pdf.text_box COMPANY_WEBSITE, at: [ pdf.bounds.width - info_width, header_top - 26 ], width: info_width, size: 9, align: :right
+    # Seller identity on the right: a VAT invoice must name the legal entity,
+    # its address and VAT number, so these replace the old tagline. The VAT
+    # line is omitted while unconfigured (see CompanyDetails).
+    info_width = 220
+    info_lines = seller_lines
+    info_lines.each_with_index do |line, index|
+      pdf.fill_color(index.zero? ? TEXT_DARK : TEXT_GRAY)
+      pdf.text_box line, at: [ pdf.bounds.width - info_width, header_top - 2 - index * HEADER_LINE_HEIGHT ],
+        width: info_width, size: 9, align: :right
+    end
 
-    # Move cursor below header
-    pdf.move_down logo_height + 10
+    pdf.move_down [ logo_height, info_lines.size * HEADER_LINE_HEIGHT ].max + 10
 
     # Accent line below header
     pdf.stroke_color PRIMARY_COLOR
@@ -119,7 +123,14 @@ class OrderPdfGenerator
     pdf.fill_color TEXT_DARK
   end
 
-  def add_confirmation_banner(pdf)
+  def seller_lines
+    lines = [ CompanyDetails.legal_name_line, *CompanyDetails::ADDRESS_LINES ]
+    lines << "VAT No. #{CompanyDetails.vat_number}" if CompanyDetails.vat_number.present?
+    lines << "Company No. #{CompanyDetails::COMPANY_NUMBER}"
+    lines << COMPANY_EMAIL
+  end
+
+  def add_invoice_banner(pdf)
     banner_height = 50
 
     # Draw rounded rectangle background
@@ -133,12 +144,11 @@ class OrderPdfGenerator
     # Banner content
     pdf.bounding_box([ 20, pdf.cursor - 10 ], width: pdf.bounds.width - 40, height: banner_height - 20) do
       pdf.fill_color TEXT_DARK
-      pdf.text "Order Confirmation", size: 18, style: :bold
+      pdf.text "Invoice", size: 18, style: :bold
 
-      # Order number on the right
       pdf.bounding_box([ pdf.bounds.width - 200, 22 ], width: 200, height: 25) do
         pdf.fill_color TEXT_GRAY
-        pdf.text @order.order_number, size: 14, style: :bold, align: :right
+        pdf.text @order.invoice_number, size: 14, style: :bold, align: :right
       end
     end
 
@@ -147,36 +157,56 @@ class OrderPdfGenerator
 
   def add_details_section(pdf)
     column_width = (pdf.bounds.width - 30) / 2
-    shipping_lines = OrderAddress.shipping_lines(@order)
-    billing_lines = OrderAddress.billing_lines(@order)
-    # The right column also carries a billing block when one was collected;
-    # both boxes share the measured height so the columns stay aligned. The
-    # height is measured from the same lines that render (as add_price_summary
-    # sizes from its row count).
-    section_height = address_section_height(pdf, column_width, shipping_lines, billing_lines)
+    blocks = address_blocks
+    # Both columns share the measured height so they stay aligned. The height
+    # is measured from the same lines that render (as add_price_summary sizes
+    # from its row count).
+    section_height = address_section_height(pdf, column_width, blocks)
 
-    # Left column: Order details
     pdf.bounding_box([ 0, pdf.cursor ], width: column_width, height: section_height) do
-      add_section_header(pdf, "Order Details")
+      add_section_header(pdf, "Invoice Details")
       pdf.move_down 8
 
-      add_detail_row(pdf, "Order Number", @order.order_number)
-      add_detail_row(pdf, "Order Date", @order.created_at.strftime("%d %B %Y"))
-      add_detail_row(pdf, "Status", @order.status.titleize)
+      add_detail_row(pdf, "Invoice No.", @order.invoice_number)
+      add_detail_row(pdf, "Invoice Date", @order.created_at.strftime("%d %B %Y"))
+      add_detail_row(pdf, "Order No.", @order.order_number)
+      add_detail_row(pdf, "Payment", payment_status)
       add_detail_row(pdf, "Email", @order.email) if @order.email.present?
     end
 
-    # Right column: Shipping (and, when collected, billing) address
     pdf.bounding_box([ column_width + 30, pdf.cursor + section_height ], width: column_width, height: section_height) do
-      add_address_block(pdf, "Shipping Address", shipping_lines)
-
-      if billing_lines.any?
-        pdf.move_down ADDRESS_BLOCK_GAP
-        add_address_block(pdf, "Billing Address", billing_lines)
+      blocks.each_with_index do |(title, lines), index|
+        pdf.move_down ADDRESS_BLOCK_GAP if index.positive?
+        add_address_block(pdf, title, lines)
       end
     end
 
     pdf.fill_color TEXT_DARK
+  end
+
+  # The invoice is paid at checkout (or charged on the reorder schedule), so
+  # the tax point is the order date and the status reads "Paid". Later
+  # statuses (processing, shipped, delivered) are fulfilment, not payment.
+  def payment_status
+    return "Paid" if Order::COMPLETED_STATUSES.include?(@order.status)
+
+    @order.status.titleize
+  end
+
+  # Bill-to is the collected billing address when it differs from delivery;
+  # otherwise the delivery address is the invoiced party (orders predating
+  # billing collection, or same-as-delivery). The second block then only
+  # notes the match instead of repeating the address.
+  def address_blocks
+    shipping_lines = OrderAddress.shipping_lines(@order)
+    billing_lines = OrderAddress.billing_lines(@order)
+    separate_billing = billing_lines.any? { |line| line[:kind] == :address }
+
+    if separate_billing
+      [ [ "Bill to", billing_lines ], [ "Deliver to", shipping_lines ] ]
+    else
+      [ [ "Bill to", shipping_lines ], [ "Deliver to", [ { kind: :note, text: SAME_AS_BILLING_NOTE } ] ] ]
+    end
   end
 
   # Only :name lines get the dark emphasis and trailing gap; :address and
@@ -199,11 +229,9 @@ class OrderPdfGenerator
   # address lines that break count in full. The per-block ADDRESS_NAME_GAP is
   # an allowance: blocks without a :name line render without the gap, so the
   # box can only be over-sized, never under.
-  def address_section_height(pdf, column_width, shipping_lines, billing_lines)
-    height = address_block_height(pdf, "Shipping Address", shipping_lines, column_width)
-    if billing_lines.any?
-      height += ADDRESS_BLOCK_GAP + address_block_height(pdf, "Billing Address", billing_lines, column_width)
-    end
+  def address_section_height(pdf, column_width, blocks)
+    height = blocks.sum { |title, lines| address_block_height(pdf, title, lines, column_width) }
+    height += ADDRESS_BLOCK_GAP * (blocks.size - 1)
 
     [ height + 4, 100 ].max
   end
@@ -215,6 +243,14 @@ class OrderPdfGenerator
       ADDRESS_TITLE_GAP +
       lines.sum { |line| pdf.height_of(line[:text], size: ADDRESS_LINE_SIZE, width: column_width) } +
       ADDRESS_NAME_GAP
+  end
+
+  # HMRC wants the VAT rate per item; every line is standard-rated, so one
+  # statement covers the table.
+  def add_vat_note(pdf)
+    pdf.fill_color TEXT_GRAY
+    pdf.text VAT_NOTE, size: 8
+    pdf.fill_color TEXT_DARK
   end
 
   def add_section_header(pdf, title)

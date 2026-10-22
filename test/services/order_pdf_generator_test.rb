@@ -333,3 +333,77 @@ class OrderPdfGeneratorTest < ActiveSupport::TestCase
     refute_includes result, "packs"
   end
 end
+
+class OrderPdfInvoiceTest < ActiveSupport::TestCase
+  # The attached PDF is the customer's VAT invoice: customers were phoning for
+  # one because the document read "Order Confirmation" and carried no legal
+  # entity, registered address or VAT number. These tests read the rendered
+  # text back so the invoice content is pinned, not just "generates".
+  def setup
+    @order = orders(:complete_order)
+    CompanyDetails.stubs(:vat_number).returns("GB123456789")
+  end
+
+  def pdf_text(order = @order)
+    PDF::Reader.new(StringIO.new(OrderPdfGenerator.new(order).generate)).pages.map(&:text).join("\n")
+  end
+
+  test "titles the document as an invoice, not an order confirmation" do
+    text = pdf_text
+
+    assert_includes text, "Invoice"
+    assert_not_includes text, "Order Confirmation"
+  end
+
+  test "carries the invoice number, invoice date and order number" do
+    text = pdf_text
+
+    assert_includes text, @order.invoice_number
+    assert_includes text, @order.order_number
+    assert_includes text, @order.created_at.strftime("%d %B %Y")
+  end
+
+  test "carries the seller's legal identity" do
+    text = pdf_text
+
+    assert_includes text, "B&B Eco Ltd"
+    assert_includes text, "Watford WD18 9SB"
+    assert_includes text, "VAT No. GB123456789"
+    assert_includes text, "Company No. 12927067"
+  end
+
+  test "states that prices exclude VAT and the rate charged" do
+    assert_includes pdf_text, "Prices exclude VAT. VAT at 20% is charged on goods and delivery."
+  end
+
+  test "marks a paid order as paid" do
+    assert_includes pdf_text, "Paid"
+  end
+
+  test "bills the delivery address when no separate billing address was collected" do
+    text = pdf_text
+
+    assert_includes text, "Bill to"
+    assert_includes text, "Deliver to"
+    assert_includes text, @order.shipping_address_line1
+  end
+
+  test "bills the billing address when one differs from delivery" do
+    @order.update_columns(
+      billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+
+    text = pdf_text
+
+    assert_includes text, "Accounts Payable"
+    assert_includes text, "1 Finance Row"
+    assert_includes text, @order.shipping_address_line1
+  end
+
+  test "omits the VAT number line while it is not configured" do
+    CompanyDetails.stubs(:vat_number).returns("")
+
+    assert_not_includes pdf_text, "VAT No."
+  end
+end

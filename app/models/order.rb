@@ -127,6 +127,12 @@ class Order < ApplicationRecord
     "##{order_number}"
   end
 
+  # HMRC asks for a unique, sequential invoice number. The order number is
+  # random, so the invoice carries its own series built on the sequential id.
+  def invoice_number
+    format("INV-%06d", id)
+  end
+
   # The promised delivery date. Stamped at creation (see set_estimated_delivery_on);
   # falls back to computing from created_at for legacy orders predating the column.
   def estimated_delivery_date

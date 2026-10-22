@@ -89,6 +89,9 @@ group :test do
 
   # Code coverage analysis [https://github.com/simplecov-ruby/simplecov]
   gem "simplecov", require: false
+
+  # Extract text from generated PDFs so tests can assert on invoice content
+  gem "pdf-reader"
 end
 gem "mocha"
 

@@ -3,6 +3,9 @@ Order Confirmed!
 Thank you for your order, <%= @order.shipping_name %>!
 
 Your order #<%= @order.order_number %> has been confirmed and is being processed.
+<% if @invoice_attached %>
+Your VAT invoice is attached to this email as a PDF.
+<% end %>
 
 ORDER SUMMARY
 =============

@@ -6,7 +6,8 @@ class OrderMailer < ApplicationMailer
   def confirmation_email
     @order = params[:order]
 
-    attach_order_pdf(@order)
+    # The body only promises the invoice when the attachment made it on.
+    @invoice_attached = attach_order_pdf(@order)
 
     mail(
       to: @order.email,
@@ -32,12 +33,14 @@ class OrderMailer < ApplicationMailer
 
   def attach_order_pdf(order)
     pdf_data = OrderPdfGenerator.new(order).generate
-    attachments["Order-#{order.order_number}.pdf"] = {
+    attachments["Invoice-#{order.order_number}.pdf"] = {
       mime_type: "application/pdf",
       content: pdf_data
     }
+    true
   rescue StandardError => e
     # Log error but continue sending email
     Rails.logger.error("Failed to generate PDF for order #{order.order_number}: #{e.message}")
+    false
   end
 end

@@ -149,8 +149,17 @@ class OrderMailerTest < ActionMailer::TestCase
     pdf_attachment = email.attachments.find { |a| a.content_type.include?("application/pdf") }
     assert_not_nil pdf_attachment, "Email should have PDF attachment"
 
-    # Verify filename matches order number
-    assert_equal "Order-#{@order.order_number}.pdf", pdf_attachment.filename
+    # The attachment is the VAT invoice, so it is named as one
+    assert_equal "Invoice-#{@order.order_number}.pdf", pdf_attachment.filename
+  end
+
+  test "confirmation_email tells the customer the VAT invoice is attached" do
+    email = OrderMailer.with(order: @order).confirmation_email
+
+    html = email.html_part.body.decoded
+    text = email.text_part.body.decoded
+    assert_includes html, "Your VAT invoice is attached"
+    assert_includes text, "Your VAT invoice is attached"
   end
 
   test "confirmation_email pdf attachment has content" do
@@ -171,6 +180,10 @@ class OrderMailerTest < ActionMailer::TestCase
     OrderPdfGenerator.any_instance.stubs(:generate).raises(StandardError, "Test error")
 
     email = OrderMailer.with(order: @order).confirmation_email
+
+    # The body must not promise an attachment that is not there
+    assert_not_includes email.html_part.body.decoded, "Your VAT invoice is attached"
+    assert_not_includes email.text_part.body.decoded, "Your VAT invoice is attached"
 
     # Email should still be deliverable
     assert_not_nil email
