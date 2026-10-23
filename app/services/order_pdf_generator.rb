@@ -23,7 +23,7 @@ class OrderPdfGenerator
 
   HEADER_LINE_HEIGHT = 12
   SAME_AS_BILLING_NOTE = "Same as billing address"
-  VAT_NOTE = "Prices exclude VAT. VAT at #{(VAT_RATE * 100).round}% is charged on goods and delivery."
+  VAT_NOTE = "Prices exclude VAT. VAT at #{VAT_RATE_PERCENT}% is charged on goods and delivery."
 
   COMPANY_NAME = "Afida".freeze
   COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
@@ -202,7 +202,8 @@ class OrderPdfGenerator
   # billing collection, or same-as-delivery). The second block then only
   # notes the match instead of repeating the address. Same-as-delivery is
   # judged on the address alone, so the billing name (the invoiced party,
-  # e.g. the company) still replaces the delivery recipient when present.
+  # e.g. the company) still heads "Bill to" when present, and the delivery
+  # recipient, when a different person, still heads "Deliver to".
   def address_blocks
     shipping_lines = OrderAddress.shipping_lines(@order)
     billing_lines = OrderAddress.billing_lines(@order)
@@ -211,7 +212,7 @@ class OrderPdfGenerator
     if separate_billing
       [ [ "Bill to", billing_lines ], [ "Deliver to", shipping_lines ] ]
     else
-      [ [ "Bill to", bill_to_lines(shipping_lines) ], [ "Deliver to", [ { kind: :note, text: SAME_AS_BILLING_NOTE } ] ] ]
+      [ [ "Bill to", bill_to_lines(shipping_lines) ], [ "Deliver to", deliver_to_note_lines ] ]
     end
   end
 
@@ -219,6 +220,13 @@ class OrderPdfGenerator
     return shipping_lines if @order.billing_name.blank?
 
     [ { kind: :name, text: @order.billing_name }, *shipping_lines.reject { |line| line[:kind] == :name } ]
+  end
+
+  def deliver_to_note_lines
+    note = { kind: :note, text: SAME_AS_BILLING_NOTE }
+    return [ note ] if @order.billing_name.blank? || @order.billing_name == @order.shipping_name
+
+    [ { kind: :name, text: @order.shipping_name }, note ]
   end
 
   # Only :name lines get the dark emphasis and trailing gap; :address and

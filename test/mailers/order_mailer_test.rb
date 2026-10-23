@@ -178,6 +178,7 @@ class OrderMailerTest < ActionMailer::TestCase
   test "confirmation_email sends without pdf if generation fails" do
     # Stub the generator to raise an error
     OrderPdfGenerator.any_instance.stubs(:generate).raises(StandardError, "Test error")
+    Rails.error.expects(:report).with(instance_of(StandardError), handled: true, context: { order_id: @order.id })
 
     email = OrderMailer.with(order: @order).confirmation_email
 

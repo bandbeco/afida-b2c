@@ -14,3 +14,5 @@
 # 3. Consider how this affects existing orders (they use captured amounts)
 #
 VAT_RATE = 0.2
+# The rate as printed ("VAT (20%)"), derived so labels never drift from VAT_RATE.
+VAT_RATE_PERCENT = (VAT_RATE * 100).round

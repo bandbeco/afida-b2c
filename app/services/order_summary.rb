@@ -36,7 +36,7 @@ class OrderSummary
       line(:shipping, "Shipping", @order.shipping_amount)
     ]
     result << discount_line if @order.discount_amount.positive?
-    result << line(:vat, "VAT (#{(VAT_RATE * 100).round}%)", @order.vat_amount)
+    result << line(:vat, "VAT (#{VAT_RATE_PERCENT}%)", @order.vat_amount)
     result << line(:total, "Total", @order.total_amount)
     result
   end

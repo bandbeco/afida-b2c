@@ -798,4 +798,15 @@ class OrderInvoiceNumberTest < ActiveSupport::TestCase
 
     assert_equal format("WEB-%06d", order.id), order.invoice_number
   end
+
+  # Fixture ids are hashes, so both orders are created here to exercise the
+  # real sequence.
+  test "invoice numbers are distinct and increase with creation order" do
+    attributes = orders(:one).attributes.except("id", "order_number", "created_at", "updated_at")
+    earlier = Order.create!(attributes.merge("stripe_session_id" => "sess_invoice_earlier"))
+    later = Order.create!(attributes.merge("stripe_session_id" => "sess_invoice_later"))
+
+    assert_not_equal earlier.invoice_number, later.invoice_number
+    assert_operator later.invoice_number.delete_prefix("WEB-").to_i, :>, earlier.invoice_number.delete_prefix("WEB-").to_i
+  end
 end

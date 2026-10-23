@@ -350,7 +350,7 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
   test "titles the document as an invoice, not an order confirmation" do
     text = pdf_text
 
-    assert_includes text, "Invoice"
+    assert_match(/^\s*Invoice\s+#{@order.invoice_number}\s*$/, text)
     assert_not_includes text, "Order Confirmation"
   end
 
@@ -376,7 +376,20 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
   end
 
   test "marks a paid order as paid" do
-    assert_includes pdf_text, "Paid"
+    assert_match(/Payment:\s+Paid/, pdf_text)
+  end
+
+  test "shows the raw status for an order that is not paid" do
+    @order.update_columns(status: "refunded")
+
+    assert_match(/Payment:\s+Refunded/, pdf_text)
+  end
+
+  test "shows the VAT charged and the total payable" do
+    text = pdf_text
+
+    assert_match(/VAT \(20%\)\s+£9\.60/, text)
+    assert_match(/Total\s+£63\.55/, text)
   end
 
   test "bills the delivery address when no separate billing address was collected" do
@@ -396,9 +409,10 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
 
     text = pdf_text
 
-    assert_includes text, "Example Cafe Ltd"
-    assert_not_includes text, @order.shipping_name
-    assert_includes text, "Same as billing address"
+    # The two columns interleave in the extracted text, so the bill-to name
+    # sits on the line after the headers, beside the invoice number row.
+    assert_match(/Bill to\n.*\n.*Example Cafe Ltd/, text)
+    assert_match(/Deliver to\s+#{@order.shipping_name}\s+Same as billing address/, text)
   end
 
   test "bills the billing address when one differs from delivery" do
