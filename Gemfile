@@ -99,7 +99,7 @@ gem "sentry-ruby", "~> 7.0"
 
 gem "sentry-rails", "~> 7.1"
 
-gem "pagy", "~> 43.6"
+gem "pagy", "~> 43.8"
 
 # Markdown rendering
 gem "redcarpet", "~> 3.6"
