@@ -54,7 +54,7 @@ class CartSummary
     elsif @placeholder_discount
       result << placeholder_discount_line
     end
-    result << line(:vat, "VAT (#{(VAT_RATE * 100).to_i}%)", money(@cart.vat_amount))
+    result << line(:vat, "VAT (#{VAT_RATE_PERCENT}%)", money(@cart.vat_amount))
     result << line(:total, "Total", money(@cart.display_total_amount))
     result
   end

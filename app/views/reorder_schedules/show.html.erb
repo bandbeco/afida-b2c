@@ -104,7 +104,7 @@
         <span><%= number_to_currency(totals.subtotal, unit: '£') %></span>
       </div>
       <div class="flex justify-between text-sm">
-        <span class="text-base-content/70">VAT (20%)</span>
+        <span class="text-base-content/70">VAT (<%= VAT_RATE_PERCENT %>%)</span>
         <span><%= number_to_currency(totals.vat, unit: '£') %></span>
       </div>
       <div class="flex justify-between text-sm">

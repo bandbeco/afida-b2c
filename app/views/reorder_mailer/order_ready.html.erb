@@ -44,7 +44,7 @@
     <td align="right"><p style="font-size: 14px; color: #111827; margin: 0;">&pound;<%= @pending_order.items_snapshot["subtotal"] %></p></td>
   </tr>
   <tr>
-    <td style="padding-top: 5px;"><p style="font-size: 14px; color: #374151; margin: 0;">VAT (20%)</p></td>
+    <td style="padding-top: 5px;"><p style="font-size: 14px; color: #374151; margin: 0;">VAT (<%= VAT_RATE_PERCENT %>%)</p></td>
     <td align="right" style="padding-top: 5px;"><p style="font-size: 14px; color: #111827; margin: 0;">&pound;<%= @pending_order.items_snapshot["vat"] %></p></td>
   </tr>
   <tr>
