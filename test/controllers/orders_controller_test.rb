@@ -124,6 +124,20 @@ class OrdersControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, response.body.scan(@order_one.shipping_address_line1).count
   end
 
+  test "show names a billed company above the same-as-delivery note" do
+    @order_one.update_columns(
+      billing_name: "Example Cafe Ltd",
+      billing_address_line1: @order_one.shipping_address_line1,
+      billing_address_line2: @order_one.shipping_address_line2,
+      billing_city: @order_one.shipping_city,
+      billing_postal_code: @order_one.shipping_postal_code,
+      billing_country: @order_one.shipping_country
+    )
+    sign_in @user_one
+    get order_url(@order_one)
+    assert_match(/Example Cafe Ltd.*Same as delivery address/m, response.body)
+  end
+
   test "confirmation renders a billing address when one was collected" do
     @order_one.update_columns(
       billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",

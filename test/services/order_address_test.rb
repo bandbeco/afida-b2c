@@ -79,4 +79,60 @@ class OrderAddressTest < ActiveSupport::TestCase
     assert_equal [ { kind: :note, text: "Same as delivery address" } ],
       OrderAddress.billing_lines(@order)
   end
+
+  test "billing_lines names a billed company above the same-as-delivery note" do
+    same_address_billing(billing_name: "Example Cafe Ltd")
+
+    assert_equal [ { kind: :name, text: "Example Cafe Ltd" }, { kind: :note, text: "Same as delivery address" } ],
+      OrderAddress.billing_lines(@order)
+  end
+
+  test "billing_lines treats a name differing only in case as the same person" do
+    same_address_billing(billing_name: @order.shipping_name.upcase)
+
+    assert_equal [ { kind: :note, text: "Same as delivery address" } ], OrderAddress.billing_lines(@order)
+  end
+
+  # bill_to_lines / deliver_to_lines frame the invoice: the invoiced party
+  # first, the delivery second.
+  test "bill_to_lines is the delivery address when no billing address was collected" do
+    assert_equal OrderAddress.shipping_lines(@order), OrderAddress.bill_to_lines(@order)
+    assert_equal [ { kind: :note, text: "Same as billing address" } ], OrderAddress.deliver_to_lines(@order)
+  end
+
+  test "bill_to_lines puts the billed company on the delivery address, deliver_to_lines keeps the recipient" do
+    same_address_billing(billing_name: "Example Cafe Ltd")
+
+    assert_equal [ { kind: :name, text: "Example Cafe Ltd" }, *address_only(OrderAddress.shipping_lines(@order)) ],
+      OrderAddress.bill_to_lines(@order)
+    assert_equal [ { kind: :name, text: @order.shipping_name }, { kind: :note, text: "Same as billing address" } ],
+      OrderAddress.deliver_to_lines(@order)
+  end
+
+  test "bill_to_lines names the recipient when a separate billing address has no name" do
+    @order.assign_attributes(
+      billing_name: nil, billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+
+    assert_equal({ kind: :name, text: @order.shipping_name }, OrderAddress.bill_to_lines(@order).first)
+    assert_equal OrderAddress.shipping_lines(@order), OrderAddress.deliver_to_lines(@order)
+  end
+
+  private
+
+  def same_address_billing(billing_name:)
+    @order.assign_attributes(
+      billing_name: billing_name,
+      billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2,
+      billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code,
+      billing_country: @order.shipping_country
+    )
+  end
+
+  def address_only(lines)
+    lines.reject { |line| line[:kind] == :name }
+  end
 end

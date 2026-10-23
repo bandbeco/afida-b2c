@@ -22,7 +22,6 @@ class OrderPdfGenerator
   BORDER_GRAY = "E5E7EB".freeze        # Subtle borders
 
   HEADER_LINE_HEIGHT = 12
-  SAME_AS_BILLING_NOTE = "Same as billing address"
   VAT_NOTE = "Prices exclude VAT. VAT at #{VAT_RATE_PERCENT}% is charged on goods and delivery."
 
   COMPANY_NAME = CompanyDetails::TRADING_NAME
@@ -197,50 +196,11 @@ class OrderPdfGenerator
     @order.status.titleize
   end
 
-  # Bill-to is the collected billing address when it differs from delivery;
-  # otherwise the delivery address is the invoiced party (orders predating
-  # billing collection, or same-as-delivery). The second block then only
-  # notes the match instead of repeating the address. Same-as-delivery is
-  # judged on the address alone, so the billing name (the invoiced party,
-  # e.g. the company) still heads "Bill to" when present, and the delivery
-  # recipient, when a different person, still heads "Deliver to".
   def address_blocks
-    shipping_lines = OrderAddress.shipping_lines(@order)
-    billing_lines = OrderAddress.billing_lines(@order)
-    separate_billing = billing_lines.any? { |line| line[:kind] == :address }
-
-    if separate_billing
-      [ [ "Bill to", named_billing_lines(billing_lines) ], [ "Deliver to", shipping_lines ] ]
-    else
-      [ [ "Bill to", bill_to_lines(shipping_lines) ], [ "Deliver to", deliver_to_note_lines ] ]
-    end
-  end
-
-  # A VAT invoice must name the customer, and Stripe can return a billing
-  # address without a name; the delivery recipient is then the named party.
-  def named_billing_lines(billing_lines)
-    return billing_lines if billing_lines.any? { |line| line[:kind] == :name }
-
-    [ { kind: :name, text: @order.shipping_name }, *billing_lines ]
-  end
-
-  def bill_to_lines(shipping_lines)
-    return shipping_lines if @order.billing_name.blank?
-
-    [ { kind: :name, text: @order.billing_name }, *shipping_lines.reject { |line| line[:kind] == :name } ]
-  end
-
-  def deliver_to_note_lines
-    note = { kind: :note, text: SAME_AS_BILLING_NOTE }
-    return [ note ] if @order.billing_name.blank? || same_person?(@order.billing_name, @order.shipping_name)
-
-    [ { kind: :name, text: @order.shipping_name }, note ]
-  end
-
-  # Stripe returns the cardholder as typed on the card ("JANE SMITH"), so
-  # case and spacing differences are still one person.
-  def same_person?(name, other)
-    name.squish.casecmp?(other.to_s.squish)
+    [
+      [ "Bill to", OrderAddress.bill_to_lines(@order) ],
+      [ "Deliver to", OrderAddress.deliver_to_lines(@order) ]
+    ]
   end
 
   # Only :name lines get the dark emphasis and trailing gap; :address and
