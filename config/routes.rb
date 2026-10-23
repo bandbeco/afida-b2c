@@ -182,6 +182,7 @@ Rails.application.routes.draw do
   resources :orders, only: [ :show, :index ] do
     member do
       get :confirmation
+      get :invoice
       post :reorder
     end
   end
@@ -328,7 +329,9 @@ Rails.application.routes.draw do
       end
     end
     resources :product_families, path: "product-families", except: [ :show ]
-    resources :orders, only: [ :index, :show ]
+    resources :orders, only: [ :index, :show ] do
+      member { get :invoice }
+    end
     resources :leaderboard_entries, only: [ :index ] do
       member do
         patch :approve

@@ -9,6 +9,14 @@ class Admin::OrdersController < Admin::ApplicationController
     @order = Order.includes(order_items: :product).find(params[:id])
   end
 
+  def invoice
+    order = Order.includes(order_items: :product).find(params[:id])
+    return redirect_to admin_order_path(order), alert: OrdersController::INVOICE_UNAVAILABLE unless order.invoiceable?
+
+    send_data OrderPdfGenerator.new(order).generate,
+      filename: order.invoice_filename, type: "application/pdf", disposition: "attachment"
+  end
+
   private
 
   def filter_by_sample_status(orders)

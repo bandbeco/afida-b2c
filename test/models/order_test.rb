@@ -801,6 +801,13 @@ class OrderInvoiceNumberTest < ActiveSupport::TestCase
 
   # Fixture ids are hashes, so both orders are created here to exercise the
   # real sequence.
+  # The mailer attachment and the download share one file name.
+  test "invoice_filename carries the invoice number" do
+    order = orders(:one)
+
+    assert_equal "Invoice-#{order.invoice_number}.pdf", order.invoice_filename
+  end
+
   test "invoice numbers are distinct and increase with creation order" do
     attributes = orders(:one).attributes.except("id", "order_number", "created_at", "updated_at")
     earlier = Order.create!(attributes.merge("stripe_session_id" => "sess_invoice_earlier"))

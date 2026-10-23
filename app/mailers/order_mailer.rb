@@ -35,7 +35,7 @@ class OrderMailer < ApplicationMailer
   # failure, so Sentry counts each customer missing an invoice once.
   def attach_order_pdf(order, report_failure: false)
     pdf_data = OrderPdfGenerator.new(order).generate
-    attachments["Invoice-#{order.invoice_number}.pdf"] = {
+    attachments[order.invoice_filename] = {
       mime_type: "application/pdf",
       content: pdf_data
     }

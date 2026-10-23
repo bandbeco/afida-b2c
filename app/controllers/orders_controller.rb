@@ -1,14 +1,16 @@
 class OrdersController < ApplicationController
+  INVOICE_UNAVAILABLE = "An invoice is only available for a paid order.".freeze
+
   # Allow guest access to show and confirmation (for order confirmation after checkout)
   # Index and reorder require authentication (order history)
-  allow_unauthenticated_access only: [ :show, :confirmation ]
+  allow_unauthenticated_access only: [ :show, :confirmation, :invoice ]
   before_action :require_authentication, only: [ :index, :reorder ]
 
   # Resume session for show/confirmation so we can check if user owns the order
-  before_action :resume_session, only: [ :show, :confirmation ]
-  before_action :set_order, only: [ :show, :confirmation ]
+  before_action :resume_session, only: [ :show, :confirmation, :invoice ]
+  before_action :set_order, only: [ :show, :confirmation, :invoice ]
   before_action :set_user_order, only: [ :reorder ]
-  before_action :authorize_order_access!, only: [ :show, :confirmation ]
+  before_action :authorize_order_access!, only: [ :show, :confirmation, :invoice ]
 
   def confirmation
     # Guest users visiting via email link (valid token) need session[:recent_order_id]
@@ -27,6 +29,15 @@ class OrdersController < ApplicationController
   end
 
   def show
+  end
+
+  def invoice
+    unless @order.invoiceable?
+      return redirect_to order_path(@order, token: params[:token].presence), alert: INVOICE_UNAVAILABLE
+    end
+
+    send_data OrderPdfGenerator.new(@order).generate,
+      filename: @order.invoice_filename, type: "application/pdf", disposition: "attachment"
   end
 
   def index

@@ -101,6 +101,17 @@
 
     <!-- Actions -->
     <div class="mt-8 flex flex-wrap justify-center gap-3">
+      <% if @order.invoiceable? %>
+        <%# A guest reaches this page through the emailed token link; the
+            invoice route checks access the same way, so the token rides along. %>
+        <%= link_to invoice_order_path(@order, token: params[:token].presence), class: "btn btn-outline", data: { turbo: false } do %>
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M6 20h12a2 2 0 002-2V8l-6-6H6a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          Download invoice
+        <% end %>
+      <% end %>
+
       <% if authenticated? && Current.user&.id == @order.user_id %>
         <%= link_to reorder_order_path(@order), method: :post, class: "btn btn-secondary", data: { turbo_method: :post } do %>
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

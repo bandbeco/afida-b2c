@@ -141,6 +141,16 @@ class Order < ApplicationRecord
     format("%s%06d", INVOICE_NUMBER_PREFIX, id)
   end
 
+  def invoice_filename
+    "Invoice-#{invoice_number}.pdf"
+  end
+
+  # Only a paid order has a valid VAT invoice; a refunded one needs a credit
+  # note, which the invoice PDF is not.
+  def invoiceable?
+    COMPLETED_STATUSES.include?(status)
+  end
+
   # The promised delivery date. Stamped at creation (see set_estimated_delivery_on);
   # falls back to computing from created_at for legacy orders predating the column.
   def estimated_delivery_date

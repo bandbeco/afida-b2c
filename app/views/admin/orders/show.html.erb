@@ -7,6 +7,9 @@
       </svg>
     <% end %>
     <h1>Order <%= @order.display_number %></h1>
+    <% if @order.invoiceable? %>
+      <%= link_to "Download invoice", invoice_admin_order_path(@order), class: "btn btn-outline btn-sm ml-auto", data: { turbo: false } %>
+    <% end %>
   </div>
 
   <div class="max-w-4xl space-y-4 sm:space-y-6">
