@@ -15,4 +15,7 @@
 #
 VAT_RATE = 0.2
 # The rate as printed ("VAT (20%)"), derived so labels never drift from VAT_RATE.
-VAT_RATE_PERCENT = (VAT_RATE * 100).round
+# Two decimals with trailing zeros stripped, so 17.5% prints as "17.5", not 18.
+VAT_RATE_PERCENT = ActiveSupport::NumberHelper.number_to_rounded(
+  VAT_RATE * 100, precision: 2, strip_insignificant_zeros: true
+)

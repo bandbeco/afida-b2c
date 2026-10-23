@@ -415,6 +415,25 @@ class OrderPdfInvoiceTest < ActiveSupport::TestCase
     assert_match(/Deliver to\s+#{@order.shipping_name}\s+Same as billing address/, text)
   end
 
+  test "names the delivery recipient on the bill when Stripe returned a billing address without a name" do
+    @order.update_columns(
+      billing_name: nil, billing_address_line1: "1 Finance Row",
+      billing_city: "Manchester", billing_postal_code: "M1 1AA", billing_country: "GB"
+    )
+
+    assert_match(/Bill to\n.*\n.*#{@order.shipping_name}/, pdf_text)
+  end
+
+  test "does not repeat the recipient when the billing name differs only in case" do
+    @order.update_columns(
+      billing_name: @order.shipping_name.upcase, billing_address_line1: @order.shipping_address_line1,
+      billing_address_line2: @order.shipping_address_line2, billing_city: @order.shipping_city,
+      billing_postal_code: @order.shipping_postal_code, billing_country: @order.shipping_country
+    )
+
+    assert_match(/Deliver to\s+Same as billing address/, pdf_text)
+  end
+
   test "bills the billing address when one differs from delivery" do
     @order.update_columns(
       billing_name: "Accounts Payable", billing_address_line1: "1 Finance Row",

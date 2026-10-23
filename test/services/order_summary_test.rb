@@ -86,3 +86,11 @@ class OrderSummaryTest < ActiveSupport::TestCase
     end
   end
 end
+
+class VatRatePercentTest < ActiveSupport::TestCase
+  # Printed in labels, so it must keep a fractional rate (17.5) intact rather
+  # than rounding it, and drop the zeros of a whole one.
+  test "prints the whole rate without decimals" do
+    assert_equal "20", VAT_RATE_PERCENT
+  end
+end

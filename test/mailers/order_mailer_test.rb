@@ -205,6 +205,15 @@ class OrderMailerTest < ActionMailer::TestCase
 
   # --- Internal ops confirmation email ---
 
+  # The customer email already reports a generation failure; the ops copy
+  # renders the same PDF, so reporting there too would double-count it.
+  test "ops_confirmation_email does not report a pdf failure a second time" do
+    OrderPdfGenerator.any_instance.stubs(:generate).raises(StandardError, "Test error")
+    Rails.error.expects(:report).never
+
+    OrderMailer.with(order: @order).ops_confirmation_email.deliver_now
+  end
+
   test "ops_confirmation_email is sent to the ops address only" do
     email = OrderMailer.with(order: @order).ops_confirmation_email
 

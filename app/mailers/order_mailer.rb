@@ -7,7 +7,7 @@ class OrderMailer < ApplicationMailer
     @order = params[:order]
 
     # The body only promises the invoice when the attachment made it on.
-    @invoice_attached = attach_order_pdf(@order)
+    @invoice_attached = attach_order_pdf(@order, report_failure: true)
 
     mail(
       to: @order.email,
@@ -31,7 +31,9 @@ class OrderMailer < ApplicationMailer
 
   private
 
-  def attach_order_pdf(order)
+  # Both emails render the same PDF; only the customer copy reports a
+  # failure, so Sentry counts each customer missing an invoice once.
+  def attach_order_pdf(order, report_failure: false)
     pdf_data = OrderPdfGenerator.new(order).generate
     attachments["Invoice-#{order.invoice_number}.pdf"] = {
       mime_type: "application/pdf",
@@ -42,7 +44,7 @@ class OrderMailer < ApplicationMailer
     # The email still goes out, but the customer is then missing their VAT
     # invoice, so the failure is reported (Sentry) rather than only logged.
     Rails.logger.error("Failed to generate PDF for order #{order.order_number}: #{e.message}")
-    Rails.error.report(e, handled: true, context: { order_id: order.id })
+    Rails.error.report(e, handled: true, context: { order_id: order.id }) if report_failure
     false
   end
 end

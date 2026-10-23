@@ -25,7 +25,7 @@ class OrderPdfGenerator
   SAME_AS_BILLING_NOTE = "Same as billing address"
   VAT_NOTE = "Prices exclude VAT. VAT at #{VAT_RATE_PERCENT}% is charged on goods and delivery."
 
-  COMPANY_NAME = "Afida".freeze
+  COMPANY_NAME = CompanyDetails::TRADING_NAME
   COMPANY_EMAIL = ENV.fetch("ORDERS_EMAIL", "orders@afida.com").freeze
   LOGO_PATH = Rails.root.join("app", "frontend", "images", "afida-logo-pdf.png").freeze
 
@@ -210,10 +210,18 @@ class OrderPdfGenerator
     separate_billing = billing_lines.any? { |line| line[:kind] == :address }
 
     if separate_billing
-      [ [ "Bill to", billing_lines ], [ "Deliver to", shipping_lines ] ]
+      [ [ "Bill to", named_billing_lines(billing_lines) ], [ "Deliver to", shipping_lines ] ]
     else
       [ [ "Bill to", bill_to_lines(shipping_lines) ], [ "Deliver to", deliver_to_note_lines ] ]
     end
+  end
+
+  # A VAT invoice must name the customer, and Stripe can return a billing
+  # address without a name; the delivery recipient is then the named party.
+  def named_billing_lines(billing_lines)
+    return billing_lines if billing_lines.any? { |line| line[:kind] == :name }
+
+    [ { kind: :name, text: @order.shipping_name }, *billing_lines ]
   end
 
   def bill_to_lines(shipping_lines)
@@ -224,9 +232,15 @@ class OrderPdfGenerator
 
   def deliver_to_note_lines
     note = { kind: :note, text: SAME_AS_BILLING_NOTE }
-    return [ note ] if @order.billing_name.blank? || @order.billing_name == @order.shipping_name
+    return [ note ] if @order.billing_name.blank? || same_person?(@order.billing_name, @order.shipping_name)
 
     [ { kind: :name, text: @order.shipping_name }, note ]
+  end
+
+  # Stripe returns the cardholder as typed on the card ("JANE SMITH"), so
+  # case and spacing differences are still one person.
+  def same_person?(name, other)
+    name.squish.casecmp?(other.to_s.squish)
   end
 
   # Only :name lines get the dark emphasis and trailing gap; :address and

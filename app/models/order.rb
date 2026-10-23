@@ -138,7 +138,7 @@ class Order < ApplicationRecord
   INVOICE_NUMBER_PREFIX = "WEB-"
 
   def invoice_number
-    format("#{INVOICE_NUMBER_PREFIX}%06d", id)
+    format("%s%06d", INVOICE_NUMBER_PREFIX, id)
   end
 
   # The promised delivery date. Stamped at creation (see set_estimated_delivery_on);
