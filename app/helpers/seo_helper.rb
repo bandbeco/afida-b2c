@@ -128,9 +128,9 @@ module SeoHelper
     data = {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Afida",
-      "alternateName": "B&B Eco",
-      "legalName": "B&B Eco, Ltd",
+      "name": CompanyDetails::TRADING_NAME,
+      "alternateName": CompanyDetails::SHORT_NAME,
+      "legalName": CompanyDetails::LEGAL_NAME,
       "url": root_url,
       "logo": logo_url,
       "description": "Eco-friendly packaging supplies for UK businesses",
@@ -139,11 +139,11 @@ module SeoHelper
       "email": "hello@afida.com",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Unit 27, The Metro Centre, Dwight Rd",
-        "addressLocality": "Watford",
-        "addressRegion": "Hertfordshire",
-        "postalCode": "WD18 9SB",
-        "addressCountry": "GB"
+        "streetAddress": CompanyDetails::STREET,
+        "addressLocality": CompanyDetails::LOCALITY,
+        "addressRegion": CompanyDetails::REGION,
+        "postalCode": CompanyDetails::POSTCODE,
+        "addressCountry": CompanyDetails::COUNTRY_CODE
       },
       "areaServed": {
         "@type": "Country",
@@ -188,9 +188,9 @@ module SeoHelper
       "@context": "https://schema.org",
       "@type": "LocalBusiness",
       "@id": "#{root_url}#localbusiness",
-      "name": "Afida",
-      "alternateName": "B&B Eco",
-      "legalName": "B&B Eco, Ltd",
+      "name": CompanyDetails::TRADING_NAME,
+      "alternateName": CompanyDetails::SHORT_NAME,
+      "legalName": CompanyDetails::LEGAL_NAME,
       "url": root_url,
       "description": "Eco-friendly packaging supplies for UK businesses",
       "telephone": "+44-203-302-7719",
@@ -199,11 +199,11 @@ module SeoHelper
       "openingHours": "Mo-Fr 09:00-17:00",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Unit 27, The Metro Centre, Dwight Rd",
-        "addressLocality": "Watford",
-        "addressRegion": "Hertfordshire",
-        "postalCode": "WD18 9SB",
-        "addressCountry": "GB"
+        "streetAddress": CompanyDetails::STREET,
+        "addressLocality": CompanyDetails::LOCALITY,
+        "addressRegion": CompanyDetails::REGION,
+        "postalCode": CompanyDetails::POSTCODE,
+        "addressCountry": CompanyDetails::COUNTRY_CODE
       },
       "areaServed": {
         "@type": "Country",

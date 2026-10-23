@@ -15,7 +15,7 @@
     <!-- Introduction Card -->
     <div class="bg-white border border-gray-200 rounded-lg p-6 lg:p-8 mb-8 shadow-sm">
       <p class="text-gray-700 leading-relaxed">
-        Welcome to Afida, operated by B&B Eco, Ltd. These Terms of Service govern your use of our website and any purchases you make. By accessing our website or placing an order, you agree to be bound by these terms. Please read them carefully before using our services.
+        Welcome to Afida, operated by <%= CompanyDetails::LEGAL_NAME %>. These Terms of Service govern your use of our website and any purchases you make. By accessing our website or placing an order, you agree to be bound by these terms. Please read them carefully before using our services.
       </p>
       <p class="text-gray-700 mt-4">
         Questions? Contact us at <a href="mailto:hello@afida.com" class="text-primary hover:underline font-medium">hello@afida.com</a>
@@ -49,11 +49,11 @@
         <dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <div>
             <dt class="text-gray-500">Company Name</dt>
-            <dd class="text-gray-900 font-medium">B&B Eco, Ltd</dd>
+            <dd class="text-gray-900 font-medium"><%= CompanyDetails::LEGAL_NAME %></dd>
           </div>
           <div>
             <dt class="text-gray-500">Trading As</dt>
-            <dd class="text-gray-900 font-medium">Afida</dd>
+            <dd class="text-gray-900 font-medium"><%= CompanyDetails::TRADING_NAME %></dd>
           </div>
           <div>
             <dt class="text-gray-500">Business Type</dt>
@@ -65,7 +65,7 @@
           </div>
           <div class="sm:col-span-2">
             <dt class="text-gray-500">Address</dt>
-            <dd class="text-gray-900 font-medium">Unit 27, The Metro Centre, Dwight Rd, Northwood, Watford WD18 9SB</dd>
+            <dd class="text-gray-900 font-medium"><%= CompanyDetails.postal_address %>, <%= CompanyDetails::COUNTRY_NAME %></dd>
           </div>
           <div>
             <dt class="text-gray-500">Contact</dt>
@@ -189,7 +189,7 @@
       <!-- Section 6 -->
       <section id="intellectual" class="p-6 lg:p-8 border-b border-gray-100">
         <h2 class="text-xl text-gray-900 mb-4">6. Intellectual Property</h2>
-        <p class="text-gray-600 mb-4">All content on this website, including but not limited to text, graphics, logos, images, and software, is the property of B&B Eco, Ltd or its licensors and is protected by copyright and other intellectual property laws.</p>
+        <p class="text-gray-600 mb-4">All content on this website, including but not limited to text, graphics, logos, images, and software, is the property of <%= CompanyDetails::LEGAL_NAME %> or its licensors and is protected by copyright and other intellectual property laws.</p>
         <p class="text-gray-600">You may not reproduce, distribute, modify, or create derivative works from any content on this website without our prior written consent.</p>
       </section>
 
@@ -218,7 +218,7 @@
       <!-- Section 8 -->
       <section id="indemnification" class="p-6 lg:p-8 border-b border-gray-100">
         <h2 class="text-xl text-gray-900 mb-4">8. Indemnification</h2>
-        <p class="text-gray-600">You agree to indemnify, defend, and hold harmless B&B Eco, Ltd, its officers, directors, employees, and agents from any claims, liabilities, damages, losses, or expenses (including legal fees) arising from your breach of these terms, your use of our products, or your violation of any law or third-party rights.</p>
+        <p class="text-gray-600">You agree to indemnify, defend, and hold harmless <%= CompanyDetails::LEGAL_NAME %>, its officers, directors, employees, and agents from any claims, liabilities, damages, losses, or expenses (including legal fees) arising from your breach of these terms, your use of our products, or your violation of any law or third-party rights.</p>
       </section>
 
       <!-- Section 9 -->
@@ -268,7 +268,7 @@
           </div>
           <div>
             <dt class="text-gray-500 inline">Address:</dt>
-            <dd class="text-gray-900 font-medium inline ml-2">Unit 27, The Metro Centre, Dwight Rd, Northwood, Watford WD18 9SB, United Kingdom</dd>
+            <dd class="text-gray-900 font-medium inline ml-2"><%= CompanyDetails.postal_address %>, <%= CompanyDetails::COUNTRY_NAME %></dd>
           </div>
         </dl>
       </section>
