@@ -115,4 +115,4 @@ gem "business", "~> 3.1"
 gem "webmock", "~> 3.34", group: :test
 
 # Structured logging to Logtail (Better Stack)
-gem "logtail-rails", "~> 0.2"
+gem "logtail-rails", "~> 0.3"
