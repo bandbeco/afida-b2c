@@ -112,7 +112,7 @@ gem "http", "~> 6.0"
 # Working-day / business-day date maths (UK bank holidays)
 gem "business", "~> 3.1"
 
-gem "webmock", "~> 3.26", group: :test
+gem "webmock", "~> 3.34", group: :test
 
 # Structured logging to Logtail (Better Stack)
 gem "logtail-rails", "~> 0.2"
