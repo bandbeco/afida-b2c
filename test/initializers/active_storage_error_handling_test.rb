@@ -11,7 +11,7 @@ class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
 
   test "rescue_from handlers are registered on Representations::ProxyController" do
     handlers = ActiveStorage::Representations::ProxyController.rescue_handlers
-    
+
     assert handlers.any? { |h| h.first == "Aws::S3::Errors::Http503Error" },
            "Http503Error handler not registered"
     assert handlers.any? { |h| h.first == "Aws::S3::Errors::BadRequest" },
@@ -22,7 +22,7 @@ class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
 
   test "rescue_from handlers are registered on Blobs::ProxyController" do
     handlers = ActiveStorage::Blobs::ProxyController.rescue_handlers
-    
+
     assert handlers.any? { |h| h.first == "Aws::S3::Errors::Http503Error" },
            "Http503Error handler not registered on Blobs::ProxyController"
     assert handlers.any? { |h| h.first == "Aws::S3::Errors::BadRequest" },
