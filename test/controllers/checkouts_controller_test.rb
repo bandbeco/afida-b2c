@@ -75,7 +75,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to checkout_path
     assert_response :see_other
-    assert_equal "custom", captured_params[:ui_mode]
+    assert_equal "elements", captured_params[:ui_mode]
     assert_match %r{/checkout/success\?session_id=\{CHECKOUT_SESSION_ID\}}, captured_params[:return_url]
     assert_nil captured_params[:success_url]
 
@@ -177,6 +177,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_match "cs_test_secret_abc", response.body
+    assert_match "https://js.stripe.com/endive/stripe.js", response.body
     assert_select "[data-controller='onsite-checkout']"
     assert_select "[data-onsite-checkout-target='payment']"
     assert_select "[data-onsite-checkout-target='address']"

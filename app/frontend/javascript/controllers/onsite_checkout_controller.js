@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 // On-site checkout: binds the page to a Stripe Checkout Session (ui_mode:
-// "custom") created server-side. Stripe's SDK owns the money math; this
+// "elements") created server-side. Stripe's SDK owns the money math; this
 // controller mounts the secure elements, mirrors session totals into the
 // summary, reprices shipping from the typed delivery address, applies/removes
 // promo codes, and confirms. API per https://docs.stripe.com/js/custom_checkout.
@@ -23,7 +23,7 @@ import { Controller } from "@hotwired/stimulus"
 // disagrees with the zone the session is priced for, so a missed reprice
 // cannot be paid at the wrong price either.
 // (permissions.update_shipping_details=server_only is deliberately NOT used:
-// the clover elements SDK rejects onShippingDetailsChange at init, and under
+// the elements SDK rejects onShippingDetailsChange at init, and under
 // server_only it throws when applying defaultValues - see SessionBuilder.)
 export default class extends Controller {
   static targets = [
@@ -53,7 +53,7 @@ export default class extends Controller {
         // Puts Stripe's "same as shipping" checkbox on the billing element so
         // most shoppers never type their address twice. Documented as the
         // default when both address elements share one Elements instance, but
-        // the clover SDK does not apply it unless set explicitly.
+        // the elements SDK does not apply it unless set explicitly.
         elementsOptions: { syncAddressCheckbox: "billing" }
       })
       // loadActions resolves to a {type, actions} result wrapper; the
