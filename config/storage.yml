@@ -14,7 +14,7 @@ hetzner:
   bucket: afida-b2c
   region: unused
   http_open_timeout: 5
-  http_read_timeout: 30
+  http_read_timeout: 10
   retry_limit: 3
   retry_mode: standard
 

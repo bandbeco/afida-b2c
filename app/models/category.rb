@@ -51,6 +51,8 @@ class Category < ApplicationRecord
   scope :subcategories, -> { where.not(parent_id: nil) }
 
   # Scope for categories with sample-eligible products, with preloaded count
+  # Returns a grouped relation with custom select. Note that .count returns a Hash,
+  # and .size, .exists?, .pluck behave differently. Use only for index display.
   scope :with_sample_products, -> {
     joins(:products)
       .where(products: { sample_eligible: true, active: true, product_type: "standard" })

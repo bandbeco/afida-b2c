@@ -27,5 +27,9 @@ module Shop
     #
     config.time_zone = "London"
     # config.eager_load_paths << Rails.root.join("extras")
+
+    # Handle IP spoof attacks with 400 Bad Request instead of 500
+    # Bots with conflicting forwarded-IP headers should get 400, not 500
+    config.action_dispatch.rescue_responses["ActionDispatch::RemoteIp::IpSpoofAttackError"] = :bad_request
   end
 end

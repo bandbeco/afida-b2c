@@ -4,11 +4,31 @@ require "test_helper"
 
 class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
   setup do
-    skip "AWS SDK not loaded in test environment" unless defined?(Aws::S3::Errors)
-
     @controller = ActiveStorage::Representations::ProxyController.new
     @controller.request = ActionDispatch::TestRequest.create
     @controller.response = ActionDispatch::TestResponse.new
+  end
+
+  test "rescue_from handlers are registered on Representations::ProxyController" do
+    handlers = ActiveStorage::Representations::ProxyController.rescue_handlers
+    
+    assert handlers.any? { |h| h.first == "Aws::S3::Errors::Http503Error" },
+           "Http503Error handler not registered"
+    assert handlers.any? { |h| h.first == "Aws::S3::Errors::BadRequest" },
+           "BadRequest handler not registered"
+    assert handlers.any? { |h| h.first == "Seahorse::Client::NetworkingError" },
+           "NetworkingError handler not registered"
+  end
+
+  test "rescue_from handlers are registered on Blobs::ProxyController" do
+    handlers = ActiveStorage::Blobs::ProxyController.rescue_handlers
+    
+    assert handlers.any? { |h| h.first == "Aws::S3::Errors::Http503Error" },
+           "Http503Error handler not registered on Blobs::ProxyController"
+    assert handlers.any? { |h| h.first == "Aws::S3::Errors::BadRequest" },
+           "BadRequest handler not registered on Blobs::ProxyController"
+    assert handlers.any? { |h| h.first == "Seahorse::Client::NetworkingError" },
+           "NetworkingError handler not registered on Blobs::ProxyController"
   end
 
   test "handles S3 Http503Error with 503 response" do

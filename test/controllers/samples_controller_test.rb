@@ -63,18 +63,18 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index preloads sample product counts to avoid N+1 queries" do
-    # Create multiple categories with sample products
-    5.times do |i|
+    # Create baseline: 2 categories with 3 products each
+    2.times do |i|
       category = Category.create!(
-        name: "Test Category #{i}",
-        slug: "test-category-#{i}",
+        name: "Baseline Category #{i}",
+        slug: "baseline-category-#{i}",
         position: i
       )
       3.times do |j|
         Product.create!(
           category: category,
           name: "Sample #{i}-#{j}",
-          sku: "SAMPLE-N1-TEST-#{i}-#{j}",
+          sku: "SAMPLE-BASELINE-#{i}-#{j}",
           price: 10.0,
           sample_eligible: true,
           active: true,
@@ -83,14 +83,54 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    # The key fix: Category.with_sample_products scope preloads counts
-    # This prevents N+1 queries where each category would trigger a separate COUNT
-    get samples_path
+    # Count queries on baseline request
+    baseline_count_queries = 0
+    ActiveSupport::Notifications.subscribed(
+      ->(_, _, _, _, payload) {
+        baseline_count_queries += 1 if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
+      },
+      "sql.active_record"
+    ) do
+      get samples_path
+      assert_response :success
+    end
 
-    assert_response :success
-    assert_select ".space-y-6" # Categories container exists
+    # Add more categories (should not increase COUNT queries with proper preloading)
+    3.times do |i|
+      category = Category.create!(
+        name: "Extra Category #{i}",
+        slug: "extra-category-#{i}",
+        position: 10 + i
+      )
+      3.times do |j|
+        Product.create!(
+          category: category,
+          name: "Sample Extra #{i}-#{j}",
+          sku: "SAMPLE-EXTRA-#{i}-#{j}",
+          price: 10.0,
+          sample_eligible: true,
+          active: true,
+          product_type: "standard"
+        )
+      end
+    end
 
-    # Verify the preloaded count is used (will be in response body)
-    assert_select "p", text: /3 samples available/
+    # Count queries with more categories
+    expanded_count_queries = 0
+    ActiveSupport::Notifications.subscribed(
+      ->(_, _, _, _, payload) {
+        expanded_count_queries += 1 if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
+      },
+      "sql.active_record"
+    ) do
+      get samples_path
+      assert_response :success
+    end
+
+    # Query count should stay constant (both should be 1 from the grouped query)
+    assert_equal baseline_count_queries, expanded_count_queries,
+                 "COUNT queries increased from #{baseline_count_queries} to #{expanded_count_queries} when categories grew"
+    assert_equal 1, baseline_count_queries,
+                 "Expected 1 grouped COUNT query, got #{baseline_count_queries}"
   end
 end
