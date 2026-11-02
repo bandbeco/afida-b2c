@@ -20,7 +20,7 @@ module Checkout
   # fields would be nil, so the Order can never be valid.
   class MissingShippingDetails < PermanentCompletionFailure
     attr_reader :stripe_session
-    
+
     def initialize(message = "Shipping details are required", stripe_session = nil)
       super(message)
       @stripe_session = stripe_session

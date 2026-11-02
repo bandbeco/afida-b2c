@@ -962,6 +962,30 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Unable to verify payment/, flash[:error]
   end
 
+  test "success never 500s a paid customer on an unclassified error" do
+    # A StandardError (DB connection, effects bug) must not 500 a paid customer.
+    Checkout::Completion.stubs(:complete).raises(StandardError.new("Database connection lost"))
+    Sentry.expects(:capture_exception).with(
+      instance_of(StandardError),
+      has_entries(extra: { stripe_session_id: "sess_db_error" })
+    )
+
+    get success_checkout_path, params: { session_id: "sess_db_error" }
+
+    assert_redirected_to cart_path
+    assert_match /Unable to verify payment/, flash[:error]
+  end
+
+  test "success drops the on-site stash on an unclassified error too" do
+    stash_onsite_session
+    Checkout::Completion.stubs(:complete).raises(PG::ConnectionBad.new("connection lost"))
+    Sentry.stubs(:capture_exception)
+
+    get success_checkout_path, params: { session_id: "sess_blip" }
+
+    assert_nil session[:onsite_checkout]
+  end
+
   test "success never 500s a paid customer on a transient failure" do
     Checkout::Completion.stubs(:complete).raises(Checkout::TransientCompletionFailure.new("connection reset"))
 

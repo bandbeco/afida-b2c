@@ -298,4 +298,29 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     assert_equal 0.0, order.discount_amount.to_f
     assert_nil order.discount_code
   end
+
+  test "mismatch detector pages line items when has_more is true" do
+    # The session has 11 items: the first page embeds 10, and the detector
+    # must list the 11th to count correctly. Stub list to return one more item.
+    @cart.cart_items.destroy_all
+    11.times { |i| @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00) }
+
+    first_page = 10.times.map { |i| stripe_product_line_item(amount_subtotal: 1000, id: "li_#{i}") }
+    stripe_session = build_stripe_session(
+      customer_email: "pagination@example.com",
+      line_items_data: first_page,
+      line_items_has_more: true
+    )
+
+    # The detector calls SessionLineItems.list when has_more is true
+    eleventh_item = stripe_product_line_item(amount_subtotal: 1000, id: "li_10")
+    Checkout::SessionLineItems.expects(:list).with(
+      stripe_session.id, starting_after: "li_9"
+    ).returns([ eleventh_item ])
+
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+    assert_equal "paid", order.status
+  end
 end

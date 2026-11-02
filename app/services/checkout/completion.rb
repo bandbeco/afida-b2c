@@ -81,9 +81,6 @@ module Checkout
       e.code == "resource_missing" ? fail_permanent(e, session: nil) : fail_transient(e)
     rescue Stripe::StripeError => e
       fail_transient(e)
-    rescue Checkout::PermanentCompletionFailure
-      # Already reported by fail_permanent with full context; just re-raise
-      raise
     end
 
     # [order, created]. created is false when this call lost the create race:
@@ -168,19 +165,19 @@ module Checkout
 
     def fail_permanent(cause, session:)
       extra = { stripe_session_id: @session_id }
-      
+
       # Add validation errors for Order RecordInvalid
       if cause.is_a?(ActiveRecord::RecordInvalid) && cause.record.is_a?(Order)
         extra[:validation_errors] = cause.record.errors.messages
       end
-      
+
       # Add session context when available (for recreating the order by hand)
       if session
         extra[:customer_email] = session.customer_details&.email
         extra[:session_amount_total] = session.amount_total
         extra[:session_line_items_summary] = summarize_line_items(session)
       end
-      
+
       report("can never complete", cause, level: :error, extra: extra)
       raise Checkout::PermanentCompletionFailure, cause.message
     end
@@ -199,7 +196,7 @@ module Checkout
     # Summarize line items for Sentry reporting (for recreating orders by hand)
     def summarize_line_items(session)
       return [] unless session.line_items&.data
-      
+
       session.line_items.data.map do |item|
         {
           description: item.description,

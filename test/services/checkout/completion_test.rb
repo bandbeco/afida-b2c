@@ -235,6 +235,43 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     Checkout::Completion.complete(@session.id, browser_present: true)
   end
 
+  test "mismatch detector failing with nil amount_subtotal still creates the order" do
+    # A line item with nil amount_subtotal would raise TypeError in sum(&:amount_subtotal).
+    # The detect-only check must not block order creation.
+    stub_paid_session(
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: nil, name: "Product", id: "li_1")
+      ]
+    )
+    Sentry.expects(:capture_exception).with(
+      instance_of(TypeError),
+      has_entries(extra: { stripe_session_id: @session.id })
+    )
+
+    outcome = nil
+    assert_difference "Order.count", 1 do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+    assert outcome.created?
+  end
+
+  test "mismatch detector failing with Stripe error still creates the order" do
+    # SessionLineItems.list can raise Stripe::StripeError during pagination.
+    # The detect-only check must not block order creation.
+    stub_paid_session
+    Checkout::SessionLineItems.stubs(:list).raises(Stripe::APIConnectionError.new("timeout"))
+    Sentry.expects(:capture_exception).with(
+      instance_of(Stripe::APIConnectionError),
+      has_entries(extra: { stripe_session_id: @session.id })
+    )
+
+    outcome = nil
+    assert_difference "Order.count", 1 do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+    assert outcome.created?
+  end
+
   test "claims the Welcome discount from Stripe metadata, never from a browser session" do
     stub_paid_session(metadata: { discount_code: "WELCOME10" })
 

@@ -105,6 +105,7 @@ module Checkout
     # Detect cart vs session mismatch: items added to the cart after pricing
     # would be copied into the order unpaid. Compare cart item count and subtotal
     # against the session's paid product line items (excluding shipping).
+    # This is detect-only (#322) and must not fail a paid order.
     def detect_cart_session_mismatch
       return unless cart.present?
 
@@ -135,6 +136,11 @@ module Checkout
           }
         )
       end
+    rescue StandardError => e
+      # Detect-only: a diagnostic failure must not block order creation.
+      # Report and continue, the same way an unreadable promotion code is handled.
+      Sentry.capture_exception(e, extra: { stripe_session_id: stripe_session.id })
+      Rails.logger.error("Cart/session mismatch check failed on session #{stripe_session.id}: #{e.message}")
     end
 
     # Product line items from the session (excluding shipping). Uses the same

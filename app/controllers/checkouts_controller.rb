@@ -321,6 +321,14 @@ class CheckoutsController < ApplicationController
     drop_paid_stash
     flash[:error] = "Unable to verify payment. Please contact support."
     redirect_to cart_path
+  rescue StandardError => e
+    # Catch-all for unclassified errors (DB connection, effects bugs, etc).
+    # The customer has already paid, so never 500 them. Report and show flash.
+    drop_paid_stash
+    Sentry.capture_exception(e, extra: { stripe_session_id: session_id })
+    Rails.logger.error("[Checkout success] Unhandled error: #{e.class}: #{e.message}")
+    flash[:error] = "Unable to verify payment. Please contact support."
+    redirect_to cart_path
   end
 
   # Reaching the success URL means the customer paid in the browser, so
