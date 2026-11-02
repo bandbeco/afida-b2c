@@ -878,8 +878,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success clears the Welcome discount from the browser session once spent" do
+    EmailSubscriptionsController.any_instance.stubs(:welcome_discount_code).returns("TEST_WELCOME_COUPON")
     post email_subscriptions_path, params: { email: "discount-test@example.com" }
-    assert_equal welcome_coupon_id, session[:discount_code]
+    assert_equal "TEST_WELCOME_COUPON", session[:discount_code]
     Checkout::Completion.stubs(:complete).returns(completion_outcome(:created, orders(:one)))
 
     get success_checkout_path, params: { session_id: "sess_paid" }
@@ -888,8 +889,9 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "success spends the Welcome discount even when the webhook completed the order first" do
+    EmailSubscriptionsController.any_instance.stubs(:welcome_discount_code).returns("TEST_WELCOME_COUPON")
     post email_subscriptions_path, params: { email: "discount-test@example.com" }
-    assert_equal welcome_coupon_id, session[:discount_code]
+    assert_equal "TEST_WELCOME_COUPON", session[:discount_code]
     Checkout::Completion.stubs(:complete).returns(completion_outcome(:existing, orders(:one)))
 
     get success_checkout_path, params: { session_id: orders(:one).stripe_session_id }
