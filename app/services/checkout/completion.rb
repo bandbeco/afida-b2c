@@ -88,10 +88,11 @@ module Checkout
     # hit the unique stripe_session_id index or the model validation ahead of
     # it, and the pair carries that order instead. RecordNotUnique or a lost-race
     # RecordInvalid (unique index validated by the model) both leave an existing
-    # order. Any other RecordInvalid is classified by type: Order validation
-    # failures (invalid data) are permanent (a retry cannot fix them), while
-    # nested association failures remain transient for backwards compatibility.
-    # Rescued only around the create so a failure elsewhere is never mistaken for a race.
+    # order. Any other RecordInvalid is classified by type: Order and OrderItem
+    # validation failures (invalid data) are permanent (a retry cannot fix them),
+    # while other nested association failures remain transient for backwards
+    # compatibility. Rescued only around the create so a failure elsewhere is
+    # never mistaken for a race.
     def create_order(session)
       [ OrderCreator.new(stripe_session: session, cart: cart_for(session)).create, true ]
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
@@ -99,9 +100,9 @@ module Checkout
       return [ existing, false ] if existing
 
       # No existing order: distinguish deterministic from transient failures.
-      # Order validation errors are deterministic (invalid email, missing fields);
-      # nested association rollbacks may be transient (kept for compatibility).
-      if e.is_a?(ActiveRecord::RecordInvalid) && e.record.is_a?(Order)
+      # Order and OrderItem validation errors are deterministic (invalid data);
+      # other nested association rollbacks may be transient (kept for compatibility).
+      if e.is_a?(ActiveRecord::RecordInvalid) && (e.record.is_a?(Order) || e.record.is_a?(OrderItem))
         fail_permanent(e, session: session)
       else
         fail_transient(e)

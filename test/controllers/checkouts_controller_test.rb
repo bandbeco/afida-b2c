@@ -986,6 +986,24 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
     assert_nil session[:onsite_checkout]
   end
 
+  test "success shows different flash for permanent vs transient failures" do
+    # Permanent failure: payment received, ops will reconcile
+    Checkout::Completion.stubs(:complete).raises(Checkout::PermanentCompletionFailure.new("invalid order"))
+
+    get success_checkout_path, params: { session_id: "sess_permanent" }
+
+    assert_redirected_to cart_path
+    assert_match /payment received.*in touch/i, flash[:error]
+
+    # Transient failure: webhook may succeed
+    Checkout::Completion.stubs(:complete).raises(Checkout::TransientCompletionFailure.new("db blip"))
+
+    get success_checkout_path, params: { session_id: "sess_transient" }
+
+    assert_redirected_to cart_path
+    assert_match /unable to verify.*contact support/i, flash[:error]
+  end
+
   test "success never 500s a paid customer on a transient failure" do
     Checkout::Completion.stubs(:complete).raises(Checkout::TransientCompletionFailure.new("connection reset"))
 

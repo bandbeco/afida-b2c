@@ -419,6 +419,26 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert_match(/invalid/i, error.message)
   end
 
+  test "OrderItem validation failure is permanent, not transient" do
+    stub_paid_session
+
+    # An OrderItem validation error is just as deterministic as Order validation
+    item_with_error = OrderItem.new
+    item_with_error.errors.add(:quantity, "must be positive")
+    validation_error = ActiveRecord::RecordInvalid.new(item_with_error)
+
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(validation_error)
+
+    # Should report to Sentry at error level and raise PermanentCompletionFailure
+    Sentry.expects(:capture_exception).once
+
+    error = assert_raises(Checkout::PermanentCompletionFailure) do
+      Checkout::Completion.complete(@session.id, browser_present: false)
+    end
+
+    assert_match(/positive/i, error.message)
+  end
+
   test "Order RecordInvalid reports exactly once to Sentry with validation errors and session data" do
     stub_paid_session
 
