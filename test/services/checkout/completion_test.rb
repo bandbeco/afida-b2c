@@ -172,6 +172,69 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     Checkout::Completion.complete(@session.id, browser_present: true)
   end
 
+  test "cart/session match with discount does not false-positive" do
+    # Cart has 2 items at £10 each (£20 subtotal). Session applied a 10% discount,
+    # so the line item amount_subtotal is £18 (Stripe reports post-discount amount).
+    # This should NOT report a mismatch - the cart is correct, the discount is in
+    # the session's total_details.breakdown, not in the line items.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
+
+    stub_paid_session(
+      amount_subtotal: 1800, # £18.00 after discount (line items report post-discount)
+      line_items_data: [
+        stripe_product_line_item(
+          amount_subtotal: 1800,
+          quantity: 2,
+          price_data: { unit_amount: 1000 },
+          name: "Product",
+          id: "li_1"
+        )
+      ],
+      total_details: {
+        breakdown: {
+          discounts: [{ amount: 200 }]
+        }
+      }
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "cart/session match with tax does not false-positive" do
+    # Tax is added on top of the subtotal and doesn't affect line item amount_subtotal
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    stub_paid_session(
+      amount_subtotal: 1000,
+      amount_total: 1200, # includes £2 tax
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1000, name: "Product", id: "li_1")
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "cart/session match with custom price does not false-positive" do
+    # A cart item with a custom/promotional price that matches what Stripe charged
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 8.50)
+
+    stub_paid_session(
+      amount_subtotal: 850,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 850, name: "Product", id: "li_1")
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
   test "claims the Welcome discount from Stripe metadata, never from a browser session" do
     stub_paid_session(metadata: { discount_code: "WELCOME10" })
 
@@ -310,16 +373,67 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     Checkout::OrderCreator.any_instance.stubs(:create).raises(validation_error)
 
     # Should report to Sentry at error level and raise PermanentCompletionFailure (2xx to Stripe)
-    Sentry.expects(:capture_exception).with(
-      validation_error,
-      has_entries(level: :error, extra: { stripe_session_id: @session.id })
-    )
+    Sentry.expects(:capture_exception).once
 
     error = assert_raises(Checkout::PermanentCompletionFailure) do
       Checkout::Completion.complete(@session.id, browser_present: false)
     end
 
     assert_match(/invalid/i, error.message)
+  end
+
+  test "Order RecordInvalid reports exactly once to Sentry with validation errors and session data" do
+    stub_paid_session
+
+    # An Order validation error (deterministic failure)
+    order_with_error = Order.new(stripe_session_id: @session.id, email: "")
+    order_with_error.errors.add(:email, "can't be blank")
+    order_with_error.errors.add(:shipping_name, "is too short")
+    validation_error = ActiveRecord::RecordInvalid.new(order_with_error)
+
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(validation_error)
+
+    # Should capture exactly once with validation errors and session context
+    Sentry.expects(:capture_exception).once.with(
+      validation_error,
+      has_entries(
+        level: :error,
+        extra: has_entries(
+          stripe_session_id: @session.id,
+          validation_errors: { email: ["can't be blank"], shipping_name: ["is too short"] },
+          customer_email: "buyer@example.com",
+          session_amount_total: anything,
+          session_line_items_summary: anything
+        )
+      )
+    )
+
+    assert_raises(Checkout::PermanentCompletionFailure) do
+      Checkout::Completion.complete(@session.id, browser_present: false)
+    end
+  end
+
+  test "MissingShippingDetails reports exactly once to Sentry with session data" do
+    stub_paid_session(shipping_address: { line1: nil, line2: nil, city: nil, postal_code: nil, country: nil })
+
+    Sentry.expects(:capture_exception).once.with(
+      instance_of(Checkout::MissingShippingDetails),
+      has_entries(
+        level: :error,
+        extra: has_entries(
+          stripe_session_id: @session.id,
+          customer_email: "buyer@example.com",
+          session_amount_total: anything,
+          session_line_items_summary: anything
+        )
+      )
+    )
+
+    assert_no_difference "Order.count" do
+      assert_raises(Checkout::MissingShippingDetails) do
+        Checkout::Completion.complete(@session.id, browser_present: true)
+      end
+    end
   end
 
   private

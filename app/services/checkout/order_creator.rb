@@ -17,7 +17,7 @@ module Checkout
     def create
       shipping_address = Checkout::SessionDetails.shipping_address(stripe_session)
       if Order.required_shipping_values(shipping_address).any?(&:blank?)
-        raise Checkout::MissingShippingDetails, "Shipping details are required"
+        raise Checkout::MissingShippingDetails.new("Shipping details are required", stripe_session)
       end
 
       # Check for cart vs session mismatch before proceeding
