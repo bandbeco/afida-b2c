@@ -2,7 +2,8 @@ module Checkout
   # Checkout completion (see CONTEXT.md): turns a paid Checkout Session into
   # exactly one Order with its invariant side effects, whichever completion
   # channel (the success redirect or the Stripe webhook) arrives first. The
-  # other channel finds the order and does nothing.
+  # other channel finds the order. Effects run once, on whichever channel
+  # finds them still unrecorded.
   #
   # The channels keep only transport: the redirect its flash, redirect and
   # browser-session cleanup, the webhook the HTTP status Stripe sees and its own
@@ -12,20 +13,28 @@ module Checkout
   #   - the exactly-once order row: an existing order is found before any
   #     Stripe call, and the create race between channels is absorbed
   #   - consuming the cart inside the order's transaction (OrderCreator)
-  #   - the side effects (CompletionEffects)
+  #   - the side effects (CompletionEffects), recorded on effects_completed_at
   #   - reporting to Sentry, once, whichever channel hit the failure
   #
   # Interface: .complete(session_id, browser_present:) returns an Outcome whose
-  # status is :created (this call made the order and fired the effects),
-  # :existing (an earlier completion did) or :unpaid (no order; the session has
-  # not been paid, or is not a payment-mode session at all). It raises
+  # status is :created (this call inserted the order), :existing (the row was
+  # already there) or :unpaid (no order; the session has not been paid, or is
+  # not a payment-mode session at all). Effects run for a :created order and
+  # for an :existing order whose effects_completed_at is still nil. It raises
   # PermanentCompletionFailure when the session can never produce an order and
   # TransientCompletionFailure when a retry may succeed. Anything else (a
-  # programmer error) propagates untouched.
+  # programmer error, including an exception that escapes the effects before
+  # they are recorded) propagates untouched, so the webhook answers 5xx and
+  # Stripe retries.
   #
-  # Effects run after the order commits and are reported, not retried: a crash
-  # between the commit and the effects loses them, since the retry finds the
-  # order and returns :existing. A durable marker is a known follow-up.
+  # effects_completed_at is set only after the effects finish, under a row
+  # lock. A crash between the commit and that write leaves the marker nil,
+  # and the next channel runs the effects. The lock keeps the redirect and
+  # the webhook from both sending. A failure rescued inside one effect does
+  # not withhold the marker: that effect is already in Sentry, and running
+  # the set again would repeat the effects that succeeded (a second
+  # confirmation email, a second order.placed). No background job: the
+  # effects are already mostly enqueues, and the two channels are the retry.
   #
   # browser_present says whether the customer is looking at the site right now:
   # true on the redirect, false on the webhook. It decides only the GA4
@@ -55,9 +64,12 @@ module Checkout
 
     def complete
       # The common case: the other channel already completed this session. Found
-      # from the id alone, so no Stripe call is made and the answer does not
-      # depend on Stripe being up.
+      # from the id alone, so when its effects are already recorded no Stripe
+      # call is made and the answer does not depend on Stripe being up. When
+      # the marker is still nil (a crash after the commit), this channel
+      # finishes the effects.
       if (existing = Order.find_by(stripe_session_id: @session_id))
+        ensure_effects(existing)
         return Outcome.new(order: existing, status: :existing)
       end
 
@@ -66,12 +78,8 @@ module Checkout
       return Outcome.new(order: nil, status: :unpaid) unless payment?(session) && paid?(session)
 
       order, created = create_order(session)
-      return Outcome.new(order: order, status: :existing) unless created
-
-      itemless = order.order_items.none?
-      handle_itemless_order(order, session) if itemless
-      effects_for(order, session, itemless: itemless).run
-      Outcome.new(order: order, status: :created)
+      ensure_effects(order, session)
+      Outcome.new(order: order, status: created ? :created : :existing)
     rescue Checkout::PermanentCompletionFailure => e
       # Body-raised permanent failures (missing shipping, an unexpanded line
       # item) are reported here and re-raised as themselves, so callers can
@@ -114,6 +122,29 @@ module Checkout
     end
 
     private
+
+    # One sender for this order's effects. The row lock is the claim: the
+    # other channel blocks until this transaction commits the marker or rolls
+    # back. The session is retrieved before the lock so that Stripe
+    # round-trip does not hold the row. An exception from run aborts the
+    # transaction before the marker is committed, so a crash stays retryable.
+    def ensure_effects(order, session = nil)
+      return if order.effects_completed_at.present?
+
+      unless session
+        session = retrieve_session
+        @retrieved_session = session
+      end
+
+      order.with_lock do
+        next if order.effects_completed_at.present?
+
+        itemless = order.order_items.none?
+        handle_itemless_order(order, session) if itemless
+        effects_for(order, session, itemless: itemless).run
+        order.update_columns(effects_completed_at: Time.current)
+      end
+    end
 
     def retrieve_session
       Stripe::Checkout::Session.retrieve(id: @session_id, expand: EXPAND)
