@@ -35,8 +35,9 @@ module Checkout
         end
         # The whole cart is consumed, including any item added after the
         # session was priced. The redirect is reached from a page that would
-        # have repriced on such a change; the webhook has no such guard. A
-        # check against the session's line items is a known follow-up.
+        # have repriced on such a change; the webhook has no such guard.
+        # detect_cart_session_mismatch now reports such cases to Sentry but
+        # doesn't block order creation; see #322 for the full fix.
         cart&.cart_items&.destroy_all
 
         order

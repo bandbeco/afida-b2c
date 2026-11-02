@@ -299,6 +299,29 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert_equal webhook_order, redirect_outcome.order
   end
 
+  test "deterministic validation failure is permanent, not endlessly retried" do
+    stub_paid_session
+
+    # Stub OrderCreator to raise an Order validation error (deterministic)
+    order_with_error = Order.new(stripe_session_id: @session.id)
+    order_with_error.errors.add(:email, "is invalid")
+    validation_error = ActiveRecord::RecordInvalid.new(order_with_error)
+
+    Checkout::OrderCreator.any_instance.stubs(:create).raises(validation_error)
+
+    # Should report to Sentry at error level and raise PermanentCompletionFailure (2xx to Stripe)
+    Sentry.expects(:capture_exception).with(
+      validation_error,
+      has_entries(level: :error, extra: { stripe_session_id: @session.id })
+    )
+
+    error = assert_raises(Checkout::PermanentCompletionFailure) do
+      Checkout::Completion.complete(@session.id, browser_present: false)
+    end
+
+    assert_match(/invalid/i, error.message)
+  end
+
   private
 
   # A paid, expanded session whose metadata names @cart, as SessionBuilder

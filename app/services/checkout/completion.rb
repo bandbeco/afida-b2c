@@ -85,16 +85,26 @@ module Checkout
     # [order, created]. created is false when this call lost the create race:
     # the other channel committed in the window after our find_by, so create!
     # hit the unique stripe_session_id index or the model validation ahead of
-    # it, and the pair carries that order instead. Any other RecordInvalid (an
-    # item rollback) leaves no order, and a retry may fix it. Rescued only
-    # around the create so a failure elsewhere is never mistaken for a lost race.
+    # it, and the pair carries that order instead. RecordNotUnique or a lost-race
+    # RecordInvalid (unique index validated by the model) both leave an existing
+    # order. Any other RecordInvalid is classified by type: Order validation
+    # failures (invalid data) are permanent (a retry cannot fix them), while
+    # nested association failures remain transient for backwards compatibility.
+    # Rescued only around the create so a failure elsewhere is never mistaken for a race.
     def create_order(session)
       [ OrderCreator.new(stripe_session: session, cart: cart_for(session)).create, true ]
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
       existing = Order.find_by(stripe_session_id: @session_id)
       return [ existing, false ] if existing
 
-      fail_transient(e)
+      # No existing order: distinguish deterministic from transient failures.
+      # Order validation errors are deterministic (invalid email, missing fields);
+      # nested association rollbacks may be transient (kept for compatibility).
+      if e.is_a?(ActiveRecord::RecordInvalid) && e.record.is_a?(Order)
+        fail_permanent(e)
+      else
+        fail_transient(e)
+      end
     end
 
     private
@@ -153,7 +163,7 @@ module Checkout
     end
 
     def fail_permanent(cause)
-      report("can never complete", cause)
+      report("can never complete", cause, level: :error)
       raise Checkout::PermanentCompletionFailure, cause.message
     end
 
@@ -163,9 +173,9 @@ module Checkout
     end
 
     # One log line and one Sentry capture per failure, whichever channel hit it.
-    def report(outcome, error)
+    def report(outcome, error, level: :warning)
       Rails.logger.error("[Checkout completion] session #{@session_id} #{outcome}: #{error.class}: #{error.message}")
-      Sentry.capture_exception(error, extra: { stripe_session_id: @session_id })
+      Sentry.capture_exception(error, level: level, extra: { stripe_session_id: @session_id })
     end
   end
 end
