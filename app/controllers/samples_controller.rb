@@ -42,9 +42,8 @@ class SamplesController < ApplicationController
     end
 
     @products = Product
-      .standard
-      .sample_eligible
-      .where(category: @category, active: true)
+      .sample_listable
+      .where(category: @category)
       .with_attached_product_photo
       .with_attached_lifestyle_photo
       .includes(

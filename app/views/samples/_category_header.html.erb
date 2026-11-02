@@ -7,7 +7,7 @@
   sample_count_in_category = if category.respond_to?(:sample_products_count)
     category.sample_products_count
   else
-    category.products.where(sample_eligible: true, active: true, product_type: "standard").count
+    category.products.sample_listable.count
   end
 %>
 

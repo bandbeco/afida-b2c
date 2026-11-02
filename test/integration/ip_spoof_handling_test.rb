@@ -15,19 +15,15 @@ class IpSpoofHandlingTest < ActionDispatch::IntegrationTest
                     "IP spoof attacks should be excluded from Sentry"
   end
 
-  test "IP spoof attack returns 400 Bad Request" do
-    # Create a test route that simulates IP spoofing
-    Rails.application.routes.draw do
-      get "/test_ip_spoof" => proc { |_env|
-        raise ActionDispatch::RemoteIp::IpSpoofAttackError, "IP spoofing detected"
-      }
-    end
-
-    get "/test_ip_spoof"
+  test "conflicting X-Forwarded-For and Client-IP headers return 400" do
+    # RemoteIp stores a lazy calculator and raises only when remote_ip is read.
+    # Samples#index reads it through rate_limit, so the spoof check runs inside
+    # that middleware rather than from a route that raises the error itself.
+    get samples_path, headers: {
+      "X-Forwarded-For" => "203.0.113.5",
+      "Client-IP" => "198.51.100.8"
+    }
 
     assert_response :bad_request
-  ensure
-    # Restore original routes
-    Rails.application.reload_routes!
   end
 end

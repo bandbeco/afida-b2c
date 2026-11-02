@@ -55,7 +55,7 @@ class Category < ApplicationRecord
   # and .size, .exists?, .pluck behave differently. Use only for index display.
   scope :with_sample_products, -> {
     joins(:products)
-      .where(products: { sample_eligible: true, active: true, product_type: "standard" })
+      .merge(Product.sample_listable)
       .group("categories.id")
       .select("categories.*, COUNT(products.id)::integer AS sample_products_count")
       .order(:position)

@@ -15,7 +15,9 @@ hetzner:
   region: unused
   http_open_timeout: 5
   http_read_timeout: 10
-  retry_limit: 3
+  # standard mode ignores retry_limit (legacy only). max_attempts is the total
+  # number of attempts, including the first request: 3 means one try plus two retries.
+  max_attempts: 3
   retry_mode: standard
 
 # Use bin/rails credentials:edit to set the AWS secrets (as aws:access_key_id|secret_access_key)

@@ -83,19 +83,11 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    # Count queries on baseline request
-    baseline_count_queries = 0
-    ActiveSupport::Notifications.subscribed(
-      ->(_, _, _, _, payload) {
-        if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
-          baseline_count_queries += 1
-        end
-      },
-      "sql.active_record"
-    ) do
+    baseline_count_queries = count_product_count_queries do
       get samples_path
       assert_response :success
     end
+    assert_equal 1, baseline_count_queries, "expected exactly one product COUNT query"
 
     # Add more categories (should not increase COUNT queries with proper preloading)
     3.times do |i|
@@ -117,22 +109,34 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    # Count queries with more categories
-    expanded_count_queries = 0
-    ActiveSupport::Notifications.subscribed(
-      ->(_, _, _, _, payload) {
-        if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
-          expanded_count_queries += 1
-        end
-      },
-      "sql.active_record"
-    ) do
+    expanded_count_queries = count_product_count_queries do
       get samples_path
       assert_response :success
     end
 
-    # Query count should stay constant (no per-category queries)
+    assert_equal 1, expanded_count_queries,
+                 "expected exactly one product COUNT query after adding categories (N+1)"
     assert_equal baseline_count_queries, expanded_count_queries,
                  "COUNT queries grew from #{baseline_count_queries} to #{expanded_count_queries} when adding categories (N+1)"
+  end
+
+  private
+
+  # SCHEMA queries are identified by payload[:name], not by the SQL text.
+  # Counts the single grouped COUNT(products.id) from Category.with_sample_products.
+  def count_product_count_queries
+    count = 0
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      next if payload[:name].to_s.include?("SCHEMA")
+
+      sql = payload[:sql].to_s
+      count += 1 if sql.match?(/COUNT\s*\(\s*products\.id\s*\)/i)
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    count
   end
 end
