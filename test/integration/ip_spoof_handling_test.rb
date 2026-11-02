@@ -14,4 +14,20 @@ class IpSpoofHandlingTest < ActionDispatch::IntegrationTest
     assert_includes excluded, "ActionDispatch::RemoteIp::IpSpoofAttackError",
                     "IP spoof attacks should be excluded from Sentry"
   end
+
+  test "IP spoof attack returns 400 Bad Request" do
+    # Create a test route that simulates IP spoofing
+    Rails.application.routes.draw do
+      get "/test_ip_spoof" => proc { |_env|
+        raise ActionDispatch::RemoteIp::IpSpoofAttackError, "IP spoofing detected"
+      }
+    end
+
+    get "/test_ip_spoof"
+
+    assert_response :bad_request
+  ensure
+    # Restore original routes
+    Rails.application.reload_routes!
+  end
 end
