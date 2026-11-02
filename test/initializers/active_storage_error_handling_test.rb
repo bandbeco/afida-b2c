@@ -4,6 +4,8 @@ require "test_helper"
 
 class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
   setup do
+    skip "AWS SDK not loaded in test environment" unless defined?(Aws::S3::Errors)
+
     @controller = ActiveStorage::Representations::ProxyController.new
     @controller.request = ActionDispatch::TestRequest.create
     @controller.response = ActionDispatch::TestResponse.new
