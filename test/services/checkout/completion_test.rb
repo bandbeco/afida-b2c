@@ -378,6 +378,38 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     Checkout::Completion.complete(@session.id, browser_present: true)
   end
 
+  test "a session line with nil quantity is counted as zero and still creates the order" do
+    # quantity || 0. A missing quantity must not raise, and it must not be
+    # treated as a match against a priced line.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    line = stub(
+      id: "li_nil_qty",
+      description: "Product",
+      quantity: nil,
+      amount_subtotal: 1000,
+      amount_tax: 200,
+      amount_total: 1200,
+      price: stub(product: Stripe::StripeObject.construct_from("metadata" => {}))
+    )
+    stub_paid_session(amount_subtotal: 1000, line_items_data: [ line ])
+    Sentry.expects(:capture_exception).never
+    Sentry.expects(:capture_message).with(
+      "Cart/session mismatch: items added after pricing",
+      has_entries(
+        level: :error,
+        extra: has_entries(session_item_count: 0, cart_stripe_quantity: 1)
+      )
+    ).once
+
+    outcome = nil
+    assert_difference "Order.count", 1 do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+    assert outcome.created?
+  end
+
   test "mismatch detector failing with nil amount_subtotal still creates the order" do
     # A line item with nil amount_subtotal would raise TypeError in sum(&:amount_subtotal).
     # The detect-only check must not block order creation. Built without the

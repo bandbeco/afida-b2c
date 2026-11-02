@@ -126,7 +126,7 @@ module Checkout
           price_data: {
             currency: "gbp",
             product_data: {
-              name: product_name(item)
+              name: product_name(item, pricing)
             },
             unit_amount: pricing.unit_amount,
             tax_behavior: "exclusive"
@@ -136,7 +136,7 @@ module Checkout
       end
     end
 
-    def product_name(item)
+    def product_name(item, pricing)
       product = item.product
 
       if item.sample?
@@ -144,16 +144,12 @@ module Checkout
       elsif item.configured?
         units_formatted = ActiveSupport::NumberHelper.number_to_delimited(item.quantity)
         "#{product.generated_title} - #{item.configuration['size']} (#{units_formatted} units)"
-      elsif unit_priced?(item)
+      elsif pricing.unit_priced?
         product.generated_title
       else
         packs_label = item.quantity == 1 ? "pack" : "packs"
         "#{product.generated_title} (#{item.quantity} #{packs_label})"
       end
-    end
-
-    def unit_priced?(item)
-      Checkout::StripeLinePricing.for(item).unit_priced?
     end
 
     # The taxed shipping line item, or nil when the order ships free

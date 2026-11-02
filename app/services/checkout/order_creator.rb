@@ -76,6 +76,10 @@ module Checkout
       attributes
     end
 
+    # Same preload SessionBuilder uses. StripeLinePricing reads product
+    # (pac_size) on every item; the design attachment is what the order-item
+    # copy reads. Both completion channels create the order through here, so
+    # the redirect and the webhook share this load.
     def cart_items
       return @cart_items if defined?(@cart_items)
 
@@ -157,6 +161,11 @@ module Checkout
 
     # Product line items from the session (excluding shipping). Uses the same
     # pagination logic as SessionAmounts to handle >10 line items.
+    #
+    # Invariant: every non-shipping line is one cart product line. The mismatch
+    # check compares this list's length to the cart. A later fee or discount
+    # line that is not the shipping line would look like an item added after
+    # pricing, and would have to be excluded here too.
     def session_product_line_items
       return @session_product_line_items if defined?(@session_product_line_items)
 
