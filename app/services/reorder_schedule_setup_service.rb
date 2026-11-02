@@ -14,7 +14,7 @@ class ReorderScheduleSetupService
     session = Stripe::Checkout::Session.create(
       mode: "setup",
       customer: customer.id,
-      payment_method_types: [ "card" ],
+      allowed_payment_method_types: [ "card" ],
       success_url: success_url,
       cancel_url: cancel_url,
       metadata: {
