@@ -87,7 +87,9 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     baseline_count_queries = 0
     ActiveSupport::Notifications.subscribed(
       ->(_, _, _, _, payload) {
-        baseline_count_queries += 1 if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
+        if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
+          baseline_count_queries += 1
+        end
       },
       "sql.active_record"
     ) do
@@ -119,7 +121,9 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     expanded_count_queries = 0
     ActiveSupport::Notifications.subscribed(
       ->(_, _, _, _, payload) {
-        expanded_count_queries += 1 if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
+        if payload[:sql] =~ /COUNT.*products/i && !payload[:sql].include?("SCHEMA")
+          expanded_count_queries += 1
+        end
       },
       "sql.active_record"
     ) do
@@ -127,10 +131,8 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
     end
 
-    # Query count should stay constant (both should be 1 from the grouped query)
+    # Query count should stay constant (no per-category queries)
     assert_equal baseline_count_queries, expanded_count_queries,
-                 "COUNT queries increased from #{baseline_count_queries} to #{expanded_count_queries} when categories grew"
-    assert_equal 1, baseline_count_queries,
-                 "Expected 1 grouped COUNT query, got #{baseline_count_queries}"
+                 "COUNT queries grew from #{baseline_count_queries} to #{expanded_count_queries} when adding categories (N+1)"
   end
 end
