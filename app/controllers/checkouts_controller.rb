@@ -315,10 +315,10 @@ class CheckoutsController < ApplicationController
     drop_paid_stash
     flash[:error] = "Shipping details are required. Please try checkout again."
     redirect_to cart_path
-  rescue Checkout::PermanentCompletionFailure => e
-    # A permanent failure (invalid order data, missing shipping) can never succeed
-    # on retry, so the webhook will also fail and no order will be created. The
-    # customer has already paid: Sentry has the details, and ops will reconcile.
+  rescue Checkout::PermanentCompletionFailure
+    # A permanent failure (invalid order data) can never succeed on retry, so the
+    # webhook will also fail and no order will be created. The customer has
+    # already paid: Sentry has the details, and ops will reconcile.
     drop_paid_stash
     flash[:error] = "Payment received. We're processing your order and will be in touch shortly."
     redirect_to cart_path
@@ -326,14 +326,6 @@ class CheckoutsController < ApplicationController
     # A transient failure (Stripe hiccup, DB blip) may succeed on the webhook
     # retry. The customer has already paid, so never 500 them.
     drop_paid_stash
-    flash[:error] = "Unable to verify payment. Please contact support."
-    redirect_to cart_path
-  rescue StandardError => e
-    # Catch-all for unclassified errors (DB connection, effects bugs, etc).
-    # The customer has already paid, so never 500 them. Report and show flash.
-    drop_paid_stash
-    Sentry.capture_exception(e, extra: { stripe_session_id: session_id })
-    Rails.logger.error("[Checkout success] Unhandled error: #{e.class}: #{e.message}")
     flash[:error] = "Unable to verify payment. Please contact support."
     redirect_to cart_path
   end

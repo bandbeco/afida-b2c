@@ -62,6 +62,7 @@ module Checkout
       end
 
       session = retrieve_session
+      @retrieved_session = session
       return Outcome.new(order: nil, status: :unpaid) unless payment?(session) && paid?(session)
 
       order, created = create_order(session)
@@ -71,9 +72,13 @@ module Checkout
       handle_itemless_order(order, session) if itemless
       effects_for(order, session, itemless: itemless).run
       Outcome.new(order: order, status: :created)
-    rescue Checkout::MissingShippingDetails => e
-      # MissingShippingDetails carries the session for enhanced reporting
-      fail_permanent(e, session: e.stripe_session)
+    rescue Checkout::PermanentCompletionFailure => e
+      # Body-raised permanent failures (missing shipping, an unexpanded line
+      # item) are reported here and re-raised as themselves, so callers can
+      # still tell MissingShippingDetails apart. fail_permanent marks the
+      # exception it raises, so a validation failure is not reported twice.
+      report_permanent(e, session_for(e)) unless e.already_reported
+      raise
     rescue Stripe::InvalidRequestError => e
       # A session id Stripe cannot resolve fails identically on every retry.
       # Stripe raises the same class for retryable conditions too (lock_timeout),
@@ -88,11 +93,10 @@ module Checkout
     # hit the unique stripe_session_id index or the model validation ahead of
     # it, and the pair carries that order instead. RecordNotUnique or a lost-race
     # RecordInvalid (unique index validated by the model) both leave an existing
-    # order. Any other RecordInvalid is classified by type: Order and OrderItem
-    # validation failures (invalid data) are permanent (a retry cannot fix them),
-    # while other nested association failures remain transient for backwards
-    # compatibility. Rescued only around the create so a failure elsewhere is
-    # never mistaken for a race.
+    # order. Any other RecordInvalid is classified by type: Order validation
+    # failures (invalid data) are permanent (a retry cannot fix them), while
+    # nested association failures remain transient for backwards compatibility.
+    # Rescued only around the create so a failure elsewhere is never mistaken for a race.
     def create_order(session)
       [ OrderCreator.new(stripe_session: session, cart: cart_for(session)).create, true ]
     rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
@@ -100,9 +104,9 @@ module Checkout
       return [ existing, false ] if existing
 
       # No existing order: distinguish deterministic from transient failures.
-      # Order and OrderItem validation errors are deterministic (invalid data);
-      # other nested association rollbacks may be transient (kept for compatibility).
-      if e.is_a?(ActiveRecord::RecordInvalid) && (e.record.is_a?(Order) || e.record.is_a?(OrderItem))
+      # Order validation errors are deterministic (invalid email, missing fields);
+      # nested association rollbacks may be transient (kept for compatibility).
+      if e.is_a?(ActiveRecord::RecordInvalid) && e.record.is_a?(Order)
         fail_permanent(e, session: session)
       else
         fail_transient(e)
@@ -165,14 +169,21 @@ module Checkout
     end
 
     def fail_permanent(cause, session:)
+      report_permanent(cause, session)
+      error = Checkout::PermanentCompletionFailure.new(cause.message)
+      error.already_reported = true
+      raise error
+    end
+
+    # One report for a permanent failure, with the validation errors and the
+    # Stripe session fields ops need to recreate the order by hand.
+    def report_permanent(cause, session)
       extra = { stripe_session_id: @session_id }
 
-      # Add validation errors for Order RecordInvalid
       if cause.is_a?(ActiveRecord::RecordInvalid) && cause.record.is_a?(Order)
         extra[:validation_errors] = cause.record.errors.messages
       end
 
-      # Add session context when available (for recreating the order by hand)
       if session
         extra[:customer_email] = session.customer_details&.email
         extra[:session_amount_total] = session.amount_total
@@ -180,7 +191,12 @@ module Checkout
       end
 
       report("can never complete", cause, level: :error, extra: extra)
-      raise Checkout::PermanentCompletionFailure, cause.message
+    end
+
+    def session_for(error)
+      return error.stripe_session if error.respond_to?(:stripe_session) && error.stripe_session
+
+      @retrieved_session
     end
 
     def fail_transient(cause)
@@ -196,7 +212,7 @@ module Checkout
 
     # Summarize line items for Sentry reporting (for recreating orders by hand)
     def summarize_line_items(session)
-      return [ ] unless session.line_items&.data
+      return [] unless session.line_items&.data
 
       session.line_items.data.map do |item|
         {

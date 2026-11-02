@@ -173,28 +173,23 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
   end
 
   test "cart/session match with discount does not false-positive" do
-    # Cart has 2 items at £10 each (£20 subtotal). Session applied a 10% discount,
-    # so the line item amount_subtotal is £18 (Stripe reports post-discount amount).
-    # This should NOT report a mismatch - the cart is correct, the discount is in
-    # the session's total_details.breakdown, not in the line items.
+    # Stripe line-item amount_subtotal is pre-discount (amount_total =
+    # amount_subtotal + tax - discount). A discount must not look like the cart
+    # and the session disagree.
     @cart.cart_items.destroy_all
     @cart.cart_items.create!(product: products(:one), quantity: 2, price: 10.00)
 
     stub_paid_session(
-      amount_subtotal: 1800, # £18.00 after discount (line items report post-discount)
+      amount_subtotal: 2000,
+      amount_discount: 200,
       line_items_data: [
         stripe_product_line_item(
-          amount_subtotal: 1800,
+          amount_subtotal: 2000,
           quantity: 2,
           name: "Product",
           id: "li_1"
         )
-      ],
-      total_details: {
-        breakdown: {
-          discounts: [ { amount: 200 } ]
-        }
-      }
+      ]
     )
     Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
 
@@ -236,12 +231,18 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
 
   test "mismatch detector failing with nil amount_subtotal still creates the order" do
     # A line item with nil amount_subtotal would raise TypeError in sum(&:amount_subtotal).
-    # The detect-only check must not block order creation.
-    stub_paid_session(
-      line_items_data: [
-        stripe_product_line_item(amount_subtotal: nil, amount_tax: 0, name: "Product", id: "li_1")
-      ]
+    # The detect-only check must not block order creation. Built without the
+    # line-item helper, which multiplies amount_subtotal and cannot represent nil.
+    line = stub(
+      id: "li_nil",
+      description: "Product",
+      quantity: 1,
+      amount_subtotal: nil,
+      amount_tax: 0,
+      amount_total: 0,
+      price: stub(product: Stripe::StripeObject.construct_from("metadata" => {}))
     )
+    stub_paid_session(line_items_data: [ line ])
     Sentry.expects(:capture_exception).with(
       instance_of(TypeError),
       has_entries(extra: { stripe_session_id: @session.id })
@@ -256,9 +257,12 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
 
   test "mismatch detector failing with Stripe error still creates the order" do
     # SessionLineItems.list can raise Stripe::StripeError during pagination.
-    # The detect-only check must not block order creation.
-    stub_paid_session
-    Checkout::SessionLineItems.stubs(:list).raises(Stripe::APIConnectionError.new("timeout"))
+    # The detect-only check must not block order creation. The money read pages
+    # the same list, so the first call fails the diagnostic and the next succeeds.
+    stub_paid_session(line_items_has_more: true)
+    Checkout::SessionLineItems.stubs(:list)
+      .raises(Stripe::APIConnectionError.new("timeout"))
+      .then.returns([])
     Sentry.expects(:capture_exception).with(
       instance_of(Stripe::APIConnectionError),
       has_entries(extra: { stripe_session_id: @session.id })
@@ -418,26 +422,6 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert_match(/invalid/i, error.message)
   end
 
-  test "OrderItem validation failure is permanent, not transient" do
-    stub_paid_session
-
-    # An OrderItem validation error is just as deterministic as Order validation
-    item_with_error = OrderItem.new
-    item_with_error.errors.add(:quantity, "must be positive")
-    validation_error = ActiveRecord::RecordInvalid.new(item_with_error)
-
-    Checkout::OrderCreator.any_instance.stubs(:create).raises(validation_error)
-
-    # Should report to Sentry at error level and raise PermanentCompletionFailure
-    Sentry.expects(:capture_exception).once
-
-    error = assert_raises(Checkout::PermanentCompletionFailure) do
-      Checkout::Completion.complete(@session.id, browser_present: false)
-    end
-
-    assert_match(/positive/i, error.message)
-  end
-
   test "Order RecordInvalid reports exactly once to Sentry with validation errors and session data" do
     stub_paid_session
 
@@ -456,7 +440,7 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
         level: :error,
         extra: has_entries(
           stripe_session_id: @session.id,
-          validation_errors: { email: ["can't be blank"], shipping_name: ["is too short"] },
+          validation_errors: { email: [ "can't be blank" ], shipping_name: [ "is too short" ] },
           customer_email: "buyer@example.com",
           session_amount_total: anything,
           session_line_items_summary: anything

@@ -14,7 +14,11 @@ module Checkout
   # Permanent: the same session will fail identically on every attempt.
   # Subclassed rather than wrapped so a caller can still pick copy by the
   # concrete class (MissingShippingDetails has its own customer message).
-  class PermanentCompletionFailure < StandardError; end
+  class PermanentCompletionFailure < StandardError
+    # Set when the failure has already been reported, so the completion
+    # rescue can re-raise without a second Sentry capture.
+    attr_accessor :already_reported
+  end
 
   # A completed session carrying no shipping_details: the required shipping
   # fields would be nil, so the Order can never be valid.
