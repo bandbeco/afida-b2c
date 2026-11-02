@@ -716,7 +716,7 @@ class CheckoutsControllerTest < ActionDispatch::IntegrationTest
 
     assert_not_nil captured_params
     assert captured_params[:line_items].all? { |li| li[:price_data][:currency] == "gbp" }
-    assert_equal "card", captured_params[:payment_method_types].first
+    assert_equal "card", captured_params[:allowed_payment_method_types].first
     assert_equal "payment", captured_params[:mode]
   end
 

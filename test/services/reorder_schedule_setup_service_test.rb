@@ -26,7 +26,7 @@ class ReorderScheduleSetupServiceTest < ActiveSupport::TestCase
     Stripe::Checkout::Session.expects(:create).with(
       mode: "setup",
       customer: "cus_test_123",
-      payment_method_types: [ "card" ],
+      allowed_payment_method_types: [ "card" ],
       success_url: success_url,
       cancel_url: cancel_url,
       metadata: has_entries(order_id: @order.id.to_s, user_id: @user.id.to_s)

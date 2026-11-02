@@ -803,11 +803,11 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
     assert_equal @return_url, custom[:return_url]
     assert_nil custom[:success_url]
     assert_nil custom[:cancel_url]
-    assert_equal [ "card", "link" ], custom[:payment_method_types]
+    assert_equal [ "card", "link" ], custom[:allowed_payment_method_types]
 
     # Everything else must be identical - this is the parity contract the
     # hosted fallback depends on. Shipping line item drift here costs money.
-    mode_keys = [ :ui_mode, :return_url, :success_url, :cancel_url, :payment_method_types ]
+    mode_keys = [ :ui_mode, :return_url, :success_url, :cancel_url, :allowed_payment_method_types ]
     assert_equal hosted.except(*mode_keys), custom.except(*mode_keys)
   end
 
