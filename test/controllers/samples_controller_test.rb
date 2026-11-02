@@ -89,7 +89,7 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".space-y-6" # Categories container exists
-    
+
     # Verify the preloaded count is used (will be in response body)
     assert_select "p", text: /3 samples available/
   end
