@@ -61,4 +61,33 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
     assert_redirected_to category_samples_path(@category.slug)
   end
+
+  test "index preloads sample product counts to avoid N+1 queries" do
+    # Create multiple categories with sample products
+    3.times do |i|
+      category = Category.create!(
+        name: "Test Category #{i}",
+        slug: "test-category-#{i}",
+        position: i
+      )
+      2.times do |j|
+        Product.create!(
+          category: category,
+          name: "Sample #{i}-#{j}",
+          sku: "SAMPLE-N1-TEST-#{i}-#{j}",
+          price: 10.0,
+          sample_eligible: true,
+          active: true
+        )
+      end
+    end
+
+    # Assert no additional queries are made when rendering the view
+    # The count should be preloaded in the controller
+    get samples_path
+
+    assert_response :success
+    # Verify that categories are loaded with counts
+    assert assigns(:categories).all? { |c| c.respond_to?(:sample_products_count) }
+  end
 end

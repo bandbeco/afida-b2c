@@ -33,6 +33,14 @@ class MarkdownForAgentsMiddleware
     new_headers["x-markdown-tokens"] = estimate_tokens(markdown).to_s
 
     [ status, new_headers, head_request ? [] : [ markdown ] ]
+  rescue ActionDispatch::RemoteIp::IpSpoofAttackError
+    wordpress_probe_path = env["PATH_INFO"].to_s.start_with?("/wp-")
+
+    if wordpress_probe_path
+      [ 404, { "Content-Type" => "text/plain; charset=utf-8" }, [ "Not Found" ] ]
+    else
+      [ 400, { "Content-Type" => "text/plain; charset=utf-8" }, [ "Bad Request" ] ]
+    end
   end
 
   private

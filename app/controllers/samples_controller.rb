@@ -17,6 +17,8 @@ class SamplesController < ApplicationController
       .where(products: { sample_eligible: true, active: true, product_type: "standard" })
       .distinct
       .order(:position)
+      .select("categories.*, COUNT(products.id) AS sample_products_count")
+      .group("categories.id")
 
     # Load curated sample packs
     @sample_packs = Collection.sample_packs

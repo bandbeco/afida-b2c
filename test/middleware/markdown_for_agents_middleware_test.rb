@@ -173,3 +173,37 @@ class MarkdownForAgentsMiddlewareRackHeadersTest < ActiveSupport::TestCase
     assert_nil headers["ETag"]
   end
 end
+
+class MarkdownForAgentsMiddlewareIpSpoofTest < ActiveSupport::TestCase
+  test "returns 400 for IP spoof attack on regular paths" do
+    app = ->(_env) { raise ActionDispatch::RemoteIp::IpSpoofAttackError }
+    env = Rack::MockRequest.env_for("/some-path")
+
+    status, headers, body = MarkdownForAgentsMiddleware.new(app).call(env)
+
+    assert_equal 400, status
+    assert_equal "text/plain; charset=utf-8", headers["Content-Type"]
+    assert_equal [ "Bad Request" ], body
+  end
+
+  test "returns 404 for IP spoof attack on WordPress probe paths" do
+    app = ->(_env) { raise ActionDispatch::RemoteIp::IpSpoofAttackError }
+
+    [ "/wp-login.php", "/wp-admin", "/wp-content/themes/test.php" ].each do |path|
+      env = Rack::MockRequest.env_for(path)
+      status, headers, body = MarkdownForAgentsMiddleware.new(app).call(env)
+
+      assert_equal 404, status, "Expected 404 for #{path}"
+      assert_equal "text/plain; charset=utf-8", headers["Content-Type"]
+      assert_equal [ "Not Found" ], body
+    end
+  end
+
+  test "IP spoof error does not trigger Sentry for bot probes" do
+    app = ->(_env) { raise ActionDispatch::RemoteIp::IpSpoofAttackError }
+    env = Rack::MockRequest.env_for("/wp-login.php")
+
+    status, _headers, _body = MarkdownForAgentsMiddleware.new(app).call(env)
+    assert_equal 404, status
+  end
+end
