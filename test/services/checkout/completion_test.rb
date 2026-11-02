@@ -143,7 +143,8 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
   end
 
   test "cart/session mismatch is detected and reported when item added after pricing" do
-    # Cart has 2 items but session only paid for 1
+    # One folded line: the cart is 2 × £10 = £20, the session charged £10.
+    # Line counts match; the subtotal does not, so the extra packs are reported.
     stub_paid_session(
       amount_subtotal: 1000, # £10.00 in pence
       line_items_data: [ stripe_product_line_item(amount_subtotal: 1000, name: "Product", id: "li_1") ]
@@ -183,9 +184,12 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
       amount_subtotal: 2000,
       amount_discount: 200,
       line_items_data: [
+        # products(:one) has pac_size 1, which is pack-folded: two packs are
+        # one Stripe unit at £20, not quantity 2. The discount lives on
+        # total_details and must not look like a shortfall.
         stripe_product_line_item(
           amount_subtotal: 2000,
-          quantity: 2,
+          quantity: 1,
           name: "Product",
           id: "li_1"
         )
@@ -227,6 +231,183 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
 
     Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "two packs of a pack-priced product do not false-positive" do
+    # 2 × £80.99 is one Stripe line of quantity 1 at 16198 pence. The pack
+    # count lives in the product name. A shipping line must not enter the sum.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:paper_lid_80mm), quantity: 2, price: BigDecimal("80.99"))
+
+    stub_paid_session(
+      amount_subtotal: 16198 + 699,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 16198, quantity: 1, name: "Lids (2 packs)", id: "li_packs"),
+        stripe_shipping_line_item(amount_subtotal: 699)
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "a configured item does not false-positive" do
+    @cart.cart_items.destroy_all
+    cart_item = @cart.cart_items.build(
+      product: products(:branded_template_variant),
+      quantity: 5000,
+      price: BigDecimal("0.20"),
+      configuration: { size: "12oz", quantity: 5000 },
+      calculated_price: 1000.00
+    )
+    cart_item.design.attach(
+      io: StringIO.new("fake design content"),
+      filename: "design.pdf",
+      content_type: "application/pdf"
+    )
+    cart_item.save!
+
+    stub_paid_session(
+      amount_subtotal: 100_000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 100_000, quantity: 1, id: "li_branded")
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "a sample item does not false-positive" do
+    # Samples are one Stripe unit at 0 even when the cart quantity is higher.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(
+      product: products(:sample_cup_8oz), quantity: 2, price: 0, is_sample: true
+    )
+
+    stub_paid_session(
+      amount_subtotal: 0,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 0, quantity: 1, id: "li_sample")
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "a unit-priced item with quantity greater than one does not false-positive" do
+    # pac_size blank keeps the real quantity. Folding it into one unit would
+    # disagree with the session Stripe actually built.
+    product = products(:only_product_in_category)
+    assert product.pac_size.blank?
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: product, quantity: 4, price: BigDecimal("2.50"))
+
+    stub_paid_session(
+      amount_subtotal: 1000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1000, quantity: 4, id: "li_units")
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "sub-penny pack prices across lines do not false-positive" do
+    # Each line rounds to 33p. Three lines are 99p. Rounding the cart sum
+    # once is round(99.99) = 100, a 1p false alert.
+    @cart.cart_items.destroy_all
+    price = BigDecimal("0.3333")
+    [ products(:one), products(:two), products(:paper_lid_80mm) ].each do |product|
+      @cart.cart_items.create!(product: product, quantity: 1, price: price)
+    end
+
+    stub_paid_session(
+      amount_subtotal: 99,
+      line_items_data: 3.times.map { |i|
+        stripe_product_line_item(amount_subtotal: 33, quantity: 1, id: "li_penny_#{i}")
+      }
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "an item added after the session was priced is reported" do
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+    @cart.cart_items.create!(product: products(:two), quantity: 1, price: 5.00)
+
+    stub_paid_session(
+      amount_subtotal: 1000,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 1000, quantity: 1, id: "li_priced")
+      ]
+    )
+    Sentry.expects(:capture_message).with(
+      "Cart/session mismatch: items added after pricing",
+      has_entries(
+        level: :error,
+        extra: has_entries(cart_line_count: 2, session_line_count: 1, session_subtotal_pence: 1000)
+      )
+    ).once
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "a sample added after pricing is reported even when the subtotal is unchanged" do
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:paper_lid_80mm), quantity: 1, price: 45.00)
+    @cart.cart_items.create!(
+      product: products(:sample_cup_8oz), quantity: 1, price: 0, is_sample: true
+    )
+
+    stub_paid_session(
+      amount_subtotal: 4500,
+      line_items_data: [
+        stripe_product_line_item(amount_subtotal: 4500, quantity: 1, id: "li_paid")
+      ]
+    )
+    Sentry.expects(:capture_message).with(
+      "Cart/session mismatch: items added after pricing",
+      has_entries(level: :error, extra: has_entries(cart_line_count: 2, session_line_count: 1))
+    ).once
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "a session line with nil quantity is counted as zero and still creates the order" do
+    # quantity || 0. A missing quantity must not raise, and it must not be
+    # treated as a match against a priced line.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    line = stub(
+      id: "li_nil_qty",
+      description: "Product",
+      quantity: nil,
+      amount_subtotal: 1000,
+      amount_tax: 200,
+      amount_total: 1200,
+      price: stub(product: Stripe::StripeObject.construct_from("metadata" => {}))
+    )
+    stub_paid_session(amount_subtotal: 1000, line_items_data: [ line ])
+    Sentry.expects(:capture_exception).never
+    Sentry.expects(:capture_message).with(
+      "Cart/session mismatch: items added after pricing",
+      has_entries(
+        level: :error,
+        extra: has_entries(session_item_count: 0, cart_stripe_quantity: 1)
+      )
+    ).once
+
+    outcome = nil
+    assert_difference "Order.count", 1 do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+    assert outcome.created?
   end
 
   test "mismatch detector failing with nil amount_subtotal still creates the order" do
