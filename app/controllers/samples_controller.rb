@@ -12,11 +12,7 @@ class SamplesController < ApplicationController
   # GET /samples
   # Main samples browsing page showing categories with sample-eligible products
   def index
-    @categories = Category
-      .joins(:products)
-      .where(products: { sample_eligible: true, active: true, product_type: "standard" })
-      .distinct
-      .order(:position)
+    @categories = Category.with_sample_products
 
     # Load curated sample packs
     @sample_packs = Collection.sample_packs
@@ -46,9 +42,8 @@ class SamplesController < ApplicationController
     end
 
     @products = Product
-      .standard
-      .sample_eligible
-      .where(category: @category, active: true)
+      .sample_listable
+      .where(category: @category)
       .with_attached_product_photo
       .with_attached_lifestyle_photo
       .includes(

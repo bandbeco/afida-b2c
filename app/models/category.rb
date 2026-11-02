@@ -50,6 +50,17 @@ class Category < ApplicationRecord
   scope :top_level, -> { where(parent_id: nil) }
   scope :subcategories, -> { where.not(parent_id: nil) }
 
+  # Scope for categories with sample-eligible products, with preloaded count
+  # Returns a grouped relation with custom select. Note that .count returns a Hash,
+  # and .size, .exists?, .pluck behave differently. Use only for index display.
+  scope :with_sample_products, -> {
+    joins(:products)
+      .merge(Product.sample_listable)
+      .group("categories.id")
+      .select("categories.*, COUNT(products.id)::integer AS sample_products_count")
+      .order(:position)
+  }
+
   # Resolves a slug to its category, following slug history for renamed slugs.
   # Every controller that turns a URL slug into a Category must use this so
   # admin renames 301 instead of 404ing (June 2026 incident).

@@ -17,6 +17,10 @@ Sentry.init do |config|
   # Set environment
   config.environment = Rails.env
 
+  # Exclude IP spoof attacks from reporting (bots with conflicting headers)
+  # These are handled by rescue_responses returning 400, no need to alert
+  config.excluded_exceptions += [ "ActionDispatch::RemoteIp::IpSpoofAttackError" ]
+
   # sentry-rails 7 ships Rails logs to Sentry by default. The shop has never
   # sent them and they are billed separately; turn them on deliberately or not
   # at all.

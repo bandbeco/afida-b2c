@@ -86,6 +86,9 @@ class Product < ApplicationRecord
   scope :featured, -> { where(featured: true) }
   scope :best_sellers, -> { where(best_seller: true) }
   scope :sample_eligible, -> { where(sample_eligible: true) }
+  # Active standard products shown in the sample catalog. Shared by
+  # Category.with_sample_products and the samples category-header fallback.
+  scope :sample_listable, -> { active.sample_eligible.standard }
   scope :by_position, -> { order(:position, :name) }
   scope :by_name, -> { order(:name) }
 

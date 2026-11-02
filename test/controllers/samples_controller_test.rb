@@ -61,4 +61,82 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
     assert_response :moved_permanently
     assert_redirected_to category_samples_path(@category.slug)
   end
+
+  test "index preloads sample product counts to avoid N+1 queries" do
+    # Create baseline: 2 categories with 3 products each
+    2.times do |i|
+      category = Category.create!(
+        name: "Baseline Category #{i}",
+        slug: "baseline-category-#{i}",
+        position: i
+      )
+      3.times do |j|
+        Product.create!(
+          category: category,
+          name: "Sample #{i}-#{j}",
+          sku: "SAMPLE-BASELINE-#{i}-#{j}",
+          price: 10.0,
+          sample_eligible: true,
+          active: true,
+          product_type: "standard"
+        )
+      end
+    end
+
+    baseline_count_queries = count_product_count_queries do
+      get samples_path
+      assert_response :success
+    end
+    assert_equal 1, baseline_count_queries, "expected exactly one product COUNT query"
+
+    # Add more categories (should not increase COUNT queries with proper preloading)
+    3.times do |i|
+      category = Category.create!(
+        name: "Extra Category #{i}",
+        slug: "extra-category-#{i}",
+        position: 10 + i
+      )
+      3.times do |j|
+        Product.create!(
+          category: category,
+          name: "Sample Extra #{i}-#{j}",
+          sku: "SAMPLE-EXTRA-#{i}-#{j}",
+          price: 10.0,
+          sample_eligible: true,
+          active: true,
+          product_type: "standard"
+        )
+      end
+    end
+
+    expanded_count_queries = count_product_count_queries do
+      get samples_path
+      assert_response :success
+    end
+
+    assert_equal 1, expanded_count_queries,
+                 "expected exactly one product COUNT query after adding categories (N+1)"
+    assert_equal baseline_count_queries, expanded_count_queries,
+                 "COUNT queries grew from #{baseline_count_queries} to #{expanded_count_queries} when adding categories (N+1)"
+  end
+
+  private
+
+  # SCHEMA queries are identified by payload[:name], not by the SQL text.
+  # Counts the single grouped COUNT(products.id) from Category.with_sample_products.
+  def count_product_count_queries
+    count = 0
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      next if payload[:name].to_s.include?("SCHEMA")
+
+      sql = payload[:sql].to_s
+      count += 1 if sql.match?(/COUNT\s*\(\s*products\.id\s*\)/i)
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    count
+  end
 end
