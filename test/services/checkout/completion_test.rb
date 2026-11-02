@@ -186,14 +186,13 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
         stripe_product_line_item(
           amount_subtotal: 1800,
           quantity: 2,
-          price_data: { unit_amount: 1000 },
           name: "Product",
           id: "li_1"
         )
       ],
       total_details: {
         breakdown: {
-          discounts: [{ amount: 200 }]
+          discounts: [ { amount: 200 } ]
         }
       }
     )
@@ -240,7 +239,7 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     # The detect-only check must not block order creation.
     stub_paid_session(
       line_items_data: [
-        stripe_product_line_item(amount_subtotal: nil, name: "Product", id: "li_1")
+        stripe_product_line_item(amount_subtotal: nil, amount_tax: 0, name: "Product", id: "li_1")
       ]
     )
     Sentry.expects(:capture_exception).with(

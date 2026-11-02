@@ -196,7 +196,7 @@ module Checkout
 
     # Summarize line items for Sentry reporting (for recreating orders by hand)
     def summarize_line_items(session)
-      return [] unless session.line_items&.data
+      return [ ] unless session.line_items&.data
 
       session.line_items.data.map do |item|
         {
