@@ -83,23 +83,12 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    # First request establishes baseline
-    get samples_path
-    assert_response :success
-
-    # Count queries on second request - should stay flat regardless of category count
-    queries = []
-    ActiveSupport::Notifications.subscribe("sql.active_record") do |_, _, _, _, details|
-      queries << details[:sql] unless details[:sql].include?("SCHEMA")
+    # Verify query count stays constant regardless of number of categories
+    assert_queries_count(2) do
+      get samples_path
     end
 
-    get samples_path
     assert_response :success
-
-    ActiveSupport::Notifications.unsubscribe("sql.active_record")
-
-    # Should not have per-category COUNT queries
-    count_queries = queries.select { |q| q.match?(/COUNT.*products.*category_id/) }
-    assert_equal 0, count_queries.length, "Found #{count_queries.length} per-category COUNT queries, expected 0"
+    assert_select ".space-y-6"
   end
 end
