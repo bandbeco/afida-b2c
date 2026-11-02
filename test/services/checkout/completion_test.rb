@@ -6,6 +6,8 @@ require "test_helper"
 # completes"; the two controller tests cover only their transport.
 class Checkout::CompletionTest < ActiveSupport::TestCase
   include StripeTestHelper
+  include ActiveJob::TestHelper
+  include ActionMailer::TestHelper
 
   setup do
     @cart = Cart.create!
@@ -130,6 +132,46 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert_empty outcome.order.order_items
   end
 
+  test "an itemless order skips the customer confirmation email but sends ops confirmation" do
+    stub_paid_session(metadata: { cart_id: "999999" })
+    Sentry.stubs(:capture_message)
+
+    # Only one email should be enqueued (ops confirmation, not customer)
+    assert_enqueued_emails 1 do
+      Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+  end
+
+  test "cart/session mismatch is detected and reported when item added after pricing" do
+    # Cart has 2 items but session only paid for 1
+    stub_paid_session(
+      amount_subtotal: 1000, # £10.00 in pence
+      line_items_data: [ stripe_product_line_item(amount_subtotal: 1000, name: "Product", id: "li_1") ]
+    )
+    Sentry.expects(:capture_message).with(
+      "Cart/session mismatch: items added after pricing",
+      has_entries(level: :error, extra: has_entry(:session_item_count, 1))
+    ).once
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
+  test "cart/session match does not report when cart matches session" do
+    # Cart has 1 item priced at £10, session has matching line item
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 1, price: 10.00)
+
+    stub_paid_session(
+      amount_subtotal: 1000, # £10.00 in pence
+      line_items_data: [ 
+        stripe_product_line_item(amount_subtotal: 1000, name: "Product", id: "li_1")
+      ]
+    )
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    Checkout::Completion.complete(@session.id, browser_present: true)
+  end
+
   test "claims the Welcome discount from Stripe metadata, never from a browser session" do
     stub_paid_session(metadata: { discount_code: "WELCOME10" })
 
@@ -230,6 +272,31 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert_raises(StandardError) do
       Checkout::Completion.complete(@session.id, browser_present: true)
     end
+  end
+
+  test "redirect and webhook both completing the same session only creates one order" do
+    # This models the common case where both channels fire: the webhook wins
+    # the create race, commits the order, then the redirect finds it.
+    stub_paid_session
+    Ga4MeasurementProtocolService.stubs(:track_purchase)
+
+    # Webhook channel completes first (browser_present: false)
+    webhook_outcome = nil
+    assert_difference [ "Order.count", "OrderItem.count" ], 1 do
+      webhook_outcome = Checkout::Completion.complete(@session.id, browser_present: false)
+    end
+    assert webhook_outcome.created?
+    webhook_order = webhook_outcome.order
+
+    # Redirect channel arrives second (browser_present: true)
+    redirect_outcome = nil
+    assert_no_difference "Order.count" do
+      assert_no_event_reported("order.placed") do
+        redirect_outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+      end
+    end
+    assert redirect_outcome.existing?
+    assert_equal webhook_order, redirect_outcome.order
   end
 
   private

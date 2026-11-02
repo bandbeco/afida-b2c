@@ -20,20 +20,25 @@ module Checkout
   # in Stripe metadata: present only when the discount was actually applied.
   # KlaviyoSubscriber resolves the customer email from order_id (Rails.event
   # filters payload[:email]), so order_id is the contract on every event.
+  #
+  # itemless: true when the order has no items (cart gone or mismatched); the
+  # customer confirmation is suppressed, but the ops confirmation still fires.
   class CompletionEffects
     def initialize(order, browser_present:, payment_method: nil, welcome_discount_code: nil,
-                   datafast_visitor_id: nil, datafast_session_id: nil)
+                   datafast_visitor_id: nil, datafast_session_id: nil, itemless: false)
       @order = order
       @browser_present = browser_present
       @payment_method = payment_method
       @welcome_discount_code = welcome_discount_code.presence
       @datafast_visitor_id = datafast_visitor_id.presence
       @datafast_session_id = datafast_session_id.presence
+      @itemless = itemless
     end
 
     def run
+      # Skip customer confirmation for itemless orders (ops still gets notified).
       attempt("confirmation emails") do
-        OrderMailer.with(order: order).confirmation_email.deliver_later
+        OrderMailer.with(order: order).confirmation_email.deliver_later unless itemless
         OrderMailer.with(order: order).ops_confirmation_email.deliver_later
       end
       attempt("team notification") { TelegramOrderNotificationJob.perform_later(order.id) }
@@ -46,7 +51,7 @@ module Checkout
     private
 
     attr_reader :order, :browser_present, :payment_method, :welcome_discount_code,
-                :datafast_visitor_id, :datafast_session_id
+                :datafast_visitor_id, :datafast_session_id, :itemless
 
     # checkout.completed feeds the Datafast purchase goal, keyed on the visitor
     # in the event context. The redirect request carries the browser's cookie;

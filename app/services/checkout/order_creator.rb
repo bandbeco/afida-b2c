@@ -20,6 +20,9 @@ module Checkout
         raise Checkout::MissingShippingDetails, "Shipping details are required"
       end
 
+      # Check for cart vs session mismatch before proceeding
+      detect_cart_session_mismatch if cart.present?
+
       # Resolved before the transaction opens: reading the promotion code can
       # call Stripe, and a network round-trip must not hold a connection open.
       attributes = order_attributes
@@ -96,6 +99,58 @@ module Checkout
       Sentry.capture_exception(e, extra: { stripe_session_id: stripe_session.id })
       Rails.logger.error("Unreadable promotion code on session #{stripe_session.id}: #{e.message}")
       nil
+    end
+
+    # Detect cart vs session mismatch: items added to the cart after pricing
+    # would be copied into the order unpaid. Compare cart item count and subtotal
+    # against the session's paid product line items (excluding shipping).
+    def detect_cart_session_mismatch
+      return unless cart.present?
+
+      session_product_lines = session_product_line_items
+      cart_item_count = cart_items.sum(&:quantity)
+      session_item_count = session_product_lines.sum { |item| item.quantity || 0 }
+
+      # Get subtotals in pence for comparison
+      cart_subtotal_pence = (cart_items.sum { |item| item.price * item.quantity } * 100).round
+      session_subtotal_pence = session_product_lines.sum(&:amount_subtotal)
+
+      if cart_item_count != session_item_count || cart_subtotal_pence != session_subtotal_pence
+        Rails.logger.error(
+          "[Checkout completion] Cart/session mismatch on session #{stripe_session.id}: " \
+          "cart has #{cart_item_count} items (£#{cart_subtotal_pence / 100.0}), " \
+          "session has #{session_item_count} items (£#{session_subtotal_pence / 100.0})"
+        )
+        Sentry.capture_message(
+          "Cart/session mismatch: items added after pricing",
+          level: :error,
+          extra: {
+            stripe_session_id: stripe_session.id,
+            cart_id: cart.id,
+            cart_item_count: cart_item_count,
+            cart_subtotal_pence: cart_subtotal_pence,
+            session_item_count: session_item_count,
+            session_subtotal_pence: session_subtotal_pence
+          }
+        )
+      end
+    end
+
+    # Product line items from the session (excluding shipping). Uses the same
+    # pagination logic as SessionAmounts to handle >10 line items.
+    def session_product_line_items
+      return @session_product_line_items if defined?(@session_product_line_items)
+
+      embedded = stripe_session.line_items
+      page_one = embedded&.data || []
+      all_lines =
+        if embedded.respond_to?(:has_more) && embedded.has_more
+          page_one + Checkout::SessionLineItems.list(stripe_session.id, starting_after: page_one.last&.id)
+        else
+          page_one
+        end
+
+      @session_product_line_items = all_lines.reject { |item| Checkout::SessionLineItems.shipping?(item) }
     end
   end
 end

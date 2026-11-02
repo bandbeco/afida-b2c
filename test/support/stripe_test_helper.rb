@@ -224,7 +224,8 @@ module StripeTestHelper
   # product metadata has no shipping_line flag, so SessionAmounts treats it as
   # part of the subtotal. As with the shipping stub, amount_tax/amount_total are
   # not read by SessionAmounts (VAT comes from session total_details.amount_tax).
-  def stripe_product_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Test Product", id: "li_prod")
+  # quantity defaults to 1 for backward compatibility with existing tests.
+  def stripe_product_line_item(amount_subtotal:, amount_tax: nil, amount_total: nil, name: "Test Product", id: "li_prod", quantity: 1)
     tax = amount_tax || (amount_subtotal * VAT_RATE).round
     stub(
       id: id,
@@ -232,7 +233,8 @@ module StripeTestHelper
       amount_tax: tax,
       amount_total: amount_total || (amount_subtotal + tax),
       price: stub(product: Stripe::StripeObject.construct_from("metadata" => {})),
-      description: name
+      description: name,
+      quantity: quantity
     )
   end
 

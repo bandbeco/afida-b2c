@@ -67,8 +67,8 @@ module Checkout
       order, created = create_order(session)
       return Outcome.new(order: order, status: :existing) unless created
 
-      report_itemless(order, session) if order.order_items.none?
-      effects_for(order, session).run
+      handle_itemless_order(order, session) if order.order_items.none?
+      effects_for(order, session, itemless: order.order_items.none?).run
       Outcome.new(order: order, status: :created)
     rescue Stripe::InvalidRequestError => e
       # A session id Stripe cannot resolve fails identically on every retry.
@@ -81,8 +81,6 @@ module Checkout
       report("can never complete", e)
       raise
     end
-
-    private
 
     # [order, created]. created is false when this call lost the create race:
     # the other channel committed in the window after our find_by, so create!
@@ -127,22 +125,30 @@ module Checkout
       session.metadata&.[](key)
     end
 
-    # A static message so Sentry groups every item-less order into one issue;
-    # the ids ride in extra.
-    def report_itemless(order, session)
-      Rails.logger.warn("[Checkout completion] Order #{order.id} recorded without line items " \
+    # When a paid order has no items (the cart is gone or mismatched), report it
+    # for ops to reconcile and suppress the normal customer confirmation email.
+    # The ops confirmation still fires (see CompletionEffects#run with itemless: true).
+    def handle_itemless_order(order, session)
+      Rails.logger.error("[Checkout completion] Order #{order.id} recorded without line items " \
                         "(cart_id: #{metadata_value(session, "cart_id").inspect}); reconcile against session #{session.id}")
-      Sentry.capture_message("Checkout completion recorded an order without line items", level: :warning,
-        extra: { order_id: order.id, stripe_session_id: session.id, cart_id: metadata_value(session, "cart_id") })
+      Sentry.capture_message("Checkout completion recorded an order without line items", level: :error,
+        extra: {
+          order_id: order.id,
+          stripe_session_id: session.id,
+          cart_id: metadata_value(session, "cart_id"),
+          session_line_item_count: session.line_items&.data&.size || 0,
+          session_amount_total: session.amount_total
+        })
     end
 
-    def effects_for(order, session)
+    def effects_for(order, session, itemless: false)
       CompletionEffects.new(order,
         browser_present: @browser_present,
         payment_method: Checkout::SessionDetails.payment_method_type(session),
         welcome_discount_code: metadata_value(session, "discount_code"),
         datafast_visitor_id: metadata_value(session, "datafast_visitor_id"),
-        datafast_session_id: metadata_value(session, "datafast_session_id")
+        datafast_session_id: metadata_value(session, "datafast_session_id"),
+        itemless: itemless
       )
     end
 
