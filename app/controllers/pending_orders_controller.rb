@@ -75,7 +75,7 @@ class PendingOrdersController < ApplicationController
     session = Stripe::Checkout::Session.create(
       mode: "setup",
       customer: customer_id,
-      payment_method_types: [ "card" ],
+      allowed_payment_method_types: [ "card" ],
       success_url: update_payment_method_success_pending_order_url(
         @pending_order,
         token: @pending_order.confirmation_token,

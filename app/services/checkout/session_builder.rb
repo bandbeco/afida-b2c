@@ -86,7 +86,7 @@ module Checkout
         {
           ui_mode: "custom",
           return_url: return_url,
-          payment_method_types: [ "card", "link" ]
+          allowed_payment_method_types: [ "card", "link" ]
           # Deliberately NOT permissions.update_shipping_details=server_only:
           # the clover elements SDK applies defaultValues (and contact picks) by
           # calling updateShippingAddress internally, which that permission
@@ -96,7 +96,7 @@ module Checkout
         }
       else
         {
-          payment_method_types: [ "card" ],
+          allowed_payment_method_types: [ "card" ],
           success_url: success_url,
           cancel_url: cancel_url
         }
