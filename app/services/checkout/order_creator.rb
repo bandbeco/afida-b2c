@@ -103,39 +103,51 @@ module Checkout
     end
 
     # Detect cart vs session mismatch: items added to the cart after pricing
-    # would be copied into the order unpaid. Compare cart item count and subtotal
-    # against the session's paid product line items (excluding shipping).
-    # This is detect-only (#322) and must not fail a paid order.
+    # would be copied into the order unpaid. Compare the Stripe line shape
+    # SessionBuilder would have sent (line count, Stripe quantity, and the
+    # per-line rounded subtotal from StripeLinePricing) with the session's
+    # paid product lines. Pack counts are not Stripe quantities, and the
+    # subtotal is rounded per line, the same way the charge was built.
+    # Shipping lines are excluded. This is detect-only (#322) and must not
+    # fail a paid order.
     def detect_cart_session_mismatch
       return unless cart.present?
 
       session_product_lines = session_product_line_items
-      cart_item_count = cart_items.sum(&:quantity)
-      session_item_count = session_product_lines.sum { |item| item.quantity || 0 }
+      expected = cart_items.map { |item| Checkout::StripeLinePricing.for(item) }
 
-      # Get subtotals in pence for comparison
-      cart_subtotal_pence = (cart_items.sum { |item| item.price * item.quantity } * 100).round
+      cart_line_count = expected.size
+      session_line_count = session_product_lines.size
+      cart_stripe_quantity = expected.sum(&:quantity)
+      session_item_count = session_product_lines.sum { |item| item.quantity || 0 }
+      cart_subtotal_pence = expected.sum(&:amount_pence)
       session_subtotal_pence = session_product_lines.sum(&:amount_subtotal)
 
-      if cart_item_count != session_item_count || cart_subtotal_pence != session_subtotal_pence
-        Rails.logger.error(
-          "[Checkout completion] Cart/session mismatch on session #{stripe_session.id}: " \
-          "cart has #{cart_item_count} items (£#{cart_subtotal_pence / 100.0}), " \
-          "session has #{session_item_count} items (£#{session_subtotal_pence / 100.0})"
-        )
-        Sentry.capture_message(
-          "Cart/session mismatch: items added after pricing",
-          level: :error,
-          extra: {
-            stripe_session_id: stripe_session.id,
-            cart_id: cart.id,
-            cart_item_count: cart_item_count,
-            cart_subtotal_pence: cart_subtotal_pence,
-            session_item_count: session_item_count,
-            session_subtotal_pence: session_subtotal_pence
-          }
-        )
-      end
+      return if cart_line_count == session_line_count &&
+        cart_stripe_quantity == session_item_count &&
+        cart_subtotal_pence == session_subtotal_pence
+
+      Rails.logger.error(
+        "[Checkout completion] Cart/session mismatch on session #{stripe_session.id}: " \
+        "cart has #{cart_line_count} lines, stripe qty #{cart_stripe_quantity} " \
+        "(£#{cart_subtotal_pence / 100.0}); " \
+        "session has #{session_line_count} lines, stripe qty #{session_item_count} " \
+        "(£#{session_subtotal_pence / 100.0})"
+      )
+      Sentry.capture_message(
+        "Cart/session mismatch: items added after pricing",
+        level: :error,
+        extra: {
+          stripe_session_id: stripe_session.id,
+          cart_id: cart.id,
+          cart_line_count: cart_line_count,
+          session_line_count: session_line_count,
+          cart_stripe_quantity: cart_stripe_quantity,
+          cart_subtotal_pence: cart_subtotal_pence,
+          session_item_count: session_item_count,
+          session_subtotal_pence: session_subtotal_pence
+        }
+      )
     rescue StandardError => e
       # Detect-only: a diagnostic failure must not block order creation.
       # Report and continue, the same way an unreadable promotion code is handled.

@@ -300,13 +300,21 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
   end
 
   test "mismatch detector pages line items when has_more is true" do
-    # The session has 11 units: the first page embeds 10, and the detector
-    # must list the 11th to count correctly. One cart row (a product is unique
-    # per cart) carries the same quantity. SessionAmounts pages the same list.
+    # Eleven product lines: the first page embeds 10, and the detector must
+    # list the 11th or the line count and subtotal disagree. Each cart row is
+    # one Stripe line (quantity 1). SessionAmounts pages the same list.
+    products = [
+      products(:one), products(:two), products(:paper_lid_80mm), products(:paper_lid_90mm),
+      products(:wooden_fork), products(:wooden_knife), products(:wooden_spoon),
+      products(:bamboo_fork), products(:bamboo_knife), products(:bamboo_spoon),
+      products(:napkin_small_white)
+    ]
     @cart.cart_items.destroy_all
-    @cart.cart_items.create!(product: products(:one), quantity: 11, price: 10.00)
+    products.each do |product|
+      @cart.cart_items.create!(product: product, quantity: 1, price: 10.00)
+    end
 
-    first_page = 10.times.map { |i| stripe_product_line_item(amount_subtotal: 1000, id: "li_#{i}") }
+    first_page = 10.times.map { |i| stripe_product_line_item(amount_subtotal: 1000, quantity: 1, id: "li_#{i}") }
     stripe_session = build_stripe_session(
       customer_email: "pagination@example.com",
       amount_subtotal: 11000,
@@ -314,7 +322,7 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
       line_items_has_more: true
     )
 
-    eleventh_item = stripe_product_line_item(amount_subtotal: 1000, id: "li_10")
+    eleventh_item = stripe_product_line_item(amount_subtotal: 1000, quantity: 1, id: "li_10")
     Checkout::SessionLineItems.expects(:list).with(
       stripe_session.id, starting_after: "li_9"
     ).returns([ eleventh_item ]).at_least_once

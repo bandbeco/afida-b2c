@@ -120,40 +120,19 @@ module Checkout
 
     def product_line_items
       cart.cart_items.includes(Checkout::CART_ITEM_INCLUDES).map do |item|
+        pricing = Checkout::StripeLinePricing.for(item)
         {
-          quantity: stripe_quantity(item),
+          quantity: pricing.quantity,
           price_data: {
             currency: "gbp",
             product_data: {
               name: product_name(item)
             },
-            unit_amount: unit_amount(item),
+            unit_amount: pricing.unit_amount,
             tax_behavior: "exclusive"
           },
           tax_rates: [ tax_rate.id ]
         }
-      end
-    end
-
-    def stripe_quantity(item)
-      return 1 if item.sample? || item.configured?
-      return item.quantity if unit_priced?(item)
-
-      # Pack-priced items fold pack count into unit_amount for one Stripe subtotal.
-      1
-    end
-
-    def unit_amount(item)
-      if item.sample?
-        0
-      elsif item.configured?
-        (item.price.to_f * item.quantity * 100).round
-      elsif unit_priced?(item)
-        (item.price.to_f * 100).round
-      else
-        # Pack-priced items use one Stripe line item with the pack count folded
-        # into unit_amount, so Stripe's tax/discount math sees one subtotal.
-        (item.price.to_f * item.quantity * 100).round
       end
     end
 
@@ -174,7 +153,7 @@ module Checkout
     end
 
     def unit_priced?(item)
-      item.product.pac_size.blank? || item.product.pac_size.zero?
+      Checkout::StripeLinePricing.for(item).unit_priced?
     end
 
     # The taxed shipping line item, or nil when the order ships free
