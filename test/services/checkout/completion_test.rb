@@ -163,7 +163,7 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
 
     stub_paid_session(
       amount_subtotal: 1000, # £10.00 in pence
-      line_items_data: [ 
+      line_items_data: [
         stripe_product_line_item(amount_subtotal: 1000, name: "Product", id: "li_1")
       ]
     )
