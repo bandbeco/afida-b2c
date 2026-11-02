@@ -21,10 +21,11 @@ class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
     assert_equal 503, @controller.response.status
   end
 
-  test "handles S3 BadRequest with 404 response" do
+  test "handles S3 BadRequest with 404 response and Sentry report" do
     error = Aws::S3::Errors::BadRequest.new(nil, "Bad Request")
 
-    Rails.logger.expects(:warn).with(regexp_matches(/S3 bad request/))
+    Rails.logger.expects(:error).with(regexp_matches(/S3 bad request/))
+    Sentry.expects(:capture_exception).with(error)
 
     @controller.send(:handle_s3_bad_request, error)
 
@@ -32,10 +33,11 @@ class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "handles Net::ReadTimeout with 503 response and Sentry capture" do
-    error = Seahorse::Client::NetworkingError.new(Net::ReadTimeout.new)
+    original_error = Net::ReadTimeout.new
+    error = Seahorse::Client::NetworkingError.new(original_error)
 
     Rails.logger.expects(:error).with(regexp_matches(/S3 read timeout/))
-    Sentry.expects(:capture_exception).with(error) if defined?(Sentry)
+    Sentry.expects(:capture_exception).with(error)
 
     @controller.send(:handle_s3_network_error, error)
 
@@ -43,10 +45,11 @@ class ActiveStorageErrorHandlingTest < ActiveSupport::TestCase
   end
 
   test "handles other NetworkingError with 503 response and Sentry capture" do
-    error = Seahorse::Client::NetworkingError.new(StandardError.new("Network issue"))
+    original_error = StandardError.new("Network issue")
+    error = Seahorse::Client::NetworkingError.new(original_error)
 
     Rails.logger.expects(:error).with(regexp_matches(/S3 network error/))
-    Sentry.expects(:capture_exception).with(error) if defined?(Sentry)
+    Sentry.expects(:capture_exception).with(error)
 
     @controller.send(:handle_s3_network_error, error)
 

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-Rails.application.config.after_initialize do
+Rails.application.config.to_prepare do
   # Only add error handlers if AWS SDK is loaded (production with S3 storage)
   if defined?(Aws::S3::Errors)
     ActiveStorage::Representations::ProxyController.class_eval do
@@ -16,20 +16,20 @@ Rails.application.config.after_initialize do
       end
 
       def handle_s3_bad_request(error)
-        Rails.logger.warn("S3 bad request for representation: #{error.message}")
+        Rails.logger.error("S3 bad request for representation: #{error.message}")
+        Sentry.capture_exception(error)
         head :not_found
       end
 
       def handle_s3_network_error(error)
-        if error.is_a?(Net::ReadTimeout)
-          Rails.logger.error("S3 read timeout for representation: #{error.message}")
-          Sentry.capture_exception(error) if defined?(Sentry)
-          head :service_unavailable
+        original_error = error.original_error
+        if original_error.is_a?(Net::ReadTimeout)
+          Rails.logger.error("S3 read timeout for representation: #{original_error.message}")
         else
-          Rails.logger.error("S3 network error for representation: #{error.message}")
-          Sentry.capture_exception(error) if defined?(Sentry)
-          head :service_unavailable
+          Rails.logger.error("S3 network error for representation: #{original_error.class.name}: #{original_error.message}")
         end
+        Sentry.capture_exception(error)
+        head :service_unavailable
       end
     end
   end

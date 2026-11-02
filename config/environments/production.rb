@@ -39,6 +39,9 @@ Rails.application.configure do
     hsts: { subdomains: true, preload: true, expires: 2.years.to_i }
   }
 
+  # Handle IP spoof attacks with 400 Bad Request instead of 500
+  config.action_dispatch.rescue_responses["ActionDispatch::RemoteIp::IpSpoofAttackError"] = :bad_request
+
   # Log to STDOUT with the current request id as a default log tag.
   config.log_tags = [ :request_id ]
   config.logger   = ActiveSupport::TaggedLogging.logger(STDOUT)

@@ -64,29 +64,42 @@ class SamplesControllerTest < ActionDispatch::IntegrationTest
 
   test "index preloads sample product counts to avoid N+1 queries" do
     # Create multiple categories with sample products
-    3.times do |i|
+    5.times do |i|
       category = Category.create!(
         name: "Test Category #{i}",
         slug: "test-category-#{i}",
         position: i
       )
-      2.times do |j|
+      3.times do |j|
         Product.create!(
           category: category,
           name: "Sample #{i}-#{j}",
           sku: "SAMPLE-N1-TEST-#{i}-#{j}",
           price: 10.0,
           sample_eligible: true,
-          active: true
+          active: true,
+          product_type: "standard"
         )
       end
     end
 
+    # First request establishes baseline
     get samples_path
-
     assert_response :success
-    # Verify that the page renders without triggering additional COUNT queries
-    # The preload ensures the count is in the SQL result set
-    assert_select ".space-y-6"
+
+    # Count queries on second request - should stay flat regardless of category count
+    queries = []
+    ActiveSupport::Notifications.subscribe("sql.active_record") do |_, _, _, _, details|
+      queries << details[:sql] unless details[:sql].include?("SCHEMA")
+    end
+
+    get samples_path
+    assert_response :success
+
+    ActiveSupport::Notifications.unsubscribe("sql.active_record")
+
+    # Should not have per-category COUNT queries
+    count_queries = queries.select { |q| q.match?(/COUNT.*products.*category_id/) }
+    assert_equal 0, count_queries.length, "Found #{count_queries.length} per-category COUNT queries, expected 0"
   end
 end
