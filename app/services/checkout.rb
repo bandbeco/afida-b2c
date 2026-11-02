@@ -6,5 +6,32 @@ module Checkout
   # successful completions that must yield an order; only "unpaid" is rejected.
   COMPLETED_PAYMENT_STATUSES = %w[paid no_payment_required].freeze
 
-  class MissingShippingDetails < StandardError; end
+  # The two kinds of failure a checkout completion (see CONTEXT.md) can raise.
+  # Callers act on the kind, never the cause: the webhook answers Stripe 200 to
+  # a permanent failure (a retry can never succeed) and 5xx to a transient one
+  # (so Stripe retries); the success redirect picks its flash copy by kind.
+  #
+  # Permanent: the same session will fail identically on every attempt.
+  # Subclassed rather than wrapped so a caller can still pick copy by the
+  # concrete class (MissingShippingDetails has its own customer message).
+  class PermanentCompletionFailure < StandardError
+    # Set when the failure has already been reported, so the completion
+    # rescue can re-raise without a second Sentry capture.
+    attr_accessor :already_reported
+  end
+
+  # A completed session carrying no shipping_details: the required shipping
+  # fields would be nil, so the Order can never be valid.
+  class MissingShippingDetails < PermanentCompletionFailure
+    attr_reader :stripe_session
+
+    def initialize(message = "Shipping details are required", stripe_session = nil)
+      super(message)
+      @stripe_session = stripe_session
+    end
+  end
+
+  # A failure a retry may recover from: a Stripe hiccup, a database blip, an
+  # item rollback that left no order behind. Wraps the cause (Exception#cause).
+  class TransientCompletionFailure < StandardError; end
 end

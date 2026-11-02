@@ -3,8 +3,8 @@
 module Checkout
   # Derives the money figures we persist on an Order from a completed Stripe
   # Checkout session, in pounds. Single home for "given an expanded session, what
-  # are the subtotal / vat / shipping / total / discount" so the success path
-  # (OrderCreator) and the webhook fallback compute them identically.
+  # are the subtotal / vat / shipping / total / discount", read by OrderCreator
+  # for every checkout completion.
   #
   # Why this exists: shipping is sent as a taxed LINE ITEM (manual tax rates do
   # not tax shipping_options), so Stripe's amount_subtotal now INCLUDES shipping
@@ -30,7 +30,8 @@ module Checkout
     # String id), which means the caller forgot expand: line_items.data.price.product.
     # Without the expanded product the shipping line cannot be identified, so we
     # fail loud rather than silently recording £0 shipping and an inflated subtotal.
-    class UnexpandedLineItemError < StandardError; end
+    # Permanent: the same payload fails identically on every retry.
+    class UnexpandedLineItemError < Checkout::PermanentCompletionFailure; end
 
     def self.from(session)
       new(session).amounts

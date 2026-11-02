@@ -189,12 +189,139 @@ class Checkout::OrderCreatorTest < ActiveSupport::TestCase
     end
   end
 
-  test "propagates unexpected Stripe promotion code shapes" do
+  test "records no promotion code and reports when the Stripe discount shape is unexpected" do
     stripe_session = build_stripe_session
     stripe_session.total_details.stubs(:breakdown).raises(NoMethodError.new("unexpected shape"))
+    Sentry.expects(:capture_exception).once
 
-    assert_raises(NoMethodError) do
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_nil order.discount_code
+    assert_equal "paid", order.status
+  end
+
+  test "consumes the cart in the same transaction as the order" do
+    Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: @cart).create
+
+    assert_equal 0, @cart.reload.cart_items.count
+  end
+
+  test "leaves the cart intact when the order rolls back" do
+    OrderItem.any_instance.stubs(:save!).raises(ActiveRecord::RecordInvalid.new(OrderItem.new))
+
+    assert_raises(ActiveRecord::RecordInvalid) do
+      Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: @cart).create
+    end
+
+    assert_equal 1, @cart.reload.cart_items.count
+  end
+
+  test "records an item-less paid order when the cart is gone" do
+    order = nil
+    assert_difference "Order.count", 1 do
+      order = Checkout::OrderCreator.new(stripe_session: build_stripe_session, cart: nil).create
+    end
+
+    assert_empty order.order_items
+    assert_nil order.branded_order_status
+  end
+
+  test "associates the order with the user the session references" do
+    user = users(:one)
+    order = Checkout::OrderCreator.new(
+      stripe_session: build_stripe_session(customer_email: user.email_address, client_reference_id: user.id), cart: @cart
+    ).create
+
+    assert_equal user, order.user
+    assert_nil order.organization_id
+    assert_nil order.placed_by_user_id
+  end
+
+  test "creates a guest order when the session references no user" do
+    order = Checkout::OrderCreator.new(
+      stripe_session: build_stripe_session(customer_email: "guest@example.com"), cart: @cart
+    ).create
+
+    assert_nil order.user
+    assert_equal "guest@example.com", order.email
+  end
+
+  test "records the organization and placing user for a B2B customer" do
+    admin = users(:acme_admin)
+    order = Checkout::OrderCreator.new(
+      stripe_session: build_stripe_session(customer_email: admin.email_address, client_reference_id: admin.id), cart: @cart
+    ).create
+
+    assert_equal organizations(:acme), order.organization
+    assert_equal admin, order.placed_by_user
+  end
+
+  test "a session with no customer details fails validation rather than crashing" do
+    stripe_session = build_stripe_session
+    stripe_session.stubs(:customer_details).returns(nil)
+
+    assert_raises(ActiveRecord::RecordInvalid) do
       Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
     end
+  end
+
+  test "resolves the promotion code before opening the order transaction" do
+    # Transactional tests already hold one transaction open, so compare depth
+    # against that baseline rather than asking whether any is open.
+    stripe_session = build_stripe_session(promotion_code: "SUMMER20")
+    baseline = ApplicationRecord.connection.open_transactions
+    depth_at_lookup = nil
+    Checkout::SessionDetails.stubs(:promotion_code).with do |_|
+      depth_at_lookup = ApplicationRecord.connection.open_transactions
+      true
+    end.returns("SUMMER20")
+
+    Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal baseline, depth_at_lookup
+  end
+
+  test "prefers the Welcome discount in metadata over a Stripe-entered promotion code" do
+    stripe_session = build_stripe_session(
+      amount_discount: 200, metadata: { discount_code: "WELCOME5" }, promotion_code: "SUMMER20"
+    )
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+
+    assert_equal "WELCOME5", order.discount_code
+    assert_equal 2.0, order.discount_amount.to_f
+  end
+
+  test "records no discount when none was applied" do
+    order = Checkout::OrderCreator.new(stripe_session: build_stripe_session(amount_discount: 0), cart: @cart).create
+
+    assert_equal 0.0, order.discount_amount.to_f
+    assert_nil order.discount_code
+  end
+
+  test "mismatch detector pages line items when has_more is true" do
+    # The session has 11 units: the first page embeds 10, and the detector
+    # must list the 11th to count correctly. One cart row (a product is unique
+    # per cart) carries the same quantity. SessionAmounts pages the same list.
+    @cart.cart_items.destroy_all
+    @cart.cart_items.create!(product: products(:one), quantity: 11, price: 10.00)
+
+    first_page = 10.times.map { |i| stripe_product_line_item(amount_subtotal: 1000, id: "li_#{i}") }
+    stripe_session = build_stripe_session(
+      customer_email: "pagination@example.com",
+      amount_subtotal: 11000,
+      line_items_data: first_page,
+      line_items_has_more: true
+    )
+
+    eleventh_item = stripe_product_line_item(amount_subtotal: 1000, id: "li_10")
+    Checkout::SessionLineItems.expects(:list).with(
+      stripe_session.id, starting_after: "li_9"
+    ).returns([ eleventh_item ]).at_least_once
+
+    Sentry.expects(:capture_message).with(includes("mismatch"), anything).never
+
+    order = Checkout::OrderCreator.new(stripe_session: stripe_session, cart: @cart).create
+    assert_equal "paid", order.status
   end
 end
