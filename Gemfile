@@ -110,7 +110,7 @@ gem "reverse_markdown", "~> 3.0"
 gem "http", "~> 6.0"
 
 # Working-day / business-day date maths (UK bank holidays)
-gem "business", "~> 3.1"
+gem "business", "~> 3.2"
 
 gem "webmock", "~> 3.34", group: :test
 
