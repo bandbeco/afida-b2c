@@ -799,7 +799,8 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
 
     hosted, custom = captured
 
-    assert_equal "custom", custom[:ui_mode]
+    assert_equal "elements", custom[:ui_mode]
+    assert_nil hosted[:ui_mode]
     assert_equal @return_url, custom[:return_url]
     assert_nil custom[:success_url]
     assert_nil custom[:cancel_url]
@@ -812,7 +813,7 @@ class Checkout::SessionBuilderTest < ActiveSupport::TestCase
   end
 
   # permissions.update_shipping_details=server_only must never come back: the
-  # clover elements SDK applies defaultValues (and contact picks) by calling
+  # elements SDK applies defaultValues (and contact picks) by calling
   # updateShippingAddress internally, which that permission forbids - init
   # throws and the checkout page dies for every customer.
   test "neither mode restricts shipping-details updates" do

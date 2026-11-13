@@ -1,9 +1,9 @@
 <% content_for :title, "Checkout | Afida" %>
 <% content_for :head do %>
-  <%# The VERSIONED bundle, matching the clover API version the stripe gem
-      pins: the legacy /v3/ bundle refuses initCheckoutElementsSdk with
+  <%# Versioned Stripe.js bundle for the pinned API release (2026-10-28.endive).
+      The legacy /v3/ bundle refuses initCheckoutElementsSdk with
       "You must upgrade to the Basil release or higher". %>
-  <script src="https://js.stripe.com/clover/stripe.js"></script>
+  <script src="https://js.stripe.com/endive/stripe.js"></script>
   <%# Never snapshot this page: a Turbo cache restore would clone the Stripe
       iframes as dead markup and re-run connect() against them. Back/forward
       re-renders server-side instead, which #show serves for free. %>
