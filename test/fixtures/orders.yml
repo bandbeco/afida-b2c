@@ -1,6 +1,13 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
+# Historic orders are already past completion. The deploy backfill marks them
+# the same way, so a fixture order must not look like a crash that still owes
+# its effects.
+DEFAULTS: &DEFAULTS
+  effects_completed_at: <%= Time.utc(2026, 1, 1) %>
+
 one:
+  <<: *DEFAULTS
   user: one
   email: user1@example.com
   stripe_session_id: stripe_session_1
@@ -18,6 +25,7 @@ one:
   shipping_country: GB
 
 two:
+  <<: *DEFAULTS
   user: two
   email: user2@example.com
   stripe_session_id: stripe_session_2
@@ -35,6 +43,7 @@ two:
   shipping_country: GB
 
 acme_order:
+  <<: *DEFAULTS
   user: acme_admin
   organization: acme
   placed_by_user: acme_admin
@@ -55,6 +64,7 @@ acme_order:
 
 # Complete order for PDF generator testing
 complete_order:
+  <<: *DEFAULTS
   user: one
   email: complete@example.com
   stripe_session_id: cs_test_complete
@@ -74,6 +84,7 @@ complete_order:
 
 # Guest order (no user association) - for authorization testing
 guest_order:
+  <<: *DEFAULTS
   # user: intentionally omitted - this is a guest checkout order
   email: guest@example.com
   stripe_session_id: cs_test_guest
@@ -92,6 +103,7 @@ guest_order:
 
 # Sample-only order (for testing sample badges)
 sample_only_order:
+  <<: *DEFAULTS
   email: sample@example.com
   stripe_session_id: cs_test_sample_only
   order_number: ORD-2025-SAMPLE1
@@ -109,6 +121,7 @@ sample_only_order:
 
 # Mixed order (samples + paid products)
 mixed_order:
+  <<: *DEFAULTS
   email: mixed@example.com
   stripe_session_id: cs_test_mixed
   order_number: ORD-2025-MIXED1
