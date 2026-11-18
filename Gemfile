@@ -105,7 +105,7 @@ gem "pagy", "~> 43.8"
 gem "redcarpet", "~> 3.6"
 
 # HTML to Markdown conversion for agent content negotiation
-gem "reverse_markdown", "~> 3.0"
+gem "reverse_markdown", "~> 3.1"
 
 gem "http", "~> 6.0"
 
