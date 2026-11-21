@@ -6,9 +6,9 @@ Rails.configuration.stripe = {
 
 Stripe.api_key = Rails.configuration.stripe[:secret_key]
 
-# Use Clover API version - requires collected_information.shipping_details
-# (shipping_details moved from top-level in basil release 2025-03-31)
-Stripe.api_version = "2025-12-15.clover"
+# Pin Endive. Checkout reads collected_information.shipping_details, which
+# moved off the top level in basil (2025-03-31) and is unchanged through endive.
+Stripe.api_version = "2026-10-28.endive"
 
 # Validate API version compatibility at boot time.
 # The checkout flow depends on collected_information.shipping_details which

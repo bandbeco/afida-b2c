@@ -84,11 +84,13 @@ module Checkout
     def mode_params
       if ui_mode == :custom
         {
-          ui_mode: "custom",
+          # App mode is still :custom. Stripe's enum is "elements" (dahlia
+          # renamed "custom"); endive rejects the old value.
+          ui_mode: "elements",
           return_url: return_url,
           allowed_payment_method_types: [ "card", "link" ]
           # Deliberately NOT permissions.update_shipping_details=server_only:
-          # the clover elements SDK applies defaultValues (and contact picks) by
+          # the elements SDK applies defaultValues (and contact picks) by
           # calling updateShippingAddress internally, which that permission
           # forbids - init throws and the page dies. Address sync stays
           # client-side; PATCH /checkout owns only the PRICE (line items +
