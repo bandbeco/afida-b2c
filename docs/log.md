@@ -1,5 +1,9 @@
 # Update Log
 
+## 2026-11-02
+
+* **Update**: [Developer guide](/developer_guide.md). Checkout completion records side effects on `orders.effects_completed_at` after they finish. A channel that finds an order with no marker runs them, under a row lock so the redirect and the webhook cannot both send. The migration backfills existing orders to `created_at` so deploy does not resend historic effects. `CONTEXT.md` states that either channel runs the effects until they are recorded.
+
 ## 2026-09-30
 
 * **Update**: [Developer guide](/developer_guide.md). The "After payment" section now describes checkout completion: `Checkout::Completion` completes a paid session through either channel (success redirect or Stripe webhook), so the webhook-created orders that used to miss Klaviyo now emit the same events. `CONTEXT.md` gains the term.

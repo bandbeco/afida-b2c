@@ -6,10 +6,12 @@ module Checkout
   # reorder) can reuse it. Internal to the Checkout namespace: Completion is
   # its only caller today.
   #
-  # Effects are independent and each is attempted even if another fails: the
-  # order has already committed, and a webhook retry would find it and do
-  # nothing, so raising here could only lose the remaining effects. A failed
-  # effect is reported to Sentry instead.
+  # Effects are independent and each is attempted even if another fails. A
+  # failed effect is reported to Sentry and does not stop the others.
+  # Completion records effects_completed_at after run returns, so a rescued
+  # failure is not retried: a retry would repeat the effects that succeeded.
+  # An exception that escapes run leaves the order unmarked, and the next
+  # completion channel runs the set again.
   #
   # The one channel-dependent effect is the GA4 purchase. The confirmation page
   # fires it client-side with the real client id and consent state (see

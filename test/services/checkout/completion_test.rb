@@ -35,6 +35,7 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     assert first.created?
     assert_equal @session.id, first.order.stripe_session_id
     assert_equal "paid", first.order.status
+    assert_not_nil first.order.effects_completed_at
     assert_equal 0, @cart.reload.cart_items.count
 
     second = nil
@@ -45,6 +46,7 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     end
     assert second.existing?
     assert_equal first.order, second.order
+    assert_equal first.order.reload.effects_completed_at, second.order.effects_completed_at
   end
 
   test "retrieves the session with the expands the money and address reads need" do
@@ -57,8 +59,12 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
 
   test "an order that already exists is found without asking Stripe" do
     Stripe::Checkout::Session.expects(:retrieve).never
+    assert_not_nil orders(:one).effects_completed_at
 
-    outcome = Checkout::Completion.complete(orders(:one).stripe_session_id, browser_present: false)
+    outcome = nil
+    assert_no_event_reported("order.placed") do
+      outcome = Checkout::Completion.complete(orders(:one).stripe_session_id, browser_present: false)
+    end
 
     assert outcome.existing?
     assert_equal orders(:one), outcome.order
@@ -532,11 +538,14 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
 
   test "losing the create race to the other channel finds that order instead" do
     stub_paid_session
+    # The winning channel already recorded its effects. The loser must not
+    # send them again. An unmarked winner is the crash case, covered below.
     winner = Order.create!(
       email: "buyer@example.com", stripe_session_id: @session.id, status: "paid",
       subtotal_amount: 10, vat_amount: 2, shipping_amount: 0, total_amount: 12,
       shipping_name: "Test Customer", shipping_address_line1: "1 Street", shipping_city: "London",
-      shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+      shipping_postal_code: "SW1A 1AA", shipping_country: "GB",
+      effects_completed_at: Time.current
     )
     # The other channel commits between our find_by and our create!.
     Order.stubs(:find_by).with(stripe_session_id: @session.id).returns(nil).then.returns(winner)
@@ -547,6 +556,150 @@ class Checkout::CompletionTest < ActiveSupport::TestCase
     end
     assert outcome.existing?
     assert_equal winner, outcome.order
+  end
+
+  test "losing the create race runs effects when the winner never finished them" do
+    stub_paid_session
+    Ga4MeasurementProtocolService.stubs(:track_purchase)
+    winner = Order.create!(
+      email: "buyer@example.com", stripe_session_id: @session.id, status: "paid",
+      subtotal_amount: 10, vat_amount: 2, shipping_amount: 0, total_amount: 12,
+      shipping_name: "Test Customer", shipping_address_line1: "1 Street", shipping_city: "London",
+      shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+    )
+    # Mocha's with() constraint rejects the later Order.find_by(id:) from the
+    # Klaviyo subscriber, so the miss-then-hit is a real method that delegates
+    # every other lookup.
+    original_find_by = Order.singleton_class.instance_method(:find_by)
+    session_id = @session.id
+    lookups = 0
+    Order.define_singleton_method(:find_by) do |*args, **kwargs|
+      sid = kwargs[:stripe_session_id]
+      sid ||= args[0][:stripe_session_id] if args[0].is_a?(Hash)
+      if sid == session_id
+        lookups += 1
+        lookups == 1 ? nil : winner
+      else
+        original_find_by.bind_call(self, *args, **kwargs)
+      end
+    end
+
+    outcome = nil
+    assert_event_reported("order.placed") do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+    assert outcome.existing?
+    assert_equal winner, outcome.order
+    assert_not_nil winner.reload.effects_completed_at
+  ensure
+    Order.singleton_class.define_method(:find_by, original_find_by) if original_find_by
+  end
+
+  test "a crash after the order commits runs effects once on retry" do
+    stub_paid_session
+    Ga4MeasurementProtocolService.stubs(:track_purchase)
+
+    original = Checkout::CompletionEffects.instance_method(:run)
+    crashed = false
+    Checkout::CompletionEffects.define_method(:run) do
+      unless crashed
+        crashed = true
+        raise "process died before effects finished"
+      end
+      original.bind_call(self)
+    end
+
+    assert_difference "Order.count", 1 do
+      assert_raises(RuntimeError) do
+        Checkout::Completion.complete(@session.id, browser_present: false)
+      end
+    end
+    order = Order.find_by!(stripe_session_id: @session.id)
+    assert_nil order.effects_completed_at
+
+    outcome = nil
+    assert_enqueued_emails 2 do
+      assert_event_reported("order.placed") do
+        outcome = Checkout::Completion.complete(@session.id, browser_present: false)
+      end
+    end
+    assert outcome.existing?
+    assert_equal order, outcome.order
+    assert_not_nil order.reload.effects_completed_at
+
+    assert_no_event_reported("order.placed") do
+      assert_no_enqueued_emails do
+        again = Checkout::Completion.complete(@session.id, browser_present: true)
+        assert again.existing?
+      end
+    end
+  ensure
+    Checkout::CompletionEffects.define_method(:run, original) if original
+  end
+
+  test "a retry of an itemless order still suppresses the customer email" do
+    stub_paid_session(metadata: { cart_id: "999999" })
+    Sentry.stubs(:capture_message)
+
+    original = Checkout::CompletionEffects.instance_method(:run)
+    crashed = false
+    Checkout::CompletionEffects.define_method(:run) do
+      unless crashed
+        crashed = true
+        raise "process died before effects finished"
+      end
+      original.bind_call(self)
+    end
+
+    assert_raises(RuntimeError) do
+      Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+
+    assert_enqueued_emails 1 do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: false)
+      assert outcome.existing?
+      assert_empty outcome.order.order_items
+    end
+  ensure
+    Checkout::CompletionEffects.define_method(:run, original) if original
+  end
+
+  test "a failed individual effect is reported and still marks effects complete" do
+    stub_paid_session
+    OrderMailer.stubs(:with).raises(StandardError.new("mailer down"))
+    Sentry.expects(:capture_exception).once
+
+    outcome = nil
+    assert_event_reported("order.placed") do
+      outcome = Checkout::Completion.complete(@session.id, browser_present: true)
+    end
+    assert outcome.created?
+    assert_not_nil outcome.order.reload.effects_completed_at
+
+    assert_no_event_reported("order.placed") do
+      second = Checkout::Completion.complete(@session.id, browser_present: false)
+      assert second.existing?
+    end
+  end
+
+  test "backfill marks historic orders from created_at and leaves a later order unmarked" do
+    require Rails.root.join("db/migrate/20261102140000_add_effects_completed_at_to_orders")
+
+    historic = orders(:one)
+    historic.update_columns(effects_completed_at: nil)
+
+    AddEffectsCompletedAtToOrders.backfill
+
+    historic.reload
+    assert_equal historic.created_at, historic.effects_completed_at
+
+    fresh = Order.create!(
+      email: "later@example.com", stripe_session_id: "sess_after_backfill", status: "paid",
+      subtotal_amount: 10, vat_amount: 2, shipping_amount: 0, total_amount: 12,
+      shipping_name: "Later Customer", shipping_address_line1: "1 Street", shipping_city: "London",
+      shipping_postal_code: "SW1A 1AA", shipping_country: "GB"
+    )
+    assert_nil fresh.effects_completed_at
   end
 
   test "a programmer error propagates untouched" do

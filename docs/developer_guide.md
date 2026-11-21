@@ -2,7 +2,7 @@
 type: Guide
 description: Codebase orientation for developers, covering data models, cart and checkout flows, authentication, and common tasks.
 status: active
-timestamp: 2026-09-30
+timestamp: 2026-11-02
 ---
 
 # Developer Guide
@@ -342,15 +342,21 @@ All money math lives in the Stripe session, built by
 Both modes land on the same success URL with `?session_id=`, and Stripe also
 sends `checkout.session.completed`. These are the two **completion channels**
 of a **checkout completion** (see `CONTEXT.md`): `Checkout::Completion` turns
-a paid session into exactly one Order with its invariant side effects,
-whichever channel arrives first, and the other channel finds the order.
+a paid session into exactly one Order, whichever channel arrives first. The
+other channel finds that order.
 
 The module owns the retrieve and its expand list, the paid check, the
 exactly-once row (`Checkout::OrderCreator`, which also consumes the cart inside
 the order's transaction) and the side effects (`Checkout::CompletionEffects`:
 confirmation emails, Telegram, `checkout.completed`, `order.placed` and the
 Welcome-discount `email_signup.discount_claimed`, all driven by Stripe metadata
-rather than the browser session). It returns `created`, `existing` or `unpaid`
+rather than the browser session). Effects run after the commit. The order
+records them on `effects_completed_at`, set only once they have finished, and
+a row lock keeps the two channels from both sending. A later channel runs
+them when the timestamp is still nil, which is how a crash between the commit
+and the effects is repaired. A rescued failure inside one effect does not
+withhold the marker, because retrying the set would repeat the effects that
+succeeded; that failure is already reported to Sentry. The module returns `created`, `existing` or `unpaid`
 and raises `Checkout::PermanentCompletionFailure` or
 `Checkout::TransientCompletionFailure`; the controllers only map those to a
 flash and redirect (`CheckoutsController#success`) or to the HTTP status Stripe

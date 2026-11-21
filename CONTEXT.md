@@ -63,5 +63,5 @@ A customer-facing code typed at checkout to claim a discount. Distinct from a co
 _Avoid_: promo, voucher, coupon code.
 
 **Checkout completion**:
-The step that turns a paid Checkout Session into exactly one Order with its invariant side effects (confirmation emails, team notification, marketing and analytics events). Reached through two completion channels, the success redirect and the Stripe webhook; whichever arrives first completes the order and the other finds it. Which side effects fire is a property of the completion, not of the channel; the only channel-dependent effect is the server-side GA4 fallback for a customer who is not in a browser.
+The step that turns a paid Checkout Session into exactly one Order with its invariant side effects (confirmation emails, team notification, marketing and analytics events). Reached through two completion channels, the success redirect and the Stripe webhook; whichever arrives first creates the order, and either channel runs the side effects until they have been recorded on the order. Which side effects fire is a property of the completion, not of the channel; the only channel-dependent effect is the server-side GA4 fallback for a customer who is not in a browser.
 _Avoid_: order creation (the row is one part of it), success path / webhook path as if they were two different completions.
